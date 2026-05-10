@@ -63,9 +63,9 @@ export function ProfileCard() {
                     start_date,
                     end_date,
                     monthly_rent,
-                    units:unit_id (
+                    units (
                         unit_number,
-                        properties:property_id (
+                        properties (
                             name
                         )
                     )
@@ -75,7 +75,7 @@ export function ProfileCard() {
                 .single();
 
             if (!error && data) {
-                const unit = data.units as { unit_number: string; properties: { name: string } | null };
+                const unit = data.units as any;
                 setLeaseData({
                     unitName: unit ? `${unit.properties?.name ?? ''} ${unit.unit_number ?? ''}`.trim() : null,
                     status: data.status,

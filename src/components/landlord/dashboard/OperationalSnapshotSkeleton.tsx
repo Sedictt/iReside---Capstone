@@ -14,7 +14,7 @@ export function OperationalSnapshotSkeleton({ className }: { className?: string 
                     <div className="space-y-4">
                         <Skeleton className="h-6 w-32 rounded-full opacity-60" />
                         <div className="space-y-2">
-                            <Skeleton className="h-4 w-40 rounded-full opacity-40" />
+                            <Skeleton className="size-40 rounded-full opacity-40" />
                             <Skeleton className="h-10 w-64 rounded-2xl" />
                         </div>
                     </div>
@@ -35,7 +35,7 @@ export function OperationalSnapshotSkeleton({ className }: { className?: string 
                                     <Skeleton className="h-3 w-20 rounded-full opacity-60" />
                                     <Skeleton className="h-8 w-24 rounded-full" />
                                 </div>
-                                <Skeleton className="h-10 w-10 rounded-xl" />
+                                <Skeleton className="size-10 rounded-xl" />
                             </div>
                             <Skeleton className="h-3 w-32 rounded-full opacity-40" />
                         </div>

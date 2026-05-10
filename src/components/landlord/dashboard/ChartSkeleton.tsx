@@ -12,7 +12,7 @@ export function ChartSkeleton({ className }: { className?: string }) {
             <div className="relative z-10 flex flex-col h-full gap-8">
                 <div className="flex items-center justify-between px-2">
                     <div className="space-y-3">
-                        <Skeleton className="h-4 w-48 rounded-full" />
+                        <Skeleton className="size-48 rounded-full" />
                         <Skeleton className="h-3 w-64 rounded-full opacity-60" />
                     </div>
                     <div className="flex gap-3">

@@ -247,7 +247,7 @@ export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview =
         </div>
 
         <div className="relative w-full md:w-80">
-          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
             placeholder="Search by tenant, unit, or property..."
@@ -262,17 +262,17 @@ export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview =
       <div className="min-h-[400px]">
         {loading ? (
           <div className="flex h-64 items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-primary/40" />
+            <Loader2 className="size-8 animate-spin text-primary/40" />
           </div>
         ) : error ? (
           <div className="flex h-64 flex-col items-center justify-center rounded-[2rem] border border-red-500/10 bg-red-500/5 p-8 text-center">
-            <AlertCircle className="mb-4 h-12 w-12 text-red-500/50" />
+            <AlertCircle className="mb-4 size-12 text-red-500/50" />
             <h3 className="text-lg font-black text-foreground">Error Loading Requests</h3>
             <p className="text-sm font-medium text-muted-foreground">{error}</p>
           </div>
         ) : filteredRequests.length === 0 ? (
           <div className="flex h-64 flex-col items-center justify-center rounded-[2.5rem] border border-dashed border-border bg-muted/20 p-12 text-center">
-            <Inbox className="mb-4 h-12 w-12 text-muted-foreground/30" />
+            <Inbox className="mb-4 size-12 text-muted-foreground/30" />
             <h3 className="text-xl font-black text-foreground">No Requests Found</h3>
             <p className="text-sm font-medium text-muted-foreground">
               {searchQuery || activeFilter !== "all" 
@@ -306,7 +306,7 @@ export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview =
                     {/* Tenant Info */}
                     <div className="mb-4 flex flex-1 flex-col gap-1 md:mb-0">
                       <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-primary/60" />
+                        <User className="size-4 text-primary/60" />
                         <h4 className="text-sm font-black text-foreground group-hover:text-primary transition-colors">
                           {req.lease.tenant.full_name}
                         </h4>
@@ -319,7 +319,7 @@ export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview =
                     {/* Property/Unit Info */}
                     <div className="mb-4 flex flex-1 flex-col gap-1 md:mb-0">
                       <div className="flex items-center gap-2">
-                        <Home className="h-4 w-4 text-primary/60" />
+                        <Home className="size-4 text-primary/60" />
                         <span className="text-sm font-black text-foreground">
                           {req.lease.unit.name}
                         </span>
@@ -339,8 +339,8 @@ export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview =
 
                     {/* Action Arrow */}
                     <div className="absolute right-6 top-1/2 hidden -translate-y-1/2 md:block">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-muted transition-all group-hover:bg-primary group-hover:text-primary-foreground">
-                        <ChevronRight className="h-5 w-5" />
+                      <div className="flex size-10 items-center justify-center rounded-2xl bg-muted transition-all group-hover:bg-primary group-hover:text-primary-foreground">
+                        <ChevronRight className="size-5" />
                       </div>
                     </div>
                   </div>
@@ -353,3 +353,4 @@ export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview =
     </div>
   );
 }
+

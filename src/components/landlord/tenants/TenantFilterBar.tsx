@@ -20,7 +20,7 @@ export function TenantFilterBar({
     return (
         <div className="flex flex-col gap-4 rounded-[2rem] border border-border bg-card p-3 shadow-sm lg:flex-row lg:items-center">
             <div className="relative flex-1">
-                <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Search className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <input
                     type="text"
                     placeholder="Search residents, units, or properties..."
@@ -46,7 +46,7 @@ export function TenantFilterBar({
                 ))}
                 <div className="mx-2 h-6 w-px bg-border hidden lg:block" />
                 <button className="flex h-10 items-center gap-2 rounded-xl border border-border px-4 text-sm font-bold text-muted-foreground hover:bg-muted hover:text-foreground transition-all">
-                    <Filter className="h-4 w-4" />
+                    <Filter className="size-4" />
                     <span>More Filters</span>
                 </button>
             </div>

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/supabase/auth";
 
 type LeaseWithUnit = {
     id: string;
@@ -8,12 +8,7 @@ type LeaseWithUnit = {
 };
 
 export async function GET() {
-    const supabase = await createClient();
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const { user, supabase } = await requireUser();
 
     // 1. Fetch lease with unit and property info in one go (avoiding waterfall)
     const { data: leaseWithUnit, error: initialError } = await supabase
@@ -122,12 +117,7 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-    const supabase = await createClient();
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const { user, supabase } = await requireUser();
 
     let payload: { requestedUnitId?: string; reason?: string };
     try {

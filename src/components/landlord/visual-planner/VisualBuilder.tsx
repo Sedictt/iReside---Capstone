@@ -376,13 +376,13 @@ const UnitHistoryModal = ({
                     >
                         <div className="absolute right-6 top-6 z-10">
                             <button onClick={onClose} className={`rounded-full p-2 transition-colors hover:bg-muted text-muted-foreground`}>
-                                <X className="h-6 w-6" />
+                                <X className="size-6" />
                             </button>
                         </div>
 
                         <div className="p-8 pb-4">
                             <div className="flex items-center gap-4 mb-4">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                                <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                                     <span className="material-icons-round text-2xl">history</span>
                                 </div>
                                 <div>
@@ -416,7 +416,7 @@ const UnitHistoryModal = ({
                                 {activeTab === "tenants" ? (
                                     tenantHistory.map((item) => (
                                         <div key={item.id} className={`flex items-center gap-4 p-5 rounded-2xl border border-border bg-muted/30 transition-colors hover:bg-muted/50`}>
-                                            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white text-[10px] font-black ${item.avatarBg}`}>
+                                            <div className={`flex size-10 shrink-0 items-center justify-center rounded-full text-white text-[10px] font-black ${item.avatarBg}`}>
                                                 {item.name.charAt(0)}
                                             </div>
                                             <div className="flex-1">
@@ -443,7 +443,7 @@ const UnitHistoryModal = ({
                                 ) : (
                                     maintenanceHistory.map((item) => (
                                         <div key={item.id} className={`flex items-center gap-4 p-5 rounded-2xl border border-border bg-muted/30 transition-colors hover:bg-muted/50`}>
-                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-500/10 text-rose-500 border border-rose-500/20">
+                                            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-rose-500/10 text-rose-500 border border-rose-500/20">
                                                 <span className="material-icons-round text-xl">engineering</span>
                                             </div>
                                             <div className="flex-1">
@@ -545,7 +545,7 @@ const ComplaintModal = ({
                     >
                         <div className="absolute right-6 top-6 z-10">
                             <button onClick={onClose} className="rounded-full p-2 transition-colors hover:bg-muted text-muted-foreground">
-                                <X className="h-6 w-6" />
+                                <X className="size-6" />
                             </button>
                         </div>
 
@@ -630,7 +630,7 @@ const ComplaintModal = ({
                                             />
                                             {attachment ? (
                                                 <>
-                                                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/20 text-primary">
+                                                    <div className="flex size-12 items-center justify-center rounded-xl bg-primary/20 text-primary">
                                                         <span className="material-icons-round text-2xl">image</span>
                                                     </div>
                                                     <div className="text-center">
@@ -642,7 +642,7 @@ const ComplaintModal = ({
                                                 </>
                                             ) : (
                                                 <>
-                                                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                                                    <div className="flex size-12 items-center justify-center rounded-xl bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
                                                         <span className="material-icons-round text-2xl">add_a_photo</span>
                                                     </div>
                                                     <div className="text-center">
@@ -802,7 +802,7 @@ const TransferRequestModal = ({
                     >
                         <div className="absolute right-6 top-6 z-10">
                             <button onClick={onClose} className="rounded-full p-2 transition-colors hover:bg-muted text-muted-foreground">
-                                <X className="h-6 w-6" />
+                                <X className="size-6" />
                             </button>
                         </div>
 
@@ -3566,19 +3566,19 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                     />
 
                                                     <div
-                                                        className="absolute left-0 top-0 -translate-x-1/2 -translate-y-1/2 z-30 h-4 w-4 cursor-nwse-resize rounded-full border border-white bg-primary"
+                                                        className="absolute left-0 top-0 -translate-x-1/2 -translate-y-1/2 z-30 size-4 cursor-nwse-resize rounded-full border border-white bg-primary"
                                                         onPointerDown={handleCorridorResizeStart(corridor, "nw")}
                                                     />
                                                     <div
-                                                        className="absolute right-0 top-0 translate-x-1/2 -translate-y-1/2 z-30 h-4 w-4 cursor-nesw-resize rounded-full border border-white bg-primary"
+                                                        className="absolute right-0 top-0 translate-x-1/2 -translate-y-1/2 z-30 size-4 cursor-nesw-resize rounded-full border border-white bg-primary"
                                                         onPointerDown={handleCorridorResizeStart(corridor, "ne")}
                                                     />
                                                     <div
-                                                        className="absolute left-0 bottom-0 -translate-x-1/2 translate-y-1/2 z-30 h-4 w-4 cursor-nesw-resize rounded-full border border-white bg-primary"
+                                                        className="absolute left-0 bottom-0 -translate-x-1/2 translate-y-1/2 z-30 size-4 cursor-nesw-resize rounded-full border border-white bg-primary"
                                                         onPointerDown={handleCorridorResizeStart(corridor, "sw")}
                                                     />
                                                     <div
-                                                        className="absolute right-0 bottom-0 translate-x-1/2 translate-y-1/2 z-30 h-4 w-4 cursor-nwse-resize rounded-full border border-white bg-primary"
+                                                        className="absolute right-0 bottom-0 translate-x-1/2 translate-y-1/2 z-30 size-4 cursor-nwse-resize rounded-full border border-white bg-primary"
                                                         onPointerDown={handleCorridorResizeStart(corridor, "se")}
                                                     />
                                                 </>
@@ -3952,11 +3952,11 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                     <div className={`mx-auto h-full w-px ${isDark ? 'bg-neutral-500' : 'bg-zinc-400'}`}></div>
                                                 </div>
 
-                                                <div className={`absolute right-[8px] top-[8px] h-5 w-5 border ${isDark ? 'border-neutral-600 bg-neutral-700/70' : 'border-zinc-300 bg-zinc-50/70'}`}></div>
-                                                <div className={`absolute bottom-[8px] left-[8px] flex h-4 w-4 flex-col gap-0.5 border p-0.5 ${isDark ? 'border-neutral-600 bg-neutral-700/70' : 'border-zinc-300 bg-zinc-50/70'}`}>
+                                                <div className={`absolute right-[8px] top-[8px] size-5 border ${isDark ? 'border-neutral-600 bg-neutral-700/70' : 'border-zinc-300 bg-zinc-50/70'}`}></div>
+                                                <div className={`absolute bottom-[8px] left-[8px] flex size-4 flex-col gap-0.5 border p-0.5 ${isDark ? 'border-neutral-600 bg-neutral-700/70' : 'border-zinc-300 bg-zinc-50/70'}`}>
                                                     <div className={`h-full w-full border ${isDark ? 'border-neutral-700' : 'border-zinc-400/70'}`}></div>
                                                 </div>
-                                                <div className={`absolute bottom-[8px] right-[8px] flex h-4 w-4 flex-col gap-0.5 border p-0.5 ${isDark ? 'border-neutral-600 bg-neutral-700/70' : 'border-zinc-300 bg-zinc-50/70'}`}>
+                                                <div className={`absolute bottom-[8px] right-[8px] flex size-4 flex-col gap-0.5 border p-0.5 ${isDark ? 'border-neutral-600 bg-neutral-700/70' : 'border-zinc-300 bg-zinc-50/70'}`}>
                                                     <div className={`h-full w-full border ${isDark ? 'border-neutral-700' : 'border-zinc-400/70'}`}></div>
                                                 </div>
 
@@ -4673,7 +4673,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                         onClick={() => setIsInviteModalOpen(false)}
                                         className="rounded-full bg-white/10 p-2 text-white/50 backdrop-blur-xl transition-all hover:bg-white/20 hover:text-white"
                                     >
-                                        <X className="h-6 w-6" />
+                                        <X className="size-6" />
                                     </button>
                                 </div>
                                 <TenantInviteManager
@@ -5034,7 +5034,7 @@ const UnitDetailsPanel = ({
                                                     />
                                                 )}
                                             </div>
-                                            <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-4 border-white bg-emerald-500 shadow-sm dark:border-black"></div>
+                                            <div className="absolute -bottom-1 -right-1 size-5 rounded-full border-4 border-white bg-emerald-500 shadow-sm dark:border-black"></div>
                                         </div>
                                     </div>
                                     <div className="flex-1">
@@ -5045,7 +5045,7 @@ const UnitDetailsPanel = ({
                                             <span className="text-[11px] font-bold text-primary tracking-wide">ID-{unit.id.slice(0, 5).toUpperCase()}</span>
                                         </div>
                                     </div>
-                                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-zinc-100 text-zinc-400 group-hover:bg-primary/10 group-hover:text-primary dark:bg-black/40">
+                                    <div className="flex size-10 items-center justify-center rounded-2xl bg-zinc-100 text-zinc-400 group-hover:bg-primary/10 group-hover:text-primary dark:bg-black/40">
                                         <span className="material-icons-round text-xl">more_vert</span>
                                     </div>
                                 </div>
@@ -5063,7 +5063,7 @@ const UnitDetailsPanel = ({
                                             href={`/landlord/messages?unitId=${encodeURIComponent(unit.id)}`}
                                             className="flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-sm font-black text-zinc-700 transition-all hover:bg-primary/10 hover:text-primary dark:text-zinc-200"
                                         >
-                                            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                                            <div className="flex size-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
                                                 <span className="material-icons-round text-base">chat_bubble</span>
                                             </div>
                                             Message Resident
@@ -5073,7 +5073,7 @@ const UnitDetailsPanel = ({
                                                 href={tenantProfileHref}
                                                 className="flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-sm font-black text-zinc-700 transition-all hover:bg-primary/10 hover:text-primary dark:text-zinc-200"
                                             >
-                                                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
+                                                <div className="flex size-8 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
                                                     <span className="material-icons-round text-base">person</span>
                                                 </div>
                                                 Access Portfolio
@@ -5083,7 +5083,7 @@ const UnitDetailsPanel = ({
                                                 title="No tenant identity available for this unit yet."
                                                 className="flex w-full cursor-not-allowed items-center gap-3 rounded-2xl px-4 py-3.5 text-sm font-black text-zinc-400 dark:text-zinc-600"
                                             >
-                                                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-zinc-100 text-zinc-300 dark:bg-white/5">
+                                                <div className="flex size-8 items-center justify-center rounded-xl bg-zinc-100 text-zinc-300 dark:bg-white/5">
                                                     <span className="material-icons-round text-base">person_off</span>
                                                 </div>
                                                 Access Portfolio
@@ -5104,7 +5104,7 @@ const UnitDetailsPanel = ({
                                 onClick={onOpenWalkIn}
                                 className="flex w-full items-center justify-center gap-3 rounded-[32px] border-2 border-dashed border-primary/30 bg-primary/5 p-8 text-[11px] font-black tracking-[0.2em] text-primary transition-all hover:border-primary/50"
                             >
-                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                                <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                                     <span className="material-icons-round text-2xl">person_add</span>
                                 </div>
                                 START WALK-IN APPLICATION
@@ -5114,7 +5114,7 @@ const UnitDetailsPanel = ({
                                 <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-indigo-500/10 blur-2xl transition-all group-hover:bg-indigo-500/20" />
                                 <div className="flex items-center justify-between mb-4">
                                     <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-400">INVITE RESIDENT</h3>
-                                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-500 text-white">
+                                    <div className="flex size-8 items-center justify-center rounded-xl bg-indigo-500 text-white">
                                         <span className="material-icons-round text-lg">qr_code_2</span>
                                     </div>
                                 </div>
@@ -5145,7 +5145,7 @@ const UnitDetailsPanel = ({
                             >
                                 <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-rose-500/10 blur-2xl transition-all group-hover:bg-rose-500/20" />
                                 <div className="flex items-start gap-5">
-                                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-rose-500 text-white shadow-lg shadow-rose-500/30">
+                                    <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-rose-500 text-white shadow-lg shadow-rose-500/30">
                                         <span className="material-icons-round animate-pulse text-2xl">engineering</span>
                                     </div>
                                     <div className="flex-1">
@@ -5233,7 +5233,7 @@ const UnitDetailsPanel = ({
 
                                     <div className="mt-6 w-full rounded-2xl bg-zinc-50 p-4 dark:bg-black/20">
                                         <div className="flex items-center gap-3">
-                                            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white shadow-sm dark:bg-zinc-800">
+                                            <div className="flex size-8 items-center justify-center rounded-xl bg-white shadow-sm dark:bg-zinc-800">
                                                 <span className="material-icons-round text-sm text-primary">insights</span>
                                             </div>
                                             <p className="text-[11px] font-bold leading-tight text-zinc-600 dark:text-zinc-400">
@@ -5253,7 +5253,7 @@ const UnitDetailsPanel = ({
                         <div className="grid grid-cols-1 gap-3">
                             {unit.applicationCount && unit.applicationCount > 0 ? (
                                 <div className="flex items-center gap-4 rounded-[24px] border border-zinc-200 bg-white p-4 dark:border-white/5 dark:bg-zinc-900/40">
-                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500">
+                                    <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500">
                                         <span className="material-icons-round text-xl">assignment_ind</span>
                                     </div>
                                     <div className="flex-1">
@@ -5268,7 +5268,7 @@ const UnitDetailsPanel = ({
                                 className="flex items-center gap-4 rounded-[24px] border border-zinc-200 bg-white p-4 dark:border-white/5 dark:bg-zinc-900/40 cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition-colors"
                                 onClick={onOpenHistory}
                             >
-                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
+                                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
                                     <span className="material-icons-round text-xl">history</span>
                                 </div>
                                 <div className="flex-1">
@@ -5293,7 +5293,7 @@ const UnitDetailsPanel = ({
                                     onClick={() => handleQuickAction(action)}
                                     className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-white/10 p-4 text-[11px] font-black text-white transition-all hover:shadow-xl hover:shadow-black/20"
                                 >
-                                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10">
+                                    <div className="flex size-10 items-center justify-center rounded-xl bg-white/10">
                                         <span className="material-icons-round text-xl">{QUICK_ACTION_META[action].icon}</span>
                                     </div>
                                     {QUICK_ACTION_META[action].label.toUpperCase()}
@@ -5606,7 +5606,7 @@ const SidebarBlockLibrary = ({
                             onDragStart={onDragStart("elevator")}
                             onDragEnd={handleSidebarBlockDragEnd}
                         >
-                            <div className={`flex h-8 w-8 items-center justify-center rounded ${isDark ? 'bg-neutral-700' : 'bg-zinc-200'}`}>
+                            <div className={`flex size-8 items-center justify-center rounded ${isDark ? 'bg-neutral-700' : 'bg-zinc-200'}`}>
                                 <span className={`material-icons-round text-sm ${isDark ? 'text-zinc-300' : 'text-zinc-500'}`}>elevator</span>
                             </div>
                             <div className="text-center"><p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>Elevator</p></div>
@@ -5639,7 +5639,7 @@ const SidebarBlockLibrary = ({
                             onDragStart={onDragStart("stair-l")}
                             onDragEnd={handleSidebarBlockDragEnd}
                         >
-                            <div className={`relative h-8 w-8 rounded ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-zinc-400 bg-zinc-200'}`}>
+                            <div className={`relative size-8 rounded ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-zinc-400 bg-zinc-200'}`}>
                                 <div className={`absolute top-0 right-0 h-1/2 w-1/2 border-l border-b ${isDark ? 'border-neutral-400' : 'border-zinc-400'}`}></div>
                                 <div className={`absolute bottom-0 right-0 flex h-1/2 w-1/2 flex-col justify-evenly border-l ${isDark ? 'border-neutral-400' : 'border-zinc-400'}`}>
                                     {[...Array(3)].map((_, i) => <div key={i} className={`h-px w-full ${isDark ? 'bg-neutral-400' : 'bg-zinc-400'}`}></div>)}
@@ -5658,7 +5658,7 @@ const SidebarBlockLibrary = ({
                             onDragStart={onDragStart("stair-u")}
                             onDragEnd={handleSidebarBlockDragEnd}
                         >
-                            <div className={`relative h-8 w-8 rounded ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-zinc-400 bg-zinc-200'}`}>
+                            <div className={`relative size-8 rounded ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-zinc-400 bg-zinc-200'}`}>
                                 <div className={`absolute top-0 left-0 right-0 h-[30%] border-b ${isDark ? 'border-neutral-400' : 'border-zinc-400'}`}></div>
                                 <div className={`absolute top-[30%] bottom-0 left-1/2 w-0.5 -translate-x-1/2 ${isDark ? 'bg-neutral-400' : 'bg-zinc-400'}`}></div>
                                 <div className={`absolute top-[30%] bottom-0 left-0 right-1/2 flex flex-col justify-evenly border-r ${isDark ? 'border-neutral-400' : 'border-zinc-400'}`}>
@@ -5678,7 +5678,7 @@ const SidebarBlockLibrary = ({
                             onDragStart={onDragStart("stair-spiral")}
                             onDragEnd={handleSidebarBlockDragEnd}
                         >
-                            <div className={`relative flex h-8 w-8 items-center justify-center rounded-full ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-zinc-400 bg-zinc-200'}`}>
+                            <div className={`relative flex size-8 items-center justify-center rounded-full ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-zinc-400 bg-zinc-200'}`}>
                                 <div className={`h-2 w-2 rounded-full ${isDark ? 'border border-neutral-400' : 'border border-zinc-400'}`}></div>
                                 {[0, 45, 90, 135, 180, 225, 270, 315].map(deg => (
                                     <div key={deg} className={`absolute inset-0 border-t ${isDark ? 'border-neutral-400/50' : 'border-zinc-400/50'}`} style={{ transform: `rotate(${deg}deg)` }}></div>
@@ -5741,7 +5741,7 @@ const SidebarBlockLibrary = ({
                                     : isDark ? 'border-rose-800/40 bg-rose-950/20 text-rose-300 hover:bg-rose-900/40' : 'border-rose-200 bg-rose-50 text-rose-700 hover:border-rose-300 hover:bg-rose-100'
                             }`}
                         >
-                            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${activeFloorItemCount === 0 ? 'bg-zinc-200 dark:bg-zinc-800' : 'bg-rose-100 dark:bg-rose-900/40'}`}>
+                            <div className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${activeFloorItemCount === 0 ? 'bg-zinc-200 dark:bg-zinc-800' : 'bg-rose-100 dark:bg-rose-900/40'}`}>
                                 <span className="material-icons-round text-xl">layers_clear</span>
                             </div>
                             <div className="flex-1">
@@ -5762,6 +5762,7 @@ const HotkeyItem = ({ label, shortcut }: { label: string; shortcut: string }) =>
         <kbd className="px-2 py-1 rounded-md bg-white/10 border border-white/10 text-[10px] font-black text-primary font-mono shadow-sm">{shortcut}</kbd>
     </div>
 );
+
 
 
 

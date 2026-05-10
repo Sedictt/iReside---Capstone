@@ -99,7 +99,7 @@ export function OperationalSnapshotCard({
                                             <p className="mt-2 text-3xl font-black tracking-tight">{metric.value}</p>
                                         </div>
                                         <div className="rounded-xl bg-card/50 p-2.5 text-current shadow-sm border border-border">
-                                            <Icon className="h-4 w-4" />
+                                            <Icon className="size-4" />
                                         </div>
                                     </div>
                                     <p className="relative z-10 mt-5 text-[11px] font-bold uppercase tracking-wider opacity-70">{metric.detail}</p>

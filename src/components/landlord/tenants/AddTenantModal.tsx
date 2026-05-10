@@ -207,7 +207,7 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                     onClick={onClose}
                                     className="rounded-2xl bg-muted p-3 text-muted-foreground transition-all hover:bg-red-500/10 hover:text-red-500"
                                 >
-                                    <X className="h-5 w-5" />
+                                    <X className="size-5" />
                                 </button>
                             </div>
 
@@ -240,14 +240,14 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                             {/* Tenant Info Section */}
                                             <div className="space-y-6">
                                                 <h3 className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-primary">
-                                                    <User className="h-4 w-4" />
+                                                    <User className="size-4" />
                                                     Resident Profile
                                                 </h3>
                                                 
                                                 <div className="space-y-2">
                                                     <label htmlFor="fullName" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Full Name</label>
                                                     <div className="relative">
-                                                        <User className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/40" />
+                                                        <User className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40" />
                                                         <input
                                                             id="fullName"
                                                             required
@@ -263,7 +263,7 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                                 <div className="space-y-2">
                                                     <label htmlFor="email" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Email Address</label>
                                                     <div className="relative">
-                                                        <Mail className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/40" />
+                                                        <Mail className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40" />
                                                         <input
                                                             id="email"
                                                             required
@@ -279,7 +279,7 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                                 <div className="space-y-2">
                                                     <label htmlFor="phone" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Phone Number</label>
                                                     <div className="relative">
-                                                        <Phone className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/40" />
+                                                        <Phone className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40" />
                                                         <input
                                                             id="phone"
                                                             required
@@ -296,14 +296,14 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                             {/* Lease Info Section */}
                                             <div className="space-y-6">
                                                 <h3 className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-primary">
-                                                    <Building2 className="h-4 w-4" />
+                                                    <Building2 className="size-4" />
                                                     Lease Agreement
                                                 </h3>
 
                                                 <div className="space-y-2">
                                                     <label htmlFor="propertyId" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Property</label>
                                                     <div className="relative">
-                                                        <Building2 className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/40" />
+                                                        <Building2 className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40" />
                                                         <select
                                                             id="propertyId"
                                                             required
@@ -322,7 +322,7 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                                 <div className="space-y-2">
                                                     <label htmlFor="unitId" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Unit</label>
                                                     <div className="relative">
-                                                        <Home className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/40" />
+                                                        <Home className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40" />
                                                         <select
                                                             id="unitId"
                                                             required
@@ -411,7 +411,7 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                             >
                                                 {loading ? (
                                                     <div className="flex items-center justify-center gap-2">
-                                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                                        <Loader2 className="size-4 animate-spin" />
                                                         <span>Registering Resident...</span>
                                                     </div>
                                                 ) : 'Register Resident'}
@@ -421,8 +421,8 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                 ) : (
                                     <div className="space-y-8">
                                         <div className="rounded-[2rem] border border-primary/20 bg-primary/5 p-6 text-center">
-                                            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-                                                <Sparkles className="h-6 w-6" />
+                                            <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+                                                <Sparkles className="size-6" />
                                             </div>
                                             <h3 className="text-lg font-black text-foreground">Self-Onboarding Link</h3>
                                             <p className="mt-1 text-sm text-muted-foreground">Residents can register their current lease details via this link.</p>
@@ -432,7 +432,7 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                             <div className="space-y-2">
                                                 <label htmlFor="invitePropertyId" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Target Property</label>
                                                 <div className="relative">
-                                                    <Building2 className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/40" />
+                                                    <Building2 className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40" />
                                                     <select
                                                         id="invitePropertyId"
                                                         required
@@ -451,7 +451,7 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                             <div className="space-y-2">
                                                 <label htmlFor="expiresAt" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Expiration (Optional)</label>
                                                 <div className="relative">
-                                                    <Calendar className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/40" />
+                                                    <Calendar className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40" />
                                                     <input
                                                         id="expiresAt"
                                                         type="date"
@@ -478,7 +478,7 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                             >
                                                 {loading ? (
                                                     <div className="flex items-center justify-center gap-2">
-                                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                                        <Loader2 className="size-4 animate-spin" />
                                                         <span>Generating Link...</span>
                                                     </div>
                                                 ) : 'Generate Onboarding Link'}
@@ -493,7 +493,7 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                             {successData ? (
                                 <>
                                     <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500">
-                                        <CheckCircle2 className="h-10 w-10" />
+                                        <CheckCircle2 className="size-10" />
                                     </div>
                                     <h2 className="text-2xl font-black text-foreground">Resident Registered!</h2>
                                     <p className="mt-2 text-muted-foreground">The resident has been successfully added to the system.</p>
@@ -501,7 +501,7 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                     {successData.tempPassword ? (
                                         <div className="mt-8 rounded-[2rem] border border-border bg-muted/30 p-8">
                                             <div className="mb-4 flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground/60">
-                                                <AlertCircle className="h-4 w-4" />
+                                                <AlertCircle className="size-4" />
                                                 <span>Temporary Credentials</span>
                                             </div>
                                             <div className="space-y-4">
@@ -511,7 +511,7 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                                         <p className="text-sm font-bold text-foreground">{successData.email}</p>
                                                     </div>
                                                     <button onClick={() => copyToClipboard(successData.email)} className="p-2 text-muted-foreground hover:text-primary">
-                                                        <Copy className="h-4 w-4" />
+                                                        <Copy className="size-4" />
                                                     </button>
                                                 </div>
                                                 <div className="flex items-center justify-between rounded-2xl bg-background p-4 border border-border">
@@ -520,7 +520,7 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                                         <p className="font-mono text-lg font-black text-primary tracking-wider">{successData.tempPassword}</p>
                                                     </div>
                                                     <button onClick={() => copyToClipboard(successData.tempPassword!)} className="p-2 text-muted-foreground hover:text-primary">
-                                                        <Copy className="h-4 w-4" />
+                                                        <Copy className="size-4" />
                                                     </button>
                                                 </div>
                                             </div>
@@ -534,7 +534,7 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                             ) : inviteResult && (
                                 <>
                                     <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-primary">
-                                        <QrCode className="h-10 w-10" />
+                                        <QrCode className="size-10" />
                                     </div>
                                     <h2 className="text-2xl font-black text-foreground">Onboarding Link Ready</h2>
                                     <p className="mt-2 text-muted-foreground">Share this with your residents to start self-onboarding.</p>
@@ -559,10 +559,10 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                             </div>
                                             <div className="flex gap-2">
                                                 <button onClick={() => copyToClipboard(inviteResult.shareUrl)} className="p-2 text-muted-foreground hover:text-primary">
-                                                    <Copy className="h-4 w-4" />
+                                                    <Copy className="size-4" />
                                                 </button>
                                                 <button className="p-2 text-muted-foreground hover:text-primary">
-                                                    <Share2 className="h-4 w-4" />
+                                                    <Share2 className="size-4" />
                                                 </button>
                                             </div>
                                         </div>
@@ -583,4 +583,5 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
         </AnimatePresence>
     )
 }
+
 

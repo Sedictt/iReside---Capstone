@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 
 import { expireInPersonIntents } from "@/lib/billing/workflow";
 import { getInvoiceDetailForActor } from "@/lib/billing/server";
+import { requireUser } from "@/lib/supabase/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
 
 type RouteContext = {
     params: Promise<{ id: string }>;
@@ -11,16 +11,8 @@ type RouteContext = {
 
 export async function GET(_: Request, context: RouteContext) {
     const { id } = await context.params;
-    const supabase = await createClient();
+    const { user, supabase } = await requireUser();
     const adminClient = createAdminClient();
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     try {
         // Parallelize: expireInPersonIntents and getInvoiceDetailForActor are independent

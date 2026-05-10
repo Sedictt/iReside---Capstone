@@ -110,8 +110,8 @@ export function LandlordQuestBoard({ isOpen, onClose }: LandlordQuestBoardProps)
                             {/* Header */}
                             <div className="flex items-center justify-between border-b border-white/5 p-8">
                                 <div className="flex items-center gap-4">
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
-                                        <Rocket className="h-6 w-6" />
+                                    <div className="flex size-12 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
+                                        <Rocket className="size-6" />
                                     </div>
                                     <div>
                                         <h2 className="text-xl font-black tracking-tight text-foreground">Mission Control</h2>
@@ -120,9 +120,9 @@ export function LandlordQuestBoard({ isOpen, onClose }: LandlordQuestBoardProps)
                                 </div>
                                 <button
                                     onClick={onClose}
-                                    className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/5 text-muted-foreground transition-all hover:bg-white/10 hover:text-foreground"
+                                    className="flex size-10 items-center justify-center rounded-xl bg-white/5 text-muted-foreground transition-all hover:bg-white/10 hover:text-foreground"
                                 >
-                                    <X className="h-5 w-5" />
+                                    <X className="size-5" />
                                 </button>
                             </div>
 
@@ -149,15 +149,15 @@ export function LandlordQuestBoard({ isOpen, onClose }: LandlordQuestBoardProps)
                                             >
                                                 <div className="flex items-start justify-between mb-4">
                                                     <div className={cn(
-                                                        "flex h-10 w-10 items-center justify-center rounded-xl transition-all",
+                                                        "flex size-10 items-center justify-center rounded-xl transition-all",
                                                         isDone 
                                                             ? "bg-emerald-500/20 text-emerald-500" 
                                                             : "bg-surface-2 text-muted-foreground group-hover:bg-primary/20 group-hover:text-primary"
                                                     )}>
-                                                        <Icon className="h-5 w-5" />
+                                                        <Icon className="size-5" />
                                                     </div>
                                                     {isDone ? (
-                                                        <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                                                        <CheckCircle2 className="size-5 text-emerald-500" />
                                                     ) : (
                                                         <span className="text-[10px] font-black tracking-widest text-primary bg-primary/10 px-2 py-1 rounded-lg">
                                                             {progress}%
@@ -194,7 +194,7 @@ export function LandlordQuestBoard({ isOpen, onClose }: LandlordQuestBoardProps)
                                                         )}
                                                     >
                                                         {isDone ? "Review" : "Start Mission"}
-                                                        <ArrowRight className="h-3.5 w-3.5" />
+                                                        <ArrowRight className="size-[0.875rem]" />
                                                     </button>
                                                 </div>
                                             </motion.div>
@@ -206,7 +206,7 @@ export function LandlordQuestBoard({ isOpen, onClose }: LandlordQuestBoardProps)
                             {/* Footer */}
                             <div className="border-t border-white/5 p-8 bg-white/2">
                                 <div className="flex items-center gap-4 text-muted-foreground/60">
-                                    <Layout className="h-4 w-4" />
+                                    <Layout className="size-4" />
                                     <p className="text-[10px] font-medium leading-relaxed">
                                         Complete all missions to unlock advanced platform capabilities and professional badges.
                                     </p>

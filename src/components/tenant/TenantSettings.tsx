@@ -127,7 +127,7 @@ function ToggleSwitch({ enabled, onToggle, size = "default" }: { enabled: boolea
             <span
                 className={cn(
                     "inline-block transform rounded-full bg-white shadow-sm transition-all duration-300",
-                    isSmall ? "h-3 w-3" : "h-4 w-4",
+                    isSmall ? "h-3 w-3" : "size-4",
                     enabled
                         ? isSmall ? "translate-x-5" : "translate-x-6"
                         : "translate-x-1"
@@ -498,7 +498,7 @@ export function TenantSettings() {
                         disabled={isSaving}
                         className="flex items-center gap-2 rounded-2xl bg-primary px-8 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
                     >
-                        {isSaving ? "Saving..." : <><Save className="h-5 w-5" /> Save Changes</>}
+                        {isSaving ? "Saving..." : <><Save className="size-5" /> Save Changes</>}
                     </button>
                 </div>
 
@@ -535,7 +535,7 @@ export function TenantSettings() {
                                             onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                                             className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-white transition-colors"
                                         >
-                                            {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                            {showCurrentPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                                         </button>
                                     </div>
                                 </SettingField>
@@ -552,7 +552,7 @@ export function TenantSettings() {
                                             onClick={() => setShowNewPassword(!showNewPassword)}
                                             className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-white transition-colors"
                                         >
-                                            {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                            {showNewPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                                         </button>
                                     </div>
                                 </SettingField>
@@ -614,15 +614,15 @@ export function TenantSettings() {
                             {twoFAStatus === 'loading' ? (
                                 <div className="flex items-center justify-center py-12">
                                     <div className="relative flex items-center justify-center">
-                                        <div className="absolute h-12 w-12 animate-ping rounded-full bg-primary/20"></div>
-                                        <div className="relative h-12 w-12 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+                                        <div className="absolute size-12 animate-ping rounded-full bg-primary/20"></div>
+                                        <div className="relative size-12 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
                                     </div>
                                 </div>
                             ) : twoFAStatus === 'enabled' ? (
                                 <div className="space-y-6 max-w-lg">
                                     <div className="flex items-center gap-4 p-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/10">
-                                        <div className="h-10 w-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-                                            <ShieldCheck className="h-5 w-5 text-emerald-500" />
+                                        <div className="size-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                                            <ShieldCheck className="size-5 text-emerald-500" />
                                         </div>
                                         <div>
                                             <p className="text-sm font-bold text-white">2FA is Active</p>
@@ -676,7 +676,7 @@ export function TenantSettings() {
                                                     : "border-white/5 bg-white/5 hover:bg-white/10"
                                             )}>
                                                 <div className="flex items-center gap-4">
-                                                    <Icon className={cn("h-5 w-5", isCurrent ? "text-primary" : "text-neutral-400")} />
+                                                    <Icon className={cn("size-5", isCurrent ? "text-primary" : "text-neutral-400")} />
                                                     <div>
                                                         <h4 className="text-sm font-semibold text-white">{browser} on {os}</h4>
                                                         <p className="text-[10px] text-neutral-500 uppercase tracking-wider">
@@ -822,8 +822,8 @@ export function TenantSettings() {
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between p-4 rounded-2xl border border-primary/20 bg-primary/5">
                                         <div className="flex items-center gap-3">
-                                            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                                                <Wallet className="h-5 w-5 text-primary" />
+                                            <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                                                <Wallet className="size-5 text-primary" />
                                             </div>
                                             <div>
                                                 <p className="text-sm font-medium text-white">GCash (E-Wallet)</p>
@@ -834,7 +834,7 @@ export function TenantSettings() {
                                     </div>
                                     
                                     <button className="flex items-center justify-center gap-2 w-full p-4 rounded-2xl border border-dashed border-white/10 text-sm text-neutral-500 hover:text-white hover:border-white/20 transition-all">
-                                        <Plus className="h-4 w-4" /> Add Payment Method
+                                        <Plus className="size-4" /> Add Payment Method
                                     </button>
                                 </div>
                             </GlassCard>
@@ -852,8 +852,8 @@ export function TenantSettings() {
                                 ].map((item) => (
                                     <div key={item.receipt} className="flex items-center justify-between p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-colors group">
                                         <div className="flex items-center gap-4">
-                                            <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                                                <CheckCircle className="h-5 w-5 text-emerald-500" />
+                                            <div className="size-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                                                <CheckCircle className="size-5 text-emerald-500" />
                                             </div>
                                             <div>
                                                 <p className="text-sm font-medium text-white">{item.receipt}</p>
@@ -863,7 +863,7 @@ export function TenantSettings() {
                                         <div className="flex items-center gap-4">
                                             <span className="text-sm font-bold text-white">{item.amount}</span>
                                             <button className="opacity-0 group-hover:opacity-100 text-xs text-primary hover:text-primary/80 font-medium transition-all">
-                                                <Download className="h-4 w-4" />
+                                                <Download className="size-4" />
                                             </button>
                                         </div>
                                     </div>
@@ -916,10 +916,10 @@ export function TenantSettings() {
                                         { icon: Mail, label: "Communications", desc: "Messages and requests" },
                                     ].map((item) => (
                                         <label key={item.label} className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 cursor-pointer transition-colors group">
-                                            <input type="checkbox" defaultChecked className="accent-primary h-4 w-4" />
+                                            <input type="checkbox" defaultChecked className="accent-primary size-4" />
                                             <div className="flex items-center gap-3 flex-1">
-                                                <div className="h-8 w-8 rounded-lg bg-white/5 flex items-center justify-center">
-                                                    <item.icon className="h-4 w-4 text-neutral-400 group-hover:text-primary transition-colors" />
+                                                <div className="size-8 rounded-lg bg-white/5 flex items-center justify-center">
+                                                    <item.icon className="size-4 text-neutral-400 group-hover:text-primary transition-colors" />
                                                 </div>
                                                 <div>
                                                     <p className="text-sm font-medium text-white">{item.label}</p>
@@ -935,7 +935,7 @@ export function TenantSettings() {
                                         <Info className="h-3 w-3" /> Export may take up to 24 hours to process.
                                     </p>
                                     <button className="flex items-center gap-2 rounded-2xl bg-primary px-6 py-3 text-sm font-bold text-white transition-all hover:bg-primary/90">
-                                        <Download className="h-4 w-4" /> Request Export
+                                        <Download className="size-4" /> Request Export
                                     </button>
                                 </div>
                             </div>
@@ -946,8 +946,8 @@ export function TenantSettings() {
                         <GlassCard className="border-red-500/20 bg-red-500/5 hover:bg-red-500/10" title="Danger Zone" description="Irreversible account actions.">
                             <div className="space-y-6 max-w-lg">
                                 <div className="flex items-start gap-4">
-                                    <div className="h-12 w-12 rounded-xl bg-red-500/10 flex items-center justify-center flex-shrink-0">
-                                        <AlertTriangle className="h-6 w-6 text-red-500" />
+                                    <div className="size-12 rounded-xl bg-red-500/10 flex items-center justify-center flex-shrink-0">
+                                        <AlertTriangle className="size-6 text-red-500" />
                                     </div>
                                     <div>
                                         <h4 className="text-base font-semibold text-red-400">Delete Account</h4>
@@ -1065,8 +1065,8 @@ export function TenantSettings() {
             {/* Sidebar */}
             <div className="w-full lg:w-80 flex-shrink-0 space-y-6">
                 <div className="flex items-center gap-4 px-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-[1.2rem] bg-primary/20 text-primary border border-primary/20">
-                        <Layout className="h-6 w-6" />
+                    <div className="flex size-12 items-center justify-center rounded-[1.2rem] bg-primary/20 text-primary border border-primary/20">
+                        <Layout className="size-6" />
                     </div>
                     <div>
                         <h1 className="text-xl font-black text-white">Settings</h1>
@@ -1090,7 +1090,7 @@ export function TenantSettings() {
                                 )}
                             >
                                 <div className="flex w-full items-center justify-between">
-                                    <Icon className={cn("h-5 w-5 transition-transform duration-500", isActive && "scale-110")} />
+                                    <Icon className={cn("size-5 transition-transform duration-500", isActive && "scale-110")} />
                                     {isActive && (
                                         <motion.div 
                                             layoutId="active-indicator"
@@ -1131,3 +1131,4 @@ export function TenantSettings() {
         </div>
     );
 }
+

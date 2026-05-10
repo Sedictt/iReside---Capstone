@@ -201,7 +201,7 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
                         
                         <div className="relative z-10 mb-8">
                             <div 
-                                className="h-40 w-40 rounded-[2.5rem] p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] ring-1 ring-white/10 overflow-hidden relative transition-all duration-700 ease-out group-hover:scale-105"
+                                className="size-40 rounded-[2.5rem] p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] ring-1 ring-white/10 overflow-hidden relative transition-all duration-700 ease-out group-hover:scale-105"
                                 style={{ backgroundColor: selectedColor }}
                             >
                                 {selectedAvatar ? (
@@ -235,7 +235,7 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
                                 disabled={isUpdating || !selectedAvatar || loading}
                                 className="group relative w-full flex items-center justify-center gap-3 rounded-2xl bg-primary px-6 py-4 text-[11px] font-black uppercase tracking-[0.2em] text-primary-foreground shadow-[0_15px_30px_-5px_rgba(var(--primary-rgb),0.3)] transition-all hover:scale-[1.02] hover:shadow-[0_20px_40px_-5px_rgba(var(--primary-rgb),0.4)] active:scale-95 disabled:opacity-50 overflow-hidden"
                             >
-                                {isUpdating || (loading && !profile) ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                                {isUpdating || (loading && !profile) ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
                                 <span>{isUpdating ? "Saving..." : (loading && !profile ? "Loading..." : "Save Profile")}</span>
                             </button>
                             <button
@@ -286,7 +286,7 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
                                             {currentPage === 0 && (
                                                 <label className="group relative aspect-square flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-white/20 bg-white/[0.02] transition-all hover:border-primary/40 hover:bg-primary/5 active:scale-95">
                                                     <input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} disabled={isUploading} />
-                                                    {isUploading ? <Loader2 className="h-5 w-5 animate-spin text-primary" /> : <Upload className="h-4 w-4 text-zinc-500 group-hover:text-primary transition-colors" />}
+                                                    {isUploading ? <Loader2 className="size-5 animate-spin text-primary" /> : <Upload className="size-4 text-zinc-500 group-hover:text-primary transition-colors" />}
                                                 </label>
                                             )}
 
@@ -305,7 +305,7 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
                                                         {isSelected && (
                                                             <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
                                                                 <div className="bg-primary rounded-full p-1 shadow-xl border border-white/20">
-                                                                    <Check className="h-3 w-3 text-white" />
+                                                                    <Check className="size-3 text-white" />
                                                                 </div>
                                                             </div>
                                                         )}
@@ -322,7 +322,7 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
                                         disabled={currentPage === 0}
                                         className="p-1.5 rounded-full bg-[#171717] border border-white/10 hover:bg-white/5 disabled:opacity-0 transition-all shadow-xl"
                                     >
-                                        <ChevronLeft className="h-4 w-4" />
+                                        <ChevronLeft className="size-4" />
                                     </button>
                                 </div>
                                 <div className="absolute inset-y-0 -right-2 flex items-center">
@@ -331,7 +331,7 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
                                         disabled={currentPage === totalPages - 1}
                                         className="p-1.5 rounded-full bg-[#171717] border border-white/10 hover:bg-white/5 disabled:opacity-0 transition-all shadow-xl"
                                     >
-                                        <ChevronRight className="h-4 w-4" />
+                                        <ChevronRight className="size-4" />
                                     </button>
                                 </div>
                             </div>
@@ -389,7 +389,7 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
                                             >
                                                 {selectedColor === color && (
                                                     <div className="absolute inset-0 flex items-center justify-center">
-                                                        <Check className="h-3 w-3 text-white drop-shadow-md" />
+                                                        <Check className="size-3 text-white drop-shadow-md" />
                                                     </div>
                                                 )}
                                             </button>
@@ -401,23 +401,23 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
                     </div>
                 </motion.div>
                 
-                <style jsx global>{`
+                <style>{`
                     .custom-color-picker-container .react-colorful {
                         width: 100% !important;
-                        height: 160px !important;
+                        height: 180px !important;
+                        border-radius: 16px !important;
                     }
                     .custom-color-picker-container .react-colorful__saturation {
-                        border-radius: 1rem 1rem 0 0 !important;
+                        border-bottom: none !important;
+                        border-radius: 16px 16px 0 0 !important;
                     }
                     .custom-color-picker-container .react-colorful__hue {
-                        height: 8px !important;
-                        border-radius: 0 0 1rem 1rem !important;
-                        margin-top: 6px !important;
+                        height: 14px !important;
+                        border-radius: 0 0 16px 16px !important;
                     }
                     .custom-color-picker-container .react-colorful__pointer {
-                        width: 16px !important;
-                        height: 16px !important;
-                        border: 2px solid white !important;
+                        width: 20px !important;
+                        height: 20px !important;
                     }
                 `}</style>
             </div>

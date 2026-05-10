@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/supabase/auth";
 import type { MaintenancePriority, MaintenanceStatus } from "@/types/database";
 import {
     buildHeuristicMaintenanceTriage,
@@ -181,20 +182,13 @@ const formatRelativeDate = (value: string) => {
 };
 
 export async function GET(request: Request) {
+    const { user } = await requireUser();
     const { searchParams } = new URL(request.url);
     const propertyId = searchParams.get("propertyId");
 
     const supabase = await createClient();
+
     const maintenanceRequests = supabase.from("maintenance_requests") as any;
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     let query = maintenanceRequests
         .select(
             "id, unit_id, tenant_id, title, description, status, priority, category, images, self_repair_requested, self_repair_decision, photo_requested, tenant_repair_status, tenant_provided_photos, repair_method, third_party_name, resolved_at, created_at, ai_triage_priority, ai_triage_sentiment, ai_triage_reason, ai_triage_confidence, ai_triage_hash, ai_triage_version, ai_triaged_at"
@@ -512,15 +506,8 @@ type LandlordMaintenancePatchBody = {
 };
 
 export async function PATCH(request: Request) {
+    const { user } = await requireUser();
     const supabase = await createClient();
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     const body = (await request.json()) as LandlordMaintenancePatchBody;
     if (!isNonEmptyString(body.requestId)) {

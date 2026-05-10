@@ -228,7 +228,7 @@ export function TenantProductTourOverlay() {
                         onClick={() => router.push(activeStep.route)}
                         className="inline-flex items-center gap-2 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-black"
                     >
-                        <MapPinned className="h-4 w-4" />
+                        <MapPinned className="size-4" />
                         Go to step
                     </button>
                     <button
@@ -237,7 +237,7 @@ export function TenantProductTourOverlay() {
                         disabled={submitting}
                         className="inline-flex items-center gap-2 rounded-xl border border-white/20 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
                     >
-                        <SkipForward className="h-4 w-4" />
+                        <SkipForward className="size-4" />
                         Skip
                     </button>
                 </div>
@@ -313,3 +313,4 @@ export function TenantProductTourOverlay() {
         </>
     );
 }
+

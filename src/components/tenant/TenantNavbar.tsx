@@ -188,7 +188,7 @@ export function TenantSidebar() {
                                             : "text-muted-foreground hover:text-foreground"
                                     )}
                                 >
-                                    <item.icon className={cn("h-5 w-5", active ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
+                                    <item.icon className={cn("size-5", active ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
                                     <span className="flex-1">{item.label}</span>
                                     {((item.href === '/tenant/lease' && (isUrgent('lease') || isUrgent('lease_renewal_request'))) ||
                                       (item.href === '/tenant/maintenance' && isUrgent('maintenance')) ||
@@ -222,10 +222,10 @@ export function TenantSidebar() {
                                 )}
                                 aria-label="Notifications"
                             >
-                                <Bell className="h-4 w-4" />
+                                <Bell className="size-4" />
                                 {unreadCount > 0 && (
                                     <span className={cn(
-                                        "absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full text-[8px] font-bold",
+                                        "absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full text-[8px] font-bold",
                                         isNotificationsOpen ? "bg-background text-primary" : "bg-primary text-primary-foreground"
                                     )}>
                                         {unreadCount > 9 ? "9+" : unreadCount}
@@ -260,7 +260,7 @@ export function TenantSidebar() {
                             className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground"
                             aria-label="Toggle tenant navigation"
                         >
-                            {isMobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                            {isMobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
                         </button>
                     </div>
                 </div>
@@ -285,7 +285,7 @@ export function TenantSidebar() {
                             initialData={{ full_name: displayName, avatar_url: avatarUrl, role: profile?.role as Profile["role"] }}
                             asChild
                         >
-                            <div className="relative h-10 w-10 overflow-hidden rounded-full ring-2 ring-border cursor-pointer hover:ring-primary transition-all" style={{ backgroundColor: avatarBgColor }}>
+                            <div className="relative size-10 overflow-hidden rounded-full ring-2 ring-border cursor-pointer hover:ring-primary transition-all" style={{ backgroundColor: avatarBgColor }}>
                                 <Image src={avatarUrl} alt="Profile" fill className="object-cover" />
                             </div>
                         </ProfileCardTrigger>
@@ -311,10 +311,10 @@ export function TenantSidebar() {
                                 )} 
                                 aria-label="Notifications"
                             >
-                                <Bell className="h-4 w-4" />
+                                <Bell className="size-4" />
                                 {unreadCount > 0 && (
                                     <span className={cn(
-                                        "absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full text-[8px] font-bold",
+                                        "absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full text-[8px] font-bold",
                                         isNotificationsOpen ? "bg-background text-primary" : "bg-primary text-primary-foreground"
                                     )}>
                                         {unreadCount > 9 ? "9+" : unreadCount}
@@ -346,11 +346,11 @@ export function TenantSidebar() {
 
                     <div className="space-y-1">
                         <Link href="/tenant/profile" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-all hover:bg-muted/80 hover:text-foreground">
-                            <User className="h-4 w-4" />
+                            <User className="size-4" />
                             Profile
                         </Link>
                         <Link href="/tenant/settings" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-all hover:bg-muted/80 hover:text-foreground">
-                            <Settings className="h-4 w-4" />
+                            <Settings className="size-4" />
                             Settings
                         </Link>
                         <button
@@ -360,7 +360,7 @@ export function TenantSidebar() {
                             }}
                             className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-all hover:bg-red-500/10 hover:text-red-500 text-left"
                         >
-                            <LogOut className="h-5 w-5" />
+                            <LogOut className="size-5" />
                             Log Out
                         </button>
                     </div>
@@ -389,10 +389,10 @@ export function TenantSidebar() {
                         <button
                             type="button"
                             onClick={() => setIsMobileOpen(false)}
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border bg-card"
+                            className="inline-flex size-8 items-center justify-center rounded-md border border-border bg-card"
                             aria-label="Close tenant navigation"
                         >
-                            <X className="h-4 w-4" />
+                            <X className="size-4" />
                         </button>
                     </div>
 
@@ -400,11 +400,11 @@ export function TenantSidebar() {
 
                     <div className="mt-6 border-t border-border pt-4 space-y-1">
                         <Link href="/tenant/profile" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground" onClick={() => setIsMobileOpen(false)}>
-                            <User className="h-4 w-4" />
+                            <User className="size-4" />
                             Profile
                         </Link>
                         <Link href="/tenant/settings" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground" onClick={() => setIsMobileOpen(false)}>
-                            <Settings className="h-4 w-4" />
+                            <Settings className="size-4" />
                             Settings
                         </Link>
                         <button
@@ -414,7 +414,7 @@ export function TenantSidebar() {
                             }}
                             className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-500 hover:bg-red-500/10 text-left"
                         >
-                            <LogOut className="h-4 w-4" />
+                            <LogOut className="size-4" />
                             Log Out
                         </button>
                     </div>
@@ -464,7 +464,7 @@ function NotificationPanelContent({
                     </div>
                 ) : notifications.length === 0 ? (
                     <div className="px-6 py-12 text-center text-muted-foreground">
-                        <Sparkles className="h-8 w-8 mx-auto mb-3 opacity-20" />
+                        <Sparkles className="size-8 mx-auto mb-3 opacity-20" />
                         <p className="text-sm font-bold">All caught up!</p>
                         <p className="text-[10px] mt-1 opacity-60">You have no notifications yet</p>
                     </div>
@@ -503,3 +503,4 @@ function NotificationPanelContent({
         </>
     );
 }
+

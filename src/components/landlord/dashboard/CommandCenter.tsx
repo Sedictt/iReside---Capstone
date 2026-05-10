@@ -153,7 +153,7 @@ export function CommandCenter({
                                 stat.toneClass
                             )}
                         >
-                            <stat.icon className="h-4 w-4 opacity-80 transition-opacity group-hover:opacity-100" />
+                            <stat.icon className="size-4 opacity-80 transition-opacity group-hover:opacity-100" />
                             <div className="flex flex-col">
                                 <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{stat.label}</span>
                                 <span className="text-base font-black leading-none text-foreground">{stat.value}</span>
@@ -186,11 +186,11 @@ export function CommandCenter({
                             const Content = (
                                 <>
                                     <div className={cn(
-                                        "flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-black/20",
+                                        "flex size-10 items-center justify-center rounded-xl transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-black/20",
                                         action.bgColor,
                                         action.color
                                     )}>
-                                        <action.icon className="h-5 w-5" />
+                                        <action.icon className="size-5" />
                                     </div>
                                     <div className="flex flex-col gap-0.5">
                                         <span className={cn(
@@ -227,7 +227,7 @@ export function CommandCenter({
                         {nextMoves.map((move) => (
                             <div key={move.id} className="group/item relative overflow-hidden rounded-2xl border border-white/10 bg-card/70 p-4 transition-all hover:bg-card">
                                 <div className="absolute top-0 right-0 p-2 opacity-0 -translate-y-1 translate-x-1 group-hover/item:opacity-20 transition-all">
-                                    <Zap className="h-12 w-12" />
+                                    <Zap className="size-12" />
                                 </div>
                                 <div className="mb-2 flex items-center justify-between relative z-10">
                                     <span className={cn("rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-widest", urgencyStyles[move.urgency])}>

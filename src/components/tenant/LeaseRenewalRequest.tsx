@@ -106,7 +106,7 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                     <div className="relative z-10">
                         <div className="flex items-center gap-3 mb-4">
                             <div className={cn(
-                                "flex h-10 w-10 items-center justify-center rounded-xl border",
+                                "flex size-10 items-center justify-center rounded-xl border",
                                 isEligible ? "bg-primary/10 text-primary border-primary/20" : "bg-muted text-muted-foreground border-border"
                             )}>
                                 <RefreshCw className={cn("size-5", isEligible && "animate-spin-slow")} />
@@ -170,7 +170,7 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                 onClick={() => setIsOpen(false)}
                                 className="p-2 rounded-xl hover:bg-muted transition-colors text-muted-foreground hover:text-foreground border border-transparent hover:border-border"
                             >
-                                <X className="h-5 w-5" />
+                                <X className="size-5" />
                             </button>
                         </div>
 
@@ -347,4 +347,5 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
         </>
     );
 }
+
 

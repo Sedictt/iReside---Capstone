@@ -5,6 +5,7 @@ import { expireInPersonIntents } from "@/lib/billing/workflow";
 import { generateMonthlyInvoices, listLandlordInvoices } from "@/lib/billing/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/supabase/auth";
 
 const generateSchema = z.object({
     billingMonth: z.string().optional(),
@@ -12,16 +13,9 @@ const generateSchema = z.object({
 });
 
 export async function GET(request: Request) {
+    const { user } = await requireUser();
     const supabase = await createClient();
     const adminClient = createAdminClient();
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     const { searchParams } = new URL(request.url);
     const propertyId = searchParams.get("propertyId");
@@ -41,15 +35,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+    const { user } = await requireUser();
     const supabase = await createClient();
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     try {
         const payload = await request.json();

@@ -35,7 +35,7 @@ export function ChatHeader({
             <div className="flex items-center gap-4">
                 <div 
                     className={cn(
-                        "h-12 w-12 rounded-full border border-border overflow-hidden flex items-center justify-center transition-all",
+                        "size-12 rounded-full border border-border overflow-hidden flex items-center justify-center transition-all",
                         isPlaceholder ? "bg-surface-2" : ""
                     )}
                     style={{ backgroundColor: contact.avatarBgColor || 'var(--surface-3)' }}
@@ -96,7 +96,7 @@ export function ChatHeader({
                         )}
                         title="Shared Files"
                     >
-                        <Folder className="h-5 w-5" />
+                        <Folder className="size-5" />
                     </button>
                     
                     <button
@@ -111,10 +111,11 @@ export function ChatHeader({
                                 : "text-medium hover:bg-surface-2"
                         )}
                     >
-                        <MoreVertical className="h-5 w-5" />
+                        <MoreVertical className="size-5" />
                     </button>
                 </div>
             )}
         </div>
     );
 }
+

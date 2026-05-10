@@ -83,7 +83,7 @@ export function ProfileWidget() {
         >
             {/* Profile Avatar Button */}
             <button 
-                className="group relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-border transition-all hover:ring-2 hover:ring-primary/50 dark:border-white/10"
+                className="group relative flex size-10 items-center justify-center overflow-hidden rounded-full border border-border transition-all hover:ring-2 hover:ring-primary/50 dark:border-white/10"
                 style={{ backgroundColor: profile?.avatar_bg_color || '#171717' }}
             >
                 {shouldShowAvatar ? (
@@ -150,7 +150,7 @@ export function ProfileWidget() {
                                             <p className="truncate text-xs text-muted-foreground">{profile?.email || user?.email || "Account"}</p>
                                         </div>
                                         <Link href="/landlord/profile" className="p-2 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors shrink-0">
-                                            <Pencil className="h-4 w-4" />
+                                            <Pencil className="size-4" />
                                         </Link>
                                     </div>
                                 </div>
@@ -163,21 +163,21 @@ export function ProfileWidget() {
                                 href="/landlord/profile"
                                 className="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:text-neutral-300 dark:hover:bg-white/10 dark:hover:text-white"
                             >
-                                <User className="h-4 w-4 group-hover:text-primary transition-colors" />
+                                <User className="size-4 group-hover:text-primary transition-colors" />
                                 <span>My Profile</span>
                             </Link>
                             <Link
                                 href="/landlord/settings"
                                 className="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:text-neutral-300 dark:hover:bg-white/10 dark:hover:text-white"
                             >
-                                <Settings className="h-4 w-4 group-hover:text-primary transition-colors" />
+                                <Settings className="size-4 group-hover:text-primary transition-colors" />
                                 <span>Settings</span>
                             </Link>
                             <Link
                                 href="/landlord/billing"
                                 className="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:text-neutral-300 dark:hover:bg-white/10 dark:hover:text-white"
                             >
-                                <CreditCard className="h-4 w-4 group-hover:text-primary transition-colors" />
+                                <CreditCard className="size-4 group-hover:text-primary transition-colors" />
                                 <span>Billing & Plans</span>
                             </Link>
 
@@ -190,7 +190,7 @@ export function ProfileWidget() {
                                 }}
                                 className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors group text-left"
                             >
-                                <LogOut className="h-4 w-4" />
+                                <LogOut className="size-4" />
                                 <span>Log Out</span>
                             </button>
                         </div>

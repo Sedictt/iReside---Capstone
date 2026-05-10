@@ -379,7 +379,7 @@ export interface Database {
                     contract_template?: Json | null
                     images?: string[]
                     is_featured?: boolean
-total_units?: number
+                    total_units?: number
                     total_floors?: number
                     base_rent_amount?: number
                     advance_rent_months?: number
@@ -402,7 +402,7 @@ total_units?: number
                     contract_template?: Json | null
                     images?: string[]
                     is_featured?: boolean
-total_units?: number
+                    total_units?: number
                     total_floors?: number
                     base_rent_amount?: number
                     advance_rent_months?: number
@@ -410,8 +410,39 @@ total_units?: number
                     renewal_window_days?: number
                     renewal_settings?: Json
                     created_at?: string
+                    updated_at?: string
+                }
+                Relationships: any[]
+            }
+            units: {
+                Row: {
+                    id: string
+                    property_id: string
+                    name: string
+                    floor: number
+                    status: UnitStatus
+                    rent_amount: number
+                    sqft: number | null
+                    beds: number
+                    baths: number
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    property_id: string
+                    name: string
+                    floor?: number
+                    status?: UnitStatus
+                    rent_amount: number
+                    sqft?: number | null
+                    beds?: number
+                    baths?: number
+                    created_at?: string
+                    updated_at?: string
                 }
                 Update: {
+                    id?: string
                     property_id?: string
                     name?: string
                     floor?: number
@@ -422,7 +453,15 @@ total_units?: number
                     baths?: number
                     updated_at?: string
                 }
-                Relationships: any[]
+                Relationships: [
+                    {
+                        foreignKeyName: "units_property_id_fkey"
+                        columns: ["property_id"]
+                        isOneToOne: false
+                        referencedRelation: "properties"
+                        referencedColumns: ["id"]
+                    }
+                ]
             }
             leases: {
                 Row: {
@@ -495,7 +534,15 @@ total_units?: number
                     signed_document_path?: string | null
                     updated_at?: string
                 }
-                Relationships: any[]
+                Relationships: [
+                    {
+                        foreignKeyName: "leases_unit_id_fkey"
+                        columns: ["unit_id"]
+                        isOneToOne: false
+                        referencedRelation: "units"
+                        referencedColumns: ["id"]
+                    }
+                ]
             }
             landlord_reviews: {
                 Row: {

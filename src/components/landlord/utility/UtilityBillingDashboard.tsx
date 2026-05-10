@@ -281,7 +281,7 @@ export function UtilityBillingDashboard() {
     if (loading && !workspace) {
         return (
             <div className="flex h-[60vh] flex-col items-center justify-center space-y-4">
-                <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                <Loader2 className="size-10 animate-spin text-primary" />
                 <p className="text-sm font-medium text-muted-foreground">Loading utility data...</p>
             </div>
         );
@@ -292,7 +292,7 @@ export function UtilityBillingDashboard() {
             {/* Page Header */}
             <div className="space-y-2">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-[0.2em]">
-                    <Building2 className="h-3 w-3" />
+                    <Building2 className="size-3" />
                     Property Management
                 </div>
                 <h1 className="text-4xl font-black tracking-tight text-foreground">Utility Billing</h1>
@@ -321,7 +321,7 @@ export function UtilityBillingDashboard() {
                                         : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
                                 )}
                             >
-                                <tab.icon className={cn("h-4 w-4", activeTab === tab.id ? "text-primary" : "text-muted-foreground/50")} />
+                                <tab.icon className={cn("size-4", activeTab === tab.id ? "text-primary" : "text-muted-foreground/50")} />
                                 {tab.label}
                                 {activeTab === tab.id && (
                                     <motion.div 
@@ -344,7 +344,7 @@ export function UtilityBillingDashboard() {
                 {activeTab === "readings" && (
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div className="relative flex-1 max-w-md">
-                            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                            <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                             <input 
                                 placeholder="Search units or tenants..." 
                                 value={searchQuery}
@@ -358,7 +358,7 @@ export function UtilityBillingDashboard() {
                             disabled={saving}
                             className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-8 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 hover:scale-[1.02] active:scale-95 disabled:opacity-50"
                         >
-                            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                            {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
                             Save All Readings
                         </button>
                     </div>
@@ -391,7 +391,7 @@ export function UtilityBillingDashboard() {
                                             <tr>
                                                 <td colSpan={4} className="px-6 py-20 text-center">
                                                     <div className="flex flex-col items-center gap-3 text-muted-foreground">
-                                                        <Building2 className="h-12 w-12 opacity-20" />
+                                                        <Building2 className="size-12 opacity-20" />
                                                         <p className="text-sm font-medium">No units found matching your criteria</p>
                                                     </div>
                                                 </td>
@@ -466,15 +466,15 @@ export function UtilityBillingDashboard() {
                                                 <td className="px-6 py-5 text-right">
                                                     <div className="flex items-center justify-end gap-3">
                                                         {(draft.water.exists || draft.water.current) && (draft.electricity.exists || draft.electricity.current) && (
-                                                            <div className="h-6 w-6 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/20">
-                                                                <Check className="h-3.5 w-3.5" />
+                                                            <div className="size-6 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/20">
+                                                                <Check className="size-3.5" />
                                                             </div>
                                                         )}
                                                         <button 
                                                             onClick={() => setSelectedLeaseId(draft.leaseId)}
-                                                            className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-border bg-card text-muted-foreground transition-all hover:border-primary hover:text-primary hover:shadow-sm"
+                                                            className="inline-flex items-center justify-center size-9 rounded-lg border border-border bg-card text-muted-foreground transition-all hover:border-primary hover:text-primary hover:shadow-sm"
                                                         >
-                                                            <Edit3 className="h-4 w-4" />
+                                                            <Edit3 className="size-4" />
                                                         </button>
                                                     </div>
                                                 </td>
@@ -520,12 +520,12 @@ export function UtilityBillingDashboard() {
                         {/* Hero Header */}
                         <div className="relative overflow-hidden rounded-[2.5rem] border border-border bg-card p-10 shadow-sm dark:bg-white/[0.01]">
                             <div className="absolute top-0 right-0 p-12 opacity-[0.03] pointer-events-none">
-                                <History className="h-48 w-48 -rotate-12" />
+                                <History className="size-48 -rotate-12" />
                             </div>
                             <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
                                 <div className="space-y-3">
                                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-[0.2em]">
-                                        <BarChart3 className="h-3 w-3" />
+                                        <BarChart3 className="size-3" />
                                         Billing Archives
                                     </div>
                                     <h3 className="text-3xl font-black text-foreground tracking-tight">Audit Trail & History</h3>
@@ -535,7 +535,7 @@ export function UtilityBillingDashboard() {
                                 </div>
                                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
                                     <div className="relative group min-w-[300px]">
-                                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                                         <input 
                                             placeholder="Search month, year or status..."
                                             className="w-full pl-11 pr-4 py-3.5 rounded-2xl border border-border bg-muted/20 dark:bg-white/[0.03] text-sm font-semibold outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all"
@@ -575,7 +575,7 @@ export function UtilityBillingDashboard() {
                                         >
                                             {/* Date Block */}
                                             <div className="md:col-span-2 flex md:flex-col items-center md:items-start gap-4">
-                                                <div className="h-16 w-16 flex items-center justify-center rounded-2xl bg-muted/50 border border-border group-hover:border-primary/20 group-hover:bg-primary/5 transition-all">
+                                                <div className="size-16 flex items-center justify-center rounded-2xl bg-muted/50 border border-border group-hover:border-primary/20 group-hover:bg-primary/5 transition-all">
                                                     <div className="text-center">
                                                         <p className="text-[10px] font-black uppercase leading-none text-muted-foreground group-hover:text-primary transition-colors">{d.toLocaleDateString('en-US', { month: 'short' })}</p>
                                                         <p className="text-xl font-black mt-1 text-foreground">{d.getFullYear()}</p>
@@ -601,8 +601,8 @@ export function UtilityBillingDashboard() {
                                                 </h4>
                                                 <div className="flex flex-wrap gap-6">
                                                     <div className="flex items-center gap-2">
-                                                        <div className="h-6 w-6 flex items-center justify-center rounded-lg bg-amber-500/10 text-amber-500">
-                                                            <Zap className="h-3 w-3" />
+                                                        <div className="size-6 flex items-center justify-center rounded-lg bg-amber-500/10 text-amber-500">
+                                                            <Zap className="size-3" />
                                                         </div>
                                                         <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                                                             {historySummariesLoading ? "--" : totalElec.toLocaleString(undefined, { maximumFractionDigits: 2 })}{" "}
@@ -610,8 +610,8 @@ export function UtilityBillingDashboard() {
                                                         </span>
                                                     </div>
                                                     <div className="flex items-center gap-2">
-                                                        <div className="h-6 w-6 flex items-center justify-center rounded-lg bg-sky-500/10 text-sky-500">
-                                                            <Droplets className="h-3 w-3" />
+                                                        <div className="size-6 flex items-center justify-center rounded-lg bg-sky-500/10 text-sky-500">
+                                                            <Droplets className="size-3" />
                                                         </div>
                                                         <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                                                             {historySummariesLoading ? "--" : totalWater.toLocaleString(undefined, { maximumFractionDigits: 2 })}{" "}
@@ -631,8 +631,8 @@ export function UtilityBillingDashboard() {
                                                          </span>
                                                      </div>
                                                  </div>
-                                                 <div className="h-12 w-12 flex items-center justify-center rounded-2xl bg-muted/50 text-muted-foreground group-hover:bg-primary group-hover:text-white group-hover:shadow-lg group-hover:shadow-primary/20 transition-all">
-                                                     <ArrowUpRight className="h-5 w-5" />
+                                                 <div className="size-12 flex items-center justify-center rounded-2xl bg-muted/50 text-muted-foreground group-hover:bg-primary group-hover:text-white group-hover:shadow-lg group-hover:shadow-primary/20 transition-all">
+                                                     <ArrowUpRight className="size-5" />
                                                  </div>
                                             </div>
                                         </button>
@@ -675,8 +675,8 @@ export function UtilityBillingDashboard() {
                             exit={{ opacity: 0, scale: 0.95 }}
                             className="w-full max-w-md rounded-3xl border border-border bg-card p-8 shadow-2xl"
                         >
-                            <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-amber-600">
-                                <AlertCircle className="h-8 w-8" />
+                            <div className="mb-6 flex size-14 items-center justify-center rounded-2xl bg-amber-100 text-amber-600">
+                                <AlertCircle className="size-8" />
                             </div>
                             <div className="space-y-2 mb-8">
                                 <h3 className="text-xl font-semibold text-foreground">Apply Property Defaults?</h3>
@@ -762,9 +762,9 @@ function HistoryDetailModal({ month, isOpen, onClose }: { month: string | null, 
                             </div>
                             <button 
                                 onClick={onClose} 
-                                className="h-12 w-12 flex items-center justify-center rounded-2xl bg-muted/50 text-muted-foreground hover:bg-red-500 hover:text-white transition-all shadow-sm"
+                                className="size-12 flex items-center justify-center rounded-2xl bg-muted/50 text-muted-foreground hover:bg-red-500 hover:text-white transition-all shadow-sm"
                             >
-                                <X className="h-5 w-5" />
+                                <X className="size-5" />
                             </button>
                         </div>
 
@@ -772,7 +772,7 @@ function HistoryDetailModal({ month, isOpen, onClose }: { month: string | null, 
                         <div className="flex-1 overflow-y-auto p-8 space-y-8">
                             {loading ? (
                                 <div className="flex flex-col items-center justify-center py-20 space-y-4">
-                                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                                    <Loader2 className="size-8 animate-spin text-primary" />
                                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Retrieving archive data...</p>
                                 </div>
                             ) : (
@@ -789,7 +789,7 @@ function HistoryDetailModal({ month, isOpen, onClose }: { month: string | null, 
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                 <div className="p-8 rounded-3xl bg-amber-500/[0.03] border border-amber-500/10 transition-all hover:bg-amber-500/[0.05]">
                                                     <div className="flex items-center gap-3 text-amber-500 mb-4">
-                                                        <Zap className="h-5 w-5" />
+                                                        <Zap className="size-5" />
                                                         <span className="text-[10px] font-black uppercase tracking-widest">Total Electricity</span>
                                                     </div>
                                                     <div className="flex items-baseline gap-2">
@@ -799,7 +799,7 @@ function HistoryDetailModal({ month, isOpen, onClose }: { month: string | null, 
                                                 </div>
                                                 <div className="p-8 rounded-3xl bg-sky-500/[0.03] border border-sky-500/10 transition-all hover:bg-sky-500/[0.05]">
                                                     <div className="flex items-center gap-3 text-sky-500 mb-4">
-                                                        <Droplets className="h-5 w-5" />
+                                                        <Droplets className="size-5" />
                                                         <span className="text-[10px] font-black uppercase tracking-widest">Total Water</span>
                                                     </div>
                                                     <div className="flex items-baseline gap-2">
@@ -830,11 +830,11 @@ function HistoryDetailModal({ month, isOpen, onClose }: { month: string | null, 
                                                             <td className="px-8 py-5 capitalize text-[10px] font-bold text-muted-foreground tracking-widest">
                                                                 <div className="flex items-center gap-2.5">
                                                                     {reading.utility_type === 'water' ? (
-                                                                        <div className="h-6 w-6 flex items-center justify-center rounded-lg bg-sky-500/10 text-sky-500">
+                                                                        <div className="size-6 flex items-center justify-center rounded-lg bg-sky-500/10 text-sky-500">
                                                                             <Droplets className="h-3 w-3" />
                                                                         </div>
                                                                     ) : (
-                                                                        <div className="h-6 w-6 flex items-center justify-center rounded-lg bg-amber-500/10 text-amber-500">
+                                                                        <div className="size-6 flex items-center justify-center rounded-lg bg-amber-500/10 text-amber-500">
                                                                             <Zap className="h-3 w-3" />
                                                                         </div>
                                                                     )}
@@ -906,8 +906,8 @@ function UnitDetailModal({ isOpen, onClose, draft, onUpdate }: { isOpen: boolean
                         {/* Modal Header */}
                         <div className="flex items-center justify-between border-b border-border p-6 md:px-8">
                             <div className="flex items-center gap-4">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                                    <Building2 className="h-6 w-6" />
+                                <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                                    <Building2 className="size-6" />
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-semibold text-foreground">{draft.unitName}</h2>
@@ -916,9 +916,9 @@ function UnitDetailModal({ isOpen, onClose, draft, onUpdate }: { isOpen: boolean
                             </div>
                             <button 
                                 onClick={onClose} 
-                                className="h-10 w-10 flex items-center justify-center rounded-xl bg-muted/50 text-muted-foreground hover:bg-red-50 hover:text-white transition-all"
+                                className="size-10 flex items-center justify-center rounded-xl bg-muted/50 text-muted-foreground hover:bg-red-50 hover:text-white transition-all"
                             >
-                                <X className="h-5 w-5" />
+                                <X className="size-5" />
                             </button>
                         </div>
 
@@ -969,7 +969,7 @@ function UnitDetailModal({ isOpen, onClose, draft, onUpdate }: { isOpen: boolean
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
-                                        <DollarSign className="h-4 w-4 text-primary" />
+                                        <DollarSign className="size-4 text-primary" />
                                         <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground">Service Add-ons</h3>
                                     </div>
                                     <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Optional Charges</span>
@@ -1007,7 +1007,7 @@ function UnitDetailModal({ isOpen, onClose, draft, onUpdate }: { isOpen: boolean
                                 onClick={onClose}
                                 className="w-full flex items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-4 text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 hover:scale-[1.01] active:scale-95"
                             >
-                                <Check className="h-4 w-4" />
+                                <Check className="size-4" />
                                 Save All Changes
                             </button>
                         </div>
@@ -1044,7 +1044,7 @@ function ResourceSection({ label, icon: Icon, colorClass, draft, onUpdate }: {
     return (
         <div className="space-y-4">
             <div className={cn("flex items-center gap-2", accentClass)}>
-                <Icon className="h-5 w-5" />
+                <Icon className="size-5" />
                 <h3 className="text-sm font-semibold uppercase tracking-wider">{label}</h3>
             </div>
             <div className={cn("grid grid-cols-1 md:grid-cols-5 gap-6 rounded-3xl border p-6 overflow-hidden", borderClass, bgClass)}>
@@ -1104,3 +1104,4 @@ function ResourceSection({ label, icon: Icon, colorClass, draft, onUpdate }: {
         </div>
     );
 }
+

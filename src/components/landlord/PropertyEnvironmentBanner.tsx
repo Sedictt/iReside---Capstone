@@ -41,8 +41,8 @@ export function PropertyEnvironmentBanner({
     return (
         <div className={cn("flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between rounded-2xl border border-border bg-card p-4 shadow-sm", className)}>
             <div className="flex items-center gap-4">
-                <div className={cn("flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border", themeColor)}>
-                    <Icon className="h-6 w-6" />
+                <div className={cn("flex size-12 shrink-0 items-center justify-center rounded-xl border", themeColor)}>
+                    <Icon className="size-6" />
                 </div>
                 <div>
                     <h3 className="text-sm font-semibold text-foreground flex flex-wrap items-center gap-2">

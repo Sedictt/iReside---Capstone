@@ -81,8 +81,8 @@ export function RecordExpenseModal({ isOpen, onClose, onSaved }: RecordExpenseMo
                     <div className="relative flex items-start justify-between">
                         <div className="space-y-2">
                             <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-background border border-border shadow-inner">
-                                    <Receipt className="h-5 w-5 text-rose-500" />
+                                <div className="flex size-10 items-center justify-center rounded-xl bg-background border border-border shadow-inner">
+                                    <Receipt className="size-5 text-rose-500" />
                                 </div>
                                 <span className="text-[10px] font-black uppercase tracking-[0.25em] text-primary">Financial Ledger</span>
                             </div>
@@ -91,9 +91,9 @@ export function RecordExpenseModal({ isOpen, onClose, onSaved }: RecordExpenseMo
                         </div>
                         <button
                             onClick={onClose}
-                            className="group flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition-all hover:bg-muted hover:text-foreground active:scale-95 shadow-sm"
+                            className="group flex size-10 items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition-all hover:bg-muted hover:text-foreground active:scale-95 shadow-sm"
                         >
-                            <X className="h-5 w-5 transition-transform group-hover:rotate-90" />
+                            <X className="size-5 transition-transform group-hover:rotate-90" />
                         </button>
                     </div>
                 </div>
@@ -114,8 +114,8 @@ export function RecordExpenseModal({ isOpen, onClose, onSaved }: RecordExpenseMo
                                             : "border-border bg-background/50 hover:bg-background"
                                     )}
                                 >
-                                    <div className={cn("flex h-8 w-8 items-center justify-center rounded-full", cat.bg, cat.color)}>
-                                        <CheckCircle2 className={cn("h-4 w-4", category === cat.id ? "opacity-100" : "opacity-0")} />
+                                    <div className={cn("flex size-8 items-center justify-center rounded-full", cat.bg, cat.color)}>
+                                        <CheckCircle2 className={cn("size-4", category === cat.id ? "opacity-100" : "opacity-0")} />
                                     </div>
                                     <span className={cn("text-xs font-bold", category === cat.id ? "text-foreground" : "text-muted-foreground")}>{cat.label}</span>
                                 </button>
@@ -127,7 +127,7 @@ export function RecordExpenseModal({ isOpen, onClose, onSaved }: RecordExpenseMo
                         <div className="space-y-3">
                             <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Amount (PHP)</label>
                             <div className="relative group">
-                                <DollarSign className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                                <DollarSign className="absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
                                 <input
                                     type="number"
                                     required
@@ -144,7 +144,7 @@ export function RecordExpenseModal({ isOpen, onClose, onSaved }: RecordExpenseMo
                         <div className="space-y-3">
                             <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Date Incurred</label>
                             <div className="relative group">
-                                <Calendar className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                                <Calendar className="absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
                                 <input
                                     type="date"
                                     required
@@ -159,7 +159,7 @@ export function RecordExpenseModal({ isOpen, onClose, onSaved }: RecordExpenseMo
                     <div className="space-y-3">
                         <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Description</label>
                         <div className="relative group">
-                            <Type className="absolute left-4 top-4 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                            <Type className="absolute left-4 top-4 size-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
                             <textarea
                                 required
                                 value={description}
@@ -181,7 +181,7 @@ export function RecordExpenseModal({ isOpen, onClose, onSaved }: RecordExpenseMo
                                 "Saving..."
                             ) : (
                                 <>
-                                    <CheckCircle2 className="h-5 w-5 transition-transform group-hover:scale-110" />
+                                    <CheckCircle2 className="size-5 transition-transform group-hover:scale-110" />
                                     Record Expense
                                 </>
                             )}

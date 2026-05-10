@@ -187,7 +187,7 @@ export function MoveOutInspectionForm({
   if (initialLoading) {
     return (
       <div className="flex h-[400px] items-center justify-center rounded-[2.5rem] border border-border bg-card">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="size-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -200,8 +200,8 @@ export function MoveOutInspectionForm({
       )}>
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-              <ShieldCheck className="h-6 w-6" />
+            <div className="flex size-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <ShieldCheck className="size-6" />
             </div>
             <h2 className="text-2xl font-black text-foreground tracking-tight">Move-Out Inspection</h2>
           </div>
@@ -216,7 +216,7 @@ export function MoveOutInspectionForm({
             animate={{ opacity: 1, y: 0 }}
             className="flex items-center gap-3 rounded-2xl border border-red-500/20 bg-red-500/5 p-4 text-sm font-medium text-red-500"
           >
-            <AlertCircle className="h-5 w-5 shrink-0" />
+            <AlertCircle className="size-5 shrink-0" />
             {error}
           </motion.div>
         )}
@@ -258,7 +258,7 @@ export function MoveOutInspectionForm({
                       type="checkbox"
                       checked={value}
                       onChange={(e) => setChecklist({ ...checklist, [key]: e.target.checked })}
-                      className="h-5 w-5 rounded-lg border-border text-primary focus:ring-primary/20"
+                      className="size-5 rounded-lg border-border text-primary focus:ring-primary/20"
                     />
                   </label>
                 );
@@ -278,7 +278,7 @@ export function MoveOutInspectionForm({
             <div className="space-y-3">
               <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Photos</h3>
               <div className="flex h-32 cursor-pointer flex-col items-center justify-center rounded-[2rem] border-2 border-dashed border-border bg-muted/20 text-muted-foreground transition-all hover:border-primary/30 hover:bg-primary/5">
-                <Camera className="mb-2 h-6 w-6 opacity-40" />
+                <Camera className="mb-2 size-6 opacity-40" />
                 <span className="text-[10px] font-black uppercase tracking-widest">Upload Photos</span>
                 <span className="mt-1 text-[9px] opacity-50">JPEG, PNG up to 10MB</span>
               </div>
@@ -376,7 +376,7 @@ export function MoveOutInspectionForm({
                         onClick={() => setDeductions(deductions.filter(item => item.id !== d.id))}
                         className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="size-4" />
                       </button>
                     </motion.div>
                   ))
@@ -424,9 +424,9 @@ export function MoveOutInspectionForm({
             className="flex items-center gap-2 rounded-2xl bg-primary px-10 py-3 text-[10px] font-black uppercase tracking-widest text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 disabled:opacity-50"
           >
             {loading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="size-4 animate-spin" />
             ) : (
-              <Save className="h-4 w-4" />
+              <Save className="size-4" />
             )}
             Save Inspection Results
           </button>
@@ -452,7 +452,7 @@ export function MoveOutInspectionForm({
             >
               <div className="flex flex-col gap-6">
                 <div className="flex h-16 w-16 items-center justify-center rounded-[1.5rem] bg-amber-500/10 text-amber-500">
-                  <AlertCircle className="h-8 w-8" />
+                  <AlertCircle className="size-8" />
                 </div>
                 <div className="space-y-2">
                   <h3 className="text-3xl font-black text-foreground tracking-tight">Final Confirmation</h3>
@@ -480,7 +480,7 @@ export function MoveOutInspectionForm({
                     disabled={loading}
                     className="h-14 rounded-2xl bg-primary text-[10px] font-black uppercase tracking-widest text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 disabled:opacity-50"
                   >
-                    {loading ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : "Confirm & Save"}
+                    {loading ? <Loader2 className="mx-auto size-4 animate-spin" /> : "Confirm & Save"}
                   </button>
                 </div>
               </div>
@@ -491,3 +491,4 @@ export function MoveOutInspectionForm({
     </div>
   );
 }
+

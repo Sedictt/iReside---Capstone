@@ -99,7 +99,7 @@ export function SignaturePad({
           )}
         >
           <div className="absolute inset-0 -z-10 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 text-primary group-hover:scale-110 transition-transform">
+          <div className="flex size-12 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 text-primary group-hover:scale-110 transition-transform">
             <Maximize2 size={20} strokeWidth={2.5} />
           </div>
           <div className="flex flex-col items-start gap-0.5">

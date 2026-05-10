@@ -35,7 +35,7 @@ export function CommunityPropertyGate() {
                         className="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:brightness-110"
                     >
                         Go to Properties
-                        <ArrowRight className="h-4 w-4" />
+                        <ArrowRight className="size-4" />
                     </Link>
                 </div>
             </div>
@@ -94,7 +94,7 @@ export function CommunityPropertyGate() {
                                         />
                                     ) : (
                                         <div className="flex h-full items-center justify-center bg-gradient-to-br from-emerald-500/20 via-sky-500/10 to-primary/20">
-                                            <Building2 className="h-10 w-10 text-emerald-700/70 dark:text-emerald-200/80" />
+                                            <Building2 className="size-10 text-emerald-700/70 dark:text-emerald-200/80" />
                                         </div>
                                     )}
                                     <div className="absolute inset-0 bg-gradient-to-t from-card/90 via-card/20 to-transparent dark:from-[#0b1117]/95" />
@@ -129,7 +129,7 @@ export function CommunityPropertyGate() {
 
                                     <div className="inline-flex items-center gap-2 text-sm font-semibold text-primary transition-transform duration-300 group-hover:translate-x-1">
                                         Open this property
-                                        <ArrowRight className="h-4 w-4" />
+                                        <ArrowRight className="size-4" />
                                     </div>
                                 </div>
                             </motion.button>

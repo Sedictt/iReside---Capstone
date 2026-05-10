@@ -80,7 +80,7 @@ export function MoveOutChecklist({ requestId, initialData }: MoveOutChecklistPro
             )}
           >
             <div className={cn(
-              "h-5 w-5 rounded-lg border-2 flex items-center justify-center shrink-0 transition-all",
+              "size-5 rounded-lg border-2 flex items-center justify-center shrink-0 transition-all",
               item.completed ? "bg-primary border-primary text-white" : "border-primary/30"
             )}>
               {item.completed && <Check className="h-3 w-3" />}
@@ -94,3 +94,4 @@ export function MoveOutChecklist({ requestId, initialData }: MoveOutChecklistPro
     </div>
   );
 }
+

@@ -1,22 +1,15 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/supabase/auth";
 
 export async function GET(
     _request: Request,
-    context: { params: Promise<{ id: string }> | { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { user } = await requireUser();
     const supabase = await createClient();
 
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const resolvedParams = await context.params;
+    const resolvedParams = await params;
     const propertyId = resolvedParams?.id;
     if (!propertyId) {
         return NextResponse.json({ error: "Property id is required." }, { status: 400 });

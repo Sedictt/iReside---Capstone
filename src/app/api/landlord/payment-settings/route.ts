@@ -2,40 +2,25 @@ import { NextResponse } from "next/server";
 
 import { getBillingWorkspace } from "@/lib/billing/server";
 import { BILLING_BUCKETS, removeBillingFile, uploadBillingFile } from "@/lib/billing/storage";
-import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/supabase/auth";
 
 export async function GET() {
-    const supabase = await createClient();
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     try {
+        const { user, supabase } = await requireUser();
         const workspace = await getBillingWorkspace(supabase, user.id);
         return NextResponse.json(workspace);
     } catch (error) {
+        if (error instanceof Error && error.message === "Unauthorized") {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
         console.error("Failed to load billing workspace:", error);
         return NextResponse.json({ error: "Failed to load billing settings." }, { status: 500 });
     }
 }
 
 export async function POST(request: Request) {
-    const supabase = await createClient();
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     try {
+        const { user, supabase } = await requireUser();
         const formData = await request.formData();
         const accountName = String(formData.get("accountName") ?? "").trim();
         const accountNumber = String(formData.get("accountNumber") ?? "").trim();
@@ -138,6 +123,9 @@ export async function POST(request: Request) {
         const workspace = await getBillingWorkspace(supabase, user.id);
         return NextResponse.json(workspace);
     } catch (error) {
+        if (error instanceof Error && error.message === "Unauthorized") {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
         console.error("Failed to save billing workspace:", error);
         return NextResponse.json({ error: "Failed to save billing settings." }, { status: 500 });
     }

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/supabase/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
     TENANT_PRODUCT_TOUR_STEPS,
@@ -56,16 +56,8 @@ export async function GET(request: Request) {
         });
     }
 
-    const supabase = await createClient();
+    const { user, supabase } = await requireUser();
     const adminClient = createAdminClient();
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     const role = await resolveRole(supabase as any, user);
     if (role !== "tenant") {

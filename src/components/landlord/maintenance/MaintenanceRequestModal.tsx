@@ -372,7 +372,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                 <div className="rounded-3xl border border-emerald-500/20 bg-emerald-500/5 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-sm">
                                     <div className="flex items-center gap-4">
                                         <div className="p-3 bg-emerald-500/10 rounded-2xl shrink-0">
-                                            <ShieldCheck className="h-6 w-6 text-emerald-500" />
+                                            <ShieldCheck className="size-6 text-emerald-500" />
                                         </div>
                                         <div>
                                             <p className="text-base font-black text-foreground">Self-Repair Requested</p>
@@ -461,11 +461,11 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                                     : "bg-primary/20"
                                         )}>
                                             {request.tenantRepairStatus === "done" ? (
-                                                <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                                                <CheckCircle2 className="size-5 text-emerald-600 dark:text-emerald-400" />
                                             ) : request.tenantRepairStatus === "personnel_arrived" ? (
-                                                <UserRound className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
+                                                <UserRound className="size-5 text-cyan-600 dark:text-cyan-400" />
                                             ) : (
-                                                <Wrench className="h-5 w-5 text-primary" />
+                                                <Wrench className="size-5 text-primary" />
                                             )}
                                         </div>
                                         <div>
@@ -776,4 +776,5 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
         </>
     );
 }
+
 

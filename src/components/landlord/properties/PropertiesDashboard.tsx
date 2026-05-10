@@ -150,11 +150,11 @@ export function PropertiesDashboard() {
 
                     <div className="flex gap-3">
                         <button className="flex h-12 items-center gap-2 rounded-xl border border-border bg-background/75 px-6 font-medium text-foreground transition-all hover:bg-muted/70">
-                            <Filter className="h-4 w-4" />
+                            <Filter className="size-4" />
                             Analytics
                         </button>
                         <Link href="/landlord/properties/new" className="flex h-12 items-center gap-2 rounded-xl bg-primary px-6 font-bold text-primary-foreground shadow-[0_14px_30px_-18px_rgba(var(--primary-rgb),0.65)] transition-all hover:bg-primary/90">
-                            <Plus className="h-5 w-5" />
+                            <Plus className="size-5" />
                             New Asset
                         </Link>
                     </div>
@@ -183,7 +183,7 @@ export function PropertiesDashboard() {
                 </div>
 
                 <div className="relative w-full sm:w-80">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                     <input
                         type="text"
                         placeholder="Search properties..."
@@ -206,7 +206,7 @@ export function PropertiesDashboard() {
 
                 {!isLoading && loadError && (
                     <div className="rounded-3xl border border-red-500/20 bg-card/95 py-20 text-center shadow-sm">
-                        <Building2 className="mx-auto mb-4 h-12 w-12 text-red-500 dark:text-red-400" />
+                        <Building2 className="mx-auto mb-4 size-12 text-red-500 dark:text-red-400" />
                         <h3 className="mb-2 text-xl font-semibold text-foreground">Failed to load portfolio</h3>
                         <p className="mb-6 text-sm text-red-600 dark:text-red-300">{loadError}</p>
                         <button
@@ -285,8 +285,8 @@ export function PropertiesDashboard() {
                                                         />
                                                     </svg>
                                                     <div className="absolute inset-0 flex items-center justify-center">
-                                                        <div className="flex h-10 w-10 items-center justify-center rounded-full border border-border/80 bg-background/95 text-primary shadow-sm dark:border-white/10 dark:bg-neutral-950/90">
-                                                            <Users className="h-5 w-5 text-primary" />
+                                                        <div className="flex size-10 items-center justify-center rounded-full border border-border/80 bg-background/95 text-primary shadow-sm dark:border-white/10 dark:bg-neutral-950/90">
+                                                            <Users className="size-5 text-primary" />
                                                         </div>
                                                     </div>
                                                 </div>
@@ -313,7 +313,7 @@ export function PropertiesDashboard() {
                                                         ? "border-amber-500/20 bg-amber-500/5 text-amber-500" 
                                                         : "border-border bg-muted/30 text-muted-foreground"
                                                 )}>
-                                                    <Wrench className="h-6 w-6" />
+                                                    <Wrench className="size-6" />
                                                 </div>
                                                 <div>
                                                     <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Maintenance</p>
@@ -334,7 +334,7 @@ export function PropertiesDashboard() {
                                                 onClick={() => setHubModalId(property.id)}
                                                 className="flex-1 lg:w-40 h-12 px-6 flex items-center justify-center gap-2 rounded-xl border border-border bg-background font-bold text-foreground transition-all hover:bg-muted shadow-sm"
                                             >
-                                                <Settings className="h-4 w-4" />
+                                                <Settings className="size-4" />
                                                 <span>Manage</span>
                                             </button>
                                         </div>
@@ -349,7 +349,7 @@ export function PropertiesDashboard() {
 
                 {!isLoading && !loadError && filteredProperties.length === 0 && (
                     <div className="rounded-3xl border border-border bg-card/95 py-20 text-center shadow-sm">
-                        <Building2 className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+                        <Building2 className="mx-auto mb-4 size-12 text-muted-foreground" />
                         <h3 className="mb-2 text-xl font-semibold text-foreground">No matching assets</h3>
                         <p className="text-muted-foreground">Try adjusting your filters or search query.</p>
                     </div>
@@ -489,4 +489,5 @@ function PropertySkeleton() {
         </div>
     );
 }
+
 

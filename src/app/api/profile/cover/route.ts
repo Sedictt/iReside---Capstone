@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { requireUser } from "@/lib/supabase/auth";
 
 const BUCKET_NAME = "profile-covers";
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB for covers
@@ -32,36 +32,28 @@ const ensureBucket = async () => {
 };
 
 export async function POST(request: Request) {
-    const authClient = await createClient();
-    const {
-        data: { user },
-        error: userError,
-    } = await authClient.auth.getUser();
-
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const formData = await request.formData();
-    const file = formData.get("file");
-
-    if (!(file instanceof File)) {
-        return NextResponse.json({ error: "File is required." }, { status: 400 });
-    }
-
-    if (file.size <= 0) {
-        return NextResponse.json({ error: "File is empty." }, { status: 400 });
-    }
-
-    if (file.size > MAX_FILE_SIZE_BYTES) {
-        return NextResponse.json({ error: "File is too large. Max size is 10 MB." }, { status: 400 });
-    }
-
-    if (!file.type || !file.type.startsWith(ALLOWED_IMAGE_PREFIX)) {
-        return NextResponse.json({ error: "Only image uploads are allowed." }, { status: 400 });
-    }
-
     try {
+        const { user } = await requireUser();
+
+        const formData = await request.formData();
+        const file = formData.get("file");
+
+        if (!(file instanceof File)) {
+            return NextResponse.json({ error: "File is required." }, { status: 400 });
+        }
+
+        if (file.size <= 0) {
+            return NextResponse.json({ error: "File is empty." }, { status: 400 });
+        }
+
+        if (file.size > MAX_FILE_SIZE_BYTES) {
+            return NextResponse.json({ error: "File is too large. Max size is 10 MB." }, { status: 400 });
+        }
+
+        if (!file.type || !file.type.startsWith(ALLOWED_IMAGE_PREFIX)) {
+            return NextResponse.json({ error: "Only image uploads are allowed." }, { status: 400 });
+        }
+
         const admin = createAdminClient();
         await ensureBucket();
 
@@ -94,7 +86,10 @@ export async function POST(request: Request) {
         }
 
         return NextResponse.json({ coverUrl: publicUrl }, { status: 200 });
-    } catch (error) {
+    } catch (error: any) {
+        if (error.message === "Unauthorized") {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
         console.error("Failed to upload cover:", error);
         return NextResponse.json({ error: "Failed to update profile cover." }, { status: 500 });
     }

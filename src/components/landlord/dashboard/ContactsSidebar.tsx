@@ -859,7 +859,7 @@ export function ContactsSidebar() {
                     {!isHovered && (
                         <div className="flex flex-col items-center gap-4">
                             <div className="relative cursor-default rounded-xl bg-muted p-2.5 dark:bg-white/5">
-                                <MessageSquare className="h-5 w-5 text-primary" />
+                                <MessageSquare className="size-5 text-primary" />
                                 {hasUnreadConversations && (
                                     <span className="absolute -right-1 -top-1 h-3 w-3 animate-pulse rounded-full bg-red-500 ring-2 ring-card dark:ring-neutral-900"></span>
                                 )}
@@ -927,7 +927,7 @@ export function ContactsSidebar() {
                                         >
                                             <div className="relative shrink-0">
                                                 <div 
-                                                    className="h-10 w-10 rounded-full border-2 border-background overflow-hidden"
+                                                    className="size-10 rounded-full border-2 border-background overflow-hidden"
                                                     style={{ backgroundColor: msg.avatarBgColor || '#171717' }}
                                                 >
                                                     <img
@@ -1056,7 +1056,7 @@ export function ContactsSidebar() {
                                 <div className="flex items-center gap-2 overflow-hidden">
                                     <div className="relative shrink-0">
                                         <div 
-                                            className="h-8 w-8 rounded-full border border-border dark:border-white/10 overflow-hidden"
+                                            className="size-8 rounded-full border border-border dark:border-white/10 overflow-hidden"
                                             style={{ backgroundColor: chat.avatarBgColor || '#171717' }}
                                         >
                                             <img src={chat.avatar} alt={chat.name} className="h-full w-full object-cover" />
@@ -1205,7 +1205,7 @@ export function ContactsSidebar() {
                                                     className="flex items-center gap-3 rounded-2xl border border-border bg-card/90 p-3 dark:border-white/10 dark:bg-neutral-900/80"
                                                 >
                                                     <div className="shrink-0 rounded-lg bg-muted p-2 dark:bg-white/10">
-                                                        <File className="h-4 w-4 text-foreground dark:text-neutral-100" />
+                                                        <File className="size-4 text-foreground dark:text-neutral-100" />
                                                     </div>
                                                     <div className="min-w-0">
                                                         <p className="truncate text-xs font-bold text-foreground dark:text-neutral-100">{message.content || "Attachment"}</p>
@@ -1348,7 +1348,7 @@ export function ContactsSidebar() {
                                                 />
                                             ) : (
                                                 <div className="flex items-center gap-2 text-foreground dark:text-neutral-100">
-                                                    <span className="rounded-lg bg-card p-2 dark:bg-white/10"><File className="h-4 w-4" /></span>
+                                                    <span className="rounded-lg bg-card p-2 dark:bg-white/10"><File className="size-4" /></span>
                                                     <span className="text-xs font-medium truncate">{message.content || "Attachment"}</span>
                                                 </div>
                                             )}
@@ -1377,11 +1377,11 @@ type ContactCardProps = {
 
 function renderSystemIcon(type: string) {
     switch (type) {
-        case 'awaiting_in_person': return <HandCoins className="h-5 w-5" />;
-        case 'reminder_sent': return <Bell className="h-5 w-5" />;
-        case 'invoice': return <Receipt className="h-5 w-5" />;
-        case 'landlord_review': return <History className="h-5 w-5" />;
-        default: return <Zap className="h-5 w-5" />;
+        case 'awaiting_in_person': return <HandCoins className="size-5" />;
+        case 'reminder_sent': return <Bell className="size-5" />;
+        case 'invoice': return <Receipt className="size-5" />;
+        case 'landlord_review': return <History className="size-5" />;
+        default: return <Zap className="size-5" />;
     }
 }
 
@@ -1406,7 +1406,7 @@ function MiniSystemMessage({ message, router }: { message: MiniChatMessage; rout
         return (
             <NotificationCard
                 message={message}
-                icon={isOverpayment ? <TrendingUp className="h-6 w-6 text-white" /> : (isRejected ? <AlertTriangle className="h-6 w-6 text-white" /> : <CheckCircle2 className="h-6 w-6 text-white" />)}
+                icon={isOverpayment ? <TrendingUp className="size-6 text-white" /> : (isRejected ? <AlertTriangle className="size-6 text-white" /> : <CheckCircle2 className="size-6 text-white" />)}
                 title={isOverpayment 
                     ? (isResolved ? "Reconciliation Complete" : "Overpayment Detected")
                     : (isRejected ? "Payment Rejected" : "Payment Confirmed")
@@ -1423,7 +1423,7 @@ function MiniSystemMessage({ message, router }: { message: MiniChatMessage; rout
         return (
             <NotificationCard
                 message={message}
-                icon={<HandCoins className="h-6 w-6 text-white" />}
+                icon={<HandCoins className="size-6 text-white" />}
                 title="In-Person Payment"
                 subtitle="Verification Required"
                 variant="warning"
@@ -1436,7 +1436,7 @@ function MiniSystemMessage({ message, router }: { message: MiniChatMessage; rout
         return (
             <NotificationCard
                 message={message}
-                icon={<Bell className="h-6 w-6 text-white" />}
+                icon={<Bell className="size-6 text-white" />}
                 title="Payment Reminder"
                 subtitle="Notification Sent"
                 variant="default"
@@ -1467,7 +1467,7 @@ function ContactCard({ name, role, unit, avatar, avatarBgColor, status, isExpand
         )}>
             <div className="relative shrink-0">
                 <div 
-                    className="h-10 w-10 rounded-full border-2 border-background overflow-hidden shadow-sm transition-transform duration-300 group-hover:scale-105"
+                    className="size-10 rounded-full border-2 border-background overflow-hidden shadow-sm transition-transform duration-300 group-hover:scale-105"
                     style={{ backgroundColor: avatarBgColor || '#171717' }}
                 >
                     <img

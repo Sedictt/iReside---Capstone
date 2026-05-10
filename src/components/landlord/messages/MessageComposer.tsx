@@ -118,13 +118,13 @@ export function MessageComposer({
                                             <img src={att.previewUrl} className="h-full w-full object-cover" alt="Preview" />
                                         ) : (
                                             <div className="h-full w-full flex items-center justify-center">
-                                                <Paperclip className="h-6 w-6 text-medium" />
+                                                <Paperclip className="size-6 text-medium" />
                                             </div>
                                         )}
                                         
                                         {att.status === 'uploading' && (
                                             <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[1px]">
-                                                <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                                                 <span className="absolute bottom-1 text-[8px] font-black text-white">{att.progress}%</span>
                                             </div>
                                         )}
@@ -132,7 +132,7 @@ export function MessageComposer({
 
                                         {att.status === 'error' && (
                                             <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center backdrop-blur-[1px]">
-                                                <X className="h-5 w-5 text-red-500" />
+                                                <X className="size-5 text-red-500" />
                                             </div>
                                         )}
                                     </div>
@@ -140,7 +140,7 @@ export function MessageComposer({
                                     {att.status !== 'uploading' && (
                                         <button 
                                             onClick={() => removePendingAttachment(att.id)}
-                                            className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg hover:scale-110 active:scale-90 transition-transform z-10"
+                                            className="absolute -top-1.5 -right-1.5 size-5 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg hover:scale-110 active:scale-90 transition-transform z-10"
                                         >
                                             <X className="h-3 w-3" />
                                         </button>
@@ -163,7 +163,7 @@ export function MessageComposer({
                         className="p-2.5 rounded-full hover:bg-surface-3 transition-colors text-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
                         title="Attach files"
                     >
-                        <ImageIcon className="h-5 w-5" />
+                        <ImageIcon className="size-5" />
                     </button>
                     <input 
                         type="file" 
@@ -197,7 +197,7 @@ export function MessageComposer({
                             )}
                             title="Add emoji"
                         >
-                            <Smile className="h-5 w-5" />
+                            <Smile className="size-5" />
                         </button>
                         <button 
                             onClick={onSendMessage}
@@ -209,7 +209,7 @@ export function MessageComposer({
                                     : "bg-surface-3 text-disabled"
                             )}
                         >
-                            <Send className="h-5 w-5" />
+                            <Send className="size-5" />
                         </button>
 
                         {showEmojiPicker && (
@@ -257,4 +257,5 @@ export function MessageComposer({
         </div>
     );
 }
+
 

@@ -57,8 +57,8 @@ export function LandlordWelcomeLightbox() {
                 </button>
 
                 {/* Icon Badge */}
-                <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-primary/15 text-primary mb-6">
-                    <Zap className="h-8 w-8" />
+                <div className="flex size-16 items-center justify-center rounded-3xl bg-primary/15 text-primary mb-6">
+                    <Zap className="size-8" />
                 </div>
 
                 {/* Heading */}
@@ -74,8 +74,8 @@ export function LandlordWelcomeLightbox() {
                 {/* Feature Highlight Section */}
                 <div className="mb-8 rounded-2xl border border-primary/20 bg-primary/5 p-5">
                     <div className="flex items-start gap-4">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/20 text-primary shrink-0 mt-0.5">
-                            <Sparkles className="h-5 w-5" />
+                        <div className="flex size-10 items-center justify-center rounded-xl bg-primary/20 text-primary shrink-0 mt-0.5">
+                            <Sparkles className="size-5" />
                         </div>
                         <div>
                             <h3 className="text-sm font-black text-foreground mb-1">
@@ -95,19 +95,19 @@ export function LandlordWelcomeLightbox() {
                     </p>
                     <ul className="space-y-2">
                         <li className="flex items-center gap-2 text-xs text-muted-foreground/80">
-                            <div className="h-1.5 w-1.5 rounded-full bg-primary/60" />
+                            <div className="size-1.5 rounded-full bg-primary/60" />
                             Setting up your visual unit map
                         </li>
                         <li className="flex items-center gap-2 text-xs text-muted-foreground/80">
-                            <div className="h-1.5 w-1.5 rounded-full bg-primary/60" />
+                            <div className="size-1.5 rounded-full bg-primary/60" />
                             Managing multiple properties
                         </li>
                         <li className="flex items-center gap-2 text-xs text-muted-foreground/80">
-                            <div className="h-1.5 w-1.5 rounded-full bg-primary/60" />
+                            <div className="size-1.5 rounded-full bg-primary/60" />
                             Inviting and managing residents
                         </li>
                         <li className="flex items-center gap-2 text-xs text-muted-foreground/80">
-                            <div className="h-1.5 w-1.5 rounded-full bg-primary/60" />
+                            <div className="size-1.5 rounded-full bg-primary/60" />
                             Tracking revenue and finances
                         </li>
                     </ul>

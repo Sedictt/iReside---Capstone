@@ -94,7 +94,7 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                         <div className="flex shrink-0 items-center justify-between border-b border-white/5 bg-neutral-900/50 p-8 backdrop-blur-xl">
                             <div className="flex items-center gap-5">
                                 <div className="rounded-2xl bg-white/5 p-4 border border-white/5">
-                                    <CreditCard className="h-6 w-6 text-primary" />
+                                    <CreditCard className="size-6 text-primary" />
                                 </div>
                                 <div>
                                     <h2 className="flex items-center gap-3 text-2xl font-black text-white">
@@ -108,16 +108,16 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                             </div>
                             <button 
                                 onClick={onClose} 
-                                className="group flex h-12 w-12 items-center justify-center rounded-2xl border border-white/5 bg-white/5 text-muted-foreground transition-all hover:bg-white/10 hover:text-white hover:rotate-90"
+                                className="group flex size-12 items-center justify-center rounded-2xl border border-white/5 bg-white/5 text-muted-foreground transition-all hover:bg-white/10 hover:text-white hover:rotate-90"
                             >
-                                <X className="h-5 w-5" />
+                                <X className="size-5" />
                             </button>
                         </div>
 
                         {/* Search Bar - Premium Glass */}
                         <div className="shrink-0 border-b border-white/5 p-8 bg-white/[0.02]">
                             <div className="relative group">
-                                <Search className="absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                                <Search className="absolute left-5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
                                 <input
                                     type="text"
                                     placeholder={`Filter ${categoryCopy.filterLabel} entries...`}
@@ -148,7 +148,7 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                                                     <img src={payment.avatar || FALLBACK_AVATAR} alt={payment.tenant} className="h-full w-full object-cover" />
                                                 </div>
                                                 <div className={cn(
-                                                    "absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-background shadow-lg",
+                                                    "absolute -bottom-0.5 -right-0.5 size-4 rounded-full border-2 border-background shadow-lg",
                                                     confirmedPayments.includes(payment.id) || category === "Paid" ? "bg-emerald-500" : getDotColor()
                                                 )} />
                                             </div>
@@ -222,12 +222,12 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                                                     className="group flex items-center justify-between rounded-2xl bg-primary px-6 py-5 shadow-[0_15px_30px_rgba(var(--primary-rgb),0.3)] transition-all hover:scale-[1.02] hover:shadow-[0_20px_40px_rgba(var(--primary-rgb),0.4)] active:scale-95"
                                                 >
                                                     <div className="flex items-center gap-4">
-                                                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20">
-                                                            <CheckCircle2 className="h-5 w-5 text-white" />
+                                                        <div className="flex size-10 items-center justify-center rounded-xl bg-white/20">
+                                                            <CheckCircle2 className="size-5 text-white" />
                                                         </div>
                                                         <span className="text-sm font-black uppercase tracking-tight text-white">Record Settlement</span>
                                                     </div>
-                                                    <ChevronRight className="h-4 w-4 text-white/60 transition-transform group-hover:translate-x-1" />
+                                                    <ChevronRight className="size-4 text-white/60 transition-transform group-hover:translate-x-1" />
                                                 </button>
 
                                                 <button 
@@ -241,7 +241,7 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                                     ) : (
                                         <div className="p-8 text-center pt-10 animate-in slide-in-from-right-4 duration-300">
                                             <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-primary/10 text-primary">
-                                                <AlertTriangle className="h-10 w-10" />
+                                                <AlertTriangle className="size-10" />
                                             </div>
                                             <h3 className="text-2xl font-black text-white tracking-tight">Double Check</h3>
                                             

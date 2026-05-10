@@ -785,7 +785,7 @@ export function WalkInApplicationModal({
                                 <h2 className="text-xl font-black uppercase tracking-tighter text-foreground">{STEPS[step].label}</h2>
                                 <p className="text-[9px] text-primary font-black uppercase tracking-widest">Step {step + 1} of 6</p>
                             </div>
-                            <button onClick={onClose} className="flex h-10 w-10 items-center justify-center rounded-xl bg-background text-foreground"><X size={20}/></button>
+                            <button onClick={onClose} className="flex size-10 items-center justify-center rounded-xl bg-background text-foreground"><X size={20}/></button>
                         </div>
                         {/* Mobile Progress Bar */}
                         <div className="absolute bottom-0 left-0 h-0.5 w-full overflow-hidden bg-border">
@@ -828,7 +828,7 @@ export function WalkInApplicationModal({
                          </div>
                           <button 
                              onClick={onClose} 
-                             className="pointer-events-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-border bg-background text-muted-foreground transition-all hover:scale-110 hover:bg-red-500/10 hover:text-red-500 active:scale-90 focus-visible:ring-2 focus-visible:ring-red-500/50 outline-none"
+                             className="pointer-events-auto flex size-12 items-center justify-center rounded-2xl border border-border bg-background text-muted-foreground transition-all hover:scale-110 hover:bg-red-500/10 hover:text-red-500 active:scale-90 focus-visible:ring-2 focus-visible:ring-red-500/50 outline-none"
                          >
                              <X size={20} />
                          </button>

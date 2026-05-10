@@ -110,7 +110,7 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
 
                 {loading ? (
                     <div className="p-20 text-center">
-                        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
+                        <div className="animate-spin size-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
                         <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Syncing Configuration...</p>
                     </div>
                 ) : (

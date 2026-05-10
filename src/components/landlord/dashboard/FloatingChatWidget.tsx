@@ -75,7 +75,7 @@ export function HeaderChatWidget() {
                     )}
                 >
                     <MessageSquare className={cn(
-                        "h-5 w-5 transition-colors",
+                        "size-5 transition-colors",
                         mockMessages.some(m => m.unread) ? "text-white" : "text-white/70 group-hover:text-white"
                     )} />
 
@@ -98,7 +98,7 @@ export function HeaderChatWidget() {
                             <div className="p-4 border-b border-white/5 bg-neutral-900/50 backdrop-blur-md flex items-center justify-between">
                                 <h3 className="font-semibold text-white">Recent Messages</h3>
                                 <button onClick={toggleList} className="text-neutral-500 hover:text-white transition-colors">
-                                    <X className="h-4 w-4" />
+                                    <X className="size-4" />
                                 </button>
                             </div>
                             <div className="flex flex-col max-h-[400px] overflow-y-auto custom-scrollbar">

@@ -23,7 +23,7 @@ export function ContactItem({ contact, isActive, onClick }: ContactItemProps) {
         >
             <div className="relative shrink-0">
                 <div 
-                    className="h-12 w-12 shrink-0 rounded-full border border-border overflow-hidden flex items-center justify-center transition-transform group-hover:scale-105"
+                    className="size-12 shrink-0 rounded-full border border-border overflow-hidden flex items-center justify-center transition-transform group-hover:scale-105"
                     style={{ backgroundColor: contact.avatarBgColor || 'var(--surface-3)' }}
                 >
                     {contact.avatarUrl ? (
@@ -33,7 +33,7 @@ export function ContactItem({ contact, isActive, onClick }: ContactItemProps) {
                     )}
                 </div>
                 {contact.unread > 0 && (
-                    <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-surface-1 bg-red-500 shadow-sm animate-in zoom-in duration-300">
+                    <div className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full border-2 border-surface-1 bg-red-500 shadow-sm animate-in zoom-in duration-300">
                         <span className="text-[10px] font-black text-white">{contact.unread}</span>
                     </div>
                 )}
@@ -64,3 +64,4 @@ export function ContactItem({ contact, isActive, onClick }: ContactItemProps) {
         </button>
     );
 }
+

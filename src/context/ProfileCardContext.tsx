@@ -65,7 +65,7 @@ export function ProfileCardProvider({ children }: { children: ReactNode }) {
 }
 
 export function useProfileCard() {
-    const context = use(ProfileCardContext);
+    const context = useContext(ProfileCardContext);
     if (context === undefined) {
         throw new Error('useProfileCard must be used within a ProfileCardProvider');
     }

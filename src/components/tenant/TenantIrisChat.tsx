@@ -401,7 +401,7 @@ export function TenantIrisChat() {
                             <button
                                 onClick={handleSend}
                                 disabled={!input.trim() || isChatInitializing}
-                                className="h-10 w-10 shrink-0 flex items-center justify-center rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm transition-all active:scale-95 disabled:opacity-50 disabled:scale-100 disabled:hover:bg-primary"
+                                className="size-10 shrink-0 flex items-center justify-center rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm transition-all active:scale-95 disabled:opacity-50 disabled:scale-100 disabled:hover:bg-primary"
                             >
                                 <ArrowUp className="size-5" />
                             </button>
@@ -426,5 +426,6 @@ export function TenantIrisChat() {
         </div>
     );
 }
+
 
 

@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/supabase/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export type TenantTourContext = {
@@ -19,16 +19,8 @@ export const resolveTenantRole = async (supabase: any, user: any) => {
 };
 
 export const resolveTenantTourContext = async () => {
-    const supabase = await createClient();
+    const { user, supabase } = await requireUser();
     const adminClient = createAdminClient();
-    const {
-        data: { user },
-        error,
-    } = await supabase.auth.getUser();
-
-    if (error || !user) {
-        return { error: "Unauthorized" as const, status: 401 as const };
-    }
 
     const role = await resolveTenantRole(supabase as any, user);
     if (role !== "tenant") {

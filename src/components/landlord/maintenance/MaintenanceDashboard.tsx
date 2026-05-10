@@ -262,7 +262,7 @@ export function MaintenanceDashboard() {
                 <div>
                     <div className="flex items-center gap-3 mb-2">
                         <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
-                            <Wrench className="h-8 w-8 text-primary" />
+                            <Wrench className="size-8 text-primary" />
                             Maintenance Operations
                         </h1>
                         <div className="bg-primary/10 border border-primary/20 px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
@@ -275,7 +275,7 @@ export function MaintenanceDashboard() {
                     </p>
                 </div>
                 <button className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3.5 rounded-3xl font-black uppercase tracking-wider text-xs hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all active:scale-95 shrink-0">
-                    <Plus className="h-5 w-5" />
+                    <Plus className="size-5" />
                     New Work Order
                 </button>
             </div>
@@ -483,7 +483,7 @@ function MaintenanceCard({ request, onClick }: { request: MaintenanceRequest, on
                 <div className="flex items-center justify-between gap-4 shrink-0 pt-5 border-t border-border/50 mt-auto">
                     <div className="flex -space-x-2 overflow-hidden">
                         <div 
-                            className="inline-block h-8 w-8 rounded-full ring-2 ring-background flex items-center justify-center text-[10px] font-bold text-white overflow-hidden shrink-0"
+                            className="inline-block size-8 rounded-full ring-2 ring-background flex items-center justify-center text-[10px] font-bold text-white overflow-hidden shrink-0"
                             style={{ backgroundColor: request.tenantAvatarBgColor || '#6d9838' }}
                         >
                             {request.tenantAvatar ? (

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/supabase/auth";
 
 type InquiryItem = {
     id: string;
@@ -48,16 +49,8 @@ const formatRelativeDate = (value: string) => {
 };
 
 export async function GET() {
+    const { user } = await requireUser();
     const supabase = await createClient();
-
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     const { data: inquiryRows, error } = await supabase
         .from("applications")

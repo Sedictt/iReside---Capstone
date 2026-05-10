@@ -111,7 +111,7 @@ export function LandlordProfile() {
                                     >
                                         <span
                                             className={cn(
-                                                "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+                                                "inline-block size-4 transform rounded-full bg-white transition-transform",
                                                 isTwoFactorEnabled ? "translate-x-6" : "translate-x-1"
                                             )}
                                         />
@@ -166,7 +166,7 @@ export function LandlordProfile() {
                             <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
                                 <div className="flex items-start gap-4">
                                     <div className="h-20 w-20 flex-shrink-0 rounded-xl bg-white p-2 shadow-sm flex items-center justify-center">
-                                        <Building2 className="h-10 w-10 text-blue-600" />
+                                        <Building2 className="size-10 text-blue-600" />
                                     </div>
                                     <div>
                                         <div className="flex items-center gap-2 mb-1">
@@ -198,7 +198,7 @@ export function LandlordProfile() {
                                 </div>
                                 <div className="flex items-center gap-3">
                                     <button className="flex items-center gap-2 rounded-lg border border-white/10 bg-[#0f172a] px-4 py-2 text-sm font-medium text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors shadow-sm">
-                                        <Edit2 className="h-4 w-4" />
+                                        <Edit2 className="size-4" />
                                         Edit Profile
                                     </button>
                                 </div>
@@ -223,13 +223,13 @@ export function LandlordProfile() {
                                         <option>Bank Transfer (BDO)</option>
                                         <option>Check Deposit</option>
                                     </select>
-                                    <ChevronRight className="pointer-events-none absolute right-3 top-3 h-4 w-4 rotate-90 text-zinc-500" />
+                                    <ChevronRight className="pointer-events-none absolute right-3 top-3 size-4 rotate-90 text-zinc-500" />
                                 </div>
                             </div>
                             <div className="space-y-2">
                                 <label className="text-xs font-bold uppercase tracking-wider text-zinc-500">GCash Mobile Number</label>
                                 <div className="relative">
-                                    <Smartphone className="absolute left-3 top-2.5 h-4 w-4 text-zinc-500" />
+                                    <Smartphone className="absolute left-3 top-2.5 size-4 text-zinc-500" />
                                     <input
                                         type="text"
                                         value={phone}
@@ -242,8 +242,8 @@ export function LandlordProfile() {
 
                         <div className="rounded-lg border border-white/5 bg-[#0f172a] p-4 flex items-start justify-between">
                             <div className="flex gap-4">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-white p-1">
-                                    <QrCode className="h-8 w-8 text-black" />
+                                <div className="flex size-12 items-center justify-center rounded-lg bg-white p-1">
+                                    <QrCode className="size-8 text-black" />
                                 </div>
                                 <div>
                                     <div className="flex items-center gap-2 mb-1">
@@ -253,7 +253,7 @@ export function LandlordProfile() {
                                     <button className="mt-2 text-xs font-medium text-blue-400 hover:text-blue-300">Replace QR Code</button>
                                 </div>
                             </div>
-                            <div className="h-6 w-6 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                            <div className="size-6 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
                                 <CheckCircle className="h-3.5 w-3.5 text-white" />
                             </div>
                         </div>
@@ -356,7 +356,7 @@ export function LandlordProfile() {
                                                 : "text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200"
                                     )}
                                 >
-                                    <item.icon className="h-4 w-4" />
+                                    <item.icon className="size-4" />
                                     {item.label}
                                 </button>
                             ))}

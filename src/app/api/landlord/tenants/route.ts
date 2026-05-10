@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/supabase/auth";
 import type { LeaseStatus, PaymentStatus } from "@/types/database";
 
 type TenantStatus = "Active" | "Moving Out" | "Evicted";
@@ -80,17 +81,10 @@ const logOptionalQueryFailure = (scope: string, error: unknown) => {
 };
 
 export async function GET(request: Request) {
+    const { user } = await requireUser();
     const supabase = await createClient();
+
     const optionalStateClient = supabase as unknown as OptionalTenantStateClient;
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const { searchParams } = new URL(request.url);
     const propertyId = searchParams.get("propertyId");
 

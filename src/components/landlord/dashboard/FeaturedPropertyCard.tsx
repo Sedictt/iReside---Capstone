@@ -57,8 +57,8 @@ export function FeaturedPropertyCard({
                         {propertyName}
                     </h3>
                 </div>
-                <button className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md text-white transition-all hover:bg-white hover:text-black shadow-lg border border-white/20">
-                    <ArrowUpRight className="h-5 w-5" />
+                <button className="flex size-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md text-white transition-all hover:bg-white hover:text-black shadow-lg border border-white/20">
+                    <ArrowUpRight className="size-5" />
                 </button>
             </div>
 

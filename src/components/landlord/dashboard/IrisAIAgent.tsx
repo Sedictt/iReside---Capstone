@@ -337,7 +337,7 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
                                         onClick={() => setIsOpen(false)}
                                         className="rounded-2xl p-3 text-muted-foreground transition-all hover:bg-white/5 hover:text-foreground active:scale-90"
                                     >
-                                        <X className="h-6 w-6" />
+                                        <X className="size-6" />
                                     </button>
                                 </div>
 
@@ -398,15 +398,15 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
 
                                             <div className="rounded-3xl border border-white/5 bg-primary/5 p-6 flex items-center justify-between">
                                                 <div className="flex items-center gap-4">
-                                                    <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                                                        <MessageSquare className="h-5 w-5 text-primary" />
+                                                    <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                                                        <MessageSquare className="size-5 text-primary" />
                                                     </div>
                                                     <div>
                                                         <p className="text-xs font-black text-foreground">Need deeper insights?</p>
                                                         <p className="text-[10px] font-medium text-muted-foreground">Ask iRis in the command center.</p>
                                                     </div>
                                                 </div>
-                                                <ChevronRight className="h-5 w-5 text-muted-foreground/40" />
+                                                <ChevronRight className="size-5 text-muted-foreground/40" />
                                             </div>
                                         </>
                                     ) : (

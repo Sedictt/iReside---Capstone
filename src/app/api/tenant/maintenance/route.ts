@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/supabase/auth";
 import type { MaintenancePriority, MaintenanceStatus } from "@/types/database";
 
 type MaintenanceStatusLabel = "Pending" | "Assigned" | "In Progress" | "Resolved";
@@ -135,15 +135,7 @@ const formatRelativeDate = (value: string) => {
 };
 
 export async function GET() {
-    const supabase = await createClient();
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const { user, supabase } = await requireUser();
 
     const { data: requestRows, error: requestsError } = await supabase
         .from("maintenance_requests")
@@ -241,15 +233,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-    const supabase = await createClient();
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const { user, supabase } = await requireUser();
 
     const body = await request.json();
     const { title, description, priority, category, images, fixItMyself } = body;
@@ -311,15 +295,7 @@ type TenantMaintenancePatchBody = {
 };
 
 export async function PATCH(request: Request) {
-    const supabase = await createClient();
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const { user, supabase } = await requireUser();
 
     const body = (await request.json()) as TenantMaintenancePatchBody;
     if (!isNonEmptyString(body.requestId)) {

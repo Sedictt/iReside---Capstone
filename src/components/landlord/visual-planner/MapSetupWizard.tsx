@@ -107,7 +107,7 @@ function SortableUnit({ unit, isOverlay = false }: { unit: DbUnit; isOverlay?: b
             <div className="flex-1 min-w-0">
                 <p className="truncate text-xs font-bold text-white">{unit.name}</p>
             </div>
-            <div className="flex h-5 w-5 items-center justify-center rounded-md bg-white/5 text-[10px] font-black text-neutral-500">
+            <div className="flex size-5 items-center justify-center rounded-md bg-white/5 text-[10px] font-black text-neutral-500">
                 {unit.beds}B
             </div>
         </div>
@@ -124,7 +124,7 @@ function FloorLane({ floor, units, onRemove }: { floor: FloorConfig; units: DbUn
         <div className="group flex flex-col gap-3">
             <div className="flex items-center justify-between px-1">
                 <div className="flex items-center gap-2">
-                    <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <div className="flex size-6 items-center justify-center rounded-lg bg-primary/10 text-primary">
                         <Layers className="h-3.5 w-3.5" />
                     </div>
                     <h3 className="text-sm font-black uppercase tracking-widest text-white">
@@ -535,8 +535,8 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete }: Ma
             {/* Top Navigation / Header */}
             <header className="flex h-20 shrink-0 items-center justify-between border-b border-white/5 bg-white/[0.02] px-8 backdrop-blur-xl">
                     <div data-tour-id="tour-wizard-header" className="flex items-center gap-4">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-black">
-                            <Layout className="h-5 w-5" />
+                        <div className="flex size-10 items-center justify-center rounded-2xl bg-primary text-black">
+                            <Layout className="size-5" />
                         </div>
                         <div>
                             <h1 className="text-lg font-black tracking-tight">{propertyName}</h1>
@@ -572,7 +572,7 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete }: Ma
                                     : "bg-white/5 border-white/10 text-white hover:bg-white/10"
                             )}
                         >
-                            <Sparkles className="h-4 w-4" />
+                            <Sparkles className="size-4" />
                         </button>
                         
                         <button
@@ -581,7 +581,7 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete }: Ma
                             disabled={isSaving}
                             className="group relative flex items-center gap-2 overflow-hidden rounded-2xl bg-primary px-6 py-3 text-sm font-black uppercase tracking-widest text-black transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
                         >
-                            {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
+                            {isSaving ? <Loader2 className="size-4 animate-spin" /> : <ArrowRight className="size-4" />}
                             Generate Map
                         </button>
                     </div>
@@ -696,7 +696,7 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete }: Ma
                                         disabled={isSaving || Object.values(floorDistribution).reduce((a, b) => a + b, 0) !== totalUnits}
                                         className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-primary text-black font-black text-xs uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:grayscale"
                                     >
-                                        {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save & Close"}
+                                        {isSaving ? <Loader2 className="size-4 animate-spin" /> : "Save & Close"}
                                     </button>
                                     
                                     <p className="mt-4 text-[10px] text-center text-neutral-600 font-bold uppercase tracking-widest">
@@ -731,8 +731,8 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete }: Ma
                                     disabled={isSaving}
                                     className="group flex shrink-0 items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-6 py-3 transition-all hover:bg-white/10 active:scale-95 disabled:opacity-50"
                                 >
-                                    <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/20 text-primary group-hover:bg-primary group-hover:text-black transition-all">
-                                        <Plus className="h-4 w-4" />
+                                    <div className="flex size-6 items-center justify-center rounded-lg bg-primary/20 text-primary group-hover:bg-primary group-hover:text-black transition-all">
+                                        <Plus className="size-4" />
                                     </div>
                                     <span className="text-xs font-black uppercase tracking-widest">Add New Floor</span>
                                 </button>
@@ -767,19 +767,19 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete }: Ma
                                 <h4 className="text-xs font-black uppercase tracking-[0.2em] text-primary">Instructions</h4>
                                 <ul className="mt-6 space-y-6">
                                     <li className="flex gap-4">
-                                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/10 text-[10px] font-bold text-white">1</div>
+                                        <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-white/10 text-[10px] font-bold text-white">1</div>
                                         <p className="text-xs font-medium leading-relaxed text-neutral-400">
                                             Verify that each unit is assigned to its correct floor.
                                         </p>
                                     </li>
                                     <li className="flex gap-4">
-                                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/10 text-[10px] font-bold text-white">2</div>
+                                        <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-white/10 text-[10px] font-bold text-white">2</div>
                                         <p className="text-xs font-medium leading-relaxed text-neutral-400">
                                             Drag units between floor boards to reassign them instantly.
                                         </p>
                                     </li>
                                     <li className="flex gap-4">
-                                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/10 text-[10px] font-bold text-white">3</div>
+                                        <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-white/10 text-[10px] font-bold text-white">3</div>
                                         <p className="text-xs font-medium leading-relaxed text-neutral-400">
                                             Click <span className="font-bold text-white">&quot;Generate Map&quot;</span> to auto-layout your unit map.
                                         </p>
@@ -799,7 +799,7 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete }: Ma
 
                             {error && (
                                 <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-4 flex items-start gap-3">
-                                    <AlertCircle className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
+                                    <AlertCircle className="size-4 text-red-400 shrink-0 mt-0.5" />
                                     <p className="text-[10px] font-bold text-red-200 uppercase leading-normal">{error}</p>
                                 </div>
                             )}
@@ -824,4 +824,5 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete }: Ma
         </div>
     );
 }
+
 

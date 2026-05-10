@@ -119,8 +119,8 @@ export function LandlordQuestTriggerGuide() {
                 } : {}}
             >
                 <div className="flex items-center gap-3 mb-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/20 text-primary">
-                        <Sparkles className="h-4 w-4" />
+                    <div className="flex size-8 items-center justify-center rounded-xl bg-primary/20 text-primary">
+                        <Sparkles className="size-4" />
                     </div>
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Action Required</p>
                 </div>

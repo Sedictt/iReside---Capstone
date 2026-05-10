@@ -4,6 +4,7 @@ import { z } from "zod";
 import { recordUtilityReading } from "@/lib/billing/server";
 import { BILLING_BUCKETS, uploadBillingFile } from "@/lib/billing/storage";
 import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/supabase/auth";
 
 const readingSchema = z.object({
     leaseId: z.string().uuid(),
@@ -18,15 +19,8 @@ const readingSchema = z.object({
 const bulkSchema = z.array(readingSchema);
 
 export async function POST(request: Request) {
+    const { user } = await requireUser();
     const supabase = await createClient();
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     try {
         const contentType = request.headers.get("content-type");
@@ -87,15 +81,8 @@ export async function POST(request: Request) {
 }
 
 export async function GET(request: Request) {
+    const { user } = await requireUser();
     const supabase = await createClient();
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     const { searchParams } = new URL(request.url);
     const propertyId = searchParams.get("propertyId");

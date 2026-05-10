@@ -147,7 +147,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                     <div className="rounded-[2rem] border border-border/60 bg-card p-8 relative overflow-hidden group flex-shrink-0 shadow-sm backdrop-blur-sm">
                         <div className="flex items-center gap-3 mb-4">
                             <div className={cn(
-                                "flex h-10 w-10 items-center justify-center rounded-xl border",
+                                "flex size-10 items-center justify-center rounded-xl border",
                                 existingRequest.status === "pending" ? "bg-amber-500/10 border-amber-500/20 text-amber-500" :
                                 "bg-blue-500/10 border-blue-500/20 text-blue-500"
                             )}>
@@ -196,7 +196,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                     <div className="absolute inset-0 bg-gradient-to-br from-red-500/[0.03] via-transparent to-transparent opacity-80" />
                     <div className="relative z-10">
                         <div className="flex items-center gap-3 mb-4">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/10 text-red-500 border border-red-500/20">
+                            <div className="flex size-10 items-center justify-center rounded-xl bg-red-500/10 text-red-500 border border-red-500/20">
                                 <LogOut className="size-5" />
                             </div>
                             <h3 className="text-xl font-semibold text-foreground">End of Lease</h3>
@@ -245,7 +245,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                 onClick={() => setIsOpen(false)}
                                 className="p-2 rounded-xl hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
                             >
-                                <X className="h-5 w-5" />
+                                <X className="size-5" />
                             </button>
                         </div>
 
@@ -261,8 +261,8 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
 
                                         {/* Step 1: Submission */}
                                         <div className="relative flex items-start gap-6">
-                                            <div className="z-10 flex h-8 w-8 items-center justify-center rounded-xl bg-primary text-white shadow-lg shadow-primary/20">
-                                                <Clock className="h-4 w-4" />
+                                            <div className="z-10 flex size-8 items-center justify-center rounded-xl bg-primary text-white shadow-lg shadow-primary/20">
+                                                <Clock className="size-4" />
                                             </div>
                                             <div className="flex flex-col">
                                                 <p className="text-sm font-black text-foreground">Request Submitted</p>
@@ -273,11 +273,11 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                         {/* Step 2: Approval */}
                                         <div className="relative flex items-start gap-6">
                                             <div className={cn(
-                                                "z-10 flex h-8 w-8 items-center justify-center rounded-xl transition-all",
+                                                "z-10 flex size-8 items-center justify-center rounded-xl transition-all",
                                                 existingRequest.status !== "pending" && existingRequest.status !== "denied" ? "bg-primary text-white shadow-lg shadow-primary/20" : 
                                                 existingRequest.status === "denied" ? "bg-red-500 text-white" : "bg-muted text-muted-foreground"
                                             )}>
-                                                {existingRequest.status === "denied" ? <XCircle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
+                                                {existingRequest.status === "denied" ? <XCircle className="size-4" /> : <CheckCircle2 className="size-4" />}
                                             </div>
                                             <div className="flex flex-col">
                                                 <p className={cn("text-sm font-black", existingRequest.status === "pending" ? "text-muted-foreground" : "text-foreground")}>
@@ -298,10 +298,10 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                         {/* Step 3: Inspection */}
                                         <div className="relative flex items-start gap-6">
                                             <div className={cn(
-                                                "z-10 flex h-8 w-8 items-center justify-center rounded-xl transition-all",
+                                                "z-10 flex size-8 items-center justify-center rounded-xl transition-all",
                                                 existingRequest.inspection_date ? "bg-primary text-white shadow-lg shadow-primary/20" : "bg-muted text-muted-foreground"
                                             )}>
-                                                <ShieldCheck className="h-4 w-4" />
+                                                <ShieldCheck className="size-4" />
                                             </div>
                                             <div className="flex flex-col">
                                                 <p className={cn("text-sm font-black", !existingRequest.inspection_date ? "text-muted-foreground" : "text-foreground")}>Physical Inspection</p>
@@ -314,10 +314,10 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                         {/* Step 4: Finalization */}
                                         <div className="relative flex items-start gap-6">
                                             <div className={cn(
-                                                "z-10 flex h-8 w-8 items-center justify-center rounded-xl transition-all",
+                                                "z-10 flex size-8 items-center justify-center rounded-xl transition-all",
                                                 existingRequest.status === "completed" ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "bg-muted text-muted-foreground"
                                             )}>
-                                                <LogOut className="h-4 w-4" />
+                                                <LogOut className="size-4" />
                                             </div>
                                             <div className="flex flex-col">
                                                 <p className={cn("text-sm font-black", existingRequest.status !== "completed" ? "text-muted-foreground" : "text-foreground")}>Lease Terminated</p>
@@ -417,5 +417,6 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
         </>
     );
 }
+
 
 

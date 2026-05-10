@@ -299,7 +299,7 @@ export function TenantInviteManager({
                                 : "border-border bg-background text-foreground"
                         }`}
                     >
-                        <History className="h-4 w-4" />
+                        <History className="size-4" />
                         {showHistory ? "Hide History" : `History (${invites.length})`}
                     </button>
                     <button
@@ -307,7 +307,7 @@ export function TenantInviteManager({
                         onClick={onRefresh}
                         className="inline-flex h-12 items-center gap-2 rounded-2xl border border-border bg-background px-5 text-xs font-black uppercase tracking-[0.2em] text-foreground transition-all hover:bg-muted active:scale-95"
                     >
-                        <RefreshCw className="h-4 w-4" />
+                        <RefreshCw className="size-4" />
                         Refresh
                     </button>
                 </div>
@@ -346,7 +346,7 @@ export function TenantInviteManager({
                                                     : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                                             )}
                                         >
-                                            <Icon className="h-4 w-4" />
+                                            <Icon className="size-4" />
                                             <span className="pointer-events-none absolute -bottom-8 left-1/2 z-20 hidden -translate-x-1/2 whitespace-nowrap rounded-md border border-border bg-background px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-foreground shadow-md group-hover:block">
                                                 {control.tooltip}
                                             </span>
@@ -372,7 +372,7 @@ export function TenantInviteManager({
                                                     : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                                             )}
                                         >
-                                            <Icon className="h-4 w-4" />
+                                            <Icon className="size-4" />
                                             <span className="pointer-events-none absolute -bottom-8 left-1/2 z-20 hidden -translate-x-1/2 whitespace-nowrap rounded-md border border-border bg-background px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-foreground shadow-md group-hover:block">
                                                 {control.tooltip}
                                             </span>
@@ -386,7 +386,7 @@ export function TenantInviteManager({
                                     title="Toggle help information"
                                     className="group relative inline-flex items-center justify-center rounded-lg border border-border bg-card p-2 text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
                                 >
-                                    <CircleHelp className="h-4 w-4" />
+                                    <CircleHelp className="size-4" />
                                     <div className="pointer-events-none absolute right-0 top-10 z-30 hidden w-64 rounded-xl border border-border bg-background p-3 text-left text-[11px] font-semibold leading-relaxed text-foreground shadow-xl group-hover:block group-focus-visible:block">
                                         <p className="font-black uppercase tracking-wider text-muted-foreground">Quick Help</p>
                                         <p className="mt-2">First buttons: choose if this link is for one unit or the whole property.</p>
@@ -438,7 +438,7 @@ export function TenantInviteManager({
                                                 {option.key === "valid_id" && (
                                                     <span className="group/validid relative inline-flex items-center">
                                                         <CircleHelp
-                                                            className="h-4 w-4 rounded-full border border-amber-400/40 bg-amber-400/15 p-0.5 text-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.35)] animate-pulse"
+                                                            className="size-4 rounded-full border border-amber-400/40 bg-amber-400/15 p-0.5 text-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.35)] animate-pulse"
                                                             aria-label={VALID_ID_TOOLTIP}
                                                             role="img"
                                                             tabIndex={0}
@@ -486,7 +486,7 @@ export function TenantInviteManager({
                             </label>
                             <div className="relative">
                                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                                    <MapPin className="h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                                    <MapPin className="size-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                                 </div>
                                 <select
                                     value={propertyId}
@@ -505,7 +505,7 @@ export function TenantInviteManager({
                                     ))}
                                 </select>
                                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-muted-foreground">
-                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </div>
                             </div>
                         </div>
@@ -517,7 +517,7 @@ export function TenantInviteManager({
                                 </label>
                                 <div className="relative">
                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                                        <DoorOpen className="h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                                        <DoorOpen className="size-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                                     </div>
                                     <select
                                         value={unitId}
@@ -535,7 +535,7 @@ export function TenantInviteManager({
                                         ))}
                                     </select>
                                     <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-muted-foreground">
-                                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                        <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                                     </div>
                                 </div>
                             </div>
@@ -548,7 +548,7 @@ export function TenantInviteManager({
                                 </label>
                                 <div className="relative">
                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                                        <DoorOpen className="h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                                        <DoorOpen className="size-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                                     </div>
                                     <select
                                         value={previewUnitId}
@@ -566,7 +566,7 @@ export function TenantInviteManager({
                                         ))}
                                     </select>
                                     <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-muted-foreground">
-                                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                        <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                                     </div>
                                 </div>
                             </div>
@@ -580,7 +580,7 @@ export function TenantInviteManager({
                             </div>
                             <div className="relative overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all hover:border-primary/50 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
                                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                                    <Calendar className="h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
+                                    <Calendar className="size-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
                                 </div>
                                 <input
                                     type="datetime-local"
@@ -628,7 +628,7 @@ export function TenantInviteManager({
                             }
                             className="inline-flex h-12 items-center gap-2 rounded-xl bg-primary px-6 text-sm font-black text-primary-foreground shadow-[0_8px_16px_-6px_rgba(var(--primary-rgb),0.4)] transition-all hover:scale-[1.02] hover:bg-primary/90 active:scale-95 disabled:pointer-events-none disabled:opacity-50"
                         >
-                            <Link2 className="h-5 w-5" />
+                            <Link2 className="size-5" />
                             {submitting ? "Generating..." : "Generate Invite"}
                         </button>
                     </div>
@@ -638,7 +638,7 @@ export function TenantInviteManager({
                     {freshInvite ? (
                         <div className="flex w-full flex-col items-center animate-in fade-in zoom-in duration-500">
                             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1">
-                                <ShieldCheck className="h-4 w-4 text-primary" />
+                                <ShieldCheck className="size-4 text-primary" />
                                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Generated Invite</span>
                             </div>
                             <div className="relative mb-6 rounded-3xl border-2 border-border bg-white p-3 shadow-xl">
@@ -665,14 +665,14 @@ export function TenantInviteManager({
                                 onClick={() => void copyLink(freshInvite.shareUrl)}
                                 className="inline-flex w-full h-12 items-center justify-center gap-2 rounded-xl bg-foreground px-6 text-xs font-black uppercase tracking-[0.2em] text-background transition-transform hover:scale-[1.02] active:scale-95"
                             >
-                                <Copy className="h-4 w-4" />
+                                <Copy className="size-4" />
                                 Copy Link
                             </button>
                         </div>
                     ) : (
                         <div className="flex flex-col items-center opacity-60">
                             <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-3xl border border-dashed border-border bg-background">
-                                <QrCode className="h-8 w-8 text-muted-foreground" />
+                                <QrCode className="size-8 text-muted-foreground" />
                             </div>
                             <p className="text-sm font-medium leading-relaxed text-muted-foreground">
                                 Configure settings and generate <br /> to preview QR code and link here.
@@ -686,22 +686,22 @@ export function TenantInviteManager({
                 <div className="mt-8 animate-in slide-in-from-top-4 fade-in duration-300">
                     <div className="mb-4 flex items-center justify-between border-b border-border/50 pb-4">
                         <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                            <History className="h-4 w-4" />
+                            <History className="size-4" />
                             Recent Invites History
                         </h3>
                     </div>
                     <div className="grid gap-4">
                         {invites.length === 0 ? (
                             <div className="flex flex-col items-center justify-center rounded-[2rem] border border-dashed border-border bg-background/40 py-12 text-center text-sm font-medium text-muted-foreground">
-                                <Link2 className="mb-3 h-8 w-8 opacity-20" />
+                                <Link2 className="mb-3 size-8 opacity-20" />
                                 No tenant invite links have been created yet.
                             </div>
                         ) : (
                             invites.map((invite) => (
                                 <div key={invite.id} className="group relative flex flex-col gap-4 overflow-hidden rounded-[1.5rem] border border-border bg-background/60 p-5 transition-colors hover:bg-card lg:flex-row lg:items-center lg:justify-between">
                                     <div className="flex items-center gap-4">
-                                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-muted group-hover:bg-primary/10 transition-colors">
-                                            <QrCode className="h-5 w-5 text-muted-foreground group-hover:text-primary" />
+                                        <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-muted group-hover:bg-primary/10 transition-colors">
+                                            <QrCode className="size-5 text-muted-foreground group-hover:text-primary" />
                                         </div>
                                         <div className="space-y-1">
                                             <div className="flex items-center gap-2">
@@ -728,7 +728,7 @@ export function TenantInviteManager({
                                             rel="noreferrer"
                                             className="inline-flex h-10 items-center gap-2 rounded-xl border border-border bg-card px-4 text-xs font-bold uppercase tracking-wider text-foreground transition-colors hover:bg-muted"
                                         >
-                                            <QrCode className="h-4 w-4" />
+                                            <QrCode className="size-4" />
                                             View QR
                                         </a>
                                         <button
@@ -736,7 +736,7 @@ export function TenantInviteManager({
                                             onClick={() => void copyLink(invite.shareUrl)}
                                             className="inline-flex h-10 items-center gap-2 rounded-xl border border-border bg-card px-4 text-xs font-bold uppercase tracking-wider text-foreground transition-colors hover:bg-muted"
                                         >
-                                            <Copy className="h-4 w-4" />
+                                            <Copy className="size-4" />
                                             Copy URL
                                         </button>
                                         {invite.status === "active" && (
@@ -745,7 +745,7 @@ export function TenantInviteManager({
                                                 onClick={() => void revokeInvite(invite.id)}
                                                 className="inline-flex h-10 items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/5 px-4 text-xs font-bold uppercase tracking-wider text-red-600 transition-colors hover:bg-red-500/10"
                                             >
-                                                <XCircle className="h-4 w-4" />
+                                                <XCircle className="size-4" />
                                                 Revoke
                                             </button>
                                         )}

@@ -329,7 +329,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
         return (
             <div className="min-h-screen bg-[#0f1218] text-white flex items-center justify-center">
                 <div className="flex items-center gap-3 text-sm font-bold tracking-wide text-zinc-300">
-                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <Loader2 className="size-5 animate-spin" />
                     Loading private invite...
                 </div>
             </div>
@@ -344,7 +344,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                 </div>
                 <div className="relative z-10 max-w-lg w-full rounded-[3rem] border border-white/10 bg-black/40 backdrop-blur-3xl p-10 text-center shadow-2xl">
                     <div className="mx-auto size-24 bg-gradient-to-br from-red-500/20 to-red-900/20 rounded-3xl flex items-center justify-center shadow-2xl mb-8 border border-red-500/20">
-                        <ShieldAlert className="h-10 w-10 text-red-500" />
+                        <ShieldAlert className="size-10 text-red-500" />
                     </div>
                     <h1 className="text-3xl font-black tracking-tight text-white mb-4">Invite <span className="text-red-400 italic">unavailable</span></h1>
                     <p className="text-sm leading-relaxed text-white/60 mb-8">{loadError || "This invite is no longer available."}</p>
@@ -376,7 +376,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                         transition={{ delay: 0.3, type: "spring" }}
                         className="mx-auto size-24 bg-gradient-to-br from-primary to-primary-dark rounded-3xl flex items-center justify-center shadow-2xl shadow-primary/40 mb-10"
                     >
-                        <CheckCircle2 className="h-12 w-12 text-black" />
+                        <CheckCircle2 className="size-12 text-black" />
                     </motion.div>
 
                     <h1 className="text-4xl md:text-5xl font-extrabold mb-6 tracking-tight text-white leading-tight">
@@ -392,7 +392,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                             href="/login"
                             className="w-full sm:w-auto px-10 py-5 rounded-2xl bg-white text-black font-bold hover:bg-white/90 transition-all flex items-center justify-center gap-3 active:scale-95 shadow-xl shadow-white/5"
                         >
-                            <User className="h-4 w-4" />
+                            <User className="size-4" />
                             Return Home
                         </Link>
                     </div>
@@ -451,12 +451,12 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                         )}
 
                                         <div className={cn(
-                                            "h-10 w-10 rounded-xl flex items-center justify-center transition-all duration-500 shrink-0",
+                                            "size-10 rounded-xl flex items-center justify-center transition-all duration-500 shrink-0",
                                             isActive ? "bg-primary text-black scale-105 shadow-[0_0_20px_rgba(109,152,56,0.5)]" :
                                                 isCompleted ? "bg-primary/20 text-primary" :
                                                     "bg-white/5 text-white/40"
                                         )}>
-                                            {isCompleted ? <CheckCircle2 className="h-5 w-5" /> : <stepDef.icon className="h-4 w-4" />}
+                                            {isCompleted ? <CheckCircle2 className="size-5" /> : <stepDef.icon className="size-4" />}
                                         </div>
 
                                         <div className="min-w-0">
@@ -522,7 +522,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                         <div className="size-10 rounded-2xl bg-primary/20 flex items-center justify-center text-primary">
                                             {(() => {
                                                 const Icon = stepDefinitions[step].icon;
-                                                return <Icon className="h-5 w-5" />;
+                                                return <Icon className="size-5" />;
                                             })()}
                                         </div>
                                         <span className="text-[10px] font-bold text-white/40 uppercase tracking-[0.3em]">Step {step + 1} of {totalSteps}</span>
@@ -671,7 +671,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                             
                                             <div className="rounded-[2.5rem] border border-white/10 bg-white/5 p-6 lg:p-8">
                                                 <div className="flex items-center gap-3 opacity-50 mb-3">
-                                                    <FileText className="h-4 w-4" />
+                                                    <FileText className="size-4" />
                                                     <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">Detailed Notes</p>
                                                 </div>
                                                 <p className="text-sm leading-relaxed text-zinc-200">{formData.message || "No additional notes provided."}</p>
@@ -679,7 +679,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
 
                                             <div className="rounded-[2.5rem] bg-emerald-500/[0.03] border border-emerald-500/20 p-6 flex flex-col md:flex-row items-center gap-6">
                                                 <div className="size-16 rounded-3xl bg-emerald-500/10 flex items-center justify-center shrink-0 border border-emerald-500/20 shadow-[0_0_30px_rgba(16,185,129,0.2)]">
-                                                    <CheckCircle2 className="h-8 w-8 text-emerald-500" />
+                                                    <CheckCircle2 className="size-8 text-emerald-500" />
                                                 </div>
                                                 <div>
                                                     <h4 className="text-white font-semibold text-lg mb-1">Final Review</h4>
@@ -702,7 +702,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                             step === 0 ? "opacity-0 pointer-events-none" : "text-white/40 hover:text-white"
                                         )}
                                     >
-                                        <ChevronLeft className="h-4 w-4" />
+                                        <ChevronLeft className="size-4" />
                                         Previous
                                     </button>
 
@@ -715,13 +715,13 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                         <div className="absolute inset-x-0 bottom-0 h-1 bg-black/10 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
                                         {submitting ? (
                                             <>
-                                                <Loader2 className="h-5 w-5 animate-spin" />
+                                                <Loader2 className="size-5 animate-spin" />
                                                 Submitting...
                                             </>
                                         ) : (
                                             <>
                                                 {step === finalStepIndex ? "Submit Application" : "Continue Process"}
-                                                {step === finalStepIndex ? <CheckCircle2 className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+                                                {step === finalStepIndex ? <CheckCircle2 className="size-5" /> : <ChevronRight className="size-5" />}
                                             </>
                                         )}
                                     </button>
@@ -761,9 +761,10 @@ function SummaryCard({ label, value, icon: Icon }: any) {
 function Seal({ icon: Icon, label }: any) {
     return (
         <div className="flex items-center gap-2 grayscale hover:grayscale-0 transition-all cursor-default duration-500">
-            <Icon className="h-4 w-4" />
+            <Icon className="size-4" />
             <span className="text-[9px] font-bold uppercase tracking-widest">{label}</span>
         </div>
     );
 }
+
 

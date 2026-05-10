@@ -857,7 +857,7 @@ export function TenantContactsSidebar() {
                     {!isHovered && (
                         <div className="flex flex-col items-center gap-4">
                             <div className="relative p-2.5 bg-muted rounded-xl cursor-default border border-border">
-                                <MessageSquare className="h-5 w-5 text-primary" />
+                                <MessageSquare className="size-5 text-primary" />
                                 {hasUnreadConversations && (
                                     <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 ring-2 ring-card animate-pulse"></span>
                                 )}
@@ -1410,11 +1410,11 @@ type ContactCardProps = {
 
 function renderSystemIcon(type: string) {
     switch (type) {
-        case 'awaiting_in_person': return <HandCoins className="h-5 w-5" />;
-        case 'reminder_sent': return <Bell className="h-5 w-5" />;
-        case 'invoice': return <Receipt className="h-5 w-5" />;
-        case 'landlord_review': return <History className="h-5 w-5" />;
-        default: return <Zap className="h-5 w-5" />;
+        case 'awaiting_in_person': return <HandCoins className="size-5" />;
+        case 'reminder_sent': return <Bell className="size-5" />;
+        case 'invoice': return <Receipt className="size-5" />;
+        case 'landlord_review': return <History className="size-5" />;
+        default: return <Zap className="size-5" />;
     }
 }
 
@@ -1439,7 +1439,7 @@ function MiniSystemMessage({ message, router }: { message: MiniChatMessage; rout
         return (
             <NotificationCard
                 message={message}
-                icon={isOverpayment ? <TrendingUp className="h-6 w-6 text-white" /> : (isRejected ? <AlertTriangle className="h-6 w-6 text-white" /> : <CheckCircle2 className="h-6 w-6 text-white" />)}
+                icon={isOverpayment ? <TrendingUp className="size-6 text-white" /> : (isRejected ? <AlertTriangle className="size-6 text-white" /> : <CheckCircle2 className="size-6 text-white" />)}
                 title={isOverpayment 
                     ? (isResolved ? "Reconciliation Complete" : "Overpayment Detected")
                     : (isRejected ? "Payment Rejected" : "Payment Confirmed")
@@ -1456,7 +1456,7 @@ function MiniSystemMessage({ message, router }: { message: MiniChatMessage; rout
         return (
             <NotificationCard
                 message={message}
-                icon={<HandCoins className="h-6 w-6 text-white" />}
+                icon={<HandCoins className="size-6 text-white" />}
                 title="In-Person Payment"
                 subtitle="Verification Required"
                 variant="warning"
@@ -1469,7 +1469,7 @@ function MiniSystemMessage({ message, router }: { message: MiniChatMessage; rout
         return (
             <NotificationCard
                 message={message}
-                icon={<Bell className="h-6 w-6 text-white" />}
+                icon={<Bell className="size-6 text-white" />}
                 title="Payment Reminder"
                 subtitle="Notification Sent"
                 variant="default"
@@ -1534,5 +1534,6 @@ function ContactCard({ name, role, unit, avatar, avatarBgColor, status, isExpand
         </div>
     )
 }
+
 
 

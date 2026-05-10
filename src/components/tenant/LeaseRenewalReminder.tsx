@@ -136,7 +136,7 @@ export default function LeaseRenewalReminder({ daysRemaining, leaseId, teamMembe
                                                         localStorage.removeItem(`ireside_renewal_reminder_dismissed_${leaseId}`);
                                                     }
                                                 }}
-                                                className="peer h-4 w-4 shrink-0 rounded border border-border bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 checked:bg-primary checked:border-primary transition-all appearance-none"
+                                                className="peer size-4 shrink-0 rounded border border-border bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 checked:bg-primary checked:border-primary transition-all appearance-none"
                                             />
                                             <Check className="absolute h-3 w-3 text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity stroke-[4]" />
                                         </div>
@@ -199,4 +199,5 @@ export default function LeaseRenewalReminder({ daysRemaining, leaseId, teamMembe
         </>
     );
 }
+
 

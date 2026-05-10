@@ -280,7 +280,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                             onClick={onClose}
                             className="rounded-2xl bg-muted p-3 text-muted-foreground transition-all hover:bg-red-500/10 hover:text-red-500"
                         >
-                            <X className="h-5 w-5" />
+                            <X className="size-5" />
                         </button>
                     </div>
 
@@ -310,7 +310,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                         Facility Name
                                     </label>
                                     <div className="relative">
-                                        <Zap className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/40" />
+                                        <Zap className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40" />
                                         <input
                                             required
                                             type="text"
@@ -342,7 +342,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                             Capacity
                                         </label>
                                         <div className="relative">
-                                            <Users className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/40" />
+                                            <Users className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40" />
                                             <input
                                                 type="number"
                                                 value={formData.capacity}
@@ -397,7 +397,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                                                 : "border-border bg-muted/30 text-muted-foreground hover:bg-muted/50"
                                                         )}
                                                     >
-                                                        <item.icon className="h-5 w-5" />
+                                                        <item.icon className="size-5" />
                                                     </button>
                                                 ))}
                                                 
@@ -417,9 +417,9 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                                 type="button"
                                                 disabled={currentPage === 0}
                                                 onClick={() => setCurrentPage(prev => prev - 1)}
-                                                className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-muted/30 text-muted-foreground transition-all hover:bg-muted disabled:opacity-30"
+                                                className="flex size-8 items-center justify-center rounded-lg border border-border bg-muted/30 text-muted-foreground transition-all hover:bg-muted disabled:opacity-30"
                                             >
-                                                <ChevronLeft className="h-4 w-4" />
+                                                <ChevronLeft className="size-4" />
                                             </button>
                                             <div className="flex gap-1.5">
                                                 {[...Array(totalPages)].map((_, i) => (
@@ -438,9 +438,9 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                                 type="button"
                                                 disabled={currentPage === totalPages - 1}
                                                 onClick={() => setCurrentPage(prev => prev + 1)}
-                                                className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-muted/30 text-muted-foreground transition-all hover:bg-muted disabled:opacity-30"
+                                                className="flex size-8 items-center justify-center rounded-lg border border-border bg-muted/30 text-muted-foreground transition-all hover:bg-muted disabled:opacity-30"
                                             >
-                                                <ChevronRight className="h-4 w-4" />
+                                                <ChevronRight className="size-4" />
                                             </button>
                                         </div>
                                     )}
@@ -481,7 +481,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                         Specific Location
                                     </label>
                                     <div className="relative">
-                                        <MapPin className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/40" />
+                                        <MapPin className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40" />
                                         <input
                                             type="text"
                                             placeholder="e.g., 5th Floor, Main Wing"
@@ -520,12 +520,12 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                                     className="absolute inset-0 h-full w-full object-cover transition-transform group-hover:scale-105"
                                                 />
                                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                    <Camera className="h-6 w-6 text-white" />
+                                                    <Camera className="size-6 text-white" />
                                                 </div>
                                             </>
                                         ) : (
                                             <div className="flex flex-col items-center gap-2 text-muted-foreground/60">
-                                                <Camera className="h-8 w-8" />
+                                                <Camera className="size-8" />
                                                 <span className="text-[10px] font-bold uppercase tracking-widest">Click to upload photo</span>
                                             </div>
                                         )}

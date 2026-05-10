@@ -170,7 +170,7 @@ export function MessageBubble({
                                     "p-2 rounded-lg",
                                     isMe ? "bg-white/20" : "bg-primary/10"
                                 )}>
-                                    <Paperclip className={cn("h-4 w-4", isMe ? "text-white" : "text-primary")} />
+                                    <Paperclip className={cn("size-4", isMe ? "text-white" : "text-primary")} />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="text-xs font-bold truncate">{message.fileName || "File Attachment"}</p>
@@ -331,11 +331,11 @@ function AlbumGrid({ attachments, isMe, onImageClick }: { attachments: UiMessage
 // Helper to render icons based on system type
 function renderSystemIcon(type: string) {
     switch (type) {
-        case 'awaiting_in_person': return <HandCoins className="h-5 w-5" />;
-        case 'reminder_sent': return <Bell className="h-5 w-5" />;
-        case 'invoice': return <Receipt className="h-5 w-5" />;
-        case 'landlord_review': return <History className="h-5 w-5" />;
-        default: return <Zap className="h-5 w-5" />;
+        case 'awaiting_in_person': return <HandCoins className="size-5" />;
+        case 'reminder_sent': return <Bell className="size-5" />;
+        case 'invoice': return <Receipt className="size-5" />;
+        case 'landlord_review': return <History className="size-5" />;
+        default: return <Zap className="size-5" />;
     }
 }
 
@@ -376,7 +376,7 @@ function SystemMessage({
         return (
             <NotificationCard
                 message={message}
-                icon={<HandCoins className="h-6 w-6 text-white" />}
+                icon={<HandCoins className="size-6 text-white" />}
                 title={isLandlord ? "In-Person Payment" : "Payment Awaiting Collection"}
                 subtitle={isLandlord ? "Verification Required" : "Face-to-Face Transaction"}
                 variant="warning"
@@ -392,7 +392,7 @@ function SystemMessage({
         return (
             <NotificationCard
                 message={message}
-                icon={<Bell className="h-6 w-6 text-white" />}
+                icon={<Bell className="size-6 text-white" />}
                 title={isLandlord ? "Payment Reminder" : "Payment Request"}
                 subtitle={isLandlord ? "Notification Sent" : "Action Required"}
                 variant="default"
@@ -411,7 +411,7 @@ function SystemMessage({
         return (
             <NotificationCard
                 message={message}
-                icon={isOverpayment ? <TrendingUp className="h-6 w-6 text-white" /> : (isRejected ? <AlertTriangle className="h-6 w-6 text-white" /> : <CheckCircle2 className="h-6 w-6 text-white" />)}
+                icon={isOverpayment ? <TrendingUp className="size-6 text-white" /> : (isRejected ? <AlertTriangle className="size-6 text-white" /> : <CheckCircle2 className="size-6 text-white" />)}
                 title={isOverpayment 
                     ? (message.metadata?.isResolved 
                         ? "Reconciliation Complete"
@@ -460,3 +460,4 @@ function SystemMessage({
         />
     );
 }
+

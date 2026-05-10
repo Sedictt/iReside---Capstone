@@ -109,13 +109,13 @@ export function UnitShowcaseModal({
                                 onClick={prevImage}
                                 className="absolute left-4 top-1/2 -translate-y-1/2 size-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors"
                             >
-                                <ChevronLeft className="h-5 w-5" />
+                                <ChevronLeft className="size-5" />
                             </button>
                             <button
                                 onClick={nextImage}
                                 className="absolute right-4 top-1/2 -translate-y-1/2 size-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors"
                             >
-                                <ChevronRight className="h-5 w-5" />
+                                <ChevronRight className="size-5" />
                             </button>
 
                             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
@@ -171,7 +171,7 @@ export function UnitShowcaseModal({
                                 key={d.label}
                                 className="bg-white/5 border border-white/5 rounded-xl p-4 flex flex-col items-center gap-2"
                             >
-                                <d.icon className="h-5 w-5 text-primary" />
+                                <d.icon className="size-5 text-primary" />
                                 <p className="text-white font-bold text-lg">{d.value}</p>
                                 <p className="text-neutral-500 text-xs font-medium uppercase tracking-wider">
                                     {d.label}
@@ -221,7 +221,7 @@ export function UnitShowcaseModal({
                             }}
                             className="w-full h-14 rounded-xl bg-primary hover:bg-primary/90 text-black font-bold text-lg transition-all flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(var(--primary),0.3)]"
                         >
-                            <ClipboardList className="h-5 w-5" />
+                            <ClipboardList className="size-5" />
                             Start Tenant Application
                         </button>
                     )}

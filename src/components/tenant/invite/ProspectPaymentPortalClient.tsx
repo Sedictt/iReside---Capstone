@@ -208,7 +208,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
     if (loading) {
         return (
             <div className="min-h-screen bg-[#0f1218] text-white flex items-center justify-center p-6">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <Loader2 className="size-8 animate-spin text-primary" />
             </div>
         );
     }
@@ -217,7 +217,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
         return (
             <div className="min-h-screen bg-[#0f1218] text-white flex items-center justify-center p-6">
                 <div className="max-w-lg w-full rounded-3xl border border-red-500/20 bg-red-500/10 p-8 text-center">
-                    <ShieldAlert className="mx-auto h-10 w-10 text-red-400" />
+                    <ShieldAlert className="mx-auto size-10 text-red-400" />
                     <h1 className="mt-3 text-2xl font-black">Payment Portal Unavailable</h1>
                     <p className="mt-3 text-sm text-red-200">{error || "This link is invalid or expired."}</p>
                 </div>
@@ -364,9 +364,9 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                         className="inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-black text-black disabled:opacity-50"
                                     >
                                         {savingRequestId === request.id ? (
-                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                            <Loader2 className="size-4 animate-spin" />
                                         ) : (
-                                            <CheckCircle2 className="h-4 w-4" />
+                                            <CheckCircle2 className="size-4" />
                                         )}
                                         {request.status === "rejected" ? "Resubmit" : "Submit"}
                                     </button>
@@ -385,4 +385,5 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
         </div>
     );
 }
+
 

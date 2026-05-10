@@ -777,14 +777,14 @@ export function RentApplications() {
                         onClick={() => setShowInviteTools(true)}
                         className="flex h-11 items-center gap-2 rounded-2xl border border-border bg-card px-5 text-xs font-black uppercase tracking-widest text-foreground transition-all hover:border-primary/30 hover:bg-muted active:scale-95"
                     >
-                        <Plus className="h-4 w-4" />
+                        <Plus className="size-4" />
                         Invite Manager
                     </button>
                     <button
                         onClick={() => setShowTenantApplicationModal(true)}
                         className="flex h-11 items-center gap-2 rounded-2xl bg-primary px-6 text-xs font-black uppercase tracking-widest text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95"
                     >
-                        <QrCode className="h-4 w-4" />
+                        <QrCode className="size-4" />
                         Walk-in Intake
                     </button>
                 </div>
@@ -820,7 +820,7 @@ export function RentApplications() {
 
                     <div className="flex w-full items-center gap-3 xl:w-auto">
                         <div className="relative flex-1 xl:w-80">
-                            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                            <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                             <input
                                 type="text"
                                 placeholder="Search applications..."
@@ -830,7 +830,7 @@ export function RentApplications() {
                             />
                         </div>
                         <button className="flex h-11 items-center gap-2 rounded-2xl border border-border bg-background px-5 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:bg-muted hover:text-foreground transition-all">
-                            <Filter className="h-4 w-4" />
+                            <Filter className="size-4" />
                             <span className="hidden sm:inline">Advanced</span>
                         </button>
                     </div>
@@ -842,12 +842,12 @@ export function RentApplications() {
                         <ApplicationsSkeletonList />
                     ) : error ? (
                         <div className="flex flex-col items-center justify-center py-12 text-center">
-                            <AlertCircle className="h-12 w-12 text-red-500/50 mb-4" />
+                            <AlertCircle className="size-12 text-red-500/50 mb-4" />
                             <p className="text-sm font-black text-foreground">{error}</p>
                         </div>
                     ) : filteredApplications.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-24 text-center">
-                            <Users className="h-12 w-12 text-muted-foreground/30 mb-4" />
+                            <Users className="size-12 text-muted-foreground/30 mb-4" />
                             <h3 className="text-xl font-black text-foreground">No Applications Found</h3>
                             <p className="text-sm font-medium text-muted-foreground max-w-xs mt-2">
                                 We couldn&apos;t find any applications matching your current criteria.
@@ -876,7 +876,7 @@ export function RentApplications() {
 
                                             <div className="grid flex-1 grid-cols-1 items-center gap-6 px-6 lg:grid-cols-[1fr_120px_180px] xl:grid-cols-[1fr_120px_120px_180px]">
                                                 <div className="flex items-center gap-4 min-w-0">
-                                                    <div className="h-12 w-12 shrink-0 rounded-full border-2 border-border bg-muted flex items-center justify-center font-black text-muted-foreground" style={{ backgroundColor: app.applicant.avatarBgColor || "" }}>
+                                                    <div className="size-12 shrink-0 rounded-full border-2 border-border bg-muted flex items-center justify-center font-black text-muted-foreground" style={{ backgroundColor: app.applicant.avatarBgColor || "" }}>
                                                         {app.applicant.avatar ? <img src={app.applicant.avatar} alt={`${app.applicant.name} avatar`} className="h-full w-full object-cover" /> : app.applicant.name[0]}
                                                     </div>
                                                     <div className="min-w-0 flex-1">
@@ -906,8 +906,8 @@ export function RentApplications() {
                                                         <config.icon className="h-3.5 w-3.5" />
                                                         {config.label}
                                                     </div>
-                                                    <button className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-card transition-all hover:bg-primary hover:text-white hover:border-primary">
-                                                        <Eye className="h-4 w-4" />
+                                                    <button className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-border bg-card transition-all hover:bg-primary hover:text-white hover:border-primary">
+                                                        <Eye className="size-4" />
                                                     </button>
                                                 </div>
                                             </div>
@@ -951,7 +951,7 @@ export function RentApplications() {
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <button onClick={() => { setSelectedApp(null); cancelEdit(); }} className="flex h-11 w-11 items-center justify-center rounded-2xl border border-border bg-background transition-all hover:bg-muted active:scale-95">
-                                        <X className="h-5 w-5" />
+                                        <X className="size-5" />
                                     </button>
                                 </div>
                             </div>
@@ -966,9 +966,9 @@ export function RentApplications() {
                                                 className="flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-emerald-500 disabled:opacity-50"
                                             >
                                                 {updatingStatusId === selectedApp.id ? (
-                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                    <Loader2 className="size-4 animate-spin" />
                                                 ) : (
-                                                    <Sparkles className="h-4 w-4" />
+                                                    <Sparkles className="size-4" />
                                                 )}
                                                 Quick Approve
                                             </button>
@@ -976,7 +976,7 @@ export function RentApplications() {
                                                 onClick={() => openApprovalModal(selectedApp)}
                                                 className="flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-5 py-2.5 text-xs font-black uppercase tracking-widest text-primary transition-all hover:bg-primary/20"
                                             >
-                                                <Wallet className="h-4 w-4" />
+                                                <Wallet className="size-4" />
                                                 {selectedApp.status === "payment_pending" ? "Finalize" : "Request Payment"}
                                             </button>
                                         </div>
@@ -1025,7 +1025,7 @@ export function RentApplications() {
                                             </div>
                                             {missing.length > 0 && (
                                                 <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-5 flex items-start gap-4">
-                                                    <AlertCircle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+                                                    <AlertCircle className="size-5 text-amber-500 shrink-0 mt-0.5" />
                                                     <div className="space-y-3">
                                                         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-500">Missing Prerequisites</p>
                                                         <ul className="space-y-1.5">
@@ -1122,7 +1122,7 @@ export function RentApplications() {
                                                     )}
                                                 >
                                                     <span className="text-[10px] font-black uppercase tracking-widest">{req.label}</span>
-                                                    {isDone ? <CheckCircle2 className="h-4 w-4" /> : <div className="h-4 w-4 rounded-full border-2 border-current opacity-20" />}
+                                                    {isDone ? <CheckCircle2 className="size-4" /> : <div className="size-4 rounded-full border-2 border-current opacity-20" />}
                                                 </button>
                                             );
                                         })}
@@ -1136,10 +1136,10 @@ export function RentApplications() {
                                         {selectedApp.documents.map((doc, i) => (
                                             <button key={i} onClick={() => setPreviewUrl(doc)} className="flex items-center justify-between rounded-2xl border border-border bg-background p-4 hover:border-primary/30 transition-all">
                                                 <div className="flex items-center gap-3">
-                                                    <FileText className="h-5 w-5 text-muted-foreground" />
+                                                    <FileText className="size-5 text-muted-foreground" />
                                                     <span className="text-[11px] font-black text-foreground">{formatDocumentLabel(doc)}</span>
                                                 </div>
-                                                <Eye className="h-4 w-4 text-primary" />
+                                                <Eye className="size-4 text-primary" />
                                             </button>
                                         ))}
                                     </div>
@@ -1154,8 +1154,8 @@ export function RentApplications() {
                                                 <>
                                                     <div className="flex items-center justify-between">
                                                         <div className="flex items-center gap-4">
-                                                            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20">
-                                                                <FileText className="h-6 w-6 text-primary" />
+                                                            <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20">
+                                                                <FileText className="size-6 text-primary" />
                                                             </div>
                                                             <div>
                                                                 <p className="text-sm font-black text-foreground">Digital Lease Contract</p>
@@ -1169,8 +1169,8 @@ export function RentApplications() {
 
                                                     {(selectedApp.lease.status === 'pending_signature' || selectedApp.lease.status === 'pending_tenant_signature') && (
                                                         <div className="rounded-2xl bg-amber-500/5 border border-amber-500/10 p-5 flex items-start gap-4">
-                                                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-500/20 text-amber-600">
-                                                                <Clock className="h-4 w-4" />
+                                                            <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-amber-500/20 text-amber-600">
+                                                                <Clock className="size-4" />
                                                             </div>
                                                             <div className="space-y-1">
                                                                 <p className="text-[10px] font-black uppercase tracking-widest text-amber-600">Awaiting Signature</p>
@@ -1224,8 +1224,8 @@ export function RentApplications() {
 
                                                     {selectedApp.lease.status === 'pending_landlord_signature' && (
                                                         <div className="rounded-2xl bg-emerald-500/5 border border-emerald-500/10 p-5 flex items-start gap-4">
-                                                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-600">
-                                                                <FileText className="h-4 w-4" />
+                                                            <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-600">
+                                                                <FileText className="size-4" />
                                                             </div>
                                                             <div className="space-y-1 w-full">
                                                                 <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Awaiting Your Signature</p>
@@ -1251,7 +1251,7 @@ export function RentApplications() {
                                             ) : (
                                                 <div className="flex flex-col items-center justify-center py-8 text-center space-y-4">
                                                     <div className="flex h-16 w-16 items-center justify-center rounded-[2rem] bg-muted/50 text-muted-foreground/30">
-                                                        <FileText className="h-8 w-8" />
+                                                        <FileText className="size-8" />
                                                     </div>
                                                     <div className="space-y-1">
                                                         <p className="text-sm font-black text-foreground">No Lease Generated</p>
@@ -1264,7 +1264,7 @@ export function RentApplications() {
                                                         disabled={signingLinkState.loading}
                                                         className="rounded-2xl bg-primary px-8 py-3 text-[10px] font-black uppercase tracking-widest text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-50"
                                                     >
-                                                        {signingLinkState.loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Generate & Link Lease"}
+                                                        {signingLinkState.loading ? <Loader2 className="size-4 animate-spin" /> : "Generate & Link Lease"}
                                                     </button>
                                                     {signingLinkState.message && (
                                                         <div className="space-y-1 text-center">
@@ -1308,7 +1308,7 @@ export function RentApplications() {
                                         {selectedApp.status === "rejected" && (
                                             <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6 text-center">
                                                 <div className="mb-2 flex items-center justify-center">
-                                                    <XCircle className="h-6 w-6 text-red-500" />
+                                                    <XCircle className="size-6 text-red-500" />
                                                 </div>
                                                 <p className="text-sm font-black text-red-500">Application Declined</p>
                                                 {declineReason && (
@@ -1328,7 +1328,7 @@ export function RentApplications() {
                                                             className="w-full rounded-2xl border border-amber-500/20 bg-amber-500/10 py-4 text-xs font-black uppercase tracking-widest text-amber-500 hover:bg-amber-500 hover:text-white transition-all active:scale-95 disabled:opacity-50"
                                                         >
                                                             {signingLinkState.loading ? (
-                                                                <Loader2 className="h-4 w-4 animate-spin mx-auto" />
+                                                                <Loader2 className="size-4 animate-spin mx-auto" />
                                                             ) : (
                                                                 <Mail className="h-3.5 w-3.5" />
                                                             )}
@@ -1361,7 +1361,7 @@ export function RentApplications() {
                                                     disabled={sendingCredentials}
                                                     className="w-full rounded-2xl border border-blue-500/20 bg-blue-500/10 py-4 text-xs font-black uppercase tracking-widest text-blue-500 hover:bg-blue-500 hover:text-white transition-all active:scale-95 disabled:opacity-50"
                                                 >
-                                                    {sendingCredentials ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : "Resend Access Portal Link"}
+                                                    {sendingCredentials ? <Loader2 className="size-4 animate-spin mx-auto" /> : "Resend Access Portal Link"}
                                                 </button>
                                             </div>
                                         )}
@@ -1391,8 +1391,8 @@ export function RentApplications() {
                         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative z-[210] flex h-full w-full max-w-6xl flex-col overflow-hidden rounded-[2.5rem] border border-white/10 bg-card shadow-2xl">
                             <div className="flex items-center justify-between border-b border-white/5 bg-white/5 px-8 py-6 backdrop-blur-md">
                                 <h3 className="text-xl font-black text-white">{formatDocumentLabel(previewUrl)}</h3>
-                                <button onClick={() => setPreviewUrl(null)} className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-500/10 text-red-500 transition-all hover:bg-red-500 hover:text-white">
-                                    <X className="h-6 w-6" />
+                                <button onClick={() => setPreviewUrl(null)} className="flex size-12 items-center justify-center rounded-xl bg-red-500/10 text-red-500 transition-all hover:bg-red-500 hover:text-white">
+                                    <X className="size-6" />
                                 </button>
                             </div>
                             <div className="flex-1 bg-black/50 p-4">
@@ -1420,7 +1420,7 @@ export function RentApplications() {
                         />
                         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative z-[310] w-full max-w-md rounded-[2.5rem] border border-emerald-500/20 bg-card p-8 shadow-2xl">
                             <div className="mb-6 flex items-center gap-4">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 border border-emerald-500/20"><CheckCircle2 className="h-6 w-6 text-emerald-500" /></div>
+                                <div className="flex size-12 items-center justify-center rounded-2xl bg-emerald-500/10 border border-emerald-500/20"><CheckCircle2 className="size-6 text-emerald-500" /></div>
                                 <div>
                                     <h3 className="text-xl font-black text-foreground">Access Generated</h3>
                                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tenant credentials provisioned</p>
@@ -1460,7 +1460,7 @@ export function RentApplications() {
                         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="relative z-[160] h-[90vh] w-full max-w-6xl overflow-hidden rounded-[2.5rem] border border-border bg-background shadow-2xl">
                             <div className="flex items-center justify-between border-b border-border bg-card px-8 py-6">
                                 <h3 className="text-xl font-black tracking-tighter text-foreground">Intake Manager</h3>
-                                <button onClick={() => setShowInviteTools(false)} className="rounded-xl border border-border bg-background p-2 transition-all hover:bg-muted"><X className="h-6 w-6" /></button>
+                                <button onClick={() => setShowInviteTools(false)} className="rounded-xl border border-border bg-background p-2 transition-all hover:bg-muted"><X className="size-6" /></button>
                             </div>
                             <div className="h-full overflow-y-auto p-8 pb-24"><TenantInviteManager availableUnits={scopedAvailableUnits} invites={scopedTenantInvites} onRefresh={loadInvites} /></div>
                         </motion.div>
@@ -1521,8 +1521,8 @@ export function RentApplications() {
                         />
                         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative z-[310] w-full max-w-md rounded-[2.5rem] border border-red-500/20 bg-card p-8 shadow-2xl">
                             <div className="mb-6 flex items-center gap-4">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-500/10 border border-red-500/20">
-                                    <AlertCircle className="h-6 w-6 text-red-500" />
+                                <div className="flex size-12 items-center justify-center rounded-2xl bg-red-500/10 border border-red-500/20">
+                                    <AlertCircle className="size-6 text-red-500" />
                                 </div>
                                 <div>
                                     <h3 className="text-xl font-black text-foreground">Decline Application</h3>
@@ -1588,7 +1588,7 @@ export function RentApplications() {
                                         className="flex-1 rounded-2xl bg-red-500 py-4 text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-red-500/20 hover:bg-red-400 transition-all active:scale-95 disabled:opacity-50"
                                     >
                                         {updatingStatusId === selectedApp.id ? (
-                                            <Loader2 className="h-4 w-4 animate-spin mx-auto" />
+                                            <Loader2 className="size-4 animate-spin mx-auto" />
                                         ) : (
                                             "Confirm Decline"
                                         )}

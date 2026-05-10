@@ -308,7 +308,7 @@ export function ContractPreviewModal({
                 <div className="p-6 space-y-6">
                     {error && (
                         <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
-                            <AlertCircle className="h-5 w-5 text-red-400 shrink-0" />
+                            <AlertCircle className="size-5 text-red-400 shrink-0" />
                             <p className="text-sm text-red-400">{error}</p>
                         </div>
                     )}
@@ -317,7 +317,7 @@ export function ContractPreviewModal({
                         <div className="space-y-6">
                             <div className="text-center py-6">
                                 <div className="size-16 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-4">
-                                    <CheckCircle2 className="h-8 w-8 text-emerald-400" />
+                                    <CheckCircle2 className="size-8 text-emerald-400" />
                                 </div>
                                 <h3 className="text-2xl font-semibold text-white mb-2">
                                     {result.status === "approved" ? "Approval Complete" : "Payment Request Sent"}
@@ -354,17 +354,17 @@ export function ContractPreviewModal({
                         <>
                             <div className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-3 text-sm">
                                 <div className="flex items-center gap-3 text-neutral-300">
-                                    <Home className="h-4 w-4 text-neutral-500" />
+                                    <Home className="size-4 text-neutral-500" />
                                     <span className="font-medium text-white">{contractData.property_name}</span>
                                     <span className="text-neutral-500">-</span>
                                     <span>{contractData.unit_name}</span>
                                 </div>
                                 <div className="flex items-center gap-3 text-neutral-300">
-                                    <User className="h-4 w-4 text-neutral-500" />
+                                    <User className="size-4 text-neutral-500" />
                                     <span>Tenant: <span className="text-white font-medium">{contractData.applicant_name}</span></span>
                                 </div>
                                 <div className="flex items-center gap-3 text-neutral-300">
-                                    <Mail className="h-4 w-4 text-neutral-500" />
+                                    <Mail className="size-4 text-neutral-500" />
                                     <span>{contractData.applicant_email}</span>
                                 </div>
                             </div>
@@ -452,7 +452,7 @@ export function ContractPreviewModal({
                                         type="checkbox"
                                         checked={policyConfirmed}
                                         onChange={(event) => setPolicyConfirmed(event.target.checked)}
-                                        className="mt-0.5 h-4 w-4 rounded border-white/20 bg-transparent"
+                                        className="mt-0.5 size-4 rounded border-white/20 bg-transparent"
                                     />
                                     <span className="text-xs text-neutral-300 leading-relaxed">
                                         I confirm this should start payment-pending stage and send the payment portal
@@ -471,7 +471,7 @@ export function ContractPreviewModal({
                                         : "bg-white/10 text-neutral-500"
                                 )}
                             >
-                                {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <ShieldCheck className="h-5 w-5" />}
+                                {submitting ? <Loader2 className="size-5 animate-spin" /> : <ShieldCheck className="size-5" />}
                                 {submitting
                                     ? isFinalApproval
                                         ? "Finalizing..."

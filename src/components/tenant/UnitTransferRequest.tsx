@@ -153,7 +153,7 @@ export default function UnitTransferRequest({ currentUnitId }: UnitTransferReque
                                 onClick={() => setIsOpen(false)}
                                 className="p-2 rounded-xl hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
                             >
-                                <X className="h-5 w-5" />
+                                <X className="size-5" />
                             </button>
                         </div>
 
@@ -290,4 +290,5 @@ export default function UnitTransferRequest({ currentUnitId }: UnitTransferReque
         </>
     );
 }
+
 

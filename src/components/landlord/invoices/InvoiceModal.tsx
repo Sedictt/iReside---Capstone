@@ -318,8 +318,8 @@ export function InvoiceModal({
                     <div className="relative flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
                         <div className="space-y-4">
                             <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-surface-2 border border-white/10 shadow-inner">
-                                    <FileText className="h-5 w-5 text-text-medium" />
+                                <div className="flex size-10 items-center justify-center rounded-xl bg-surface-2 border border-white/10 shadow-inner">
+                                    <FileText className="size-5 text-text-medium" />
                                 </div>
                                 <span className="text-xs font-bold uppercase tracking-[0.25em] text-text-medium">Invoice Specification</span>
                             </div>
@@ -365,9 +365,9 @@ export function InvoiceModal({
                              )}
                              <button 
                                  onClick={handleClose} 
-                                 className="group flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-surface-2 text-text-medium transition-all hover:bg-surface-3 hover:text-text-high active:scale-95 shadow-lg"
+                                 className="group flex size-10 items-center justify-center rounded-full border border-white/10 bg-surface-2 text-text-medium transition-all hover:bg-surface-3 hover:text-text-high active:scale-95 shadow-lg"
                              >
-                                 <X className="h-5 w-5 transition-transform group-hover:rotate-90" />
+                                 <X className="size-5 transition-transform group-hover:rotate-90" />
                              </button>
                         </div>
                     </div>
@@ -379,7 +379,7 @@ export function InvoiceModal({
                         {loading || !invoice ? (
                             <div className="flex min-h-[400px] flex-col items-center justify-center gap-4 text-text-medium text-center">
                                 <div className="relative">
-                                    <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                                    <Loader2 className="size-12 animate-spin text-primary" />
                                     <div className="absolute inset-0 blur-xl bg-primary/20 animate-pulse rounded-full" />
                                 </div>
                                 <p className="text-sm font-medium">Synchronizing ledger details...</p>
@@ -394,7 +394,7 @@ export function InvoiceModal({
                                 <section className="space-y-4">
                                     <div className="flex items-center justify-between">
                                         <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-text-high">
-                                            <Hash className="h-4 w-4 text-primary" />
+                                            <Hash className="size-4 text-primary" />
                                             Itemized Breakdown
                                         </h3>
                                     </div>
@@ -435,7 +435,7 @@ export function InvoiceModal({
 
                                 <section className="space-y-4">
                                     <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-text-high">
-                                        <Clock3 className="h-4 w-4 text-primary" />
+                                        <Clock3 className="size-4 text-primary" />
                                         Utility Consumption
                                     </h3>
                                     <div className="grid gap-4">
@@ -476,7 +476,7 @@ export function InvoiceModal({
                                 <section className="space-y-4 pt-4 border-t border-white/5">
                                     <div className="flex items-center justify-between">
                                         <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-text-high">
-                                            <Receipt className="h-4 w-4 text-primary" />
+                                            <Receipt className="size-4 text-primary" />
                                             Proof of Payment
                                         </h3>
                                     </div>
@@ -494,8 +494,8 @@ export function InvoiceModal({
                                                 />
                                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                                                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-md border border-white/20">
-                                                        <ArrowUpRight className="h-6 w-6" />
+                                                    <div className="flex size-12 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-md border border-white/20">
+                                                        <ArrowUpRight className="size-6" />
                                                     </div>
                                                 </div>
                                                 <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all">
@@ -508,7 +508,7 @@ export function InvoiceModal({
                                             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/5 to-transparent opacity-20" />
                                             <div className="relative flex flex-col items-center gap-4">
                                                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-2 border border-white/5 text-text-disabled shadow-inner group-hover:scale-110 transition-transform">
-                                                    <Receipt className="h-8 w-8 opacity-20" />
+                                                    <Receipt className="size-8 opacity-20" />
                                                 </div>
                                                 <div className="space-y-1">
                                                     <p className="text-sm font-bold text-text-medium">No Proof Attached</p>
@@ -523,7 +523,7 @@ export function InvoiceModal({
                                     {(invoice.metadata as any)?.refund_proof_url && (
                                         <div className="space-y-4 pt-8 border-t border-white/5 text-left">
                                             <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-text-high">
-                                                <Wallet className="h-4 w-4 text-amber-400" />
+                                                <Wallet className="size-4 text-amber-400" />
                                                 Proof of Refund
                                             </h3>
                                             <button 
@@ -538,8 +538,8 @@ export function InvoiceModal({
                                                     />
                                                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                                                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-md border border-white/20">
-                                                            <ArrowUpRight className="h-6 w-6" />
+                                                        <div className="flex size-12 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-md border border-white/20">
+                                                            <ArrowUpRight className="size-6" />
                                                         </div>
                                                     </div>
                                                 </div>
@@ -584,15 +584,15 @@ export function InvoiceModal({
                                                 >
                                                     <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                                                     <div className="flex items-center gap-4 relative">
-                                                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 text-primary shadow-inner">
-                                                            <Receipt className="h-5 w-5" />
+                                                        <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 text-primary shadow-inner">
+                                                            <Receipt className="size-5" />
                                                         </div>
                                                         <div>
                                                             <p className="text-sm font-bold text-text-high">Review Payment Proof</p>
                                                             <p className="text-[10px] text-text-medium font-medium">Click to view uploaded receipt image</p>
                                                         </div>
                                                     </div>
-                                                    <ArrowUpRight className="h-5 w-5 text-text-disabled transition-all group-hover:translate-x-1 group-hover:-translate-y-1 group-hover:text-primary" />
+                                                    <ArrowUpRight className="size-5 text-text-disabled transition-all group-hover:translate-x-1 group-hover:-translate-y-1 group-hover:text-primary" />
                                                 </a>
                                             )}
 
@@ -672,7 +672,7 @@ export function InvoiceModal({
                                                         <>
                                                             <div className="rounded-2xl bg-emerald-500/5 border border-emerald-500/20 p-5 space-y-3">
                                                                 <div className="flex items-start gap-3">
-                                                                    <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
+                                                                    <div className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
                                                                         <CheckCircle className="h-3 w-3" />
                                                                     </div>
                                                                     <div className="space-y-1">
@@ -692,7 +692,7 @@ export function InvoiceModal({
                                                                         placeholder="Add an optional message for the tenant (e.g. 'Thank you for the prompt payment!')" 
                                                                     />
                                                                     <div className="absolute right-4 bottom-4 opacity-30 group-focus-within:opacity-100 transition-opacity">
-                                                                        <MessageSquare className="h-4 w-4 text-primary" />
+                                                                        <MessageSquare className="size-4 text-primary" />
                                                                     </div>
                                                                 </div>
  
@@ -702,7 +702,7 @@ export function InvoiceModal({
                                                                         loading={actionLoading === "confirm"} 
                                                                         variant="primary"
                                                                         fullWidth
-                                                                        icon={<CheckCircle2 className="h-5 w-5" />}
+                                                                        icon={<CheckCircle2 className="size-5" />}
                                                                     >
                                                                         Confirm & Issue Receipt
                                                                     </ActionButton>
@@ -758,7 +758,7 @@ export function InvoiceModal({
                                                             <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-64 pointer-events-none opacity-0 group-hover/nudge:opacity-100 translate-y-2 group-hover/nudge:translate-y-0 transition-all duration-300 z-50">
                                                                 <div className="relative rounded-2xl bg-surface-3 border border-white/10 p-4 shadow-2xl backdrop-blur-xl">
                                                                     <div className="flex gap-3">
-                                                                        <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-500/20 text-amber-400">
+                                                                        <div className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-amber-500/20 text-amber-400">
                                                                             <Info className="h-3 w-3" />
                                                                         </div>
                                                                         <p className="text-[10px] font-medium leading-relaxed text-text-medium">
@@ -859,7 +859,7 @@ export function InvoiceModal({
                             <div className="p-10 space-y-8">
                                 <div className="flex justify-center">
                                     <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-amber-500/10 text-amber-400 shadow-inner">
-                                        <ShieldCheck className="h-10 w-10" />
+                                        <ShieldCheck className="size-10" />
                                     </div>
                                 </div>
 
@@ -895,12 +895,12 @@ export function InvoiceModal({
                                         <span className="relative z-10 flex items-center justify-center gap-2">
                                             {confirmCountdown > 0 ? (
                                                 <>
-                                                    <Clock3 className="h-4 w-4 animate-pulse" />
+                                                    <Clock3 className="size-4 animate-pulse" />
                                                     Hold to Confirm ({confirmCountdown}s)
                                                 </>
                                             ) : (
                                                 <>
-                                                    <CheckCircle2 className="h-4 w-4" />
+                                                    <CheckCircle2 className="size-4" />
                                                     Yes, Proceed
                                                 </>
                                             )}
@@ -941,9 +941,9 @@ export function InvoiceModal({
                             <div className="absolute top-4 right-4">
                                 <button 
                                     onClick={() => setLightboxUrl(null)}
-                                    className="flex h-12 w-12 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-md border border-white/10 hover:bg-black/60 transition-all shadow-lg"
+                                    className="flex size-12 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-md border border-white/10 hover:bg-black/60 transition-all shadow-lg"
                                 >
-                                    <X className="h-6 w-6" />
+                                    <X className="size-6" />
                                 </button>
                             </div>
                             <div className="absolute bottom-6 left-1/2 -translate-x-1/2">
@@ -1023,7 +1023,7 @@ function F2FActionCenter({
                     loading={actionLoading === "confirm_received"} 
                     variant="primary"
                     fullWidth
-                    icon={<ShieldCheck className="h-5 w-5" />}
+                    icon={<ShieldCheck className="size-5" />}
                 >
                     Confirm Cash Received
                 </ActionButton>
@@ -1096,19 +1096,19 @@ function WizardFlow({
                         <p className="text-[11px] font-bold text-text-medium">What seems to be the problem?</p>
                         <div className="grid gap-3">
                             <DiagnosisCard 
-                                icon={<AlertTriangle className="h-5 w-5" />}
+                                icon={<AlertTriangle className="size-5" />}
                                 title="Amount is Incorrect"
                                 desc="The tenant paid more or less than required"
                                 onClick={() => handleDiagnosis("amount")}
                             />
                             <DiagnosisCard 
-                                icon={<FileText className="h-5 w-5" />}
+                                icon={<FileText className="size-5" />}
                                 title="Invalid Proof"
                                 desc="Receipt is blurry, fake, or incorrect"
                                 onClick={() => handleDiagnosis("proof")}
                             />
                             <DiagnosisCard 
-                                icon={<MessageSquare className="h-5 w-5" />}
+                                icon={<MessageSquare className="size-5" />}
                                 title="Something Else"
                                 desc="Another issue not listed above"
                                 onClick={() => handleDiagnosis("other")}
@@ -1127,7 +1127,7 @@ function WizardFlow({
                     >
                         <div className="flex items-center gap-2">
                             <button onClick={() => setStep("diagnose")} className="text-text-disabled hover:text-text-medium transition-colors">
-                                <ChevronRight className="h-4 w-4 rotate-180" />
+                                <ChevronRight className="size-4 rotate-180" />
                             </button>
                             <p className="text-[11px] font-bold text-text-medium">Enter actual payment details</p>
                         </div>
@@ -1163,7 +1163,7 @@ function WizardFlow({
                             disabled={receivedAmount === ""}
                             variant="primary"
                             fullWidth
-                            icon={<ChevronRight className="h-4 w-4" />}
+                            icon={<ChevronRight className="size-4" />}
                         >
                             Continue to Resolution
                         </ActionButton>
@@ -1180,7 +1180,7 @@ function WizardFlow({
                     >
                         <div className="flex items-center gap-2">
                             <button onClick={() => setStep(diagnosis === "amount" ? "adjust" : "diagnose")} className="text-text-disabled hover:text-text-medium transition-colors">
-                                <ChevronRight className="h-4 w-4 rotate-180" />
+                                <ChevronRight className="size-4 rotate-180" />
                             </button>
                             <p className="text-[11px] font-bold text-text-medium">How would you like to handle this?</p>
                         </div>
@@ -1266,7 +1266,7 @@ function WizardFlow({
                     >
                         <div className="flex items-center gap-2">
                             <button onClick={() => setStep(diagnosis === "amount" ? "resolve" : "diagnose")} className="text-text-disabled hover:text-text-medium transition-colors">
-                                <ChevronRight className="h-4 w-4 rotate-180" />
+                                <ChevronRight className="size-4 rotate-180" />
                             </button>
                             <p className="text-[11px] font-bold text-text-medium">Finalize and Notify Tenant</p>
                         </div>
@@ -1286,7 +1286,7 @@ function WizardFlow({
 
                         {showRejectionWarning && (
                             <div className="rounded-xl bg-rose-500/10 border border-rose-500/20 p-4 flex items-start gap-3">
-                                <AlertTriangle className="h-5 w-5 text-rose-400 shrink-0 mt-0.5" />
+                                <AlertTriangle className="size-5 text-rose-400 shrink-0 mt-0.5" />
                                 <div>
                                     <p className="text-sm font-medium text-rose-400">Rejection reason required</p>
                                     <p className="text-xs text-rose-300/70 mt-1">Please enter a reason for the tenant before rejecting or requesting completion.</p>
@@ -1304,7 +1304,7 @@ function WizardFlow({
                                     placeholder="Add a reason for the tenant (e.g. 'The receipt is unreadable' or 'The amount is missing â‚±100')" 
                                 />
                                 <div className="absolute right-4 bottom-4 opacity-30 group-focus-within:opacity-100 transition-opacity">
-                                    <MessageSquare className="h-4 w-4 text-amber-500" />
+                                    <MessageSquare className="size-4 text-amber-500" />
                                 </div>
                             </div>
 
@@ -1317,7 +1317,7 @@ function WizardFlow({
                                 loading={actionLoading === "reject" || actionLoading === "request_completion" || actionLoading === "confirm"} 
                                 variant="danger"
                                 fullWidth
-                                icon={<CheckCircle2 className="h-5 w-5" />}
+                                icon={<CheckCircle2 className="size-5" />}
                             >
                                 Submit Resolution
                             </ActionButton>
@@ -1335,14 +1335,14 @@ function DiagnosisCard({ icon, title, desc, onClick }: { icon: ReactNode, title:
             onClick={onClick}
             className="flex items-center gap-4 w-full p-4 rounded-2xl border border-white/5 bg-surface-2/50 hover:bg-surface-3 hover:border-white/10 transition-all text-left group"
         >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/5 text-text-disabled group-hover:text-primary group-hover:bg-primary/10 transition-all">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/5 text-text-disabled group-hover:text-primary group-hover:bg-primary/10 transition-all">
                 {icon}
             </div>
             <div className="space-y-0.5">
                 <p className="text-xs font-bold text-text-high">{title}</p>
                 <p className="text-[10px] text-text-disabled font-medium">{desc}</p>
             </div>
-            <ChevronRight className="h-4 w-4 text-text-disabled ml-auto group-hover:translate-x-1 transition-transform" />
+            <ChevronRight className="size-4 text-text-disabled ml-auto group-hover:translate-x-1 transition-transform" />
         </button>
     );
 }
@@ -1445,7 +1445,7 @@ function ActionButton({
             )}
         >
             <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-            {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : (
+            {loading ? <Loader2 className="size-5 animate-spin" /> : (
                 <>
                     <span className="relative z-10 transition-transform group-hover:scale-110">{icon}</span>
                     <span className="relative z-10">{children}</span>
@@ -1485,7 +1485,7 @@ function RefundCenter({
                 <div className="rounded-[2rem] border border-emerald-500/20 bg-emerald-500/10 p-8 text-center space-y-4">
                     <div className="flex justify-center">
                         <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-400/20 text-emerald-400 shadow-inner">
-                            <CheckCircle2 className="h-8 w-8" />
+                            <CheckCircle2 className="size-8" />
                         </div>
                     </div>
                     <div className="space-y-1">
@@ -1518,7 +1518,7 @@ function RefundCenter({
         <div className="space-y-4">
             <div className="rounded-2xl bg-amber-500/5 border border-amber-500/20 p-5 space-y-4">
                 <div className="flex items-start gap-3">
-                    <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-500/20 text-amber-400">
+                    <div className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-amber-500/20 text-amber-400">
                         <Wallet className="h-3 w-3" />
                     </div>
                     <div className="space-y-1">
@@ -1564,7 +1564,7 @@ function RefundCenter({
                     {!proofFile ? (
                         <label className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-white/10 bg-surface-1 py-8 text-text-disabled transition-all hover:border-primary/30 hover:bg-surface-2 cursor-pointer group">
                             <div className="p-3 rounded-full bg-surface-3 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                                <Upload className="h-5 w-5" />
+                                <Upload className="size-5" />
                             </div>
                             <div className="text-center">
                                 <p className="text-xs font-bold text-text-high group-hover:text-primary transition-colors">Select Proof Image</p>
@@ -1590,7 +1590,7 @@ function RefundCenter({
                                     className="p-3 rounded-2xl bg-red-500 text-white shadow-xl active:scale-90 transition-all"
                                     title="Remove Image"
                                 >
-                                    <Trash2 className="h-5 w-5" />
+                                    <Trash2 className="size-5" />
                                 </button>
                             </div>
                         </div>
@@ -1656,7 +1656,7 @@ function RefundSubmitButton({
         <div className="space-y-3 pt-2">
             {error && (
                 <div className="rounded-xl bg-rose-500/10 border border-rose-500/20 p-3 flex items-start gap-2">
-                    <AlertTriangle className="h-4 w-4 text-rose-400 shrink-0 mt-0.5" />
+                    <AlertTriangle className="size-4 text-rose-400 shrink-0 mt-0.5" />
                     <p className="text-[10px] font-medium text-rose-400 leading-relaxed">{error}</p>
                 </div>
             )}
@@ -1666,7 +1666,7 @@ function RefundSubmitButton({
                 loading={isSubmitting}
                 variant="primary"
                 fullWidth
-                icon={<CheckCircle2 className="h-5 w-5" />}
+                icon={<CheckCircle2 className="size-5" />}
             >
                 Mark as Refunded
             </ActionButton>

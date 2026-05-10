@@ -322,7 +322,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                         <div className="relative z-10">
                                                             <div className="flex items-center gap-2 mb-3">
                                                                 <div className={cn(
-                                                                    "flex h-6 w-6 items-center justify-center rounded-full",
+                                                                    "flex size-6 items-center justify-center rounded-full",
                                                                     request.tenantProvidedPhotos && request.tenantProvidedPhotos.length > 0 ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400" : "bg-amber-500/20 text-amber-600 dark:text-amber-400"
                                                                 )}>
                                                                     {request.tenantProvidedPhotos && request.tenantProvidedPhotos.length > 0 ? <CheckCircle2 className="size-3.5" /> : <AlertCircle className="size-3.5" />}
@@ -503,7 +503,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                         <div className="relative z-10">
                                                             <div className="flex items-center gap-2 mb-3">
                                                                 <div className={cn(
-                                                                    "flex h-6 w-6 items-center justify-center rounded-full",
+                                                                    "flex size-6 items-center justify-center rounded-full",
                                                                     request.tenantProvidedPhotos && request.tenantProvidedPhotos.length > 0 ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400" : "bg-amber-500/20 text-amber-600 dark:text-amber-400"
                                                                 )}>
                                                                     {request.tenantProvidedPhotos && request.tenantProvidedPhotos.length > 0 ? <CheckCircle2 className="size-3.5" /> : <AlertCircle className="size-3.5" />}
@@ -584,4 +584,5 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
         </div>
     );
 }
+
 

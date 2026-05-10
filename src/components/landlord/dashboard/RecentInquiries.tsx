@@ -144,7 +144,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
-                                <MessageSquare className="h-5 w-5 text-primary" />
+                                <MessageSquare className="size-5 text-primary" />
                             </div>
                             <div>
                                 <h2 className="text-xl font-semibold text-foreground dark:text-white">
@@ -160,7 +160,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                             className="group flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-muted-foreground transition-all hover:bg-muted hover:text-foreground dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10 dark:hover:text-white"
                         >
                             <span>{simplifiedMode ? "See All Messages" : "View All"}</span>
-                            <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                            <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
                         </a>
                     </div>
                 </div>
@@ -172,7 +172,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                             {[1, 2, 3, 4].map((i) => (
                                 <div key={i} className="group relative overflow-hidden rounded-2xl border border-border bg-card animate-pulse dark:border-white/5 dark:bg-neutral-900">
                                     <div className="relative h-32 bg-muted/50 dark:bg-white/5">
-                                        <div className="absolute bottom-3 left-4 h-14 w-14 rounded-full bg-muted ring-2 ring-card dark:bg-white/10 dark:ring-neutral-900" />
+                                        <div className="absolute bottom-3 left-4 size-14 rounded-full bg-muted ring-2 ring-card dark:bg-white/10 dark:ring-neutral-900" />
                                     </div>
                                     <div className="p-4 pt-4">
                                         <div className="space-y-3">
@@ -234,26 +234,26 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                                                 handleMenuOpen(inquiry.id);
                                             }}
                                         >
-                                            <MoreVertical className="h-4 w-4 text-white group-hover/menu:scale-110 transition-transform" />
+                                            <MoreVertical className="size-4 text-white group-hover/menu:scale-110 transition-transform" />
                                         </button>
                                     </div>
 
                                     {/* Unread Badge */}
                                     {inquiry.isUnread && (
                                         <div className="absolute top-3 right-14 flex items-center gap-1.5 bg-lime-500 text-white px-2.5 py-1 rounded-full text-xs font-bold shadow-lg animate-pulse z-10">
-                                            <Mail className="h-3 w-3" />
+                                            <Mail className="size-3" />
                                             New
                                         </div>
                                     )}
 
                                     {/* Avatar positioned at bottom */}
                                     <div className="absolute bottom-3 left-4 flex items-center gap-3 z-10">
-                                        <div className="h-14 w-14 rounded-full bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm flex items-center justify-center ring-2 ring-white/30">
+                                        <div className="size-14 rounded-full bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm flex items-center justify-center ring-2 ring-white/30">
                                             {inquiry.prospectAvatar ? (
                                                 <img
                                                     src={inquiry.prospectAvatar}
                                                     alt={inquiry.prospectName}
-                                                    className="h-14 w-14 rounded-full object-cover"
+                                                    className="size-14 rounded-full object-cover"
                                                 />
                                             ) : (
                                                 <span className="text-lg font-bold text-white">
@@ -272,7 +272,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                                             {inquiry.prospectName}
                                         </h3>
                                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground dark:text-neutral-400">
-                                            <Home className="h-3.5 w-3.5 flex-shrink-0" />
+                                            <Home className="size-[0.875rem] flex-shrink-0" />
                                             <p className="truncate font-medium">{inquiry.propertyName}</p>
                                         </div>
                                     </div>
@@ -285,7 +285,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                                     {/* Footer with Time and Action */}
                                     <div className="flex items-center justify-between border-t border-border pt-2 dark:border-white/5">
                                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                            <Clock className="h-3.5 w-3.5" />
+                                            <Clock className="size-[0.875rem]" />
                                             <span>{inquiry.timestamp}</span>
                                         </div>
                                     </div>
@@ -303,8 +303,8 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                         </div>
                     ) : (
                         <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-6 text-center dark:border-white/10 dark:bg-black/20">
-                            <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-muted dark:bg-neutral-800/50">
-                                <MessageSquare className="h-8 w-8 text-muted-foreground dark:text-neutral-600" />
+                            <div className="mb-4 inline-flex size-16 items-center justify-center rounded-full bg-muted dark:bg-neutral-800/50">
+                                <MessageSquare className="size-8 text-muted-foreground dark:text-neutral-600" />
                             </div>
                             <h3 className="mb-2 text-lg font-semibold text-foreground dark:text-white">No Recent Inquiries</h3>
                             <p className="mx-auto max-w-sm text-sm text-muted-foreground dark:text-neutral-400">
@@ -339,7 +339,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                             }}
                             className="group/item flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-muted/80 dark:hover:bg-white/5"
                         >
-                            <CheckCircle className="h-4 w-4 text-muted-foreground transition-colors group-hover/item:text-foreground dark:group-hover/item:text-white" />
+                            <CheckCircle className="size-4 text-muted-foreground transition-colors group-hover/item:text-foreground dark:group-hover/item:text-white" />
                             <span className="text-sm text-muted-foreground transition-colors group-hover/item:text-foreground dark:text-neutral-300 dark:group-hover/item:text-white">
                                 {simplifiedMode ? "Got it" : (inquiries.find(i => i.id === openMenuId)?.isUnread ? 'Mark as Read' : 'Mark as Unread')}
                             </span>
@@ -352,7 +352,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                             }}
                             className="group/item flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-muted/80 dark:hover:bg-white/5"
                         >
-                            <Eye className="h-4 w-4 text-muted-foreground transition-colors group-hover/item:text-foreground dark:group-hover/item:text-white" />
+                            <Eye className="size-4 text-muted-foreground transition-colors group-hover/item:text-foreground dark:group-hover/item:text-white" />
                             <span className="text-sm text-muted-foreground transition-colors group-hover/item:text-foreground dark:text-neutral-300 dark:group-hover/item:text-white">
                                 {simplifiedMode ? "See House" : "View Property"}
                             </span>
@@ -369,7 +369,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                             }}
                             className="group/item flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-muted/80 dark:hover:bg-white/5"
                         >
-                            <Archive className="h-4 w-4 text-muted-foreground transition-colors group-hover/item:text-foreground dark:group-hover/item:text-white" />
+                            <Archive className="size-4 text-muted-foreground transition-colors group-hover/item:text-foreground dark:group-hover/item:text-white" />
                             <span className="text-sm text-muted-foreground transition-colors group-hover/item:text-foreground dark:text-neutral-300 dark:group-hover/item:text-white">
                                 {simplifiedMode ? "Save" : "Archive"}
                             </span>
@@ -387,7 +387,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                             }}
                             className="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-red-500/10 transition-colors text-left group/item"
                         >
-                            <Trash2 className="h-4 w-4 text-red-400 group-hover/item:text-red-300 transition-colors" />
+                            <Trash2 className="size-4 text-red-400 group-hover/item:text-red-300 transition-colors" />
                             <span className="text-sm text-red-400 group-hover/item:text-red-300 transition-colors">
                                 {simplifiedMode ? "Remove" : "Delete"}
                             </span>
@@ -411,12 +411,12 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                         {/* Chat Header */}
                         <div className="flex items-center justify-between border-b border-border bg-muted/70 p-4 backdrop-blur-md dark:border-white/10 dark:bg-neutral-800/80">
                             <div className="flex items-center gap-3">
-                                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-lime-600 to-emerald-800 flex items-center justify-center text-white font-bold text-sm">
+                                <div className="size-10 rounded-full bg-gradient-to-br from-lime-600 to-emerald-800 flex items-center justify-center text-white font-bold text-sm">
                                     {activeChat.prospectAvatar ? (
                                         <img
                                             src={activeChat.prospectAvatar || FALLBACK_AVATAR}
                                             alt={activeChat.prospectName}
-                                            className="h-10 w-10 rounded-full object-cover"
+                                            className="size-10 rounded-full object-cover"
                                         />
                                     ) : (
                                         activeChat.prospectName.split(' ').map(n => n[0]).join('')
@@ -434,7 +434,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                                 }}
                                 className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:hover:bg-white/10 dark:hover:text-white"
                             >
-                                <X className="h-4 w-4" />
+                                <X className="size-4" />
                             </button>
                         </div>
 
@@ -482,7 +482,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                                     disabled={!messageInput.trim()}
                                     className="p-2.5 rounded-xl bg-lime-600 hover:bg-lime-500 disabled:opacity-50 disabled:cursor-not-allowed text-white transition-colors"
                                 >
-                                    <Send className="h-4 w-4" />
+                                    <Send className="size-4" />
                                 </button>
                             </form>
                         </div>

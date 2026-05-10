@@ -23,7 +23,7 @@ export default function LeaseModal({ open, onOpenChange, leaseData }: LeaseModal
                     {/* Header */}
                     <div className="flex items-center justify-between p-6 border-b border-border bg-card/50 backdrop-blur-md sticky top-0 z-20">
                         <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                            <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
                                 <FileText className="size-5" />
                             </div>
                             <div>
@@ -42,7 +42,7 @@ export default function LeaseModal({ open, onOpenChange, leaseData }: LeaseModal
                                 <span className="hidden sm:inline">Download PDF</span>
                             </button>
                             <div className="w-px h-6 bg-border mx-2" />
-                            <Dialog.Close className="h-10 w-10 rounded-xl bg-muted/50 border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+                            <Dialog.Close className="size-10 rounded-xl bg-muted/50 border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
                                 <X className="size-5" />
                             </Dialog.Close>
                         </div>
@@ -103,4 +103,5 @@ export default function LeaseModal({ open, onOpenChange, leaseData }: LeaseModal
         </Dialog.Root>
     );
 }
+
 

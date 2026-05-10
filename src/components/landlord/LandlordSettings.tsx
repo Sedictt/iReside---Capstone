@@ -133,7 +133,7 @@ function ToggleSwitch({ enabled, onToggle }: { enabled: boolean; onToggle: () =>
         >
             <span
                 className={cn(
-                    "inline-block h-4 w-4 transform rounded-full bg-white transition-all duration-300",
+                    "inline-block size-4 transform rounded-full bg-white transition-all duration-300",
                     enabled ? "translate-x-6" : "translate-x-1"
                 )}
             />
@@ -644,9 +644,9 @@ export function LandlordSettings() {
                                         )}
                                         <button 
                                             onClick={() => setIsAvatarPickerOpen(true)}
-                                            className="absolute -bottom-2 -right-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-white shadow-lg transition-all hover:scale-110 active:scale-95"
+                                            className="absolute -bottom-2 -right-2 flex size-12 items-center justify-center rounded-2xl bg-primary text-white shadow-lg transition-all hover:scale-110 active:scale-95"
                                         >
-                                            <Camera className="h-6 w-6" />
+                                            <Camera className="size-6" />
                                         </button>
                                     </div>
                                     <h4 className="mt-6 text-xl font-semibold text-white">{profile?.full_name}</h4>
@@ -719,7 +719,7 @@ export function LandlordSettings() {
                                                 <img src={profile.business_permit_url} alt="Business Permit" className="h-full w-full object-cover" />
                                             ) : (
                                                 <div className="flex h-full flex-col items-center justify-center gap-2 text-neutral-500">
-                                                    <UploadCloud className="h-8 w-8" />
+                                                    <UploadCloud className="size-8" />
                                                     <span className="text-[10px] font-bold uppercase tracking-widest">No Document</span>
                                                 </div>
                                             )}
@@ -733,7 +733,7 @@ export function LandlordSettings() {
                                                 disabled={isUploadingPermit}
                                                 className="inline-flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/10 px-6 py-3 text-sm font-bold text-primary transition-all hover:bg-primary/20 disabled:opacity-50"
                                             >
-                                                <UploadCloud className="h-5 w-5" /> 
+                                                <UploadCloud className="size-5" /> 
                                                 {isUploadingPermit ? "Uploading..." : profile?.business_permit_url ? "Replace Document" : "Upload Document"}
                                             </button>
                                             <input 
@@ -769,7 +769,7 @@ export function LandlordSettings() {
                         disabled={isSaving}
                         className="flex items-center gap-2 rounded-2xl bg-primary px-8 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
                     >
-                        {isSaving ? "Saving..." : <><Save className="h-5 w-5" /> Save Changes</>}
+                        {isSaving ? "Saving..." : <><Save className="size-5" /> Save Changes</>}
                     </button>
                 </div>
 
@@ -815,8 +815,8 @@ export function LandlordSettings() {
                                         )}
                                         onClick={() => setActiveFinanceTab(tab as any)}
                                     >
-                                        {tab === "Water" && <Droplets className="h-4 w-4" />}
-                                        {tab === "Electricity" && <Zap className="h-4 w-4" />}
+                                        {tab === "Water" && <Droplets className="size-4" />}
+                                        {tab === "Electricity" && <Zap className="size-4" />}
                                         {tab} Configuration
                                     </button>
                                 ))}
@@ -852,7 +852,7 @@ export function LandlordSettings() {
                     {activeSubTab !== "GCash" && (
                         <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-1">
                             <div className="flex items-center gap-2 px-3 py-1">
-                                <Building2 className="h-4 w-4 text-primary" />
+                                <Building2 className="size-4 text-primary" />
                                 <span className="text-xs font-bold text-white whitespace-nowrap">Property:</span>
                             </div>
                             <select
@@ -1013,15 +1013,15 @@ export function LandlordSettings() {
         {twoFAStatus === 'loading' ? (
             <div className="flex items-center justify-center py-12">
                 <div className="relative flex items-center justify-center">
-                    <div className="absolute h-12 w-12 animate-ping rounded-full bg-primary/20"></div>
-                    <div className="relative h-12 w-12 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+                    <div className="absolute size-12 animate-ping rounded-full bg-primary/20"></div>
+                    <div className="relative size-12 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
                 </div>
             </div>
         ) : twoFAStatus === 'disabled' ? (
             <div className="space-y-8 max-w-lg">
                 <div className="flex items-center gap-6 p-6 rounded-3xl border border-white/5 bg-white/[0.02] transition-all hover:bg-white/[0.04]">
                     <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-inner">
-                        <Smartphone className="h-8 w-8" />
+                        <Smartphone className="size-8" />
                     </div>
                     <div className="space-y-1">
                         <h4 className="text-base font-semibold text-white">Email OTP Protection</h4>
@@ -1046,7 +1046,7 @@ export function LandlordSettings() {
                     </div>
                     <div className="space-y-4">
                         <div className="flex items-center gap-3">
-                            <div className="h-5 w-5 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                            <div className="size-5 rounded-full bg-emerald-500/20 flex items-center justify-center">
                                 <CheckCircle className="h-3 w-3 text-emerald-500" />
                             </div>
                             <span className="text-xs font-bold text-neutral-300 uppercase tracking-widest">Google Account Linked</span>
@@ -1104,7 +1104,7 @@ export function LandlordSettings() {
                     <div className="space-y-4">
                         <p className="text-sm text-neutral-400 leading-relaxed">Your account is now protected with high-security email authentication.</p>
                         <div className="flex items-center gap-3 text-sm font-mono text-neutral-300 bg-white/5 rounded-xl px-4 py-3 border border-white/5 w-fit">
-                            <Mail className="h-4 w-4 text-primary" />
+                            <Mail className="size-4 text-primary" />
                             {twoFAEmail?.replace(/(.{2})(.*)(@.*)/, "$1***$3")}
                         </div>
                     </div>
@@ -1169,7 +1169,7 @@ export function LandlordSettings() {
                                                     : "border-white/5 bg-white/5 hover:bg-white/10"
                                             )}>
                                                 <div className="flex items-center gap-4">
-                                                    <Icon className={cn("h-5 w-5", isCurrent ? "text-primary" : "text-neutral-400")} />
+                                                    <Icon className={cn("size-5", isCurrent ? "text-primary" : "text-neutral-400")} />
                                                     <div>
                                                         <h4 className="text-sm font-semibold text-white">{browser} on {os}</h4>
                                                         <p className="text-[10px] text-neutral-500 uppercase tracking-wider">
@@ -1291,7 +1291,7 @@ export function LandlordSettings() {
                             <div className="space-y-4 max-w-lg">
                                 <p className="text-xs text-neutral-400">This includes your properties, tenant history, and financial ledgers.</p>
                                 <button className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-sm font-bold text-white transition-all hover:bg-white/10">
-                                    <Download className="h-4 w-4" /> Request Data Export
+                                    <Download className="size-4" /> Request Data Export
                                 </button>
                             </div>
                         </GlassCard>
@@ -1319,7 +1319,7 @@ export function LandlordSettings() {
                                         disabled={isResetting}
                                         className="mt-4 flex items-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/5 px-6 py-3 text-sm font-bold text-red-500 transition-all hover:bg-red-500/10 disabled:opacity-50"
                                     >
-                                        <RotateCcw className="h-4 w-4" /> 
+                                        <RotateCcw className="size-4" /> 
                                         {isResetting ? "Resetting..." : "Reset All Quests"}
                                     </button>
                                 </div>
@@ -1332,7 +1332,7 @@ export function LandlordSettings() {
                             <div className="space-y-4 max-w-lg">
                                 <p className="text-xs text-red-400/80">Permanently delete your account and all associated data. This cannot be undone.</p>
                                 <button className="flex items-center gap-2 rounded-2xl bg-red-500 px-6 py-3 text-sm font-bold text-white shadow-xl shadow-red-500/20 transition-all hover:scale-[1.02] active:scale-95">
-                                    <Trash2 className="h-4 w-4" /> Delete Account
+                                    <Trash2 className="size-4" /> Delete Account
                                 </button>
                             </div>
                         </GlassCard>
@@ -1381,8 +1381,8 @@ export function LandlordSettings() {
             {/* Sidebar */}
             <div className="w-full lg:w-80 flex-shrink-0 space-y-6">
                 <div className="flex items-center gap-4 px-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-[1.2rem] bg-primary/20 text-primary border border-primary/20">
-                        <Layout className="h-6 w-6" />
+                    <div className="flex size-12 items-center justify-center rounded-[1.2rem] bg-primary/20 text-primary border border-primary/20">
+                        <Layout className="size-6" />
                     </div>
                     <div>
                         <h1 className="text-xl font-black text-white">Settings</h1>
@@ -1406,7 +1406,7 @@ export function LandlordSettings() {
                                 )}
                             >
                                 <div className="flex w-full items-center justify-between">
-                                    <Icon className={cn("h-5 w-5 transition-transform duration-500", isActive && "scale-110")} />
+                                    <Icon className={cn("size-5 transition-transform duration-500", isActive && "scale-110")} />
                                     {isActive && (
                                         <motion.div 
                                             layoutId="active-indicator"

@@ -50,7 +50,7 @@ export function ContactList({
                             className="rounded-xl border border-border bg-surface-2 p-2 transition-all hover:bg-surface-3 hover:scale-105 active:scale-95"
                             title="Back to Dashboard"
                         >
-                            <ArrowLeft className="h-4 w-4 text-high" />
+                            <ArrowLeft className="size-4 text-high" />
                         </Link>
                         <h2 className="text-xl font-black tracking-tight text-high">Messages</h2>
                     </div>
@@ -59,7 +59,7 @@ export function ContactList({
 
                 <div className="relative group">
                     <Search className={cn(
-                        "absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 transition-colors",
+                        "absolute left-3.5 top-1/2 size-4 -translate-y-1/2 transition-colors",
                         searchQuery ? "text-primary" : "text-disabled"
                     )} />
                     <input
@@ -88,7 +88,7 @@ export function ContactList({
                                     className="flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left transition-all hover:bg-primary/5 group"
                                 >
                                     <div 
-                                        className="h-10 w-10 shrink-0 rounded-full border border-border overflow-hidden flex items-center justify-center bg-surface-3 transition-transform group-hover:scale-105"
+                                        className="size-10 shrink-0 rounded-full border border-border overflow-hidden flex items-center justify-center bg-surface-3 transition-transform group-hover:scale-105"
                                     >
                                         {result.avatarUrl ? (
                                             <img src={result.avatarUrl} alt={result.fullName} className="h-full w-full object-cover" />
@@ -113,7 +113,7 @@ export function ContactList({
 
                 {conversationsError && (
                     <div className="flex items-start gap-3 rounded-2xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-xs text-red-600 animate-in slide-in-from-top-2">
-                        <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                        <AlertTriangle className="size-4 shrink-0 mt-0.5" />
                         <div className="flex-1 font-medium">{conversationsError}</div>
                         <button onClick={() => setConversationsError(null)} className="p-1 hover:bg-red-500/10 rounded-lg">
                             <X className="h-3 w-3" />
@@ -128,7 +128,7 @@ export function ContactList({
                     <div className="space-y-2">
                         {Array.from({ length: 6 }).map((_, i) => (
                             <div key={i} className="flex items-center gap-3 p-3 rounded-2xl animate-pulse">
-                                <div className="h-12 w-12 rounded-full bg-surface-2" />
+                                <div className="size-12 rounded-full bg-surface-2" />
                                 <div className="flex-1 space-y-2">
                                     <div className="h-3 w-1/2 bg-surface-2 rounded" />
                                     <div className="h-2 w-1/3 bg-surface-3 rounded" />
@@ -150,3 +150,4 @@ export function ContactList({
         </div>
     );
 }
+

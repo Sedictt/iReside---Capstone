@@ -192,9 +192,9 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
         <div className="flex items-center gap-5">
           <button
             onClick={onBack}
-            className="group flex h-12 w-12 items-center justify-center rounded-2xl border border-border bg-card shadow-sm transition-all hover:border-primary/30 hover:bg-muted active:scale-95"
+            className="group flex size-12 items-center justify-center rounded-2xl border border-border bg-card shadow-sm transition-all hover:border-primary/30 hover:bg-muted active:scale-95"
           >
-            <ChevronLeft className="h-5 w-5 text-muted-foreground group-hover:text-primary" />
+            <ChevronLeft className="size-5 text-muted-foreground group-hover:text-primary" />
           </button>
           <div className="space-y-1">
             <div className="flex items-center gap-3">
@@ -216,7 +216,7 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
               disabled={!!actionLoading}
               className="flex h-11 items-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/5 px-6 text-[10px] font-black uppercase tracking-widest text-red-500 transition-all hover:bg-red-500/10 active:scale-95 disabled:opacity-50"
             >
-              <XCircle className="h-4 w-4" />
+              <XCircle className="size-4" />
               Deny Request
             </button>
             <button
@@ -225,9 +225,9 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
               className="flex h-11 items-center gap-2 rounded-2xl bg-primary px-8 text-[10px] font-black uppercase tracking-widest text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-50"
             >
               {actionLoading === "approve" ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="size-4 animate-spin" />
               ) : (
-                <CheckCircle2 className="h-4 w-4" />
+                <CheckCircle2 className="size-4" />
               )}
               Approve Move-Out
             </button>
@@ -241,7 +241,7 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
           animate={{ opacity: 1, scale: 1 }}
           className="flex items-center gap-3 rounded-2xl border border-red-500/20 bg-red-500/5 p-4 text-sm font-medium text-red-500"
         >
-          <AlertTriangle className="h-5 w-5 shrink-0" />
+          <AlertTriangle className="size-5 shrink-0" />
           {error}
         </motion.div>
       )}
@@ -268,8 +268,8 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
               <div className="col-span-full overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
                 <div className="grid divide-x divide-border md:grid-cols-2">
                   <div className="flex items-center gap-4 p-6">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                      <Calendar className="h-6 w-6" />
+                    <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                      <Calendar className="size-6" />
                     </div>
                     <div>
                       <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Requested Move-Out</p>
@@ -277,8 +277,8 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
                     </div>
                   </div>
                   <div className="flex items-center gap-4 p-6 bg-muted/10">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500">
-                      <Clock className="h-6 w-6" />
+                    <div className="flex size-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500">
+                      <Clock className="size-6" />
                     </div>
                     <div>
                       <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Current Lease Ends</p>
@@ -386,7 +386,7 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
                     className="flex h-12 items-center gap-2 rounded-2xl bg-white px-8 text-[10px] font-black uppercase tracking-widest text-primary transition-all hover:bg-white/90 active:scale-95"
                   >
                     Start Inspection
-                    <ArrowRight className="h-4 w-4" />
+                    <ArrowRight className="size-4" />
                   </button>
                 </div>
                 {/* Subtle background decoration */}
@@ -413,9 +413,9 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
                     className="flex h-12 items-center gap-2 rounded-2xl bg-white px-8 text-[10px] font-black uppercase tracking-widest text-emerald-600 transition-all hover:bg-white/90 active:scale-95 disabled:opacity-50"
                   >
                     {actionLoading === "approve" ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <Loader2 className="size-4 animate-spin" />
                     ) : (
-                      <CheckCircle2 className="h-4 w-4" />
+                      <CheckCircle2 className="size-4" />
                     )}
                     Complete Move-Out
                   </button>
@@ -436,11 +436,11 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
                     <div key={key} className="flex items-center justify-between rounded-xl border border-border/50 bg-muted/10 px-4 py-3">
                       <span className="text-[11px] font-bold capitalize text-foreground">{key.replace(/_/g, " ")}</span>
                       {value ? (
-                        <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500 ring-1 ring-emerald-500/20">
+                        <div className="flex size-6 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500 ring-1 ring-emerald-500/20">
                           <CheckCircle2 className="h-3.5 w-3.5" />
                         </div>
                       ) : (
-                        <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-red-500/10 text-red-500 ring-1 ring-red-500/20">
+                        <div className="flex size-6 items-center justify-center rounded-lg bg-red-500/10 text-red-500 ring-1 ring-red-500/20">
                           <XCircle className="h-3.5 w-3.5" />
                         </div>
                       )}
@@ -461,7 +461,7 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
                   return (
                     <div key={idx} className="relative flex items-start gap-4">
                       <div className={cn(
-                        "z-10 flex h-8 w-8 items-center justify-center rounded-xl transition-all ring-4 ring-card",
+                        "z-10 flex size-8 items-center justify-center rounded-xl transition-all ring-4 ring-card",
                         event.status === "completed" ? (event.color?.replace('text-', 'bg-') || "bg-primary text-white") : (event.status === "pending" ? "bg-amber-500 text-white animate-pulse" : "bg-muted text-muted-foreground")
                       )}>
                         <Icon className="h-3.5 w-3.5" />
@@ -551,7 +551,7 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
                   className="flex-1 rounded-2xl bg-red-500 py-3 text-[10px] font-black uppercase tracking-widest text-white shadow-lg shadow-red-500/20 transition-all hover:bg-red-600 active:scale-95 disabled:opacity-50"
                 >
                   {actionLoading === "deny" ? (
-                    <Loader2 className="mx-auto h-4 w-4 animate-spin" />
+                    <Loader2 className="mx-auto size-4 animate-spin" />
                   ) : (
                     "Confirm Denial"
                   )}
@@ -564,3 +564,4 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
     </div>
   );
 }
+

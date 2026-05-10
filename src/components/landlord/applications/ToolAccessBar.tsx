@@ -170,7 +170,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
             animate={{ opacity: 1, scale: 1 }}
             className="flex flex-col items-center gap-4 rounded-3xl border border-border bg-card/95 px-8 py-6 shadow-sm backdrop-blur-md"
           >
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <Loader2 className="size-8 animate-spin text-primary" />
             <span className="text-sm font-black uppercase tracking-widest text-muted-foreground">Loading property data...</span>
           </motion.div>
         </div>
@@ -221,7 +221,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
         <div className="h-full overflow-y-auto p-6 sm:p-10 lg:p-14 relative z-10 custom-scrollbar">
           {propertyData.amenities.length === 0 ? (
             <div className="rounded-[2.5rem] border border-dashed border-border bg-muted/20 p-20 text-center">
-              <Sparkles className="mx-auto h-10 w-10 text-muted-foreground/20 mb-4" />
+              <Sparkles className="mx-auto size-10 text-muted-foreground/20 mb-4" />
               <p className="text-sm font-bold tracking-tight text-muted-foreground/50">No amenities configured for this property.</p>
             </div>
           ) : (
@@ -237,10 +237,10 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
                     className="group flex items-center gap-5 rounded-2xl border border-border/40 bg-card/15 p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:bg-card/40"
                   >
                     <div className={cn(
-                      "h-12 w-12 shrink-0 rounded-xl flex items-center justify-center border border-border/50 shadow-inner transition-all duration-500 group-hover:scale-110",
+                      "size-12 shrink-0 rounded-xl flex items-center justify-center border border-border/50 shadow-inner transition-all duration-500 group-hover:scale-110",
                       bg
                     )}>
-                      <AmenityIcon className={cn("h-6 w-6", color)} strokeWidth={1.5} />
+                      <AmenityIcon className={cn("size-6", color)} strokeWidth={1.5} />
                     </div>
                     <div className="flex flex-col gap-0.5">
                         <span className="text-[15px] font-black tracking-tight text-foreground/90 leading-tight">{item}</span>
@@ -263,7 +263,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
         <div className="h-full overflow-y-auto p-6 sm:p-10 lg:p-14 relative z-10 custom-scrollbar">
           {propertyData.house_rules.length === 0 ? (
             <div className="rounded-[2.5rem] border border-dashed border-border bg-muted/20 p-20 text-center">
-              <ShieldCheck className="mx-auto h-10 w-10 text-muted-foreground/20 mb-4" />
+              <ShieldCheck className="mx-auto size-10 text-muted-foreground/20 mb-4" />
               <p className="text-sm font-bold tracking-tight text-muted-foreground/50">No property policies configured yet.</p>
             </div>
           ) : (
@@ -438,7 +438,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
                 key={tool.key}
                 type="button"
                 className={cn(
-                  "group relative flex h-10 w-10 items-center justify-center rounded-xl border border-border/50 backdrop-blur-xl transition-all duration-300",
+                  "group relative flex size-10 items-center justify-center rounded-xl border border-border/50 backdrop-blur-xl transition-all duration-300",
                   disabled
                     ? "cursor-not-allowed bg-muted/20 text-muted-foreground opacity-50"
                     : "cursor-pointer bg-card/60 text-foreground hover:-translate-y-0.5 hover:border-primary/40 hover:bg-card hover:shadow-lg active:scale-95"
@@ -502,9 +502,9 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
               <div className="relative z-20 flex h-24 shrink-0 items-center justify-between border-b border-border bg-card/92 px-6 backdrop-blur-md sm:px-10">
                 <div className="flex items-center gap-5 min-w-0">
                   <div className={cn("h-14 w-14 rounded-[1.2rem] flex items-center justify-center shrink-0 border shadow-inner", TOOL_ACCENTS[activeTool.key].iconBorder, TOOL_ACCENTS[activeTool.key].iconBg)}>
-                    {activeTool.key === "templates" && <FileText className="h-6 w-6 text-violet-300" />}
-                    {activeTool.key === "policies" && <ClipboardList className="h-6 w-6 text-blue-300" />}
-                    {activeTool.key === "amenities" && <Sparkles className="h-6 w-6 text-emerald-300" />}
+                    {activeTool.key === "templates" && <FileText className="size-6 text-violet-300" />}
+                    {activeTool.key === "policies" && <ClipboardList className="size-6 text-blue-300" />}
+                    {activeTool.key === "amenities" && <Sparkles className="size-6 text-emerald-300" />}
                   </div>
                   <div className="min-w-0">
                     <p className="text-[10px] font-black text-primary uppercase tracking-[0.25em] opacity-80 mb-1">Property Configuration</p>
@@ -521,9 +521,9 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
                   <button
                     type="button"
                     onClick={() => setActiveTool(null)}
-                    className="group flex h-12 w-12 items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow-lg transition-all hover:scale-110 hover:bg-muted hover:text-foreground active:scale-95"
+                    className="group flex size-12 items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow-lg transition-all hover:scale-110 hover:bg-muted hover:text-foreground active:scale-95"
                   >
-                    <X className="h-5 w-5 group-hover:rotate-90 transition-transform duration-300" />
+                    <X className="size-5 group-hover:rotate-90 transition-transform duration-300" />
                   </button>
                 </div>
               </div>

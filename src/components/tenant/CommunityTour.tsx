@@ -167,7 +167,7 @@ export function CommunityTour() {
                         {stepIndex > 0 && (
                             <button
                                 onClick={prevStep}
-                                className="flex h-10 w-10 items-center justify-center rounded-xl border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:border-white/10 dark:text-white/60 dark:hover:bg-white/5 dark:hover:text-white"
+                                className="flex size-10 items-center justify-center rounded-xl border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:border-white/10 dark:text-white/60 dark:hover:bg-white/5 dark:hover:text-white"
                             >
                                 <ArrowLeft className="size-5" />
                             </button>
@@ -185,4 +185,5 @@ export function CommunityTour() {
         </div>
     );
 }
+
 

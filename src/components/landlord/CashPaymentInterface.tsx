@@ -51,14 +51,14 @@ export function CashPaymentInterface({ isOpen, onClose, payment, onConfirm }: Ca
                     onClick={onClose}
                     className="absolute right-6 top-6 z-20 rounded-2xl bg-surface-2 p-2 text-medium transition-all hover:bg-surface-3 hover:text-high border border-divider"
                 >
-                    <X className="h-5 w-5" />
+                    <X className="size-5" />
                 </button>
 
                 <div className="relative overflow-hidden border-b border-white/5 bg-card/40 px-8 py-10 backdrop-blur-2xl">
                     <div className="absolute right-0 top-0 -mr-10 -mt-10 h-64 w-64 rounded-full bg-primary/5 blur-3xl" />
                     <div className="relative z-10 flex items-center gap-5">
                         <div className="flex h-16 w-16 items-center justify-center rounded-[1.5rem] bg-card/50 backdrop-blur-xl border border-white/10 shadow-lg">
-                            <HandCoins className="h-8 w-8 text-primary" />
+                            <HandCoins className="size-8 text-primary" />
                         </div>
                         <div>
                             <h2 className="text-2xl font-black tracking-tight text-foreground">Cash Payment</h2>
@@ -90,8 +90,8 @@ export function CashPaymentInterface({ isOpen, onClose, payment, onConfirm }: Ca
 
                             <div className="flex justify-between items-center">
                                 <div className="flex items-center gap-3">
-                                    <div className="h-12 w-12 rounded-2xl bg-surface-1 flex items-center justify-center border border-divider">
-                                        <Wallet className="h-5 w-5 text-primary" />
+                                    <div className="size-12 rounded-2xl bg-surface-1 flex items-center justify-center border border-divider">
+                                        <Wallet className="size-5 text-primary" />
                                     </div>
                                     <div>
                                         <p className="text-[10px] font-bold uppercase tracking-wider text-disabled">Amount to Receive</p>
@@ -106,7 +106,7 @@ export function CashPaymentInterface({ isOpen, onClose, payment, onConfirm }: Ca
                         </div>
 
                         <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 flex gap-3">
-                            <ShieldCheck className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                            <ShieldCheck className="size-5 text-primary shrink-0 mt-0.5" />
                             <div className="space-y-1">
                                 <p className="text-xs font-bold text-high">Verification Protocol</p>
                                 <p className="text-[11px] text-medium leading-relaxed">
@@ -116,7 +116,7 @@ export function CashPaymentInterface({ isOpen, onClose, payment, onConfirm }: Ca
                         </div>
 
                         <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 flex gap-3">
-                            <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+                            <AlertTriangle className="size-5 text-amber-500 shrink-0 mt-0.5" />
                             <div className="space-y-1">
                                 <p className="text-xs font-bold text-amber-500">Physical Cash Check Required</p>
                                 <p className="text-[11px] text-medium leading-relaxed italic">
@@ -127,7 +127,7 @@ export function CashPaymentInterface({ isOpen, onClose, payment, onConfirm }: Ca
 
                         {error && (
                             <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-4 flex gap-3 animate-in slide-in-from-top-2">
-                                <AlertTriangle className="h-5 w-5 text-red-500 shrink-0" />
+                                <AlertTriangle className="size-5 text-red-500 shrink-0" />
                                 <p className="text-xs font-medium text-red-500">{error}</p>
                             </div>
                         )}

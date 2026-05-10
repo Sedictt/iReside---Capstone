@@ -49,7 +49,7 @@ export function PropertySelector({ isCollapsed = false }: { isCollapsed?: boolea
                 )}
                 title={isCollapsed ? (selectedPropertyId === 'all' ? 'All Properties' : selectedProperty?.name) : undefined}
             >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                     {selectedPropertyId === 'all' ? (
                         <LayoutGrid className="h-4.5 w-4.5" />
                     ) : (
@@ -63,7 +63,7 @@ export function PropertySelector({ isCollapsed = false }: { isCollapsed?: boolea
                             {selectedPropertyId === 'all' ? 'All Properties' : (selectedProperty?.name || 'Loading...')}
                         </span>
                         <ChevronDown className={cn(
-                            "h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-300",
+                            "size-4 shrink-0 text-muted-foreground transition-transform duration-300",
                             isOpen && "rotate-180"
                         )} />
                     </div>
@@ -73,7 +73,7 @@ export function PropertySelector({ isCollapsed = false }: { isCollapsed?: boolea
             {isOpen && (
                 <div className="absolute left-0 top-full z-[200] mt-2 w-72 overflow-hidden rounded-[2rem] border border-white/10 bg-card/95 p-2 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-200 origin-top-left">
                     <div className="relative mb-2 px-2 pt-2">
-                        <Search className="absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/40" />
+                        <Search className="absolute left-5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40" />
                         <input
                             type="text"
                             placeholder="Search properties..."
@@ -98,17 +98,17 @@ export function PropertySelector({ isCollapsed = false }: { isCollapsed?: boolea
                                     )}
                                 >
                                     <div className={cn(
-                                        "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors",
+                                        "flex size-10 shrink-0 items-center justify-center rounded-xl transition-colors",
                                         selectedPropertyId === 'all' ? "bg-primary/20 text-primary" : "bg-white/5 text-muted-foreground/60 group-hover:text-foreground"
                                     )}>
-                                        <LayoutGrid className="h-5 w-5" />
+                                        <LayoutGrid className="size-5" />
                                     </div>
                                     <div className="flex flex-1 flex-col items-start overflow-hidden">
                                         <span className="text-sm font-black text-foreground">All Properties</span>
                                         <span className="text-[10px] font-medium text-muted-foreground/60">See every property together</span>
                                     </div>
                                     {selectedPropertyId === 'all' && (
-                                        <Check className="h-4 w-4 text-primary" />
+                                        <Check className="size-4 text-primary" />
                                     )}
                                 </button>
 
@@ -137,12 +137,12 @@ export function PropertySelector({ isCollapsed = false }: { isCollapsed?: boolea
                                         selectedPropertyId === property.id && "bg-primary/5"
                                     )}
                                 >
-                                    <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-white/10">
+                                    <div className="relative size-10 shrink-0 overflow-hidden rounded-xl border border-white/10">
                                         {property.image ? (
                                             <img src={property.image} alt={property.name} className="h-full w-full object-cover" />
                                         ) : (
                                             <div className="flex h-full w-full items-center justify-center bg-white/5 text-muted-foreground/40">
-                                                <Building2 className="h-5 w-5" />
+                                                <Building2 className="size-5" />
                                             </div>
                                         )}
                                     </div>
@@ -155,7 +155,7 @@ export function PropertySelector({ isCollapsed = false }: { isCollapsed?: boolea
                                         </span>
                                     </div>
                                     {selectedPropertyId === property.id && (
-                                        <Check className="h-4 w-4 text-primary" />
+                                        <Check className="size-4 text-primary" />
                                     )}
                                 </button>
                             ))
