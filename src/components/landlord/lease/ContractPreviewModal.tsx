@@ -372,7 +372,7 @@ export function ContractPreviewModal({
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <label htmlFor="lease-start" className="text-xs font-bold uppercase tracking-wide text-neutral-300 flex items-center gap-2">
-                                        <Calendar className="h-3.5 w-3.5" />
+                                        <Calendar className="size-3.5" />
                                         Lease Start Date
                                     </label>
                                     <input
@@ -385,7 +385,7 @@ export function ContractPreviewModal({
                                 </div>
                                 <div className="space-y-2">
                                     <label htmlFor="lease-end" className="text-xs font-bold uppercase tracking-wide text-neutral-300 flex items-center gap-2">
-                                        <Calendar className="h-3.5 w-3.5" />
+                                        <Calendar className="size-3.5" />
                                         Lease End Date
                                     </label>
                                     <input
@@ -401,7 +401,7 @@ export function ContractPreviewModal({
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <div className="space-y-2">
                                     <label htmlFor="monthly-rent" className="text-xs font-bold uppercase tracking-wide text-neutral-300 flex items-center gap-2">
-                                        <Banknote className="h-3.5 w-3.5" />
+                                        <Banknote className="size-3.5" />
                                         Monthly Rent
                                     </label>
                                     <input
@@ -415,7 +415,7 @@ export function ContractPreviewModal({
                                 </div>
                                 <div className="space-y-2">
                                     <label htmlFor="advance-invoice" className="text-xs font-bold uppercase tracking-wide text-neutral-300 flex items-center gap-2">
-                                        <Banknote className="h-3.5 w-3.5" />
+                                        <Banknote className="size-3.5" />
                                         Advance Invoice
                                     </label>
                                     <input
@@ -429,7 +429,7 @@ export function ContractPreviewModal({
                                 </div>
                                 <div className="space-y-2">
                                     <label htmlFor="security-deposit" className="text-xs font-bold uppercase tracking-wide text-neutral-300 flex items-center gap-2">
-                                        <Banknote className="h-3.5 w-3.5" />
+                                        <Banknote className="size-3.5" />
                                         Security Deposit
                                     </label>
                                     <input

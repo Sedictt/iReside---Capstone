@@ -246,7 +246,7 @@ export function ChatWidget({
                         <div className="flex items-center gap-3">
                             <div className="relative group">
                                 <div className="absolute -inset-1 bg-white/30 rounded-full blur-md opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                <div className="relative h-11 w-11 rounded-full bg-white/20 p-0.5">
+                                <div className="relative size-11 rounded-full bg-white/20 p-0.5">
                                     <div className="h-full w-full rounded-full bg-white overflow-hidden">
                                         <Image
                                             src="/logos/favicon.png"
@@ -255,13 +255,13 @@ export function ChatWidget({
                                             className="object-cover"
                                         />
                                     </div>
-                                    <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-primary"></div>
+                                    <div className="absolute bottom-0 right-0 size-3 rounded-full bg-green-500 border-2 border-primary"></div>
                                 </div>
                             </div>
                             <div>
                                 <h3 className="font-semibold text-base tracking-tight">iRis Assistant</h3>
                                 <div className="flex items-center gap-1.5">
-                                    <span className="h-1.5 w-1.5 rounded-full bg-white/60 animate-pulse"></span>
+                                    <span className="size-1.5 rounded-full bg-white/60 animate-pulse"></span>
                                     <p className="text-[10px] text-white/80 uppercase tracking-widest font-bold">Ask iRis</p>
                                 </div>
                             </div>
@@ -296,7 +296,7 @@ export function ChatWidget({
                                             className={cn("flex gap-3 max-w-[88%]", isRight ? "ml-auto flex-row-reverse" : "")}
                                         >
                                             {!isRight && (
-                                                <div className="h-7 w-7 rounded-full bg-zinc-300/80 animate-pulse flex-shrink-0 mt-auto mb-1" />
+                                                <div className="size-7 rounded-full bg-zinc-300/80 animate-pulse flex-shrink-0 mt-auto mb-1" />
                                             )}
                                             <div
                                                 className={cn(
@@ -324,7 +324,7 @@ export function ChatWidget({
                                     >
                                         {msg.role === "iris" && (
                                             <div className="flex-shrink-0 mt-auto mb-1">
-                                                <div className="h-7 w-7 rounded-full overflow-hidden bg-primary/10 border border-primary/20">
+                                                <div className="size-7 rounded-full overflow-hidden bg-primary/10 border border-primary/20">
                                                     <Image
                                                         src="/logos/favicon.png"
                                                         alt="iRis"
@@ -358,13 +358,13 @@ export function ChatWidget({
                                 animate={{ opacity: 1, y: 0 }}
                                 className="flex gap-3"
                             >
-                                <div className="h-7 w-7 rounded-full overflow-hidden bg-primary/10 border border-primary/20 flex-shrink-0 mt-auto">
+                                <div className="size-7 rounded-full overflow-hidden bg-primary/10 border border-primary/20 flex-shrink-0 mt-auto">
                                     <Image src="/logos/favicon.png" alt="iRis" width={28} height={28} />
                                 </div>
                                 <div className="bg-card px-4 py-3 rounded-[1.25rem] rounded-bl-none border border-border shadow-sm flex items-center gap-1">
-                                    <span className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                                    <span className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                                    <span className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce"></span>
+                                    <span className="size-1.5 bg-primary/40 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                                    <span className="size-1.5 bg-primary/40 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                                    <span className="size-1.5 bg-primary/40 rounded-full animate-bounce"></span>
                                 </div>
                             </motion.div>
                         )}
@@ -405,7 +405,7 @@ export function ChatWidget({
                             <button
                                 onClick={handleSend}
                                 disabled={!input.trim() || isChatInitializing}
-                                className="h-11 w-11 flex items-center justify-center rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_5px_15px_rgba(109,152,56,0.3)] transition-all hover:scale-110 active:scale-90 disabled:opacity-50 disabled:scale-100"
+                                className="size-11 flex items-center justify-center rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_5px_15px_rgba(109,152,56,0.3)] transition-all hover:scale-110 active:scale-90 disabled:opacity-50 disabled:scale-100"
                             >
                                 <ArrowUp className="size-5" />
                             </button>

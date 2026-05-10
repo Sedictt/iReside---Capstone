@@ -60,7 +60,7 @@ export function MoveOutChecklist({ requestId, initialData }: MoveOutChecklistPro
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <h4 className="text-sm font-black uppercase tracking-widest text-muted-foreground">Pre-Departure Checklist</h4>
-          {saving && <Loader2 className="h-3 w-3 animate-spin text-primary/40" />}
+          {saving && <Loader2 className="size-3 animate-spin text-primary/40" />}
         </div>
         <span className="text-[10px] font-black bg-primary/10 text-primary px-2 py-0.5 rounded-lg">
           {items.filter(i => i.completed).length}/{items.length} Done
@@ -83,7 +83,7 @@ export function MoveOutChecklist({ requestId, initialData }: MoveOutChecklistPro
               "size-5 rounded-lg border-2 flex items-center justify-center shrink-0 transition-all",
               item.completed ? "bg-primary border-primary text-white" : "border-primary/30"
             )}>
-              {item.completed && <Check className="h-3 w-3" />}
+              {item.completed && <Check className="size-3" />}
             </div>
             <span className={cn("text-xs font-bold", item.completed && "line-through opacity-70")}>
               {item.label}

@@ -49,7 +49,7 @@ export function PropertyEnvironmentBanner({
                         {label} Environment Scope
                         {needsReview && (
                             <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-[10px] font-black uppercase tracking-wider">
-                                <AlertCircle className="h-3 w-3" /> Needs Review
+                                <AlertCircle className="size-4" /> Needs Review
                             </span>
                         )}
                     </h3>

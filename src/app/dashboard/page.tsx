@@ -17,13 +17,13 @@ export default function DashboardPage() {
                 <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 backdrop-blur-xl">
                     <div className="flex items-center justify-between">
                         <h3 className="text-sm font-medium text-zinc-400">Total Revenue</h3>
-                        <PhilippinePeso className="h-4 w-4 text-zinc-400" />
+                        <PhilippinePeso className="size-4 text-zinc-400" />
                     </div>
                     <div className="mt-2 flex items-baseline gap-2">
                         <span className="text-2xl font-bold text-white">₱45,231.89</span>
                         <span className="flex items-center text-xs font-medium text-emerald-500">
                             +20.1%
-                            <ArrowUpRight className="h-3 w-3" />
+                            <ArrowUpRight className="size-3" />
                         </span>
                     </div>
                 </div>
@@ -31,13 +31,13 @@ export default function DashboardPage() {
                 <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 backdrop-blur-xl">
                     <div className="flex items-center justify-between">
                         <h3 className="text-sm font-medium text-zinc-400">Active Tenants</h3>
-                        <Users className="h-4 w-4 text-zinc-400" />
+                        <Users className="size-5" />
                     </div>
                     <div className="mt-2 flex items-baseline gap-2">
                         <span className="text-2xl font-bold text-white">+2350</span>
                         <span className="flex items-center text-xs font-medium text-emerald-500">
                             +180.1%
-                            <ArrowUpRight className="h-3 w-3" />
+                            <ArrowUpRight className="size-3" />
                         </span>
                     </div>
                 </div>
@@ -45,13 +45,13 @@ export default function DashboardPage() {
                 <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 backdrop-blur-xl">
                     <div className="flex items-center justify-between">
                         <h3 className="text-sm font-medium text-zinc-400">Properties</h3>
-                        <HomeIcon className="h-4 w-4 text-zinc-400" />
+                        <HomeIcon className="size-4 text-zinc-400" />
                     </div>
                     <div className="mt-2 flex items-baseline gap-2">
                         <span className="text-2xl font-bold text-white">12</span>
                         <span className="flex items-center text-xs font-medium text-emerald-500">
                             +19%
-                            <ArrowUpRight className="h-3 w-3" />
+                            <ArrowUpRight className="size-3" />
                         </span>
                     </div>
                 </div>
@@ -70,7 +70,7 @@ export default function DashboardPage() {
                     <div className="space-y-4">
                         {[1, 2, 3, 4, 5].map((i) => (
                             <div key={i} className="flex items-center gap-4">
-                                <div className="h-2 w-2 rounded-full bg-blue-500" />
+                                <div className="size-2 rounded-full bg-blue-500" />
                                 <div className="flex-1 space-y-1">
                                     <p className="text-sm font-medium text-white">New lease signed</p>
                                     <p className="text-xs text-zinc-400">2 hours ago</p>

@@ -146,7 +146,7 @@ export function RoleSidebar({
                     <item.icon 
                         className={cn(
                             "transition-transform duration-300", 
-                            isCollapsed ? "h-6 w-6" : "h-5 w-5 shrink-0",
+                            isCollapsed ? "size-6" : "size-5 shrink-0",
                             isActive ? "text-primary scale-110" : "text-muted-foreground group-hover:text-foreground group-hover:scale-105"
                         )} 
                         aria-hidden="true" 
@@ -172,7 +172,7 @@ export function RoleSidebar({
                     </span>
                 ) : isCollapsed && item.badge ? (
                     <span className={cn(
-                        "absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white dark:ring-slate-900",
+                        "absolute right-2 top-2 size-2.5 rounded-full bg-red-500 ring-2 ring-white dark:ring-slate-900",
                         item.urgent && "animate-ping"
                     )} />
                 ) : null}
@@ -202,20 +202,20 @@ export function RoleSidebar({
                     {showCollapseToggle && !isCollapsed && (
                         <button 
                             onClick={onToggleCollapse}
-                            className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
+                            className="flex size-8 items-center justify-center rounded-lg bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
                             title="Collapse sidebar"
                         >
-                            <PanelLeftClose className="h-4 w-4" />
+                            <PanelLeftClose className="size-4" />
                         </button>
                     )}
                 </div>
                 {isCollapsed && (
                     <button 
                         onClick={onToggleCollapse}
-                        className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:scale-105 transition-all active:scale-95 hover:shadow-primary/40"
+                        className="flex size-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:scale-105 transition-all active:scale-95 hover:shadow-primary/40"
                         title="Expand sidebar"
                     >
-                        <PanelLeftOpen className="h-6 w-6" />
+                        <PanelLeftOpen className="size-6" />
                     </button>
                 )}
             </div>
@@ -263,12 +263,12 @@ export function RoleSidebar({
                                         >
                                             <div className="flex items-center gap-2">
                                                 {SectionIcon && (
-                                                    <SectionIcon className={cn("h-4 w-4", hasActiveItem ? "text-primary" : "text-muted-foreground")} />
+                                                    <SectionIcon className={cn("size-4", hasActiveItem ? "text-primary" : "text-muted-foreground")} />
                                                 )}
                                                 <span className="text-[11px] font-bold uppercase tracking-wider">{section.category}</span>
                                             </div>
                                             {isCollapsible && (
-                                                <ChevronDown className={cn("h-3 w-3 transition-transform duration-200", isExpanded ? "rotate-180" : "")} />
+                                                <ChevronDown className={cn("size-3 transition-transform duration-200", isExpanded ? "rotate-180" : "")} />
                                             )}
                                         </button>
                                     )
@@ -308,7 +308,7 @@ export function RoleSidebar({
                         isCollapsed ? "size-10 justify-center mx-auto" : "w-full"
                     )}
                 >
-                    <LogOut className="h-5 w-5 shrink-0" />
+                    <LogOut className="size-5 shrink-0" />
                     {!isCollapsed && <span className="text-sm font-semibold">{logoutLabel}</span>}
                 </button>
             </div>

@@ -60,7 +60,7 @@ export default function UnitMapPage() {
                 title="Visual Planner"
                 description="Initialize the architectural layout and unit map for your property portfolio."
                 buttonText="Open Visual Planner"
-                icon={<Map className="h-6 w-6" />}
+                icon={<Map className="size-6" />}
                 badgeText="Architecture Hub"
             />
         );

@@ -89,10 +89,10 @@ export default function TestVerificationPage() {
                 <div className="mb-8">
                     <div className="flex items-center gap-2.5 mb-2">
                         <div
-                            className="h-8 w-8 rounded-lg flex items-center justify-center"
+                            className="size-8 rounded-lg flex items-center justify-center"
                             style={{ background: "rgba(59,130,246,0.18)", border: "1px solid rgba(59,130,246,0.28)" }}
                         >
-                            <Search className="h-5 w-5 text-blue-400" />
+                            <Search className="size-5 text-blue-400" />
                         </div>
                         <h1 className="text-3xl font-black text-white tracking-tight">Business Verification Test</h1>
                     </div>
@@ -146,12 +146,12 @@ export default function TestVerificationPage() {
                             >
                                 {verifying ? (
                                     <>
-                                        <LoaderCircle className="h-4 w-4 animate-spin" />
+                                        <LoaderCircle className="size-4 animate-spin" />
                                         Verifying...
                                     </>
                                 ) : (
                                     <>
-                                        <ShieldCheck className="h-4 w-4" />
+                                        <ShieldCheck className="size-4" />
                                         Verify Business
                                     </>
                                 )}
@@ -164,7 +164,7 @@ export default function TestVerificationPage() {
                                     className="px-6 py-3 rounded-xl text-sm font-semibold transition-opacity flex items-center gap-2"
                                     style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", color: "#8a8a8a" }}
                                 >
-                                    <ExternalLink className="h-4 w-4" />
+                                    <ExternalLink className="size-4" />
                                     Manual Search
                                 </button>
                             )}
@@ -178,7 +178,7 @@ export default function TestVerificationPage() {
                         style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.22)", color: "#fca5a5" }}
                     >
                         <div className="flex items-center gap-2">
-                            <ShieldX className="h-5 w-5" />
+                            <ShieldX className="size-5" />
                             <span className="font-semibold">Error</span>
                         </div>
                         <p className="text-sm mt-1">{error}</p>
@@ -197,7 +197,7 @@ export default function TestVerificationPage() {
                                 {(() => {
                                     const StatusIcon = VERIFICATION_STATUS_META[result.status]?.icon || CircleDashed;
                                     const meta = VERIFICATION_STATUS_META[result.status] || VERIFICATION_STATUS_META.not_verified;
-                                    return <StatusIcon className="h-5 w-5" style={{ color: meta.color }} />;
+                                    return <StatusIcon className="size-5" style={{ color: meta.color }} />;
                                 })()}
                                 <span
                                     className="text-lg font-semibold"

@@ -6,11 +6,11 @@ export default function TenantsLoading() {
             <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card via-card to-muted/35 p-8 shadow-sm">
                 <div className="relative z-10 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
                     <div className="space-y-4">
-                        <div className="h-6 w-32 rounded-full bg-muted animate-pulse" />
+                        <div className="size-12 rounded-full bg-muted animate-pulse" />
                         <div className="h-12 w-64 rounded-2xl bg-muted animate-pulse" />
                         <div className="h-4 w-96 rounded-lg bg-muted/60 animate-pulse" />
                     </div>
-                    <div className="h-11 w-32 rounded-xl bg-muted animate-pulse" />
+                    <div className="size-12 rounded-xl bg-muted animate-pulse" />
                 </div>
             </div>
 
@@ -35,9 +35,9 @@ export default function TenantsLoading() {
                         </div>
 
                         <div className="flex flex-col items-center text-center mb-8">
-                            <div className="mb-4 h-24 w-24 rounded-full bg-muted animate-pulse" />
+                            <div className="mb-4 size-24 rounded-full bg-muted animate-pulse" />
                             <div className="mb-2 h-6 w-40 rounded-xl bg-muted animate-pulse" />
-                            <div className="h-4 w-48 rounded-lg bg-muted/50 animate-pulse" />
+                            <div className="size-48 rounded-lg bg-muted/50 animate-pulse" />
                             <div className="mt-6 h-10 w-full rounded-full bg-muted/40 animate-pulse" />
                         </div>
 
@@ -48,8 +48,8 @@ export default function TenantsLoading() {
 
                         <div className="mt-auto flex items-center justify-between border-t border-border pt-6">
                             <div className="flex items-center gap-2">
-                                <div className="h-10 w-10 rounded-xl bg-muted/40 animate-pulse" />
-                                <div className="h-10 w-10 rounded-xl bg-muted/40 animate-pulse" />
+                                <div className="size-10 rounded-xl bg-muted/40 animate-pulse" />
+                                <div className="size-10 rounded-xl bg-muted/40 animate-pulse" />
                             </div>
                             <div className="h-10 w-24 rounded-xl bg-muted/50 animate-pulse" />
                         </div>

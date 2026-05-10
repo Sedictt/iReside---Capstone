@@ -280,7 +280,7 @@ export default function PropertyEnvironmentPage() {
                     onClick={() => router.push(`/landlord/properties`)}
                     className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
                 >
-                    <ArrowLeft className="h-4 w-4" />
+                    <ArrowLeft className="size-4" />
                     Back to Properties
                 </button>
             </div>
@@ -301,7 +301,7 @@ export default function PropertyEnvironmentPage() {
 
             <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
                 <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                    <Building2 className="h-5 w-5 text-primary" />
+                    <Building2 className="size-5 text-primary" />
                     Property Type
                 </h2>
 
@@ -322,17 +322,17 @@ export default function PropertyEnvironmentPage() {
                                 )}
                             >
                                 <div className={cn(
-                                    "flex h-10 w-10 items-center justify-center rounded-lg",
+                                    "flex size-10 items-center justify-center rounded-lg",
                                     isSelected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
                                 )}>
-                                    <Icon className="h-5 w-5" />
+                                    <Icon className="size-5" />
                                 </div>
                                 <div>
                                     <p className="font-bold text-foreground">{info.label}</p>
                                     <p className="mt-1 text-xs text-muted-foreground">{info.description}</p>
                                 </div>
                                 {isSelected && (
-                                    <CheckCircle2 className="h-5 w-5 text-primary mt-2" />
+                                    <CheckCircle2 className="size-5 text-primary mt-2" />
                                 )}
                             </button>
                         );
@@ -343,7 +343,7 @@ export default function PropertyEnvironmentPage() {
             <div className="grid gap-6 lg:grid-cols-2">
                 <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
                     <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                        <Users className="h-5 w-5 text-primary" />
+                        <Users className="size-5 text-primary" />
                         Occupancy Settings
                     </h2>
 
@@ -367,7 +367,7 @@ export default function PropertyEnvironmentPage() {
 
                         <div>
                             <label className="text-sm font-medium text-foreground flex items-center gap-2">
-                                <VenusAndMars className="h-4 w-4" />
+                                <VenusAndMars className="size-4" />
                                 Gender Restriction
                             </label>
                             <select
@@ -387,14 +387,14 @@ export default function PropertyEnvironmentPage() {
 
                 <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
                     <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                        <Zap className="h-5 w-5 text-primary" />
+                        <Zap className="size-5 text-primary" />
                         Utility Policy
                     </h2>
 
                     <div className="space-y-4">
                         <div>
                             <label className="text-sm font-medium text-foreground flex items-center gap-2">
-                                <Zap className="h-4 w-4" />
+                                <Zap className="size-4" />
                                 Utility Billing Mode
                             </label>
                             <select
@@ -413,7 +413,7 @@ export default function PropertyEnvironmentPage() {
                         {formData.utility_policy_mode === "mixed" && (
                             <div>
                                 <label className="text-sm font-medium text-foreground flex items-center gap-2">
-                                    <DollarSign className="h-4 w-4" />
+                                    <DollarSign className="size-4" />
                                     Fixed Monthly Charge (Optional)
                                 </label>
                                 <input
@@ -436,7 +436,7 @@ export default function PropertyEnvironmentPage() {
 
             <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
                 <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                    <Clock className="h-5 w-5 text-primary" />
+                    <Clock className="size-5 text-primary" />
                     Rules & Curfew Settings
                 </h2>
 
@@ -455,7 +455,7 @@ export default function PropertyEnvironmentPage() {
                                 )}
                             >
                                 <span className={cn(
-                                    "absolute top-1 h-4 w-4 rounded-full bg-white transition-transform",
+                                    "absolute top-1 size-4 rounded-full bg-white transition-transform",
                                     formData.curfew_enabled ? "left-6" : "left-1"
                                 )} />
                             </button>
@@ -488,7 +488,7 @@ export default function PropertyEnvironmentPage() {
                                 )}
                             >
                                 <span className={cn(
-                                    "absolute top-1 h-4 w-4 rounded-full bg-white transition-transform",
+                                    "absolute top-1 size-4 rounded-full bg-white transition-transform",
                                     formData.visitor_cutoff_enabled ? "left-6" : "left-1"
                                 )} />
                             </button>
@@ -511,7 +511,7 @@ export default function PropertyEnvironmentPage() {
                 <div className="mt-6 border-t border-border pt-6">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <Moon className="h-4 w-4 text-muted-foreground" />
+                            <Moon className="size-4 text-muted-foreground" />
                             <div>
                                 <p className="text-sm font-medium text-foreground">Quiet Hours</p>
                                 <p className="text-xs text-muted-foreground">Mandatory silence period</p>
@@ -538,14 +538,14 @@ export default function PropertyEnvironmentPage() {
 
             {error && (
                 <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-4 text-sm text-red-600 dark:text-red-300">
-                    <AlertCircle className="mr-2 inline h-4 w-4" />
+                    <AlertCircle className="mr-2 inline size-4" />
                     {error}
                 </div>
             )}
 
             {success && (
                 <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-sm text-emerald-600 dark:text-emerald-300">
-                    <CheckCircle2 className="mr-2 inline h-4 w-4" />
+                    <CheckCircle2 className="mr-2 inline size-4" />
                     Environment settings saved successfully
                 </div>
             )}
@@ -563,9 +563,9 @@ export default function PropertyEnvironmentPage() {
                     className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                 >
                     {saving ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <Loader2 className="size-4 animate-spin" />
                     ) : (
-                        <Save className="h-4 w-4" />
+                        <Save className="size-4" />
                     )}
                     {saving ? "Saving..." : "Save Settings"}
                 </button>

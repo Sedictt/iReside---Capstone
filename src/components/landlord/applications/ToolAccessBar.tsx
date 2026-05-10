@@ -185,8 +185,8 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
             animate={{ opacity: 1, y: 0 }}
             className="max-w-md w-full rounded-3xl border border-red-500/20 bg-red-500/10 backdrop-blur-md p-8 flex flex-col items-center gap-4 text-center shadow-2xl"
           >
-            <div className="h-14 w-14 rounded-full bg-red-500/20 border border-red-500/30 flex items-center justify-center">
-              <AlertCircle className="h-7 w-7 text-red-400" />
+            <div className="size-14 rounded-full bg-red-500/20 border border-red-500/30 flex items-center justify-center">
+              <AlertCircle className="size-7 text-red-400" />
             </div>
             <div>
               <p className="text-lg font-black text-red-300 tracking-tight">Unable to Load Tools</p>
@@ -451,7 +451,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
                   setActiveTool(tool);
                 }}
               >
-                <Icon className={cn("h-4.5 w-4.5", !disabled && "text-muted-foreground group-hover:text-primary transition-colors")} />
+                <Icon className={cn("size-4.5", !disabled && "text-muted-foreground group-hover:text-primary transition-colors")} />
                 
                 {/* Custom Tooltip - adjusted for vertical/horizontal visibility */}
                 <div className={cn(
@@ -501,7 +501,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
 
               <div className="relative z-20 flex h-24 shrink-0 items-center justify-between border-b border-border bg-card/92 px-6 backdrop-blur-md sm:px-10">
                 <div className="flex items-center gap-5 min-w-0">
-                  <div className={cn("h-14 w-14 rounded-[1.2rem] flex items-center justify-center shrink-0 border shadow-inner", TOOL_ACCENTS[activeTool.key].iconBorder, TOOL_ACCENTS[activeTool.key].iconBg)}>
+                  <div className={cn("size-14 rounded-[1.2rem] flex items-center justify-center shrink-0 border shadow-inner", TOOL_ACCENTS[activeTool.key].iconBorder, TOOL_ACCENTS[activeTool.key].iconBg)}>
                     {activeTool.key === "templates" && <FileText className="size-6 text-violet-300" />}
                     {activeTool.key === "policies" && <ClipboardList className="size-6 text-blue-300" />}
                     {activeTool.key === "amenities" && <Sparkles className="size-6 text-emerald-300" />}
@@ -514,7 +514,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
 
                 <div className="flex items-center gap-4">
                   <div className="hidden items-center gap-3 rounded-xl border border-border bg-background px-4 py-2.5 shadow-inner md:flex">
-                    <Building2 className="h-4.5 w-4.5 text-muted-foreground" />
+                    <Building2 className="size-4.5 text-muted-foreground" />
                     <span className="max-w-[200px] truncate text-xs font-bold text-foreground">{propertyData?.name ?? "Loading..."}</span>
                   </div>
 
@@ -567,7 +567,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
                 )}
                 title={disabled ? "Select a unit first to open tools" : `Open ${tool.label} modal`}
               >
-                <Icon className={cn("h-4.5 w-4.5", !disabled && "text-primary/70 group-hover:text-primary group-hover:scale-110 transition-transform")} />
+                <Icon className={cn("size-4.5", !disabled && "text-primary/70 group-hover:text-primary group-hover:scale-110 transition-transform")} />
                 {tool.label}
               </button>
             );

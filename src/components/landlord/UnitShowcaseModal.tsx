@@ -138,7 +138,7 @@ export function UnitShowcaseModal({
                     {/* Property badge on image */}
                     <div className="absolute top-6 left-6 z-10">
                         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-xs font-bold text-white">
-                            <Home className="h-3.5 w-3.5 text-primary" />
+                            <Home className="size-3.5 text-primary" />
                             {unit.property.name}
                         </div>
                     </div>
@@ -196,7 +196,7 @@ export function UnitShowcaseModal({
                     {unit.property.amenities?.length > 0 && (
                         <div>
                             <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-400 mb-3 flex items-center gap-2">
-                                <Sparkles className="h-3.5 w-3.5" />
+                                <Sparkles className="size-3.5" />
                                 Amenities
                             </h3>
                             <div className="flex flex-wrap gap-2">

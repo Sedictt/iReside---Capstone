@@ -160,7 +160,7 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
                             <div className="space-y-3">
                                 {settings.new_rules.map((rule, idx) => (
                                     <div key={idx} className="flex items-center gap-3 bg-muted/30 p-3 rounded-xl border border-border/50">
-                                        <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                                        <div className="size-1.5 rounded-full bg-primary" />
                                         <span className="flex-1 text-sm font-medium">{rule}</span>
                                         <button onClick={() => removeRule(idx)} className="text-muted-foreground hover:text-red-500 transition-colors">
                                             <Trash2 className="size-4" />

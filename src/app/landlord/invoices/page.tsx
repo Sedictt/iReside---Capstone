@@ -280,7 +280,7 @@ export default function InvoicesPage() {
       <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/80 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.25em] text-primary shadow-sm backdrop-blur-md">
-            <FileText className="h-3.5 w-3.5" />
+            <FileText className="size-3.5" />
             Financial Center
           </div>
           <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">Finance Hub</h1>
@@ -289,7 +289,7 @@ export default function InvoicesPage() {
         {/* Deprecated: Invoice Studio removed in favor of direct utility dashboard workflow */}
         {/* 
         <button onClick={() => setIsStudioOpen(true)} className="group inline-flex items-center gap-2.5 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-sm transition-all hover:scale-105 hover:bg-primary/90 active:scale-95">
-          <Plus className="h-4 w-4 transition-transform group-hover:rotate-90" />
+          <Plus className="size-4 transition-transform group-hover:rotate-90" />
           Invoice Studio
         </button>
         */}
@@ -340,14 +340,14 @@ export default function InvoicesPage() {
               <h2 className="mt-2 text-2xl font-black text-foreground lg:text-3xl">Issued invoices</h2>
             </div>
             <div className="relative w-full md:max-w-xs">
-              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search records..." className="w-full rounded-full border border-border/50 bg-background/80 py-3 pl-11 pr-4 text-sm font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-2 focus:ring-primary/10 hover:bg-background shadow-sm" />
             </div>
           </div>
           
           <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-background/40 p-3">
             <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground border-r border-border/50 pr-4">
-              <Filter className="h-4 w-4" /> Filters
+              <Filter className="size-4" /> Filters
             </div>
             
             <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="rounded-full border border-border/50 bg-card px-4 py-2 text-xs font-medium text-foreground outline-none transition-all hover:border-border focus:border-primary/50">
@@ -388,7 +388,7 @@ export default function InvoicesPage() {
         </div>
 
         <div className="custom-scrollbar space-y-5 overflow-y-auto pr-2">
-          {loading && <div className="flex flex-col items-center justify-center rounded-[2rem] border border-border/50 bg-background/50 py-16 text-muted-foreground"><Loader2 className="mb-4 h-8 w-8 animate-spin text-primary" /><p className="text-sm font-bold uppercase tracking-widest text-foreground">Loading invoices...</p></div>}
+          {loading && <div className="flex flex-col items-center justify-center rounded-[2rem] border border-border/50 bg-background/50 py-16 text-muted-foreground"><Loader2 className="mb-4 size-8 animate-spin text-primary" /><p className="text-sm font-bold uppercase tracking-widest text-foreground">Loading invoices...</p></div>}
           {!loading && processedInvoices.map((invoice) => (
             <button key={invoice.id} onClick={() => setSelectedInvoiceId(invoice.id)} className="group w-full rounded-[2rem] border border-border/50 bg-background/80 p-6 shadow-sm backdrop-blur-md transition-all hover:scale-[1.01] hover:border-primary/30 hover:bg-card hover:shadow-md md:p-8">
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
@@ -400,7 +400,7 @@ export default function InvoicesPage() {
                           const config = getStatusConfig(invoice.workflowStatus ?? invoice.status);
                           return (
                             <span className={cn("inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.15em] shadow-sm", config.classes)}>
-                              <div className="mr-1.5 h-1 w-1 rounded-full bg-current animate-pulse" />
+                              <div className="mr-1.5 size-1 rounded-full bg-current animate-pulse" />
                               {config.label}
                             </span>
                           );
@@ -422,12 +422,12 @@ export default function InvoicesPage() {
                     
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-bold text-muted-foreground">
                       <span className="flex items-center gap-2 hover:text-foreground transition-colors">
-                        <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
+                        <div className="size-1.5 rounded-full bg-primary/40" />
                         {invoice.tenant}
                       </span>
                       <div className="h-4 w-[1px] bg-border/40 hidden sm:block" />
                       <span className="flex items-center gap-2">
-                        <CalendarDays className="h-3.5 w-3.5 opacity-40" />
+                        <CalendarDays className="size-3.5 opacity-40" />
                         {invoice.property}
                       </span>
                       <div className="h-4 w-[1px] bg-border/40 hidden sm:block" />
@@ -467,8 +467,8 @@ export default function InvoicesPage() {
           <div className="rounded-[2rem] border border-border/50 bg-background/50 p-8 shadow-inner custom-scrollbar overflow-y-auto max-h-[500px] space-y-4">
             {expenses.length === 0 && invoices.length === 0 ? (
                 <div className="p-12 text-center text-sm font-medium text-muted-foreground">
-                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-4">
-                    <FileText className="h-8 w-8" />
+                  <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-4">
+                    <FileText className="size-8" />
                   </div>
                   <p className="text-lg font-black text-foreground">No entries yet.</p>
                   <p className="mt-2 max-w-md mx-auto">Your timeline of paid invoices and recorded expenses will appear here.</p>
@@ -481,8 +481,8 @@ export default function InvoicesPage() {
                     .map((item, idx) => (
                         <div key={idx} className="flex items-center justify-between rounded-2xl border border-border/50 bg-card p-5">
                             <div className="flex items-center gap-4">
-                                <div className={cn("flex h-10 w-10 items-center justify-center rounded-full", item.type === 'income' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500')}>
-                                    {item.type === 'income' ? <Plus className="h-5 w-5" /> : <Filter className="h-5 w-5" />}
+                                <div className={cn("flex size-10 items-center justify-center rounded-full", item.type === 'income' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500')}>
+                                    {item.type === 'income' ? <Plus className="size-5" /> : <Filter className="size-5" />}
                                 </div>
                                 <div>
                                     <p className="text-sm font-bold text-foreground capitalize">{item.label}</p>
@@ -513,7 +513,7 @@ export default function InvoicesPage() {
                 onClick={() => setIsExpenseModalOpen(true)}
                 className="group inline-flex items-center gap-2.5 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-sm transition-all hover:scale-105 hover:bg-primary/90 active:scale-95"
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="size-4" />
                 Record Expense
               </button>
             </div>
@@ -521,8 +521,8 @@ export default function InvoicesPage() {
           <div className="rounded-[2rem] border border-border/50 bg-background/50 p-8 shadow-inner custom-scrollbar overflow-y-auto max-h-[500px] space-y-4">
             {expenses.length === 0 ? (
                 <div className="p-12 text-center text-sm font-medium text-muted-foreground">
-                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-500 mb-4">
-                    <Filter className="h-8 w-8" />
+                  <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-500 mb-4">
+                    <Filter className="size-8" />
                   </div>
                   <p className="text-lg font-black text-foreground">No expenses recorded yet.</p>
                   <p className="mt-2 max-w-md mx-auto">Click &quot;Record Expense&quot; to log maintenance costs, utility bills you cover, and property taxes to keep your accounting accurate.</p>
@@ -531,8 +531,8 @@ export default function InvoicesPage() {
                 expenses.map(expense => (
                     <div key={expense.id} className="flex items-center justify-between rounded-2xl border border-border/50 bg-card p-5 transition-all hover:bg-muted/50">
                         <div className="flex items-center gap-4">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-500/10 text-rose-500">
-                                <Filter className="h-5 w-5" />
+                            <div className="flex size-10 items-center justify-center rounded-full bg-rose-500/10 text-rose-500">
+                                <Filter className="size-5" />
                             </div>
                             <div>
                                 <p className="text-sm font-bold text-foreground capitalize">{expense.category}</p>
@@ -564,7 +564,7 @@ export default function InvoicesPage() {
                 </p>
               </div>
               <button onClick={() => setIsStudioOpen(false)} className="rounded-full border border-border/50 p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground">
-                <X className="h-5 w-5" />
+                <X className="size-5" />
               </button>
             </div>
 
@@ -702,7 +702,7 @@ export default function InvoicesPage() {
                 </button>
                 {isLastStudioStep ? (
                   <button onClick={createInvoices} disabled={actionLoading === "generate" || !generatorForm.leaseId} className="group inline-flex items-center justify-center gap-2.5 rounded-2xl bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] hover:bg-primary/90 active:scale-95 disabled:pointer-events-none disabled:opacity-60">
-                    {actionLoading === "generate" ? <Loader2 className="h-5 w-5 animate-spin" /> : <Plus className="h-5 w-5 transition-transform group-hover:rotate-90" />}
+                    {actionLoading === "generate" ? <Loader2 className="size-5 animate-spin" /> : <Plus className="size-5 transition-transform group-hover:rotate-90" />}
                     Generate invoice
                   </button>
                 ) : (
@@ -831,7 +831,7 @@ function UtilityReadingStep({
     <div className="rounded-[2rem] border border-border/50 bg-background/60 p-6 shadow-inner backdrop-blur-md">
       <div className="mb-6 flex items-center gap-3 text-sm font-bold text-foreground">
         <div className="rounded-xl border border-primary/20 bg-primary/10 p-2 text-primary shadow-sm">
-          <CalendarDays className="h-5 w-5" />
+          <CalendarDays className="size-5" />
         </div>
         {utilityLabel} reading
       </div>
@@ -853,7 +853,7 @@ function UtilityReadingStep({
         <input type="file" accept="image/*" onChange={(event) => setProofFile(event.target.files?.[0] || null)} className="w-full rounded-2xl border border-border/50 bg-card px-5 py-3 text-sm font-medium text-foreground outline-none transition-all file:mr-4 file:rounded-full file:border-0 file:bg-primary/20 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-primary hover:file:bg-primary/30 focus:border-primary/50 focus:ring-4 focus:ring-primary/10" />
       </label>
       <button onClick={submitReading} disabled={actionLoading === "reading" || !proofFile} className="group mt-6 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card px-6 py-4 text-sm font-bold text-foreground shadow-sm transition-all hover:bg-muted active:scale-95 disabled:pointer-events-none disabled:opacity-60">
-        {actionLoading === "reading" ? <Loader2 className="h-4 w-4 animate-spin" /> : <CalendarDays className="h-4 w-4 transition-transform group-hover:-translate-y-0.5" />}
+        {actionLoading === "reading" ? <Loader2 className="size-4 animate-spin" /> : <CalendarDays className="size-4 transition-transform group-hover:-translate-y-0.5" />}
         Save {utilityLabel.toLowerCase()} reading
       </button>
     </div>

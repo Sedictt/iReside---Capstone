@@ -51,9 +51,9 @@ export function PropertySelector({ isCollapsed = false }: { isCollapsed?: boolea
             >
                 <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                     {selectedPropertyId === 'all' ? (
-                        <LayoutGrid className="h-4.5 w-4.5" />
+                        <LayoutGrid className="size-4.5" />
                     ) : (
-                        <Building2 className="h-4.5 w-4.5" />
+                        <Building2 className="size-4.5" />
                     )}
                 </div>
                 
@@ -63,7 +63,7 @@ export function PropertySelector({ isCollapsed = false }: { isCollapsed?: boolea
                             {selectedPropertyId === 'all' ? 'All Properties' : (selectedProperty?.name || 'Loading...')}
                         </span>
                         <ChevronDown className={cn(
-                            "size-4 shrink-0 text-muted-foreground transition-transform duration-300",
+                            "size-4 text-muted-foreground transition-transform duration-300",
                             isOpen && "rotate-180"
                         )} />
                     </div>

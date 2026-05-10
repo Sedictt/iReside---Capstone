@@ -134,15 +134,18 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                                 </div>
                             ) : (
                                 payments.map((payment) => (
-                                    <div 
-                                        key={payment.id} 
+                                    <div
+                                        key={payment.id}
                                         onClick={() => setSelectedActionPayment(payment)}
+                                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedActionPayment(payment); }}}
+                                        tabIndex={0}
+                                        role="button"
                                         className="group relative flex cursor-pointer items-center justify-between overflow-hidden rounded-[1.75rem] border border-white/5 bg-white/[0.03] p-5 transition-all hover:bg-white/[0.06] hover:ring-1 hover:ring-primary/20 active:scale-[0.98]"
                                     >
                                         <div className="flex items-center gap-5 relative z-10">
                                             <div className="relative">
                                                 <div 
-                                                    className="h-14 w-14 rounded-full border-2 border-background overflow-hidden transition-all duration-500 group-hover:scale-110"
+                                                    className="size-14 rounded-full border-2 border-background overflow-hidden transition-all duration-500 group-hover:scale-110"
                                                     style={{ backgroundColor: payment.avatarBgColor || '#171717' }}
                                                 >
                                                     <img src={payment.avatar || FALLBACK_AVATAR} alt={payment.tenant} className="h-full w-full object-cover" />
@@ -180,7 +183,7 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                     <AnimatePresence>
                         {selectedActionPayment && (
                             <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-                                <motion.div 
+                                <motion.div
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
@@ -189,6 +192,9 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                                         setSelectedActionPayment(null);
                                         setIsConfirmingAction(false);
                                     }}
+                                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedActionPayment(null); setIsConfirmingAction(false); }}}
+                                    tabIndex={0}
+                                    role="button"
                                 />
                                 <motion.div 
                                     initial={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -199,13 +205,13 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                                     {!isConfirmingAction ? (
                                         <>
                                             <div className="p-8 text-center pt-10">
-                                                <div className="relative mx-auto mb-6 h-24 w-24">
+                                                <div className="relative mx-auto mb-6 size-24">
                                                     <img 
                                                         src={selectedActionPayment.avatar || FALLBACK_AVATAR} 
                                                         alt={selectedActionPayment.tenant} 
                                                         className="h-full w-full rounded-full border-4 border-primary/20 object-cover shadow-2xl shadow-primary/10"
                                                     />
-                                                    <div className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full border-4 border-neutral-900 bg-emerald-500 shadow-lg" />
+                                                    <div className="absolute -bottom-1 -right-1 size-7 rounded-full border-4 border-neutral-900 bg-emerald-500 shadow-lg" />
                                                 </div>
                                                 <h3 className="text-2xl font-black text-white">{selectedActionPayment.tenant}</h3>
                                                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] mt-1">{selectedActionPayment.unit}</p>
@@ -240,7 +246,7 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                                         </>
                                     ) : (
                                         <div className="p-8 text-center pt-10 animate-in slide-in-from-right-4 duration-300">
-                                            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-primary/10 text-primary">
+                                            <div className="mx-auto mb-6 flex size-20 items-center justify-center rounded-3xl bg-primary/10 text-primary">
                                                 <AlertTriangle className="size-10" />
                                             </div>
                                             <h3 className="text-2xl font-black text-white tracking-tight">Double Check</h3>

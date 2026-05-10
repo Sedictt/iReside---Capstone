@@ -345,7 +345,7 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
                                     onClick={() => setSelectedColor("#171717")}
                                     className="text-[9px] font-black uppercase tracking-widest text-primary hover:opacity-80 transition-opacity flex items-center gap-1.5"
                                 >
-                                    <RefreshCcw className="h-2.5 w-2.5" />
+                                    <RefreshCcw className="size-2.5" />
                                     Reset
                                 </button>
                             </div>

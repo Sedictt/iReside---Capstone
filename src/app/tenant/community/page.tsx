@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useRef, useState, useTransition } from "react"
 import { AnimatePresence, motion } from "framer-motion"
+import { MessageCircle } from "lucide-react"
 import {
     addComment,
     approveResidentPost,
@@ -446,8 +447,8 @@ export default function TenantCommunityHubPage() {
                             
                             {visiblePosts.length === 0 && !loadingFeed && (
                                 <div className="rounded-[2.5rem] border border-dashed border-border bg-muted/20 p-20 text-center">
-                                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-                                        <Megaphone className="h-8 w-8 text-muted-foreground/50" />
+                                    <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-muted">
+                                        <MessageCircle className="size-5" />
                                     </div>
                                     <h3 className="mt-4 text-lg font-semibold text-foreground">No posts found</h3>
                                     <p className="mt-2 text-muted-foreground">Try adjusting your search or tab to see more content.</p>

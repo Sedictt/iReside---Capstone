@@ -104,7 +104,7 @@ function SettingField({ label, children, description, icon: Icon }: { label: str
     return (
         <div className="space-y-2">
             <div className="flex items-center gap-2 px-1">
-                {Icon && <Icon className="h-3.5 w-3.5 text-neutral-500" />}
+                {Icon && <Icon className="size-3.5 text-neutral-500" />}
                 <label className="text-xs font-bold uppercase tracking-wider text-neutral-400">{label}</label>
             </div>
             {children}
@@ -127,7 +127,7 @@ function ToggleSwitch({ enabled, onToggle, size = "default" }: { enabled: boolea
             <span
                 className={cn(
                     "inline-block transform rounded-full bg-white shadow-sm transition-all duration-300",
-                    isSmall ? "h-3 w-3" : "size-4",
+                    isSmall ? "size-3" : "size-4",
                     enabled
                         ? isSmall ? "translate-x-5" : "translate-x-6"
                         : "translate-x-1"
@@ -698,7 +698,7 @@ export function TenantSettings() {
                                         disabled={isSessionsLoading}
                                         className="mt-2 flex items-center gap-2 text-xs font-bold text-red-400 hover:text-red-300 transition-colors disabled:opacity-50"
                                     >
-                                        <LogOut className="h-3.5 w-3.5" /> Sign out all other devices
+                                        <LogOut className="size-3.5" /> Sign out all other devices
                                     </button>
                                 )}
                             </div>
@@ -932,7 +932,7 @@ export function TenantSettings() {
 
                                 <div className="flex items-center justify-between pt-4 border-t border-white/5">
                                     <p className="text-xs text-neutral-500 flex items-center gap-1">
-                                        <Info className="h-3 w-3" /> Export may take up to 24 hours to process.
+                                        <Info className="size-3" /> Export may take up to 24 hours to process.
                                     </p>
                                     <button className="flex items-center gap-2 rounded-2xl bg-primary px-6 py-3 text-sm font-bold text-white transition-all hover:bg-primary/90">
                                         <Download className="size-4" /> Request Export
@@ -966,7 +966,7 @@ export function TenantSettings() {
                                             "Saved preferences",
                                         ].map((text) => (
                                             <li key={text} className="flex items-center gap-2 text-sm text-neutral-400">
-                                                <X className="h-3 w-3 text-red-500 flex-shrink-0" />
+                                                <X className="size-3 text-red-500 flex-shrink-0" />
                                                 {text}
                                             </li>
                                         ))}
@@ -1094,7 +1094,7 @@ export function TenantSettings() {
                                     {isActive && (
                                         <motion.div 
                                             layoutId="active-indicator"
-                                            className="h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),1)]" 
+                                            className="size-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),1)]" 
                                         />
                                     )}
                                 </div>

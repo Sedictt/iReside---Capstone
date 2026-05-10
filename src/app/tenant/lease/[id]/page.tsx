@@ -116,22 +116,22 @@ export default async function LeaseDetailsPage({ params }: { params: Promise<{ i
                         <h3 className="text-lg font-semibold text-white mb-6">Timeline</h3>
                         <div className="relative border-l-2 border-zinc-800 ml-3 space-y-8 pl-6 pb-2">
                             <div className="relative">
-                                <span className="absolute -left-[30px] top-1 h-3 w-3 rounded-full bg-indigo-500 ring-4 ring-zinc-900" />
+                                <span className="absolute -left-[30px] top-1 size-3 rounded-full bg-indigo-500 ring-4 ring-zinc-900" />
                                 <p className="text-sm font-semibold text-white">Lease Active</p>
                                 <p className="text-xs text-zinc-400 mt-1">Jan 01, 2024</p>
                             </div>
                             <div className="relative">
-                                <span className="absolute -left-[30px] top-1 h-3 w-3 rounded-full bg-zinc-700 ring-4 ring-zinc-900" />
+                                <span className="absolute -left-[30px] top-1 size-3 rounded-full bg-zinc-700 ring-4 ring-zinc-900" />
                                 <p className="text-sm font-medium text-zinc-300">Signed by Tenant</p>
                                 <p className="text-xs text-zinc-500 mt-1">Dec 15, 2023</p>
                             </div>
                             <div className="relative">
-                                <span className="absolute -left-[30px] top-1 h-3 w-3 rounded-full bg-zinc-700 ring-4 ring-zinc-900" />
+                                <span className="absolute -left-[30px] top-1 size-3 rounded-full bg-zinc-700 ring-4 ring-zinc-900" />
                                 <p className="text-sm font-medium text-zinc-300">Sent for Signature</p>
                                 <p className="text-xs text-zinc-500 mt-1">Dec 14, 2023</p>
                             </div>
                             <div className="relative">
-                                <span className="absolute -left-[30px] top-1 h-3 w-3 rounded-full bg-zinc-700 ring-4 ring-zinc-900" />
+                                <span className="absolute -left-[30px] top-1 size-3 rounded-full bg-zinc-700 ring-4 ring-zinc-900" />
                                 <p className="text-sm font-medium text-zinc-300">Draft Created</p>
                                 <p className="text-xs text-zinc-500 mt-1">Dec 10, 2023</p>
                             </div>

@@ -313,7 +313,7 @@ export function InvoiceModal({
                 
                 {/* Header Section */}
                 <div className="relative shrink-0 overflow-hidden border-b border-white/5 bg-surface-1/50 px-8 py-8">
-                    <div className="absolute top-0 right-0 -mr-20 -mt-20 h-64 w-64 rounded-full bg-primary/5 blur-3xl transition-opacity animate-pulse" />
+                    <div className="absolute top-0 right-0 -mr-20 -mt-20 size-64 rounded-full bg-primary/5 blur-3xl transition-opacity animate-pulse" />
                     
                     <div className="relative flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
                         <div className="space-y-4">
@@ -331,23 +331,23 @@ export function InvoiceModal({
                             {invoice && (
                                 <div className="flex flex-wrap items-center gap-2 text-sm font-medium text-text-medium">
                                     <span className="flex items-center gap-2 rounded-full bg-surface-2/50 px-3 py-1 text-text-high border border-white/5 shadow-sm">
-                                        <User className="h-3.5 w-3.5 text-primary" />
+                                        <User className="size-3.5 text-primary" />
                                         {invoice.tenant?.full_name}
                                     </span>
-                                    <div className="h-1 w-1 rounded-full bg-white/10" />
+                                    <div className="size-1 rounded-full bg-white/10" />
                                     <span className="flex items-center gap-2 rounded-full bg-surface-2/50 px-3 py-1 border border-white/5 shadow-sm">
-                                        <Building2 className="h-3.5 w-3.5 text-text-disabled" />
+                                        <Building2 className="size-3.5 text-text-disabled" />
                                         {invoice.property?.name}
                                     </span>
-                                    <div className="h-1 w-1 rounded-full bg-white/10" />
+                                    <div className="size-1 rounded-full bg-white/10" />
                                     <span className="rounded-full bg-surface-2/50 px-3 py-1 border border-white/5 shadow-sm">
                                         Unit {invoice.unit?.name}
                                     </span>
                                     {invoice.paymentSubmittedAt && (
                                         <>
-                                            <div className="h-1 w-1 rounded-full bg-white/10" />
+                                            <div className="size-1 rounded-full bg-white/10" />
                                             <span className="flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-primary border border-primary/20 shadow-sm animate-in fade-in slide-in-from-left-2 duration-500">
-                                                <Clock3 className="h-3.5 w-3.5" />
+                                                <Clock3 className="size-3.5" />
                                                 Paid on {formatDateLong(invoice.paymentSubmittedAt)}
                                             </span>
                                         </>
@@ -359,7 +359,7 @@ export function InvoiceModal({
                         <div className="flex items-center gap-4">
                             {invoice && (
                                 <div className={cn("flex items-center gap-2 rounded-full border px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.1em] shadow-lg", statusStyle.classes)}>
-                                    <span className={cn("h-1.5 w-1.5 rounded-full animate-pulse", statusStyle.dot)} />
+                                    <span className={cn("size-1.5 rounded-full animate-pulse", statusStyle.dot)} />
                                     {statusStyle.label}
                                 </div>
                              )}
@@ -448,7 +448,7 @@ export function InvoiceModal({
                                             <div key={reading.id} className="overflow-hidden rounded-3xl border border-white/5 bg-surface-1 shadow-sm">
                                                 <div className="flex items-center justify-between bg-surface-2/50 px-6 py-4">
                                                     <div className="flex items-center gap-3">
-                                                        <div className="h-2 w-2 rounded-full bg-primary" />
+                                                        <div className="size-2 rounded-full bg-primary" />
                                                         <p className="text-sm font-bold capitalize text-text-high">{reading.utility_type} Service</p>
                                                     </div>
                                                     <span className={cn("rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider", reading.billing_mode === "included_in_rent" ? "bg-white/5 text-text-medium" : "bg-primary/10 text-primary")}>
@@ -507,7 +507,7 @@ export function InvoiceModal({
                                         <div className="relative overflow-hidden rounded-[2rem] border-2 border-dashed border-white/5 bg-surface-1/30 p-10 text-center group transition-all hover:border-white/10">
                                             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/5 to-transparent opacity-20" />
                                             <div className="relative flex flex-col items-center gap-4">
-                                                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-2 border border-white/5 text-text-disabled shadow-inner group-hover:scale-110 transition-transform">
+                                                <div className="flex size-16 items-center justify-center rounded-2xl bg-surface-2 border border-white/5 text-text-disabled shadow-inner group-hover:scale-110 transition-transform">
                                                     <Receipt className="size-8 opacity-20" />
                                                 </div>
                                                 <div className="space-y-1">
@@ -563,7 +563,7 @@ export function InvoiceModal({
                                             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-text-medium">Payment Verification</h3>
                                             {invoice.paymentProofUrl && (
                                                 <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                                                    <ShieldCheck className="h-3 w-3" />
+                                                    <ShieldCheck className="size-3" />
                                                     Attachment Provided
                                                 </span>
                                             )}
@@ -571,8 +571,8 @@ export function InvoiceModal({
                                         
                                         <div className="grid gap-3">
                                             <div className="grid grid-cols-2 gap-3">
-                                                <StatusLine label="Payment Method" value={invoice.paymentMethod ?? "Not specified"} icon={<CreditCardIcon className="h-3.5 w-3.5" />} />
-                                                <StatusLine label="Reference #" value={invoice.referenceNumber ?? "None"} icon={<Hash className="h-3.5 w-3.5" />} />
+                                                <StatusLine label="Payment Method" value={invoice.paymentMethod ?? "Not specified"} icon={<CreditCardIcon className="size-3.5" />} />
+                                                <StatusLine label="Reference #" value={invoice.referenceNumber ?? "None"} icon={<Hash className="size-3.5" />} />
                                             </div>
 
                                             {invoice.paymentProofUrl && (
@@ -599,7 +599,7 @@ export function InvoiceModal({
                                             {invoice.paymentDestination && (
                                                 <div className="rounded-2xl border border-white/10 bg-surface-2 p-5 space-y-3 shadow-sm">
                                                     <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-text-disabled">
-                                                        <QrCode className="h-3.5 w-3.5" />
+                                                        <QrCode className="size-3.5" />
                                                         Paid To
                                                     </div>
                                                     <div>
@@ -673,7 +673,7 @@ export function InvoiceModal({
                                                             <div className="rounded-2xl bg-emerald-500/5 border border-emerald-500/20 p-5 space-y-3">
                                                                 <div className="flex items-start gap-3">
                                                                     <div className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
-                                                                        <CheckCircle className="h-3 w-3" />
+                                                                        <CheckCircle className="size-3" />
                                                                     </div>
                                                                     <div className="space-y-1">
                                                                         <p className="text-xs font-bold text-text-high leading-tight">Proceed with Confirmation</p>
@@ -749,9 +749,9 @@ export function InvoiceModal({
                                                                 disabled={!!actionLoading}
                                                                 className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-surface-2/30 py-3 text-[10px] font-bold uppercase tracking-widest text-text-medium transition-all hover:bg-surface-3 hover:text-text-high hover:border-white/20 group"
                                                             >
-                                                                {actionLoading === "remind" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />}
+                                                                {actionLoading === "remind" ? <Loader2 className="size-3 animate-spin" /> : <Send className="size-3 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />}
                                                                 Send a Gentle Nudge
-                                                                <HelpCircle className="h-3 w-3 text-text-disabled group-hover:text-amber-400 transition-colors" />
+                                                                <HelpCircle className="size-3 text-text-disabled group-hover:text-amber-400 transition-colors" />
                                                             </button>
 
                                                             {/* Custom Premium Tooltip */}
@@ -759,7 +759,7 @@ export function InvoiceModal({
                                                                 <div className="relative rounded-2xl bg-surface-3 border border-white/10 p-4 shadow-2xl backdrop-blur-xl">
                                                                     <div className="flex gap-3">
                                                                         <div className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-amber-500/20 text-amber-400">
-                                                                            <Info className="h-3 w-3" />
+                                                                            <Info className="size-3" />
                                                                         </div>
                                                                         <p className="text-[10px] font-medium leading-relaxed text-text-medium">
                                                                             This sends a message to the tenant <span className="text-amber-400 font-bold">without changing anything</span>. Use this if you just want to tell them you're still reviewing their payment.
@@ -779,7 +779,7 @@ export function InvoiceModal({
                                     {/* History Section */}
                                     <section className="space-y-4 pt-4 border-t border-white/5">
                                         <div className="flex items-center gap-2">
-                                            <History className="h-3.5 w-3.5 text-text-disabled" />
+                                            <History className="size-3.5 text-text-disabled" />
                                             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-text-medium">Audit History</h3>
                                         </div>
                                         <div className="space-y-3">
@@ -791,7 +791,7 @@ export function InvoiceModal({
                                             {invoice.receipts.map((receipt) => (
                                                 <div key={receipt.id} className="group flex items-center justify-between rounded-2xl border border-white/5 bg-surface-2/50 px-5 py-4 transition-all hover:bg-surface-3 shadow-sm">
                                                     <div className="flex items-center gap-4">
-                                                        <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                                                        <div className="size-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
                                                         <div>
                                                             <p className="text-[11px] font-black text-text-high tracking-tight">{receipt.receipt_number}</p>
                                                             <p className="text-[9px] font-medium uppercase tracking-wider text-text-disabled mt-0.5">{formatDateLong(receipt.issued_at)}</p>
@@ -858,7 +858,7 @@ export function InvoiceModal({
                         >
                             <div className="p-10 space-y-8">
                                 <div className="flex justify-center">
-                                    <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-amber-500/10 text-amber-400 shadow-inner">
+                                    <div className="flex size-20 items-center justify-center rounded-3xl bg-amber-500/10 text-amber-400 shadow-inner">
                                         <ShieldCheck className="size-10" />
                                     </div>
                                 </div>
@@ -978,8 +978,8 @@ function F2FActionCenter({
         <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
             <div className="rounded-[2rem] border border-cyan-500/20 bg-cyan-500/10 p-6 text-center space-y-4">
                 <div className="flex justify-center">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-400/20 text-cyan-400 shadow-inner">
-                        <Building2 className="h-7 w-7" />
+                    <div className="flex size-14 items-center justify-center rounded-2xl bg-cyan-400/20 text-cyan-400 shadow-inner">
+                        <Building2 className="size-7" />
                     </div>
                 </div>
                 <div className="space-y-1">
@@ -1273,7 +1273,7 @@ function WizardFlow({
 
                         <div className="rounded-2xl bg-amber-500/5 border border-amber-500/20 p-4 space-y-2">
                             <p className="text-[10px] font-black uppercase text-amber-500/80 tracking-widest flex items-center gap-2">
-                                <Info className="h-3 w-3" />
+                                <Info className="size-3" />
                                 Effect of this action
                             </p>
                             <p className="text-[11px] text-text-medium leading-relaxed font-medium">
@@ -1360,7 +1360,7 @@ function ResolutionCard({ title, desc, onClick, active, disabled }: { title: str
         >
             <div className="flex items-center justify-between w-full">
                 <p className={cn("text-xs font-bold", active ? "text-amber-400" : "text-text-high")}>{title}</p>
-                <div className={cn("h-2 w-2 rounded-full", active ? "bg-amber-500" : "bg-white/10")} />
+                <div className={cn("size-2 rounded-full", active ? "bg-amber-500" : "bg-white/10")} />
             </div>
             <p className="text-[10px] text-text-disabled font-medium mt-1">{desc}</p>
         </button>
@@ -1374,7 +1374,7 @@ function Metric({ label, value, accent, warning }: { label: string; value: strin
             accent ? "border-primary/30 bg-primary/5 shadow-[0_20px_40px_-20px_rgba(109,152,56,0.15)]" : "border-white/5 bg-surface-1",
             warning && !accent && "border-amber-500/20 bg-amber-500/5 shadow-[0_20px_40px_-20px_rgba(245,158,11,0.1)]"
         )}>
-            {accent && <div className="absolute -top-6 -right-6 h-24 w-24 bg-primary/10 blur-3xl rounded-full animate-pulse" />}
+            {accent && <div className="absolute -top-6 -right-6 size-24 bg-primary/10 blur-3xl rounded-full animate-pulse" />}
             <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-[0.3em] text-text-medium group-hover:text-primary transition-colors">{label}</p>
             <p className={cn(
                 "mt-2 sm:mt-3 text-lg sm:text-xl lg:text-2xl font-black tracking-tight transition-transform group-hover:scale-[1.02] origin-left break-words leading-tight",
@@ -1484,7 +1484,7 @@ function RefundCenter({
             <div className="space-y-6 animate-in fade-in zoom-in-95 duration-500">
                 <div className="rounded-[2rem] border border-emerald-500/20 bg-emerald-500/10 p-8 text-center space-y-4">
                     <div className="flex justify-center">
-                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-400/20 text-emerald-400 shadow-inner">
+                        <div className="flex size-16 items-center justify-center rounded-2xl bg-emerald-400/20 text-emerald-400 shadow-inner">
                             <CheckCircle2 className="size-8" />
                         </div>
                     </div>
@@ -1519,7 +1519,7 @@ function RefundCenter({
             <div className="rounded-2xl bg-amber-500/5 border border-amber-500/20 p-5 space-y-4">
                 <div className="flex items-start gap-3">
                     <div className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-amber-500/20 text-amber-400">
-                        <Wallet className="h-3 w-3" />
+                        <Wallet className="size-3" />
                     </div>
                     <div className="space-y-1">
                         <p className="text-xs font-bold text-text-high leading-tight">Tenant Refund Request</p>

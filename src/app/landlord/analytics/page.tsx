@@ -631,7 +631,7 @@ export default function AnalyticsPage() {
             <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                     <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/80 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.25em] text-primary shadow-sm backdrop-blur-md">
-                        <BarChart className="h-3.5 w-3.5" />
+                        <BarChart className="size-3.5" />
                         Portfolio Analytics
                     </div>
                     <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">Analytics</h1>
@@ -652,7 +652,7 @@ export default function AnalyticsPage() {
                             aria-label={isIrisVisible ? "Hide iRis assistant" : "Show iRis assistant"}
                             aria-describedby="iris-toggle-tooltip"
                         >
-                            {isIrisVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            {isIrisVisible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                             {isIrisVisible ? "Hide iRis" : "Show iRis"}
                         </button>
                         <div
@@ -661,14 +661,14 @@ export default function AnalyticsPage() {
                             className="pointer-events-none absolute left-1/2 top-[-0.85rem] z-20 w-max max-w-[17rem] -translate-x-1/2 -translate-y-full rounded-xl border border-white/10 bg-card/95 px-3 py-2 text-[10px] font-bold tracking-wide text-foreground opacity-0 shadow-xl backdrop-blur-xl transition-all duration-200 group-hover/iris-toggle:opacity-100 group-hover/iris-toggle:translate-y-[-2.75rem] group-focus-within/iris-toggle:opacity-100 group-focus-within/iris-toggle:translate-y-[-2.75rem]"
                         >
                             Toggle iRis mascot visibility on this page.
-                            <div className="absolute left-1/2 top-full h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rotate-45 border-r border-b border-border bg-card/95" />
+                            <div className="absolute left-1/2 top-full size-2.5 -translate-x-1/2 -translate-y-1/2 rotate-45 border-r border-b border-border bg-card/95" />
                         </div>
                     </div>
                     <button
                         onClick={() => setIsExportModalOpen(true)}
                         className="group inline-flex items-center gap-2.5 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-sm transition-all hover:scale-105 hover:bg-primary/90 active:scale-95"
                     >
-                        <Download className="h-4 w-4 transition-transform group-hover:-translate-y-0.5" />
+                        <Download className="size-4 transition-transform group-hover:-translate-y-0.5" />
                         Export Report
                     </button>
                 </div>
@@ -678,8 +678,8 @@ export default function AnalyticsPage() {
             <section className="relative z-0 w-full rounded-[2.5rem] border border-border bg-card p-8 shadow-xl shadow-black/[0.04] dark:shadow-black/20">
                 <div className="flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
                     <div className="flex min-w-0 items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-[1rem] border border-indigo-500/20 bg-indigo-500/12 text-indigo-300">
-                            <BarChart className="h-6 w-6" />
+                        <div className="flex size-12 items-center justify-center rounded-[1rem] border border-indigo-500/20 bg-indigo-500/12 text-indigo-300">
+                            <BarChart className="size-6" />
                         </div>
                         <div>
                             <h2 className="text-2xl font-black tracking-tight text-foreground">
@@ -713,7 +713,7 @@ export default function AnalyticsPage() {
                             )}
                         >
                             {showMoreKpis ? "Less Details" : "More Metrics"}
-                            <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-300", showMoreKpis && "rotate-180")} />
+                            <ChevronDown className={cn("size-3.5 transition-transform duration-300", showMoreKpis && "rotate-180")} />
                         </button>
                     </div>
                 </div>
@@ -783,8 +783,8 @@ export default function AnalyticsPage() {
             <section className="relative z-0 w-full rounded-[2.5rem] border border-border bg-card p-8 shadow-xl shadow-black/[0.04] dark:shadow-black/20">
                 <div className="mb-10 flex flex-wrap items-center justify-between gap-4 px-2">
                     <div className="flex min-w-0 items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-[1rem] border border-emerald-500/20 bg-emerald-500/12 text-emerald-300">
-                            <TrendingUp className="h-6 w-6" />
+                        <div className="flex size-12 items-center justify-center rounded-[1rem] border border-emerald-500/20 bg-emerald-500/12 text-emerald-300">
+                            <TrendingUp className="size-6" />
                         </div>
                         <div>
                             <h2 className="text-2xl font-black tracking-tight text-foreground">Financial Performance</h2>
@@ -822,8 +822,8 @@ export default function AnalyticsPage() {
             {/* Export History */}
             <section className="relative z-0 w-full rounded-[2.5rem] border border-border bg-card p-8 shadow-xl shadow-black/[0.04] dark:shadow-black/20">
                 <div className="mb-6 flex items-center gap-4 px-2">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-[1rem] border border-amber-500/20 bg-amber-500/12 text-amber-300">
-                        <History className="h-6 w-6" />
+                    <div className="flex size-12 items-center justify-center rounded-[1rem] border border-amber-500/20 bg-amber-500/12 text-amber-300">
+                        <History className="size-6" />
                     </div>
                     <div>
                         <h2 className="text-2xl font-black tracking-tight text-foreground">Export History</h2>
@@ -832,7 +832,7 @@ export default function AnalyticsPage() {
                 </div>
                 {exportHistory.length === 0 ? (
                     <div className="flex flex-col items-center justify-center rounded-[1.75rem] border border-border bg-muted/20 py-12 text-muted-foreground">
-                        <FileText className="h-8 w-8 mb-3 opacity-20" />
+                        <FileText className="size-8 mb-3 opacity-20" />
                         <p className="text-[10px] font-black uppercase tracking-widest opacity-40">No reports exported yet</p>
                     </div>
                 ) : (
@@ -875,7 +875,7 @@ export default function AnalyticsPage() {
                                             onClick={() => handleRedownload(item)}
                                             className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-card py-2 text-[10px] font-black uppercase tracking-widest text-primary border border-primary/20 transition-all hover:bg-primary hover:text-primary-foreground"
                                         >
-                                            <Download className="h-3 w-3" />
+                                            <Download className="size-3" />
                                             Redownload
                                         </button>
                                     )}
@@ -892,7 +892,7 @@ export default function AnalyticsPage() {
                             className="group flex items-center gap-2 rounded-full border border-border bg-card px-8 py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground transition-all hover:border-primary/30 hover:bg-primary/5 hover:text-primary active:scale-95"
                         >
                             Load Older Reports
-                            <ChevronDown className="h-3 w-3 transition-transform group-hover:translate-y-0.5" />
+                            <ChevronDown className="size-3 transition-transform group-hover:translate-y-0.5" />
                         </button>
                     </div>
                 )}
@@ -909,8 +909,8 @@ export default function AnalyticsPage() {
                     <div className="relative z-10 w-full max-w-lg overflow-hidden rounded-[2.5rem] border border-border bg-card shadow-2xl animate-in zoom-in-95 duration-300">
                         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-card/95 px-8 py-6 backdrop-blur-xl">
                             <div className="flex items-center gap-4">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                                    <Download className="h-6 w-6" />
+                                <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                                    <Download className="size-6" />
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-black text-foreground">Export Report</h2>
@@ -920,9 +920,9 @@ export default function AnalyticsPage() {
                             <button
                                 type="button"
                                 onClick={() => setIsExportModalOpen(false)}
-                                className="group flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-card/70 text-muted-foreground transition-all hover:bg-card hover:text-foreground hover:rotate-90 active:scale-95"
+                                className="group flex size-10 items-center justify-center rounded-xl border border-white/10 bg-card/70 text-muted-foreground transition-all hover:bg-card hover:text-foreground hover:rotate-90 active:scale-95"
                             >
-                                <X className="h-5 w-5" />
+                                <X className="size-5" />
                             </button>
                         </div>
                         
@@ -930,7 +930,7 @@ export default function AnalyticsPage() {
                             {/* Report Period Section */}
                             <div className="flex flex-col gap-4">
                                 <label className="flex items-center gap-3 text-sm font-black text-foreground">
-                                    <div className="flex h-7 w-7 items-center justify-center rounded-full border border-primary/20 bg-primary/10 text-[10px] font-black text-primary">1</div>
+                                    <div className="flex size-7 items-center justify-center rounded-full border border-primary/20 bg-primary/10 text-[10px] font-black text-primary">1</div>
                                     Select Report Period
                                 </label>
                                 <div className="pl-10 flex flex-col gap-4">
@@ -979,7 +979,7 @@ export default function AnalyticsPage() {
                             {/* Export Format Section */}
                             <div className="flex flex-col gap-4">
                                 <label className="flex items-center gap-3 text-sm font-black text-foreground">
-                                    <div className="flex h-7 w-7 items-center justify-center rounded-full border border-primary/20 bg-primary/10 text-[10px] font-black text-primary">2</div>
+                                    <div className="flex size-7 items-center justify-center rounded-full border border-primary/20 bg-primary/10 text-[10px] font-black text-primary">2</div>
                                     Select Format
                                 </label>
                                 <div className="pl-10 grid grid-cols-2 gap-4">
@@ -992,7 +992,7 @@ export default function AnalyticsPage() {
                                                 : "border-white/10 bg-card/70 text-muted-foreground hover:bg-card hover:text-foreground"
                                         )}
                                     >
-                                        <FileText className="h-8 w-8" />
+                                        <FileText className="size-8" />
                                         <span className="text-xs font-black uppercase tracking-[0.15em]">PDF</span>
                                     </button>
                                     <button
@@ -1004,7 +1004,7 @@ export default function AnalyticsPage() {
                                                 : "border-white/10 bg-card/70 text-muted-foreground hover:bg-card hover:text-foreground"
                                         )}
                                     >
-                                        <Download className="h-8 w-8" />
+                                        <Download className="size-8" />
                                         <span className="text-xs font-black uppercase tracking-[0.15em]">CSV</span>
                                     </button>
                                 </div>

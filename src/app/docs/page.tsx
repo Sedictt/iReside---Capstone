@@ -10,7 +10,9 @@ import {
   CheckCircle2,
   Building2,
   Lock,
-  Lightbulb
+  Lightbulb,
+  BookOpen,
+  LifeBuoy
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -54,7 +56,7 @@ export default function DocsPage() {
         <div className="flex flex-wrap gap-4 pt-2">
           <Button className="bg-primary hover:bg-primary-dark text-white h-12 px-8 text-lg font-semibold rounded-xl" asChild>
             <Link href="/docs/getting-started/quick-start">
-              Get Started <Rocket className="ml-2 h-5 w-5" />
+              Get Started <Rocket className="ml-2 size-5" />
             </Link>
           </Button>
           <Button variant="outline" className="h-12 px-8 text-lg font-semibold rounded-xl border-divider hover:bg-surface-2" asChild>
@@ -88,8 +90,8 @@ export default function DocsPage() {
               href={category.href}
               className="group relative flex flex-col gap-4 rounded-2xl border border-divider bg-surface-1 p-6 transition-all duration-300 hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-1"
             >
-              <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${category.color}`}>
-                <category.icon className="h-6 w-6" />
+              <div className={`flex items-center justify-center rounded-xl ${category.color}`}>
+                <category.icon className="size-6" />
               </div>
               <div className="space-y-2">
                 <h3 className="text-xl font-semibold text-text-high group-hover:text-primary transition-colors">
@@ -100,7 +102,7 @@ export default function DocsPage() {
                 </p>
               </div>
               <div className="mt-auto flex items-center text-sm font-semibold text-primary">
-                Learn more <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                Learn more <ArrowRight className="ml-1 size-4 transition-transform group-hover:translate-x-1" />
               </div>
             </Link>
           ))}
@@ -119,7 +121,7 @@ export default function DocsPage() {
           <div>
             <Button asChild size="lg" className="bg-primary hover:bg-primary-dark text-white rounded-full shadow-lg shadow-primary/20">
               <Link href="/docs/features">
-                Explore Core Features <ArrowRight className="ml-2 h-5 w-5" />
+                Explore Core Features <ArrowRight className="ml-2 size-5" />
               </Link>
             </Button>
           </div>
@@ -169,7 +171,7 @@ export default function DocsPage() {
             }
           ].map((item, index) => (
             <div key={index} className="rounded-2xl border border-divider bg-surface-1 p-6">
-              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+              <div className="mb-4 flex items-center justify-center rounded-lg bg-primary/10">
                 <span className="text-lg font-bold text-primary">{item.step}</span>
               </div>
               <h4 className="mb-2 font-semibold text-text-high">{item.title}</h4>
@@ -185,8 +187,8 @@ export default function DocsPage() {
         <div className="rounded-2xl border border-divider bg-surface-1 p-8">
           <div className="space-y-6">
             <div className="flex gap-4">
-              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                <Shield className="h-5 w-5 text-primary" />
+              <div className="flex items-center justify-center rounded-lg bg-primary/10">
+                <BookOpen className="size-5 text-primary" />
               </div>
               <div>
                 <h4 className="mb-1 font-semibold text-text-high">Your Information is Protected</h4>
@@ -197,8 +199,8 @@ export default function DocsPage() {
             </div>
 
             <div className="flex gap-4">
-              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                <Lightbulb className="h-5 w-5 text-primary" />
+              <div className="flex items-center justify-center rounded-lg bg-primary/10">
+                <LifeBuoy className="size-5 text-teal-500" />
               </div>
               <div>
                 <h4 className="mb-1 font-semibold text-text-high">Built for Simplicity</h4>
@@ -209,8 +211,8 @@ export default function DocsPage() {
             </div>
 
             <div className="flex gap-4">
-              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                <Users className="h-5 w-5 text-primary" />
+              <div className="flex items-center justify-center rounded-lg bg-primary/10">
+                <Users className="size-5 text-blue-500" />
               </div>
               <div>
                 <h4 className="mb-1 font-semibold text-text-high">Direct Relationships</h4>
@@ -221,8 +223,8 @@ export default function DocsPage() {
             </div>
 
             <div className="flex gap-4">
-              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                <CheckCircle2 className="h-5 w-5 text-primary" />
+              <div className="flex size-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                <CheckCircle2 className="size-5 text-primary" />
               </div>
               <div>
                 <h4 className="mb-1 font-semibold text-text-high">Clear Communication</h4>
@@ -244,28 +246,28 @@ export default function DocsPage() {
           </p>
           <div className="space-y-4">
             <Link href="/docs/getting-started/quick-start" className="flex items-center gap-3 rounded-lg border border-divider bg-surface-1 p-4 transition-all hover:border-primary/50 hover:bg-surface-2">
-              <Rocket className="h-5 w-5 text-primary flex-shrink-0" />
+              <Rocket className="size-5 text-primary flex-shrink-0" />
               <div className="flex-1">
                 <h4 className="font-semibold text-text-high">Quick Start Guide</h4>
                 <p className="text-sm text-text-medium">Get up and running in 5 minutes</p>
               </div>
-              <ArrowRight className="h-4 w-4 text-primary flex-shrink-0" />
+              <ArrowRight className="size-4 text-primary flex-shrink-0" />
             </Link>
             <Link href="/docs/tenant/applications" className="flex items-center gap-3 rounded-lg border border-divider bg-surface-1 p-4 transition-all hover:border-primary/50 hover:bg-surface-2">
-              <Users className="h-5 w-5 text-primary flex-shrink-0" />
+              <Users className="size-5 text-primary flex-shrink-0" />
               <div className="flex-1">
                 <h4 className="font-semibold text-text-high">Tenant Guide</h4>
                 <p className="text-sm text-text-medium">Learn how to apply and manage your tenancy</p>
               </div>
-              <ArrowRight className="h-4 w-4 text-primary flex-shrink-0" />
+              <ArrowRight className="size-4 text-primary flex-shrink-0" />
             </Link>
             <Link href="/docs/landlord/screening" className="flex items-center gap-3 rounded-lg border border-divider bg-surface-1 p-4 transition-all hover:border-primary/50 hover:bg-surface-2">
-              <Shield className="h-5 w-5 text-primary flex-shrink-0" />
+              <Shield className="size-5 text-primary flex-shrink-0" />
               <div className="flex-1">
                 <h4 className="font-semibold text-text-high">Landlord Guide</h4>
                 <p className="text-sm text-text-medium">Find tenants and manage your properties</p>
               </div>
-              <ArrowRight className="h-4 w-4 text-primary flex-shrink-0" />
+              <ArrowRight className="size-4 text-primary flex-shrink-0" />
             </Link>
           </div>
         </div>

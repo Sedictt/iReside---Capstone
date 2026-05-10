@@ -90,7 +90,7 @@ export function CommunityComposer({
 
                     <div className="flex gap-4">
                         <div 
-                            className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border shadow-inner dark:border-white/10"
+                            className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border shadow-inner dark:border-white/10"
                             style={{ backgroundColor: profile?.avatar_bg_color || undefined }}
                         >
                             {profile?.avatar_url ? (
@@ -104,8 +104,8 @@ export function CommunityComposer({
                                 value={body}
                                 onChange={(e) => {
                                     setBody(e.target.value)
-                                    e.target.style.height = 'auto'
-                                    e.target.style.height = `${e.target.scrollHeight}px`
+                                    const scrollHeight = e.target.scrollHeight
+                                    e.target.style.cssText = `height: ${scrollHeight}px;`
                                 }}
                                 placeholder={
                                     composerType === "announcement" ? "What's the announcement about?..." : 
@@ -167,7 +167,7 @@ export function CommunityComposer({
                                     animate={{ opacity: 1, scale: 1 }}
                                     exit={{ opacity: 0, scale: 0.8 }}
                                     key={index} 
-                                    className="group relative h-20 w-20 overflow-hidden rounded-xl border border-border dark:border-white/10"
+                                    className="group relative size-20 overflow-hidden rounded-xl border border-border dark:border-white/10"
                                 >
                                     <img src={URL.createObjectURL(photo)} alt="Preview" className="h-full w-full object-cover" />
                                     <button 
@@ -175,7 +175,7 @@ export function CommunityComposer({
                                         onClick={() => removePhoto(index)} 
                                         className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
                                     >
-                                        <X className="h-3 w-3" />
+                                        <X className="size-4" />
                                     </button>
                                 </motion.div>
                             ))}
@@ -198,7 +198,7 @@ export function CommunityComposer({
                                 disabled={selectedPhotos.length >= 4}
                                 className="flex items-center gap-2 rounded-xl px-3 py-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-30 dark:hover:bg-white/5 dark:hover:text-white"
                             >
-                                <ImageIcon className="h-5 w-5 text-primary" />
+                                <ImageIcon className="size-5" />
                                 <span className="text-sm font-bold">Photo</span>
                             </button>
                         </div>
@@ -208,7 +208,7 @@ export function CommunityComposer({
                             className="flex items-center gap-2 rounded-2xl bg-primary px-8 py-2.5 text-sm font-black text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
                         >
                             {uploadingPhotos ? "Uploading..." : isSubmitting ? "Publishing..." : "Publish"}
-                            <Send className="h-4 w-4" />
+                            <Send className="size-5" />
                         </button>
                     </div>
                 </div>
@@ -228,7 +228,7 @@ function TypeButton({ active, onClick, icon: Icon, label }: { active: boolean, o
                 : 'text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-white/5'
             }`}
         >
-            <Icon className="h-4 w-4" />
+            <Icon className="size-4" />
             {label}
         </button>
     )

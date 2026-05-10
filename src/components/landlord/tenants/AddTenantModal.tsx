@@ -227,7 +227,7 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                                 : "text-muted-foreground hover:bg-muted hover:text-foreground"
                                         )}
                                     >
-                                        <tab.icon className="h-3.5 w-3.5" />
+                                        <tab.icon className="size-3.5" />
                                         {tab.label}
                                     </button>
                                 ))}
@@ -492,7 +492,7 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                         <div className="p-10 text-center">
                             {successData ? (
                                 <>
-                                    <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500">
+                                    <div className="mx-auto mb-6 flex size-20 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500">
                                         <CheckCircle2 className="size-10" />
                                     </div>
                                     <h2 className="text-2xl font-black text-foreground">Resident Registered!</h2>
@@ -533,7 +533,7 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                 </>
                             ) : inviteResult && (
                                 <>
-                                    <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-primary">
+                                    <div className="mx-auto mb-6 flex size-20 items-center justify-center rounded-full bg-primary/10 text-primary">
                                         <QrCode className="size-10" />
                                     </div>
                                     <h2 className="text-2xl font-black text-foreground">Onboarding Link Ready</h2>
@@ -541,7 +541,7 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
 
                                     <div className="mt-8 space-y-6">
                                         <div className="flex items-center justify-center rounded-3xl border border-border bg-muted/10 p-6">
-                                            <div className="relative h-48 w-48 overflow-hidden rounded-2xl shadow-lg">
+                                            <div className="relative size-48 overflow-hidden rounded-2xl shadow-lg">
                                                 <Image 
                                                     src={inviteResult.qrUrl} 
                                                     alt="QR Code" 

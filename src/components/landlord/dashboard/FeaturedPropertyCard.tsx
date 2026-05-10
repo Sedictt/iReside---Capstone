@@ -30,63 +30,70 @@ export function FeaturedPropertyCard({
 
     return (
         <>
-            <div 
+            <div
                 onClick={() => setIsModalOpen(true)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setIsModalOpen(true); }}}
+                tabIndex={0}
+                role="button"
                 className={cn(
                     "group relative flex h-full min-h-[300px] w-full cursor-pointer flex-col justify-between overflow-hidden rounded-3xl border border-white/20 p-6 text-white shadow-[0_28px_60px_-30px_rgba(15,23,42,0.5)] md:p-8 dark:border-white/10 dark:shadow-xl",
                     className
-                )}>
-            {/* Background Image */}
-            <div className="absolute inset-0 z-0">
-                <Image
-                    src={image}
-                    alt={propertyName}
-                    fill
-                    className="object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent z-10" />
-            </div>
-
-            {/* Header */}
-            <div className="flex justify-between items-start z-20 relative">
-                <div>
-                    <p className="text-sm font-bold tracking-wider text-white/90 mb-1 uppercase drop-shadow-md">
-                        {simplifiedMode ? "Your Best House" : "Best Performing Property"}
-                    </p>
-                    <h3 className="text-3xl font-semibold leading-tight max-w-[250px] text-white drop-shadow-lg">
-                        {propertyName}
-                    </h3>
+                )}
+            >
+                {/* Background Image */}
+                <div className="absolute inset-0 z-0">
+                    <Image
+                        src={image}
+                        alt={propertyName}
+                        fill
+                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent z-10" />
                 </div>
-                <button className="flex size-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md text-white transition-all hover:bg-white hover:text-black shadow-lg border border-white/20">
-                    <ArrowUpRight className="size-5" />
-                </button>
-            </div>
 
-            {/* Content & Stats */}
-            <div className="relative z-20 mt-auto">
-                <div className="flex gap-8 backdrop-blur-sm bg-black/20 p-4 rounded-2xl border border-white/10 inline-flex">
+                {/* Header */}
+                <div className="flex justify-between items-start z-20 relative">
                     <div>
-                        <p className="text-xs font-semibold text-white/70 uppercase tracking-wide">
-                            {simplifiedMode ? "Money Made" : "Total Revenue"}
+                        <p className="text-sm font-bold tracking-wider text-white/90 mb-1 uppercase drop-shadow-md">
+                            {simplifiedMode ? "Your Best House" : "Best Performing Property"}
                         </p>
-                        <p className="text-2xl font-bold tracking-tight mt-0.5">{totalSales}</p>
+                        <h3 className="text-3xl font-semibold leading-tight max-w-[250px] text-white drop-shadow-lg">
+                            {propertyName}
+                        </h3>
                     </div>
-                    <div>
-                        <p className="text-xs font-semibold text-white/70 uppercase tracking-wide">
-                            {simplifiedMode ? "People Looking" : "Total Views"}
-                        </p>
-                        <p className="text-2xl font-bold tracking-tight mt-0.5">{totalViews}</p>
+                    <button className="flex size-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md text-white transition-all hover:bg-white hover:text-black shadow-lg border border-white/20">
+                        <ArrowUpRight className="size-5" />
+                    </button>
+                </div>
+
+                {/* Content & Stats */}
+                <div className="relative z-20 mt-auto">
+                    <div className="flex gap-8 backdrop-blur-sm bg-black/20 p-4 rounded-2xl border border-white/10 inline-flex">
+                        <div>
+                            <p className="text-xs font-semibold text-white/70 uppercase tracking-wide">
+                                {simplifiedMode ? "Money Made" : "Total Revenue"}
+                            </p>
+                            <p className="text-2xl font-bold tracking-tight mt-0.5">{totalSales}</p>
+                        </div>
+                        <div>
+                            <p className="text-xs font-semibold text-white/70 uppercase tracking-wide">
+                                {simplifiedMode ? "People Looking" : "Total Views"}
+                            </p>
+                            <p className="text-2xl font-bold tracking-tight mt-0.5">{totalViews}</p>
+                        </div>
                     </div>
                 </div>
-            </div>
             </div>
 
             {/* Quick View Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    <div 
-                        className="fixed inset-0 bg-black/60 backdrop-blur-sm" 
+                    <div
+                        className="fixed inset-0 bg-black/60 backdrop-blur-sm"
                         onClick={() => setIsModalOpen(false)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setIsModalOpen(false); }}}
+                        tabIndex={0}
+                        role="button"
                     />
                     <div className="relative z-10 w-full max-w-md animate-in rounded-3xl border border-border bg-card p-6 shadow-2xl duration-200 fade-in zoom-in-95">
                         <button 

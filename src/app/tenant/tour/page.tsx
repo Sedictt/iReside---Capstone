@@ -142,7 +142,7 @@ export default function TenantTourPage() {
         return (
             <div className="min-h-[70vh] flex items-center justify-center">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="size-4 animate-spin" />
                     Loading product tour...
                 </div>
             </div>
@@ -172,7 +172,7 @@ export default function TenantTourPage() {
                                 className={`rounded-lg border p-3 ${active ? "border-primary/40 bg-primary/5" : "border-border bg-background/40"}`}
                             >
                                 <p className="text-sm font-semibold flex items-center gap-2">
-                                    {completed ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <span>{index + 1}.</span>}
+                                    {completed ? <CheckCircle2 className="size-4 text-green-500" /> : <span>{index + 1}.</span>}
                                     {step.title}
                                 </p>
                                 <p className="text-xs text-muted-foreground mt-1">{step.description}</p>
@@ -194,7 +194,7 @@ export default function TenantTourPage() {
                         disabled={submitting}
                         className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-black disabled:opacity-60"
                     >
-                        <RotateCcw className="h-4 w-4" />
+                        <RotateCcw className="size-4" />
                         Replay Tour
                     </button>
                 ) : (
@@ -205,7 +205,7 @@ export default function TenantTourPage() {
                             disabled={!eligible || submitting}
                             className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-black disabled:opacity-60"
                         >
-                            <PlayCircle className="h-4 w-4" />
+                            <PlayCircle className="size-4" />
                             {state?.status === "in_progress" ? "Resume Tour" : "Start Tour"}
                         </button>
                         <button
@@ -214,7 +214,7 @@ export default function TenantTourPage() {
                             disabled={submitting}
                             className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-semibold text-foreground disabled:opacity-60"
                         >
-                            <SkipForward className="h-4 w-4" />
+                            <SkipForward className="size-4" />
                             Skip for Now
                         </button>
                         <button
@@ -223,7 +223,7 @@ export default function TenantTourPage() {
                             disabled={submitting}
                             className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-semibold text-foreground disabled:opacity-60"
                         >
-                            <RotateCcw className="h-4 w-4" />
+                            <RotateCcw className="size-4" />
                             Replay from Start
                         </button>
                     </>

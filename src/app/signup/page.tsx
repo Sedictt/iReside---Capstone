@@ -244,7 +244,7 @@ export default function SignUpPage() {
                 <div className="absolute top-[-10%] right-[-5%] w-[40rem] h-[40rem] rounded-full bg-primary/10 blur-[120px] pointer-events-none" />
                 <div className="max-w-md w-full p-10 text-center space-y-6 bg-white/[0.02] border border-white/12 rounded-3xl backdrop-blur-xl relative z-10 shadow-2xl">
                     <div className="size-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto border border-primary/20 shadow-[0_0_30px_rgba(109,152,56,0.2)]">
-                        <CheckCircle2 className="h-12 w-12 text-primary" />
+                        <CheckCircle2 className="size-12 text-primary" />
                     </div>
                     <div className="space-y-2">
                         <h2 className="text-3xl font-extrabold tracking-tight">Application Submitted</h2>
@@ -284,9 +284,9 @@ export default function SignUpPage() {
                 {/* Hero Title Area */}
                 <div className="text-center mb-6 sm:mb-8 space-y-2 sm:space-y-3 animate-in fade-in slide-in-from-bottom-8 duration-700 fill-mode-both shrink-0">
                     <div className="inline-flex items-center gap-2 px-4 py-1.5 sm:px-5 sm:py-2 rounded-full bg-primary/10 border border-primary/20 text-primary font-bold text-xs sm:text-sm tracking-wide uppercase shadow-[0_0_20px_rgba(109,152,56,0.15)] mb-1">
-                        <span className="relative flex h-2 w-2">
+                        <span className="relative flex size-2">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                          <span className="relative inline-flex rounded-full size-2 bg-primary"></span>
                         </span>
                         Partner Portal
                     </div>
@@ -402,7 +402,7 @@ export default function SignUpPage() {
                                 {otpVerified && (
                                     <div className="flex items-center gap-2 text-sm text-primary font-bold animate-in fade-in pt-2 ml-1">
                                         <div className="p-1 bg-primary/20 rounded-full">
-                                            <Check className="h-3 w-3" />
+                                            <Check className="size-3" />
                                         </div>
                                         Email verified successfully
                                     </div>
@@ -461,7 +461,7 @@ export default function SignUpPage() {
                                             </div>
                                         ) : (
                                             <div className="p-3 bg-amber-500/20 rounded-full mb-3 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
-                                                <FileCheck className="h-8 w-8 text-amber-500" />
+                                                <FileCheck className="size-8 text-amber-500" />
                                             </div>
                                         )}
                                         <span className="text-xs font-bold text-white/87 block truncate w-full px-2 text-center">{idFile.name}</span>
@@ -474,7 +474,7 @@ export default function SignUpPage() {
                                             }}
                                             className="mt-2 p-1.5 bg-rose-500/20 text-rose-500 rounded-lg hover:bg-rose-500/40 transition-colors pointer-events-auto"
                                         >
-                                            <Trash2 className="h-3 w-3" />
+                                            <Trash2 className="size-3" />
                                         </button>
                                     </div>
                                 ) : (
@@ -485,7 +485,7 @@ export default function SignUpPage() {
                                             <div className="absolute top-[2px] left-1/2 -translate-x-1/2 text-[3px] text-white/87 font-bold tracking-widest uppercase">Republic ID</div>
                                             
                                             <div className="absolute top-5 left-2 w-5 h-7 bg-zinc-200 border border-zinc-300 rounded-sm overflow-hidden flex flex-col items-center justify-end">
-                                                <div className="w-2.5 h-2.5 bg-zinc-400 rounded-full absolute top-1"></div>
+                                                <div className="size-2.5 bg-zinc-400 rounded-full absolute top-1"></div>
                                                 <div className="w-4 h-3 bg-zinc-400 rounded-t-full"></div>
                                             </div>
                                             
@@ -544,7 +544,7 @@ export default function SignUpPage() {
                                             </div>
                                         ) : (
                                             <div className="p-3 bg-amber-500/20 rounded-full mb-3 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
-                                                <FileCheck className="h-8 w-8 text-amber-500" />
+                                                <FileCheck className="size-8 text-amber-500" />
                                             </div>
                                         )}
                                         <span className="text-xs font-bold text-white/87 block truncate w-full px-2 text-center">{permitFile.name}</span>
@@ -557,7 +557,7 @@ export default function SignUpPage() {
                                             }}
                                             className="mt-2 p-1.5 bg-rose-500/20 text-rose-500 rounded-lg hover:bg-rose-500/40 transition-colors pointer-events-auto"
                                         >
-                                            <Trash2 className="h-3 w-3" />
+                                            <Trash2 className="size-3" />
                                         </button>
                                     </div>
                                 ) : (
@@ -609,7 +609,7 @@ export default function SignUpPage() {
                                             </div>
                                         ) : (
                                             <div className="p-3 bg-amber-500/20 rounded-full mb-3 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
-                                                <FileCheck className="h-8 w-8 text-amber-500" />
+                                                <FileCheck className="size-8 text-amber-500" />
                                             </div>
                                         )}
                                         <span className="text-xs font-bold text-white/87 block truncate w-full px-2 text-center">{permitCardFile.name}</span>
@@ -622,7 +622,7 @@ export default function SignUpPage() {
                                             }}
                                             className="mt-2 p-1.5 bg-rose-500/20 text-rose-500 rounded-lg hover:bg-rose-500/40 transition-colors pointer-events-auto"
                                         >
-                                            <Trash2 className="h-3 w-3" />
+                                            <Trash2 className="size-3" />
                                         </button>
                                     </div>
                                 ) : (
@@ -643,7 +643,7 @@ export default function SignUpPage() {
                                             </div>
                                             
                                             <div className="absolute bottom-1.5 left-2 z-10 flex items-center gap-1">
-                                                <div className="w-3.5 h-3.5 rounded-full bg-gradient-to-br from-amber-200 to-amber-400 border-[0.5px] border-amber-500 flex items-center justify-center shadow-sm">
+                                                <div className="size-3.5 rounded-full bg-gradient-to-br from-amber-200 to-amber-400 border-[0.5px] border-amber-500 flex items-center justify-center shadow-sm">
                                                     <div className="size-2 rounded-full border border-amber-600/50"></div>
                                                 </div>
                                                 <div className="flex flex-col">
@@ -653,7 +653,7 @@ export default function SignUpPage() {
                                             </div>
                                             
                                             <div className="absolute bottom-1.5 right-6 z-10 flex items-center gap-1">
-                                                <div className="w-3.5 h-3.5 bg-white border border-zinc-300 p-[1px] rounded-sm shadow-sm">
+                                                <div className="size-3.5 bg-white border border-zinc-300 p-[1px] rounded-sm shadow-sm">
                                                     <div className="w-full h-full bg-zinc-800 grid grid-cols-2 gap-[0.5px] p-[0.5px]">
                                                         <div className="bg-white"></div><div className="bg-white"></div>
                                                         <div className="bg-white"></div><div className="bg-white"></div>
@@ -688,7 +688,7 @@ export default function SignUpPage() {
                                                 </div>
                                             ) : (
                                                 <div className="p-3 bg-amber-500/20 rounded-full mb-3 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
-                                                    <FileCheck className="h-8 w-8 text-amber-500" />
+                                                    <FileCheck className="size-8 text-amber-500" />
                                                 </div>
                                             )}
                                             <span className="text-xs font-bold text-white/87 block truncate w-full px-2 text-center">{ownershipFile.name}</span>
@@ -701,7 +701,7 @@ export default function SignUpPage() {
                                                 }}
                                                 className="mt-2 p-1.5 bg-rose-500/20 text-rose-500 rounded-lg hover:bg-rose-500/40 transition-colors pointer-events-auto"
                                             >
-                                                <Trash2 className="h-3 w-3" />
+                                                <Trash2 className="size-3" />
                                             </button>
                                         </div>
                                     ) : (
@@ -764,7 +764,7 @@ export default function SignUpPage() {
                         >
                             <span className="relative z-10 flex items-center gap-2 tracking-tight">
                                 {loading ? "Processing..." : currentStep === 3 ? "Submit Application" : "Continue"}
-                                {!loading && <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />}
+                                {!loading && <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform duration-300" />}
                             </span>
                             <div className="absolute inset-0 -translate-x-full rotate-[45deg] bg-gradient-to-r from-transparent via-black/10 to-transparent group-hover:animate-[shimmer_1.5s_infinite] pointer-events-none" />
                         </button>
@@ -777,10 +777,10 @@ export default function SignUpPage() {
                                 required
                                 type="checkbox"
                                 id="terms"
-                                className="mt-0.5 h-4 w-4 shrink-0 rounded border-white/20 bg-white/5 text-primary focus:ring-primary focus:ring-offset-0 focus:ring-offset-[#121212] cursor-pointer"
+                                className="mt-0.5 size-4 shrink-0 rounded border-white/20 bg-white/5 text-primary focus:ring-primary focus:ring-offset-0 focus:ring-offset-[#121212] cursor-pointer"
                             />
                             <label htmlFor="terms" className="text-[11px] font-medium text-white/60 cursor-pointer select-none leading-relaxed">
-                                I verify that the information provided is accurate. I agree to the <a href="#" className="text-white/87 font-bold hover:text-primary transition-colors">Terms of Service</a> and <a href="#" className="text-white/87 font-bold hover:text-primary transition-colors">Privacy Policy</a>.
+                                I verify that the information provided is accurate. I agree to the <button className="text-white/87 font-bold hover:text-primary transition-colors cursor-pointer bg-transparent border-0 p-0">Terms of Service</button> and <button className="text-white/87 font-bold hover:text-primary transition-colors cursor-pointer bg-transparent border-0 p-0">Privacy Policy</button>.
                             </label>
                         </div>
                     )}

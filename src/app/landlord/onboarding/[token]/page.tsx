@@ -5,7 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { 
     Eye, 
     EyeOff, 
-    CheckCircle2, 
+    CheckCircle2,
+    CheckCircle,
     Loader2, 
     Building2, 
     User, 
@@ -387,7 +388,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
     if (loading) {
         return (
             <div className="min-h-screen bg-[#121212] flex items-center justify-center">
-                <Loader2 className="size-8 animate-spin text-primary" />
+                <Loader2 className="size-12 animate-spin text-primary" />
             </div>
         );
     }
@@ -395,7 +396,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
     if (error) {
         return (
             <div className="min-h-screen bg-[#121212] flex items-center justify-center p-4">
-                <div className="max-w-md w-full p-8 text-center bg-white/[0.02] border border-red-500/20 rounded-3xl">
+                <div className="max-w-md w-full p-8 text-center bg-white/[0.02] border border-white/12 rounded-3xl">
                     <div className="size-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
                         <Lock className="size-8 text-red-500" />
                     </div>
@@ -417,7 +418,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
             <div className="min-h-screen bg-[#121212] flex items-center justify-center p-4">
                 <div className="max-w-md w-full p-10 text-center bg-white/[0.02] border border-white/12 rounded-3xl backdrop-blur-xl">
                     <div className="size-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto border border-primary/20 shadow-[0_0_30px_rgba(109,152,56,0.2)] mb-6">
-                        <CheckCircle2 className="h-12 w-12 text-primary" />
+                        <CheckCircle className="size-12 text-emerald-500" />
                     </div>
                     <h2 className="text-3xl font-black text-white mb-2">All Set!</h2>
                     <p className="text-white/60 mb-6">
@@ -542,7 +543,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                             { label: "Special char", met: /[^A-Za-z0-9]/.test(password) },
                                         ].map((req, i) => (
                                             <div key={i} className="flex items-center gap-2">
-                                                <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center border transition-all duration-500 ${req.met ? "bg-primary border-primary text-black" : "border-white/10 text-transparent"}`}>
+                                                <div className={`size-3.5 rounded-full flex items-center justify-center border transition-all duration-500 ${req.met ? "bg-primary border-primary text-black" : "border-white/10 text-transparent"}`}>
                                                     <CheckCircle2 className="size-2" />
                                                 </div>
                                                 <span className={`text-[10px] font-bold uppercase tracking-wider transition-colors ${req.met ? "text-primary" : "text-white/20"}`}>
@@ -623,8 +624,8 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                     {/* Property Photo */}
                                     <div className="space-y-3">
                                         <div className="flex items-center gap-2 px-1">
-                                            <ImageIcon className="w-3.5 h-3.5 text-primary" />
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-white/40">Cover Identity</label>
+                                            <ImageIcon className="size-3.5 text-primary" />
+                                            <label htmlFor="cover-photo-input" className="text-[10px] font-black uppercase tracking-widest text-white/40">Cover Identity</label>
                                         </div>
                                         <div className="relative group cursor-pointer overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 hover:bg-white/10 transition-all aspect-[16/10] shadow-2xl">
                                             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
@@ -642,7 +643,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                     </>
                                                 )}
                                             </div>
-                                            <input type="file" onChange={handleFileChange} className="absolute inset-0 opacity-0 cursor-pointer z-10" accept="image/*" />
+                                            <input id="cover-photo-input" type="file" onChange={handleFileChange} className="absolute inset-0 opacity-0 cursor-pointer z-10" accept="image/*" />
                                             {propertyPhoto && (
                                                 <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center z-20 pointer-events-none">
                                                     <div className="bg-white/10 border border-white/20 px-4 py-2 rounded-full flex items-center gap-2">
@@ -657,8 +658,8 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                     {/* Verified Identity Stack */}
                                     <div className="bg-white/[0.03] border border-white/5 rounded-[2rem] p-5 space-y-4 backdrop-blur-md">
                                         <div className="flex items-center gap-2 px-1">
-                                            <ShieldCheck className="w-3.5 h-3.5 text-primary" />
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-white/40">Verified Identity</label>
+                                            <ShieldCheck className="size-3.5 text-primary" />
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Verified Identity</span>
                                         </div>
                                         <div className="grid gap-3">
                                             <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-4">
@@ -682,22 +683,24 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                         <div className="grid gap-4">
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div className="space-y-2">
-                                                    <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-white/30 px-1">
+                                                    <label htmlFor="total-units" className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-white/30 px-1">
                                                         <Building2 className="size-3" /> Total Units
                                                     </label>
-                                                    <input 
-                                                        type="number" 
+                                                    <input
+                                                        id="total-units"
+                                                        type="number"
                                                         value={totalUnits || ""}
                                                         onChange={(e) => setTotalUnits(e.target.value === "" ? 0 : parseInt(e.target.value) || 0)}
                                                         className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-primary/50 transition-all font-bold"
                                                     />
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-white/30 px-1">
+                                                    <label htmlFor="total-floors" className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-white/30 px-1">
                                                         <Layers className="size-3" /> Total Floors
                                                     </label>
-                                                    <input 
-                                                        type="number" 
+                                                    <input
+                                                        id="total-floors"
+                                                        type="number"
                                                         value={totalFloors || ""}
                                                         onChange={(e) => setTotalFloors(e.target.value === "" ? 0 : parseInt(e.target.value) || 0)}
                                                         className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-primary/50 transition-all font-bold"
@@ -705,11 +708,12 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                 </div>
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-white/30 px-1">
+                                                <label htmlFor="head-limit" className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-white/30 px-1">
                                                     <Users className="size-3" /> Maximum Capacity per Unit
                                                 </label>
                                                 <div className="relative">
-                                                    <select 
+                                                    <select
+                                                        id="head-limit"
                                                         value={headLimit}
                                                         onChange={(e) => setHeadLimit(e.target.value === "none" ? "none" : parseInt(e.target.value))}
                                                         className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-primary/50 appearance-none font-bold pr-10"
@@ -748,7 +752,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                             className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl border transition-all text-left ${utilityBilling === opt.id ? "bg-primary/10 border-primary/50 shadow-lg shadow-primary/5" : "bg-white/5 border-white/5 hover:bg-white/[0.08]"}`}
                                                         >
                                                             <div className="flex items-center gap-4">
-                                                                <div className={`w-2.5 h-2.5 rounded-full ${utilityBilling === opt.id ? "bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),1)]" : "bg-white/10"}`} />
+                                                                <div className={`size-2.5 rounded-full ${utilityBilling === opt.id ? "bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),1)]" : "bg-white/10"}`} />
                                                                 <div>
                                                                     <div className="flex items-center gap-2">
                                                                         <p className={`text-sm font-black tracking-tight ${utilityBilling === opt.id ? "text-primary" : "text-white"}`}>{opt.label}</p>
@@ -889,7 +893,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                             onClick={() => setBuildingRules(buildingRules.filter((_, i) => i !== index))}
                                                             className="text-white/20 hover:text-red-400 transition-colors"
                                                         >
-                                                            <X className="w-3.5 h-3.5" />
+                                                            <X className="size-4" />
                                                         </button>
                                                     </div>
                                                 ))}
@@ -906,7 +910,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                             <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Final Validation</h3>
                                         </div>
                                         
-                                        <div 
+                                        <div
                                             onClick={() => {
                                                 if (contractMode === "generate") {
                                                     setShowLightbox(true);
@@ -914,6 +918,9 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                     document.getElementById('contract-upload-input')?.click();
                                                 }
                                             }}
+                                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (contractMode === "generate") { setShowLightbox(true); } else { document.getElementById('contract-upload-input')?.click(); }}}}
+                                            tabIndex={0}
+                                            role="button"
                                             className="relative group cursor-pointer aspect-[16/11] rounded-[2rem] border border-white/10 bg-black/40 overflow-hidden shadow-2xl flex flex-col items-center justify-center gap-3 transition-all hover:border-primary/40"
                                         >
                                             <input 
@@ -1081,7 +1088,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                             }}
                                                             className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-full border border-white/10 text-white/60 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
                                                         >
-                                                            {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                                                            {exporting ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-3.5" />}
                                                             Export PDF
                                                         </button>
 
@@ -1117,7 +1124,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                             }}
                                                             className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-full border border-white/10 text-white/60 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
                                                         >
-                                                            <ImageIcon className="w-3.5 h-3.5" />
+                                                            <ImageIcon className="size-3.5" />
                                                             Save Photo
                                                         </button>
                                                     </>
@@ -1246,8 +1253,11 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                 <div className="p-8 pt-0 -mt-12 relative z-10">
                                     <div className="flex flex-col md:flex-row items-end gap-6 mb-8">
                                         {/* Profile Photo */}
-                                        <div 
+                                        <div
                                             onClick={() => setIsAvatarPickerOpen(true)}
+                                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setIsAvatarPickerOpen(true); }}}
+                                            tabIndex={0}
+                                            role="button"
                                             className="relative group shrink-0 cursor-pointer"
                                         >
                                             <div 

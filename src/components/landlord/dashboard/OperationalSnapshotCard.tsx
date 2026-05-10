@@ -60,7 +60,7 @@ export function OperationalSnapshotCard({
                                 statusStyles[status]
                             )}>
                                 <div className={cn(
-                                    "h-2 w-2 rounded-full",
+                                    "size-2 rounded-full",
                                     status === "Performing" ? "bg-emerald-500 animate-pulse" :
                                     status === "Stable" ? "bg-blue-500" : "bg-red-500 animate-pulse"
                                 )} />
@@ -74,8 +74,8 @@ export function OperationalSnapshotCard({
                             </div>
                         </div>
 
-                        <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-border bg-card text-primary shadow-lg transition-transform group-hover:scale-110">
-                            <ShieldCheck className="h-7 w-7" />
+                        <div className="flex size-14 items-center justify-center rounded-2xl border border-border bg-card text-primary shadow-lg transition-transform group-hover:scale-110">
+                            <ShieldCheck className="size-7" />
                         </div>
                     </div>
 

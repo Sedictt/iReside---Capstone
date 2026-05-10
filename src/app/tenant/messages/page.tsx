@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { ThemeToggle } from "@/components/theme-toggle";
 import {
@@ -1013,7 +1014,11 @@ if (isStillUploading) {
                 }
             });
         activeChannelRef.current = channel;
-        return () => { activeChannelRef.current = null; supabase.removeChannel(channel); };
+        return () => {
+            activeChannelRef.current = null;
+            channel.unsubscribe();
+            void supabase.removeChannel(channel);
+        };
     }, [activeConversationId, supabase, user?.id, activeContact?.participantUserId]);
 
 useEffect(() => {
@@ -1039,6 +1044,7 @@ useEffect(() => {
         if (query.length < 2) { setUserSearchResults([]); setUserSearchError(null); setIsSearchingUsers(false); return; }
         let cancelled = false;
         const timeout = setTimeout(async () => {
+            if (cancelled) return;
             setIsSearchingUsers(true);
             const { data, error } = await searchMessageUsers(query, 8);
             if (cancelled) return;
@@ -1052,8 +1058,8 @@ useEffect(() => {
             {isGlobalFileDrag && (
                 <div className="pointer-events-none fixed inset-0 z-[70] flex items-center justify-center bg-zinc-950/35 backdrop-blur-sm dark:bg-black/60">
                     <div className="rounded-3xl border border-primary/30 bg-card/95 px-10 py-8 text-center shadow-[0_24px_60px_-30px_rgba(15,23,42,0.28)] dark:border-primary/40 dark:bg-neutral-900/90 dark:shadow-2xl dark:shadow-primary/20">
-                        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/30 bg-primary/10">
-                            <Paperclip className="h-6 w-6 text-primary" />
+                        <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-2xl border border-primary/30 bg-primary/10">
+                            <Paperclip className="size-6 text-primary" />
                         </div>
                         <p className="text-lg font-bold text-foreground dark:text-white">
                             {!activeConversationId ? "Select a conversation to upload" : "Drop here to upload"}
@@ -1139,12 +1145,12 @@ useEffect(() => {
                             <div className="flex h-full flex-col">
                                 <div className="flex items-center justify-between border-b border-divider p-6">
                                     <h3 className="text-lg font-semibold text-high">Conversation Info</h3>
-                                    <button onClick={() => setShowInfoSidebar(false)} className="rounded-lg p-2 hover:bg-surface-2 transition-colors"><X className="h-5 w-5" /></button>
+                                    <button onClick={() => setShowInfoSidebar(false)} className="rounded-lg p-2 hover:bg-surface-2 transition-colors"><X className="size-5" /></button>
                                 </div>
                                 <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar-premium">
                                     <div className="flex flex-col items-center text-center">
-                                        <div className="h-24 w-24 rounded-full border-4 border-surface-2 overflow-hidden mb-4 shadow-xl" style={{ backgroundColor: displayContact.avatarBgColor || 'var(--surface-3)' }}>
-                                            {displayContact.avatarUrl ? <img src={displayContact.avatarUrl} alt={displayContact.name} className="h-full w-full object-cover" /> : <span className="text-2xl font-bold text-high">{displayContact.initials}</span>}
+                                        <div className="size-24 rounded-full border-4 border-surface-2 overflow-hidden mb-4 shadow-xl" style={{ backgroundColor: displayContact.avatarBgColor || 'var(--surface-3)' }}>
+                                            {displayContact.avatarUrl ? <Image src={displayContact.avatarUrl} alt={displayContact.name} width={96} height={96} className="object-cover" /> : <span className="text-2xl font-bold text-high">{displayContact.initials}</span>}
                                         </div>
                                         <h4 className="text-xl font-semibold text-high">{displayContact.name}</h4>
                                         <div className="mt-2"><RoleBadge role={displayContact.role as BadgeRole} /></div>
@@ -1153,7 +1159,7 @@ useEffect(() => {
                                     <div className="grid grid-cols-2 gap-3">
                                         {activeQuickActions.map((action) => (
                                             <button key={action.key} onClick={() => handleQuickAction(action.key)} className="flex flex-col items-center gap-2 rounded-2xl border border-divider bg-surface-2 p-4 transition-all hover:bg-surface-3 hover:scale-[1.02] active:scale-95 group">
-                                                <div className={cn("p-2.5 rounded-xl transition-colors", action.iconContainerClassName)}><action.icon className={cn("h-5 w-5", action.iconClassName)} /></div>
+                                                <div className={cn("p-2.5 rounded-xl transition-colors", action.iconContainerClassName)}><action.icon className={cn("size-5", action.iconClassName)} /></div>
                                                 <div className="text-center"><p className="text-[10px] font-black uppercase tracking-widest text-high">{action.labelTop}</p><p className="text-[10px] font-medium text-medium">{action.labelBottom}</p></div>
                                             </button>
                                         ))}
@@ -1163,7 +1169,7 @@ useEffect(() => {
                                             <div className="flex items-center justify-between"><h5 className="text-[10px] font-black uppercase tracking-widest text-disabled">Payment History</h5><span className="text-[10px] font-bold text-primary">Total: ₱{paymentHistoryTotal}</span></div>
                                             <div className="space-y-2">{paymentHistoryLoading ? <div className="h-20 w-full animate-pulse rounded-2xl bg-surface-2" /> : paymentHistory.length === 0 ? <p className="text-xs text-disabled text-center py-6 bg-surface-2/50 rounded-2xl italic border border-dashed border-divider">No payments found</p> : paymentHistory.slice(0, 5).map((payment) => (
                                                 <div key={payment.id} className="flex items-center justify-between p-3 rounded-2xl border border-divider bg-surface-2/30 hover:bg-surface-2 transition-colors">
-                                                    <div className="flex items-center gap-3"><div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/10"><Wallet className="h-3.5 w-3.5 text-emerald-500" /></div><div className="flex flex-col"><span className="text-xs font-bold text-high truncate max-w-[100px]">{payment.typeLabel || 'Payment'}</span><span className="text-[9px] font-medium text-disabled">{payment.dateLabel}</span></div></div><span className="text-xs font-black text-emerald-500">₱{payment.amount}</span>
+                                                    <div className="flex items-center gap-3"><div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/10"><Wallet className="size-3.5 text-emerald-500" /></div><div className="flex flex-col"><span className="text-xs font-bold text-high truncate max-w-[100px]">{payment.typeLabel || 'Payment'}</span><span className="text-[9px] font-medium text-disabled">{payment.dateLabel}</span></div></div><span className="text-xs font-black text-emerald-500">₱{payment.amount}</span>
                                                 </div>
                                             ))}</div>
                                         </div>
@@ -1171,8 +1177,8 @@ useEffect(() => {
                                     <div className="pt-4 space-y-3">
                                         <h5 className="text-[10px] font-black uppercase tracking-widest text-disabled">Actions</h5>
                                         <div className="space-y-2">
-                                            <button onClick={() => setPendingConfirmAction("archive")} className="w-full flex items-center justify-between p-3 rounded-2xl border border-divider bg-surface-2/30 hover:bg-surface-2 transition-all group"><span className="text-xs font-bold text-medium group-hover:text-high">Archive Chat</span><ChevronRight className="h-4 w-4 text-disabled" /></button>
-                                            <button onClick={() => setPendingConfirmAction("block")} className="w-full flex items-center justify-between p-3 rounded-2xl border border-red-500/10 bg-red-500/5 hover:bg-red-500/10 transition-all group"><span className="text-xs font-bold text-red-500">Block Contact</span><AlertTriangle className="h-4 w-4 text-red-500/50" /></button>
+                                            <button onClick={() => setPendingConfirmAction("archive")} className="w-full flex items-center justify-between p-3 rounded-2xl border border-divider bg-surface-2/30 hover:bg-surface-2 transition-all group"><span className="text-xs font-bold text-medium group-hover:text-high">Archive Chat</span><ChevronRight className="size-4 text-disabled" /></button>
+                                            <button onClick={() => setPendingConfirmAction("block")} className="w-full flex items-center justify-between p-3 rounded-2xl border border-red-500/10 bg-red-500/5 hover:bg-red-500/10 transition-all group"><span className="text-xs font-bold text-red-500">Block Contact</span><AlertTriangle className="size-4 text-red-500/50" /></button>
                                         </div>
                                     </div>
                                 </div>
@@ -1181,7 +1187,7 @@ useEffect(() => {
                             <div className="flex h-full flex-col">
                                 <div className="flex items-center justify-between border-b border-divider p-6">
                                     <h3 className="text-lg font-semibold text-high">Shared Files</h3>
-                                    <button onClick={() => setShowFilesSidebar(false)} className="rounded-lg p-2 hover:bg-surface-2 transition-colors"><X className="h-5 w-5" /></button>
+                                    <button onClick={() => setShowFilesSidebar(false)} className="rounded-lg p-2 hover:bg-surface-2 transition-colors"><X className="size-5" /></button>
                                 </div>
                                 <div className="flex-1 overflow-y-auto p-6 custom-scrollbar-premium">
                                     <div className="flex gap-2 mb-6 p-1 bg-surface-2 rounded-2xl">
@@ -1198,27 +1204,38 @@ useEffect(() => {
                                                     <div
                                                         key={file.id}
                                                         className="aspect-square rounded-xl overflow-hidden border border-divider bg-surface-2 relative group cursor-pointer"
+                                                        role="button"
+                                                        tabIndex={0}
                                                         onClick={() => {
                                                             const mediaFiles = sharedFiles.filter(f => f.isMedia).map(f => ({ url: f.url, id: f.id }));
                                                             const index = mediaFiles.findIndex(f => f.id === file.id);
                                                             setPreviewImages(mediaFiles);
                                                             setPreviewImageIndex(index >= 0 ? index : 0);
                                                         }}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                                e.preventDefault();
+                                                                const mediaFiles = sharedFiles.filter(f => f.isMedia).map(f => ({ url: f.url, id: f.id }));
+                                                                const index = mediaFiles.findIndex(f => f.id === file.id);
+                                                                setPreviewImages(mediaFiles);
+                                                                setPreviewImageIndex(index >= 0 ? index : 0);
+                                                            }
+                                                        }}
                                                     >
-                                                        <img src={file.url} className="w-full h-full object-cover" alt="" />
+                                                        <Image src={file.url} width={400} height={300} className="object-cover" alt="" />
                                                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                                             <button
                                                                 onClick={(e) => { e.stopPropagation(); handleDownloadFile(file.url, file.name); }}
                                                                 className="p-1.5 rounded-lg bg-white/20 backdrop-blur-md text-white hover:bg-white/40 transition-colors"
                                                             >
-                                                                <Download className="h-4 w-4" />
+                                                                <Download className="size-4" />
                                                             </button>
                                                         </div>
                                                     </div>
                                                 ) : (
                                                     <div key={file.id} className="flex items-center gap-3 p-3 rounded-2xl border border-divider bg-surface-2/30 hover:bg-surface-2 transition-all group">
                                                         <div className="p-2.5 rounded-xl bg-surface-2 text-medium group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                                                            <FileText className="h-5 w-5" />
+                                                            <FileText className="size-5" />
                                                         </div>
                                                         <div className="flex-1 min-w-0">
                                                             <p className="text-xs font-bold text-high truncate">{file.name}</p>
@@ -1228,7 +1245,7 @@ useEffect(() => {
                                                             onClick={() => handleDownloadFile(file.url, file.name)}
                                                             className="p-2 rounded-lg text-disabled hover:text-primary hover:bg-primary/10 transition-all"
                                                         >
-                                                            <Download className="h-4 w-4" />
+                                                            <Download className="size-4" />
                                                         </button>
                                                     </div>
                                                 )
@@ -1236,7 +1253,7 @@ useEffect(() => {
                                         </div>
                                     ) : (
                                         <div className="flex flex-col items-center justify-center py-12 px-6 text-center bg-surface-2/30 rounded-[2rem] border border-dashed border-divider">
-                                            <div className="p-4 rounded-full bg-surface-2 mb-4"><Folder className="h-8 w-8 text-disabled" /></div>
+                                            <div className="p-4 rounded-full bg-surface-2 mb-4"><Folder className="size-8 text-disabled" /></div>
                                             <p className="text-sm font-bold text-medium">No files shared yet</p>
                                             <p className="text-[10px] font-medium text-disabled mt-1">Shared documents and media will appear here</p>
                                         </div>
@@ -1252,7 +1269,7 @@ useEffect(() => {
                 {pendingConfirmAction && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
                         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="w-full max-w-md rounded-[2.5rem] border border-border bg-card p-8 shadow-2xl">
-                            <div className="flex items-center gap-4 mb-6"><div className={cn("p-3 rounded-2xl", pendingConfirmAction === "block" ? "bg-red-500/10 text-red-500" : "bg-amber-500/10 text-amber-500")}>{pendingConfirmAction === "block" ? <ShieldCheck className="h-6 w-6" /> : <Folder className="h-6 w-6" />}</div><h3 className="text-xl font-black tracking-tight text-high">{pendingConfirmAction === "block" ? "Block Contact?" : "Archive Conversation?"}</h3></div>
+                            <div className="flex items-center gap-4 mb-6"><div className={cn("p-3 rounded-2xl", pendingConfirmAction === "block" ? "bg-red-500/10 text-red-500" : "bg-amber-500/10 text-amber-500")}>{pendingConfirmAction === "block" ? <ShieldCheck className="size-6" /> : <Folder className="size-6" />}</div><h3 className="text-xl font-black tracking-tight text-high">{pendingConfirmAction === "block" ? "Block Contact?" : "Archive Conversation?"}</h3></div>
                             <p className="text-sm text-medium leading-relaxed mb-8">{pendingConfirmAction === "block" ? "This user will no longer be able to message you. You can unblock them later in settings." : "This conversation will be moved to archives. You can still access it later from your archived messages."}</p>
                             <div className="flex justify-end gap-3">
                                 <button onClick={() => setPendingConfirmAction(null)} className="px-6 py-2.5 rounded-xl text-sm font-bold text-medium hover:bg-surface-2 transition-all">Cancel</button>
@@ -1305,18 +1322,28 @@ useEffect(() => {
 
                         <div
                             className="relative max-w-full max-h-[70vh] flex items-center"
+                            role="button"
+                            tabIndex={0}
                             onClick={(event) => event.stopPropagation()}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.stopPropagation();
+                                }
+                            }}
                         >
-                            <img
+                            <Image
                                 src={previewImages[previewImageIndex].url}
                                 alt={`Photo ${previewImageIndex + 1} of ${previewImages.length}`}
-                                className="max-w-[90vw] max-h-[70vh] object-contain rounded-3xl shadow-2xl border border-border"
+                                width={800}
+                                height={600}
+                                className="object-contain rounded-3xl shadow-2xl border border-border"
                             />
                         </div>
 
                         {previewImages.length > 1 && (
                             <div
                                 className="mt-6 flex gap-2 max-w-[90vw] overflow-x-auto py-2 px-1"
+                                role="presentation"
                                 onClick={(event) => event.stopPropagation()}
                             >
                                 {previewImages.map((img, idx) => (
@@ -1330,10 +1357,12 @@ useEffect(() => {
                                                 : "border-transparent opacity-60 hover:opacity-100"
                                         )}
                                     >
-                                        <img
+                                        <Image
                                             src={img.url}
                                             alt={`Thumbnail ${idx + 1}`}
-                                            className="w-full h-full object-cover"
+                                            width={80}
+                                            height={80}
+                                            className="object-cover"
                                         />
                                     </button>
                                 ))}

@@ -334,8 +334,8 @@ export default function LandlordDashboard() {
                     <div className="group relative overflow-hidden rounded-[2rem] border border-amber-500/25 bg-amber-500/10 p-6 backdrop-blur-sm animate-in zoom-in-95 duration-500">
                         <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                             <div className="flex items-center gap-5">
-                                <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-500/20 bg-amber-500/12 text-amber-400">
-                                    <AlertTriangle className="h-7 w-7" />
+                                <div className="flex size-14 items-center justify-center rounded-2xl border border-amber-500/20 bg-amber-500/12 text-amber-400">
+                                    <AlertTriangle className="size-7" />
                                 </div>
                                 <div>
                                     <h3 className="text-lg font-black text-amber-300">{systemAdvisory.title}</h3>
@@ -347,7 +347,7 @@ export default function LandlordDashboard() {
                             </div>
                         </div>
                         <div className="absolute -right-10 top-1/2 -translate-y-1/2 opacity-[0.03] transition-transform duration-700 group-hover:scale-125">
-                            <AlertTriangle className="h-40 w-40" />
+                            <AlertTriangle className="size-40" />
                         </div>
                     </div>
                 )}
@@ -367,8 +367,8 @@ export default function LandlordDashboard() {
                 <section className="relative z-0 h-auto w-full rounded-[2.5rem] border border-white/10 bg-card/60 p-8 shadow-2xl shadow-black/30 backdrop-blur-xl">
                     <div className="mb-10 flex flex-wrap items-center justify-between gap-4 px-2">
                         <div className="flex min-w-0 items-center gap-4">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-[1rem] border border-indigo-500/20 bg-indigo-500/12 text-indigo-300">
-                                <CreditCard className="h-6 w-6" />
+                            <div className="flex size-12 items-center justify-center rounded-[1rem] border border-indigo-500/20 bg-indigo-500/12 text-indigo-300">
+                                <CreditCard className="size-6" />
                             </div>
                             <div>
                                 <h2 className="text-2xl font-black tracking-tight text-foreground">Cash Flow Ledger</h2>
@@ -377,7 +377,7 @@ export default function LandlordDashboard() {
                         </div>
                         <Link href="/landlord/invoices" className="group shrink-0 flex items-center gap-2 rounded-xl border border-white/10 bg-card/70 px-4 py-2 text-xs font-black uppercase tracking-widest transition-all hover:bg-card">
                             View Invoices
-                            <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                            <ArrowUpRight className="size-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
                         </Link>
                     </div>
 
@@ -385,8 +385,8 @@ export default function LandlordDashboard() {
                     <div className="relative z-0 h-auto w-full rounded-[2.5rem] border border-white/10 bg-card/60 p-8 shadow-2xl shadow-black/30 backdrop-blur-xl mb-8">
                         <div className="flex flex-wrap items-center justify-between gap-4 px-2">
                             <div className="flex min-w-0 items-center gap-4">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-[1rem] border border-indigo-500/20 bg-indigo-500/12 text-indigo-300">
-                                    <RefreshCw className="h-6 w-6" />
+                                <div className="flex size-12 items-center justify-center rounded-[1rem] border border-indigo-500/20 bg-indigo-500/12 text-indigo-300">
+                                    <RefreshCw className="size-6" />
                                 </div>
                                 <div>
                                     <h2 className="text-2xl font-black tracking-tight text-foreground">Lease Renewals</h2>
@@ -395,7 +395,7 @@ export default function LandlordDashboard() {
                             </div>
                             <Link href="/landlord/tenants?tab=renewals" className="group shrink-0 flex items-center gap-2 rounded-xl border border-white/10 bg-card/70 px-4 py-2 text-xs font-black uppercase tracking-widest transition-all hover:bg-card">
                                 View All
-                                <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                                <ArrowUpRight className="size-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
                             </Link>
                         </div>
                     </div>
@@ -409,7 +409,7 @@ export default function LandlordDashboard() {
                                 <div key={key} className="flex flex-col gap-4">
                                     <div className="flex items-center justify-between px-4">
                                         <div className="flex items-start gap-3">
-                                            <div className={cn("h-1.5 w-1.5 rounded-full", dot)} />
+                                            <div className={cn("size-1.5 rounded-full", dot)} />
                                             <div className="space-y-1">
                                                 <h3 className={cn("text-[10px] font-black uppercase tracking-[0.2em]", tone)}>{label}</h3>
                                                 <p className="text-[10px] font-semibold text-muted-foreground/60">{hint}</p>
@@ -427,7 +427,7 @@ export default function LandlordDashboard() {
                                         {paymentsLoading ? (
                                             <div className="space-y-4 animate-pulse px-2">
                                                 <div className="flex items-center gap-4">
-                                                    <div className="h-12 w-12 rounded-full bg-muted/40" />
+                                                    <div className="size-12 rounded-full bg-muted/40" />
                                                     <div className="flex-1 space-y-2">
                                                         <div className="h-4 w-3/4 rounded bg-muted/40" />
                                                         <div className="h-3 w-1/2 rounded bg-muted/40" />
@@ -449,7 +449,7 @@ export default function LandlordDashboard() {
                                             />
                                         ) : (
                                             <div className="flex flex-col items-center justify-center py-6 text-muted-foreground/40">
-                                                <CheckCircle2 className="h-6 w-6 mb-2" />
+                                                <CheckCircle2 className="size-6 mb-2" />
                                                 <p className="text-[9px] font-black uppercase tracking-widest">{emptyState}</p>
                                             </div>
                                         )}
@@ -495,8 +495,8 @@ export default function LandlordDashboard() {
                     <div className="relative z-10 max-h-[90vh] w-full max-w-6xl overflow-hidden rounded-[2.5rem] border border-white/10 bg-card shadow-[0_30px_60px_rgba(0,0,0,0.5)] animate-in zoom-in-95 duration-300">
                         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-card/95 px-8 py-6 backdrop-blur-xl">
                             <div className="flex items-center gap-4">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                                    <QrCode className="h-6 w-6" />
+                                <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                                    <QrCode className="size-6" />
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-black text-foreground">Private Referral Link</h2>
@@ -506,9 +506,9 @@ export default function LandlordDashboard() {
                             <button
                                 type="button"
                                 onClick={() => setIsInviteModalOpen(false)}
-                                className="group flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-card/70 text-muted-foreground transition-all hover:bg-card hover:text-foreground hover:rotate-90 active:scale-95"
+                                className="group flex size-10 items-center justify-center rounded-xl border border-white/10 bg-card/70 text-muted-foreground transition-all hover:bg-card hover:text-foreground hover:rotate-90 active:scale-95"
                             >
-                                <X className="h-5 w-5" />
+                                <X className="size-5" />
                             </button>
                         </div>
 
@@ -559,7 +559,7 @@ export default function LandlordDashboard() {
                                             <div className="flex items-center gap-6">
                                                 {/* Avatar with status indicator */}
                                                 <div 
-                                                    className="relative h-20 w-20 shrink-0 rounded-full flex items-center justify-center overflow-hidden shadow-sm"
+                                                    className="relative size-20 shrink-0 rounded-full flex items-center justify-center overflow-hidden shadow-sm"
                                                     style={{ backgroundColor: (selectedActionPayment as any).avatarBgColor || '#10b981' }}
                                                 >
                                                     {selectedActionPayment.avatar ? (
@@ -571,7 +571,7 @@ export default function LandlordDashboard() {
                                                     ) : (
                                                         <span className="text-2xl font-black text-white/90">{selectedActionPayment.tenant.charAt(0)}</span>
                                                     )}
-                                                    <div className="absolute -bottom-0.5 -right-0.5 h-5 w-5 rounded-full border-4 border-card bg-emerald-500 shadow-lg" />
+                                                    <div className="absolute -bottom-0.5 -right-0.5 size-5 rounded-full border-4 border-card bg-emerald-500 shadow-lg" />
                                                 </div>
 
                                                 <div className="min-w-0">
@@ -588,7 +588,7 @@ export default function LandlordDashboard() {
                                                 onClick={() => setSelectedActionPayment(null)}
                                                 className="rounded-full p-2 text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors shrink-0"
                                             >
-                                                <X className="h-5 w-5" />
+                                                <X className="size-5" />
                                             </button>
                                         </div>
                                     </div>
@@ -621,7 +621,7 @@ export default function LandlordDashboard() {
                                             href="/landlord/messages"
                                             className="flex-1 flex items-center justify-center gap-3 rounded-full bg-[#D7EFFF] dark:bg-blue-500/20 py-4 px-6 text-base font-medium text-[#001D35] dark:text-blue-100 transition-all hover:bg-[#c3e6ff] active:scale-[0.98]"
                                         >
-                                            <MessageSquare className="h-5 w-5" />
+                                            <MessageSquare className="size-5" />
                                             Message
                                         </Link>
                                         
@@ -631,10 +631,10 @@ export default function LandlordDashboard() {
                                                 className="flex h-[52px] w-[52px] items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/5 text-emerald-600 transition-all hover:bg-emerald-500/10 active:scale-[0.92]"
                                                 title="Acknowledge Payment"
                                             >
-                                                <CheckCircle2 className="h-6 w-6" />
+                                                <CheckCircle2 className="size-6" />
                                             </button>
                                             <button className="flex h-[52px] w-[52px] items-center justify-center rounded-full border border-neutral-200 dark:border-neutral-700 bg-transparent text-neutral-600 dark:text-neutral-400 transition-all hover:bg-neutral-50 dark:hover:bg-neutral-800 active:scale-[0.92]">
-                                                <FolderOpen className="h-5 w-5" />
+                                                <FolderOpen className="size-5" />
                                             </button>
                                         </div>
                                     </div>
@@ -646,14 +646,14 @@ export default function LandlordDashboard() {
                                             className="w-full flex items-center justify-center gap-3 rounded-2xl bg-[#f0f4f9] dark:bg-neutral-800 px-6 py-4 text-base font-medium text-blue-700 dark:text-blue-400 transition-all hover:bg-[#e1e9f1] dark:hover:bg-neutral-700 group"
                                         >
                                             Open Full Profile
-                                            <ArrowUpRight className="h-5 w-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                                            <ArrowUpRight className="size-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                                         </button>
                                     </div>
                                 </>
                             ) : (
                                 <div className="p-8 text-center animate-in slide-in-from-right-4 duration-300">
-                                    <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-primary/10 text-primary">
-                                        <AlertTriangle className="h-10 w-10" />
+                                    <div className="mx-auto mb-6 flex size-20 items-center justify-center rounded-3xl bg-primary/10 text-primary">
+                                        <AlertTriangle className="size-10" />
                                     </div>
                                     <h3 className="text-xl font-black text-foreground">Confirm Settlement</h3>
                                     <div className="mt-4 rounded-2xl border border-primary/20 bg-primary/5 p-5">
@@ -702,13 +702,13 @@ function PaymentCard({ payment, fallbackAvatar, onClick }: { payment: PaymentLis
             <div className="flex items-center gap-4 relative z-10">
                 <div className="relative">
                     <div 
-                        className="h-12 w-12 rounded-full border-2 border-background overflow-hidden transition-all duration-500 group-hover:scale-110"
+                        className="size-12 rounded-full border-2 border-background overflow-hidden transition-all duration-500 group-hover:scale-110"
                         style={{ backgroundColor: (payment as any).avatarBgColor || '#171717' }}
                     >
                         <img src={avatar || fallbackAvatar} alt={tenant} className="h-full w-full object-cover" />
                     </div>
                     <div className={cn(
-                        "absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-background",
+                        "absolute -bottom-0.5 -right-0.5 size-4 rounded-full border-2 border-background",
                         isPaid ? "bg-emerald-500" : isNearDue ? "bg-amber-500" : "bg-red-500"
                     )} />
                 </div>

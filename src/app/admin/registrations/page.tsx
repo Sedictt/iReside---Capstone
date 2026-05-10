@@ -103,8 +103,8 @@ function KpiCard({ icon: Icon, label, value, accentText }: {
     return (
         <div className="group relative overflow-hidden rounded-[2rem] border border-border/70 bg-card p-6 transition-colors duration-300 hover:border-border hover:bg-muted/20">
             <div className="relative z-10 flex flex-col gap-4">
-                <div className={cn("flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] shadow-inner", accentText)}>
-                    <Icon className="h-5 w-5" strokeWidth={1.5} />
+                <div className={cn("flex size-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] shadow-inner", accentText)}>
+                    <Icon className="size-5" strokeWidth={1.5} />
                 </div>
                 <div>
                     <p className="text-3xl font-extrabold tracking-tight text-white">{value}</p>
@@ -237,8 +237,8 @@ export default function AdminRegistrationsPage() {
                         <div className="relative z-10 space-y-8">
                             <div className="space-y-4">
                                 <div className="inline-flex items-center gap-3 rounded-full border border-amber-500/20 bg-amber-500/10 px-4 py-2 text-[10px] font-extrabold uppercase tracking-widest text-amber-300/80">
-                                    <span className="relative flex h-2 w-2">
-                                        <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-400" />
+                                    <span className="relative flex size-2">
+                                        <span className="relative inline-flex size-2 rounded-full bg-amber-400" />
                                     </span>
                                     Registration Queue
                                 </div>
@@ -261,7 +261,7 @@ export default function AdminRegistrationsPage() {
                     {/* ─── Error Banner ─── */}
                     {error && (
                         <div className="flex items-center gap-3 rounded-2xl border border-red-500/20 bg-red-500/5 px-5 py-4">
-                            <ShieldX className="h-5 w-5 shrink-0 text-red-400" />
+                            <ShieldX className="size-5 shrink-0 text-red-400" />
                             <p className="text-sm font-semibold text-red-300">{error}</p>
                         </div>
                     )}
@@ -283,8 +283,8 @@ export default function AdminRegistrationsPage() {
                                 </div>
                             ) : incoming.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 bg-white/[0.01] px-6 py-20 text-center">
-                                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
-                                        <CheckCircle2 className="h-8 w-8 text-primary" />
+                                    <div className="flex size-16 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
+                                        <CheckCircle2 className="size-8 text-primary" />
                                     </div>
                                     <p className="mt-5 text-lg font-bold text-white">All clear</p>
                                     <p className="mt-1 text-sm text-white/40">No incoming registrations to review.</p>
@@ -309,8 +309,8 @@ export default function AdminRegistrationsPage() {
 
                                                 <div className="relative min-w-0">
                                                     <div className="flex items-center gap-3">
-                                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03]">
-                                                            <User className="h-4 w-4 text-white/50" />
+                                                        <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03]">
+                                                            <User className="size-4 text-white/50" />
                                                         </div>
                                                         <div className="min-w-0">
                                                             <div className="flex min-w-0 items-center gap-2">
@@ -318,7 +318,7 @@ export default function AdminRegistrationsPage() {
                                                                 <RoleBadge role={row.applicant?.role ?? null} />
                                                             </div>
                                                             <p className="mt-0.5 flex items-center gap-1.5 truncate text-sm text-white/40">
-                                                                <Mail className="h-3 w-3 shrink-0" />
+                                                                <Mail className="size-3 shrink-0" />
                                                                 {row.applicant?.email || "No email"}
                                                             </p>
                                                         </div>
@@ -328,7 +328,7 @@ export default function AdminRegistrationsPage() {
                                                 <div className="relative min-w-0">
                                                     <p className="truncate text-sm font-medium text-white/70">{row.business_name || "No business name"}</p>
                                                     <p className="mt-0.5 flex items-center gap-1.5 text-xs text-white/35">
-                                                        <Calendar className="h-3 w-3 shrink-0" />
+                                                        <Calendar className="size-3 shrink-0" />
                                                         {new Date(row.created_at).toLocaleDateString()}
                                                     </p>
                                                 </div>
@@ -337,13 +337,13 @@ export default function AdminRegistrationsPage() {
                                                     "relative inline-flex items-center gap-1.5 self-center rounded-full border px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest",
                                                     meta.dotClass, meta.bgClass, meta.textClass
                                                 )}>
-                                                    <span className={cn("h-1.5 w-1.5 rounded-full", meta.dotClass)} />
-                                                    <StatusIcon className="h-3 w-3" />
+                                                    <span className={cn("size-1.5 rounded-full", meta.dotClass)} />
+                                                    <StatusIcon className="size-3" />
                                                     {meta.label}
                                                 </span>
 
                                                 <span className="relative hidden items-center text-white/20 transition-colors group-hover:text-primary md:flex">
-                                                    <ArrowRight className="h-4 w-4" />
+                                                    <ArrowRight className="size-4" />
                                                 </span>
                                             </button>
                                         );
@@ -370,11 +370,11 @@ export default function AdminRegistrationsPage() {
                                 <div className="flex items-center gap-5">
                                     {/* Avatar */}
                                     <div className="relative">
-                                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
-                                            <User className="h-7 w-7 text-primary" />
+                                        <div className="flex size-16 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
+                                            <User className="size-7 text-primary" />
                                         </div>
                                         <span className={cn(
-                                            "absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-[#111114]",
+                                            "absolute -bottom-0.5 -right-0.5 size-3.5 rounded-full border-2 border-[#111114]",
                                             selected.status === "pending" ? "bg-amber-400" : "bg-blue-400"
                                         )} />
                                     </div>
@@ -390,11 +390,11 @@ export default function AdminRegistrationsPage() {
                                                 STATUS_META[selected.status].bgClass,
                                                 STATUS_META[selected.status].textClass
                                             )}>
-                                                <span className={cn("h-1.5 w-1.5 rounded-full", STATUS_META[selected.status].dotClass)} />
+                                                <span className={cn("size-1.5 rounded-full", STATUS_META[selected.status].dotClass)} />
                                                 {STATUS_META[selected.status].label}
                                             </span>
                                             <span className="flex items-center gap-1.5 text-[11px] text-white/30">
-                                                <Calendar className="h-3 w-3" />
+                                                <Calendar className="size-3" />
                                                 Applied {new Date(selected.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                                             </span>
                                         </div>
@@ -406,7 +406,7 @@ export default function AdminRegistrationsPage() {
                                     onClick={() => setSelectedId(null)}
                                     aria-label="Close modal"
                                 >
-                                    <X className="h-4 w-4" />
+                                    <X className="size-4" />
                                 </button>
                             </div>
                         </div>
@@ -417,8 +417,8 @@ export default function AdminRegistrationsPage() {
                                 {/* Applicant Profile Band */}
                                 <div className="grid gap-3 sm:grid-cols-2">
                                     <div className="flex items-center gap-4 rounded-2xl border border-white/[0.06] bg-white/[0.02] px-5 py-4">
-                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04]">
-                                            <Mail className="h-4 w-4 text-white/35" />
+                                        <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04]">
+                                            <Mail className="size-4 text-white/35" />
                                         </div>
                                         <div className="min-w-0">
                                             <p className="text-[10px] font-bold uppercase tracking-widest text-white/25">Email Address</p>
@@ -426,8 +426,8 @@ export default function AdminRegistrationsPage() {
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-4 rounded-2xl border border-white/[0.06] bg-white/[0.02] px-5 py-4">
-                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04]">
-                                            <Phone className="h-4 w-4 text-white/35" />
+                                        <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04]">
+                                            <Phone className="size-4 text-white/35" />
                                         </div>
                                         <div className="min-w-0">
                                             <p className="text-[10px] font-bold uppercase tracking-widest text-white/25">Phone Number</p>
@@ -441,8 +441,8 @@ export default function AdminRegistrationsPage() {
 
                                     <div className="relative z-10">
                                         <div className="mb-5 flex items-center gap-3">
-                                            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary/20 bg-primary/10">
-                                                <Building2 className="h-4 w-4 text-primary" />
+                                            <div className="flex size-9 items-center justify-center rounded-xl border border-primary/20 bg-primary/10">
+                                                <Building2 className="size-4 text-primary" />
                                             </div>
                                             <div>
                                                 <p className="text-sm font-bold text-white/85">Business Legitimacy Check</p>
@@ -465,9 +465,9 @@ export default function AdminRegistrationsPage() {
                                                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-primary/25 bg-primary/15 px-5 py-3 text-xs font-bold text-primary transition-colors hover:bg-primary/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:opacity-50"
                                             >
                                                 {verifyingId === selected.id ? (
-                                                    <><LoaderCircle className="h-3.5 w-3.5 animate-spin" />Verifying</>
+                                                    <><LoaderCircle className="size-3.5 animate-spin" />Verifying</>
                                                 ) : (
-                                                    <><ShieldCheck className="h-3.5 w-3.5" />Verify</>
+                                                    <><ShieldCheck className="size-3.5" />Verify</>
                                                 )}
                                             </button>
                                             <a
@@ -476,7 +476,7 @@ export default function AdminRegistrationsPage() {
                                                 rel="noreferrer"
                                                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-5 py-3 text-xs font-bold text-white/50 transition-colors hover:border-white/20 hover:bg-white/[0.06] hover:text-white/75"
                                             >
-                                                <ExternalLink className="h-3.5 w-3.5" />Open Directory
+                                                <ExternalLink className="size-3.5" />Open Directory
                                             </a>
                                         </div>
 
@@ -486,8 +486,8 @@ export default function AdminRegistrationsPage() {
                                             if (!rows.length && !liveStatus) {
                                                 return (
                                                     <div className="mt-5 flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.01] px-4 py-3.5">
-                                                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-amber-500/15 bg-amber-500/5">
-                                                            <ShieldX className="h-3.5 w-3.5 text-amber-400/50" />
+                                                        <div className="flex size-7 shrink-0 items-center justify-center rounded-lg border border-amber-500/15 bg-amber-500/5">
+                                                            <ShieldX className="size-3.5 text-amber-400/50" />
                                                         </div>
                                                         <p className="text-xs font-medium text-white/35">No verification run yet. Click <strong className="text-primary/70">Verify</strong> to check this business against the city directory.</p>
                                                     </div>
@@ -496,8 +496,8 @@ export default function AdminRegistrationsPage() {
                                             if (liveStatus === "not_found") {
                                                 return (
                                                     <div className="mt-5 flex items-center gap-3 rounded-xl border border-red-500/15 bg-red-500/5 px-4 py-3.5">
-                                                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-red-500/20 bg-red-500/10">
-                                                            <ShieldX className="h-3.5 w-3.5 text-red-400" />
+                                                        <div className="flex size-7 shrink-0 items-center justify-center rounded-lg border border-red-500/20 bg-red-500/10">
+                                                            <ShieldX className="size-3.5 text-red-400" />
                                                         </div>
                                                         <div>
                                                             <p className="text-xs font-bold text-red-300/80">Business not found in directory</p>
@@ -509,8 +509,8 @@ export default function AdminRegistrationsPage() {
                                             if (liveStatus === "error") {
                                                 return (
                                                     <div className="mt-5 flex items-center gap-3 rounded-xl border border-red-500/15 bg-red-500/5 px-4 py-3.5">
-                                                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-red-500/20 bg-red-500/10">
-                                                            <ShieldX className="h-3.5 w-3.5 text-red-400" />
+                                                        <div className="flex size-7 shrink-0 items-center justify-center rounded-lg border border-red-500/20 bg-red-500/10">
+                                                            <ShieldX className="size-3.5 text-red-400" />
                                                         </div>
                                                         <div>
                                                             <p className="text-xs font-bold text-red-300/80">Verification service error</p>
@@ -523,8 +523,8 @@ export default function AdminRegistrationsPage() {
                                             return (
                                                 <div className="mt-5">
                                                     <div className="mb-3 flex items-center gap-2">
-                                                        <div className="flex h-6 w-6 items-center justify-center rounded-md border border-emerald-500/20 bg-emerald-500/10">
-                                                            <CheckCircle2 className="h-3 w-3 text-emerald-400" />
+                                                        <div className="flex size-6 items-center justify-center rounded-md border border-emerald-500/20 bg-emerald-500/10">
+                                                            <CheckCircle2 className="size-3 text-emerald-400" />
                                                         </div>
                                                         <p className="text-xs font-bold text-emerald-300/70">Match found in directory</p>
                                                     </div>
@@ -559,8 +559,8 @@ export default function AdminRegistrationsPage() {
                                 {/* ─── Submitted Documents ─── */}
                                 <section className="rounded-2xl border border-white/[0.06] bg-[#0C0C0F]/60 p-6">
                                     <div className="mb-5 flex items-center gap-3">
-                                        <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04]">
-                                            <FileText className="h-4 w-4 text-white/35" />
+                                        <div className="flex size-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04]">
+                                            <FileText className="size-4 text-white/35" />
                                         </div>
                                         <div>
                                             <p className="text-sm font-bold text-white/85">Submitted Documents</p>
@@ -588,21 +588,21 @@ export default function AdminRegistrationsPage() {
                                                 )}
                                             >
                                                 {doc.url ? (
-                                                    <div className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full border border-[#111114] bg-emerald-500">
-                                                        <CheckCircle2 className="h-3 w-3 text-white" />
+                                                    <div className="absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full border border-[#111114] bg-emerald-500">
+                                                        <CheckCircle2 className="size-3 text-white" />
                                                     </div>
                                                 ) : (
-                                                    <div className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full border border-[#111114] bg-red-500">
-                                                        <X className="h-3 w-3 text-white" />
+                                                    <div className="absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full border border-[#111114] bg-red-500">
+                                                        <X className="size-3 text-white" />
                                                     </div>
                                                 )}
                                                 <div className={cn(
-                                                    "flex h-12 w-12 items-center justify-center rounded-2xl border",
+                                                    "flex size-12 items-center justify-center rounded-2xl border",
                                                     doc.url
                                                         ? "border-primary/15 bg-primary/10"
                                                         : "border-red-500/15 bg-red-500/10"
                                                 )}>
-                                                    <doc.icon className={cn("h-5 w-5", doc.url ? "text-primary/70" : "text-red-400/60")} />
+                                                    <doc.icon className={cn("size-5", doc.url ? "text-primary/70" : "text-red-400/60")} />
                                                 </div>
                                                 <div>
                                                     <p className="text-xs font-bold text-white/75">{doc.label}</p>
@@ -615,7 +615,7 @@ export default function AdminRegistrationsPage() {
                                                         rel="noreferrer"
                                                         className="mt-1 inline-flex items-center gap-1.5 rounded-lg border border-primary/15 bg-primary/5 px-3 py-1.5 text-[10px] font-bold text-primary/60"
                                                     >
-                                                        View <ExternalLink className="h-2.5 w-2.5" />
+                                                        View <ExternalLink className="size-2.5" />
                                                     </a>
                                                 ) : (
                                                     <span className="mt-1 inline-flex items-center gap-1 rounded-lg border border-red-500/15 bg-red-500/5 px-3 py-1.5 text-[10px] font-bold text-red-400/50">Not uploaded</span>
@@ -628,8 +628,8 @@ export default function AdminRegistrationsPage() {
                                 {/* ─── Admin Notes ─── */}
                                 <section className="rounded-2xl border border-white/[0.06] bg-[#0C0C0F]/60 p-6">
                                     <div className="mb-4 flex items-center gap-3">
-                                        <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-amber-500/15 bg-amber-500/5">
-                                            <StickyNote className="h-4 w-4 text-amber-400/50" />
+                                        <div className="flex size-9 items-center justify-center rounded-xl border border-amber-500/15 bg-amber-500/5">
+                                            <StickyNote className="size-4 text-amber-400/50" />
                                         </div>
                                         <div>
                                             <p className="text-sm font-bold text-white/85">Admin Notes</p>
@@ -654,7 +654,7 @@ export default function AdminRegistrationsPage() {
                                 <div className="flex items-center gap-3">
                                     {savingId === selected.id && (
                                         <span className="inline-flex items-center gap-2 rounded-lg border border-primary/15 bg-primary/5 px-3 py-1.5 text-[11px] font-bold text-primary/70">
-                                            <LoaderCircle className="h-3 w-3 animate-spin" />
+                                            <LoaderCircle className="size-3 animate-spin" />
                                             Saving changes
                                         </span>
                                     )}

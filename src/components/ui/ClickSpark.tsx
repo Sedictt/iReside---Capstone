@@ -153,6 +153,9 @@ const ClickSpark: React.FC<ClickSparkProps> = ({
         height: "100%"
       }}
       onClick={handleClick}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleClick(e as unknown as React.MouseEvent<HTMLDivElement>); }}}
+      tabIndex={0}
+      role="button"
     >
       <canvas
         ref={canvasRef}

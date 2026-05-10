@@ -474,7 +474,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                         {isActive && (
                                             <motion.div
                                                 layoutId="active-pill"
-                                                className="absolute right-4 w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(109,152,56,1)]"
+                                                className="absolute right-4 size-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(109,152,56,1)]"
                                             />
                                         )}
                                     </div>
@@ -512,7 +512,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                             <div className="absolute -top-10 -right-10 opacity-[0.03] select-none pointer-events-none">
                                 {(() => {
                                     const Icon = stepDefinitions[step].icon;
-                                    return <Icon className="h-80 w-80 rotate-12" />;
+                                    return <Icon className="size-80 rotate-12" />;
                                 })()}
                             </div>
 
@@ -600,7 +600,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                                                 <div className="flex flex-col gap-2 relative z-10">
                                                                     {key !== "application_form" && (
                                                                         <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-[10px] font-black uppercase tracking-[0.15em] hover:bg-white/20 transition-colors">
-                                                                            <Upload className="h-3 w-3" />
+                                                                            <Upload className="size-3" />
                                                                             {uploadingRequirementKey === key ? "WAIT..." : "UPLOAD"}
                                                                             <input
                                                                                 type="file"
@@ -645,7 +645,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                                                                 onClick={() => removeUploadedDocument(doc.url)}
                                                                                 className="p-1.5 text-white/40 hover:text-red-400 transition-colors bg-white/5 rounded-lg"
                                                                             >
-                                                                                <X className="h-3 w-3" />
+                                                                                <X className="size-3" />
                                                                             </button>
                                                                         </div>
                                                                     ))
@@ -749,7 +749,7 @@ function SummaryCard({ label, value, icon: Icon }: any) {
             </div>
             <div className="relative z-10">
                 <div className="flex items-center gap-2 opacity-50 mb-3 block">
-                    <Icon className="h-3.5 w-3.5" />
+                    <Icon className="size-3.5" />
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">{label}</p>
                 </div>
                 <p className="text-lg font-black tracking-tight text-white line-clamp-1">{value}</p>

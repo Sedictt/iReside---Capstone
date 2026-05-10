@@ -103,7 +103,7 @@ function SortableUnit({ unit, isOverlay = false }: { unit: DbUnit; isOverlay?: b
             {...attributes}
             {...listeners}
         >
-            <GripVertical className="h-3.5 w-3.5 text-neutral-600 transition-colors group-hover:text-neutral-400" />
+            <GripVertical className="size-3.5 text-neutral-600 transition-colors group-hover:text-neutral-400" />
             <div className="flex-1 min-w-0">
                 <p className="truncate text-xs font-bold text-white">{unit.name}</p>
             </div>
@@ -125,17 +125,17 @@ function FloorLane({ floor, units, onRemove }: { floor: FloorConfig; units: DbUn
             <div className="flex items-center justify-between px-1">
                 <div className="flex items-center gap-2">
                     <div className="flex size-6 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                        <Layers className="h-3.5 w-3.5" />
+                        <Layers className="size-3.5" />
                     </div>
                     <h3 className="text-sm font-black uppercase tracking-widest text-white">
                         {floorDisplayName(floor)}
                     </h3>
                     <button
                         onClick={onRemove}
-                        className="ml-2 h-7 w-7 flex items-center justify-center rounded-xl bg-rose-500/10 text-rose-500/40 hover:bg-rose-500 hover:text-white transition-all shadow-sm"
+                        className="ml-2 size-7 flex items-center justify-center rounded-xl bg-rose-500/10 text-rose-500/40 hover:bg-rose-500 hover:text-white transition-all shadow-sm"
                         title="Remove Floor"
                     >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Trash2 className="size-3.5" />
                     </button>
                 </div>
                 <span className="text-[10px] font-bold text-neutral-500 bg-white/5 px-2 py-0.5 rounded-full border border-white/5">
@@ -566,7 +566,7 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete }: Ma
                             disabled={isSaving}
                             title="Open Bulk Organizer"
                             className={cn(
-                                "flex h-11 w-11 items-center justify-center rounded-2xl border transition-all active:scale-95 disabled:opacity-50",
+                                "flex size-11 items-center justify-center rounded-2xl border transition-all active:scale-95 disabled:opacity-50",
                                 isBulkOrganizerOpen 
                                     ? "bg-primary border-primary text-black" 
                                     : "bg-white/5 border-white/10 text-white hover:bg-white/10"
@@ -789,7 +789,7 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete }: Ma
 
                             <div className="mt-auto rounded-[2rem] border border-white/10 bg-white/[0.03] p-6">
                                 <div className="flex items-center gap-3">
-                                    <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                                    <div className="size-2 rounded-full bg-primary animate-pulse" />
                                     <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400">System Ready</p>
                                 </div>
                                 <p className="mt-3 text-xs font-medium text-neutral-500">

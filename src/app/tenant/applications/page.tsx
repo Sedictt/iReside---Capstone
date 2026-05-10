@@ -277,19 +277,19 @@ export default function MyApplicationsPage() {
                         <div className="bg-[#111111]/90 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-8 shadow-2xl space-y-8">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                    <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                                    <div className="size-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
                                         <History className="size-4" />
                                     </div>
                                     <h3 className="text-white font-semibold text-lg tracking-tight">Timeline</h3>
                                 </div>
-                                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-ping" />
+                                <span className="size-1.5 rounded-full bg-primary animate-ping" />
                             </div>
 
                             <div className="relative pl-6 space-y-8 before:absolute before:left-0 before:top-2 before:bottom-2 before:w-px before:bg-white/10">
                                 {recentActivity.map((activity, i) => (
                                     <div key={i} className="relative group cursor-default">
                                         <div className={cn(
-                                            "box-content absolute -left-[27.5px] top-1 h-2 w-2 rounded-full border-2 border-[#111111] transition-all",
+                                            "box-content absolute -left-[27.5px] top-1 size-2 rounded-full border-2 border-[#111111] transition-all",
                                             activity.active ? "bg-primary scale-125 shadow-[0_0_12px_rgba(109,152,56,0.8)]" : "bg-white/10"
                                         )} />
                                         <p className="text-sm font-black text-white group-hover:text-primary transition-colors tracking-tight">{activity.title}</p>

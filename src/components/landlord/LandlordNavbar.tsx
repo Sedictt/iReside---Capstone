@@ -46,7 +46,7 @@ export function LandlordNavbar() {
             <div className="flex items-center gap-4">
                 <button className="relative rounded-full bg-muted p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
                     <Bell className="size-5" />
-                    <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500 ring-2 ring-card" />
+                    <span className="absolute right-2 top-2 size-2 rounded-full bg-red-500 ring-2 ring-card" />
                 </button>
                 <div className="mx-2 h-8 w-px bg-border" />
                 <div className="flex items-center gap-3">

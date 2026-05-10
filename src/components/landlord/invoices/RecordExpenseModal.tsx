@@ -76,7 +76,7 @@ export function RecordExpenseModal({ isOpen, onClose, onSaved }: RecordExpenseMo
                 className="relative flex w-full max-w-xl flex-col overflow-hidden rounded-[2.5rem] border border-border bg-card shadow-[0_32px_120px_-20px_rgba(0,0,0,0.8)]"
             >
                 <div className="relative shrink-0 overflow-hidden border-b border-border/50 bg-background/50 px-8 py-8">
-                    <div className="absolute top-0 right-0 -mr-20 -mt-20 h-64 w-64 rounded-full bg-rose-500/5 blur-3xl transition-opacity animate-pulse" />
+                    <div className="absolute top-0 right-0 -mr-20 -mt-20 size-64 rounded-full bg-rose-500/5 blur-3xl transition-opacity animate-pulse" />
                     
                     <div className="relative flex items-start justify-between">
                         <div className="space-y-2">

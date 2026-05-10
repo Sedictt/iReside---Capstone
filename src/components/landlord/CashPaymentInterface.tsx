@@ -55,9 +55,9 @@ export function CashPaymentInterface({ isOpen, onClose, payment, onConfirm }: Ca
                 </button>
 
                 <div className="relative overflow-hidden border-b border-white/5 bg-card/40 px-8 py-10 backdrop-blur-2xl">
-                    <div className="absolute right-0 top-0 -mr-10 -mt-10 h-64 w-64 rounded-full bg-primary/5 blur-3xl" />
+                    <div className="absolute right-0 top-0 -mr-10 -mt-10 size-64 rounded-full bg-primary/5 blur-3xl" />
                     <div className="relative z-10 flex items-center gap-5">
-                        <div className="flex h-16 w-16 items-center justify-center rounded-[1.5rem] bg-card/50 backdrop-blur-xl border border-white/10 shadow-lg">
+                        <div className="flex size-16 items-center justify-center rounded-[1.5rem] bg-card/50 backdrop-blur-xl border border-white/10 shadow-lg">
                             <HandCoins className="size-8 text-primary" />
                         </div>
                         <div>
@@ -75,7 +75,7 @@ export function CashPaymentInterface({ isOpen, onClose, payment, onConfirm }: Ca
                                     <p className="text-[10px] font-black uppercase tracking-widest text-disabled">In-Person Handover</p>
                                     <h3 className="text-lg font-semibold text-high">{payment.tenantName}</h3>
                                     <div className="flex items-center gap-2 text-xs text-medium">
-                                        <Home className="h-3 w-3" />
+                                        <Home className="size-3" />
                                         <span>{payment.unit}</span>
                                     </div>
                                 </div>
@@ -149,7 +149,7 @@ export function CashPaymentInterface({ isOpen, onClose, payment, onConfirm }: Ca
                 <div className="bg-surface-2 px-8 py-5 flex justify-between items-center border-t border-divider">
                     <p className="text-[9px] font-black uppercase tracking-[0.2em] text-disabled">iReside Secure Payment Node</p>
                     <div className="flex items-center gap-1.5 opacity-50">
-                        <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                        <div className="size-1.5 rounded-full bg-emerald-500" />
                         <span className="text-[9px] font-bold text-medium">Live Connection</span>
                     </div>
                 </div>

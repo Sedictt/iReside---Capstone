@@ -30,9 +30,9 @@ export function UnitMapFeatureSection() {
           <div className="absolute top-8 right-8 z-[10100]">
             <button
               onClick={() => setIsLightboxOpen(false)}
-              className="h-14 w-14 rounded-full bg-black/40 backdrop-blur-xl text-white flex items-center justify-center hover:bg-black/60 border border-white/20 transition-all shadow-2xl"
+              className="size-14 rounded-full bg-black/40 backdrop-blur-xl text-white flex items-center justify-center hover:bg-black/60 border border-white/20 transition-all shadow-2xl"
             >
-              <X className="h-7 w-7" />
+              <X className="size-7" />
             </button>
           </div>
 
@@ -63,7 +63,7 @@ export function UnitMapFeatureSection() {
       <div className="flex flex-col gap-8 lg:flex-row lg:items-center">
         <div className="flex-1 space-y-4">
           <div className="inline-flex items-center gap-2 text-primary font-semibold">
-            <Map className="h-5 w-5" />
+            <Map className="size-6" />
             <span>Signature Feature</span>
           </div>
           <h2 className="text-3xl font-semibold text-text-high">Interactive Unit Map</h2>
@@ -72,19 +72,19 @@ export function UnitMapFeatureSection() {
           </p>
           <ul className="space-y-3 pt-2">
             <li className="flex gap-3">
-              <div className="mt-1 h-6 w-6 shrink-0 rounded-full bg-primary/10 text-primary flex items-center justify-center p-1">
+              <div className="mt-1 size-6 shrink-0 rounded-full bg-primary/10 text-primary flex items-center justify-center p-1">
                 <CheckCircle className="h-full w-full" />
               </div>
               <span className="text-text-medium"><strong>Visual Organization:</strong> Represent properties spatially to match reality. Easily identify which unit is adjacent to which.</span>
             </li>
             <li className="flex gap-3">
-              <div className="mt-1 h-6 w-6 shrink-0 rounded-full bg-primary/10 text-primary flex items-center justify-center p-1">
+              <div className="mt-1 size-6 shrink-0 rounded-full bg-primary/10 text-primary flex items-center justify-center p-1">
                 <CheckCircle className="h-full w-full" />
               </div>
               <span className="text-text-medium"><strong>Instant Status Indicators:</strong> Color-coded blocks immediately reveal which units are vacant, occupied, or pending maintenance.</span>
             </li>
             <li className="flex gap-3">
-              <div className="mt-1 h-6 w-6 shrink-0 rounded-full bg-primary/10 text-primary flex items-center justify-center p-1">
+              <div className="mt-1 size-6 shrink-0 rounded-full bg-primary/10 text-primary flex items-center justify-center p-1">
                 <CheckCircle className="h-full w-full" />
               </div>
               <span className="text-text-medium"><strong>Quick Actions:</strong> Click any unit block to instantly access lease details, tenant information, and open requests.</span>
@@ -93,9 +93,12 @@ export function UnitMapFeatureSection() {
         </div>
         
         <div className="flex-1 group relative">
-          <div 
+          <div
             className="rounded-xl border border-divider bg-surface-2 p-6 flex flex-col items-center justify-center text-center space-y-4 min-h-[300px] cursor-pointer overflow-hidden transition-all hover:border-primary/50 hover:shadow-xl relative"
             onClick={() => setIsLightboxOpen(true)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setIsLightboxOpen(true); }}}
+            tabIndex={0}
+            role="button"
           >
             {/* Background Blur Preview */}
             <div className="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity blur-[2px] scale-105 pointer-events-none">
@@ -104,8 +107,8 @@ export function UnitMapFeatureSection() {
             
             {/* Overlay Info */}
             <div className="relative z-10 flex flex-col items-center gap-4">
-              <div className="h-16 w-16 rounded-full bg-primary/20 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Maximize2 className="h-8 w-8" />
+              <div className="size-16 rounded-full bg-primary/20 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Maximize2 className="size-4" />
               </div>
               <div>
                 <p className="text-lg font-bold text-text-high">Try the Interactive Demo</p>

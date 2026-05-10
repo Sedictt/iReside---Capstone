@@ -447,13 +447,13 @@ function TenantMaintenanceCard({ request, onClick }: { request: MaintenanceReque
                 {/* Action Badge */}
                 {request.photoRequested && request.status === "In Progress" && (!request.tenantProvidedPhotos || request.tenantProvidedPhotos.length === 0) && (
                     <div className="mb-4 shrink-0 flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-lg w-fit">
-                        <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                        <div className="size-1.5 rounded-full bg-amber-500 animate-pulse" />
                         <span className="text-xs font-bold text-amber-700 dark:text-amber-400">Action Required: Upload Photo</span>
                     </div>
                 )}
                 {request.repairMethod === "third_party" && request.status === "In Progress" && request.tenantRepairStatus === "done" && (!request.tenantProvidedPhotos || request.tenantProvidedPhotos.length === 0) && (
                     <div className="mb-4 shrink-0 flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-lg w-fit">
-                        <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                        <div className="size-1.5 rounded-full bg-amber-500 animate-pulse" />
                         <span className="text-xs font-bold text-amber-700 dark:text-amber-400">Action Required: Upload Photo</span>
                     </div>
                 )}
@@ -464,7 +464,7 @@ function TenantMaintenanceCard({ request, onClick }: { request: MaintenanceReque
                 {/* Footer Info */}
                 <div className="flex items-center justify-between gap-4 shrink-0 pt-4 border-t border-border/50 mt-auto">
                     <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 min-w-0">
-                        <Clock className="w-3.5 h-3.5 shrink-0" />
+                        <Clock className="size-3.5 shrink-0" />
                         <span className="truncate">{request.reportedAt}</span>
                     </div>
                     <button
@@ -475,7 +475,7 @@ function TenantMaintenanceCard({ request, onClick }: { request: MaintenanceReque
                         className="text-[10px] font-black uppercase tracking-widest text-primary hover:text-white hover:bg-primary bg-primary/10 border border-primary/20 px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 whitespace-nowrap shadow-sm group/btn active:scale-95"
                     >
                         Details
-                        <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover/btn:translate-x-0.5" />
+                        <ArrowRight className="size-3.5 transition-transform group-hover/btn:translate-x-0.5" />
                     </button>
                 </div>
             </div>

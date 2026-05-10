@@ -434,7 +434,7 @@ export function DigitalSigner({
                     {title}
                   </h1>
                   <div className="flex items-center gap-2 text-[8px] md:text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
-                    <span className={cn("w-1.5 h-1.5 rounded-full", isPenActive ? "bg-primary animate-pulse" : "bg-emerald-500")} />
+                    <span className={cn("size-1.5 rounded-full", isPenActive ? "bg-primary animate-pulse" : "bg-emerald-500")} />
                     <span className="hidden xs:inline">{isPenActive ? 'Drawing Mode' : 'View Mode'}</span>
                     <span className="xs:hidden">{isPenActive ? 'Draw' : 'View'}</span>
                   </div>
@@ -458,7 +458,7 @@ export function DigitalSigner({
                 onClick={() => setIsToolbarHidden(true)}
                 className="hidden lg:flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-400 transition-all text-[10px] font-bold uppercase"
               >
-                <EyeOff className="w-3.5 h-3.5" />
+                <EyeOff className="size-3.5" />
                 <span>Focus Mode</span>
               </button>
             </div>
@@ -477,7 +477,7 @@ export function DigitalSigner({
                 disabled={isExporting}
                 className="hidden sm:flex p-2.5 md:px-5 md:py-2.5 rounded-xl bg-zinc-800/50 hover:bg-zinc-700 text-zinc-300 border border-white/5 transition-all text-xs font-bold items-center gap-2"
               >
-                <Save className="w-3.5 h-3.5" /> 
+                <Save className="size-3.5" /> 
                 <span className="hidden md:inline">Save Draft</span>
               </button>
 

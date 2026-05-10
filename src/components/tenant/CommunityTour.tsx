@@ -25,15 +25,15 @@ export function CommunityTour() {
             return;
         }
 
-        const previousBodyOverflow = document.body.style.overflow;
-        const previousHtmlOverflow = document.documentElement.style.overflow;
+        const previousBodyCssText = document.body.style.cssText;
+        const previousHtmlCssText = document.documentElement.style.cssText;
 
-        document.body.style.overflow = "hidden";
-        document.documentElement.style.overflow = "hidden";
+        document.body.style.cssText = previousBodyCssText + "; overflow: hidden;";
+        document.documentElement.style.cssText = previousHtmlCssText + "; overflow: hidden;";
 
         return () => {
-            document.body.style.overflow = previousBodyOverflow;
-            document.documentElement.style.overflow = previousHtmlOverflow;
+            document.body.style.cssText = previousBodyCssText;
+            document.documentElement.style.cssText = previousHtmlCssText;
         };
     }, [isVisible]);
 

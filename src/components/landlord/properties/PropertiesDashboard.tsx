@@ -137,7 +137,7 @@ export function PropertiesDashboard() {
                 <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div>
                         <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-background/75 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur-md">
-                            <Building2 className="h-3.5 w-3.5 text-primary" />
+                            <Building2 className="size-5" />
                             <span>Portfolio Management</span>
                         </div>
                         <h1 className="mb-2 text-4xl font-black tracking-tight text-foreground md:text-5xl">
@@ -150,11 +150,11 @@ export function PropertiesDashboard() {
 
                     <div className="flex gap-3">
                         <button className="flex h-12 items-center gap-2 rounded-xl border border-border bg-background/75 px-6 font-medium text-foreground transition-all hover:bg-muted/70">
-                            <Filter className="size-4" />
+                            <Filter className="size-5" />
                             Analytics
                         </button>
                         <Link href="/landlord/properties/new" className="flex h-12 items-center gap-2 rounded-xl bg-primary px-6 font-bold text-primary-foreground shadow-[0_14px_30px_-18px_rgba(var(--primary-rgb),0.65)] transition-all hover:bg-primary/90">
-                            <Plus className="size-5" />
+                            <Plus className="size-4" />
                             New Asset
                         </Link>
                     </div>
@@ -223,7 +223,7 @@ export function PropertiesDashboard() {
                     const occupancyPercent = Math.round(occupancyRatio * 100);
 
                     return (
-                        <div key={property.id} className="group relative overflow-hidden rounded-3xl border border-border bg-card/95 shadow-sm transition-all duration-500 hover:border-primary/20 hover:shadow-[0_18px_34px_-28px_rgba(15,23,42,0.35)] dark:hover:border-white/10">
+                        <div key={property.id} className="group relative overflow-hidden rounded-3xl border border-border bg-card/95 shadow-sm transition-all duration-500 hover:border-primary/20 hover:shadow-[0_18px_34px_-28px_rgba(15,23,42,0.35)] dark:hover:border-white/10 dark:hover:shadow-[0_18px_34px_-28px_rgba(15,23,42,0.35)]">
                             {/* No Ambient Glow */}
 
                             <div className="flex flex-col lg:flex-row relative z-10 w-full">
@@ -252,14 +252,14 @@ export function PropertiesDashboard() {
                                                         : "border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400"
                                                 )}>
                                                     <span className={cn(
-                                                        "w-1.5 h-1.5 rounded-full animate-pulse",
+                                                        "size-1.5 rounded-full animate-pulse",
                                                         property.status === "Performing" || property.status === "Stable" ? "bg-emerald-500" : "bg-amber-500"
                                                     )} />
                                                     {property.status}
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-1.5 text-sm text-muted-foreground font-medium">
-                                                <MapPin className="h-3.5 w-3.5" />
+                                                <MapPin className="size-3.5" />
                                                 <span>{property.address}</span>
                                             </div>
                                         </div>
@@ -462,7 +462,7 @@ function PropertySkeleton() {
                     <div className="flex flex-wrap items-center gap-8 lg:gap-12">
                         {/* Occupancy Skeleton */}
                         <div className="flex items-center gap-4">
-                            <div className="h-14 w-14 rounded-full bg-muted animate-pulse" />
+                            <div className="size-14 rounded-full bg-muted animate-pulse" />
                             <div className="space-y-2">
                                 <div className="h-3 w-16 rounded bg-muted/50 animate-pulse" />
                                 <div className="h-5 w-24 rounded bg-muted animate-pulse" />
@@ -472,7 +472,7 @@ function PropertySkeleton() {
 
                         {/* Maintenance Skeleton */}
                         <div className="flex items-center gap-4">
-                            <div className="h-14 w-14 rounded-2xl bg-muted animate-pulse" />
+                            <div className="size-14 rounded-2xl bg-muted animate-pulse" />
                             <div className="space-y-2">
                                 <div className="h-3 w-16 rounded bg-muted/50 animate-pulse" />
                                 <div className="h-5 w-24 rounded bg-muted animate-pulse" />

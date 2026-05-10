@@ -369,7 +369,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
 
                                     {/* Search Bar for Icons */}
                                     <div className="relative">
-                                        <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/40" />
+                                        <Search className="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/40" />
                                         <input
                                             id="icon-search"
                                             type="text"
@@ -433,7 +433,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                                         type="button"
                                                         onClick={() => setCurrentPage(i)}
                                                         className={cn(
-                                                            "h-1.5 w-1.5 rounded-full transition-all",
+                                                            "size-1.5 rounded-full transition-all",
                                                             currentPage === i ? "bg-primary w-4" : "bg-muted-foreground/20 hover:bg-muted-foreground/40"
                                                         )}
                                                     />

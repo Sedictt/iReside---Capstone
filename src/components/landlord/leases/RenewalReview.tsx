@@ -266,11 +266,11 @@ export default function LandlordRenewalReview() {
                         className="flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card text-[10px] font-black text-muted-foreground uppercase tracking-widest hover:bg-muted hover:text-foreground transition-all disabled:opacity-30"
                         title={(!selectedPropertyId || selectedPropertyId === "all") ? "Select a property to configure its renewal policy" : "Configure Renewal Policy"}
                     >
-                        <Settings2 className="w-3.5 h-3.5" />
+                        <Settings2 className="size-3.5" />
                         Renewal Policy
                     </button>
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50 border border-border">
-                        <div className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+                        <div className="size-1.5 rounded-full bg-amber-500 animate-pulse" />
                         <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                             {requests.length} Pending
                         </span>
@@ -292,7 +292,7 @@ export default function LandlordRenewalReview() {
                         <div key={request.id} className="group relative bg-card border border-border rounded-[2.5rem] p-8 shadow-sm transition-all hover:border-primary/20 hover:shadow-xl hover:shadow-black/5">
                             <div className="flex justify-between items-start mb-8">
                                 <div className="flex items-center gap-4">
-                                    <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black text-xl">
+                                    <div className="size-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black text-xl">
                                         {request.tenant.full_name.charAt(0)}
                                     </div>
                                     <div>

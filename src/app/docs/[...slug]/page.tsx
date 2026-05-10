@@ -1773,15 +1773,14 @@ export default async function DocDetailPage({ params }: { params: Promise<{ slug
       {/* Feedback Section */}
       <div className="mt-20 flex flex-col items-center gap-6 rounded-2xl border border-divider bg-surface-1 p-8 text-center">
         <div className="space-y-2">
-          <h4 className="text-lg font-semibold text-text-high">Was this page helpful?</h4>
           <p className="text-sm text-text-medium">Help us improve our documentation by providing feedback.</p>
         </div>
         <div className="flex gap-3">
           <Button variant="outline" className="gap-2 border-divider hover:border-primary hover:text-primary">
-            <ThumbsUp className="h-4 w-4" /> Yes, it was
+            <ThumbsUp className="size-4" /> Yes, it was
           </Button>
           <Button variant="outline" className="gap-2 border-divider hover:border-red-500 hover:text-red-500">
-            <ThumbsDown className="h-4 w-4" /> Not really
+            <ThumbsDown className="size-4" /> Not really
           </Button>
         </div>
       </div>
@@ -1795,7 +1794,7 @@ export default async function DocDetailPage({ params }: { params: Promise<{ slug
               className="group flex flex-col items-start gap-1 text-sm transition-colors hover:text-primary"
             >
               <span className="flex items-center gap-1 text-text-disabled group-hover:text-primary">
-                <ArrowLeft className="h-4 w-4" /> Previous
+                <ArrowLeft className="size-4 mr-2" /> Previous
               </span>
               <span className="text-lg font-bold text-text-high group-hover:text-primary">
                 {getDocTitle(doc.prev)}
@@ -1810,7 +1809,7 @@ export default async function DocDetailPage({ params }: { params: Promise<{ slug
               className="group flex flex-col items-end gap-1 text-sm transition-colors hover:text-primary"
             >
               <span className="flex items-center gap-1 text-text-disabled group-hover:text-primary">
-                Next <ArrowRight className="h-4 w-4" />
+                Next <ArrowRight className="size-4 ml-2" />
               </span>
               <span className="text-lg font-bold text-text-high group-hover:text-primary">
                 {getDocTitle(doc.next)}

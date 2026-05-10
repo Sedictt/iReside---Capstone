@@ -70,7 +70,7 @@ export function PropertySelectorHub({
         return (
             <div className="flex min-h-screen items-center justify-center bg-[#0a0a0a]">
                 <div className="flex flex-col items-center gap-4">
-                    <div className="h-16 w-16 animate-pulse rounded-2xl bg-primary/20 flex items-center justify-center">
+                    <div className="size-16 animate-pulse rounded-2xl bg-primary/20 flex items-center justify-center">
                         <ShieldCheck className="size-8 text-primary" />
                     </div>
                     <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground animate-pulse">Syncing Portfolio</p>
@@ -82,7 +82,7 @@ export function PropertySelectorHub({
     if (properties.length === 0) {
         return (
             <div className="flex min-h-screen flex-col items-center justify-center bg-[#0a0a0a] px-6 text-center">
-                <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-[2rem] border border-white/5 bg-card/40 shadow-2xl backdrop-blur-xl">
+                <div className="mb-8 flex size-24 items-center justify-center rounded-[2rem] border border-white/5 bg-card/40 shadow-2xl backdrop-blur-xl">
                     <Building2 className="size-10 text-primary" />
                 </div>
                 <h1 className="mb-4 text-3xl font-black tracking-tight text-foreground md:text-5xl">No properties detected</h1>
@@ -157,7 +157,7 @@ export function PropertySelectorHub({
                                         : "hover:bg-white/5"
                                 )}
                             >
-                                <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-white/5">
+                                <div className="relative size-14 shrink-0 overflow-hidden rounded-xl bg-white/5">
                                     {property.image ? (
                                         <img src={property.image} className="h-full w-full object-cover" alt="" />
                                     ) : (
@@ -224,7 +224,7 @@ export function PropertySelectorHub({
                                             />
                                         ) : (
                                             <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-white/5 to-white/10">
-                                                <Building2 className="h-20 w-20 text-white/10" />
+                                                <Building2 className="size-20 text-white/10" />
                                             </div>
                                         )}
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
@@ -246,7 +246,7 @@ export function PropertySelectorHub({
                                     <div className="flex flex-col p-10">
                                         <div className="mb-auto">
                                             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-primary">
-                                                <MessageSquare className="h-3 w-3" />
+                                                <MessageSquare className="size-3" />
                                                 {badgeText}
                                             </div>
                                             <h1 className="property-stage-content text-4xl font-black tracking-tight text-foreground">

@@ -81,7 +81,7 @@ export function HeaderChatWidget() {
 
                     {/* Unread badge indicator */}
                     {mockMessages.some(m => m.unread) && (
-                        <span className="absolute top-0 right-0 h-3 w-3 rounded-full bg-red-500 ring-2 ring-primary animate-pulse"></span>
+                        <span className="absolute top-0 right-0 size-3 rounded-full bg-red-500 ring-2 ring-primary animate-pulse"></span>
                     )}
                 </button>
 
@@ -115,7 +115,7 @@ export function HeaderChatWidget() {
                                                 className="size-10 rounded-full object-cover border border-white/10"
                                             />
                                             {msg.unread && (
-                                                <div className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-primary border-2 border-neutral-900" />
+                                                <div className="absolute -top-1 -right-1 size-3 rounded-full bg-primary border-2 border-neutral-900" />
                                             )}
                                         </div>
                                         <div className="flex-1 min-w-0">
@@ -158,7 +158,7 @@ export function HeaderChatWidget() {
                                 <div className="flex items-center gap-2 overflow-hidden">
                                     <div className="relative shrink-0">
                                         <img src={chat.avatar} alt={chat.name} className="size-8 rounded-full object-cover border border-white/10" />
-                                        <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-neutral-900 rounded-full" />
+                                        <div className="absolute bottom-0 right-0 size-2.5 bg-emerald-500 border-2 border-neutral-900 rounded-full" />
                                     </div>
                                     <div className="flex flex-col min-w-0">
                                         <h4 className="text-sm font-semibold text-white truncate hover:underline">{chat.name}</h4>

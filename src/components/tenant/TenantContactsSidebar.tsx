@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
+import Image from "next/image";
 import { ChatWidget } from "./ChatWidget";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { useAuth } from "@/hooks/useAuth";
@@ -476,6 +477,9 @@ export function TenantContactsSidebar() {
         let isCancelled = false;
 
         const loadConversations = async () => {
+            if (isCancelled) {
+                return;
+            }
             const mapped = await refreshConversations(true);
             if (isCancelled) {
                 return;
@@ -613,7 +617,8 @@ export function TenantContactsSidebar() {
 
         return () => {
             channelRef.current = null;
-            supabase.removeChannel(channel);
+            channel.unsubscribe();
+            void supabase.removeChannel(channel);
             typingStopTimeoutRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
             remoteTypingTimeoutRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
             typingStopTimeoutRef.current.clear();
@@ -701,10 +706,10 @@ export function TenantContactsSidebar() {
 
         const intervalId = window.setInterval(() => {
             void (async () => {
-                const mapped = await refreshConversations(false);
                 if (!hasUnreadSnapshotBootstrappedRef.current) {
                     return;
                 }
+                const mapped = await refreshConversations(false);
 
                 const previous = unreadSnapshotRef.current;
                 const next = new Map<string, boolean>();
@@ -808,7 +813,7 @@ export function TenantContactsSidebar() {
             case "sending":
                 return (
                     <>
-                        <Clock3 className="h-3 w-3" />
+                        <Clock3 className="size-3" />
                         <span>Sending</span>
                         <span className="text-neutral-600">• {timestamp}</span>
                     </>
@@ -816,7 +821,7 @@ export function TenantContactsSidebar() {
             case "delivered":
                 return (
                     <>
-                        <CheckCheck className="h-3 w-3" />
+                        <CheckCheck className="size-3" />
                         <span>Delivered</span>
                         <span className="text-neutral-600">• {timestamp}</span>
                     </>
@@ -824,7 +829,7 @@ export function TenantContactsSidebar() {
             case "seen":
                 return (
                     <>
-                        <CheckCheck className="h-3 w-3 text-emerald-400" />
+                        <CheckCheck className="size-3 text-emerald-400" />
                         <span className="text-emerald-400">Seen</span>
                         <span className="text-neutral-600">• {timestamp}</span>
                     </>
@@ -832,7 +837,7 @@ export function TenantContactsSidebar() {
             default:
                 return (
                     <>
-                        <Check className="h-3 w-3" />
+                        <Check className="size-3" />
                         <span>Sent</span>
                         <span className="text-neutral-600">• {timestamp}</span>
                     </>
@@ -859,7 +864,7 @@ export function TenantContactsSidebar() {
                             <div className="relative p-2.5 bg-muted rounded-xl cursor-default border border-border">
                                 <MessageSquare className="size-5 text-primary" />
                                 {hasUnreadConversations && (
-                                    <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 ring-2 ring-card animate-pulse"></span>
+                                    <span className="absolute -top-1 -right-1 size-3 rounded-full bg-red-500 ring-2 ring-card animate-pulse"></span>
                                 )}
                             </div>
                         </div>
@@ -919,9 +924,9 @@ export function TenantContactsSidebar() {
                                 >
                                     <div className="relative shrink-0">
                                         <div className="size-10 rounded-full flex items-center justify-center bg-white overflow-hidden border-2 border-card">
-                                            <img src="/logos/favicon.png" alt="iRis" className="w-full h-full object-cover" />
+                                            <Image src="/logos/favicon.png" alt="iRis" width={40} height={40} className="object-cover" />
                                         </div>
-                                        <div className="absolute top-0 right-0 h-3 w-3 rounded-full bg-primary animate-pulse border-2 border-card" />
+                                        <div className="absolute top-0 right-0 size-3 rounded-full bg-primary animate-pulse border-2 border-card" />
                                     </div>
                                     {isHovered && (
                                         <div className="flex-1 min-w-0">
@@ -957,14 +962,16 @@ export function TenantContactsSidebar() {
                                                     className="size-10 rounded-full overflow-hidden border-2 border-card"
                                                     style={{ backgroundColor: msg.avatarBgColor || '#171717' }}
                                                 >
-                                                    <img
+                                                    <Image
                                                         src={msg.avatar}
                                                         alt={msg.name}
-                                                        className="size-10 object-cover"
+                                                        width={40}
+                                                        height={40}
+                                                        className="object-cover"
                                                     />
                                                 </div>
                                                 {msg.unread && (
-                                                    <div className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 border-2 border-card" />
+                                                    <div className="absolute -top-1 -right-1 size-3 rounded-full bg-red-500 border-2 border-card" />
                                                 )}
                                             </div>
                                         </ProfileCardTrigger>
@@ -1086,9 +1093,9 @@ export function TenantContactsSidebar() {
                                             className="size-8 rounded-full overflow-hidden border border-border"
                                             style={{ backgroundColor: chat.avatarBgColor || '#171717' }}
                                         >
-                                            <img src={chat.avatar} alt={chat.name} className="size-8 object-cover" />
+                                            <Image src={chat.avatar} alt={chat.name} width={32} height={32} className="object-cover" />
                                         </div>
-                                        <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-card rounded-full" />
+                                        <div className="absolute bottom-0 right-0 size-2.5 bg-emerald-500 border-2 border-card rounded-full" />
                                     </div>
                                     <div className="flex flex-col min-w-0">
                                         <div className="flex min-w-0 items-center gap-2">
@@ -1102,7 +1109,7 @@ export function TenantContactsSidebar() {
                                 </div>
                                 <div className="flex items-center gap-0.5 shrink-0 text-muted-foreground relative">
                                     <Link href="/tenant/messages" className="p-1.5 hover:bg-muted rounded-lg hover:text-foreground transition-colors">
-                                        <Maximize2 className="w-3.5 h-3.5" />
+                                        <Maximize2 className="size-3.5" />
                                     </Link>
                                     <div className="relative">
                                         <button 
@@ -1118,12 +1125,20 @@ export function TenantContactsSidebar() {
                                         {/* Kebab Menu Dropdown */}
                                         {openMenuId === chat.id && (
                                             <>
-                                                <div 
-                                                    className="fixed inset-0 z-40" 
+                                                <div
+                                                    className="fixed inset-0 z-40"
+                                                    role="button"
+                                                    tabIndex={0}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         setOpenMenuId(null);
-                                                    }} 
+                                                    }}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter' || e.key === ' ') {
+                                                            e.stopPropagation();
+                                                            setOpenMenuId(null);
+                                                        }
+                                                    }}
                                                 />
                                                 <div className="absolute right-0 top-full mt-1 w-40 bg-popover border border-border rounded-xl shadow-xl z-50 overflow-hidden py-1 animate-in fade-in zoom-in-95 duration-200">
                                                     <Link 
@@ -1151,7 +1166,7 @@ export function TenantContactsSidebar() {
                                                         disabled={menuActionId !== null}
                                                         className="w-full text-left px-4 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                                     >
-                                                        {menuActionId === `${chat.id}:archive` ? "Archiving..." : "Archive Chat"}
+                                                        {menuActionId === `${chat.id}:archive` ? "Archiving…" : "Archive Chat"}
                                                     </button>
                                                     <button 
                                                         onClick={(e) => {
@@ -1161,7 +1176,7 @@ export function TenantContactsSidebar() {
                                                         disabled={menuActionId !== null}
                                                         className="w-full text-left px-4 py-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-500/10 transition-colors border-t border-border mt-1 disabled:opacity-50 disabled:cursor-not-allowed"
                                                     >
-                                                        {menuActionId === `${chat.id}:report` ? "Reporting..." : "Report User"}
+                                                        {menuActionId === `${chat.id}:report` ? "Reporting…" : "Report User"}
                                                     </button>
                                                     <button 
                                                         onClick={(e) => {
@@ -1171,7 +1186,7 @@ export function TenantContactsSidebar() {
                                                         disabled={menuActionId !== null}
                                                         className="w-full text-left px-4 py-2 text-xs text-orange-400 hover:text-orange-300 hover:bg-orange-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                                     >
-                                                        {menuActionId === `${chat.id}:block` ? "Blocking..." : "Block Contact"}
+                                                        {menuActionId === `${chat.id}:block` ? "Blocking…" : "Block Contact"}
                                                     </button>
                                                 </div>
                                             </>
@@ -1191,7 +1206,7 @@ export function TenantContactsSidebar() {
                                 className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 custom-scrollbar bg-background/60"
                             >
                                 {chatState.isLoading && (
-                                    <p className="text-xs text-muted-foreground text-center">Loading conversation...</p>
+                                    <p className="text-xs text-muted-foreground text-center">Loading conversation…</p>
                                 )}
                                 {!chatState.isLoading && chatState.messages.length === 0 && (
                                     <p className="text-xs text-muted-foreground text-center">No messages yet</p>
@@ -1219,7 +1234,7 @@ export function TenantContactsSidebar() {
                                         )}>
                                             {hasImage && message.fileUrl && (
                                                 <a href={message.fileUrl} target="_blank" rel="noreferrer" className="block rounded-xl overflow-hidden w-full bg-background">
-                                                    <img src={message.fileUrl} alt="Shared image" className="w-full max-h-48 object-contain" />
+                                                    <Image src={message.fileUrl} alt="Shared image" width={400} height={48} className="object-contain" />
                                                 </a>
                                             )}
 
@@ -1255,9 +1270,9 @@ export function TenantContactsSidebar() {
                                     <div className="flex items-end gap-2 w-full justify-start max-w-full animate-in fade-in slide-in-from-left-2 duration-300">
                                         <div className="px-3 py-2 bg-card text-foreground rounded-2xl rounded-bl-sm border border-border shadow-sm">
                                             <div className="flex items-center gap-1">
-                                                <span className="h-1.5 w-1.5 rounded-full bg-primary/60 animate-bounce [animation-delay:-0.2s]" />
-                                                <span className="h-1.5 w-1.5 rounded-full bg-primary/60 animate-bounce [animation-delay:-0.1s]" />
-                                                <span className="h-1.5 w-1.5 rounded-full bg-primary/60 animate-bounce" />
+<span className="size-1.5 rounded-full bg-primary/60 animate-pulse [animation-delay:-0.2s]" />
+                                <span className="size-1.5 rounded-full bg-primary/60 animate-pulse [animation-delay:-0.1s]" />
+                                <span className="size-1.5 rounded-full bg-primary/60 animate-pulse" />
                                             </div>
                                         </div>
                                     </div>
@@ -1312,7 +1327,7 @@ export function TenantContactsSidebar() {
                                         <Send className="size-4" />
                                     </button>
                                 </div>
-                                {chatState.isUploading && <p className="text-[10px] text-muted-foreground">Uploading attachment...</p>}
+                                {chatState.isUploading && <p className="text-[10px] text-muted-foreground">Uploading attachment…</p>}
                             </div>
                         </motion.div>
                             );
@@ -1374,10 +1389,12 @@ export function TenantContactsSidebar() {
                                             className="block rounded-xl border border-border bg-background/70 hover:bg-muted/50 transition-colors p-2"
                                         >
                                             {isImage && message.fileUrl ? (
-                                                <img
+                                                <Image
                                                     src={message.fileUrl}
                                                     alt="Shared file"
-                                                    className="w-full max-h-36 object-contain rounded-lg bg-background"
+                                                    width={400}
+                                                    height={36}
+                                                    className="object-contain rounded-lg bg-background"
                                                 />
                                             ) : (
                                                 <div className="flex items-center gap-2 text-foreground">
@@ -1503,10 +1520,12 @@ function ContactCard({ name, role, unit, avatar, avatarBgColor, status, isExpand
                     className="size-10 rounded-full overflow-hidden border-2 border-card shadow-sm group-hover:scale-105 transition-transform duration-300"
                     style={{ backgroundColor: avatarBgColor || '#171717' }}
                 >
-                    <img
+                    <Image
                         src={avatar}
                         alt={name}
-                        className="size-10 object-cover"
+                        width={40}
+                        height={40}
+                        className="object-cover"
                     />
                 </div>
                 <div className={cn(

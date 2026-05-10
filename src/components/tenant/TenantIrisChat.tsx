@@ -222,8 +222,8 @@ export function TenantIrisChat() {
                         <div className="size-10 rounded-full bg-white overflow-hidden border border-border flex items-center justify-center">
                             <img src="/logos/favicon.png" alt="iRis" className="w-full h-full object-cover" />
                         </div>
-                        <div className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full bg-card border border-border flex items-center justify-center shadow-sm">
-                            <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                        <div className="absolute -bottom-1 -right-1 size-3.5 rounded-full bg-card border border-border flex items-center justify-center shadow-sm">
+                            <div className="size-2 rounded-full bg-primary animate-pulse" />
                         </div>
                     </div>
                     <div>
@@ -353,9 +353,9 @@ export function TenantIrisChat() {
                                 </div>
                             </div>
                             <div className="px-5 py-4 rounded-2xl rounded-bl-sm bg-card border border-border flex items-center gap-1.5">
-                                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]"></span>
-                                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]"></span>
-                                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce"></span>
+                                <span className="size-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]"></span>
+                                <span className="size-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]"></span>
+                                <span className="size-1.5 rounded-full bg-primary animate-bounce"></span>
                             </div>
                         </div>
                     )}

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { RefreshCw, Check, Download, AlertCircle, Maximize2, Lock } from "lucide-react";
+import { RefreshCw, Check, Download, AlertCircle, Maximize2, Lock, Trash2, Undo } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
@@ -106,13 +106,13 @@ export function SignatureModal({
                             <p className="text-xs text-zinc-400">Review the document and provide your digital signature below.</p>
                         </div>
                         <button onClick={onClose} className="text-zinc-400 hover:text-white transition-colors">
-                            <Maximize2 className="h-4 w-4" />
+                            <Trash2 className="size-4" />
                         </button>
                     </div>
 
                     <div className="p-6">
                         <div className="mb-4 flex items-start gap-3 rounded-lg bg-yellow-500/10 p-3 text-xs text-yellow-200 border border-yellow-500/20">
-                            <AlertCircle className="h-4 w-4 shrink-0 text-yellow-500" />
+                            <AlertCircle className="size-4 shrink-0 text-yellow-500" />
                             <p>By signing, you agree to the Terms of Service and acknowledge the legal weight of this signature.</p>
                         </div>
 
@@ -149,7 +149,7 @@ export function SignatureModal({
                                     className="absolute bottom-3 right-3 rounded-full bg-zinc-800 p-2 text-zinc-400 hover:bg-zinc-700 hover:text-white transition-colors border border-white/5"
                                     title="Clear Signature"
                                 >
-                                    <RefreshCw className="h-3.5 w-3.5" />
+                                    <RefreshCw className="size-3.5" />
                                 </button>
                             </div>
                         </div>
@@ -163,7 +163,7 @@ export function SignatureModal({
                             )}
                         >
                             <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-white/0 via-white/20 to-white/0 opacity-0 transition-opacity group-hover:animate-shimmer" />
-                            <Check className="h-4 w-4" />
+                            <Check className="size-4" />
                             <span>Sign & Complete Lease</span>
                         </button>
 
@@ -175,13 +175,13 @@ export function SignatureModal({
                                 Clear
                             </button>
                             <button className="flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-zinc-800/50 px-4 py-2 text-sm font-medium text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white hover:border-white/20">
-                                <Download className="h-4 w-4" />
+                                <Undo className="size-4" />
                                 Download
                             </button>
                         </div>
 
                         <div className="mt-6 flex items-center justify-center gap-1.5 text-[10px] text-zinc-500 uppercase tracking-widest font-mono">
-                            <Lock className="h-2.5 w-2.5" />
+                            <Lock className="size-2.5" />
                             Secure 256-Bit Encryption
                         </div>
                     </div>

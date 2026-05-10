@@ -54,7 +54,7 @@ export function ContactList({
                         </Link>
                         <h2 className="text-xl font-black tracking-tight text-high">Messages</h2>
                     </div>
-                    <ThemeToggle variant="sidebar" className="h-9 w-9" />
+                    <ThemeToggle variant="sidebar" className="size-9" />
                 </div>
 
                 <div className="relative group">
@@ -116,7 +116,7 @@ export function ContactList({
                         <AlertTriangle className="size-4 shrink-0 mt-0.5" />
                         <div className="flex-1 font-medium">{conversationsError}</div>
                         <button onClick={() => setConversationsError(null)} className="p-1 hover:bg-red-500/10 rounded-lg">
-                            <X className="h-3 w-3" />
+                            <X className="size-3" />
                         </button>
                     </div>
                 )}

@@ -67,17 +67,23 @@ export function CommunityHeader({
                                     className="group flex w-full items-center justify-between gap-2 rounded-2xl border border-border bg-background/50 px-4 py-3 text-sm font-medium text-foreground backdrop-blur-xl transition-all hover:bg-muted dark:border-white/10 dark:bg-white/5 dark:text-white"
                                 >
                                     <div className="flex items-center gap-2 overflow-hidden">
-                                        <Building2 className="h-4 w-4 shrink-0 text-primary" />
+                                        <Building2 className="size-4 shrink-0 text-primary" />
                                         <span className="truncate">
                                             {managementProperties.find(p => p.id === selectedPropertyId)?.name || 'Select Property'}
                                         </span>
                                     </div>
-                                    <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${isPropertyDropdownOpen ? 'rotate-180' : ''}`} />
+                                    <ChevronDown className={`size-4 shrink-0 text-muted-foreground transition-transform ${isPropertyDropdownOpen ? 'rotate-180' : ''}`} />
                                 </button>
                                 
                                 {isPropertyDropdownOpen && (
                                     <>
-                                        <div className="fixed inset-0 z-40" onClick={() => setIsPropertyDropdownOpen(false)} />
+                                        <div
+                                            className="fixed inset-0 z-40"
+                                            onClick={() => setIsPropertyDropdownOpen(false)}
+                                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setIsPropertyDropdownOpen(false); }}}
+                                            tabIndex={0}
+                                            role="button"
+                                        />
                                         <motion.div
                                             initial={{ opacity: 0, y: 8, scale: 0.96 }}
                                             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -98,7 +104,7 @@ export function CommunityHeader({
                                                         }`}
                                                     >
                                                         <span className="truncate">{p.name}</span>
-                                                        {selectedPropertyId === p.id && <Check className="h-4 w-4" />}
+                                                        {selectedPropertyId === p.id && <Check className="size-4" />}
                                                     </button>
                                                 ))}
                                             </div>
@@ -112,7 +118,7 @@ export function CommunityHeader({
                     <div className="flex w-full flex-col gap-4 xl:w-auto xl:items-end">
                         <div className="flex w-full flex-col gap-4 sm:flex-row sm:items-center xl:max-w-md">
                             <div className="relative flex-1">
-                                <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                <Search className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                                 <input
                                     type="text"
                                     placeholder="Search discussions..."
@@ -124,20 +130,20 @@ export function CommunityHeader({
                             <div className="flex items-center justify-end gap-3">
                                 <button 
                                     onClick={onToggleRules}
-                                    className={`flex h-12 w-12 items-center justify-center rounded-full border transition-all ${
+                                    className={`flex size-12 items-center justify-center rounded-full border transition-all ${
                                         showRules 
                                         ? 'border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/20' 
                                         : 'border-border bg-background/50 text-muted-foreground hover:bg-muted hover:text-foreground dark:border-white/10 dark:bg-white/5'
                                     }`}
                                     title="Community Rules"
                                 >
-                                    <Flag className="h-5 w-5" />
+                                    <Flag className="size-5" />
                                 </button>
-                                <button className="flex h-12 w-12 items-center justify-center rounded-full border border-border bg-background/50 text-muted-foreground transition-all hover:bg-muted hover:text-foreground dark:border-white/10 dark:bg-white/5">
-                                    <Bell className="h-5 w-5" />
+                                <button className="flex size-12 items-center justify-center rounded-full border border-border bg-background/50 text-muted-foreground transition-all hover:bg-muted hover:text-foreground dark:border-white/10 dark:bg-white/5">
+                                    <Bell className="size-5" />
                                 </button>
                                 <div 
-                                    className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border shadow-sm dark:border-white/20"
+                                    className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border shadow-sm dark:border-white/20"
                                     style={{ backgroundColor: profile?.avatar_bg_color || undefined }}
                                 >
                                     {profile?.avatar_url ? (
@@ -194,7 +200,7 @@ function TabButton({ active, onClick, icon: Icon, label }: { active: boolean, on
                 : 'text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-white/5 dark:hover:text-white'
             }`}
         >
-            <Icon className="h-4 w-4" />
+            <Icon className="size-4" />
             {label}
         </button>
     )

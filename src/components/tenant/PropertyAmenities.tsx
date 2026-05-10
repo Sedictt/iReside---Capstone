@@ -80,7 +80,7 @@ export function PropertyAmenities({ amenities }: { amenities: Amenity[] }) {
                         <div className="p-8 flex flex-col flex-1">
                             <div className="space-y-2 mb-4">
                                 <div className="flex items-center gap-2 text-[10px] font-black text-primary uppercase tracking-[0.2em]">
-                                    <LucideIcons.MapPin className="w-3.5 h-3.5" />
+                                    <LucideIcons.MapPin className="size-3.5" />
                                     {amenity.location_details || "Main Wing"}
                                 </div>
                                 <h4 className="text-xl font-black text-foreground tracking-tight group-hover:text-primary transition-colors leading-tight">
@@ -98,14 +98,14 @@ export function PropertyAmenities({ amenities }: { amenities: Amenity[] }) {
                                     <div className="flex flex-col gap-0.5">
                                         <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">Capacity</span>
                                         <div className="flex items-center gap-2 text-[11px] font-bold text-foreground">
-                                            <LucideIcons.Users className="w-3.5 h-3.5 text-primary" />
+                                            <LucideIcons.Users className="size-3.5 text-primary" />
                                             {amenity.capacity || 0} People
                                         </div>
                                     </div>
                                     <div className="flex flex-col gap-0.5">
                                         <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">Status</span>
                                         <div className="flex items-center gap-2 text-[11px] font-bold text-emerald-500">
-                                            <LucideIcons.CheckCircle2 className="w-3.5 h-3.5" />
+                                            <LucideIcons.CheckCircle2 className="size-3.5" />
                                             {amenity.status}
                                         </div>
                                     </div>

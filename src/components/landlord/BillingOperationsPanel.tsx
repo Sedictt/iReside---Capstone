@@ -78,6 +78,7 @@ type State = {
   saving: boolean;
   message: { type: "error" | "success"; value: string } | null;
   isFooterExpanded: boolean;
+  showBreakdown: boolean;
   helpContent: { title: string; content: ReactNode } | null;
   accountName: string;
   accountNumber: string;
@@ -339,7 +340,7 @@ export function BillingOperationsPanel({
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    onClick={() => setShowBreakdown(false)}
+                    onClick={() => dispatch({ type: 'SET_SHOW_BREAKDOWN', payload: false })}
                     className="absolute inset-0 bg-background/60 backdrop-blur-sm"
                 />
                 <motion.div 
@@ -382,7 +383,7 @@ export function BillingOperationsPanel({
                                             </p>
                                             <div className="flex items-center gap-2">
                                                 <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{c.utility_type}</span>
-                                                <div className="h-1 w-1 rounded-full bg-border" />
+                                                <div className="size-1 rounded-full bg-border" />
                                                 <span className={cn(
                                                     "text-[10px] font-black uppercase tracking-widest",
                                                     strategyLabel === "Included" ? "text-emerald-600" : (strategyLabel === "Direct" ? "text-blue-600" : "text-amber-600")
@@ -453,15 +454,15 @@ export function BillingOperationsPanel({
 
                 <div className="space-y-2">
                     <h4 className="text-2xl font-semibold text-foreground">{helpContent.title}</h4>
-                    <div className="h-1 w-12 bg-primary rounded-full" />
+                    <div className="size-12 bg-primary rounded-full" />
                 </div>
 
                 <div className="text-sm text-muted-foreground leading-relaxed">
                   {helpContent.content}
                 </div>
 
-                <button 
-                  onClick={() => setHelpContent(null)}
+                <button
+                  onClick={() => dispatch({ type: 'SET_HELP', payload: null })}
                   className="w-full py-4 rounded-2xl bg-primary text-white font-bold text-sm shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
                 >
                   Got it, thanks!
@@ -590,7 +591,7 @@ export function BillingOperationsPanel({
                 </div>
 
                 <div className="mt-8 flex flex-col sm:flex-row items-center gap-4">
-                  <label className={cn(
+                  <div className={cn(
                     "flex flex-1 w-full cursor-pointer items-center justify-between rounded-2xl border p-4 transition-all",
                     isEnabled ? "border-primary/30 bg-primary/5 dark:bg-primary/[0.03]" : "border-border bg-muted/20 dark:bg-white/[0.02]"
                   )}>
@@ -601,11 +602,12 @@ export function BillingOperationsPanel({
                     <div className={cn("flex h-6 w-11 items-center rounded-full px-1 transition-all", isEnabled ? "bg-primary" : "bg-muted-foreground/30")}>
                       <div className={cn("size-4 rounded-full bg-white transition-all", isEnabled ? "translate-x-5" : "translate-x-0")} />
                     </div>
-                    <input type="checkbox" checked={isEnabled} onChange={() => dispatch({ type: 'UPDATE_PAYMENT', payload: { isEnabled: !isEnabled } })} className="hidden" />
-                  </label>
+                    <label htmlFor="enable-payments" className="sr-only">Enable Payments</label>
+                    <input id="enable-payments" type="checkbox" checked={isEnabled} onChange={() => dispatch({ type: 'UPDATE_PAYMENT', payload: { isEnabled: !isEnabled } })} className="hidden" />
+                  </div>
 
-                  <label className="flex flex-1 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border p-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground transition-all hover:bg-muted/50 hover:border-primary/40 hover:text-primary">
-                    <input type="file" accept="image/*" className="hidden" onChange={(event) => { const file = event.target.files?.[0] ?? null; if (file) { dispatch({ type: 'UPDATE_PAYMENT', payload: { qrFile: file, qrPreview: URL.createObjectURL(file), removeQr: false } }); } else { dispatch({ type: 'UPDATE_PAYMENT', payload: { qrFile: null } }); } }} />
+                  <label htmlFor="qr-upload" className="flex flex-1 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border p-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground transition-all hover:bg-muted/50 hover:border-primary/40 hover:text-primary">
+                    <input id="qr-upload" type="file" accept="image/*" className="hidden" onChange={(event) => { const file = event.target.files?.[0] ?? null; if (file) { dispatch({ type: 'UPDATE_PAYMENT', payload: { qrFile: file, qrPreview: URL.createObjectURL(file), removeQr: false } }); } else { dispatch({ type: 'UPDATE_PAYMENT', payload: { qrFile: null } }); } }} />
                     <QrCode className="size-5 mb-1" />
                     {qrPreview ? "Change QR Code" : "Upload QR Code"}
                   </label>
@@ -739,7 +741,7 @@ export function BillingOperationsPanel({
                         {/* Default Logic */}
                         <div className="space-y-4">
                           <div className="flex items-center gap-2 pl-4">
-                            <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                            <div className="size-1.5 rounded-full bg-primary" />
                             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Property Default</span>
                           </div>
                           <UtilityConfigEditor
@@ -747,6 +749,7 @@ export function BillingOperationsPanel({
                             units={property.units}
                             isOverride={false}
                             onChange={updateConfig}
+                            mounted={mounted}
                             onHelp={() => {
                               dispatch({
                                 type: 'SET_HELP',
@@ -857,7 +860,7 @@ function Field({
             onClick={onHelp}
             className="text-muted-foreground/40 hover:text-primary transition-colors"
           >
-            <HelpCircle className="h-3 w-3" />
+            <HelpCircle className="size-3" />
           </button>
         )}
       </div>
@@ -872,7 +875,8 @@ function UtilityConfigEditor({
   isOverride,
   onChange,
   onRemove,
-  onHelp
+  onHelp,
+  mounted
 }: {
   config: UtilityConfigDraft;
   units: Array<{ id: string; name: string }>;
@@ -880,6 +884,7 @@ function UtilityConfigEditor({
   onChange: (localId: string, patch: Partial<UtilityConfigDraft>) => void;
   onRemove?: () => void;
   onHelp?: () => void;
+  mounted?: boolean;
 }) {
   const Icon = config.utility_type === "water" ? Droplets : Zap;
   
@@ -902,7 +907,7 @@ function UtilityConfigEditor({
         "absolute -bottom-6 -right-6 opacity-[0.03] transition-opacity group-hover:opacity-[0.06]",
         config.utility_type === "water" ? "text-sky-500" : "text-amber-500"
       )}>
-        <Icon className="h-28 w-28 rotate-12" />
+        <Icon className="size-28 rotate-12" />
       </div>
 
       <div className="relative z-10">
@@ -946,7 +951,7 @@ function UtilityConfigEditor({
               </select>
               <button
                 onClick={onRemove}
-                className="h-9 w-9 flex items-center justify-center rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all border border-red-100"
+                className="size-9 flex items-center justify-center rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all border border-red-100"
               >
                 <Trash2 className="size-4" />
               </button>
@@ -979,7 +984,7 @@ function UtilityConfigEditor({
                         : "text-muted-foreground hover:bg-white/5"
                     )}
                   >
-                    {strategy === "included" && <CheckCircle2 className="h-3 w-3" />}
+                    {strategy === "included" && <CheckCircle2 className="size-3" />}
                     Included
                   </button>
                   <button 
@@ -991,7 +996,7 @@ function UtilityConfigEditor({
                         : "text-muted-foreground hover:bg-white/5"
                     )}
                   >
-                    {strategy === "submetered" && <CheckCircle2 className="h-3 w-3" />}
+                    {strategy === "submetered" && <CheckCircle2 className="size-3" />}
                     Submetered
                   </button>
                   <button 
@@ -1003,7 +1008,7 @@ function UtilityConfigEditor({
                         : "text-muted-foreground hover:bg-white/5"
                     )}
                   >
-                    {strategy === "direct" && <CheckCircle2 className="h-3 w-3" />}
+                    {strategy === "direct" && <CheckCircle2 className="size-3" />}
                     Direct
                   </button>
                 </div>
@@ -1033,7 +1038,7 @@ function UtilityConfigEditor({
                   isOverride ? "p-6" : "p-8"
                 )}>
                   <div className="absolute top-0 right-0 p-4 opacity-[0.03] grayscale">
-                    <DollarSign className="h-20 w-20" />
+                    <DollarSign className="size-20" />
                   </div>
                   
                   <Field label="Rate per Unit">
@@ -1099,7 +1104,7 @@ function UtilityConfigEditor({
                     : "bg-muted/10 border-border/50"
             )}>
               <div className={cn(
-                  "h-11 w-11 flex items-center justify-center rounded-xl border shadow-sm shrink-0",
+                  "size-11 flex items-center justify-center rounded-xl border shadow-sm shrink-0",
                   isSubmetered && config.rate_per_unit === 0 ? "bg-amber-500/10 border-amber-500/20" : "bg-card border-border"
               )}>
                 {isSubmetered && config.rate_per_unit === 0 ? (

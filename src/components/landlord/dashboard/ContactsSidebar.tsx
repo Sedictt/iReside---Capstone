@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
+import Image from "next/image";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { useAuth } from "@/hooks/useAuth";
 import { createClient as createSupabaseClient } from "@/lib/supabase/client";
@@ -479,6 +480,9 @@ export function ContactsSidebar() {
         let isCancelled = false;
 
         const loadConversations = async () => {
+            if (isCancelled) {
+                return;
+            }
             const mapped = await refreshConversations(true);
             if (isCancelled) {
                 return;
@@ -616,7 +620,8 @@ export function ContactsSidebar() {
 
         return () => {
             channelRef.current = null;
-            supabase.removeChannel(channel);
+            channel.unsubscribe();
+            void supabase.removeChannel(channel);
             typingStopTimeoutRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
             remoteTypingTimeoutRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
             typingStopTimeoutRef.current.clear();
@@ -704,10 +709,10 @@ export function ContactsSidebar() {
 
         const intervalId = window.setInterval(() => {
             void (async () => {
-                const mapped = await refreshConversations(false);
                 if (!hasUnreadSnapshotBootstrappedRef.current) {
                     return;
                 }
+                const mapped = await refreshConversations(false);
 
                 const previous = unreadSnapshotRef.current;
                 const next = new Map<string, boolean>();
@@ -811,7 +816,7 @@ export function ContactsSidebar() {
             case "sending":
                 return (
                     <>
-                        <Clock3 className="h-3 w-3" />
+                        <Clock3 className="size-3" />
                         <span>Sending</span>
                         <span className="text-muted-foreground">• {timestamp}</span>
                     </>
@@ -819,7 +824,7 @@ export function ContactsSidebar() {
             case "delivered":
                 return (
                     <>
-                        <CheckCheck className="h-3 w-3" />
+                        <CheckCheck className="size-3" />
                         <span>Delivered</span>
                         <span className="text-muted-foreground">• {timestamp}</span>
                     </>
@@ -827,7 +832,7 @@ export function ContactsSidebar() {
             case "seen":
                 return (
                     <>
-                        <CheckCheck className="h-3 w-3 text-emerald-400" />
+                        <CheckCheck className="size-3 text-emerald-400" />
                         <span className="text-emerald-400">Seen</span>
                         <span className="text-muted-foreground">• {timestamp}</span>
                     </>
@@ -835,7 +840,7 @@ export function ContactsSidebar() {
             default:
                 return (
                     <>
-                        <Check className="h-3 w-3" />
+                        <Check className="size-3" />
                         <span>Sent</span>
                         <span className="text-muted-foreground">• {timestamp}</span>
                     </>
@@ -861,7 +866,7 @@ export function ContactsSidebar() {
                             <div className="relative cursor-default rounded-xl bg-muted p-2.5 dark:bg-white/5">
                                 <MessageSquare className="size-5 text-primary" />
                                 {hasUnreadConversations && (
-                                    <span className="absolute -right-1 -top-1 h-3 w-3 animate-pulse rounded-full bg-red-500 ring-2 ring-card dark:ring-neutral-900"></span>
+                                    <span className="absolute -right-1 -top-1 size-3 animate-pulse rounded-full bg-red-500 ring-2 ring-card dark:ring-neutral-900"></span>
                                 )}
                             </div>
                         </div>
@@ -930,14 +935,16 @@ export function ContactsSidebar() {
                                                     className="size-10 rounded-full border-2 border-background overflow-hidden"
                                                     style={{ backgroundColor: msg.avatarBgColor || '#171717' }}
                                                 >
-                                                    <img
+                                                    <Image
                                                         src={msg.avatar}
                                                         alt={msg.name}
-                                                        className="h-full w-full object-cover"
+                                                        width={40}
+                                                        height={40}
+                                                        className="object-cover"
                                                     />
                                                 </div>
                                                 {msg.unread && (
-                                                    <div className="absolute -right-1 -top-1 h-3 w-3 rounded-full border-2 border-card bg-red-500 dark:border-neutral-900" />
+                                                    <div className="absolute -right-1 -top-1 size-3 rounded-full border-2 border-card bg-red-500 dark:border-neutral-900" />
                                                 )}
                                             </div>
                                         </ProfileCardTrigger>
@@ -1059,9 +1066,9 @@ export function ContactsSidebar() {
                                             className="size-8 rounded-full border border-border dark:border-white/10 overflow-hidden"
                                             style={{ backgroundColor: chat.avatarBgColor || '#171717' }}
                                         >
-                                            <img src={chat.avatar} alt={chat.name} className="h-full w-full object-cover" />
+                                            <Image src={chat.avatar} alt={chat.name} width={32} height={32} className="object-cover" />
                                         </div>
-                                        <div className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-card bg-emerald-500 dark:border-neutral-900" />
+                                        <div className="absolute bottom-0 right-0 size-2.5 rounded-full border-2 border-card bg-emerald-500 dark:border-neutral-900" />
                                     </div>
                                     <div className="flex flex-col min-w-0">
                                         <div className="flex min-w-0 items-center gap-2">
@@ -1075,7 +1082,7 @@ export function ContactsSidebar() {
                                 </div>
                                     <div className="relative flex shrink-0 items-center gap-0.5 text-muted-foreground">
                                     <Link href="/landlord/messages" className="rounded-lg p-1.5 transition-colors hover:bg-muted hover:text-foreground dark:hover:bg-white/10 dark:hover:text-white">
-                                        <Maximize2 className="w-3.5 h-3.5" />
+                                        <Maximize2 className="size-3.5" />
                                     </Link>
                                     <div className="relative">
                                         <button 
@@ -1091,12 +1098,20 @@ export function ContactsSidebar() {
                                         {/* Kebab Menu Dropdown */}
                                         {openMenuId === chat.id && (
                                             <>
-                                                <div 
-                                                    className="fixed inset-0 z-40" 
+                                                <div
+                                                    className="fixed inset-0 z-40"
+                                                    role="button"
+                                                    tabIndex={0}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         setOpenMenuId(null);
-                                                    }} 
+                                                    }}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter' || e.key === ' ') {
+                                                            e.stopPropagation();
+                                                            setOpenMenuId(null);
+                                                        }
+                                                    }}
                                                 />
                                                 <div className="absolute right-0 top-full z-50 mt-1 w-40 overflow-hidden rounded-xl border border-border bg-card py-1 shadow-xl animate-in fade-in zoom-in-95 duration-200 dark:border-white/10 dark:bg-neutral-800">
                                                     <Link 
@@ -1124,7 +1139,7 @@ export function ContactsSidebar() {
                                                         disabled={menuActionId !== null}
                                                         className="w-full px-4 py-2 text-left text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 dark:text-neutral-300 dark:hover:bg-white/5 dark:hover:text-white"
                                                     >
-                                                        {menuActionId === `${chat.id}:archive` ? "Archiving..." : "Archive Chat"}
+                                                        {menuActionId === `${chat.id}:archive` ? "Archiving…" : "Archive Chat"}
                                                     </button>
                                                     <button 
                                                         onClick={(e) => {
@@ -1134,7 +1149,7 @@ export function ContactsSidebar() {
                                                         disabled={menuActionId !== null}
                                                         className="mt-1 w-full border-t border-border px-4 py-2 text-left text-xs text-red-500 transition-colors hover:bg-red-500/10 hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/5 dark:text-red-400 dark:hover:text-red-300"
                                                     >
-                                                        {menuActionId === `${chat.id}:report` ? "Reporting..." : "Report User"}
+                                                        {menuActionId === `${chat.id}:report` ? "Reporting…" : "Report User"}
                                                     </button>
                                                     <button 
                                                         onClick={(e) => {
@@ -1144,7 +1159,7 @@ export function ContactsSidebar() {
                                                         disabled={menuActionId !== null}
                                                         className="w-full px-4 py-2 text-left text-xs text-orange-500 transition-colors hover:bg-orange-500/10 hover:text-orange-400 disabled:cursor-not-allowed disabled:opacity-50 dark:text-orange-400 dark:hover:text-orange-300"
                                                     >
-                                                        {menuActionId === `${chat.id}:block` ? "Blocking..." : "Block Contact"}
+                                                        {menuActionId === `${chat.id}:block` ? "Blocking…" : "Block Contact"}
                                                     </button>
                                                 </div>
                                             </>
@@ -1164,7 +1179,7 @@ export function ContactsSidebar() {
                                 className="custom-scrollbar flex flex-1 flex-col gap-3 overflow-y-auto bg-background/80 p-4 dark:bg-[#0a0a0a]/50"
                             >
                                 {chatState.isLoading && (
-                                    <p className="text-center text-xs text-muted-foreground">Loading conversation...</p>
+                                    <p className="text-center text-xs text-muted-foreground">Loading conversation…</p>
                                 )}
                                 {!chatState.isLoading && chatState.messages.length === 0 && (
                                     <p className="text-center text-xs text-muted-foreground">No messages yet</p>
@@ -1193,7 +1208,7 @@ export function ContactsSidebar() {
                                         )}>
                                             {hasImage && message.fileUrl && (
                                                 <a href={message.fileUrl} target="_blank" rel="noreferrer" className="block w-full overflow-hidden rounded-xl bg-white/70 dark:bg-black/40">
-                                                    <img src={message.fileUrl} alt="Shared image" className="w-full max-h-48 object-contain" />
+                                                    <Image src={message.fileUrl} alt="Shared image" width={400} height={48} className="object-contain" />
                                                 </a>
                                             )}
 
@@ -1229,9 +1244,9 @@ export function ContactsSidebar() {
                                     <div className="flex items-end gap-2 w-full justify-start max-w-full animate-in fade-in slide-in-from-left-2 duration-300">
                                         <div className="rounded-2xl rounded-bl-sm border border-border bg-muted px-3 py-2 text-foreground shadow-sm dark:border-white/5 dark:bg-neutral-800 dark:text-white">
                                             <div className="flex items-center gap-1">
-                                                <span className="h-1.5 w-1.5 rounded-full bg-neutral-400 animate-bounce [animation-delay:-0.2s]" />
-                                                <span className="h-1.5 w-1.5 rounded-full bg-neutral-400 animate-bounce [animation-delay:-0.1s]" />
-                                                <span className="h-1.5 w-1.5 rounded-full bg-neutral-400 animate-bounce" />
+<span className="size-1.5 rounded-full bg-neutral-400 animate-pulse [animation-delay:-0.2s]" />
+                                <span className="size-1.5 rounded-full bg-neutral-400 animate-pulse [animation-delay:-0.1s]" />
+                                <span className="size-1.5 rounded-full bg-neutral-400 animate-pulse" />
                                             </div>
                                         </div>
                                     </div>
@@ -1286,7 +1301,7 @@ export function ContactsSidebar() {
                                         <Send className="size-4" />
                                     </button>
                                 </div>
-                                {chatState.isUploading && <p className="text-[10px] text-muted-foreground">Uploading attachment...</p>}
+                                {chatState.isUploading && <p className="text-[10px] text-muted-foreground">Uploading attachment…</p>}
                             </div>
                         </motion.div>
                             );
@@ -1341,10 +1356,12 @@ export function ContactsSidebar() {
                                             className="block rounded-xl border border-border bg-muted/40 p-2 transition-colors hover:bg-muted dark:border-white/10 dark:bg-black/30 dark:hover:bg-black/50"
                                         >
                                             {isImage && message.fileUrl ? (
-                                                <img
+                                                <Image
                                                     src={message.fileUrl}
                                                     alt="Shared file"
-                                                    className="w-full max-h-36 rounded-lg bg-white/80 object-contain dark:bg-black/60"
+                                                    width={400}
+                                                    height={36}
+                                                    className="object-contain rounded-lg bg-white/80 dark:bg-black/60"
                                                 />
                                             ) : (
                                                 <div className="flex items-center gap-2 text-foreground dark:text-neutral-100">
@@ -1470,14 +1487,16 @@ function ContactCard({ name, role, unit, avatar, avatarBgColor, status, isExpand
                     className="size-10 rounded-full border-2 border-background overflow-hidden shadow-sm transition-transform duration-300 group-hover:scale-105"
                     style={{ backgroundColor: avatarBgColor || '#171717' }}
                 >
-                    <img
+                    <Image
                         src={avatar}
                         alt={name}
-                        className="h-full w-full object-cover"
+                        width={40}
+                        height={40}
+                        className="object-cover"
                     />
                 </div>
                 <div className={cn(
-                    "absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background",
+                    "absolute bottom-0 right-0 size-3 rounded-full border-2 border-background",
                     isIssue ? "bg-red-500" : status === "Moving In" ? "bg-amber-500" : "bg-emerald-500"
                 )} />
             </div>

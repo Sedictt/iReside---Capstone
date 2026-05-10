@@ -47,8 +47,8 @@ export default function FeaturesPage() {
       <section className="grid gap-8 sm:grid-cols-2">
         {/* Document & Lease */}
         <div id="document-manager" className="scroll-mt-24 space-y-4 rounded-2xl border border-divider bg-surface-1 p-8 hover:border-primary/30 transition-colors">
-          <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-orange-500/10 text-orange-500">
-            <FileText className="h-6 w-6" />
+          <div className="inline-flex items-center justify-center rounded-xl bg-orange-500/10 text-orange-500">
+            <FileText className="size-6" />
           </div>
           <h3 className="text-2xl font-semibold text-text-high">Document & Lease Manager</h3>
           <p className="text-text-medium leading-relaxed">
@@ -56,15 +56,15 @@ export default function FeaturesPage() {
           </p>
           <ul className="space-y-3 pt-2">
             <li className="flex items-start gap-2 text-sm text-text-medium">
-              <CheckCircle className="mt-0.5 h-4 w-4 text-primary shrink-0" />
+              <CheckCircle className="mt-0.5 size-4 text-primary shrink-0" />
               <span>Step-by-step guided lease generation and signing via verification checks.</span>
             </li>
             <li className="flex items-start gap-2 text-sm text-text-medium">
-              <CheckCircle className="mt-0.5 h-4 w-4 text-primary shrink-0" />
+              <CheckCircle className="mt-0.5 size-4 text-primary shrink-0" />
               <span>Digital document storage for important artifacts like contracts and IDs.</span>
             </li>
             <li className="flex items-start gap-2 text-sm text-text-medium">
-              <CheckCircle className="mt-0.5 h-4 w-4 text-primary shrink-0" />
+              <CheckCircle className="mt-0.5 size-4 text-primary shrink-0" />
               <span>Clear boundaries on privacy; data is only revealed to corresponding matched parties.</span>
             </li>
           </ul>
@@ -72,8 +72,8 @@ export default function FeaturesPage() {
 
         {/* Financial Hub */}
         <div id="financial-hub" className="scroll-mt-24 space-y-4 rounded-2xl border border-divider bg-surface-1 p-8 hover:border-primary/30 transition-colors">
-          <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
-            <Wallet className="h-6 w-6" />
+          <div className="inline-flex items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
+            <Wallet className="size-6" />
           </div>
           <h3 className="text-2xl font-semibold text-text-high">Financial Hub & Analytics</h3>
           <p className="text-text-medium leading-relaxed">
@@ -81,15 +81,15 @@ export default function FeaturesPage() {
           </p>
           <ul className="space-y-3 pt-2">
             <li className="flex items-start gap-2 text-sm text-text-medium">
-              <CheckCircle className="mt-0.5 h-4 w-4 text-primary shrink-0" />
+              <CheckCircle className="mt-0.5 size-4 text-primary shrink-0" />
               <span>Track recurring payment deadlines, eliminating forgotten dates.</span>
             </li>
             <li className="flex items-start gap-2 text-sm text-text-medium">
-              <CheckCircle className="mt-0.5 h-4 w-4 text-primary shrink-0" />
+              <CheckCircle className="mt-0.5 size-4 text-primary shrink-0" />
               <span>Create digital receipts automatically to minimize disputes or double entries.</span>
             </li>
             <li className="flex items-start gap-2 text-sm text-text-medium">
-              <CheckCircle className="mt-0.5 h-4 w-4 text-primary shrink-0" />
+              <CheckCircle className="mt-0.5 size-4 text-primary shrink-0" />
               <span>Visualize expenses against revenue dynamically in clear dashboards.</span>
             </li>
           </ul>
@@ -97,8 +97,8 @@ export default function FeaturesPage() {
 
         {/* Communication System */}
         <div id="communication" className="scroll-mt-24 space-y-4 rounded-2xl border border-divider bg-surface-1 p-8 hover:border-primary/30 transition-colors">
-          <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
-            <MessageSquare className="h-6 w-6" />
+          <div className="inline-flex items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
+            <MessageSquare className="size-6" />
           </div>
           <h3 className="text-2xl font-semibold text-text-high">In-App Chat Messaging</h3>
           <p className="text-text-medium leading-relaxed">
@@ -106,15 +106,15 @@ export default function FeaturesPage() {
           </p>
           <ul className="space-y-3 pt-2">
             <li className="flex items-start gap-2 text-sm text-text-medium">
-              <CheckCircle className="mt-0.5 h-4 w-4 text-primary shrink-0" />
+              <CheckCircle className="mt-0.5 size-4 text-primary shrink-0" />
               <span>A professional boundary separating tenancy discussions from personal chat apps.</span>
             </li>
             <li className="flex items-start gap-2 text-sm text-text-medium">
-              <CheckCircle className="mt-0.5 h-4 w-4 text-primary shrink-0" />
+              <CheckCircle className="mt-0.5 size-4 text-primary shrink-0" />
               <span>Real-time instant messaging built directly into the platform workflow.</span>
             </li>
             <li className="flex items-start gap-2 text-sm text-text-medium">
-              <CheckCircle className="mt-0.5 h-4 w-4 text-primary shrink-0" />
+              <CheckCircle className="mt-0.5 size-4 text-primary shrink-0" />
               <span>Attachment and media support for sharing pictures of premises or receipts.</span>
             </li>
           </ul>
@@ -122,8 +122,8 @@ export default function FeaturesPage() {
 
         {/* Maintenance Tracking */}
         <div id="maintenance" className="scroll-mt-24 space-y-4 rounded-2xl border border-divider bg-surface-1 p-8 hover:border-primary/30 transition-colors">
-          <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-purple-500/10 text-purple-500">
-            <Wrench className="h-6 w-6" />
+          <div className="inline-flex items-center justify-center rounded-xl bg-purple-500/10 text-purple-500">
+            <Wrench className="size-6" />
           </div>
           <h3 className="text-2xl font-semibold text-text-high">Maintenance Ticketing</h3>
           <p className="text-text-medium leading-relaxed">
@@ -131,15 +131,15 @@ export default function FeaturesPage() {
           </p>
           <ul className="space-y-3 pt-2">
             <li className="flex items-start gap-2 text-sm text-text-medium">
-              <CheckCircle className="mt-0.5 h-4 w-4 text-primary shrink-0" />
+              <CheckCircle className="mt-0.5 size-4 text-primary shrink-0" />
               <span>Tenants open maintenance requests with categorized urgency and image uploads.</span>
             </li>
             <li className="flex items-start gap-2 text-sm text-text-medium">
-              <CheckCircle className="mt-0.5 h-4 w-4 text-primary shrink-0" />
+              <CheckCircle className="mt-0.5 size-4 text-primary shrink-0" />
               <span>Landlords track issues across multiple states: Pending, In Progress, or Resolved.</span>
             </li>
             <li className="flex items-start gap-2 text-sm text-text-medium">
-              <CheckCircle className="mt-0.5 h-4 w-4 text-primary shrink-0" />
+              <CheckCircle className="mt-0.5 size-4 text-primary shrink-0" />
               <span>Easily cross-reference expenses incurred during repair directly on the dashboard.</span>
             </li>
           </ul>
@@ -150,7 +150,7 @@ export default function FeaturesPage() {
       <section className="rounded-2xl bg-zinc-950 dark:bg-black border border-zinc-800 p-8 text-white">
         <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center">
           <div className="flex px-4 py-4 rounded-full bg-zinc-800 shrink-0">
-            <ShieldCheck className="h-8 w-8 text-zinc-300" />
+            <ShieldCheck className="size-8 text-zinc-300" />
           </div>
           <div>
             <h3 className="text-xl font-semibold mb-2">Verified Landlords for Safe Transacting</h3>
@@ -165,7 +165,7 @@ export default function FeaturesPage() {
       <div className="flex items-center justify-end pt-8">
         <Button className="bg-primary hover:bg-primary-dark text-white" asChild>
           <Link href="/docs/getting-started/quick-start">
-            Continue to Quick Start <ArrowRight className="ml-2 h-4 w-4" />
+            Continue to Quick Start <ArrowRight className="ml-2 size-4" />
           </Link>
         </Button>
       </div>

@@ -664,7 +664,7 @@ export default function TenantDashboard() {
                     <div className="space-y-8">
                         {/* Property Overview Card */}
                         <div className="bg-card/90 border border-border/60 rounded-[2rem] p-8 shadow-sm backdrop-blur-xl relative overflow-hidden" data-tour-id="tour-lease-details">
-                            <div className="absolute top-0 right-0 h-32 w-32 bg-primary/5 blur-3xl -mr-8 -mt-8" />
+                            <div className="absolute top-0 right-0 size-32 bg-primary/5 blur-3xl -mr-8 -mt-8" />
                             <div className="relative z-10 space-y-6">
                                 <div>
                                     <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">Your Home</p>

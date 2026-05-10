@@ -73,7 +73,7 @@ export function ProfileAvatarUploader({ initialAvatarUrl, avatarBgColor, fullNam
             <button
                 type="button"
                 onClick={() => setIsPickerOpen(true)}
-                className="absolute bottom-1 right-1 h-10 w-10 bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white hover:text-black transition-all shadow-lg z-20"
+                className="absolute bottom-1 right-1 size-10 bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white hover:text-black transition-all shadow-lg z-20"
                 aria-label="Change profile appearance"
                 title="Change profile appearance"
             >

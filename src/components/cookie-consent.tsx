@@ -59,14 +59,14 @@ export function CookieConsent() {
               className="absolute top-2 right-2 p-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
               aria-label="Close cookie consent"
             >
-              <X className="h-4 w-4" />
+              <X className="size-4" />
             </button>
 
             <div className="flex items-start gap-3">
               {/* Icon */}
               <div className="flex-shrink-0 mt-1">
                 <div className="p-2 rounded-full bg-primary/10 text-primary">
-                  <Cookie className="h-5 w-5" />
+                  <Cookie className="size-5" />
                 </div>
               </div>
 
@@ -74,7 +74,7 @@ export function CookieConsent() {
               <div className="flex-1 space-y-3">
                 <div>
                   <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                    <Shield className="h-4 w-4" />
+                    <Shield className="size-4" />
                     Cookie Consent
                   </h3>
                   <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
@@ -85,18 +85,16 @@ export function CookieConsent() {
 
                 {/* Privacy link */}
                 <div className="text-xs text-muted-foreground">
-                  <a
-                    href="#"
-                    className="underline hover:text-foreground transition-colors"
-                    onClick={(e) => {
-                      e.preventDefault()
+                  <button
+                    className="underline hover:text-foreground transition-colors cursor-pointer bg-transparent border-0 p-0"
+                    onClick={() => {
                       toast.info("Privacy Policy", {
                         description: "Privacy policy page coming soon.",
                       })
                     }}
                   >
                     Read our Privacy Policy
-                  </a>
+                  </button>
                 </div>
 
                 {/* Action buttons */}
@@ -107,7 +105,7 @@ export function CookieConsent() {
                       size="sm"
                       className="flex-1 sm:flex-none gap-1.5"
                     >
-                      <Check className="h-3.5 w-3.5" />
+                      <Check className="size-3.5" />
                       Accept All
                     </Button>
                     <Button
@@ -116,7 +114,7 @@ export function CookieConsent() {
                       size="sm"
                       className="flex-1 sm:flex-none gap-1.5"
                     >
-                      <X className="h-3.5 w-3.5" />
+                      <X className="size-3.5" />
                       Decline
                     </Button>
                   </div>

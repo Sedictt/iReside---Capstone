@@ -233,7 +233,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                     onClick={() => setIsImageLightboxOpen(true)}
                                     className="absolute top-6 right-6 z-20 inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-black/40 backdrop-blur-md px-3.5 py-2 text-xs font-bold text-white hover:bg-black/60 transition-colors shadow-lg"
                                 >
-                                    <Expand className="h-3.5 w-3.5" />
+                                    <Expand className="size-3.5" />
                                     Enlarge
                                 </button>
 
@@ -301,7 +301,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                             <div className="mt-2 bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl p-3 flex flex-col gap-2.5 shadow-lg w-full">
                                 <div className="flex items-center gap-3">
                                     <div className="p-1.5 bg-white/10 rounded-lg shrink-0">
-                                        <Home className="w-3.5 h-3.5 text-white" />
+                                        <Home className="size-3.5 text-white" />
                                     </div>
                                     <div className="min-w-0">
                                         <span className="text-[9px] font-black text-white/70 uppercase tracking-widest block">Property</span>
@@ -311,7 +311,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                 <div className="h-px bg-white/10 w-full" />
                                 <div className="flex items-center gap-3">
                                     <div className="p-1.5 bg-white/10 rounded-lg shrink-0">
-                                        <Zap className="w-3.5 h-3.5 text-white" />
+                                        <Zap className="size-3.5 text-white" />
                                     </div>
                                     <div className="min-w-0">
                                         <span className="text-[9px] font-black text-white/70 uppercase tracking-widest block">Unit</span>
@@ -340,7 +340,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                         ID: {request.id.split('-')[0]}
                                     </div>
                                     <div className="flex items-center gap-1.5 bg-muted/50 px-3 py-1.5 rounded-lg border border-border text-foreground/70">
-                                        <Clock className="w-3.5 h-3.5" />
+                                        <Clock className="size-3.5" />
                                         Reported {request.reportedAt}
                                     </div>
                                 </div>
@@ -408,7 +408,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                 
                                 <div className="flex items-center gap-4 bg-muted/30 p-5 rounded-3xl border border-border">
                                     <div 
-                                        className="h-14 w-14 rounded-2xl overflow-hidden border border-border shrink-0 flex items-center justify-center text-lg font-black text-white"
+                                        className="size-14 rounded-2xl overflow-hidden border border-border shrink-0 flex items-center justify-center text-lg font-black text-white"
                                         style={{ backgroundColor: request.tenantAvatarBgColor || '#6d9838' }}
                                     >
                                         {request.tenantAvatar ? (
@@ -539,7 +539,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                             </label>
                                             <div className="relative group">
                                                 <div className="absolute left-3.5 top-1/2 -translate-y-1/2 p-1.5 bg-primary/10 text-primary rounded-md group-focus-within:bg-primary group-focus-within:text-primary-foreground transition-colors pointer-events-none shadow-sm">
-                                                    {processPlan === "landlord" ? <Hammer className="w-3.5 h-3.5" /> : <UserRound className="w-3.5 h-3.5" />}
+                                                    {processPlan === "landlord" ? <Hammer className="size-3.5" /> : <UserRound className="size-3.5" />}
                                                 </div>
                                                 <select
                                                     id="select-action"
@@ -564,7 +564,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                                 </label>
                                                 <div className="relative group">
                                                     <div className="absolute left-3.5 top-1/2 -translate-y-1/2 p-1.5 bg-muted text-muted-foreground rounded-md group-focus-within:bg-primary/10 group-focus-within:text-primary transition-colors pointer-events-none shadow-sm">
-                                                        <UserRound className="h-3.5 w-3.5" />
+                                                        <UserRound className="size-3.5" />
                                                     </div>
                                                     <input
                                                         id="repair-person-name"
@@ -708,7 +708,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                         key={idx}
                                         onClick={() => setCurrentImageIndex(idx)}
                                         className={cn(
-                                            "w-2.5 h-2.5 rounded-full transition-all",
+                                            "size-2.5 rounded-full transition-all",
                                             currentImageIndex === idx ? "bg-white w-8" : "bg-white/40 hover:bg-white"
                                         )}
                                         aria-label={`Go to image ${idx + 1}`}
@@ -764,7 +764,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                         key={idx}
                                         onClick={() => setTenantPhotoIndex(idx)}
                                         className={cn(
-                                            "w-2.5 h-2.5 rounded-full transition-all",
+                                            "size-2.5 rounded-full transition-all",
                                             tenantPhotoIndex === idx ? "bg-white w-8" : "bg-white/40 hover:bg-white"
                                         )}
                                         aria-label={`Go to photo ${idx + 1}`}

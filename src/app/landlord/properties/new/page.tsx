@@ -373,7 +373,7 @@ function NewAssetContent() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-2 px-1">
-                                            <Camera className="w-3.5 h-3.5 text-primary" />
+                                            <Camera className="size-3.5 text-primary" />
                                             <label htmlFor="cover-identity" className="text-[10px] font-black uppercase tracking-widest text-white/40">Cover Identity</label>
                                         </div>
                                         <div className="relative group cursor-pointer overflow-hidden rounded-[2.5rem] border border-white/10 bg-white/5 aspect-[16/10]">
@@ -424,7 +424,7 @@ function NewAssetContent() {
                                                 onClick={() => router.push("/landlord/support?topic=property_info_change")}
                                                 className="w-full py-4 rounded-2xl border border-primary/20 bg-primary/5 text-[10px] font-black uppercase tracking-[0.2em] text-primary hover:bg-primary/10 transition-all flex items-center justify-center gap-2"
                                             >
-                                                <ShieldCheck className="w-3.5 h-3.5" />
+                                                <ShieldCheck className="size-3.5" />
                                                 Request Identity Modification
                                             </button>
                                         )}
@@ -661,7 +661,7 @@ function NewAssetContent() {
                                                                 onClick={() => handleInputChange("buildingRules", formData.buildingRules.filter((_, i) => i !== index))}
                                                                 className="text-white/20 hover:text-red-400 transition-colors"
                                                             >
-                                                                <X className="w-3.5 h-3.5" />
+                                                                <X className="size-3.5" />
                                                             </button>
                                                         </div>
                                                     ))}
@@ -749,7 +749,7 @@ function NewAssetContent() {
                                                     <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Lease Management Method</h3>
                                                 </div>
                                                 <div className="flex items-center gap-1.5 px-2 py-1 bg-primary/5 border border-primary/20 rounded-lg">
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                                                    <div className="size-1.5 rounded-full bg-primary animate-pulse" />
                                                     <span className="text-[8px] font-black text-primary uppercase tracking-widest">Global Preference</span>
                                                 </div>
                                             </div>

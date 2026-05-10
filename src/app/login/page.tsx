@@ -132,19 +132,19 @@ function LoginContent() {
                             </p>
                             <Link href="/about" className="inline-flex items-center gap-2 text-sm font-black uppercase tracking-widest text-primary hover:gap-3 transition-all group">
                                 Learn more about iReside
-                                <ArrowRight className="h-4 w-4" />
+                                <ArrowRight className="size-4" />
                             </Link>
                         </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4 max-w-lg pt-4">
                         <div className="p-6 rounded-[2rem] bg-surface-1/30 border border-border/50 backdrop-blur-sm">
-                            <ShieldCheck className="h-8 w-8 text-primary mb-4" />
+                            <ShieldCheck className="size-8 text-primary mb-4" />
                             <h3 className="font-semibold text-foreground">Secure Access</h3>
                             <p className="text-xs text-muted-foreground mt-1">Reliable and secure digital protection.</p>
                         </div>
                         <div className="p-6 rounded-[2rem] bg-surface-1/30 border border-border/50 backdrop-blur-sm">
-                            <ArrowRight className="h-8 w-8 text-primary mb-4" />
+                            <ArrowRight className="size-8 text-primary mb-4" />
                             <h3 className="font-semibold text-foreground">Smart Flows</h3>
                             <p className="text-xs text-muted-foreground mt-1">Operational excellence at your fingertips.</p>
                         </div>
@@ -168,7 +168,7 @@ function LoginContent() {
                                     exit={{ opacity: 0, height: 0 }}
                                     className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 flex gap-3 overflow-hidden"
                                 >
-                                    <ShieldCheck className="h-5 w-5 text-red-500 shrink-0" />
+                                    <ShieldCheck className="size-5 text-red-500 shrink-0" />
                                     <p className="text-xs font-bold text-red-600 dark:text-red-400">{error}</p>
                                 </motion.div>
                             )}
@@ -206,7 +206,7 @@ function LoginContent() {
                                             onClick={() => setIsPasswordVisible(!isPasswordVisible)}
                                             className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
                                         >
-                                            <Eye className={cn("h-5 w-5", isPasswordVisible && "text-primary")} />
+                                            <Eye className={cn("size-5", isPasswordVisible && "text-primary")} />
                                         </button>
                                     </div>
                                 </div>
@@ -218,7 +218,7 @@ function LoginContent() {
                                 className="h-14 w-full rounded-2xl bg-primary font-black text-primary-foreground text-base shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
                             >
                                 {loading ? "Authenticating..." : "Sign into Account"}
-                                {!loading && <ArrowRight className="h-5 w-5" />}
+                                {!loading && <ArrowRight className="size-5" />}
                             </button>
                         </form>
 
@@ -233,7 +233,7 @@ function LoginContent() {
                             onClick={handleGoogleLogin}
                             className="h-14 w-full flex items-center justify-center gap-4 rounded-2xl border border-border bg-background/50 hover:bg-surface-1 transition-all font-black text-sm active:scale-[0.98]"
                         >
-                            <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="h-6 w-6" alt="Google" />
+                            <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="size-6" alt="Google" />
                             Google Account
                         </button>
 
@@ -251,15 +251,15 @@ function LoginContent() {
                                     className="flex items-center justify-between p-4 rounded-2xl bg-surface-1/50 border border-border hover:border-primary/50 hover:bg-primary/5 transition-all group"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                                            <Building2 className="h-5 w-5" />
+                                        <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                                            <Building2 className="size-5" />
                                         </div>
                                         <div className="flex flex-col text-left">
                                             <span className="text-[10px] font-black uppercase tracking-widest text-primary/70 leading-none mb-1">Landlord</span>
                                             <span className="text-sm font-black">Register</span>
                                         </div>
                                     </div>
-                                    <ArrowUpRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                                    <ArrowUpRight className="size-4 text-muted-foreground group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                                 </Link>
 
                                 <div className="relative group/hint">
@@ -268,21 +268,21 @@ function LoginContent() {
                                         className="flex items-center justify-between p-4 rounded-2xl bg-surface-1/50 border border-border hover:border-primary/50 hover:bg-primary/5 transition-all group overflow-hidden"
                                     >
                                         <div className="flex items-center gap-3">
-                                            <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                                                <UserCircle className="h-5 w-5" />
+                                            <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                                                <UserCircle className="size-5" />
                                             </div>
                                             <div className="flex flex-col text-left">
                                                 <div className="flex items-center gap-1.5 mb-1">
                                                     <span className="text-[10px] font-black uppercase tracking-widest text-primary/70 leading-none">Resident</span>
                                                     <div className="flex items-center gap-1">
                                                         <span className="text-[8px] font-black bg-amber-500/10 text-amber-600 px-1.5 py-0.5 rounded-full border border-amber-500/10">Private</span>
-                                                        <Info className="h-2.5 w-2.5 text-amber-600/50" />
+                                                        <Info className="size-2.5 text-amber-600/50" />
                                                     </div>
                                                 </div>
                                                 <span className="text-sm font-black">Join</span>
                                             </div>
                                         </div>
-                                        <ArrowUpRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                                        <ArrowUpRight className="size-4 text-muted-foreground group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                                     </Link>
                                     
                                     {/* Hint Tooltip */}

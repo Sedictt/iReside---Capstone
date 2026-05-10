@@ -389,7 +389,7 @@ export function ActionRequired() {
                                         <div className="size-12 rounded-xl bg-muted/40" />
                                         <div className="flex-1 space-y-3">
                                             <div className="h-4 w-1/4 rounded bg-muted/40" />
-                                            <div className="h-3 w-3/4 rounded bg-muted/40" />
+                                            <div className="size-3/4 rounded bg-muted/40" />
                                         </div>
                                     </div>
                                 </div>

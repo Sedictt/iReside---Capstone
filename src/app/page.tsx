@@ -627,7 +627,7 @@ export default function ScrollyTellingLandingPage() {
                             <span className="relative z-10 md:hidden">
                                 {user ? "Dashboard" : "Login"}
                             </span>
-                        <ChevronRight className="h-4 w-4 relative z-10 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                        <ChevronRight className="size-4 relative z-10 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
                     </TransitionLink></div>
                 </div>
             </nav>
@@ -642,7 +642,7 @@ export default function ScrollyTellingLandingPage() {
                         </h1>
                     <p className="text-lg md:text-2xl text-muted-foreground max-w-2xl mx-auto font-medium mb-8">Run your rentals with less friction, stronger security, and predictable cash flow.</p>
                     <TransitionLink href="/signup" className="group relative inline-flex items-center justify-center h-16 px-10 rounded-full bg-primary text-primary-foreground font-black text-lg transition-all hover:scale-105 shadow-[0_0_40px_rgba(109,152,56,0.3)]">
-                        Request Access <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1.5 transition-transform" />
+                        Request Access <ArrowRight className="ml-2 size-5 group-hover:translate-x-1.5 transition-transform" />
                     </TransitionLink>
                 </motion.div>
                 <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
@@ -669,14 +669,14 @@ export default function ScrollyTellingLandingPage() {
                                 <div className="absolute -top-40 -right-40 w-[400px] h-[400px] rounded-full blur-[80px] opacity-20 bg-gradient-to-br from-primary/20 to-transparent" />
                                 <div>
                                     <div className="flex justify-between mb-8">
-                                        <div className="h-16 w-16 rounded-2xl bg-muted flex items-center justify-center"><feature.icon className={cn("h-7 w-7", feature.accent)} /></div>
+                                        <div className="size-16 rounded-2xl bg-muted flex items-center justify-center"><feature.icon className={cn("size-7", feature.accent)} /></div>
                                         <span className="text-muted-foreground font-black text-6xl opacity-10">0{i + 1}</span>
                                     </div>
                                     <h3 className="text-4xl md:text-5xl font-black mb-4">{feature.title}</h3>
                                     <p className="text-xl text-muted-foreground font-medium">{feature.desc}</p>
                                 </div>
                                 <div className="mt-8 pt-8 border-t border-border/50 grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
-                                    <ul className="space-y-3">{feature.highlights.map(h => <li key={h} className="flex items-center gap-2 text-[15px]"><span className="h-1.5 w-1.5 rounded-full bg-primary" />{h}</li>)}</ul>
+                                    <ul className="space-y-3">{feature.highlights.map(h => <li key={h} className="flex items-center gap-2 text-[15px]"><span className="size-1.5 rounded-full bg-primary" />{h}</li>)}</ul>
                                     <div className="rounded-2xl border border-primary/30 bg-primary/10 p-4 text-center">
                                         <p className="text-3xl font-black text-primary">{feature.metric}</p>
                                         <p className="text-xs text-muted-foreground mt-1">{feature.metricLabel}</p>
@@ -699,15 +699,15 @@ export default function ScrollyTellingLandingPage() {
                     <div key={mod.id} className="showcase-card absolute inset-0 flex items-center justify-center p-6 bg-background border-t border-border shadow-2xl" style={{ zIndex: i + 1 }}>
                         <div className="max-w-7xl w-full flex flex-col items-center text-center mt-12">
                             <div className="module-body flex flex-col items-center">
-                                <div className={cn("h-16 w-16 rounded-2xl flex items-center justify-center mb-8 shadow-xl", mod.color)}>
-                                    <mod.icon className="h-8 w-8 text-white" />
+                                <div className={cn("size-16 rounded-2xl flex items-center justify-center mb-8 shadow-xl", mod.color)}>
+                                    <mod.icon className="size-8 text-white" />
                                 </div>
                                 <h2 className="text-4xl md:text-6xl font-black mb-6 tracking-tight">{mod.title}</h2>
                                 <p className="text-xl md:text-2xl text-muted-foreground font-medium mb-8 leading-relaxed max-w-2xl">
                                     {mod.desc}
                                 </p>
                                 <TransitionLink href={mod.href} className="module-cta inline-flex items-center gap-2 rounded-full border border-primary bg-primary/10 px-8 py-4 font-black text-primary uppercase text-sm hover:bg-primary/20 transition-all">
-                                    Explore Module <ChevronRight className="h-4 w-4" />
+                                    Explore Module <ChevronRight className="size-4" />
                                 </TransitionLink>
                             </div>
                         </div>
@@ -726,7 +726,7 @@ export default function ScrollyTellingLandingPage() {
                             <div className="grid grid-cols-1 gap-4 max-w-lg">
                                 {IRIS_WORKFLOWS.map((item) => (
                                     <article key={item.title} className="iris-card rounded-2xl border border-primary/20 bg-background/50 p-5 flex items-center gap-4">
-                                        <div className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center"><item.icon className="h-5 w-5 text-primary" /></div>
+                                        <div className="size-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center"><item.icon className="size-5 text-primary" /></div>
                                         <div><h3 className="text-lg font-semibold">{item.title}</h3><p className="text-sm text-muted-foreground mt-1">{item.detail}</p></div>
                                     </article>
                                 ))}
@@ -761,7 +761,7 @@ export default function ScrollyTellingLandingPage() {
                         <div className="grid gap-12 outcomes-right-track lg:absolute lg:inset-x-0 lg:top-0">
                             {OUTCOMES.map(o => (
                                 <article key={o.label} className="outcome-item p-8 border-l-4 border-primary/30 bg-muted/20 rounded-r-3xl">
-                                    <div className="flex items-center gap-4 mb-4"><span className="outcome-metric-value text-6xl font-black">{o.metric}</span><CheckCircle2 className="h-8 w-8 text-primary" /></div>
+                                    <div className="flex items-center gap-4 mb-4"><span className="outcome-metric-value text-6xl font-black">{o.metric}</span><CheckCircle2 className="size-8 text-primary" /></div>
                                     <h3 className="text-2xl font-semibold text-primary">{o.label}</h3><p className="text-lg text-muted-foreground mt-2">{o.detail}</p>
                                 </article>
                             ))}
@@ -779,7 +779,7 @@ export default function ScrollyTellingLandingPage() {
                     <div className="cta-reveal mt-20 cta-panel-wrapper border border-border bg-card p-12 rounded-[3rem] shadow-2xl relative overflow-hidden">
                         <p className="text-xl text-muted-foreground mb-10">Application review usually completes within two business days.</p>
                         <div className="flex flex-col sm:flex-row gap-6 justify-center">
-                            <TransitionLink href="/signup" className="h-20 px-12 rounded-full bg-primary text-white font-black text-xl flex items-center justify-center hover:scale-105 transition-transform">Request Access <ArrowRight className="ml-3 h-6 w-6" /></TransitionLink>
+                            <TransitionLink href="/signup" className="h-20 px-12 rounded-full bg-primary text-white font-black text-xl flex items-center justify-center hover:scale-105 transition-transform">Request Access <ArrowRight className="ml-3 size-6" /></TransitionLink>
                         </div>
                     </div>
                 </div>
@@ -801,7 +801,7 @@ export default function ScrollyTellingLandingPage() {
                     }
                     gsap.to(window, { scrollTo: 0, duration: 1.5, ease: "power4.inOut" });
                 }}
-                className="fixed bottom-10 right-10 z-[100] group flex items-center justify-center h-16 w-16 rounded-full bg-background/40 backdrop-blur-md border border-primary/20 shadow-2xl transition-transform hover:scale-110 active:scale-95 overflow-visible"
+                className="fixed bottom-10 right-10 z-[100] group flex items-center justify-center size-16 rounded-full bg-background/40 backdrop-blur-md border border-primary/20 shadow-2xl transition-transform hover:scale-110 active:scale-95 overflow-visible"
                 aria-label="Scroll to top"
             >
                 {/* Ripple Effect */}
@@ -822,7 +822,7 @@ export default function ScrollyTellingLandingPage() {
 
                 {/* Fun Icon Container */}
                 <div className="relative z-10 flex flex-col items-center">
-                    <ArrowRight className="arrow-icon h-6 w-6 -rotate-90 text-primary transition-colors group-hover:text-primary-dark" />
+                    <ArrowRight className="arrow-icon size-6 -rotate-90 text-primary transition-colors group-hover:text-primary-dark" />
                     <div className="absolute -bottom-8 opacity-0 group-hover:opacity-100 transition-all duration-300">
                         <span className="text-[10px] font-black uppercase tracking-widest text-primary">Top</span>
                     </div>
@@ -842,7 +842,7 @@ export default function ScrollyTellingLandingPage() {
                             <div className="flex flex-col gap-5">
                                 <Logo className="h-10 w-auto" />
                                 <div className="flex items-center gap-2">
-                                    <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                    <div className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500/80">Systems Operational</span>
                                 </div>
                             </div>
@@ -851,9 +851,9 @@ export default function ScrollyTellingLandingPage() {
                             </p>
                             <div className="flex items-center gap-3">
                                 {[Github, Mail].map((Icon, i) => (
-                                    <a key={i} href="#" className="h-12 w-12 rounded-2xl border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all group shadow-sm">
-                                        <Icon className="h-5 w-5 transition-transform group-hover:scale-110" />
-                                    </a>
+                                    <button key={i} className="size-12 rounded-2xl border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all group shadow-sm cursor-pointer bg-transparent">
+                                        <Icon className="size-5 transition-transform group-hover:scale-110" />
+                                    </button>
                                 ))}
                             </div>
                         </div>
@@ -902,14 +902,14 @@ export default function ScrollyTellingLandingPage() {
                         <div className="flex flex-col md:flex-row items-center gap-6 md:gap-12">
                             <p className="text-[13px] font-bold text-muted-foreground/60">© 2026 iReside Technologies Inc.</p>
                             <div className="flex items-center gap-8 text-[13px] font-bold text-muted-foreground/80">
-                                <a href="#" className="hover:text-primary transition-colors">Privacy Policy</a>
-                                <a href="#" className="hover:text-primary transition-colors">Terms of Service</a>
+                                <button className="hover:text-primary transition-colors cursor-pointer bg-transparent border-0 p-0">Privacy Policy</button>
+                                <button className="hover:text-primary transition-colors cursor-pointer bg-transparent border-0 p-0">Terms of Service</button>
                             </div>
                         </div>
                         
                         <div className="flex items-center gap-4 px-6 py-3 rounded-2xl border border-primary/20 bg-primary/5 backdrop-blur-sm group cursor-default shadow-sm hover:border-primary/40 transition-colors">
                             <div className="relative">
-                                <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+                                <Sparkles className="size-4 text-primary animate-pulse" />
                                 <div className="absolute inset-0 bg-primary blur-lg opacity-20 group-hover:opacity-40 transition-opacity" />
                             </div>
                             <div className="flex flex-col">

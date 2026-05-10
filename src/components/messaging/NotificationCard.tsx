@@ -129,9 +129,9 @@ export function NotificationCard({
                         </div>
                         <div className={cn(
                             "bg-primary/20 rounded-xl flex items-center justify-center border border-primary/30 shadow-inner",
-                            isCompact ? "h-9 w-9" : "h-12 w-12"
+                            isCompact ? "size-9" : "size-12"
                         )}>
-                            <Wallet className={cn(isCompact ? "h-4 w-4" : "h-5 w-5", "text-primary")} />
+                            <Wallet className={cn(isCompact ? "size-4" : "size-5", "text-primary")} />
                         </div>
                     </div>
                 )}
@@ -228,7 +228,7 @@ export function NotificationCard({
                             "relative z-10 rounded-full bg-black/10 flex items-center justify-center",
                             isCompact ? "size-4" : "size-5"
                         )}>
-                            <Zap className={cn(isCompact ? "size-3" : "w-3.5 h-3.5", "fill-current")} />
+                            <Zap className={cn(isCompact ? "size-3" : "size-3.5", "fill-current")} />
                         </div>
                     </motion.button>
                 )}

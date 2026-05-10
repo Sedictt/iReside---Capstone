@@ -1,6 +1,6 @@
 "use client";
 
-import { Lock, Check } from "lucide-react";
+import { Lock, Check, PenTool, FileText } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/Logo";
@@ -23,7 +23,7 @@ export function LeaseHeader({ currentStep, steps, leaseId }: LeaseHeaderProps) {
                     </div>
 
                     <div className="flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-400 border border-emerald-500/20">
-                        <Lock className="h-3 w-3" />
+                        <PenTool className="size-5" />
                         <span>Secure Connection</span>
                     </div>
                 </div>
@@ -40,7 +40,7 @@ export function LeaseHeader({ currentStep, steps, leaseId }: LeaseHeaderProps) {
                                 <div className="flex items-center gap-2">
                                     <div
                                         className={cn(
-                                            "flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium transition-colors",
+                                            "flex size-6 items-center justify-center rounded-full text-xs font-medium transition-colors",
                                             isActive
                                                 ? "bg-blue-600 text-white"
                                                 : isCompleted
@@ -48,7 +48,7 @@ export function LeaseHeader({ currentStep, steps, leaseId }: LeaseHeaderProps) {
                                                     : "bg-zinc-700 text-zinc-400"
                                         )}
                                     >
-                                        {isCompleted ? <Check className="h-3 w-3" /> : step.id}
+                                        {isCompleted ? <FileText className="size-5" /> : step.id}
                                     </div>
                                     <span
                                         className={cn(
@@ -73,7 +73,7 @@ export function LeaseHeader({ currentStep, steps, leaseId }: LeaseHeaderProps) {
                         <p className="text-xs text-zinc-400 uppercase tracking-wider">Lease ID</p>
                         <p className="text-sm font-medium text-white">{leaseId}</p>
                     </div>
-                    <div className="h-10 w-10 overflow-hidden rounded-full ring-2 ring-slate-700">
+                    <div className="size-10 overflow-hidden rounded-full ring-2 ring-slate-700">
                         {/* Placeholder Avatar */}
                         <div className="flex h-full w-full items-center justify-center bg-zinc-600 font-bold text-white">
                             AR

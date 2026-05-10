@@ -412,7 +412,7 @@ export function DashboardBanner({
                 <div className="relative">
                     <button
                         onClick={() => setIsNotificationsOpen((current) => !current)}
-                        className="group relative flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-surface-2 backdrop-blur-xl transition-all hover:bg-surface-3 active:scale-95"
+                        className="group relative flex size-11 items-center justify-center rounded-2xl border border-white/10 bg-surface-2 backdrop-blur-xl transition-all hover:bg-surface-3 active:scale-95"
                     >
                         <Bell className="size-5 text-muted-foreground transition-colors group-hover:text-foreground" />
                         {unreadCount > 0 && (

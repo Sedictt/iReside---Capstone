@@ -551,7 +551,7 @@ const ComplaintModal = ({
 
                         <div className="p-8 pb-4">
                             <div className="flex items-center gap-4 mb-6">
-                                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-500">
+                                <div className="flex size-14 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-500">
                                     <span className="material-icons-round text-3xl">report_problem</span>
                                 </div>
                                 <div>
@@ -808,7 +808,7 @@ const TransferRequestModal = ({
 
                         <div className="p-8">
                             <div className="flex items-center gap-4 mb-8">
-                                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                                <div className="flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                                     <span className="material-icons-round text-3xl">move_down</span>
                                 </div>
                                 <div>
@@ -3147,7 +3147,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                     <div>
                         <h1 className={`text-sm font-semibold ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{propertyContext?.selectedProperty?.name || "All Properties"}</h1>
                         <div className={`flex items-center gap-1 text-xs ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
-                            <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                            <span className="size-1.5 rounded-full bg-green-500"></span>
                             <span>All systems operational</span>
                         </div>
                     </div>
@@ -3186,7 +3186,6 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                 className="flex items-center mx-1"
                             >
                                 <input
-                                    autoFocus
                                     type="text"
                                     value={editingFloorName}
                                     onChange={(e) => setEditingFloorName(e.target.value)}
@@ -3238,7 +3237,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                 </button>
                             )}
                             <div className={`flex items-center border rounded-md px-2 py-1 h-7 ${isDark ? 'bg-zinc-900 border-zinc-700' : 'bg-white border-border shadow-sm'}`} title={`${activeFloorItemCount} items on this floor`}>
-                                <span className="w-1.5 h-1.5 rounded-full bg-primary/80 mr-2"></span>
+                                <span className="size-1.5 rounded-full bg-primary/80 mr-2"></span>
                                 <span className={`text-xs font-mono font-bold ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>
                                     {activeFloorItemCount}
                                 </span>
@@ -3972,7 +3971,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                 }`}></div>
 
                                             <div className="absolute inset-0 flex flex-col items-center justify-center p-2 z-20">
-                                                <div className={`w-2.5 h-2.5 rounded-full mb-2 shadow-[0_0_10px_rgba(255,255,255,0.9)] ${unit.status === 'occupied' ? 'bg-status-occupied' :
+                                                <div className={`size-2.5 rounded-full mb-2 shadow-[0_0_10px_rgba(255,255,255,0.9)] ${unit.status === 'occupied' ? 'bg-status-occupied' :
                                                     unit.status === 'vacant' ? 'bg-status-vacant' :
                                                         unit.status === 'maintenance' ? 'bg-status-maintenance' : 'bg-status-due'
                                                     }`}></div>
@@ -3990,7 +3989,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                 )}
                                             </div>
 
-                                            <div className={`absolute bottom-0 right-0 h-3 w-3 cursor-nwse-resize rounded-br-sm border-b-2 border-r-2 opacity-0 group-hover:opacity-100 ${isDark ? 'border-neutral-500' : 'border-zinc-400'}`}></div>
+                                            <div className={`absolute bottom-0 right-0 size-3 cursor-nwse-resize rounded-br-sm border-b-2 border-r-2 opacity-0 group-hover:opacity-100 ${isDark ? 'border-neutral-500' : 'border-zinc-400'}`}></div>
                                         </div>
                                         {draggingUnitId === unit.id && dragPlacement?.kind === "unit" && dragPlacement.id === unit.id && (
                                             <>
@@ -4076,7 +4075,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                 onClick={() => toggleStatusFilter("vacant")}
                                                 className={`flex items-center gap-2.5 group transition-all hover:scale-105 ${statusFilters.includes("vacant") ? 'opacity-100' : 'opacity-40'}`}
                                             >
-                                                <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition-all ${statusFilters.includes("vacant") ? 'bg-emerald-500 border-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-transparent border-white/30'}`}>
+                                                <div className={`size-3.5 rounded border flex items-center justify-center transition-all ${statusFilters.includes("vacant") ? 'bg-emerald-500 border-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-transparent border-white/30'}`}>
                                                     {statusFilters.includes("vacant") && <span className="material-icons-round text-[10px] text-white">check</span>}
                                                 </div>
                                                 <span className="text-[9px] font-black text-white/90 uppercase tracking-[0.1em]">Available</span>
@@ -4085,7 +4084,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                 onClick={() => toggleStatusFilter("occupied")}
                                                 className={`flex items-center gap-2.5 group transition-all hover:scale-105 ${statusFilters.includes("occupied") ? 'opacity-100' : 'opacity-40'}`}
                                             >
-                                                <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition-all ${statusFilters.includes("occupied") ? 'bg-blue-500 border-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]' : 'bg-transparent border-white/30'}`}>
+                                                <div className={`size-3.5 rounded border flex items-center justify-center transition-all ${statusFilters.includes("occupied") ? 'bg-blue-500 border-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]' : 'bg-transparent border-white/30'}`}>
                                                     {statusFilters.includes("occupied") && <span className="material-icons-round text-[10px] text-white">check</span>}
                                                 </div>
                                                 <span className="text-[9px] font-black text-white/90 uppercase tracking-[0.1em]">Occupied</span>
@@ -4094,7 +4093,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                 onClick={() => toggleStatusFilter("maintenance")}
                                                 className={`flex items-center gap-2.5 group transition-all hover:scale-105 ${statusFilters.includes("maintenance") ? 'opacity-100' : 'opacity-40'}`}
                                             >
-                                                <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition-all ${statusFilters.includes("maintenance") ? 'bg-rose-500 border-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]' : 'bg-transparent border-white/30'}`}>
+                                                <div className={`size-3.5 rounded border flex items-center justify-center transition-all ${statusFilters.includes("maintenance") ? 'bg-rose-500 border-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]' : 'bg-transparent border-white/30'}`}>
                                                     {statusFilters.includes("maintenance") && <span className="material-icons-round text-[10px] text-white">check</span>}
                                                 </div>
                                                 <span className="text-[9px] font-black text-white/90 uppercase tracking-[0.1em]">Maintenance</span>
@@ -4103,7 +4102,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                 onClick={() => toggleStatusFilter("neardue")}
                                                 className={`flex items-center gap-2.5 group transition-all hover:scale-105 ${statusFilters.includes("neardue") ? 'opacity-100' : 'opacity-40'}`}
                                             >
-                                                <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition-all ${statusFilters.includes("neardue") ? 'bg-amber-500 border-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]' : 'bg-transparent border-white/30'}`}>
+                                                <div className={`size-3.5 rounded border flex items-center justify-center transition-all ${statusFilters.includes("neardue") ? 'bg-amber-500 border-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]' : 'bg-transparent border-white/30'}`}>
                                                     {statusFilters.includes("neardue") && <span className="material-icons-round text-[10px] text-white">check</span>}
                                                 </div>
                                                 <span className="text-[9px] font-black text-white/90 uppercase tracking-[0.1em]">Near Due</span>
@@ -4468,7 +4467,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                 className={`w-full max-w-md rounded-[32px] border shadow-2xl overflow-hidden ${isDark ? 'border-zinc-800 bg-zinc-900' : 'border-zinc-200 bg-white'}`}
                             >
                                 <div className="p-8">
-                                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-500 mb-6">
+                                    <div className="flex size-14 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-500 mb-6">
                                         <span className="material-icons-round text-3xl">ink_eraser</span>
                                     </div>
                                     <h3 className={`text-2xl font-black tracking-tight ${isDark ? 'text-white' : 'text-zinc-900'}`}>Clear entire floor?</h3>
@@ -4508,7 +4507,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                 className={`w-full max-w-md overflow-hidden rounded-3xl border shadow-2xl ${isDark ? 'border-amber-500/20 bg-zinc-900 shadow-amber-500/10' : 'border-amber-200 bg-white shadow-amber-500/10'}`}
                             >
                                 <div className="p-8 pb-6">
-                                    <div className={`mb-6 flex h-16 w-16 items-center justify-center rounded-2xl ${isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-600'}`}>
+                                    <div className={`mb-6 flex size-16 items-center justify-center rounded-2xl ${isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-600'}`}>
                                         <span className="material-icons-round text-3xl">auto_awesome_mosaic</span>
                                     </div>
                                     <h3 className={`text-2xl font-black tracking-tight ${isDark ? 'text-white' : 'text-zinc-900'}`}>Apply Layout Preset?</h3>
@@ -4717,7 +4716,7 @@ const StructureDetailsPanel = ({
                         whileHover={{ scale: 1.05, rotate: 90 }}
                         whileTap={{ scale: 0.9 }}
                         onClick={onClose}
-                        className="flex h-9 w-9 items-center justify-center rounded-full border border-white/40 bg-white/20 text-zinc-900 shadow-lg shadow-black/5 backdrop-blur-md transition-all hover:bg-white/40 dark:border-white/10 dark:bg-black/40 dark:text-zinc-100 dark:hover:bg-black/60"
+                        className="flex size-9 items-center justify-center rounded-full border border-white/40 bg-white/20 text-zinc-900 shadow-lg shadow-black/5 backdrop-blur-md transition-all hover:bg-white/40 dark:border-white/10 dark:bg-black/40 dark:text-zinc-100 dark:hover:bg-black/60"
                     >
                         <span className="material-icons-round text-lg">close</span>
                     </motion.button>
@@ -4921,7 +4920,7 @@ const UnitDetailsPanel = ({
                         whileHover={{ scale: 1.05, rotate: 90 }}
                         whileTap={{ scale: 0.9 }}
                         onClick={onClose}
-                        className="flex h-9 w-9 items-center justify-center rounded-full border border-white/40 bg-white/20 text-zinc-900 shadow-lg shadow-black/5 backdrop-blur-md transition-all hover:bg-white/40 dark:border-white/10 dark:bg-black/40 dark:text-zinc-100 dark:hover:bg-black/60"
+                        className="flex size-9 items-center justify-center rounded-full border border-white/40 bg-white/20 text-zinc-900 shadow-lg shadow-black/5 backdrop-blur-md transition-all hover:bg-white/40 dark:border-white/10 dark:bg-black/40 dark:text-zinc-100 dark:hover:bg-black/60"
                     >
                         <span className="material-icons-round text-lg">close</span>
                     </motion.button>
@@ -4935,7 +4934,7 @@ const UnitDetailsPanel = ({
                         className="mb-1 flex items-center gap-2"
                     >
                         <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary dark:text-primary-400">UNIT {unit.id}</span>
-                        <div className="h-1 w-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
+                        <div className="size-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
                         <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{unit.type}</span>
                     </motion.div>
                     
@@ -4949,7 +4948,7 @@ const UnitDetailsPanel = ({
                             <span className="text-[11px] font-bold tracking-wide text-zinc-800 dark:text-zinc-100 uppercase">{unitLayoutLabel}</span>
                         </div>
                         <div className={`flex items-center gap-1.5 rounded-xl border border-white/50 bg-white/40 px-3.5 py-2 backdrop-blur-lg shadow-sm dark:border-white/10 dark:bg-black/40`}>
-                            <div className={`h-2 w-2 rounded-full animate-pulse ${
+                            <div className={`size-2 rounded-full animate-pulse ${
                                 unit.status === 'occupied' ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]' :
                                 unit.status === 'vacant' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' :
                                 unit.status === 'maintenance' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' :
@@ -5018,7 +5017,7 @@ const UnitDetailsPanel = ({
                             >
                                 <div className="flex items-center gap-5">
                                     <div className="relative">
-                                        <div className="relative h-16 w-16 rounded-[22px] border-2 border-primary/20 p-1 transition-transform group-hover:scale-105">
+                                        <div className="relative size-16 rounded-[22px] border-2 border-primary/20 p-1 transition-transform group-hover:scale-105">
                                             <div className="h-full w-full overflow-hidden rounded-[18px] bg-zinc-100 dark:bg-zinc-800" style={unit.tenantAvatarBgColor ? { backgroundColor: unit.tenantAvatarBgColor } : undefined}>
                                                 {unit.tenantAvatarUrl ? (
                                                     <img
@@ -5041,7 +5040,7 @@ const UnitDetailsPanel = ({
                                         <p className="text-xl font-black tracking-tight text-zinc-900 dark:text-white">{unit.tenant || "VACANT UNIT"}</p>
                                         <div className="mt-1 flex items-center gap-2">
                                             <span className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">{unit.tenant ? "Active Tenant" : "Ready for Move-in"}</span>
-                                            <div className="h-1 w-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
+                                            <div className="size-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
                                             <span className="text-[11px] font-bold text-primary tracking-wide">ID-{unit.id.slice(0, 5).toUpperCase()}</span>
                                         </div>
                                     </div>
@@ -5111,7 +5110,7 @@ const UnitDetailsPanel = ({
                             </motion.button>
 
                             <div className="group relative overflow-hidden rounded-[32px] border border-indigo-500/20 bg-indigo-500/5 p-6 shadow-xl shadow-indigo-500/5 dark:bg-indigo-950/20">
-                                <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-indigo-500/10 blur-2xl transition-all group-hover:bg-indigo-500/20" />
+                                <div className="absolute -right-4 -top-4 size-24 rounded-full bg-indigo-500/10 blur-2xl transition-all group-hover:bg-indigo-500/20" />
                                 <div className="flex items-center justify-between mb-4">
                                     <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-400">INVITE RESIDENT</h3>
                                     <div className="flex size-8 items-center justify-center rounded-xl bg-indigo-500 text-white">
@@ -5143,7 +5142,7 @@ const UnitDetailsPanel = ({
                                 animate={{ x: 0, opacity: 1 }}
                                 className="group relative overflow-hidden rounded-[32px] border border-rose-500/30 bg-rose-50 p-6 shadow-xl shadow-rose-500/5 dark:bg-rose-950/20"
                             >
-                                <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-rose-500/10 blur-2xl transition-all group-hover:bg-rose-500/20" />
+                                <div className="absolute -right-4 -top-4 size-24 rounded-full bg-rose-500/10 blur-2xl transition-all group-hover:bg-rose-500/20" />
                                 <div className="flex items-start gap-5">
                                     <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-rose-500 text-white shadow-lg shadow-rose-500/30">
                                         <span className="material-icons-round animate-pulse text-2xl">engineering</span>
@@ -5158,7 +5157,7 @@ const UnitDetailsPanel = ({
                                         </p>
                                         <div className="mt-3 flex items-center gap-2">
                                             <span className="text-[11px] font-bold text-rose-500/80">Reported {maintenanceOpenedDate ? maintenanceOpenedDate.toLocaleDateString() : "recently"}</span>
-                                            <div className="h-1 w-1 rounded-full bg-rose-300 dark:bg-rose-700" />
+                                            <div className="size-1 rounded-full bg-rose-300 dark:bg-rose-700" />
                                             <span className="text-[11px] font-bold text-rose-500/80">Status: {unit.maintenanceStatus?.toUpperCase() || "OPEN"}</span>
                                         </div>
                                     </div>
@@ -5679,7 +5678,7 @@ const SidebarBlockLibrary = ({
                             onDragEnd={handleSidebarBlockDragEnd}
                         >
                             <div className={`relative flex size-8 items-center justify-center rounded-full ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-zinc-400 bg-zinc-200'}`}>
-                                <div className={`h-2 w-2 rounded-full ${isDark ? 'border border-neutral-400' : 'border border-zinc-400'}`}></div>
+                                <div className={`size-2 rounded-full ${isDark ? 'border border-neutral-400' : 'border border-zinc-400'}`}></div>
                                 {[0, 45, 90, 135, 180, 225, 270, 315].map(deg => (
                                     <div key={deg} className={`absolute inset-0 border-t ${isDark ? 'border-neutral-400/50' : 'border-zinc-400/50'}`} style={{ transform: `rotate(${deg}deg)` }}></div>
                                 ))}

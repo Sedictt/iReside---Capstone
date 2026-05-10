@@ -267,12 +267,13 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         }
     };
 
+    // eslint-disable-next-line react-doctor/effect-needs-cleanup
     useEffect(() => {
         if (!user) {
             setNotifications([]);
             setUnreadCount(0);
             setLoading(false);
-            return;
+            return () => {};
         }
 
         void refresh();

@@ -23,7 +23,7 @@ export function CommunityPropertyGate() {
             <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-100 via-background to-emerald-100/40 px-6 text-foreground dark:from-[#06070b] dark:via-[#0d1118] dark:to-[#08221a]">
                 <div className="w-full max-w-xl rounded-3xl border border-border/60 bg-card/85 p-8 shadow-2xl backdrop-blur">
                     <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/70 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        <Building2 className="h-3.5 w-3.5" />
+                        <Building2 className="size-3.5" />
                         Community Hub
                     </div>
                     <h1 className="text-3xl font-display text-foreground">Set up a property first</h1>
@@ -45,9 +45,9 @@ export function CommunityPropertyGate() {
     return (
         <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-100 via-background to-emerald-100/40 text-foreground dark:from-[#06070b] dark:via-[#0d1118] dark:to-[#08221a]">
             <div className="pointer-events-none absolute inset-0 overflow-hidden">
-                <div className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-emerald-500/20 blur-3xl dark:bg-emerald-400/20" />
-                <div className="absolute top-24 right-0 h-80 w-80 rounded-full bg-sky-500/20 blur-3xl dark:bg-sky-400/20" />
-                <div className="absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-primary/20 blur-3xl" />
+                <div className="absolute -top-24 -left-24 size-72 rounded-full bg-emerald-500/20 blur-3xl dark:bg-emerald-400/20" />
+                <div className="absolute top-24 right-0 size-80 rounded-full bg-sky-500/20 blur-3xl dark:bg-sky-400/20" />
+                <div className="absolute bottom-0 left-1/3 size-72 rounded-full bg-primary/20 blur-3xl" />
             </div>
 
             <div className="relative mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-12 lg:px-10 lg:py-16">
@@ -58,7 +58,7 @@ export function CommunityPropertyGate() {
                     className="mb-10 max-w-3xl"
                 >
                     <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/70 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground backdrop-blur">
-                        <Sparkles className="h-3.5 w-3.5 text-emerald-500" />
+                        <Sparkles className="size-3.5 text-emerald-500" />
                         Choose a Property
                     </div>
                     <h1 className="text-4xl font-display leading-tight text-foreground md:text-6xl">
@@ -99,7 +99,7 @@ export function CommunityPropertyGate() {
                                     )}
                                     <div className="absolute inset-0 bg-gradient-to-t from-card/90 via-card/20 to-transparent dark:from-[#0b1117]/95" />
                                     <div className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full border border-white/30 bg-black/25 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-white backdrop-blur">
-                                        <Megaphone className="h-3.5 w-3.5" />
+                                        <Megaphone className="size-3.5" />
                                         Community
                                     </div>
                                 </div>
@@ -108,7 +108,7 @@ export function CommunityPropertyGate() {
                                     <div>
                                         <h2 className="line-clamp-1 text-xl font-display text-foreground">{property.name}</h2>
                                         <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
-                                            <MapPin className="h-3.5 w-3.5" />
+                                            <MapPin className="size-3.5" />
                                             <span className="line-clamp-1">{property.address || "Address unavailable"}</span>
                                         </p>
                                     </div>
@@ -117,7 +117,7 @@ export function CommunityPropertyGate() {
                                         <div className="rounded-xl border border-border/60 bg-background/60 px-3 py-2">
                                             <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Units</p>
                                             <p className="mt-1 flex items-center gap-1 text-sm font-semibold text-foreground">
-                                                <Home className="h-3.5 w-3.5 text-emerald-500" />
+                                                <Home className="size-3.5 text-emerald-500" />
                                                 {unitCount}
                                             </p>
                                         </div>

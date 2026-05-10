@@ -343,12 +343,12 @@ export function DocsSidebar() {
                         )}
                       >
                         <Icon className={cn(
-                          "h-4 w-4 transition-colors",
+                          "size-4 transition-colors",
                           isActive ? "text-primary" : "text-text-disabled group-hover:text-text-medium"
                         )} />
                         {item.title}
                         {isActive && (
-                          <div className="ml-auto mr-8 h-1.5 w-1.5 rounded-full bg-primary animate-pulse-subtle" />
+                          <div className="ml-auto mr-8 size-1.5 rounded-full bg-primary animate-pulse-subtle" />
                         )}
                       </Link>
 
@@ -359,12 +359,12 @@ export function DocsSidebar() {
                             toggleCollapse();
                           }}
                           className={cn(
-                            "absolute right-2 flex h-7 w-7 items-center justify-center rounded-md hover:bg-surface-2 transition-all",
+                            "absolute right-2 flex size-7 items-center justify-center rounded-md hover:bg-surface-2 transition-all",
                             isExpanded ? "rotate-90" : "rotate-0"
                           )}
                         >
                           <ChevronRight className={cn(
-                            "h-3.5 w-3.5 transition-colors",
+                            "size-3.5 transition-colors",
                             isExpanded ? "text-primary" : "text-text-disabled"
                           )} />
                         </button>
@@ -388,7 +388,7 @@ export function DocsSidebar() {
                                 href={subItem.href}
                                 className="py-1.5 text-xs font-medium text-text-disabled hover:text-primary transition-colors flex items-center gap-2 group/sub"
                               >
-                                <div className="h-1 w-1 rounded-full bg-text-disabled group-hover/sub:bg-primary transition-colors" />
+                                <div className="size-1 rounded-full bg-text-disabled group-hover/sub:bg-primary transition-colors" />
                                 {subItem.title}
                               </Link>
                             ))}

@@ -167,6 +167,9 @@ export default function MoveOutPreviewPage() {
                     <div
                       key={req.id}
                       onClick={() => setSelectedRequest(req)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedRequest(req); }}}
+                      tabIndex={0}
+                      role="button"
                       className="group flex cursor-pointer items-center justify-between rounded-3xl border border-border bg-card p-6 transition-all hover:border-primary/30 hover:shadow-xl"
                     >
                       <div className="flex items-center gap-6">

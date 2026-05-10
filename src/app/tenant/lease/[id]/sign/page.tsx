@@ -70,8 +70,8 @@ export default function LeaseSignaturePage() {
                     animate={{ scale: 1, opacity: 1 }}
                     className="bg-neutral-900 p-12 rounded-[3rem] border border-emerald-500/20 shadow-2xl text-center max-w-md w-full"
                 >
-                    <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-emerald-500/10 mb-8 border border-emerald-500/20">
-                        <CheckCircle className="h-12 w-12 text-emerald-500" />
+                    <div className="mx-auto flex size-24 items-center justify-center rounded-full bg-emerald-500/10 mb-8 border border-emerald-500/20">
+                        <CheckCircle className="size-12 text-emerald-500" />
                     </div>
                     <h1 className="text-3xl font-black mb-4 tracking-tight">Lease Executed</h1>
                     <p className="text-neutral-400 mb-10 leading-relaxed">
@@ -116,7 +116,7 @@ export default function LeaseSignaturePage() {
                     </motion.div>
                 ) : (
                     <div className="h-screen w-screen flex flex-col items-center justify-center gap-6">
-                        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                        <Loader2 className="size-10 animate-spin text-primary" />
                         <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500">Preparing Secure Document</p>
                     </div>
                 )}
@@ -126,9 +126,9 @@ export default function LeaseSignaturePage() {
                 <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/80 backdrop-blur-xl">
                     <div className="flex flex-col items-center gap-6 text-white">
                         <div className="relative">
-                            <Loader2 className="h-16 w-16 animate-spin text-primary" />
+                            <Loader2 className="size-16 animate-spin text-primary" />
                             <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="h-8 w-8 rounded-full bg-primary/20 animate-ping" />
+                                <div className="size-8 rounded-full bg-primary/20 animate-ping" />
                             </div>
                         </div>
                         <p className="text-[11px] font-black uppercase tracking-[0.4em] animate-pulse">Encrypting & Finalizing</p>

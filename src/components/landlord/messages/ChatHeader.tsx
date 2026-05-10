@@ -54,15 +54,15 @@ export function ChatHeader({
                     {!isPlaceholder && (
                         <div className="flex items-center gap-2 text-xs font-medium text-medium">
                             <span>{contact.unit}</span>
-                            <span className="h-1 w-1 rounded-full bg-disabled" />
+                            <span className="size-1 rounded-full bg-disabled" />
                             {contact.isOnline ? (
                                 <span className="text-emerald-500 flex items-center gap-1">
-                                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                    <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                     Online
                                 </span>
                             ) : (
                                 <span className="text-disabled flex items-center gap-1">
-                                    <span className="h-1.5 w-1.5 rounded-full bg-disabled" />
+                                    <span className="size-1.5 rounded-full bg-disabled" />
                                     Offline
                                 </span>
                             )}
@@ -77,7 +77,7 @@ export function ChatHeader({
                         onClick={openReportWizard}
                         className="flex items-center gap-2 px-3 py-2 rounded-xl bg-red-500/5 text-red-500 text-[10px] font-black uppercase tracking-widest border border-red-500/10 hover:bg-red-500/10 transition-all active:scale-95"
                     >
-                        <AlertTriangle className="h-3.5 w-3.5" />
+                        <AlertTriangle className="size-3.5" />
                         <span className="hidden sm:inline">Report</span>
                     </button>
                     

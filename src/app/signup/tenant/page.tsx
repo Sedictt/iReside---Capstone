@@ -130,7 +130,7 @@ export default function TenantInformationPage() {
                             href="/login"
                             className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
                         >
-                            <ArrowLeft className="h-4 w-4" />
+                            <ArrowLeft className="size-4" />
                             Back to Login
                         </Link>
                     </motion.div>
@@ -152,7 +152,7 @@ export default function TenantInformationPage() {
                         transition={{ delay: 0.2 }}
                         className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-bold uppercase tracking-widest mb-8"
                     >
-                        <Lock className="h-3.5 w-3.5" />
+                        <Lock className="size-3.5" />
                         Private Residency — Invite Only
                     </motion.div>
 
@@ -170,14 +170,14 @@ export default function TenantInformationPage() {
                             className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-base shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all hover:-translate-y-0.5"
                         >
                             I have an invite
-                            <ArrowRight className="h-5 w-5" />
+                            <ArrowRight className="size-5" />
                         </Link>
                         <a
                             href="#features"
                             className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl border border-border bg-card text-foreground font-bold text-base hover:bg-muted transition-all"
                         >
                             See what's included
-                            <ChevronRight className="h-5 w-5" />
+                            <ChevronRight className="size-5" />
                         </a>
                     </div>
                 </motion.section>
@@ -211,8 +211,8 @@ export default function TenantInformationPage() {
                                     Step {step.number}
                                 </div>
                                 <div className="mt-4">
-                                    <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-6">
-                                        <step.icon className="h-6 w-6" />
+                                    <div className="size-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-6">
+                                        <step.icon className="size-6" />
                                     </div>
                                     <h3 className="text-xl font-semibold tracking-tight mb-3">{step.title}</h3>
                                     <p className="text-muted-foreground">{step.description}</p>
@@ -252,7 +252,7 @@ export default function TenantInformationPage() {
                                         : "bg-card border border-border text-muted-foreground hover:text-foreground hover:bg-muted"
                                 )}
                             >
-                                <category.icon className="h-4 w-4" />
+                                <category.icon className="size-4" />
                                 {category.title}
                             </button>
                         ))}
@@ -274,14 +274,14 @@ export default function TenantInformationPage() {
                                     className="rounded-2xl border border-border bg-card p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
                                 >
                                     <div className={cn(
-                                        "h-10 w-10 rounded-xl flex items-center justify-center mb-4",
+                                        "size-10 rounded-xl flex items-center justify-center mb-4",
                                         featureCategories[activeCategory].color === "emerald" && "bg-emerald-500/10 text-emerald-500",
                                         featureCategories[activeCategory].color === "blue" && "bg-blue-500/10 text-blue-500",
                                         featureCategories[activeCategory].color === "amber" && "bg-amber-500/10 text-amber-500",
                                         featureCategories[activeCategory].color === "purple" && "bg-purple-500/10 text-purple-500"
                                     )}
                                     >
-                                        <feature.icon className="h-5 w-5" />
+                                        <feature.icon className="size-5" />
                                     </div>
                                     <h4 className="font-semibold mb-1">{feature.label}</h4>
                                     <p className="text-sm text-muted-foreground">{feature.desc}</p>
@@ -299,7 +299,7 @@ export default function TenantInformationPage() {
                     className="rounded-[2rem] border border-border bg-card p-10 sm:p-14 text-center shadow-sm"
                 >
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold uppercase tracking-widest mb-6">
-                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        <CheckCircle2 className="size-3.5" />
                         Invite Only Community
                     </div>
                     <h2 className="text-3xl sm:text-4xl font-black tracking-tight mb-4">
@@ -313,7 +313,7 @@ export default function TenantInformationPage() {
                         className="inline-flex items-center gap-2 px-10 py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-lg shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all hover:-translate-y-0.5"
                     >
                         Access Resident Portal
-                        <ArrowRight className="h-5 w-5" />
+                        <ArrowRight className="size-5" />
                     </Link>
                 </motion.section>
             </main>

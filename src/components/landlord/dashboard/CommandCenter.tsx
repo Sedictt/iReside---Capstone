@@ -127,12 +127,12 @@ export function CommandCenter({
     return (
         <section className="relative group/section overflow-hidden rounded-[2.5rem] border border-white/10 bg-card/60 p-8 shadow-2xl shadow-black/30 backdrop-blur-xl">
             {/* Background decorative elements */}
-            <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 h-64 w-64 rounded-full bg-white/5 blur-[80px] pointer-events-none" />
+            <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 size-64 rounded-full bg-white/5 blur-[80px] pointer-events-none" />
             
             <div className="mb-8 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between relative z-10">
                 <div className="flex items-start gap-4">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-[1.25rem] border border-primary/20 bg-primary/15 text-primary">
-                        <ShieldCheck className="h-7 w-7" />
+                    <div className="flex size-14 items-center justify-center rounded-[1.25rem] border border-primary/20 bg-primary/15 text-primary">
+                        <ShieldCheck className="size-7" />
                     </div>
                     <div>
                         <h2 className="text-2xl font-black tracking-tight text-foreground">Intelligence Hub</h2>
@@ -241,7 +241,7 @@ export function CommandCenter({
                                     className="mt-4 inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary transition-all hover:gap-3 group/link"
                                 >
                                     {move.cta}
-                                    <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover/link:translate-x-1" />
+                                    <ArrowRight className="size-3.5 transition-transform group-hover/link:translate-x-1" />
                                 </Link>
                             </div>
                         ))}

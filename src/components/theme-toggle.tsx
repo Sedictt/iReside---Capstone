@@ -22,7 +22,7 @@ export function ThemeToggle({ variant = "default", dataTourId, className, ...pro
     return (
       <div 
         className={cn(
-          "h-10 w-10 rounded-xl border border-zinc-200 bg-zinc-50 dark:border-white/10 dark:bg-white/[0.02]",
+          "size-10 rounded-xl border border-zinc-200 bg-zinc-50 dark:border-white/10 dark:bg-white/[0.02]",
           variant === "sidebar" && "border-transparent bg-transparent",
           className
         )}
@@ -35,7 +35,7 @@ export function ThemeToggle({ variant = "default", dataTourId, className, ...pro
       {...props}
       onClick={() => setTheme(theme === "light" ? "dark" : "light")}
       className={cn(
-        "relative flex h-10 w-10 items-center justify-center rounded-xl border transition-all",
+        "relative flex size-10 items-center justify-center rounded-xl border transition-all",
         variant === "default" && "border-zinc-200 bg-zinc-50 text-zinc-900 hover:bg-zinc-100 hover:border-zinc-300 dark:border-white/10 dark:bg-white/[0.02] dark:text-white dark:hover:bg-white/[0.08] dark:hover:border-white/20",
         variant === "sidebar" && "border-transparent bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground",
         className

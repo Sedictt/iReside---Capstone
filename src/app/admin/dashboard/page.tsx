@@ -56,8 +56,8 @@ function StatTile({
             
             <div className="relative z-10 flex flex-col h-full gap-6">
                 <div className="flex items-start justify-between">
-                    <div className={cn("flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.02] shadow-inner", accentColorClass)}>
-                        <Icon className="h-6 w-6" strokeWidth={1.5} />
+                    <div className={cn("flex size-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.02] shadow-inner", accentColorClass)}>
+                        <Icon className="size-6" strokeWidth={1.5} />
                     </div>
                 </div>
                 <div>
@@ -166,9 +166,9 @@ export default function AdminDashboardPage() {
                 <div className="relative z-10 flex flex-col justify-between gap-12 lg:flex-row lg:items-center">
                     <div className="max-w-2xl space-y-6">
                         <div className="inline-flex items-center gap-3 rounded-full border border-primary/25 bg-primary/10 px-4 py-2 text-[10px] font-extrabold uppercase tracking-widest text-primary">
-                            <span className="relative flex h-2 w-2">
+                            <span className="relative flex size-2">
                                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"></span>
-                                <span className="relative inline-flex h-2 w-2 rounded-full bg-primary"></span>
+                                <span className="relative inline-flex size-2 rounded-full bg-primary"></span>
                             </span>
                             Live Infrastructure
                         </div>
@@ -189,7 +189,7 @@ export default function AdminDashboardPage() {
                             >
                                 <span className="relative z-10 flex items-center gap-2">
                                     Assess Queue
-                                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                                    <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
                                 </span>
                             </Link>
                             <div className="flex items-center gap-3 rounded-2xl border border-white/5 bg-white/[0.02] px-6 py-4 shadow-inner">
@@ -206,7 +206,7 @@ export default function AdminDashboardPage() {
                                     <p className="mt-2 text-4xl font-black tracking-tight text-white">{registrationQueue}</p>
                                 </div>
                                 <div className="rounded-2xl border border-primary/20 bg-primary/20 p-4 text-primary">
-                                    <FileCheck className="h-6 w-6" strokeWidth={2} />
+                                    <FileCheck className="size-6" strokeWidth={2} />
                                 </div>
                             </div>
                             <div className="mt-5">
@@ -221,7 +221,7 @@ export default function AdminDashboardPage() {
                                     <p className="mt-2 text-4xl font-black tracking-tight text-white">{formatPercent(completionRate)}</p>
                                 </div>
                                 <div className="rounded-2xl border border-primary/20 bg-primary/20 p-4 text-primary">
-                                    <Sparkles className="h-6 w-6" strokeWidth={2} />
+                                    <Sparkles className="size-6" strokeWidth={2} />
                                 </div>
                             </div>
                             <div className="mt-5">
@@ -274,8 +274,8 @@ export default function AdminDashboardPage() {
                             <p className="text-[11px] font-extrabold uppercase tracking-widest text-white/30">Demographics</p>
                             <h2 className="mt-2 text-2xl font-black text-white">Platform Balance</h2>
                         </div>
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/[0.03] text-white/40">
-                            <TrendingUp className="h-6 w-6" />
+                        <div className="flex size-12 items-center justify-center rounded-2xl bg-white/[0.03] text-white/40">
+                            <TrendingUp className="size-6" />
                         </div>
                     </div>
 
@@ -315,8 +315,8 @@ export default function AdminDashboardPage() {
                             <p className="text-[11px] font-extrabold uppercase tracking-widest text-white/30">Analytics</p>
                             <h2 className="mt-2 text-2xl font-black text-white">Tour Funnel</h2>
                         </div>
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted/40 text-muted-foreground">
-                            <BellRing className="h-6 w-6" />
+                        <div className="flex size-12 items-center justify-center rounded-2xl bg-muted/40 text-muted-foreground">
+                            <BellRing className="size-6" />
                         </div>
                     </div>
 

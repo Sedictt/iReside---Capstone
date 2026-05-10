@@ -44,11 +44,11 @@ export function NotificationBanner() {
 
     const getIcon = (type: string) => {
         switch (type) {
-            case "payment": return <CreditCard className="h-4 w-4" />;
-            case "lease": return <FileText className="h-4 w-4" />;
-            case "maintenance": return <Wrench className="h-4 w-4" />;
-            case "application": return <Bell className="h-4 w-4" />;
-            default: return <Info className="h-4 w-4" />;
+            case "payment": return <CreditCard className="size-4" />;
+            case "lease": return <FileText className="size-4" />;
+            case "maintenance": return <Wrench className="size-4" />;
+            case "application": return <Bell className="size-4" />;
+            default: return <Info className="size-4" />;
         }
     };
 
@@ -75,7 +75,7 @@ export function NotificationBanner() {
                 )}>
                     <div className="flex items-center justify-between px-4 py-3 text-xs font-medium">
                         <div className="flex items-center gap-4">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/20 shadow-inner animate-pulse">
+                            <div className="flex size-8 items-center justify-center rounded-xl bg-white/20 shadow-inner animate-pulse">
                                 {getIcon(current.type)}
                             </div>
                             <div className="flex flex-col">
@@ -109,28 +109,28 @@ export function NotificationBanner() {
                                             className="p-1 hover:bg-white/10 transition-all rounded"
                                             title="Alert"
                                         >
-                                            <Bell className="h-3 w-3" />
+                                            <Bell className="size-3" />
                                         </button>
                                         <button
                                             onClick={() => playSound("message")}
                                             className="p-1 hover:bg-white/10 transition-all rounded"
                                             title="Message"
                                         >
-                                            <MessageSquare className="h-3 w-3" />
+                                            <MessageSquare className="size-3" />
                                         </button>
                                         <button
                                             onClick={() => playSound("success")}
                                             className="p-1 hover:bg-emerald-500/20 text-emerald-400 transition-all rounded"
                                             title="Success"
                                         >
-                                            <CheckCircle className="h-3 w-3" />
+                                            <CheckCircle className="size-3" />
                                         </button>
                                         <button
                                             onClick={() => playSound("error")}
                                             className="p-1 hover:bg-red-500/20 text-red-400 transition-all rounded"
                                             title="Error"
                                         >
-                                            <AlertTriangle className="h-3 w-3" />
+                                            <AlertTriangle className="size-3" />
                                         </button>
                                     </div>
                                 )}
@@ -153,9 +153,9 @@ export function NotificationBanner() {
                                     className="flex items-center gap-2 rounded-xl bg-white/15 px-3 py-1.5 hover:bg-white/25 transition-all font-black text-[10px] uppercase tracking-widest border border-white/10 shadow-sm"
                                 >
                                     {activeNotifications.length > 1 ? (
-                                        <>Next <ChevronRight className="h-3 w-3" /></>
+                                        <>Next <ChevronRight className="size-3" /></>
                                     ) : (
-                                        <>View Details <ArrowRight className="h-3 w-3" /></>
+                                        <>View Details <ArrowRight className="size-3" /></>
                                     )}
                                 </button>
                             </div>
@@ -167,7 +167,7 @@ export function NotificationBanner() {
                                 }}
                                 className="rounded-full p-2 hover:bg-white/10 transition-all text-white/50 hover:text-white"
                             >
-                                <X className="h-4 w-4" />
+                                <X className="size-4" />
                             </button>
                         </div>
                     </div>

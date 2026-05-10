@@ -109,7 +109,7 @@ export default function DocumentsPage() {
         return (
             <div className="flex h-screen items-center justify-center bg-background">
                 <div className="flex flex-col items-center gap-4">
-                    <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                    <Loader2 className="size-10 animate-spin text-primary" />
                     <p className="text-sm font-bold uppercase tracking-widest text-neutral-500">Accessing Vault...</p>
                 </div>
             </div>
@@ -161,16 +161,16 @@ export default function DocumentsPage() {
                 {/* ─── Hero Header ─── */}
                 <header className="relative overflow-hidden rounded-[3rem] border border-white/5 bg-gradient-to-br from-neutral-900 to-neutral-950 p-12 shadow-2xl">
                     <div className="absolute top-0 right-0 p-8">
-                        <div className="flex h-24 w-24 items-center justify-center rounded-3xl border border-primary/20 bg-primary/5 backdrop-blur-xl">
-                            <ShieldCheck className="h-12 w-12 text-primary" strokeWidth={1} />
+                        <div className="flex size-24 items-center justify-center rounded-3xl border border-primary/20 bg-primary/5 backdrop-blur-xl">
+                            <ShieldCheck className="size-12 text-primary" strokeWidth={1} />
                         </div>
                     </div>
                     
                     <div className="relative z-10 space-y-6">
                         <div className="inline-flex items-center gap-3 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-[10px] font-extrabold uppercase tracking-[0.2em] text-primary">
-                            <span className="relative flex h-2 w-2">
+                            <span className="relative flex size-2">
                                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"></span>
-                                <span className="relative inline-flex h-2 w-2 rounded-full bg-primary"></span>
+                                <span className="relative inline-flex size-2 rounded-full bg-primary"></span>
                             </span>
                             Secure Document Vault
                         </div>
@@ -199,7 +199,7 @@ export default function DocumentsPage() {
                                     activeTab === "compliance" ? "text-primary" : "text-neutral-500 hover:text-neutral-300"
                                 )}
                             >
-                                <UserCircle2 className="h-4 w-4" />
+                                <UserCircle2 className="size-4" />
                                 Personal & Compliance
                                 {activeTab === "compliance" && (
                                     <motion.div layoutId="docTab" className="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-t-full" />
@@ -212,7 +212,7 @@ export default function DocumentsPage() {
                                     activeTab === "leases" ? "text-primary" : "text-neutral-500 hover:text-neutral-300"
                                 )}
                             >
-                                <Files className="h-4 w-4" />
+                                <Files className="size-4" />
                                 Property & Leases
                                 {activeTab === "leases" && (
                                     <motion.div layoutId="docTab" className="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-t-full" />
@@ -234,7 +234,7 @@ export default function DocumentsPage() {
                                     <div className="space-y-6">
                                         <div className="flex items-center justify-between px-2">
                                             <h2 className="text-xl font-semibold text-white tracking-tight flex items-center gap-3">
-                                                <Fingerprint className="h-5 w-5 text-primary" />
+                                                <Fingerprint className="size-5 text-primary" />
                                                 Identity & Compliance
                                             </h2>
                                             <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500">{registrationDocs.length} Records</span>
@@ -248,8 +248,8 @@ export default function DocumentsPage() {
                                                         key={doc.id}
                                                         className="group relative flex items-center gap-6 rounded-[2rem] border border-white/5 bg-neutral-900/40 p-6 transition-all duration-300 hover:border-primary/20 hover:bg-neutral-900/60"
                                                     >
-                                                        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-white/5 bg-white/[0.03] transition-colors group-hover:border-primary/20 group-hover:bg-primary/5">
-                                                            <Icon className="h-7 w-7 text-neutral-500 transition-colors group-hover:text-primary" strokeWidth={1.5} />
+                                                        <div className="flex size-16 shrink-0 items-center justify-center rounded-2xl border border-white/5 bg-white/[0.03] transition-colors group-hover:border-primary/20 group-hover:bg-primary/5">
+                                                            <Icon className="size-7 text-neutral-500 transition-colors group-hover:text-primary" strokeWidth={1.5} />
                                                         </div>
                                                         
                                                         <div className="flex-1 min-w-0 space-y-1">
@@ -262,7 +262,7 @@ export default function DocumentsPage() {
                                                             <p className="text-sm text-neutral-500 truncate">{doc.description}</p>
                                                             <div className="flex items-center gap-4 pt-1">
                                                                 <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-neutral-600">
-                                                                    <Clock className="h-3 w-3" />
+                                                                    <Clock className="size-3" />
                                                                     Uploaded {new Date(doc.updatedAt).toLocaleDateString()}
                                                                 </div>
                                                             </div>
@@ -273,9 +273,9 @@ export default function DocumentsPage() {
                                                                 href={doc.url} 
                                                                 target="_blank" 
                                                                 rel="noreferrer"
-                                                                className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-white/[0.03] text-neutral-400 transition-all hover:border-primary/20 hover:bg-primary/5 hover:text-primary"
+                                                                className="flex size-10 items-center justify-center rounded-xl border border-white/5 bg-white/[0.03] text-neutral-400 transition-all hover:border-primary/20 hover:bg-primary/5 hover:text-primary"
                                                             >
-                                                                <Eye className="h-4 w-4" />
+                                                                <Eye className="size-4" />
                                                             </a>
                                                         </div>
                                                     </div>
@@ -297,7 +297,7 @@ export default function DocumentsPage() {
                                         <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between px-2">
                                             <div className="space-y-1">
                                                 <h2 className="text-xl font-semibold text-white tracking-tight flex items-center gap-3">
-                                                    <FileText className="h-5 w-5 text-primary" />
+                                                    <FileText className="size-5 text-primary" />
                                                     Lease Contracts
                                                 </h2>
                                                 <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500">
@@ -310,7 +310,7 @@ export default function DocumentsPage() {
                                                 {/* Search Bar */}
                                                 <div className="relative group w-full sm:w-64">
                                                     <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                                                        <SearchIcon className="h-4 w-4 text-neutral-500 transition-colors group-focus-within:text-primary" />
+                                                        <SearchIcon className="size-4 text-neutral-500 transition-colors group-focus-within:text-primary" />
                                                     </div>
                                                     <input 
                                                         type="text"
@@ -333,7 +333,7 @@ export default function DocumentsPage() {
                                                         <option value="pending">PENDING SIGN</option>
                                                         <option value="terminated">ARCHIVED</option>
                                                     </select>
-                                                    <Filter className="absolute right-4 top-1/2 -translate-y-1/2 h-3 w-3 text-neutral-500 pointer-events-none" />
+                                                    <Filter className="absolute right-4 top-1/2 -translate-y-1/2 size-3 text-neutral-500 pointer-events-none" />
                                                 </div>
 
                                                 {/* Type Filter */}
@@ -347,7 +347,7 @@ export default function DocumentsPage() {
                                                         <option value="lease">EXECUTED</option>
                                                         <option value="template">TEMPLATES</option>
                                                     </select>
-                                                    <ArrowUpDown className="absolute right-4 top-1/2 -translate-y-1/2 h-3 w-3 text-neutral-500 pointer-events-none" />
+                                                    <ArrowUpDown className="absolute right-4 top-1/2 -translate-y-1/2 size-3 text-neutral-500 pointer-events-none" />
                                                 </div>
                                             </div>
                                         </div>
@@ -366,8 +366,8 @@ export default function DocumentsPage() {
                                                                 exit={{ opacity: 0, scale: 0.95 }}
                                                                 className="group relative flex items-center gap-6 rounded-[2rem] border border-white/5 bg-neutral-900/40 p-6 transition-all duration-300 hover:border-primary/20 hover:bg-neutral-900/60"
                                                             >
-                                                                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-white/5 bg-white/[0.03] transition-colors group-hover:border-primary/20 group-hover:bg-primary/5">
-                                                                    <Icon className="h-7 w-7 text-neutral-500 transition-colors group-hover:text-primary" strokeWidth={1.5} />
+                                                                <div className="flex size-16 shrink-0 items-center justify-center rounded-2xl border border-white/5 bg-white/[0.03] transition-colors group-hover:border-primary/20 group-hover:bg-primary/5">
+                                                                    <Icon className="size-7 text-neutral-500 transition-colors group-hover:text-primary" strokeWidth={1.5} />
                                                                 </div>
                                                                 
                                                                 <div className="flex-1 min-w-0 space-y-1">
@@ -383,7 +383,7 @@ export default function DocumentsPage() {
                                                                     <p className="text-sm text-neutral-500 truncate">{doc.description}</p>
                                                                     <div className="flex items-center gap-4 pt-1">
                                                                         <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-neutral-600">
-                                                                            <Clock className="h-3 w-3" />
+                                                                            <Clock className="size-3" />
                                                                             Ref: {doc.id.slice(0, 8)} • {new Date(doc.updatedAt).toLocaleDateString()}
                                                                         </div>
                                                                     </div>
@@ -396,9 +396,9 @@ export default function DocumentsPage() {
                                                                                 setSelectedTemplate(doc);
                                                                                 setShowPreview(true);
                                                                             }}
-                                                                            className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-white/[0.03] text-neutral-400 transition-all hover:border-primary/20 hover:bg-primary/5 hover:text-primary"
+                                                                            className="flex size-10 items-center justify-center rounded-xl border border-white/5 bg-white/[0.03] text-neutral-400 transition-all hover:border-primary/20 hover:bg-primary/5 hover:text-primary"
                                                                         >
-                                                                            <Maximize2 className="h-4 w-4" />
+                                                                            <Maximize2 className="size-4" />
                                                                         </button>
                                                                     ) : (
                                                                         <>
@@ -406,16 +406,16 @@ export default function DocumentsPage() {
                                                                                 href={doc.url}
                                                                                 target="_blank"
                                                                                 rel="noreferrer"
-                                                                                className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-white/[0.03] text-neutral-400 transition-all hover:border-primary/20 hover:bg-primary/5 hover:text-primary"
+                                                                                className="flex size-10 items-center justify-center rounded-xl border border-white/5 bg-white/[0.03] text-neutral-400 transition-all hover:border-primary/20 hover:bg-primary/5 hover:text-primary"
                                                                             >
-                                                                                <Eye className="h-4 w-4" />
+                                                                                <Eye className="size-4" />
                                                                             </a>
                                                                             <a 
                                                                                 href={doc.url}
                                                                                 download={`${doc.name.replace(/\s+/g, '_')}.pdf`}
-                                                                                className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-white/[0.03] text-neutral-400 transition-all hover:border-primary/20 hover:bg-primary/5 hover:text-primary"
+                                                                                className="flex size-10 items-center justify-center rounded-xl border border-white/5 bg-white/[0.03] text-neutral-400 transition-all hover:border-primary/20 hover:bg-primary/5 hover:text-primary"
                                                                             >
-                                                                                <Download className="h-4 w-4" />
+                                                                                <Download className="size-4" />
                                                                             </a>
                                                                         </>
                                                                     )}
@@ -426,7 +426,7 @@ export default function DocumentsPage() {
                                                 </AnimatePresence>
                                             ) : (
                                                 <div className="rounded-[2rem] border border-dashed border-white/10 bg-neutral-900/20 p-12 text-center h-[400px] flex flex-col items-center justify-center">
-                                                    <FileText className="h-10 w-10 text-neutral-700 mx-auto mb-4" />
+                                                    <FileText className="size-10 text-neutral-700 mx-auto mb-4" />
                                                     <p className="text-sm font-bold text-neutral-500 uppercase tracking-widest">No Documents Found</p>
                                                     <p className="text-xs text-neutral-600 mt-1">Select a different property or try a different search term.</p>
                                                 </div>
@@ -439,9 +439,9 @@ export default function DocumentsPage() {
                                                 <button 
                                                     onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                                     disabled={currentPage === 1}
-                                                    className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/5 bg-neutral-900/40 text-neutral-400 transition-all hover:border-primary/20 hover:text-primary disabled:opacity-20 disabled:hover:border-white/5 disabled:hover:text-neutral-400"
+                                                    className="flex size-12 items-center justify-center rounded-2xl border border-white/5 bg-neutral-900/40 text-neutral-400 transition-all hover:border-primary/20 hover:text-primary disabled:opacity-20 disabled:hover:border-white/5 disabled:hover:text-neutral-400"
                                                 >
-                                                    <ChevronLeft className="h-5 w-5" />
+                                                    <ChevronLeft className="size-5" />
                                                 </button>
                                                 
                                                 <div className="flex items-center gap-2">
@@ -450,7 +450,7 @@ export default function DocumentsPage() {
                                                             key={i}
                                                             onClick={() => setCurrentPage(i + 1)}
                                                             className={cn(
-                                                                "h-12 w-12 rounded-2xl text-[11px] font-black transition-all",
+                                                                "size-12 rounded-2xl text-[11px] font-black transition-all",
                                                                 currentPage === i + 1 
                                                                     ? "bg-primary text-black shadow-lg shadow-primary/20" 
                                                                     : "border border-white/5 bg-neutral-900/40 text-neutral-500 hover:border-primary/20 hover:text-white"
@@ -464,9 +464,9 @@ export default function DocumentsPage() {
                                                 <button 
                                                     onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                                                     disabled={currentPage === totalPages}
-                                                    className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/5 bg-neutral-900/40 text-neutral-400 transition-all hover:border-primary/20 hover:text-primary disabled:opacity-20 disabled:hover:border-white/5 disabled:hover:text-neutral-400"
+                                                    className="flex size-12 items-center justify-center rounded-2xl border border-white/5 bg-neutral-900/40 text-neutral-400 transition-all hover:border-primary/20 hover:text-primary disabled:opacity-20 disabled:hover:border-white/5 disabled:hover:text-neutral-400"
                                                 >
-                                                    <ChevronRight className="h-5 w-5" />
+                                                    <ChevronRight className="size-5" />
                                                 </button>
                                             </div>
                                         )}

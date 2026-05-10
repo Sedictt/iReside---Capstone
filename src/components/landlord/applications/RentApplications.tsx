@@ -882,7 +882,7 @@ export function RentApplications() {
                                                     <div className="min-w-0 flex-1">
                                                         <h3 className="truncate text-lg font-black tracking-tight text-foreground">{app.applicant.name}</h3>
                                                         <p className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-muted-foreground truncate">
-                                                            <Briefcase className="h-3 w-3 shrink-0" />
+                                                            <Briefcase className="size-3 shrink-0" />
                                                             {app.applicant.occupation || "Unspecified"}
                                                         </p>
                                                     </div>
@@ -903,7 +903,7 @@ export function RentApplications() {
                                                         "flex items-center gap-2 rounded-xl border px-3 py-1.5 text-[10px] font-black uppercase tracking-widest whitespace-nowrap",
                                                         config.bgColor, config.borderColor, config.color
                                                     )}>
-                                                        <config.icon className="h-3.5 w-3.5" />
+                                                        <config.icon className="size-3.5" />
                                                         {config.label}
                                                     </div>
                                                     <button className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-border bg-card transition-all hover:bg-primary hover:text-white hover:border-primary">
@@ -942,7 +942,7 @@ export function RentApplications() {
                             <div className="flex items-center justify-between border-b border-border p-8 bg-card/50 backdrop-blur-xl">
                                 <div>
                                     <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-1">
-                                        <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                                        <div className="size-1.5 rounded-full bg-primary" />
                                         Application Record
                                     </div>
                                     <h2 className="text-3xl font-black tracking-tighter text-foreground">
@@ -950,7 +950,7 @@ export function RentApplications() {
                                     </h2>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <button onClick={() => { setSelectedApp(null); cancelEdit(); }} className="flex h-11 w-11 items-center justify-center rounded-2xl border border-border bg-background transition-all hover:bg-muted active:scale-95">
+                                    <button onClick={() => { setSelectedApp(null); cancelEdit(); }} className="flex size-11 items-center justify-center rounded-2xl border border-border bg-background transition-all hover:bg-muted active:scale-95">
                                         <X className="size-5" />
                                     </button>
                                 </div>
@@ -1031,7 +1031,7 @@ export function RentApplications() {
                                                         <ul className="space-y-1.5">
                                                             {missing.map((item, i) => (
                                                                 <li key={i} className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground/80">
-                                                                    <div className="h-1 w-1 rounded-full bg-amber-500/40" />
+                                                                    <div className="size-1 rounded-full bg-amber-500/40" />
                                                                     {item}
                                                                 </li>
                                                             ))}
@@ -1048,7 +1048,7 @@ export function RentApplications() {
                                     <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2">Tenant Profile</h4>
                                     <div className="rounded-[2.5rem] border border-border bg-background/50 p-8 space-y-8">
                                         <div className="flex items-center gap-6">
-                                            <div className="h-20 w-20 rounded-full border-4 border-border shadow-xl flex items-center justify-center text-3xl font-black text-white" style={{ backgroundColor: selectedApp.applicant.avatarBgColor || "#171717" }}>
+                                            <div className="size-20 rounded-full border-4 border-border shadow-xl flex items-center justify-center text-3xl font-black text-white" style={{ backgroundColor: selectedApp.applicant.avatarBgColor || "#171717" }}>
                                                 {selectedApp.applicant.avatar ? <img src={selectedApp.applicant.avatar} alt={`${selectedApp.applicant.name} avatar`} className="h-full w-full object-cover" /> : selectedApp.applicant.name[0]}
                                             </div>
                                             <div>
@@ -1060,40 +1060,40 @@ export function RentApplications() {
                                         <div className="grid grid-cols-2 gap-6">
                                             <div className="space-y-1">
                                                 <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                                                    <Mail className="h-3 w-3" /> Email
+                                                    <Mail className="size-3" /> Email
                                                 </span>
                                                 <p className="text-sm font-black text-foreground">{selectedApp.applicant.email}</p>
                                             </div>
                                             <div className="space-y-1">
                                                 <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                                                    <Phone className="h-3 w-3" /> Phone
+                                                    <Phone className="size-3" /> Phone
                                                 </span>
                                                 <p className="text-sm font-black text-foreground">{selectedApp.applicant.phone || "Not provided"}</p>
                                             </div>
                                             <div className="space-y-1">
                                                 <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                                                    <Banknote className="h-3 w-3" /> Income
+                                                    <Banknote className="size-3" /> Income
                                                 </span>
                                                 <p className="text-sm font-black text-foreground">{formatCurrency(selectedApp.applicant.monthlyIncome)}</p>
                                             </div>
 
                                             <div className="space-y-1">
                                                 <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                                                    <Clock className="h-3 w-3" /> Application Date
+                                                    <Clock className="size-3" /> Application Date
                                                 </span>
                                                 <p className="text-sm font-black text-foreground">{formatDate(selectedApp.submittedDate)}</p>
                                             </div>
 
                                             <div className="space-y-1">
                                                 <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                                                    <Calendar className="h-3 w-3" /> Preferred Move-in
+                                                    <Calendar className="size-3" /> Preferred Move-in
                                                 </span>
                                                 <p className="text-sm font-black text-foreground">{formatDate(selectedApp.requestedMoveIn)}</p>
                                             </div>
 
                                             <div className="space-y-1">
                                                 <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                                                    <Filter className="h-3 w-3" /> Intake Source
+                                                    <Filter className="size-3" /> Intake Source
                                                 </span>
                                                 <p className="text-sm font-black text-foreground capitalize">
                                                     {selectedApp.source?.replace(/_/g, ' ') || "Online"}
@@ -1183,9 +1183,9 @@ export function RentApplications() {
                                                                     className="mt-4 inline-flex items-center gap-2 rounded-xl bg-amber-500 px-6 py-2.5 text-[10px] font-black uppercase tracking-widest text-black shadow-lg shadow-amber-500/20 transition-all hover:bg-amber-400 active:scale-95 disabled:opacity-50"
                                                                 >
                                                                     {signingLinkState.loading ? (
-                                                                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                                        <Loader2 className="size-3.5 animate-spin" />
                                                                     ) : (
-                                                                        <Mail className="h-3.5 w-3.5" />
+                                                                        <Mail className="size-3.5" />
                                                                     )}
                                                                     {selectedApp.lease.status === "pending_signature" ? "Send Signing Link" : "Resend Signing Link"}
                                                                 </button>
@@ -1238,9 +1238,9 @@ export function RentApplications() {
                                                                     className="mt-4 w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-6 py-3 text-[10px] font-black uppercase tracking-widest text-black shadow-lg shadow-emerald-500/20 transition-all hover:bg-emerald-400 active:scale-95 disabled:opacity-50"
                                                                 >
                                                                     {countersignRedirectLoading ? (
-                                                                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                                        <Loader2 className="size-3.5 animate-spin" />
                                                                     ) : (
-                                                                        <FileText className="h-3.5 w-3.5" />
+                                                                        <FileText className="size-3.5" />
                                                                     )}
                                                                     Countersign Now
                                                                 </button>
@@ -1250,7 +1250,7 @@ export function RentApplications() {
                                                 </>
                                             ) : (
                                                 <div className="flex flex-col items-center justify-center py-8 text-center space-y-4">
-                                                    <div className="flex h-16 w-16 items-center justify-center rounded-[2rem] bg-muted/50 text-muted-foreground/30">
+                                                    <div className="flex size-16 items-center justify-center rounded-[2rem] bg-muted/50 text-muted-foreground/30">
                                                         <FileText className="size-8" />
                                                     </div>
                                                     <div className="space-y-1">
@@ -1330,7 +1330,7 @@ export function RentApplications() {
                                                             {signingLinkState.loading ? (
                                                                 <Loader2 className="size-4 animate-spin mx-auto" />
                                                             ) : (
-                                                                <Mail className="h-3.5 w-3.5" />
+                                                                <Mail className="size-3.5" />
                                                             )}
                                                             Generate & Send Lease Signing Link
                                                         </button>

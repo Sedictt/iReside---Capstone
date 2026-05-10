@@ -60,7 +60,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
                   <span className="text-xl font-bold text-text-high">Navigation</span>
                   <button onClick={() => setIsSidebarOpen(false)} className="rounded-lg p-2 hover:bg-surface-2">
                     <span className="sr-only">Close menu</span>
-                    <X className="h-6 w-6 text-text-medium" />
+                    <X className="size-5" />
                   </button>
                 </div>
                 <div className="h-[calc(100vh-8rem)] overflow-y-auto custom-scrollbar-premium">
@@ -99,12 +99,12 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
             {/* Breadcrumbs */}
             <nav className="mb-8 flex items-center gap-2 text-sm text-text-disabled" aria-label="Breadcrumb">
               <Link href="/docs" className="flex items-center gap-1 hover:text-primary transition-colors">
-                <Home className="h-3.5 w-3.5" />
+                <Home className="size-5" />
                 <span>Docs</span>
               </Link>
               {breadcrumbs.slice(1).map((crumb, index) => (
                 <React.Fragment key={crumb.href}>
-                  <ChevronRight className="h-3.5 w-3.5" />
+                  <ChevronRight className="size-3.5" />
                   <Link 
                     href={crumb.href}
                     className={cn(

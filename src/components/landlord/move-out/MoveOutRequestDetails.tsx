@@ -292,8 +292,8 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
               <div className="flex flex-col gap-4 rounded-3xl border border-border bg-card p-6 shadow-sm">
                 <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tenant Profile</h3>
                 <div className="flex items-center gap-4">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary ring-4 ring-primary/5">
-                    <User className="h-7 w-7" />
+                  <div className="flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary ring-4 ring-primary/5">
+                    <User className="size-7" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-base font-black text-foreground truncate">{request.lease.tenant.full_name}</p>
@@ -302,11 +302,11 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
                 </div>
                 <div className="flex flex-wrap gap-2 pt-2">
                   <a href={`mailto:${request.lease.tenant.email}`} className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-border px-3 py-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground transition-all hover:bg-muted">
-                    <Mail className="h-3.5 w-3.5" /> Email
+                    <Mail className="size-3.5" /> Email
                   </a>
                   {request.lease.tenant.phone && (
                     <div className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-border px-3 py-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                      <MessageSquare className="h-3.5 w-3.5" /> {request.lease.tenant.phone}
+                      <MessageSquare className="size-3.5" /> {request.lease.tenant.phone}
                     </div>
                   )}
                 </div>
@@ -316,8 +316,8 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
               <div className="flex flex-col gap-4 rounded-3xl border border-border bg-card p-6 shadow-sm">
                 <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Property & Unit</h3>
                 <div className="flex items-center gap-4">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 ring-4 ring-amber-500/5">
-                    <Home className="h-7 w-7" />
+                  <div className="flex size-14 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 ring-4 ring-amber-500/5">
+                    <Home className="size-7" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-base font-black text-foreground truncate">{request.lease.unit.name}</p>
@@ -334,7 +334,7 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
             <div className="flex flex-col gap-6 rounded-3xl border border-border bg-card p-8 shadow-sm">
               <div className="space-y-4">
                 <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                  <MessageSquare className="h-3.5 w-3.5 text-primary" />
+                  <MessageSquare className="size-3.5 text-primary" />
                   Reason for Moving Out
                 </h3>
                 <div className="rounded-2xl bg-muted/20 p-6 italic text-sm font-medium text-foreground leading-relaxed ring-1 ring-border/50">
@@ -345,7 +345,7 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
               {request.status === "denied" && request.denial_reason && (
                 <div className="space-y-4 pt-4 border-t border-border/50">
                   <h3 className="text-[10px] font-black uppercase tracking-widest text-red-500 flex items-center gap-2">
-                    <XCircle className="h-3.5 w-3.5" />
+                    <XCircle className="size-3.5" />
                     Reason for Denial
                   </h3>
                   <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6 italic text-sm font-medium text-red-600 leading-relaxed">
@@ -357,7 +357,7 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
               {request.inspection_notes && (
                 <div className="space-y-4 pt-4 border-t border-border/50">
                   <h3 className="text-[10px] font-black uppercase tracking-widest text-emerald-500 flex items-center gap-2">
-                    <ShieldCheck className="h-3.5 w-3.5" />
+                    <ShieldCheck className="size-3.5" />
                     Inspection Notes
                   </h3>
                   <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-6 text-sm font-medium text-foreground leading-relaxed">
@@ -390,7 +390,7 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
                   </button>
                 </div>
                 {/* Subtle background decoration */}
-                <ShieldCheck className="absolute -right-4 -bottom-4 h-32 w-32 text-white/5 rotate-12" />
+                <ShieldCheck className="absolute -right-4 -bottom-4 size-32 text-white/5 rotate-12" />
               </motion.div>
             )}
 
@@ -420,7 +420,7 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
                     Complete Move-Out
                   </button>
                 </div>
-                <CheckCircle2 className="absolute -right-4 -bottom-4 h-32 w-32 text-white/5 rotate-12" />
+                <CheckCircle2 className="absolute -right-4 -bottom-4 size-32 text-white/5 rotate-12" />
               </motion.div>
             )}
           </div>
@@ -437,11 +437,11 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
                       <span className="text-[11px] font-bold capitalize text-foreground">{key.replace(/_/g, " ")}</span>
                       {value ? (
                         <div className="flex size-6 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500 ring-1 ring-emerald-500/20">
-                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          <CheckCircle2 className="size-3.5" />
                         </div>
                       ) : (
                         <div className="flex size-6 items-center justify-center rounded-lg bg-red-500/10 text-red-500 ring-1 ring-red-500/20">
-                          <XCircle className="h-3.5 w-3.5" />
+                          <XCircle className="size-3.5" />
                         </div>
                       )}
                     </div>
@@ -464,7 +464,7 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
                         "z-10 flex size-8 items-center justify-center rounded-xl transition-all ring-4 ring-card",
                         event.status === "completed" ? (event.color?.replace('text-', 'bg-') || "bg-primary text-white") : (event.status === "pending" ? "bg-amber-500 text-white animate-pulse" : "bg-muted text-muted-foreground")
                       )}>
-                        <Icon className="h-3.5 w-3.5" />
+                        <Icon className="size-3.5" />
                       </div>
                       <div className="flex flex-col gap-0.5">
                         <p className={cn(
@@ -497,7 +497,7 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
                 </div>
                 <div className="pt-4 border-t border-border">
                   <button className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-card py-2.5 text-[10px] font-black uppercase tracking-widest text-foreground transition-all hover:bg-muted active:scale-[0.98]">
-                    <FileText className="h-3.5 w-3.5" />
+                    <FileText className="size-3.5" />
                     Original Lease
                   </button>
                 </div>

@@ -251,7 +251,7 @@ export default function FinanceHubPage() {
     if (loading) {
         return (
             <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-muted-foreground">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <Loader2 className="size-8 animate-spin text-primary" />
                 <p className="text-xs font-black uppercase tracking-widest">Synchronizing Hub...</p>
             </div>
         );

@@ -116,7 +116,7 @@ export default function ApplicationDashboardPage() {
                             Unit {property.id}02, {property.name}
                         </h1>
                         <p className="text-white/40 text-xs flex items-center gap-1.5 font-medium bg-white/5 px-2 py-1 rounded-lg">
-                            <MapPin className="w-3.5 h-3.5 text-primary" />
+                            <MapPin className="size-3.5 text-primary" />
                             {property.address}
                         </p>
                     </div>
@@ -186,7 +186,7 @@ export default function ApplicationDashboardPage() {
                                 className="mt-4 p-4 bg-primary/5 hover:bg-primary/10 border border-primary/10 rounded-2xl text-[10px] text-primary transition-all flex items-center justify-center gap-2 font-black uppercase tracking-widest group"
                             >
                                 Back to Applications
-                                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1" />
+                                <ArrowRight className="size-3.5 group-hover:translate-x-1" />
                             </button>
                         </div>
                     </div>

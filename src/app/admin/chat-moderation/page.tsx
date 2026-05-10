@@ -223,13 +223,13 @@ export default function AdminChatModerationPage() {
         <div className="mx-auto max-w-7xl space-y-8 px-4 pb-12 sm:px-6 lg:px-8">
             {/* Header Section */}
             <header className="relative overflow-hidden rounded-[2.5rem] border border-border/50 bg-card p-10 shadow-2xl dark:border-white/5 dark:bg-neutral-900/40">
-                <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-amber-500/10 blur-[100px] pointer-events-none" />
-                <div className="absolute -left-20 -bottom-20 h-64 w-64 rounded-full bg-primary/5 blur-[100px] pointer-events-none" />
+                <div className="absolute -right-20 -top-20 size-64 rounded-full bg-amber-500/10 blur-[100px] pointer-events-none" />
+                <div className="absolute -left-20 -bottom-20 size-64 rounded-full bg-primary/5 blur-[100px] pointer-events-none" />
 
                 <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-8">
                     <div className="space-y-4">
                         <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/10 px-4 py-1.5 text-xs font-black uppercase tracking-widest text-amber-500">
-                            <ShieldAlert className="h-4 w-4" />
+                            <ShieldAlert className="size-4" />
                             Safety Operations Center
                         </div>
                         <div className="space-y-1">
@@ -247,7 +247,7 @@ export default function AdminChatModerationPage() {
                             onClick={() => void loadData()}
                             className="group flex items-center gap-2 rounded-2xl bg-muted/50 px-6 py-3.5 text-sm font-bold text-foreground transition-all hover:bg-muted hover:scale-105 active:scale-95 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
                         >
-                            <RotateCcw className={cn("h-4 w-4 transition-transform group-hover:rotate-180", loading && "animate-spin")} />
+                            <RotateCcw className={cn("size-4 transition-transform group-hover:rotate-180", loading && "animate-spin")} />
                             Sync Queue
                         </button>
                     </div>
@@ -255,7 +255,7 @@ export default function AdminChatModerationPage() {
 
                 {error && (
                     <div className="mt-6 flex items-center gap-3 rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-sm font-bold text-red-500 animate-in slide-in-from-top-2">
-                        <AlertTriangle className="h-5 w-5" />
+                        <AlertTriangle className="size-5" />
                         {error}
                     </div>
                 )}
@@ -267,7 +267,7 @@ export default function AdminChatModerationPage() {
                     <div className="flex flex-wrap items-center justify-between gap-4 rounded-[2rem] border border-border/50 bg-card/50 p-6 backdrop-blur-sm dark:border-white/5 dark:bg-white/[0.02]">
                         <div className="flex items-center gap-4">
                             <div className="flex items-center gap-2">
-                                <Flag className="h-5 w-5 text-primary" />
+                                <Flag className="size-5 text-primary" />
                                 <h2 className="text-sm font-black text-foreground dark:text-white uppercase tracking-wider">Report Queue</h2>
                             </div>
                             <div className="h-5 w-px bg-border/50" />
@@ -282,7 +282,7 @@ export default function AdminChatModerationPage() {
                                 <button className="flex items-center gap-3 px-4 py-2.5 rounded-xl border border-border bg-background/50 hover:bg-background hover:border-primary/50 transition-all text-xs font-bold text-foreground min-w-[140px] justify-between">
                                     <div className="flex items-center gap-2">
                                         <div className={cn(
-                                            "h-1.5 w-1.5 rounded-full",
+                                            "size-1.5 rounded-full",
                                             statusFilter === "all" ? "bg-muted-foreground" :
                                             statusFilter === "open" ? "bg-red-500" :
                                             statusFilter === "reviewing" ? "bg-amber-500" :
@@ -290,7 +290,7 @@ export default function AdminChatModerationPage() {
                                         )} />
                                         <span className="capitalize">{statusFilter === "all" ? "All Status" : statusFilter}</span>
                                     </div>
-                                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform group-hover/status:rotate-180" />
+                                    <ChevronDown className="size-3.5 text-muted-foreground transition-transform group-hover/status:rotate-180" />
                                 </button>
                                 
                                 <div className="absolute top-full left-0 mt-2 w-full min-w-[160px] rounded-2xl border border-border/50 bg-card/95 p-1.5 shadow-2xl backdrop-blur-2xl opacity-0 invisible group-hover/status:opacity-100 group-hover/status:visible transition-all z-50 transform origin-top translate-y-2 group-hover/status:translate-y-0">
@@ -322,10 +322,10 @@ export default function AdminChatModerationPage() {
                             <div className="relative group/cat">
                                 <button className="flex items-center gap-3 px-4 py-2.5 rounded-xl border border-border bg-background/50 hover:bg-background hover:border-primary/50 transition-all text-xs font-bold text-foreground min-w-[160px] justify-between">
                                     <div className="flex items-center gap-2">
-                                        <Filter className="h-3.5 w-3.5 text-muted-foreground" />
+                                        <Filter className="size-3.5 text-muted-foreground" />
                                         <span className="truncate">{categoryFilter === "all" ? "All Categories" : categoryFilter}</span>
                                     </div>
-                                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform group-hover/cat:rotate-180" />
+                                    <ChevronDown className="size-3.5 text-muted-foreground transition-transform group-hover/cat:rotate-180" />
                                 </button>
                                 
                                 <div className="absolute top-full left-0 mt-2 w-full min-w-[180px] rounded-2xl border border-border/50 bg-card/95 p-1.5 shadow-2xl backdrop-blur-2xl opacity-0 invisible group-hover/cat:opacity-100 group-hover/cat:visible transition-all z-50 transform origin-top translate-y-2 group-hover/cat:translate-y-0">
@@ -363,7 +363,7 @@ export default function AdminChatModerationPage() {
                         </div>
                     ) : filteredReports.length === 0 ? (
                         <div className="flex flex-col items-center justify-center rounded-[2.5rem] border border-dashed border-border/50 bg-card/20 py-20 text-center">
-                            <CheckCircle2 className="h-12 w-12 text-muted-foreground/30 mb-4" />
+                            <CheckCircle2 className="size-12 text-muted-foreground/30 mb-4" />
                             <h3 className="text-lg font-black text-foreground dark:text-white uppercase tracking-widest">Queue Clear</h3>
                             <p className="text-sm text-muted-foreground">Everything is under control.</p>
                         </div>
@@ -410,7 +410,7 @@ export default function AdminChatModerationPage() {
                                         disabled={isAddingManualTerm || manualTerm.trim().length < 2}
                                         className="flex items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-4 text-sm font-black text-black hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 shadow-lg shadow-primary/20"
                                     >
-                                        <Plus className="h-4 w-4" />
+                                        <Plus className="size-4" />
                                         Add Term
                                     </button>
                                 </div>
@@ -418,7 +418,7 @@ export default function AdminChatModerationPage() {
 
                             <div className="pt-6 border-t border-border/50 dark:border-white/5">
                                 <div className="relative mb-4">
-                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                                     <input
                                         type="text"
                                         value={termSearchQuery}
@@ -445,7 +445,7 @@ export default function AdminChatModerationPage() {
                                                 </div>
                                                 {term.reportId && (
                                                     <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-500">
-                                                        <ArrowRight className="h-3 w-3" />
+                                                        <ArrowRight className="size-3" />
                                                     </div>
                                                 )}
                                             </div>
@@ -517,7 +517,7 @@ function ModerationReportCard({
                             </p>
                         </div>
                         {/* Tooltip Arrow */}
-                        <div className="absolute -bottom-1.5 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 border-b border-r border-primary/30 bg-card" />
+                        <div className="absolute -bottom-1.5 left-1/2 size-3 -translate-x-1/2 rotate-45 border-b border-r border-primary/30 bg-card" />
                     </div>
                 </div>
             )}
@@ -530,13 +530,13 @@ function ModerationReportCard({
                 <div className="flex flex-1 items-center min-w-0">
                     {/* Compact Identity Info */}
                     <div className="flex items-center gap-3 min-w-0 flex-1 lg:flex-none lg:w-80">
-                        <div className="h-10 w-10 shrink-0 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
-                            <User className="h-5 w-5 text-primary" />
+                        <div className="size-10 shrink-0 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+                            <User className="size-5 text-primary" />
                         </div>
                         <div className="flex flex-col min-w-0">
                             <div className="flex items-center gap-2">
                                 <span className="text-sm font-black text-foreground truncate">{report.reporter?.name || "Anon"}</span>
-                                <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/30" />
+                                <ArrowRight className="size-3.5 text-muted-foreground/30" />
                                 <span className="text-sm font-black text-primary truncate">{report.target?.name || "Target"}</span>
                             </div>
                             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest truncate">{report.category}</span>
@@ -546,7 +546,7 @@ function ModerationReportCard({
                     {/* Meta Info (Right aligned) */}
                     <div className="hidden md:flex items-center gap-6 ml-auto mr-4 text-[10px] font-black uppercase tracking-[0.15em]">
                         <div className="flex items-center gap-2 text-muted-foreground/60">
-                            <Calendar className="h-3.5 w-3.5" />
+                            <Calendar className="size-3.5" />
                             <span>{new Date(report.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
                         </div>
                         <div className="h-3 w-px bg-border/50" />
@@ -563,11 +563,11 @@ function ModerationReportCard({
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted/50 border border-border group-hover:bg-primary/10 group-hover:border-primary/30 transition-all">
+                    <div className="flex size-10 items-center justify-center rounded-full bg-muted/50 border border-border group-hover:bg-primary/10 group-hover:border-primary/30 transition-all">
                         {isExpanded ? (
-                            <ChevronDown className="h-5 w-5 text-primary" />
+                            <ChevronDown className="size-5 text-primary" />
                         ) : (
-                            <Maximize2 className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
+                            <Maximize2 className="size-4 text-muted-foreground group-hover:text-primary" />
                         )}
                     </div>
                 </div>
@@ -590,7 +590,7 @@ function ModerationReportCard({
                                     <div className="flex flex-col p-8 border-r border-border/50 bg-muted/10 dark:bg-white/[0.01]">
                                         <div className="mb-10 flex flex-col gap-1">
                                             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">
-                                                <MessageSquare className="h-3.5 w-3.5" />
+                                                <MessageSquare className="size-3.5" />
                                                 Reporter&apos;s Statement
                                             </div>
                                             {/* Vertical spacer to match the Right side's System ID height */}
@@ -604,8 +604,8 @@ function ModerationReportCard({
                                         </div>
                                         
                                         <div className="flex items-center gap-3 mt-12">
-                                            <div className="h-8 w-8 rounded-full bg-background border border-border flex items-center justify-center">
-                                                <User className="h-4 w-4 text-muted-foreground/40" />
+                                            <div className="size-8 rounded-full bg-background border border-border flex items-center justify-center">
+                                                <User className="size-4 text-muted-foreground/40" />
                                             </div>
                                             <div className="flex flex-col">
                                                 <span className="text-xs font-bold text-muted-foreground">Reported by {report.reporter?.name || "Anon"}</span>
@@ -618,7 +618,7 @@ function ModerationReportCard({
                                     <div className="flex flex-col p-8 bg-red-500/[0.02]">
                                         <div className="mb-10 flex flex-col gap-1">
                                             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-red-500/80">
-                                                <ShieldAlert className="h-3.5 w-3.5" />
+                                                <ShieldAlert className="size-3.5" />
                                                 Flagged Evidence
                                             </div>
                                             <div className="pl-5.5">
@@ -641,7 +641,7 @@ function ModerationReportCard({
                                                 </div>
                                             ) : (
                                                 <div className="flex flex-col items-center justify-center py-16 rounded-2xl border border-dashed border-border/50 bg-muted/10 w-full">
-                                                    <ShieldAlert className="h-10 w-10 text-muted-foreground/20 mb-3" />
+                                                    <ShieldAlert className="size-10 text-muted-foreground/20 mb-3" />
                                                     <span className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest">No Direct Logs Available</span>
                                                 </div>
                                             )}
@@ -653,8 +653,8 @@ function ModerationReportCard({
                                                     <span className="text-xs font-bold text-primary">Target: {report.target.name}</span>
                                                     <span className="text-[10px] text-muted-foreground/60">{report.target.email}</span>
                                                 </div>
-                                                <div className="h-8 w-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
-                                                    <User className="h-4 w-4 text-primary" />
+                                                <div className="size-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+                                                    <User className="size-4 text-primary" />
                                                 </div>
                                             </div>
                                         )}
@@ -669,7 +669,7 @@ function ModerationReportCard({
                                             disabled={savingId === report.id}
                                             className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-all active:scale-95 text-[11px] font-black uppercase tracking-widest"
                                         >
-                                            <Trash2 className="h-4 w-4" />
+                                            <Trash2 className="size-4" />
                                             Dismiss Case
                                         </button>
                                         
@@ -679,7 +679,7 @@ function ModerationReportCard({
                                                 disabled={addingTermId === report.id}
                                                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-red-500/70 hover:text-red-500 hover:bg-red-500/10 transition-all active:scale-95 text-[11px] font-black uppercase tracking-widest border border-red-500/10"
                                             >
-                                                <Ban className="h-4 w-4" />
+                                                <Ban className="size-4" />
                                                 Add to Banned Terms
                                             </button>
                                         )}
@@ -690,7 +690,7 @@ function ModerationReportCard({
                                         disabled={savingId === report.id}
                                         className="flex items-center gap-3 px-8 py-3 rounded-xl bg-emerald-500 text-white text-[11px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all active:scale-95 shadow-lg shadow-emerald-500/20"
                                     >
-                                        <CheckCircle2 className="h-4 w-4" />
+                                        <CheckCircle2 className="size-4" />
                                         Mark as Resolved
                                     </button>
                                 </div>

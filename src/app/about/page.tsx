@@ -86,7 +86,7 @@ export default function AboutPage() {
                         className="flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card text-sm font-bold hover:border-primary/30 hover:bg-muted/50 transition-all"
                     >
                         Sign In
-                        <ArrowRight className="h-4 w-4" />
+                        <ArrowRight className="size-4" />
                     </TransitionLink>
                 </motion.div>
             </header>
@@ -99,7 +99,7 @@ export default function AboutPage() {
                     className="text-center py-16 md:py-24"
                 >
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
-                        <Sparkles className="h-4 w-4 text-primary" />
+                        <Sparkles className="size-4 text-primary" />
                         <span className="text-xs font-black uppercase tracking-widest text-primary">About iReside</span>
                     </div>
                     <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-6">
@@ -132,8 +132,8 @@ export default function AboutPage() {
                                     className="p-6 rounded-2xl border border-border bg-muted/30 hover:bg-muted/50 transition-colors group"
                                 >
                                     <div className="flex items-start gap-4">
-                                        <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
-                                            <value.icon className="h-6 w-6 text-primary" />
+                                        <div className="size-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
+                                            <value.icon className="size-6 text-primary" />
                                         </div>
                                         <div>
                                             <h3 className="text-lg font-semibold mb-2">{value.title}</h3>
@@ -168,10 +168,10 @@ export default function AboutPage() {
                                 <div className="absolute -top-20 -right-20 w-[10rem] h-[10rem] rounded-full bg-primary/5 blur-[60px] group-hover:bg-primary/10 transition-all" />
                                 <div className="relative">
                                     <div className="flex items-center gap-3 mb-4">
-                                        <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                                            {i === 0 && <Building2 className="h-5 w-5 text-primary" />}
-                                            {i === 1 && <ShieldCheck className="h-5 w-5 text-primary" />}
-                                            {i === 2 && <Users className="h-5 w-5 text-primary" />}
+                                        <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                                            {i === 0 && <Building2 className="size-5 text-primary" />}
+                                            {i === 1 && <ShieldCheck className="size-5 text-primary" />}
+                                            {i === 2 && <Users className="size-5 text-primary" />}
                                         </div>
                                         <h3 className="text-xl font-semibold">{item.role}</h3>
                                     </div>
@@ -198,7 +198,7 @@ export default function AboutPage() {
                                     className="inline-flex items-center justify-center gap-2 h-14 px-8 rounded-2xl bg-primary font-bold text-primary-foreground hover:bg-primary/90 transition-all hover:scale-[1.02] shadow-lg shadow-primary/20"
                                 >
                                     Request Access
-                                    <ArrowRight className="h-5 w-5" />
+                                    <ArrowRight className="size-5" />
                                 </TransitionLink>
                                 <TransitionLink
                                     href="/login"

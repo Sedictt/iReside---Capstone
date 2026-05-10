@@ -130,7 +130,7 @@ export default function RentApplicationPage() {
                         transition={{ delay: 0.3, type: "spring" }}
                         className="mx-auto size-24 bg-gradient-to-br from-primary to-primary-dark rounded-3xl flex items-center justify-center shadow-2xl shadow-primary/40 mb-10"
                     >
-                        <CheckCircle2 className="h-12 w-12 text-white" />
+                        <CheckCircle2 className="size-12 text-white" />
                     </motion.div>
 
                     <h1 className="text-4xl md:text-5xl font-extrabold mb-6 tracking-tight text-white leading-tight">
@@ -146,7 +146,7 @@ export default function RentApplicationPage() {
                             href="/tenant/applications"
                             className="w-full sm:w-auto px-10 py-5 rounded-2xl bg-white text-black font-bold hover:bg-white/90 transition-all flex items-center justify-center gap-3 active:scale-95 shadow-xl shadow-white/5"
                         >
-                            <Zap className="h-4 w-4" />
+                            <Zap className="size-4" />
                             Track Progress
                         </Link>
                         <Link
@@ -154,7 +154,7 @@ export default function RentApplicationPage() {
                             className="w-full sm:w-auto px-10 py-5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold transition-all flex items-center justify-center gap-3 backdrop-blur-md active:scale-95"
                         >
                             Return to Dashboard
-                            <ArrowRight className="h-4 w-4 opacity-50" />
+                            <ArrowRight className="size-4 opacity-50" />
                         </Link>
                     </div>
                 </motion.div>
@@ -196,7 +196,7 @@ export default function RentApplicationPage() {
                                 onClick={() => router.push('/tenant/applications')}
                                 className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-white/40 hover:text-primary transition-colors group"
                             >
-                                <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+                                <ChevronLeft className="size-4 transition-transform group-hover:-translate-x-1" />
                                 Return to Applications
                             </button>
                             <h1 className="text-4xl font-extrabold text-white tracking-tighter leading-none">
@@ -229,12 +229,12 @@ export default function RentApplicationPage() {
                                         )}
 
                                         <div className={cn(
-                                            "h-10 w-10 rounded-xl flex items-center justify-center transition-all duration-500 shrink-0",
+                                            "size-10 rounded-xl flex items-center justify-center transition-all duration-500 shrink-0",
                                             isActive ? "bg-primary text-black scale-105 shadow-[0_0_20px_rgba(109,152,56,0.5)]" :
                                                 isCompleted ? "bg-primary/20 text-primary" :
                                                     "bg-white/5 text-white/40"
                                         )}>
-                                            {isCompleted ? <CheckCircle2 className="h-5 w-5" /> : <step.icon className="h-4 w-4" />}
+                                            {isCompleted ? <CheckCircle2 className="size-5" /> : <step.icon className="size-4" />}
                                         </div>
 
                                         <div className="min-w-0">
@@ -252,7 +252,7 @@ export default function RentApplicationPage() {
                                         {isActive && (
                                             <motion.div
                                                 layoutId="active-pill"
-                                                className="absolute right-4 w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(109,152,56,1)]"
+                                                className="absolute right-4 size-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(109,152,56,1)]"
                                             />
                                         )}
                                     </div>
@@ -279,7 +279,7 @@ export default function RentApplicationPage() {
                                     </div>
                                     <h3 className="text-xl font-extrabold text-white truncate">{property.name}</h3>
                                     <p className="text-xs text-white/70 flex items-center gap-1.5 mt-1">
-                                        <MapPin className="h-3 w-3" />
+                                        <MapPin className="size-3" />
                                         {property.address}
                                     </p>
                                 </div>
@@ -309,17 +309,17 @@ export default function RentApplicationPage() {
                             <div className="absolute -top-10 -right-10 opacity-[0.03] select-none">
                                 {(() => {
                                     const Icon = steps[currentStep - 1].icon;
-                                    return <Icon className="h-80 w-80 rotate-12" />;
+                                    return <Icon className="size-80 rotate-12" />;
                                 })()}
                             </div>
 
                             <div className="relative z-10 flex-1 flex flex-col">
                                 <header className="mb-6">
                                     <div className="flex items-center gap-3 mb-4">
-                                        <div className="h-10 w-10 rounded-2xl bg-primary/20 flex items-center justify-center text-primary">
+                                        <div className="size-10 rounded-2xl bg-primary/20 flex items-center justify-center text-primary">
                                             {(() => {
                                                 const Icon = steps[currentStep - 1].icon;
-                                                return <Icon className="h-5 w-5" />;
+                                                return <Icon className="size-5" />;
                                             })()}
                                         </div>
                                         <span className="text-[10px] font-bold text-white/40 uppercase tracking-[0.3em]">Step {currentStep} of 4</span>
@@ -341,7 +341,7 @@ export default function RentApplicationPage() {
                                         <div className="flex flex-col gap-6">
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                                                 <div className="md:col-span-2 p-4 rounded-2xl bg-primary/5 border border-primary/10 flex items-start gap-3">
-                                                    <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                                                    <Info className="size-4 text-primary shrink-0 mt-0.5" />
                                                     <p className="text-[10px] text-white/60 leading-relaxed uppercase tracking-wider font-bold">
                                                         Note: Name must exactly match the name on the lease contract and government-issued ID.
                                                     </p>
@@ -401,7 +401,7 @@ export default function RentApplicationPage() {
                                             <FormField label="Reference Contact" value={formData.referencePhone} onChange={(v: string) => setFormData(prev => ({ ...prev, referencePhone: v }))} placeholder="Mobile Number" />
 
                                             <div className="md:col-span-2 p-6 rounded-3xl bg-blue-500/5 border border-blue-500/10 flex items-start gap-4 shadow-inner">
-                                                <Shield className="h-6 w-6 text-blue-400 shrink-0 mt-0.5" />
+                                                <Shield className="size-6 text-blue-400 shrink-0 mt-0.5" />
                                                 <div className="space-y-1">
                                                     <p className="text-sm font-bold text-blue-400/90 tracking-tight">Source of Income Verification</p>
                                                     <p className="text-xs text-blue-300/60 leading-relaxed font-medium">
@@ -448,7 +448,7 @@ export default function RentApplicationPage() {
                                                         { id: 7, label: "Move-in Inspection", desc: "Photo/Video & Signed Checklist" },
                                                     ].map((item) => (
                                                         <div key={item.id} className="flex items-start gap-3 p-3 rounded-2xl bg-white/[0.02] border border-white/5 group hover:bg-white/[0.04] transition-all">
-                                                            <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-primary group-hover:text-black transition-all">
+                                                            <div className="size-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-primary group-hover:text-black transition-all">
                                                                 <span className="text-[10px] font-black">{item.id}</span>
                                                             </div>
                                                             <div>
@@ -463,8 +463,8 @@ export default function RentApplicationPage() {
                                             {/* Compliance Notice */}
                                             <div className="rounded-3xl bg-amber-500/[0.03] border border-amber-500/10 p-6 relative group hover:bg-amber-500/[0.05] transition-all">
                                                 <div className="flex items-start gap-6">
-                                                    <div className="h-14 w-14 rounded-2xl bg-amber-500/10 flex items-center justify-center shrink-0 shadow-lg group-hover:scale-110 transition-transform">
-                                                        <Shield className="h-6 w-6 text-amber-500" />
+                                                    <div className="size-14 rounded-2xl bg-amber-500/10 flex items-center justify-center shrink-0 shadow-lg group-hover:scale-110 transition-transform">
+                                                        <Shield className="size-6 text-amber-500" />
                                                     </div>
                                                     <div className="space-y-2">
                                                         <h4 className="text-white font-semibold text-lg">Strict Acceptance Policy</h4>
@@ -478,8 +478,8 @@ export default function RentApplicationPage() {
                                             </div>
 
                                             <div className="flex items-center gap-4 p-5 rounded-[2rem] bg-emerald-500/10 border border-emerald-500/20">
-                                                <div className="h-12 w-12 rounded-2xl bg-emerald-500/20 flex items-center justify-center shrink-0 shadow-lg">
-                                                    <CheckCircle2 className="h-6 w-6 text-emerald-500" />
+                                                <div className="size-12 rounded-2xl bg-emerald-500/20 flex items-center justify-center shrink-0 shadow-lg">
+                                                    <CheckCircle2 className="size-6 text-emerald-500" />
                                                 </div>
                                                 <div>
                                                     <h4 className="text-sm font-black text-white uppercase tracking-tight">Data Ready for Vault</h4>
@@ -500,7 +500,7 @@ export default function RentApplicationPage() {
                                             currentStep === 1 ? "opacity-0 pointer-events-none" : "text-white/40 hover:text-white"
                                         )}
                                     >
-                                        <ChevronLeft className="h-4 w-4" />
+                                        <ChevronLeft className="size-4" />
                                         Previous
                                     </button>
 
@@ -513,13 +513,13 @@ export default function RentApplicationPage() {
                                         <div className="absolute inset-x-0 bottom-0 h-1 bg-black/10 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
                                         {isSubmitting ? (
                                             <>
-                                                <div className="h-5 w-5 border-3 border-black/30 border-t-black rounded-full animate-spin" />
+                                                <div className="size-5 border-3 border-black/30 border-t-black rounded-full animate-spin" />
                                                 Submitting...
                                             </>
                                         ) : (
                                             <>
                                                 {currentStep === 4 ? "Submit Official Application" : "Continue Process"}
-                                                <ChevronRight className="h-5 w-5" />
+                                                <ChevronRight className="size-5" />
                                             </>
                                         )}
                                     </button>
@@ -604,12 +604,12 @@ function UnitSelector({ label, value, onChange, options, onSeeMore, propertyId }
 
                 <div className="flex items-center gap-6 flex-1 py-4">
                     <div className={cn(
-                        "h-12 w-12 rounded-2xl flex items-center justify-center shrink-0 transition-all duration-700",
+                        "size-12 rounded-2xl flex items-center justify-center shrink-0 transition-all duration-700",
                         isSelected
                             ? "bg-primary text-black rotate-[360deg] shadow-[0_10px_30px_rgba(109,152,56,0.3)]"
                             : "bg-white/5 text-white/10"
                     )}>
-                        <Home className="h-5 w-5" />
+                        <Home className="size-5" />
                     </div>
 
                     <div className="space-y-0.5">
@@ -647,7 +647,7 @@ function UnitSelector({ label, value, onChange, options, onSeeMore, propertyId }
                         )}
                     >
                         <span className="relative z-10">{isSelected ? "Change Unit" : "Select Unit"}</span>
-                        {!isSelected && <ArrowRight className="h-4 w-4 relative z-10 animate-bounce-x" />}
+                        {!isSelected && <ArrowRight className="size-4 relative z-10 animate-bounce-x" />}
                     </button>
                 </div>
             </div>
@@ -700,7 +700,7 @@ function UnitSelectionModal({ isOpen, onClose, value, onChange, options }: any) 
                                         )}
                                     >
                                         <div className={cn(
-                                            "h-1.5 w-1.5 rounded-full transition-all",
+                                            "size-1.5 rounded-full transition-all",
                                             selectedFloor === floor ? "bg-black" : "bg-white/10 group-hover/floor:bg-primary"
                                         )} />
                                         <span className="text-xs uppercase tracking-widest">{floor}</span>
@@ -720,8 +720,8 @@ function UnitSelectionModal({ isOpen, onClose, value, onChange, options }: any) 
                                         Showing Units on <span className="text-white">{selectedFloor}</span>
                                     </p>
                                 </div>
-                                <button onClick={onClose} className="h-12 w-12 rounded-2xl bg-white/5 hover:bg-white/10 transition-colors flex items-center justify-center text-white/40 hover:text-white">
-                                    <X className="h-5 w-5" />
+                                <button onClick={onClose} className="size-12 rounded-2xl bg-white/5 hover:bg-white/10 transition-colors flex items-center justify-center text-white/40 hover:text-white">
+                                    <X className="size-5" />
                                 </button>
                             </header>
 
@@ -771,10 +771,10 @@ function UnitSelectionModal({ isOpen, onClose, value, onChange, options }: any) 
                                                         </div>
                                                         <div className="pt-4 border-t border-white/5 flex items-center justify-between">
                                                             <div className="flex items-center gap-2">
-                                                                <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
+                                                                <div className="size-1.5 rounded-full bg-primary/40" />
                                                                 <span className="text-[10px] font-black text-white/60 tracking-widest">{opt.price}</span>
                                                             </div>
-                                                            <ArrowRight className={cn("h-4 w-4 transition-all duration-500 opacity-0 -translate-x-2 group-hover/unit:opacity-100 group-hover/unit:translate-x-0", isSelected ? "text-primary opacity-100 translate-x-0" : "text-white/20")} />
+                                                            <ArrowRight className={cn("size-4 transition-all duration-500 opacity-0 -translate-x-2 group-hover/unit:opacity-100 group-hover/unit:translate-x-0", isSelected ? "text-primary opacity-100 translate-x-0" : "text-white/20")} />
                                                         </div>
                                                     </div>
 
@@ -820,8 +820,8 @@ function FormField({ label, value, onChange, placeholder, type = "text" }: any) 
 function UploadCard({ title, desc, required }: any) {
     return (
         <div className="group relative border-2 border-dashed border-white/5 hover:border-primary/50 rounded-3xl p-5 transition-all bg-white/[0.01] cursor-pointer hover:bg-primary/[0.02] flex flex-col items-center text-center">
-            <div className="h-12 w-12 rounded-2xl bg-white/5 flex items-center justify-center mb-3 group-hover:bg-primary group-hover:text-black transition-all duration-300 shadow-xl">
-                <Upload className="h-5 w-5" />
+            <div className="size-12 rounded-2xl bg-white/5 flex items-center justify-center mb-3 group-hover:bg-primary group-hover:text-black transition-all duration-300 shadow-xl">
+                <Upload className="size-5" />
             </div>
             <h4 className="text-sm font-semibold text-white group-hover:text-primary transition-colors">{title}</h4>
             <p className="text-[10px] text-white/40 mt-0.5 font-medium">{desc}</p>
@@ -837,8 +837,8 @@ function UploadCard({ title, desc, required }: any) {
 function CheckItem({ label }: { label: string }) {
     return (
         <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.03] border border-white/5">
-            <div className="h-4 w-4 rounded-full bg-primary/20 flex items-center justify-center">
-                <CheckCircle2 className="h-2.5 w-2.5 text-primary" />
+            <div className="size-4 rounded-full bg-primary/20 flex items-center justify-center">
+                <CheckCircle2 className="size-2.5 text-primary" />
             </div>
             <span className="text-[10px] font-bold text-white/60 uppercase tracking-tight">{label}</span>
         </div>
@@ -849,7 +849,7 @@ function SummaryItem({ label, value, icon: Icon }: any) {
     return (
         <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-5 space-y-1">
             <div className="flex items-center gap-2 opacity-50">
-                <Icon className="h-3 w-3" />
+                <Icon className="size-3" />
                 <span className="text-[9px] font-bold uppercase tracking-widest">{label}</span>
             </div>
             <p className="text-sm font-bold text-white truncate">{value}</p>
@@ -860,7 +860,7 @@ function SummaryItem({ label, value, icon: Icon }: any) {
 function Seal({ icon: Icon, label }: any) {
     return (
         <div className="flex items-center gap-2 grayscale hover:grayscale-0 transition-all cursor-default">
-            <Icon className="h-4 w-4" />
+            <Icon className="size-4" />
             <span className="text-[9px] font-bold uppercase tracking-widest">{label}</span>
         </div>
     );

@@ -12,13 +12,13 @@ export function OperationalSnapshotSkeleton({ className }: { className?: string 
             <div className="relative z-10 flex h-full flex-col">
                 <div className="flex items-start justify-between gap-4">
                     <div className="space-y-4">
-                        <Skeleton className="h-6 w-32 rounded-full opacity-60" />
+                        <Skeleton className="size-12 rounded-2xl bg-white/5 animate-pulse" />
                         <div className="space-y-2">
                             <Skeleton className="size-40 rounded-full opacity-40" />
                             <Skeleton className="h-10 w-64 rounded-2xl" />
                         </div>
                     </div>
-                    <Skeleton className="h-14 w-14 rounded-2xl" />
+                    <Skeleton className="size-14 rounded-2xl" />
                 </div>
 
                 <div className="mt-8 space-y-3">
@@ -37,7 +37,7 @@ export function OperationalSnapshotSkeleton({ className }: { className?: string 
                                 </div>
                                 <Skeleton className="size-10 rounded-xl" />
                             </div>
-                            <Skeleton className="h-3 w-32 rounded-full opacity-40" />
+                            <Skeleton className="size-32 rounded-full opacity-40" />
                         </div>
                     ))}
                 </div>

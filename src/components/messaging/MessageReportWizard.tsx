@@ -204,7 +204,7 @@ export function MessageReportWizard({
             <div className="shrink-0 flex items-center justify-between border-b border-divider p-6 bg-surface-1/50">
               <div className="flex items-center gap-4">
                 <div className="p-3 rounded-2xl bg-red-500/10 text-red-500 shadow-inner">
-                  <ShieldAlert className="h-6 w-6" />
+                  <ShieldAlert className="size-6" />
                 </div>
                 <div className="flex flex-col">
                   <h3 className="text-xl font-black tracking-tight text-high">Security Report</h3>
@@ -218,7 +218,7 @@ export function MessageReportWizard({
                 className="rounded-2xl p-2.5 hover:bg-surface-2 transition-all active:scale-90" 
                 aria-label="Close report wizard"
               >
-                <X className="h-6 w-6" />
+                <X className="size-6" />
               </button>
             </div>
 
@@ -261,7 +261,7 @@ export function MessageReportWizard({
                             ? cn("bg-high text-surface-0 shadow-lg") 
                             : cn("bg-surface-4", theme.icon)
                         )}>
-                          <Icon className="h-4 w-4" />
+                          <Icon className="size-4" />
                         </div>
                         <span className={cn(
                           "text-[10px] font-black uppercase tracking-widest mb-1 transition-colors",
@@ -277,7 +277,7 @@ export function MessageReportWizard({
                             layoutId="active-check"
                             className={cn("absolute top-4 right-4", theme.icon)}
                           >
-                            <CheckCircle2 className="h-4 w-4" />
+                            <CheckCircle2 className="size-4" />
                           </motion.div>
                         )}
                       </button>
@@ -306,7 +306,7 @@ export function MessageReportWizard({
                       className="absolute right-2 top-2 p-1.5 rounded-xl text-disabled hover:text-primary hover:bg-primary/5 transition-all"
                       title="Paste from clipboard"
                     >
-                      <ClipboardPaste className="h-4 w-4" />
+                      <ClipboardPaste className="size-4" />
                     </button>
                   </div>
                   <p className="mt-2 text-[10px] font-medium text-disabled px-1">
@@ -369,7 +369,7 @@ export function MessageReportWizard({
                             onClick={() => removeScreenshot(idx)}
                             className="p-2 rounded-xl bg-red-500 text-white shadow-lg active:scale-90"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="size-4" />
                           </button>
                         </div>
                       </motion.div>
@@ -382,7 +382,7 @@ export function MessageReportWizard({
                         className="size-24 rounded-2xl border-2 border-dashed border-divider hover:border-primary/50 hover:bg-primary/5 transition-all flex flex-col items-center justify-center gap-2 group"
                       >
                         <div className="p-2 rounded-full bg-surface-2 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                          <Camera className="h-5 w-5" />
+                          <Camera className="size-5" />
                         </div>
                         <span className="text-[9px] font-black uppercase tracking-widest text-disabled group-hover:text-primary">
                           Add
@@ -412,7 +412,7 @@ export function MessageReportWizard({
                   animate={{ opacity: 1, y: 0 }}
                   className="rounded-2xl border border-red-500/15 bg-red-500/5 p-4 flex items-center gap-3"
                 >
-                  <AlertTriangle className="h-5 w-5 text-red-500 shrink-0" />
+                  <AlertTriangle className="size-5 text-red-500 shrink-0" />
                   <p className="text-xs font-bold text-red-500">{error}</p>
                 </motion.div>
               )}
@@ -421,7 +421,7 @@ export function MessageReportWizard({
             {/* Footer */}
             <div className="shrink-0 border-t border-divider p-6 bg-surface-1/50 flex items-center justify-between gap-4">
               <div className="hidden sm:flex items-center gap-2 text-disabled">
-                <ShieldAlert className="h-4 w-4" />
+                <ShieldAlert className="size-4" />
                 <span className="text-[10px] font-bold uppercase tracking-widest">Confidential Submission</span>
               </div>
               <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -443,13 +443,13 @@ export function MessageReportWizard({
                 >
                   {isSubmitting ? (
                     <>
-                      <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                       <span>Encrypting...</span>
                     </>
                   ) : (
                     <>
                       <span>Submit Official Report</span>
-                      <ChevronRight className="h-4 w-4" />
+                      <ChevronRight className="size-4" />
                     </>
                   )}
                 </button>

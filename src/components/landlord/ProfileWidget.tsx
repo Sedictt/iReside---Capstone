@@ -123,7 +123,7 @@ export function ProfileWidget() {
                                     asChild
                                 >
                                     <div 
-                                        className="relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-2 border-border dark:border-white/10 shadow-sm cursor-pointer hover:ring-2 hover:ring-primary transition-all shrink-0"
+                                        className="relative flex size-16 items-center justify-center overflow-hidden rounded-full border-2 border-border dark:border-white/10 shadow-sm cursor-pointer hover:ring-2 hover:ring-primary transition-all shrink-0"
                                         style={{ backgroundColor: profile?.avatar_bg_color || '#10b981' }}
                                     >
                                         {shouldShowAvatar ? (
@@ -163,13 +163,14 @@ export function ProfileWidget() {
                                 href="/landlord/profile"
                                 className="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:text-neutral-300 dark:hover:bg-white/10 dark:hover:text-white"
                             >
-                                <User className="size-4 group-hover:text-primary transition-colors" />
+                                <User className="size-5" />
                                 <span>My Profile</span>
                             </Link>
                             <Link
                                 href="/landlord/settings"
                                 className="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:text-neutral-300 dark:hover:bg-white/10 dark:hover:text-white"
                             >
+                                <Settings className="size-5" />
                                 <Settings className="size-4 group-hover:text-primary transition-colors" />
                                 <span>Settings</span>
                             </Link>

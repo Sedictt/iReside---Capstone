@@ -219,19 +219,19 @@ export default function UnitTransferRequest({ currentUnitId }: UnitTransferReque
                                                     
                                                     <div className="grid grid-cols-2 gap-4">
                                                         <div className="flex items-center gap-2 text-muted-foreground group-hover:text-foreground transition-colors">
-                                                            <Layers className="w-3.5 h-3.5" />
+                                                            <Layers className="size-3.5" />
                                                             <span className="text-[10px] font-bold uppercase tracking-widest">Floor {unit.floor}</span>
                                                         </div>
                                                         <div className="flex items-center gap-2 text-muted-foreground group-hover:text-foreground transition-colors">
-                                                            <Maximize className="w-3.5 h-3.5" />
+                                                            <Maximize className="size-3.5" />
                                                             <span className="text-[10px] font-bold uppercase tracking-widest">{unit.sqft ? `${unit.sqft} SQFT` : 'Size Varies'}</span>
                                                         </div>
                                                         <div className="flex items-center gap-2 text-muted-foreground group-hover:text-foreground transition-colors">
-                                                            <Bed className="w-3.5 h-3.5" />
+                                                            <Bed className="size-3.5" />
                                                             <span className="text-[10px] font-bold uppercase tracking-widest">{unit.beds} Bed</span>
                                                         </div>
                                                         <div className="flex items-center gap-2 text-muted-foreground group-hover:text-foreground transition-colors">
-                                                            <Bath className="w-3.5 h-3.5" />
+                                                            <Bath className="size-3.5" />
                                                             <span className="text-[10px] font-bold uppercase tracking-widest">{unit.baths} Bath</span>
                                                         </div>
                                                     </div>

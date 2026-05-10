@@ -115,8 +115,8 @@ export default function LandlordUtilitiesPage() {
         <div className="flex min-h-full w-full flex-col bg-background text-foreground">
             {/* Hero Header Section - Improved Depth */}
             <div className="relative overflow-hidden border-b border-border bg-card/20 px-6 py-10 md:px-12 md:py-16">
-                <div className="absolute -right-24 -top-24 h-96 w-96 rounded-full bg-primary/5 blur-[120px]" />
-                <div className="absolute -left-24 -bottom-24 h-96 w-96 rounded-full bg-primary/5 blur-[120px]" />
+                <div className="absolute -right-24 -top-24 size-96 rounded-full bg-primary/5 blur-[120px]" />
+                <div className="absolute -left-24 -bottom-24 size-96 rounded-full bg-primary/5 blur-[120px]" />
                 
                 <div className="relative z-10 mx-auto max-w-7xl">
                     <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
@@ -141,7 +141,7 @@ export default function LandlordUtilitiesPage() {
                                 onClick={() => setIsAddModalOpen(true)}
                                 className="flex items-center gap-3 rounded-2xl bg-primary px-8 py-4 text-sm font-black text-primary-foreground shadow-2xl shadow-primary/20 transition-all hover:bg-primary/90 hover:scale-[1.05] active:scale-95"
                             >
-                                <Plus className="h-5 w-5" />
+                                <Plus className="size-5" />
                                 Add Facility
                             </button>
                         </div>
@@ -168,7 +168,7 @@ export default function LandlordUtilitiesPage() {
                                         : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
                                 )}
                             >
-                                <tab.icon className={cn("h-4 w-4 transition-colors", activeTab === tab.id ? "text-primary" : "text-muted-foreground")} />
+                                <tab.icon className={cn("size-4 transition-colors", activeTab === tab.id ? "text-primary" : "text-muted-foreground")} />
                                 {tab.label}
                                 {tab.badge && (
                                     <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-black text-primary-foreground">
@@ -187,7 +187,7 @@ export default function LandlordUtilitiesPage() {
 
                     <div className="flex items-center gap-4">
                         <div className="relative w-full sm:w-96">
-                            <Search className="absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/40" />
+                            <Search className="absolute left-5 top-1/2 size-5 -translate-y-1/2 text-muted-foreground/40" />
                             <input
                                 type="text"
                                 placeholder="Find a facility..."
@@ -196,8 +196,8 @@ export default function LandlordUtilitiesPage() {
                                 className="w-full rounded-[2rem] border border-border bg-card py-4 pl-14 pr-6 text-base font-medium outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-8 shadow-sm"
                             />
                         </div>
-                        <button className="flex h-14 w-14 items-center justify-center rounded-[2rem] border border-border bg-card text-muted-foreground transition-all hover:bg-muted hover:text-primary active:scale-90">
-                            <Filter className="h-5 w-5" />
+                        <button className="flex size-14 items-center justify-center rounded-[2rem] border border-border bg-card text-muted-foreground transition-all hover:bg-muted hover:text-primary active:scale-90">
+                            <Filter className="size-5" />
                         </button>
                     </div>
                 </div>
@@ -217,8 +217,8 @@ export default function LandlordUtilitiesPage() {
                                 onClick={() => setIsAddModalOpen(true)}
                                 className="group relative flex flex-col items-center justify-center gap-5 rounded-3xl border-2 border-dashed border-border/50 bg-muted/10 p-8 transition-all hover:bg-primary/[0.03] hover:border-primary/30 hover:shadow-lg min-h-[340px]"
                             >
-                                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted text-muted-foreground transition-all duration-300 group-hover:bg-primary group-hover:text-primary-foreground group-hover:scale-105">
-                                    <Plus className="h-8 w-8" />
+                                <div className="flex size-16 items-center justify-center rounded-2xl bg-muted text-muted-foreground transition-all duration-300 group-hover:bg-primary group-hover:text-primary-foreground group-hover:scale-105">
+                                    <Plus className="size-8" />
                                 </div>
                                 <div className="text-center space-y-2">
                                     <p className="text-lg font-bold text-foreground">Add New Facility</p>
@@ -227,7 +227,7 @@ export default function LandlordUtilitiesPage() {
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-1.5 text-primary font-semibold text-xs opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">
-                                    Get started <ArrowRight className="h-3.5 w-3.5" />
+                                    Get started <ArrowRight className="size-3.5" />
                                 </div>
                             </button>
 
@@ -239,7 +239,7 @@ export default function LandlordUtilitiesPage() {
                             ) : filteredUtilities.length === 0 ? (
                                 <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">
                                     <div className="mb-4 rounded-full bg-muted p-4">
-                                        <Search className="h-8 w-8 text-muted-foreground" />
+                                        <Search className="size-8 text-muted-foreground" />
                                     </div>
                                     <h3 className="text-xl font-semibold">No facilities found</h3>
                                     <p className="text-muted-foreground">Try adjusting your search or add a new facility.</p>
@@ -267,7 +267,7 @@ export default function LandlordUtilitiesPage() {
                                                     />
                                                 ) : (
                                                     <div className="flex h-full w-full items-center justify-center bg-muted">
-                                                        <IconComponent className="h-12 w-12 text-muted-foreground/30" />
+                                                        <IconComponent className="size-12 text-muted-foreground/30" />
                                                     </div>
                                                 )}
                                                 {/* Status Badge */}
@@ -279,15 +279,15 @@ export default function LandlordUtilitiesPage() {
                                                             : "bg-white text-amber-600 border-amber-100 dark:bg-amber-950 dark:text-amber-400 dark:border-amber-800"
                                                     )}>
                                                         <span className={cn(
-                                                            "h-1.5 w-1.5 rounded-full",
+                                                            "size-1.5 rounded-full",
                                                             utility.status === "Active" ? "bg-emerald-500 animate-pulse" : "bg-amber-500"
                                                         )} />
                                                         {utility.status}
                                                     </div>
                                                 </div>
                                                 {/* Type Icon */}
-                                                <div className="absolute bottom-4 left-4 z-20 flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-primary border border-border shadow-xl dark:bg-card dark:text-primary">
-                                                    <IconComponent className="h-5 w-5" />
+                                                <div className="absolute bottom-4 left-4 z-20 flex size-11 items-center justify-center rounded-2xl bg-white text-primary border border-border shadow-xl dark:bg-card dark:text-primary">
+                                                    <IconComponent className="size-5" />
                                                 </div>
                                             </div>
 
@@ -297,7 +297,7 @@ export default function LandlordUtilitiesPage() {
                                                 <div className="space-y-2">
                                                     <div className="flex items-center gap-2">
                                                         <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
-                                                            <Zap className="h-3 w-3" />
+                                                            <Zap className="size-3" />
                                                             {utility.type}
                                                         </span>
                                                         {utility.tags?.slice(0, 2).map((tag: string) => (
@@ -314,12 +314,12 @@ export default function LandlordUtilitiesPage() {
                                                 {/* Meta: Capacity + Location */}
                                                 <div className="mt-3 flex items-center gap-3 text-xs font-medium text-muted-foreground">
                                                     <span className="flex items-center gap-1.5">
-                                                        <Users className="h-3.5 w-3.5 text-muted-foreground/50" />
+                                                        <Users className="size-3.5 text-muted-foreground/50" />
                                                         {utility.capacity || 0} capacity
                                                     </span>
-                                                    <span className="h-1 w-1 rounded-full bg-border/60" />
+                                                    <span className="size-1 rounded-full bg-border/60" />
                                                     <span className="flex items-center gap-1.5">
-                                                        <MapPin className="h-3.5 w-3.5 text-muted-foreground/50" />
+                                                        <MapPin className="size-3.5 text-muted-foreground/50" />
                                                         {utility.property?.name || utility.location_details || "Main Wing"}
                                                     </span>
                                                 </div>
@@ -343,10 +343,10 @@ export default function LandlordUtilitiesPage() {
                                                     <div className="flex items-center gap-2">
                                                         <button 
                                                             onClick={() => handleDeleteAmenity(utility.id)}
-                                                            className="flex h-9 w-9 items-center justify-center rounded-xl border border-border text-muted-foreground transition-all hover:bg-red-500/10 hover:text-red-500" 
+                                                            className="flex size-9 items-center justify-center rounded-xl border border-border text-muted-foreground transition-all hover:bg-red-500/10 hover:text-red-500" 
                                                             aria-label="Delete facility"
                                                         >
-                                                            <X className="h-4 w-4" />
+                                                            <X className="size-4" />
                                                         </button>
                                                         <button className="flex items-center gap-1.5 rounded-xl bg-foreground px-4 py-2 text-xs font-bold text-background transition-all hover:bg-primary hover:text-primary-foreground hover:shadow-md hover:shadow-primary/20">
                                                             Manage
@@ -385,7 +385,7 @@ export default function LandlordUtilitiesPage() {
                                             <tr>
                                                 <td colSpan={5} className="p-20 text-center">
                                                     <div className="flex flex-col items-center gap-3">
-                                                        <ClipboardList className="h-12 w-12 text-muted-foreground/20" />
+                                                        <ClipboardList className="size-12 text-muted-foreground/20" />
                                                         <p className="text-lg font-bold text-muted-foreground">No bookings found</p>
                                                     </div>
                                                 </td>
@@ -398,14 +398,14 @@ export default function LandlordUtilitiesPage() {
                                                             {req.tenant?.avatar_url ? (
                                                                 <Image src={req.tenant.avatar_url} alt="" width={56} height={56} className="rounded-[1.25rem] object-cover" />
                                                             ) : (
-                                                                <div className="flex h-14 w-14 items-center justify-center rounded-[1.25rem] bg-primary/10 text-primary font-black text-lg">
+                                                                <div className="flex size-14 items-center justify-center rounded-[1.25rem] bg-primary/10 text-primary font-black text-lg">
                                                                     {req.tenant?.full_name?.charAt(0) || "T"}
                                                                 </div>
                                                             )}
                                                             <div className="flex flex-col gap-1">
                                                                 <span className="text-lg font-black text-foreground group-hover:text-primary transition-colors">{req.tenant?.full_name || "Unknown Tenant"}</span>
                                                                 <span className="text-xs font-bold text-muted-foreground flex items-center gap-2">
-                                                                    <Zap className="h-3.5 w-3.5 text-primary" />
+                                                                    <Zap className="size-3.5 text-primary" />
                                                                     {req.amenity?.name}
                                                                 </span>
                                                             </div>
@@ -414,11 +414,11 @@ export default function LandlordUtilitiesPage() {
                                                     <td className="p-8">
                                                         <div className="flex flex-col gap-3">
                                                             <div className="flex items-center gap-3 text-sm font-black text-foreground">
-                                                                <Calendar className="h-4 w-4 text-primary" />
+                                                                <Calendar className="size-4 text-primary" />
                                                                 {req.booking_date}
                                                             </div>
                                                             <div className="flex items-center gap-3 text-xs text-muted-foreground font-bold">
-                                                                <Clock className="h-4 w-4" />
+                                                                <Clock className="size-4" />
                                                                 {req.start_time.slice(0, 5)} - {req.end_time.slice(0, 5)}
                                                             </div>
                                                         </div>
@@ -447,20 +447,20 @@ export default function LandlordUtilitiesPage() {
                                                                 <>
                                                                     <button 
                                                                         onClick={() => handleUpdateBookingStatus(req.id, "Approved")}
-                                                                        className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 transition-all hover:bg-emerald-500 hover:text-white shadow-lg shadow-emerald-500/10 active:scale-90"
+                                                                        className="flex size-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 transition-all hover:bg-emerald-500 hover:text-white shadow-lg shadow-emerald-500/10 active:scale-90"
                                                                     >
-                                                                        <Check className="h-6 w-6" />
+                                                                        <Check className="size-6" />
                                                                     </button>
                                                                     <button 
                                                                         onClick={() => handleUpdateBookingStatus(req.id, "Rejected")}
-                                                                        className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-500/10 text-red-600 transition-all hover:bg-red-500 hover:text-white shadow-lg shadow-red-500/10 active:scale-90"
+                                                                        className="flex size-12 items-center justify-center rounded-2xl bg-red-500/10 text-red-600 transition-all hover:bg-red-500 hover:text-white shadow-lg shadow-red-500/10 active:scale-90"
                                                                     >
-                                                                        <X className="h-6 w-6" />
+                                                                        <X className="size-6" />
                                                                     </button>
                                                                 </>
                                                             )}
-                                                            <button className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground transition-all hover:bg-foreground hover:text-background active:scale-90">
-                                                                <MoreVertical className="h-6 w-6" />
+                                                            <button className="flex size-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground transition-all hover:bg-foreground hover:text-background active:scale-90">
+                                                                <MoreVertical className="size-6" />
                                                             </button>
                                                         </div>
                                                     </td>
@@ -481,8 +481,8 @@ export default function LandlordUtilitiesPage() {
                             exit={{ opacity: 0, scale: 0.95 }}
                             className="flex flex-col items-center justify-center py-32 rounded-[4rem] border-4 border-dashed border-border/40 bg-muted/5"
                         >
-                            <div className="flex h-24 w-24 items-center justify-center rounded-[2.5rem] bg-muted mb-8 shadow-inner">
-                                <HistoryIcon className="h-12 w-12 text-muted-foreground/30" />
+                            <div className="flex size-24 items-center justify-center rounded-[2.5rem] bg-muted mb-8 shadow-inner">
+                                <HistoryIcon className="size-12 text-muted-foreground/30" />
                             </div>
                             <h3 className="text-3xl font-black text-foreground tracking-tight">Archive Management</h3>
                             <p className="text-base font-medium text-muted-foreground/60 text-center max-w-md mt-4 leading-relaxed">

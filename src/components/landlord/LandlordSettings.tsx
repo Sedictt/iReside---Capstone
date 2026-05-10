@@ -113,7 +113,7 @@ function SettingField({ label, children, description, icon: Icon }: { label: str
     return (
         <div className="space-y-2">
             <div className="flex items-center gap-2 px-1">
-                {Icon && <Icon className="h-3.5 w-3.5 text-neutral-500" />}
+                {Icon && <Icon className="size-3.5 text-neutral-500" />}
                 <label className="text-xs font-bold uppercase tracking-wider text-neutral-400">{label}</label>
             </div>
             {children}
@@ -632,7 +632,7 @@ export function LandlordSettings() {
                             <GlassCard title="Avatar & Identity" description="Your primary identification photo.">
                                 <div className="flex flex-col items-center py-4">
                                     <div 
-                                        className="group relative flex h-40 w-40 items-center justify-center rounded-[3rem] border-4 border-white/10 shadow-2xl transition-transform hover:scale-105"
+                                        className="group relative flex size-40 items-center justify-center rounded-[3rem] border-4 border-white/10 shadow-2xl transition-transform hover:scale-105"
                                         style={{ backgroundColor: profile?.avatar_bg_color || "#22C55E" }}
                                     >
                                         {profile?.avatar_url ? (
@@ -1020,7 +1020,7 @@ export function LandlordSettings() {
         ) : twoFAStatus === 'disabled' ? (
             <div className="space-y-8 max-w-lg">
                 <div className="flex items-center gap-6 p-6 rounded-3xl border border-white/5 bg-white/[0.02] transition-all hover:bg-white/[0.04]">
-                    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-inner">
+                    <div className="flex size-16 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-inner">
                         <Smartphone className="size-8" />
                     </div>
                     <div className="space-y-1">
@@ -1042,12 +1042,12 @@ export function LandlordSettings() {
             <div className="space-y-8 max-w-lg">
                 <div className="relative overflow-hidden rounded-3xl border border-white/5 bg-white/[0.02] p-8 transition-all">
                     <div className="absolute top-0 right-0 p-4">
-                        <div className="flex h-3 w-3 items-center justify-center rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
+                        <div className="flex size-3 items-center justify-center rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
                     </div>
                     <div className="space-y-4">
                         <div className="flex items-center gap-3">
                             <div className="size-5 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                                <CheckCircle className="h-3 w-3 text-emerald-500" />
+                                <CheckCircle className="size-3 text-emerald-500" />
                             </div>
                             <span className="text-xs font-bold text-neutral-300 uppercase tracking-widest">Google Account Linked</span>
                         </div>
@@ -1069,7 +1069,7 @@ export function LandlordSettings() {
             <div className="space-y-8 max-w-lg">
                 <div className="relative overflow-hidden rounded-3xl border border-white/5 bg-white/[0.02] p-8">
                     <div className="flex items-center gap-3 mb-6">
-                        <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.6)]"></div>
+                        <div className="size-2 rounded-full bg-amber-500 animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.6)]"></div>
                         <span className="text-xs font-bold text-neutral-300 uppercase tracking-widest">Verification Required</span>
                     </div>
                     <div className="space-y-6">
@@ -1098,7 +1098,7 @@ export function LandlordSettings() {
             <div className="space-y-8 max-w-lg">
                 <div className="relative overflow-hidden rounded-3xl border border-primary/20 bg-primary/5 p-8 transition-all">
                     <div className="flex items-center gap-3 mb-6">
-                        <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
+                        <div className="size-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
                         <span className="text-xs font-bold text-primary uppercase tracking-widest">2FA Active</span>
                     </div>
                     <div className="space-y-4">
@@ -1191,7 +1191,7 @@ export function LandlordSettings() {
                                         disabled={isSessionsLoading}
                                         className="mt-2 flex items-center gap-2 text-xs font-bold text-red-400 hover:text-red-300 transition-colors disabled:opacity-50"
                                     >
-                                        <LogOut className="h-3.5 w-3.5" /> Sign out all other devices
+                                        <LogOut className="size-3.5" /> Sign out all other devices
                                     </button>
                                 )}
                             </div>
@@ -1410,7 +1410,7 @@ export function LandlordSettings() {
                                     {isActive && (
                                         <motion.div 
                                             layoutId="active-indicator"
-                                            className="h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),1)]" 
+                                            className="size-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),1)]" 
                                         />
                                     )}
                                 </div>

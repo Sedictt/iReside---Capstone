@@ -52,7 +52,7 @@ export function MoveOutStatusBadge({ status, className }: MoveOutStatusBadgeProp
         className
       )}
     >
-      <Icon className="h-3 w-3" />
+      <Icon className="size-4" />
       {config.label}
     </div>
   );

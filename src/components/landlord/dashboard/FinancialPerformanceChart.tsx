@@ -231,7 +231,7 @@ export function FinancialPerformanceChart({ dataByWindow }: FinancialPerformance
                                 className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6d9838] shadow-[0_0_12px_rgba(109,152,56,0.6)]"
                             />
                         )}
-                        <span className={cn("h-2 w-2 rounded-full", activeTab === "earnings" ? "bg-[#6d9838] shadow-[0_0_8px_rgba(109,152,56,0.8)]" : "bg-neutral-600")} />
+                        <span className={cn("size-2 rounded-full", activeTab === "earnings" ? "bg-[#6d9838] shadow-[0_0_8px_rgba(109,152,56,0.8)]" : "bg-neutral-600")} />
                         {labels.earnings}
                     </button>
                     <button
@@ -247,7 +247,7 @@ export function FinancialPerformanceChart({ dataByWindow }: FinancialPerformance
                                 className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.6)]"
                             />
                         )}
-                        <span className={cn("h-2 w-2 rounded-full", activeTab === "expenses" ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" : "bg-neutral-600")} />
+                        <span className={cn("size-2 rounded-full", activeTab === "expenses" ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" : "bg-neutral-600")} />
                         {labels.expenses}
                     </button>
                     <button
@@ -263,7 +263,7 @@ export function FinancialPerformanceChart({ dataByWindow }: FinancialPerformance
                                 className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 shadow-[0_0_12px_rgba(59,130,246,0.6)]"
                             />
                         )}
-                        <span className={cn("h-2 w-2 rounded-full", activeTab === "netIncome" ? "bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]" : "bg-neutral-600")} />
+                        <span className={cn("size-2 rounded-full", activeTab === "netIncome" ? "bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]" : "bg-neutral-600")} />
                         {labels.netIncome}
                     </button>
                 </div>
@@ -280,7 +280,7 @@ export function FinancialPerformanceChart({ dataByWindow }: FinancialPerformance
                         <option value="year">Yearly</option>
                     </select>
                     <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-muted-foreground/40 group-hover/select:text-primary transition-colors">
-                        <ChevronDown className="h-3.5 w-3.5" />
+                        <ChevronDown className="size-3.5" />
                     </div>
                 </div>
             </div>

@@ -51,13 +51,13 @@ export function CommunityAnnouncement({
                         onClick={() => onToggle(true)}
                         className="flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-black/5 dark:hover:bg-white/5"
                     >
-                        <X className="h-5 w-5" />
+                        <Pin className="size-4" />
                     </button>
                 </div>
                 
                 <div className="flex flex-col gap-6 p-8 md:flex-row md:items-center">
                     <div className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl ${config.bg} ${config.color}`}>
-                        <Megaphone className="h-8 w-8" />
+                        <Megaphone className="size-5" />
                     </div>
                     
                     <div className="flex-1 space-y-2">

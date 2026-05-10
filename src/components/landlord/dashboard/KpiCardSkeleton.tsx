@@ -15,7 +15,7 @@ export function KpiCardSkeleton({ className }: { className?: string }) {
                 <div className="relative z-10 w-full space-y-5">
                     {/* Title Area */}
                     <div className="flex items-center gap-3">
-                        <Skeleton className="h-3 w-3 rounded-full" />
+                        <Skeleton className="size-3 rounded-full" />
                         <Skeleton className="h-3 w-24 rounded-full" />
                     </div>
 

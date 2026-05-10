@@ -275,7 +275,6 @@ export function UnitListingWizard({
                                <input 
                                   type="text" 
                                   defaultValue={slot.name} 
-                                  autoFocus
                                   onClick={(e) => e.stopPropagation()}
                                   onChange={(e) => {
                                     setPhotoSlots(prev => prev.map(p => p.id === slot.id ? { ...p, name: e.target.value } : p))

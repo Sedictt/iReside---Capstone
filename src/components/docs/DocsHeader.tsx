@@ -22,7 +22,7 @@ export function DocsHeader({ onMenuToggle, isMenuOpen }: DocsHeaderProps) {
             className="flex items-center justify-center rounded-lg p-2 text-text-medium hover:bg-surface-2 lg:hidden"
             aria-label="Toggle menu"
           >
-            {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            {isMenuOpen ? <X className="size-4" /> : <Menu className="size-5" />}
           </button>
           
           <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-90">
@@ -56,7 +56,7 @@ export function DocsHeader({ onMenuToggle, isMenuOpen }: DocsHeaderProps) {
 
         <div className="flex items-center gap-2 sm:gap-4">
           <div className="relative hidden sm:block">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-disabled" />
+            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-text-disabled" />
             <input
               type="text"
               placeholder="Search documentation..."
@@ -68,14 +68,14 @@ export function DocsHeader({ onMenuToggle, isMenuOpen }: DocsHeaderProps) {
           </div>
           
           <div className="flex items-center gap-1 border-l border-divider pl-4">
-            <ThemeToggle variant="sidebar" className="h-9 w-9" />
-            <Button variant="ghost" size="icon" className="h-9 w-9 text-text-medium" asChild>
+            <ThemeToggle variant="sidebar" className="size-9" />
+            <Button variant="ghost" size="icon" className="size-9 text-text-medium" asChild>
               <a href="https://github.com/ireside" target="_blank" rel="noopener noreferrer">
-                <Github className="h-5 w-5" />
+                <Github className="size-5" />
               </a>
             </Button>
-            <Button variant="ghost" size="icon" className="h-9 w-9 text-text-medium hidden sm:flex">
-              <ExternalLink className="h-5 w-5" />
+            <Button variant="ghost" size="icon" className="size-9 text-text-medium hidden sm:flex">
+              <ExternalLink className="size-5" />
             </Button>
             <div className="ml-2 hidden lg:block">
               <Button size="sm" className="bg-primary hover:bg-primary-dark text-white rounded-full px-5">

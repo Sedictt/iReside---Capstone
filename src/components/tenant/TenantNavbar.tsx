@@ -193,7 +193,7 @@ export function TenantSidebar() {
                                     {((item.href === '/tenant/lease' && (isUrgent('lease') || isUrgent('lease_renewal_request'))) ||
                                       (item.href === '/tenant/maintenance' && isUrgent('maintenance')) ||
                                       (item.href === '/tenant/payments' && isUrgent('payment'))) && (
-                                        <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
+                                        <span className="size-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
                                     )}
                                 </Link>
                             );
@@ -217,7 +217,7 @@ export function TenantSidebar() {
                                 type="button"
                                 onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
                                 className={cn(
-                                    "relative flex h-9 w-9 items-center justify-center rounded-lg border border-border transition-all",
+                                    "relative flex size-9 items-center justify-center rounded-lg border border-border transition-all",
                                     isNotificationsOpen ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground"
                                 )}
                                 aria-label="Notifications"
@@ -257,7 +257,7 @@ export function TenantSidebar() {
                         <button
                             type="button"
                             onClick={() => setIsMobileOpen((prev) => !prev)}
-                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground"
+                            className="inline-flex size-9 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground"
                             aria-label="Toggle tenant navigation"
                         >
                             {isMobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
@@ -482,7 +482,7 @@ function NotificationPanelContent({
                                     <p className="mt-2 text-[10px] font-bold text-muted-foreground/40 uppercase tracking-wider">{formatTimeAgo(notification.created_at)}</p>
                                 </div>
                                 {!notification.read && (
-                                    <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),0.6)]" />
+                                    <div className="mt-1.5 size-2 shrink-0 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),0.6)]" />
                                 )}
                             </div>
                         </div>

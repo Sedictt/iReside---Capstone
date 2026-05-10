@@ -44,12 +44,12 @@ export function RoleBadge({ role, className, showTenant = false }: RoleBadgeProp
             aria-label={meta.label}
             title={meta.label}
             className={cn(
-                "inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full border",
+                "inline-flex size-4 shrink-0 items-center justify-center rounded-full border",
                 meta.className,
                 className
             )}
         >
-            <Icon className="h-2.5 w-2.5" />
+            <Icon className="size-2.5" />
         </span>
     );
 }

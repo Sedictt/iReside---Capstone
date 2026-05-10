@@ -96,7 +96,7 @@ export function CommunityPostCard({
             <header className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <div 
-                        className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border shadow-inner dark:border-white/10"
+                        className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border shadow-inner dark:border-white/10"
                         style={{ backgroundColor: post.author_avatar_bg_color || '#f3f4f6' }}
                     >
                         {post.author_avatar ? (
@@ -122,8 +122,8 @@ export function CommunityPostCard({
                     </div>
                 </div>
                 {!isPending && (
-                    <button className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-muted dark:hover:bg-white/5">
-                        <MoreHorizontal className="h-4 w-4" />
+                    <button className="flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-muted dark:hover:bg-white/5">
+                        <MoreHorizontal className="size-4" />
                     </button>
                 )}
             </header>
@@ -180,8 +180,8 @@ export function CommunityPostCard({
                                     )}
                                     <div className="relative z-10 flex items-center justify-between">
                                         <div className="flex items-center gap-3">
-                                            <div className={`flex h-5 w-5 items-center justify-center rounded-full border transition-colors ${selected ? 'border-primary bg-primary text-white' : 'border-border bg-white dark:bg-black'}`}>
-                                                {selected && <Check className="h-3 w-3 stroke-[4]" />}
+                                            <div className={`flex size-5 items-center justify-center rounded-full border transition-colors ${selected ? 'border-primary bg-primary text-white' : 'border-border bg-white dark:bg-black'}`}>
+                                                {selected && <Check className="size-3 stroke-[4]" />}
                                             </div>
                                             <span className={`text-sm font-bold ${selected ? 'text-primary' : 'text-foreground dark:text-white'}`}>
                                                 {option}
@@ -203,8 +203,8 @@ export function CommunityPostCard({
             {isPending ? (
                 <div className="flex items-center justify-between rounded-2xl bg-amber-500/10 p-4 border border-amber-500/20">
                     <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400">
-                            <Pin className="h-4 w-4" />
+                        <div className="flex size-8 items-center justify-center rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400">
+                            <Pin className="size-4" />
                         </div>
                         <span className="text-xs font-bold text-amber-700 dark:text-amber-300 uppercase tracking-wider">Awaiting Moderation</span>
                     </div>
@@ -214,13 +214,13 @@ export function CommunityPostCard({
                                 onClick={() => onModerationDecision(post.id, true)}
                                 className="flex h-9 items-center gap-2 rounded-xl bg-emerald-500 px-4 text-xs font-bold text-white shadow-lg shadow-emerald-500/20 hover:brightness-110"
                             >
-                                <Check className="h-4 w-4" /> Approve
+                                <Check className="size-4" /> Approve
                             </button>
                             <button 
                                 onClick={() => onModerationDecision(post.id, false)}
                                 className="flex h-9 items-center gap-2 rounded-xl bg-red-500 px-4 text-xs font-bold text-white shadow-lg shadow-red-500/20 hover:brightness-110"
                             >
-                                <XCircle className="h-4 w-4" /> Reject
+                                <XCircle className="size-4" /> Reject
                             </button>
                         </div>
                     )}
@@ -270,7 +270,7 @@ export function CommunityPostCard({
                                 <div className="space-y-4 py-2">
                                     {[1, 2].map(i => (
                                         <div key={i} className="flex gap-4 animate-pulse">
-                                            <div className="h-9 w-9 rounded-full bg-muted dark:bg-white/5" />
+                                            <div className="size-9 rounded-full bg-muted dark:bg-white/5" />
                                             <div className="flex-1 space-y-2">
                                                 <div className="h-3 w-24 rounded bg-muted dark:bg-white/5" />
                                                 <div className="h-10 rounded-2xl bg-muted/50 dark:bg-white/5" />
@@ -283,7 +283,7 @@ export function CommunityPostCard({
                                     {comments.map((comment: { id: string; authorAvatarBgColor?: string | null; authorAvatar?: string | null; authorName: string; createdAt: string; content: string }) => (
                                         <div key={comment.id} className="flex gap-4 group text-white">
                                             <div 
-                                                className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border dark:border-white/5"
+                                                className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border dark:border-white/5"
                                                 style={{ backgroundColor: comment.authorAvatarBgColor || '#f3f4f6' }}
                                             >
                                                 {comment.authorAvatar ? (
@@ -312,7 +312,7 @@ export function CommunityPostCard({
 
                             <form onSubmit={handleCommentSubmit} className="flex gap-4 items-start pt-2">
                                 <div 
-                                    className="h-9 w-9 shrink-0 rounded-full border border-border overflow-hidden dark:border-white/5"
+                                    className="size-9 shrink-0 rounded-full border border-border overflow-hidden dark:border-white/5"
                                     style={{ backgroundColor: '#f3f4f6' }}
                                 >
                                     <User className="h-full w-full p-2 text-muted-foreground" />
@@ -330,7 +330,7 @@ export function CommunityPostCard({
                                         disabled={!commentContent.trim() || isMutating}
                                         className="absolute right-2 top-1/2 -translate-y-1/2 text-primary hover:scale-110 disabled:opacity-30 transition-all"
                                     >
-                                        <Send className="h-5 w-5" />
+                                        <Send className="size-5" />
                                     </button>
                                 </div>
                             </form>
@@ -355,9 +355,12 @@ export function CommunityPostCard({
 function PhotoGrid({ photos, onPhotoClick }: { photos: { id: string; url: string }[], onPhotoClick: (idx: number) => void }) {
     if (photos.length === 1) {
         return (
-            <div 
+            <div
                 className="overflow-hidden rounded-2xl border border-border dark:border-white/10 cursor-pointer group"
                 onClick={() => onPhotoClick(0)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onPhotoClick(0); }}}
+                tabIndex={0}
+                role="button"
             >
                 <img src={photos[0].url} alt="Post" className="w-full object-cover max-h-[500px] transition-transform duration-500 group-hover:scale-105" />
             </div>
@@ -367,10 +370,13 @@ function PhotoGrid({ photos, onPhotoClick }: { photos: { id: string; url: string
     return (
         <div className={`grid gap-2 rounded-2xl overflow-hidden border border-border dark:border-white/10 ${photos.length === 2 ? 'grid-cols-2' : 'grid-cols-2 grid-rows-2'}`}>
             {photos.slice(0, 4).map((photo, i) => (
-                <div 
-                    key={photo.id} 
+                <div
+                    key={photo.id}
                     className={`relative overflow-hidden bg-muted dark:bg-[#1a1a1a] cursor-pointer group ${photos.length === 3 && i === 0 ? 'row-span-2' : 'aspect-square'}`}
                     onClick={() => onPhotoClick(i)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onPhotoClick(i); }}}
+                    tabIndex={0}
+                    role="button"
                 >
                     <img src={photo.url} alt={`Photo ${i}`} className="h-full w-full object-cover transition-transform hover:scale-110 duration-500" />
                     {photos.length > 4 && i === 3 && (
@@ -395,7 +401,7 @@ function InteractionButton({ icon: Icon, label, active, onClick, danger, disable
                 : 'text-muted-foreground hover:bg-muted dark:hover:bg-white/5'
             }`}
         >
-            <Icon className={`h-4 w-4 transition-transform group-hover:scale-110 ${active && !danger ? 'fill-current' : ''}`} />
+            <Icon className={`size-4 transition-transform group-hover:scale-110 ${active && !danger ? 'fill-current' : ''}`} />
             <span className="text-xs font-bold">{label}</span>
         </button>
     )

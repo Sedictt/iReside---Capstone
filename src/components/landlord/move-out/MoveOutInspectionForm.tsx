@@ -248,7 +248,7 @@ export function MoveOutInspectionForm({
                             "flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter",
                             systemValue ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500"
                           )}>
-                            <ShieldCheck className="h-2.5 w-2.5" />
+                            <ShieldCheck className="size-2.5" />
                             System Verified
                           </div>
                         )}
@@ -338,7 +338,7 @@ export function MoveOutInspectionForm({
                   onClick={() => setDeductions([...deductions, { id: Math.random().toString(36).slice(2), description: "", amount: 0 }])}
                   className="flex items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/5 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-primary transition-all hover:bg-primary/10"
                 >
-                  <Plus className="h-3 w-3" />
+                  <Plus className="size-3" />
                   Add Item
                 </button>
               </div>
@@ -374,7 +374,7 @@ export function MoveOutInspectionForm({
                       </div>
                       <button
                         onClick={() => setDeductions(deductions.filter(item => item.id !== d.id))}
-                        className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20"
+                        className="flex size-9 items-center justify-center rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20"
                       >
                         <Trash2 className="size-4" />
                       </button>
@@ -401,7 +401,7 @@ export function MoveOutInspectionForm({
                       <span className="text-2xl font-black text-primary">₱{refundAmount.toLocaleString()}</span>
                     </div>
                     <div className="flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground">
-                      <Info className="h-3 w-3" />
+                      <Info className="size-3" />
                       Refund will be processed after completion.
                     </div>
                   </div>
@@ -451,7 +451,7 @@ export function MoveOutInspectionForm({
               className="relative w-full max-w-lg overflow-hidden rounded-[3rem] border border-border bg-card p-10 shadow-2xl"
             >
               <div className="flex flex-col gap-6">
-                <div className="flex h-16 w-16 items-center justify-center rounded-[1.5rem] bg-amber-500/10 text-amber-500">
+                <div className="flex size-16 items-center justify-center rounded-[1.5rem] bg-amber-500/10 text-amber-500">
                   <AlertCircle className="size-8" />
                 </div>
                 <div className="space-y-2">

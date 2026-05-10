@@ -1129,7 +1129,7 @@ export function WalkInApplicationModal({
                                                                     {REQUIREMENT_LABELS[key]}
                                                                 </p>
                                                                 <div className="flex items-center gap-2 mt-1">
-                                                                    <div className={cn("w-1.5 h-1.5 rounded-full", value ? "bg-emerald-500 animate-pulse" : "bg-amber-400")} />
+                                                                    <div className={cn("size-1.5 rounded-full", value ? "bg-emerald-500 animate-pulse" : "bg-amber-400")} />
                                                                     <p className={cn("text-[9px] font-black uppercase tracking-[0.2em] leading-none", value ? "text-emerald-500" : "text-amber-500/70")}>
                                                                         {value ? "Audit Passed" : "Pending Verification"}
                                                                     </p>
@@ -1551,7 +1551,7 @@ export function WalkInApplicationModal({
                                                   <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Monthly Income</p>
                                                  <p className="text-2xl font-black uppercase italic tracking-tighter text-foreground">₱{parseIncome(formData.employment_info.monthly_income).toLocaleString()}</p>
                                                  <div className="pt-2 flex items-center gap-2">
-                                                     <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                                     <div className="size-1.5 rounded-full bg-primary" />
                                                      <p className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground">Verified Monthly</p>
                                                  </div>
                                              </div>
@@ -1559,7 +1559,7 @@ export function WalkInApplicationModal({
                                                   <p className="text-[10px] font-black uppercase tracking-widest text-primary">Monthly Rent</p>
                                                  <p className="text-2xl font-black tracking-tighter italic text-foreground">₱{leaseData.monthly_rent.toLocaleString()}</p>
                                                  <div className="pt-2 flex items-center gap-2">
-                                                     <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                                                     <div className="size-1.5 rounded-full bg-primary animate-pulse" />
                                                      <p className="text-[9px] font-black text-primary uppercase tracking-[0.3em]">Locked Rate</p>
                                                  </div>
                                              </div>
@@ -1567,7 +1567,7 @@ export function WalkInApplicationModal({
                                                   <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Lease Period</p>
                                                  <p className="text-lg font-black tracking-tighter text-foreground">{leaseData.start_date} to {leaseData.end_date}</p>
                                                  <div className="pt-2 flex items-center gap-2">
-                                                     <div className="w-1.5 h-1.5 rounded-full bg-purple-400" />
+                                                     <div className="size-1.5 rounded-full bg-purple-400" />
                                                      <p className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground">12 Months</p>
                                                  </div>
                                              </div>
@@ -1575,7 +1575,7 @@ export function WalkInApplicationModal({
                                                   <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Security Deposit</p>
                                                  <p className="text-2xl font-black tracking-tighter text-foreground">₱{leaseData.security_deposit.toLocaleString()}</p>
                                                  <div className="pt-2 flex items-center gap-2">
-                                                     <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                                                     <div className="size-1.5 rounded-full bg-green-400" />
                                                      <p className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground">{paymentData.security_deposit_payment.status === "completed" ? "Paid" : "Pending"}</p>
                                                  </div>
                                              </div>
@@ -1583,7 +1583,7 @@ export function WalkInApplicationModal({
                                                   <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Advance Payment</p>
                                                  <p className="text-2xl font-black tracking-tighter text-foreground">₱{paymentData.advance_payment.amount.toLocaleString()}</p>
                                                  <div className="pt-2 flex items-center gap-2">
-                                                     <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                                                     <div className="size-1.5 rounded-full bg-green-400" />
                                                      <p className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground">{paymentData.advance_payment.status === "completed" ? "Paid" : "Pending"}</p>
                                                  </div>
                                              </div>

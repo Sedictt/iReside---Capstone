@@ -268,7 +268,7 @@ export function TenantProductTourOverlay() {
                 {!isAnchorVisible && (
                     <div className="mt-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-100">
                         <div className="flex items-center gap-2 font-semibold text-amber-300">
-                            <AlertTriangle className="h-3.5 w-3.5" />
+                            <AlertTriangle className="size-3.5" />
                             Fallback guidance enabled
                         </div>
                         <p className="mt-1 leading-relaxed">{activeStep.fallback}</p>
@@ -282,7 +282,7 @@ export function TenantProductTourOverlay() {
                         disabled={!previousStep || submitting}
                         className="inline-flex items-center gap-1 rounded-xl border border-white/20 px-3 py-2 text-xs font-semibold text-white disabled:opacity-40"
                     >
-                        <ArrowLeft className="h-3.5 w-3.5" />
+                        <ArrowLeft className="size-3.5" />
                         Previous
                     </button>
                     <button
@@ -291,7 +291,7 @@ export function TenantProductTourOverlay() {
                         disabled={submitting}
                         className="inline-flex items-center gap-1 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-black disabled:opacity-60"
                     >
-                        {isLastStep ? <CheckCircle2 className="h-3.5 w-3.5" /> : <ArrowRight className="h-3.5 w-3.5" />}
+                        {isLastStep ? <CheckCircle2 className="size-3.5" /> : <ArrowRight className="size-3.5" />}
                         {isLastStep ? "Finish Tour" : "Next Step"}
                     </button>
                     <button
@@ -300,7 +300,7 @@ export function TenantProductTourOverlay() {
                         disabled={submitting}
                         className="inline-flex items-center gap-1 rounded-xl border border-white/20 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
                     >
-                        <SkipForward className="h-3.5 w-3.5" />
+                        <SkipForward className="size-3.5" />
                         Skip
                     </button>
                 </div>

@@ -283,7 +283,7 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
                                                 : { opacity: 0, scale: 0.7 }
                                         }
                                         transition={{ duration: 0.2, ease: "easeOut" }}
-                                        className="absolute top-1/2 -left-1.5 h-3.5 w-3.5 -translate-y-1/2 rotate-45 border-l border-b border-white/10 bg-card/80"
+                                        className="absolute top-1/2 -left-1.5 size-3.5 -translate-y-1/2 rotate-45 border-l border-b border-white/10 bg-card/80"
                                     />
                                 </motion.div>
                             )}
@@ -322,7 +322,7 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
                             className="pointer-events-auto w-full max-w-lg rounded-[2.5rem] border border-white/10 bg-card/95 p-8 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] backdrop-blur-3xl overflow-hidden relative"
                         >
                             {/* Background decoration */}
-                            <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 h-64 w-64 rounded-full bg-primary/10 blur-[100px] pointer-events-none" />
+                            <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 size-64 rounded-full bg-primary/10 blur-[100px] pointer-events-none" />
 
                             <div className="relative z-10 flex flex-col h-full">
                                 {/* Header */}
@@ -367,13 +367,13 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
                                             <div className="grid gap-6 md:grid-cols-2">
                                                 <div className="space-y-4">
                                                     <h4 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-400">
-                                                        <div className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                                                        <div className="size-1.5 rounded-full bg-emerald-400" />
                                                         Good Things
                                                     </h4>
                                                     <ul className="space-y-3">
                                                         {analysis.goodThings.map((item, i) => (
                                                             <li key={i} className="flex gap-3 text-xs font-bold leading-relaxed text-foreground/80">
-                                                                <div className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400/30" />
+                                                                <div className="mt-1 size-1.5 shrink-0 rounded-full bg-emerald-400/30" />
                                                                 {item}
                                                             </li>
                                                         ))}
@@ -382,13 +382,13 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
 
                                                 <div className="space-y-4">
                                                     <h4 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-amber-400">
-                                                        <div className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                                                        <div className="size-1.5 rounded-full bg-amber-400" />
                                                         Things to Watch
                                                     </h4>
                                                     <ul className="space-y-3">
                                                         {analysis.toLookOutFor.map((item, i) => (
                                                             <li key={i} className="flex gap-3 text-xs font-bold leading-relaxed text-foreground/80">
-                                                                <div className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400/30" />
+                                                                <div className="mt-1 size-1.5 shrink-0 rounded-full bg-amber-400/30" />
                                                                 {item}
                                                             </li>
                                                         ))}
@@ -437,7 +437,7 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
                                                 : "bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground"
                                         )}
                                     >
-                                        <RefreshCcw className={cn("h-3.5 w-3.5", isLoading && "animate-spin")} />
+                                        <RefreshCcw className={cn("size-3.5", isLoading && "animate-spin")} />
                                         {cooldown > 0 ? `Wait ${cooldown}s` : "Refresh Analysis"}
                                     </button>
                                 </div>

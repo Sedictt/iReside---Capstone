@@ -75,8 +75,8 @@ export function MessageComposer({
     // Auto-resize textarea
     useEffect(() => {
         if (textAreaRef.current) {
-            textAreaRef.current.style.height = "auto";
-            textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, 120)}px`;
+            const scrollHeight = textAreaRef.current.scrollHeight;
+            textAreaRef.current.style.cssText = `height: ${Math.min(scrollHeight, 120)}px;`;
         }
     }, [messageInput]);
 
@@ -91,9 +91,9 @@ export function MessageComposer({
                         className="absolute -top-8 left-6 flex items-center gap-2"
                     >
                         <div className="flex gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]" />
-                            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]" />
-                            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" />
+                            <span className="size-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]" />
+                            <span className="size-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]" />
+                            <span className="size-1.5 rounded-full bg-primary animate-bounce" />
                         </div>
                         <span className="text-[10px] font-bold text-primary uppercase tracking-wider">
                             {otherUserName || "Someone"} is typing...
@@ -113,7 +113,7 @@ export function MessageComposer({
                         >
                             {pendingAttachments.map((att) => (
                                 <div key={att.id} className="relative group">
-                                    <div className="h-16 w-16 rounded-xl overflow-hidden border border-divider bg-surface-3 relative">
+                                    <div className="size-16 rounded-xl overflow-hidden border border-divider bg-surface-3 relative">
                                         {att.isImage && att.previewUrl ? (
                                             <img src={att.previewUrl} className="h-full w-full object-cover" alt="Preview" />
                                         ) : (
@@ -142,7 +142,7 @@ export function MessageComposer({
                                             onClick={() => removePendingAttachment(att.id)}
                                             className="absolute -top-1.5 -right-1.5 size-5 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg hover:scale-110 active:scale-90 transition-transform z-10"
                                         >
-                                            <X className="h-3 w-3" />
+                                            <X className="size-3" />
                                         </button>
                                     )}
                                     

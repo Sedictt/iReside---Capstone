@@ -831,11 +831,11 @@ function HistoryDetailModal({ month, isOpen, onClose }: { month: string | null, 
                                                                 <div className="flex items-center gap-2.5">
                                                                     {reading.utility_type === 'water' ? (
                                                                         <div className="size-6 flex items-center justify-center rounded-lg bg-sky-500/10 text-sky-500">
-                                                                            <Droplets className="h-3 w-3" />
+                                                                            <Droplets className="size-3" />
                                                                         </div>
                                                                     ) : (
                                                                         <div className="size-6 flex items-center justify-center rounded-lg bg-amber-500/10 text-amber-500">
-                                                                            <Zap className="h-3 w-3" />
+                                                                            <Zap className="size-3" />
                                                                         </div>
                                                                     )}
                                                                     {reading.utility_type}
@@ -940,7 +940,7 @@ function UnitDetailModal({ isOpen, onClose, draft, onUpdate }: { isOpen: boolean
                                 </div>
                                 <div className="rounded-2xl border border-border bg-emerald-500/[0.03] p-6 flex flex-col justify-center dark:border-emerald-500/10">
                                     <div className="flex items-center gap-2">
-                                        <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                                        <div className="size-2 rounded-full bg-emerald-500 animate-pulse" />
                                         <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-500/80">Account Status</span>
                                     </div>
                                     <span className="text-lg font-bold text-foreground mt-1">Active Lease</span>
@@ -982,13 +982,13 @@ function UnitDetailModal({ isOpen, onClose, draft, onUpdate }: { isOpen: boolean
                                         ].map((service) => (
                                             <div key={service.label} className="flex items-center justify-between group p-5 hover:bg-muted/30 transition-colors">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="h-2 w-2 rounded-full bg-primary/40" />
+                                                    <div className="size-2 rounded-full bg-primary/40" />
                                                     <span className="text-sm font-bold text-foreground">{service.label}</span>
                                                 </div>
                                                 <div className="flex items-center gap-4">
                                                     <span className="font-mono text-sm font-bold text-primary">₱{service.cost.toLocaleString()}</span>
                                                     <button className="opacity-0 group-hover:opacity-100 p-2 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all">
-                                                        <Trash2 className="h-3.5 w-3.5" />
+                                                        <Trash2 className="size-3.5" />
                                                     </button>
                                                 </div>
                                             </div>
@@ -1077,7 +1077,7 @@ function ResourceSection({ label, icon: Icon, colorClass, draft, onUpdate }: {
                     
                     <div className="flex items-center gap-3">
                         <button className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-card border border-border text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-primary transition-all shadow-sm">
-                            <Camera className="h-3.5 w-3.5" />
+                            <Camera className="size-3.5" />
                             Upload Photo Proof
                         </button>
                     </div>

@@ -92,8 +92,7 @@ export function MessageBubble({
                 const el = document.createElement("textarea");
                 el.value = copyText;
                 el.setAttribute("readonly", "");
-                el.style.position = "fixed";
-                el.style.left = "-9999px";
+                el.style.cssText = "position: fixed; left: -9999px;";
                 document.body.appendChild(el);
                 el.select();
                 document.execCommand("copy");
@@ -138,9 +137,12 @@ export function MessageBubble({
                                 <AlbumGrid attachments={message.attachments} isMe={isMe} onImageClick={onImageClick} />
                             </div>
                         ) : message.fileUrl ? (
-                            <div 
+                            <div
                                 className="rounded-[2rem] overflow-hidden border border-black/10 shadow-sm max-w-[320px] bg-surface-2 cursor-pointer hover:opacity-90 transition-opacity"
                                 onClick={() => onImageClick?.([{ url: message.fileUrl!, id: message.id }], 0)}
+                                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onImageClick?.([{ url: message.fileUrl!, id: message.id }], 0); }}}
+                                tabIndex={0}
+                                role="button"
                             >
                                 <img src={message.fileUrl} alt="Attachment" className="w-full h-auto object-cover max-h-[400px]" />
                             </div>
@@ -182,7 +184,7 @@ export function MessageBubble({
                                     "p-1.5 rounded-lg transition-colors",
                                     isMe ? "hover:bg-white/20" : "hover:bg-surface-3"
                                 )}>
-                                    <Download className="h-3.5 w-3.5" />
+                                    <Download className="size-3.5" />
                                 </button>
                             </div>
                         ) : null}
@@ -219,7 +221,7 @@ export function MessageBubble({
                             )}
                             title="Message actions"
                         >
-                            <MoreVertical className="h-3.5 w-3.5" />
+                            <MoreVertical className="size-3.5" />
                         </button>
 
                         {/* Dropdown Menu */}
@@ -240,7 +242,7 @@ export function MessageBubble({
                                             onClick={handleCopy}
                                             className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-medium hover:bg-surface-2 hover:text-high transition-colors"
                                         >
-                                            {didCopy ? <Check className="h-3 w-3 text-primary" /> : <Copy className="h-3 w-3" />}
+                                            {didCopy ? <Check className="size-3 text-primary" /> : <Copy className="size-3" />}
                                             {didCopy ? "Copied" : "Copy text"}
                                         </button>
                                     )}
@@ -249,7 +251,7 @@ export function MessageBubble({
                                         onClick={handleCopyId}
                                         className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-medium hover:bg-surface-2 hover:text-high transition-colors"
                                     >
-                                        {didCopyId ? <Check className="h-3 w-3 text-primary" /> : <ShieldCheck className="h-3 w-3" />}
+                                        {didCopyId ? <Check className="size-3 text-primary" /> : <ShieldCheck className="size-3" />}
                                         {didCopyId ? "ID Copied" : "Copy ID"}
                                     </button>
                                     {!isMe && onReportMessage && (
@@ -258,7 +260,7 @@ export function MessageBubble({
                                             onClick={() => onReportMessage(message.id)}
                                             className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-red-500 hover:bg-red-500/10 transition-colors"
                                         >
-                                            <AlertTriangle className="h-3 w-3" />
+                                            <AlertTriangle className="size-3" />
                                             Report
                                         </button>
                                     )}
@@ -276,12 +278,12 @@ export function MessageBubble({
 
 function StatusIcon({ status }: { status?: OutboundStatus }) {
     switch (status) {
-        case "sending": return <Clock3 className="h-2.5 w-2.5 text-disabled" />;
-        case "sent": return <Check className="h-2.5 w-2.5 text-disabled" />;
-        case "delivered": return <CheckCheck className="h-2.5 w-2.5 text-disabled" />;
-        case "seen": return <CheckCheck className="h-2.5 w-2.5 text-primary" />;
-        case "failed": return <AlertTriangle className="h-2.5 w-2.5 text-red-500" />;
-        default: return <Check className="h-2.5 w-2.5 text-disabled" />;
+        case "sending": return <Clock3 className="size-2.5 text-disabled" />;
+        case "sent": return <Check className="size-2.5 text-disabled" />;
+        case "delivered": return <CheckCheck className="size-2.5 text-disabled" />;
+        case "seen": return <CheckCheck className="size-2.5 text-primary" />;
+        case "failed": return <AlertTriangle className="size-2.5 text-red-500" />;
+        default: return <Check className="size-2.5 text-disabled" />;
     }
 }
 
@@ -307,16 +309,22 @@ function AlbumGrid({ attachments, isMe, onImageClick }: { attachments: UiMessage
                             isLarge && "row-span-2 aspect-auto"
                         )}
                     >
-                        <img 
-                            src={att.fileUrl} 
-                            className={cn("w-full h-full object-cover", onImageClick && "cursor-pointer hover:opacity-90 transition-opacity")} 
-                            alt="" 
+                        <img
+                            src={att.fileUrl}
+                            className={cn("w-full h-full object-cover", onImageClick && "cursor-pointer hover:opacity-90 transition-opacity")}
+                            alt=""
                             onClick={() => onImageClick?.(attachments.map(a => ({ url: a.fileUrl!, id: a.id })), idx)}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onImageClick?.(attachments.map(a => ({ url: a.fileUrl!, id: a.id })), idx); }}}
+                            tabIndex={onImageClick ? 0 : -1}
+                            role={onImageClick ? "button" : undefined}
                         />
                         {isExtra && (
-                            <div 
+                            <div
                                 className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-[2px] cursor-pointer hover:bg-black/70 transition-colors"
                                 onClick={() => onImageClick?.(attachments.map(a => ({ url: a.fileUrl!, id: a.id })), 3)}
+                                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onImageClick?.(attachments.map(a => ({ url: a.fileUrl!, id: a.id })), 3); }}}
+                                tabIndex={0}
+                                role="button"
                             >
                                 <span className="text-white text-xl font-black">+{extraCount}</span>
                             </div>

@@ -279,7 +279,7 @@ export function TenantInviteManager({
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                 <div className="max-w-2xl">
                     <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1">
-                        <Link2 className="h-3.5 w-3.5 text-primary" />
+                        <Link2 className="size-3.5 text-primary" />
                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Private Share Links</span>
                     </div>
                     <h2 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl text-balance">
@@ -398,7 +398,7 @@ export function TenantInviteManager({
                         </div>
                     </div>
                     <div className="mb-2 inline-flex w-fit items-center gap-1 whitespace-nowrap rounded-lg border border-border bg-card px-2 py-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
-                        <Users className="h-3 w-3" />
+                        <Users className="size-3" />
                         {applicationType === "online" ? "Online" : "In-person"}
                     </div>
                     <p className="mb-5 text-xs text-muted-foreground">
@@ -646,7 +646,7 @@ export function TenantInviteManager({
                                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Generated Invite</span>
                             </div>
                             <div className="relative mb-6 rounded-3xl border-2 border-border bg-white p-3 shadow-xl">
-                                <img src={freshInvite.qrUrl} alt="Invite QR code" className="h-44 w-44 rounded-xl" />
+                                <img src={freshInvite.qrUrl} alt="Invite QR code" className="size-44 rounded-xl" />
                             </div>
                             <div className="mb-6 w-full rounded-2xl border border-border bg-background p-4 text-left">
                                 <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Share URL</p>
@@ -675,7 +675,7 @@ export function TenantInviteManager({
                         </div>
                     ) : (
                         <div className="flex flex-col items-center opacity-60">
-                            <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-3xl border border-dashed border-border bg-background">
+                            <div className="mb-4 flex size-20 items-center justify-center rounded-3xl border border-dashed border-border bg-background">
                                 <QrCode className="size-8 text-muted-foreground" />
                             </div>
                             <p className="text-sm font-medium leading-relaxed text-muted-foreground">

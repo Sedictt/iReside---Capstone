@@ -91,18 +91,18 @@ function LeasesContent() {
                     onClick={() => router.back()}
                     className="mb-6 flex items-center gap-2 text-sm font-bold text-muted-foreground transition-colors hover:text-foreground"
                 >
-                    <ArrowLeft className="h-4 w-4" />
+                    <ArrowLeft className="size-4" />
                     Back to Leases
                 </button>
 
                 {loading ? (
                     <div className="flex h-96 flex-col items-center justify-center gap-4">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        <Loader2 className="size-8 animate-spin text-primary" />
                         <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Loading Lease Record...</p>
                     </div>
                 ) : error ? (
                     <div className="flex h-96 flex-col items-center justify-center gap-4 rounded-[2.5rem] border border-red-500/20 bg-red-500/5 text-center">
-                        <AlertCircle className="h-12 w-12 text-red-500" />
+                        <AlertCircle className="size-12 text-red-500" />
                         <h3 className="text-xl font-black text-foreground">Error Loading Lease</h3>
                         <p className="text-sm text-muted-foreground">{error}</p>
                         <button 
@@ -128,7 +128,7 @@ function LeasesContent() {
                                         </div>
                                         <div className="flex items-center gap-3">
                                             <button className="flex h-11 items-center gap-2 rounded-xl border border-border bg-background px-5 text-xs font-black uppercase tracking-widest transition-all hover:bg-muted">
-                                                <Download className="h-4 w-4" />
+                                                <Download className="size-4" />
                                                 Export PDF
                                             </button>
                                         </div>
@@ -142,8 +142,8 @@ function LeasesContent() {
                                         
                                         <div className="space-y-4">
                                             <div className="flex items-start gap-4">
-                                                <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black">
-                                                    <User className="h-6 w-6" />
+                                                <div className="size-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black">
+                                                    <User className="size-6" />
                                                 </div>
                                                 <div>
                                                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tenant</p>
@@ -153,8 +153,8 @@ function LeasesContent() {
                                             </div>
 
                                             <div className="flex items-start gap-4">
-                                                <div className="h-12 w-12 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground font-black">
-                                                    <ShieldCheck className="h-6 w-6" />
+                                                <div className="size-12 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground font-black">
+                                                    <ShieldCheck className="size-6" />
                                                 </div>
                                                 <div>
                                                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Landlord</p>
@@ -171,8 +171,8 @@ function LeasesContent() {
                                         
                                         <div className="space-y-4">
                                             <div className="flex items-start gap-4">
-                                                <div className="h-12 w-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500 font-black">
-                                                    <Home className="h-6 w-6" />
+                                                <div className="size-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500 font-black">
+                                                    <Home className="size-6" />
                                                 </div>
                                                 <div>
                                                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Property</p>
@@ -182,8 +182,8 @@ function LeasesContent() {
                                             </div>
 
                                             <div className="flex items-start gap-4">
-                                                <div className="h-12 w-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 font-black">
-                                                    <LayoutGrid className="h-6 w-6" />
+                                                <div className="size-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 font-black">
+                                                    <LayoutGrid className="size-6" />
                                                 </div>
                                                 <div>
                                                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Unit</p>
@@ -236,7 +236,7 @@ function LeasesContent() {
                             <div className="rounded-[2.5rem] border border-border bg-card p-8 shadow-sm">
                                 <div className="mb-6 flex items-center justify-between">
                                     <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Audit Trail</h3>
-                                    <History className="h-4 w-4 text-muted-foreground/50" />
+                                    <History className="size-4 text-muted-foreground/50" />
                                 </div>
                                 <LeaseAuditTrail events={[]} /> {/* We might need to fetch real events if available */}
                             </div>
@@ -248,10 +248,10 @@ function LeasesContent() {
                                     <div className="flex items-center justify-between rounded-2xl bg-muted/30 p-4">
                                         <div className="flex items-center gap-3">
                                             <div className={cn(
-                                                "h-8 w-8 rounded-full flex items-center justify-center",
+                                                "size-8 rounded-full flex items-center justify-center",
                                                 lease.tenant_signed_at ? "bg-emerald-500/20 text-emerald-500" : "bg-muted text-muted-foreground"
                                             )}>
-                                                {lease.tenant_signed_at ? <CheckCircle2 className="h-4 w-4" /> : <Clock className="h-4 w-4" />}
+                                                {lease.tenant_signed_at ? <CheckCircle2 className="size-4" /> : <Clock className="size-4" />}
                                             </div>
                                             <div>
                                                 <p className="text-xs font-black text-foreground">Tenant</p>
@@ -265,10 +265,10 @@ function LeasesContent() {
                                     <div className="flex items-center justify-between rounded-2xl bg-muted/30 p-4">
                                         <div className="flex items-center gap-3">
                                             <div className={cn(
-                                                "h-8 w-8 rounded-full flex items-center justify-center",
+                                                "size-8 rounded-full flex items-center justify-center",
                                                 lease.landlord_signed_at ? "bg-emerald-500/20 text-emerald-500" : "bg-muted text-muted-foreground"
                                             )}>
-                                                {lease.landlord_signed_at ? <CheckCircle2 className="h-4 w-4" /> : <Clock className="h-4 w-4" />}
+                                                {lease.landlord_signed_at ? <CheckCircle2 className="size-4" /> : <Clock className="size-4" />}
                                             </div>
                                             <div>
                                                 <p className="text-xs font-black text-foreground">Landlord</p>
@@ -343,7 +343,7 @@ function LeasesContent() {
                             activeTab === tab.id ? "text-primary" : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        <tab.icon className="h-4 w-4" />
+                        <tab.icon className="size-4" />
                         {tab.label}
                         {activeTab === tab.id && (
                             <motion.div 
@@ -378,7 +378,7 @@ export default function LeasesPage() {
     return (
         <Suspense fallback={
             <div className="flex h-screen items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <Loader2 className="size-8 animate-spin text-primary" />
             </div>
         }>
             <LeasesContent />

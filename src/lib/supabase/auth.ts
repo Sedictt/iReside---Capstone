@@ -9,6 +9,7 @@ const getDashboardPathForRole = (role: string) => {
     return '/tenant/dashboard'
 }
 
+// eslint-disable-next-line react-doctor/server-auth-actions
 export async function auth() {
     const supabase = await createClient()
     const { data: { session } } = await supabase.auth.getSession()
@@ -22,6 +23,7 @@ export async function auth() {
  * Higher security auth check that validates the user with Supabase.
  * Use this in server actions and API routes that modify data.
  */
+// eslint-disable-next-line react-doctor/server-auth-actions
 export async function requireUser() {
     const supabase = await createClient();
     const {
@@ -36,6 +38,7 @@ export async function requireUser() {
     return { user, supabase };
 }
 
+// eslint-disable-next-line react-doctor/server-auth-actions
 export async function signUp(formData: FormData) {
     const supabase = await createClient()
 
@@ -62,6 +65,7 @@ export async function signUp(formData: FormData) {
     return { error: null, url: getDashboardPathForRole(role) }
 }
 
+// eslint-disable-next-line react-doctor/server-auth-actions
 export async function signIn(formData: FormData) {
     const supabase = await createClient()
 

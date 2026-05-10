@@ -266,7 +266,7 @@ export function MaintenanceDashboard() {
                             Maintenance Operations
                         </h1>
                         <div className="bg-primary/10 border border-primary/20 px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
-                            <Sparkles className="w-3.5 h-3.5 text-primary" />
+                            <Sparkles className="size-3.5 text-primary" />
                             <span className="text-[10px] font-black uppercase tracking-widest text-primary">Smart Triage Active</span>
                         </div>
                     </div>
@@ -300,7 +300,7 @@ export function MaintenanceDashboard() {
 
                         <div className="flex flex-wrap items-center gap-3">
                             <div className="flex items-center gap-2 bg-background border border-border rounded-xl px-3 py-1.5 shadow-sm">
-                                <Filter className="w-3.5 h-3.5 text-muted-foreground" />
+                                <Filter className="size-3.5 text-muted-foreground" />
                                 <select 
                                     value={filter}
                                     onChange={(e) => setFilter(e.target.value as any)}
@@ -315,7 +315,7 @@ export function MaintenanceDashboard() {
                             </div>
 
                             <div className="flex items-center gap-2 bg-background border border-border rounded-xl px-3 py-1.5 shadow-sm">
-                                <AlertTriangle className="w-3.5 h-3.5 text-muted-foreground" />
+                                <AlertTriangle className="size-3.5 text-muted-foreground" />
                                 <select 
                                     value={priorityFilter}
                                     onChange={(e) => setPriorityFilter(e.target.value as any)}
@@ -330,7 +330,7 @@ export function MaintenanceDashboard() {
                             </div>
 
                             <div className="flex items-center gap-2 bg-background border border-border rounded-xl px-3 py-1.5 shadow-sm">
-                                <ArrowUpDown className="w-3.5 h-3.5 text-muted-foreground" />
+                                <ArrowUpDown className="size-3.5 text-muted-foreground" />
                                 <select 
                                     value={sortBy}
                                     onChange={(e) => setSortBy(e.target.value as any)}
@@ -463,7 +463,7 @@ function MaintenanceCard({ request, onClick }: { request: MaintenanceRequest, on
                 <div className="space-y-2 mb-6">
                     <div className="flex items-center gap-2 text-muted-foreground">
                         <div className="p-1.5 bg-muted rounded-lg">
-                            <Home className="w-3.5 h-3.5" />
+                            <Home className="size-3.5" />
                         </div>
                         <span className="text-xs font-bold truncate">
                             {request.property}
@@ -471,7 +471,7 @@ function MaintenanceCard({ request, onClick }: { request: MaintenanceRequest, on
                     </div>
                     <div className="flex items-center gap-2 text-primary">
                         <div className="p-1.5 bg-primary/10 rounded-lg">
-                            <Zap className="w-3.5 h-3.5" />
+                            <Zap className="size-3.5" />
                         </div>
                         <span className="text-xs font-black uppercase tracking-wider">
                             Unit {request.unit}

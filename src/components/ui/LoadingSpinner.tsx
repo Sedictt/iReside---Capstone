@@ -15,10 +15,10 @@ export function LoadingSpinner({
     variant = "default",
 }: LoadingSpinnerProps) {
     const sizeMap = {
-        sm: "h-6 w-6",
-        md: "h-12 w-12",
-        lg: "h-20 w-20",
-        xl: "h-32 w-32",
+        sm: "size-6",
+        md: "size-12",
+        lg: "size-20",
+        xl: "size-32",
     };
 
     const containerSize = sizeMap[size];

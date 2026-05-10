@@ -366,7 +366,7 @@ export default function NewMaintenanceRequest() {
                             >
                                 <span
                                     className={cn(
-                                        "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+                                        "pointer-events-none inline-block size-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
                                         fixItMyself ? "translate-x-5" : "translate-x-0"
                                     )}
                                 />

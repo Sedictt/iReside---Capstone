@@ -569,7 +569,7 @@ export default function CheckoutPage() {
     };
 
     if (loading) {
-        return <div className="flex min-h-[60vh] items-center justify-center text-foreground"><Loader2 className="mr-3 h-5 w-5 animate-spin" />Loading invoice checkout...</div>;
+        return <div className="flex min-h-[60vh] items-center justify-center text-foreground"><Loader2 className="mr-3 size-5 animate-spin" />Loading invoice checkout...</div>;
     }
 
     if (!invoice) {
@@ -583,7 +583,7 @@ export default function CheckoutPage() {
         return (
             <div className="mx-auto max-w-3xl rounded-[2rem] border border-emerald-500/20 bg-card p-10 text-center shadow-sm relative overflow-hidden">
                 <div className="absolute -top-24 -right-24 size-48 bg-emerald-500/10 blur-3xl rounded-full" />
-                <CheckCircle2 className={cn("mx-auto mb-5 h-12 w-12", isSettled ? "text-emerald-400" : "text-amber-400")} />
+                <CheckCircle2 className={cn("mx-auto mb-5 size-12", isSettled ? "text-emerald-400" : "text-amber-400")} />
                 <h1 className="text-3xl font-black text-foreground">
                     {isSettled ? "Invoice already paid" : "Payment submitted for review"}
                 </h1>
@@ -617,14 +617,14 @@ export default function CheckoutPage() {
                         <div className="flex items-center gap-4">
                             <button 
                                 onClick={() => router.back()} 
-                                className="group flex h-10 w-10 items-center justify-center rounded-full border border-border/50 bg-card/50 text-foreground transition-all hover:bg-muted hover:scale-105 active:scale-95"
+                                className="group flex size-10 items-center justify-center rounded-full border border-border/50 bg-card/50 text-foreground transition-all hover:bg-muted hover:scale-105 active:scale-95"
                             >
-                                <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
+                                <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5" />
                             </button>
                             <div>
                                 <div className="flex items-center gap-2">
                                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Checkout Hub</p>
-                                    <span className="h-1 w-1 rounded-full bg-border" />
+                                    <span className="size-1 rounded-full bg-border" />
                                     <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">{invoice.property?.name}</p>
                                 </div>
                                 <h1 className="text-2xl font-black tracking-tight text-foreground">{invoice.invoiceNumber}</h1>
@@ -645,10 +645,10 @@ export default function CheckoutPage() {
                                 )}
                             >
                                 <div className={cn(
-                                    "flex h-10 w-10 items-center justify-center rounded-xl border transition-all",
+                                    "flex size-10 items-center justify-center rounded-xl border transition-all",
                                     method === "gcash" ? "border-primary/30 bg-primary/10 text-primary" : "border-border/50 bg-muted/50"
                                 )}>
-                                    <QrCode className="h-5 w-5" />
+                                    <QrCode className="size-5" />
                                 </div>
                                 <div className="text-left">
                                     <p className="text-sm font-black tracking-tight">GCash Wallet</p>
@@ -665,10 +665,10 @@ export default function CheckoutPage() {
                                 )}
                             >
                                 <div className={cn(
-                                    "flex h-10 w-10 items-center justify-center rounded-xl border transition-all",
+                                    "flex size-10 items-center justify-center rounded-xl border transition-all",
                                     method === "cash" ? "border-amber-500/30 bg-amber-500/10 text-amber-500" : "border-border/50 bg-muted/50"
                                 )}>
-                                    <Wallet className="h-5 w-5" />
+                                    <Wallet className="size-5" />
                                 </div>
                                 <div className="text-left">
                                     <p className="text-sm font-black tracking-tight">Cash / In-Person</p>
@@ -705,10 +705,10 @@ export default function CheckoutPage() {
                                                 <Field label="Transaction Receipt">
                                                     <label className="group relative flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border/50 bg-background/30 px-5 py-8 text-center transition-all hover:bg-background/50 hover:border-primary/40 cursor-pointer">
                                                         <div className={cn(
-                                                            "flex h-12 w-12 items-center justify-center rounded-full transition-all",
+                                                            "flex size-12 items-center justify-center rounded-full transition-all",
                                                             receipt ? "bg-emerald-500/10 text-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.1)]" : "bg-muted text-muted-foreground group-hover:text-primary"
                                                         )}>
-                                                            {receipt ? <CheckCircle2 className="h-6 w-6" /> : <Upload className="h-6 w-6" />}
+                                                            {receipt ? <CheckCircle2 className="size-6" /> : <Upload className="size-6" />}
                                                         </div>
                                                         <div className="space-y-1">
                                                             <p className="text-sm font-black text-foreground truncate max-w-[240px]">
@@ -737,7 +737,7 @@ export default function CheckoutPage() {
                                                     />
                                                 ) : (
                                                     <div className="flex h-full items-center justify-center rounded-2xl bg-zinc-50 border border-dashed border-zinc-200">
-                                                        <QrCode className="h-12 w-12 text-zinc-300" />
+                                                        <QrCode className="size-12 text-zinc-300" />
                                                     </div>
                                                 )}
                                             </div>
@@ -772,7 +772,7 @@ export default function CheckoutPage() {
                                     <div className="grid gap-6 md:grid-cols-[1fr_280px] h-full">
                                         <div className="md:col-span-2 rounded-[2rem] border border-amber-500/20 bg-amber-500/5 p-8 shadow-xl backdrop-blur-3xl h-full flex flex-col justify-center">
                                             <div className="flex items-center gap-3 text-lg font-black text-foreground">
-                                                <HandCoins className="h-6 w-6 text-amber-500" />
+                                                <HandCoins className="size-6 text-amber-500" />
                                                 In-Person Settlement
                                             </div>
                                             <p className="mt-4 text-sm leading-relaxed text-muted-foreground font-medium max-w-2xl">
@@ -781,7 +781,7 @@ export default function CheckoutPage() {
                                             
                                             {inPersonTriggered ? (
                                                 <div className="mt-8 flex items-center gap-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 p-5 text-emerald-600 dark:text-emerald-400 self-start">
-                                                    <CheckCircle2 className="h-5 w-5 shrink-0" />
+                                                    <CheckCircle2 className="size-5 shrink-0" />
                                                     <div className="text-sm">
                                                         <p className="font-black">Intent Successfully Triggered</p>
                                                         <p className="opacity-80">Waiting for landlord to confirm your cash payment.</p>
@@ -794,7 +794,7 @@ export default function CheckoutPage() {
                                                         disabled={submitting}
                                                         className="inline-flex items-center justify-center gap-3 rounded-full bg-amber-500 px-8 py-4 text-sm font-black text-white transition-all hover:bg-amber-600 hover:scale-[1.02] active:scale-95 shadow-lg shadow-amber-500/20 disabled:opacity-60"
                                                     >
-                                                        {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Wallet className="h-5 w-5" />}
+                                                        {submitting ? <Loader2 className="size-5 animate-spin" /> : <Wallet className="size-5" />}
                                                         Notify Landlord of Payment
                                                     </button>
                                                 </div>
@@ -825,7 +825,7 @@ export default function CheckoutPage() {
                 <aside className="lg:sticky lg:top-24 space-y-6">
                     <section className="rounded-[2.5rem] border border-border/50 bg-card/80 p-8 shadow-2xl backdrop-blur-2xl ring-1 ring-border/50">
                         <div className="flex items-center gap-3 mb-6">
-                            <Receipt className="h-5 w-5 text-primary" />
+                            <Receipt className="size-5 text-primary" />
                             <h2 className="text-lg font-black text-foreground tracking-tight">Invoice Summary</h2>
                         </div>
 
@@ -845,9 +845,9 @@ export default function CheckoutPage() {
                                                 isAlreadyPaid ? "border-emerald-500/30 bg-emerald-500/10" : "border-amber-500/30 bg-amber-500/10"
                                             )}>
                                                 {isAlreadyPaid ? (
-                                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                                                    <CheckCircle2 className="size-3.5 text-emerald-500" />
                                                 ) : (
-                                                    <Loader2 className="w-3.5 h-3.5 text-amber-500 animate-spin" />
+                                                    <Loader2 className="size-3.5 text-amber-500 animate-spin" />
                                                 )}
                                             </div>
                                             <div className="flex-1 min-w-0">
@@ -886,7 +886,7 @@ export default function CheckoutPage() {
                                                 "size-5 rounded-md border flex items-center justify-center transition-all cursor-pointer",
                                                 isSelected ? "bg-primary border-primary text-white shadow-sm shadow-primary/20" : "bg-card border-border group-hover:border-primary/50"
                                             )}>
-                                                {isSelected && <CheckCircle2 className="w-3.5 h-3.5" />}
+                                                {isSelected && <CheckCircle2 className="size-3.5" />}
                                             </div>
                                         )}
                                         <div className="flex-1 min-w-0">
@@ -913,9 +913,9 @@ export default function CheckoutPage() {
                                                 isAlreadyPaid ? "border-emerald-500/30 bg-emerald-500/10" : "border-amber-500/30 bg-amber-500/10"
                                             )}>
                                                 {isAlreadyPaid ? (
-                                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                                                    <CheckCircle2 className="size-3.5 text-emerald-500" />
                                                 ) : (
-                                                    <Loader2 className="w-3.5 h-3.5 text-amber-500 animate-spin" />
+                                                    <Loader2 className="size-3.5 text-amber-500 animate-spin" />
                                                 )}
                                             </div>
                                             <div className="flex-1 min-w-0">
@@ -956,7 +956,7 @@ export default function CheckoutPage() {
                                                 "size-5 rounded-md border flex items-center justify-center transition-all cursor-pointer",
                                                 isSelected ? "bg-primary border-primary text-white shadow-sm shadow-primary/20" : "bg-card border-border group-hover:border-primary/50"
                                             )}>
-                                                {isSelected && <CheckCircle2 className="w-3.5 h-3.5" />}
+                                                {isSelected && <CheckCircle2 className="size-3.5" />}
                                             </div>
                                         )}
                                         <div className="flex-1 min-w-0">
@@ -985,7 +985,7 @@ export default function CheckoutPage() {
                                                 </span>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <div className="h-1 w-1 rounded-full bg-emerald-500" />
+                                                <div className="size-1 rounded-full bg-emerald-500" />
                                                 <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest">
                                                     Paid to Date: {formatPhpCurrency(invoice.paidAmount)}
                                                 </span>
@@ -1010,7 +1010,7 @@ export default function CheckoutPage() {
                             
                             {amountDue === 0 && (
                                 <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] font-bold uppercase tracking-wider">
-                                    <Info className="w-3.5 h-3.5" /> Select at least one item to pay
+                                    <Info className="size-3.5" /> Select at least one item to pay
                                 </div>
                             )}
 
@@ -1025,7 +1025,7 @@ export default function CheckoutPage() {
                                             : "bg-gradient-to-r from-primary to-blue-600 text-white hover:scale-[1.02] hover:shadow-primary/25 active:scale-95"
                                     )}
                                 >
-                                    {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <ShieldCheck className="h-5 w-5 transition-transform group-hover:scale-110" />}
+                                    {submitting ? <Loader2 className="size-5 animate-spin" /> : <ShieldCheck className="size-5 transition-transform group-hover:scale-110" />}
                                     Confirm & Settle Now
                                 </button>
                             )}
@@ -1040,7 +1040,7 @@ export default function CheckoutPage() {
                     <div className="rounded-[2rem] border border-border/40 bg-card/40 p-6 text-center">
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">Having Trouble?</p>
                         <Link href="/tenant/messages" className="text-xs font-black text-primary hover:underline flex items-center justify-center gap-1.5">
-                            <HelpCircle className="h-3.5 w-3.5" />
+                            <HelpCircle className="size-3.5" />
                             Contact Property Manager
                         </Link>
                     </div>

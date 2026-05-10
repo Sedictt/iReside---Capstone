@@ -134,7 +134,7 @@ export function LandlordQuestTriggerGuide() {
                 </p>
 
                 <div className="flex items-center gap-2 text-[10px] font-bold text-primary animate-bounce">
-                    <ArrowUpRight className="h-3 w-3" />
+                    <ArrowUpRight className="size-3" />
                     Click the icon above
                 </div>
             </div>

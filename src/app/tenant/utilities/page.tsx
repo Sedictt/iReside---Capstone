@@ -105,8 +105,8 @@ export default function TenantUtilitiesPage() {
         <div className="flex h-full w-full flex-col gap-8 bg-background text-foreground">
             {/* Hero Header Section - High Fidelity */}
             <div className="relative overflow-hidden border-b border-border bg-card/20 px-6 py-10 md:px-12 md:py-16">
-                <div className="absolute -right-24 -top-24 h-96 w-96 rounded-full bg-primary/5 blur-[120px]" />
-                <div className="absolute -left-24 -bottom-24 h-96 w-96 rounded-full bg-primary/5 blur-[120px]" />
+                <div className="absolute -right-24 -top-24 size-96 rounded-full bg-primary/5 blur-[120px]" />
+                <div className="absolute -left-24 -bottom-24 size-96 rounded-full bg-primary/5 blur-[120px]" />
                 
                 <div className="relative z-10 mx-auto max-w-7xl">
                     <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
@@ -185,10 +185,10 @@ export default function TenantUtilitiesPage() {
                                         />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                                         <div className="absolute bottom-4 left-4 flex items-center gap-2">
-                                            <div className={cn("flex h-8 w-8 items-center justify-center rounded-lg text-white shadow-lg", amenity.color)}>
+                                            <div className={cn("flex size-8 items-center justify-center rounded-lg text-white shadow-lg", amenity.color)}>
                                                 {(() => {
                                                     const Icon = getIconByName(amenity.icon_name);
-                                                    return <Icon className="h-4 w-4" />;
+                                                    return <Icon className="size-4" />;
                                                 })()}
                                             </div>
                                             <span className="text-xs font-black uppercase tracking-wider text-white drop-shadow-md">{amenity.type}</span>
@@ -201,11 +201,11 @@ export default function TenantUtilitiesPage() {
                                         
                                         <div className="mt-4 flex items-center gap-4 border-t border-border/50 pt-4">
                                             <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground">
-                                                <Users className="h-3.5 w-3.5" />
+                                                <Users className="size-3.5" />
                                                 {amenity.capacity}
                                             </div>
                                             <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground">
-                                                <MapPin className="h-3.5 w-3.5" />
+                                                <MapPin className="size-3.5" />
                                                 Tower A, Level 4
                                             </div>
                                         </div>
@@ -225,7 +225,7 @@ export default function TenantUtilitiesPage() {
                                                 className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95"
                                             >
                                                 {amenity.price === 0 ? "Borrow" : "Rent Now"}
-                                                <ArrowRight className="h-4 w-4" />
+                                                <ArrowRight className="size-4" />
                                             </button>
                                         </div>
                                     </div>
@@ -240,7 +240,7 @@ export default function TenantUtilitiesPage() {
                         <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
                             <div className="flex items-center justify-between mb-6">
                                 <h3 className="font-black tracking-tight flex items-center gap-2">
-                                    <Calendar className="h-5 w-5 text-primary" />
+                                    <Calendar className="size-5 text-primary" />
                                     My Reservations
                                 </h3>
                                 <button className="text-xs font-bold text-primary hover:underline">View All</button>
@@ -259,7 +259,7 @@ export default function TenantUtilitiesPage() {
                                                 "rounded-full p-1.5",
                                                 booking.status === "Confirmed" ? "bg-emerald-500/10 text-emerald-600" : "bg-amber-500/10 text-amber-600"
                                             )}>
-                                                {booking.status === "Confirmed" ? <CheckCircle2 className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
+                                                {booking.status === "Confirmed" ? <CheckCircle2 className="size-4" /> : <AlertCircle className="size-4" />}
                                             </div>
                                         </div>
                                         <div className="mt-3 flex items-center justify-between">
@@ -274,14 +274,14 @@ export default function TenantUtilitiesPage() {
 
                         {/* Usage History Mini */}
                         <div className="flex items-center gap-4 rounded-2xl border border-dashed border-border p-4 text-muted-foreground hover:text-foreground transition-colors cursor-pointer group">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted group-hover:bg-primary/10 transition-colors">
-                                <LucideIcons.History className="h-5 w-5" />
+                            <div className="flex size-10 items-center justify-center rounded-full bg-muted group-hover:bg-primary/10 transition-colors">
+                                <LucideIcons.History className="size-5" />
                             </div>
                             <div className="flex-1">
                                 <p className="text-sm font-bold">Past Bookings</p>
                                 <p className="text-xs">Review your facility usage history</p>
                             </div>
-                            <LucideIcons.ChevronRight className="h-4 w-4" />
+                            <LucideIcons.ChevronRight className="size-4" />
                         </div>
                     </div>
                 </div>
@@ -307,15 +307,15 @@ export default function TenantUtilitiesPage() {
                             <div className="flex items-center justify-between mb-6">
                                 <h3 className="text-2xl font-black">Request Access</h3>
                                 <button onClick={() => setBookingModal(null)} className="rounded-full bg-muted p-2 hover:bg-muted-foreground/10">
-                                    <AlertCircle className="h-5 w-5 rotate-45" />
+                                    <AlertCircle className="size-5 rotate-45" />
                                 </button>
                             </div>
 
                             <div className="mb-6 flex items-center gap-4 rounded-2xl bg-muted/30 p-4">
-                                <div className={cn("flex h-12 w-12 items-center justify-center rounded-xl text-white", bookingModal.color)}>
+                                <div className={cn("flex size-12 items-center justify-center rounded-xl text-white", bookingModal.color)}>
                                     {(() => {
                                         const Icon = getIconByName(bookingModal.icon_name);
-                                        return <Icon className="h-6 w-6" />;
+                                        return <Icon className="size-6" />;
                                     })()}
                                 </div>
                                 <div>
@@ -329,7 +329,7 @@ export default function TenantUtilitiesPage() {
                                     <div className="flex flex-col gap-1.5">
                                         <label htmlFor="booking-date" className="text-xs font-black uppercase tracking-wider text-muted-foreground">Date</label>
                                         <div className="flex items-center gap-2 rounded-xl border border-border bg-background p-3">
-                                            <Calendar className="h-4 w-4 text-primary" />
+                                            <Calendar className="size-4 text-primary" />
                                             <input 
                                                 id="booking-date"
                                                 type="date" 
@@ -340,7 +340,7 @@ export default function TenantUtilitiesPage() {
                                     <div className="flex flex-col gap-1.5">
                                         <label htmlFor="booking-duration" className="text-xs font-black uppercase tracking-wider text-muted-foreground">Duration</label>
                                         <div className="flex items-center gap-2 rounded-xl border border-border bg-background p-3">
-                                            <Clock className="h-4 w-4 text-primary" />
+                                            <Clock className="size-4 text-primary" />
                                             <select 
                                                 id="booking-duration"
                                                 className="bg-transparent text-sm font-medium outline-none"

@@ -298,7 +298,7 @@ export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview =
                     <div className="mb-4 flex flex-col gap-3 md:mb-0 md:min-w-[140px]">
                       <MoveOutStatusBadge status={req.status} />
                       <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground">
-                        <Calendar className="h-3 w-3" />
+                        <Home className="size-5" />
                         Requested: {formatDate(req.requested_date)}
                       </div>
                     </div>

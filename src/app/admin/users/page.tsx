@@ -65,9 +65,9 @@ function ActionMenu({ user, onViewSnapshot, onResendEmail }: { user: UserRow; on
         <div className="relative" ref={menuRef}>
             <button
                 onClick={() => setOpen(!open)}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-white/[0.02] text-white/40 transition-all hover:bg-white/10 hover:text-white"
+                className="inline-flex size-10 items-center justify-center rounded-xl border border-white/5 bg-white/[0.02] text-white/40 transition-all hover:bg-white/10 hover:text-white"
             >
-                <MoreHorizontal className="h-5 w-5" />
+                <MoreHorizontal className="size-5" />
             </button>
             
             {open && (
@@ -78,24 +78,24 @@ function ActionMenu({ user, onViewSnapshot, onResendEmail }: { user: UserRow; on
                                 onClick={() => { setOpen(false); onViewSnapshot(user); }}
                                 className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium text-white/80 hover:bg-white/10 transition-colors"
                             >
-                                <Eye className="h-4 w-4 text-blue-400" />
+                                <Eye className="size-4 text-blue-400" />
                                 View Registration
                             </button>
                             <button
                                 onClick={() => { setOpen(false); onResendEmail(user); }}
                                 className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium text-white/80 hover:bg-white/10 transition-colors"
                             >
-                                <Send className="h-4 w-4 text-primary" />
+                                <Send className="size-4 text-primary" />
                                 Resend Onboarding
                             </button>
                         </>
                     )}
                     <button className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium text-white/80 hover:bg-white/10 transition-colors">
-                        <Mail className="h-4 w-4 text-white/40" />
+                        <Mail className="size-4 text-white/40" />
                         Send Email
                     </button>
                     <button className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium text-white/80 hover:bg-white/10 transition-colors">
-                        <Key className="h-4 w-4 text-white/40" />
+                        <Key className="size-4 text-white/40" />
                         Reset Password
                     </button>
                 </div>
@@ -114,9 +114,9 @@ function SnapshotModal({ user, onClose }: { user: UserDetail; onClose: () => voi
             <div className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl border border-white/10 bg-[#1a1a1a] p-8 shadow-2xl">
                 <button
                     onClick={onClose}
-                    className="absolute right-6 top-6 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/60 hover:bg-white/20 transition-colors"
+                    className="absolute right-6 top-6 flex size-10 items-center justify-center rounded-full bg-white/10 text-white/60 hover:bg-white/20 transition-colors"
                 >
-                    <X className="h-5 w-5" />
+                    <X className="size-5" />
                 </button>
 
                 <div className="mb-8">
@@ -310,7 +310,7 @@ export default function AdminUsersPage() {
                 <div className="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
                     <div className="max-w-2xl space-y-4">
                         <div className="inline-flex items-center gap-3 rounded-full border border-primary/25 bg-primary/10 px-4 py-2 text-[10px] font-extrabold uppercase tracking-widest text-primary">
-                            <Users className="h-3.5 w-3.5" />
+                            <Users className="size-3.5" />
                             Directory Access
                         </div>
                         <h1 className="text-4xl font-extrabold tracking-tight text-white md:text-5xl">
@@ -349,7 +349,7 @@ export default function AdminUsersPage() {
                 {/* Hick''s Law - Unified Search Bar */}
                 <div className="relative z-10 mt-8">
                     <div className="group relative flex items-center">
-                        <Search className="absolute left-6 h-5 w-5 text-white/30 transition-colors group-focus-within:text-primary" />
+                        <Search className="absolute left-6 size-5 text-white/30 transition-colors group-focus-within:text-primary" />
                         <input
                             type="text"
                             placeholder="Search by name, email, or identity..."
@@ -376,8 +376,8 @@ export default function AdminUsersPage() {
                         </div>
                     ) : filtered.length === 0 ? (
                         <div className="p-10 text-center">
-                            <div className="mx-auto mb-4 inline-flex h-14 w-14 items-center justify-center rounded-full bg-white/5">
-                                <Search className="h-7 w-7 text-white/20" />
+                            <div className="mx-auto mb-4 inline-flex size-14 items-center justify-center rounded-full bg-white/5">
+                                <Search className="size-7 text-white/20" />
                             </div>
                             <p className="text-base font-bold text-white">No records found</p>
                             <p className="mt-1 text-sm text-white/40">Adjust your filters or search query.</p>
@@ -393,9 +393,9 @@ export default function AdminUsersPage() {
                                     <article key={user.id} className="rounded-2xl border border-border/70 bg-background p-4">
                                         <div className="flex items-center gap-3">
                                             {user.avatar_url ? (
-                                                <img src={user.avatar_url} alt="" className="h-10 w-10 shrink-0 rounded-full border border-white/10 object-cover" />
+                                                <img src={user.avatar_url} alt="" className="size-10 shrink-0 rounded-full border border-white/10 object-cover" />
                                             ) : (
-                                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-gradient-to-br from-white/10 to-white/5">
+                                                <div className="flex size-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-gradient-to-br from-white/10 to-white/5">
                                                     <span className="text-xs font-bold text-white/70">
                                                         {user.full_name.substring(0, 2).toUpperCase()}
                                                     </span>
@@ -412,17 +412,17 @@ export default function AdminUsersPage() {
 
                                         <div className="mt-3 flex flex-wrap items-center gap-2">
                                             <div className={cn("inline-flex items-center gap-2 rounded-xl border px-3 py-1.5 shadow-inner", roleInfo.bgClass, roleInfo.borderClass)}>
-                                                <RoleIcon className={cn("h-4 w-4 shrink-0", roleInfo.colorClass)} />
+                                                <RoleIcon className={cn("size-4 shrink-0", roleInfo.colorClass)} />
                                                 <span className={cn("text-[11px] font-bold uppercase tracking-wider", roleInfo.colorClass)}>
                                                     {roleInfo.label}
                                                 </span>
                                             </div>
                                             <span className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-semibold text-white/60">
-                                                <Calendar className="h-3.5 w-3.5 text-white/30" />
+                                                <Calendar className="size-3.5 text-white/30" />
                                                 {dateObj.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                                             </span>
                                             <span className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-mono text-white/60">
-                                                <Key className="h-3.5 w-3.5 text-white/30" />
+                                                <Key className="size-3.5 text-white/30" />
                                                 {user.id.split("-")[0]}
                                             </span>
                                         </div>
@@ -463,24 +463,24 @@ export default function AdminUsersPage() {
                                     <tr key={i} className="animate-pulse">
                                         <td className="p-8">
                                             <div className="flex items-center gap-4">
-                                                <div className="h-12 w-12 rounded-full bg-white/5" />
+                                                <div className="size-12 rounded-full bg-white/5" />
                                                 <div className="space-y-2">
                                                     <div className="h-4 w-32 rounded bg-white/5" />
                                                     <div className="h-3 w-20 rounded bg-white/5" />
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="p-8"><div className="h-4 w-40 rounded bg-white/5" /></td>
+                                        <td className="p-8"><div className="size-40 rounded bg-white/5" /></td>
                                         <td className="p-8"><div className="h-8 w-24 rounded-xl bg-white/5" /></td>
                                         <td className="p-8"><div className="h-4 w-24 rounded bg-white/5" /></td>
-                                        <td className="p-8 text-right"><div className="inline-block h-8 w-8 rounded-lg bg-white/5" /></td>
+                                        <td className="p-8 text-right"><div className="inline-block size-8 rounded-lg bg-white/5" /></td>
                                     </tr>
                                 ))
                             ) : filtered.length === 0 ? (
                                 <tr>
                                     <td colSpan={5} className="p-16 text-center">
-                                        <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-white/5 mb-4">
-                                            <Search className="h-8 w-8 text-white/20" />
+                                        <div className="inline-flex size-16 items-center justify-center rounded-full bg-white/5 mb-4">
+                                            <Search className="size-8 text-white/20" />
                                         </div>
                                         <p className="text-lg font-bold text-white">No records found</p>
                                         <p className="text-sm text-white/40 mt-1">Adjust your filters or search query.</p>
@@ -497,9 +497,9 @@ export default function AdminUsersPage() {
                                             <td className="px-8 py-5">
                                                 <div className="flex items-center gap-4">
                                                     {user.avatar_url ? (
-                                                        <img src={user.avatar_url} alt="" className="h-12 w-12 shrink-0 rounded-full border border-white/10 object-cover shadow-lg" />
+                                                        <img src={user.avatar_url} alt="" className="size-12 shrink-0 rounded-full border border-white/10 object-cover shadow-lg" />
                                                     ) : (
-                                                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-white/10 bg-gradient-to-br from-white/10 to-white/5 shadow-inner">
+                                                        <div className="flex size-12 shrink-0 items-center justify-center rounded-full border border-white/10 bg-gradient-to-br from-white/10 to-white/5 shadow-inner">
                                                             <span className="text-sm font-bold text-white/70">
                                                                 {user.full_name.substring(0, 2).toUpperCase()}
                                                             </span>
@@ -511,7 +511,7 @@ export default function AdminUsersPage() {
                                                             <RoleBadge role={user.role} />
                                                         </div>
                                                         <div className="flex items-center gap-1.5 mt-1 text-[11px] font-medium text-white/40">
-                                                            <Key className="h-3 w-3" />
+                                                            <Key className="size-3" />
                                                             <span className="truncate max-w-[120px] font-mono">{user.id.split('-')[0]}</span>
                                                         </div>
                                                     </div>
@@ -519,13 +519,13 @@ export default function AdminUsersPage() {
                                             </td>
                                             <td className="px-8 py-5">
                                                 <div className="flex items-center gap-2 text-sm font-medium text-white/70">
-                                                    <Mail className="h-4 w-4 text-white/30" />
+                                                    <Mail className="size-4 text-white/30" />
                                                     {user.email}
                                                 </div>
                                             </td>
                                             <td className="px-8 py-5">
                                                 <div className={cn("inline-flex items-center gap-2 rounded-xl border px-3 py-1.5 shadow-inner", roleInfo.bgClass, roleInfo.borderClass)}>
-                                                    <RoleIcon className={cn("h-4 w-4 shrink-0", roleInfo.colorClass)} />
+                                                    <RoleIcon className={cn("size-4 shrink-0", roleInfo.colorClass)} />
                                                     <span className={cn("text-[11px] font-bold uppercase tracking-wider", roleInfo.colorClass)}>
                                                         {roleInfo.label}
                                                     </span>
@@ -533,7 +533,7 @@ export default function AdminUsersPage() {
                                             </td>
                                             <td className="px-8 py-5">
                                                 <div className="flex items-center gap-2 text-sm font-medium text-white/50">
-                                                    <Calendar className="h-4 w-4 text-white/20" />
+                                                    <Calendar className="size-4 text-white/20" />
                                                     {dateObj.toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric' })}
                                                 </div>
                                             </td>
