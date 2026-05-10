@@ -519,7 +519,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                             <div className="relative z-10 flex-1 flex flex-col">
                                 <header className="mb-6">
                                     <div className="flex items-center gap-3 mb-4">
-                                        <div className="h-10 w-10 rounded-2xl bg-primary/20 flex items-center justify-center text-primary">
+                                        <div className="size-10 rounded-2xl bg-primary/20 flex items-center justify-center text-primary">
                                             {(() => {
                                                 const Icon = stepDefinitions[step].icon;
                                                 return <Icon className="h-5 w-5" />;
@@ -678,7 +678,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                             </div>
 
                                             <div className="rounded-[2.5rem] bg-emerald-500/[0.03] border border-emerald-500/20 p-6 flex flex-col md:flex-row items-center gap-6">
-                                                <div className="h-16 w-16 rounded-3xl bg-emerald-500/10 flex items-center justify-center shrink-0 border border-emerald-500/20 shadow-[0_0_30px_rgba(16,185,129,0.2)]">
+                                                <div className="size-16 rounded-3xl bg-emerald-500/10 flex items-center justify-center shrink-0 border border-emerald-500/20 shadow-[0_0_30px_rgba(16,185,129,0.2)]">
                                                     <CheckCircle2 className="h-8 w-8 text-emerald-500" />
                                                 </div>
                                                 <div>
@@ -745,7 +745,7 @@ function SummaryCard({ label, value, icon: Icon }: any) {
     return (
         <div className="rounded-3xl border border-white/10 bg-white/5 p-6 hover:bg-white/[0.07] transition-colors relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                <Icon className="h-16 w-16" />
+                <Icon className="size-16" />
             </div>
             <div className="relative z-10">
                 <div className="flex items-center gap-2 opacity-50 mb-3 block">

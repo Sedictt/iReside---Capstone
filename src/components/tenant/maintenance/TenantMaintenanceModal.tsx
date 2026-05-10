@@ -115,7 +115,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                 <div
                                                     key={idx}
                                                     className={cn(
-                                                        "w-1.5 h-1.5 rounded-full transition-all",
+                                                        "size-1.5 rounded-full transition-all",
                                                         currentImageIndex === idx ? "bg-white w-4" : "bg-white/50"
                                                     )}
                                                 />
@@ -225,7 +225,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                         currentStep >= 2 ? "bg-primary ring-4 ring-primary/20 scale-110" : "bg-muted scale-100"
                                     )}>
                                         {currentStep >= 2 && (
-                                            request.selfRepairDecision === "rejected" ? <X className="w-3.5 h-3.5 text-primary-foreground" /> : <ShieldCheck className="w-3.5 h-3.5 text-primary-foreground" />
+                                            request.selfRepairDecision === "rejected" ? <X className="size-3.5 text-primary-foreground" /> : <ShieldCheck className="size-3.5 text-primary-foreground" />
                                         )}
                                     </div>
                                     <div className={cn(
@@ -275,7 +275,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                             <span className="text-[9px] font-black uppercase tracking-widest">Repairing</span>
                                                             {request.tenantRepairStatus === "repairing" && (
                                                                 <div className="absolute -top-1 -right-1 size-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center border-2 border-background animate-in zoom-in duration-300">
-                                                                    <CheckCircle2 className="w-2.5 h-2.5" />
+                                                                    <CheckCircle2 className="size-2.5" />
                                                                 </div>
                                                             )}
                                                         </button>
@@ -297,7 +297,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                             <span className="text-[9px] font-black uppercase tracking-widest">Done</span>
                                                             {request.tenantRepairStatus === "done" && (
                                                                 <div className="absolute -top-1 -right-1 size-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center border-2 border-background animate-in zoom-in duration-300">
-                                                                    <CheckCircle2 className="w-2.5 h-2.5" />
+                                                                    <CheckCircle2 className="size-2.5" />
                                                                 </div>
                                                             )}
                                                         </button>
@@ -325,7 +325,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                                     "flex h-6 w-6 items-center justify-center rounded-full",
                                                                     request.tenantProvidedPhotos && request.tenantProvidedPhotos.length > 0 ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400" : "bg-amber-500/20 text-amber-600 dark:text-amber-400"
                                                                 )}>
-                                                                    {request.tenantProvidedPhotos && request.tenantProvidedPhotos.length > 0 ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5" />}
+                                                                    {request.tenantProvidedPhotos && request.tenantProvidedPhotos.length > 0 ? <CheckCircle2 className="size-3.5" /> : <AlertCircle className="size-3.5" />}
                                                                 </div>
                                                                 <h5 className={cn(
                                                                     "text-xs font-black uppercase tracking-widest",
@@ -384,7 +384,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                         currentStep >= 2 && request.repairMethod ? "bg-cyan-500 ring-4 ring-cyan-500/20 scale-110" : "bg-muted scale-100"
                                     )}>
                                         {currentStep >= 2 && request.repairMethod && (
-                                            request.repairMethod === "third_party" ? <UserRound className="w-3.5 h-3.5 text-white" /> : <Hammer className="w-3.5 h-3.5 text-white" />
+                                            request.repairMethod === "third_party" ? <UserRound className="size-3.5 text-white" /> : <Hammer className="size-3.5 text-white" />
                                         )}
                                     </div>
                                     <div className={cn(
@@ -434,7 +434,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                             <span className="text-[9px] font-black uppercase tracking-widest">Arrived</span>
                                                             {request.tenantRepairStatus === "personnel_arrived" && (
                                                                 <div className="absolute -top-1 -right-1 size-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center border-2 border-background animate-in zoom-in duration-300">
-                                                                    <CheckCircle2 className="w-2.5 h-2.5" />
+                                                                    <CheckCircle2 className="size-2.5" />
                                                                 </div>
                                                             )}
                                                         </button>
@@ -456,7 +456,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                             <span className="text-[9px] font-black uppercase tracking-widest">Repairing</span>
                                                             {request.tenantRepairStatus === "repairing" && (
                                                                 <div className="absolute -top-1 -right-1 size-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center border-2 border-background animate-in zoom-in duration-300">
-                                                                    <CheckCircle2 className="w-2.5 h-2.5" />
+                                                                    <CheckCircle2 className="size-2.5" />
                                                                 </div>
                                                             )}
                                                         </button>
@@ -478,7 +478,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                             <span className="text-[9px] font-black uppercase tracking-widest">Done</span>
                                                             {request.tenantRepairStatus === "done" && (
                                                                 <div className="absolute -top-1 -right-1 size-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center border-2 border-background animate-in zoom-in duration-300">
-                                                                    <CheckCircle2 className="w-2.5 h-2.5" />
+                                                                    <CheckCircle2 className="size-2.5" />
                                                                 </div>
                                                             )}
                                                         </button>
@@ -506,7 +506,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                                     "flex h-6 w-6 items-center justify-center rounded-full",
                                                                     request.tenantProvidedPhotos && request.tenantProvidedPhotos.length > 0 ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400" : "bg-amber-500/20 text-amber-600 dark:text-amber-400"
                                                                 )}>
-                                                                    {request.tenantProvidedPhotos && request.tenantProvidedPhotos.length > 0 ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5" />}
+                                                                    {request.tenantProvidedPhotos && request.tenantProvidedPhotos.length > 0 ? <CheckCircle2 className="size-3.5" /> : <AlertCircle className="size-3.5" />}
                                                                 </div>
                                                                 <h5 className={cn(
                                                                     "text-xs font-black uppercase tracking-widest",

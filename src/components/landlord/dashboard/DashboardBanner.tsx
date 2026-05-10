@@ -324,8 +324,8 @@ export function DashboardBanner({
                 <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-background/95 to-transparent" />
                 
                 {/* Decorative Spotlight */}
-                <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-primary/10 blur-[100px] pointer-events-none" />
-                <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-white/5 blur-[80px] pointer-events-none" />
+                <div className="absolute -top-24 -right-24 size-96 rounded-full bg-primary/10 blur-[100px] pointer-events-none" />
+                <div className="absolute -bottom-24 -left-24 size-64 rounded-full bg-white/5 blur-[80px] pointer-events-none" />
             </div>
 
             {/* Header Actions */}
@@ -337,10 +337,10 @@ export function DashboardBanner({
                         window.dispatchEvent(new CustomEvent("open-quest-board"));
                     }}
                     data-tour-id="tour-quest-trigger"
-                    className="relative group flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/5 backdrop-blur-xl transition-all hover:bg-primary/10 active:scale-95"
+                    className="relative group flex size-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/5 backdrop-blur-xl transition-all hover:bg-primary/10 active:scale-95"
                 >
                     <div className="absolute inset-0 rounded-2xl bg-primary/20 animate-pulse blur-md pointer-events-none" />
-                    <AlertCircle className="h-5 w-5 text-primary transition-transform group-hover:scale-110" />
+                    <AlertCircle className="size-5 text-primary transition-transform group-hover:scale-110" />
                     
                     {/* Tooltip-like label */}
                     <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 scale-0 px-2 py-1 rounded bg-surface-4 text-[10px] font-bold text-foreground opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all whitespace-nowrap border border-white/5 shadow-xl">
@@ -350,7 +350,7 @@ export function DashboardBanner({
 
                 {/* Search Bar - Premium Glassmorphism */}
                 <div className="relative group hidden sm:block" ref={searchRef}>
-                    <Search className="absolute left-4 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
+                    <Search className="absolute left-4 top-1/2 z-10 size-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
                     <input
                         ref={inputRef}
                         type="text"
@@ -371,7 +371,7 @@ export function DashboardBanner({
                                     <div className="px-4 py-4 space-y-3">
                                         {[1, 2, 3].map((i) => (
                                             <div key={i} className="flex items-center gap-3">
-                                                <Skeleton className="h-8 w-8 rounded-lg" />
+                                                <Skeleton className="size-8 rounded-lg" />
                                                 <div className="flex-1 space-y-2">
                                                     <Skeleton className="h-3 w-24 rounded-full" />
                                                     <Skeleton className="h-2 w-32 rounded-full opacity-60" />
@@ -386,8 +386,8 @@ export function DashboardBanner({
                                             onClick={() => handleResultClick(result)}
                                             className="w-full flex items-center gap-3 px-4 py-3 text-left transition-all hover:bg-white/5"
                                         >
-                                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-                                                <result.icon className="h-4 w-4 text-primary" />
+                                            <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10">
+                                                <result.icon className="size-4 text-primary" />
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-sm font-bold text-foreground truncate">{result.title}</p>
@@ -414,7 +414,7 @@ export function DashboardBanner({
                         onClick={() => setIsNotificationsOpen((current) => !current)}
                         className="group relative flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-surface-2 backdrop-blur-xl transition-all hover:bg-surface-3 active:scale-95"
                     >
-                        <Bell className="h-5 w-5 text-muted-foreground transition-colors group-hover:text-foreground" />
+                        <Bell className="size-5 text-muted-foreground transition-colors group-hover:text-foreground" />
                         {unreadCount > 0 && (
                             <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-black text-primary-foreground shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)]">
                                 {unreadCount > 9 ? "9+" : unreadCount}
@@ -446,7 +446,7 @@ export function DashboardBanner({
                                     </div>
                                 ) : notifications.length === 0 ? (
                                     <div className="px-6 py-12 text-center text-muted-foreground">
-                                        <Sparkles className="h-8 w-8 mx-auto mb-3 opacity-20" />
+                                        <Sparkles className="size-8 mx-auto mb-3 opacity-20" />
                                         <p className="text-sm font-medium">All caught up!</p>
                                     </div>
                                 ) : (
@@ -465,17 +465,17 @@ export function DashboardBanner({
                                                 <div className="flex items-center justify-center size-8 shrink-0">
                                                     {!notification.read ? (
                                                         <div className="relative flex items-center justify-center size-8">
-                                                            <span className="h-2.5 w-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),0.6)] group-hover/item:scale-0 transition-transform duration-300" />
+                                                            <span className="size-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),0.6)] group-hover/item:scale-0 transition-transform duration-300" />
                                                             <button
                                                                 onClick={(e) => handleMarkAsRead(e, notification.id)}
                                                                 title="Mark as read"
                                                                 className="absolute inset-0 z-10 flex items-center justify-center opacity-0 group-hover/item:opacity-100 bg-primary/20 rounded-full text-primary hover:bg-primary/30 transition-all duration-300 transform scale-50 group-hover/item:scale-100"
                                                             >
-                                                                <Check className="h-4 w-4 stroke-[3px]" />
+                                                                <Check className="size-4 stroke-[3px]" />
                                                             </button>
                                                         </div>
                                                     ) : (
-                                                        <div className="h-2 w-2 rounded-full border border-white/10" />
+                                                        <div className="size-2 rounded-full border border-white/10" />
                                                     )}
                                                 </div>
                                             </div>
@@ -507,8 +507,8 @@ export function DashboardBanner({
                     {/* Badge */}
                     <div className="mb-6 flex items-center gap-2.5 w-fit rounded-full border border-white/10 bg-card/60 px-4 py-1.5 backdrop-blur-xl">
                         <div className="relative">
-                            <div className="h-2 w-2 rounded-full bg-primary animate-ping" />
-                            <div className="absolute inset-0 h-2 w-2 rounded-full bg-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.8)]" />
+                            <div className="size-2 rounded-full bg-primary animate-ping" />
+                            <div className="absolute inset-0 size-2 rounded-full bg-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.8)]" />
                         </div>
                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/80">
                             {time.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
@@ -548,7 +548,7 @@ export function DashboardBanner({
                                 <button
                                     onClick={onCreateInvite}
                                     title="Create Invite link"
-                                    className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-card/60 backdrop-blur-xl transition-all hover:bg-card"
+className="flex size-14 items-center justify-center rounded-2xl border border-white/10 bg-card/60 backdrop-blur-xl transition-all hover:bg-card"
                                 >
                                     <QrCode className="size-5 text-primary" />
                                 </button>
@@ -556,14 +556,14 @@ export function DashboardBanner({
                             <Link 
                                 href="/landlord/maintenance" 
                                 title="Maintenance Queue"
-                                className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-card/60 backdrop-blur-xl transition-all hover:bg-card"
+                                className="flex size-14 items-center justify-center rounded-2xl border border-white/10 bg-card/60 backdrop-blur-xl transition-all hover:bg-card"
                             >
                                 <Wrench className="size-5 text-amber-500" />
                             </Link>
                             <Link 
                                 href="/landlord/unit-map" 
                                 title="Unit Map"
-                                className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-card/60 backdrop-blur-xl transition-all hover:bg-card"
+                                className="flex size-14 items-center justify-center rounded-2xl border border-white/10 bg-card/60 backdrop-blur-xl transition-all hover:bg-card"
                             >
                                 <Map className="size-5 text-rose-500" />
                             </Link>

@@ -391,7 +391,7 @@ function NewAssetContent() {
                                         <div className="space-y-2 relative">
                                             <div className="flex items-center justify-between px-1">
                                                 <label className="text-[9px] font-black uppercase tracking-wider text-white/30">Designation</label>
-                                                {isEditMode && <span className="text-[8px] font-black text-primary/40 uppercase tracking-widest flex items-center gap-1"><ShieldCheck className="w-2.5 h-2.5" /> Locked by Admin</span>}
+                                                {isEditMode && <span className="text-[8px] font-black text-primary/40 uppercase tracking-widest flex items-center gap-1"><ShieldCheck className="size-2.5" /> Locked by Admin</span>}
                                             </div>
                                             <input 
                                                 type="text" 
@@ -405,7 +405,7 @@ function NewAssetContent() {
                                         <div className="space-y-2 relative">
                                             <div className="flex items-center justify-between px-1">
                                                 <label className="text-[9px] font-black uppercase tracking-wider text-white/30">Location</label>
-                                                {isEditMode && <span className="text-[8px] font-black text-primary/40 uppercase tracking-widest flex items-center gap-1"><ShieldCheck className="w-2.5 h-2.5" /> Locked by Admin</span>}
+                                                {isEditMode && <span className="text-[8px] font-black text-primary/40 uppercase tracking-widest flex items-center gap-1"><ShieldCheck className="size-2.5" /> Locked by Admin</span>}
                                             </div>
                                             <textarea 
                                                 rows={3} 
@@ -456,7 +456,7 @@ function NewAssetContent() {
                                                     className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl border transition-all text-left ${formData.propertyType === opt.id ? "bg-primary/10 border-primary/50 shadow-lg shadow-primary/5" : "bg-white/5 border-white/5 hover:bg-white/[0.08]"}`}
                                                 >
                                                     <div className="flex items-center gap-4">
-                                                        <div className={`w-2.5 h-2.5 rounded-full ${formData.propertyType === opt.id ? "bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),1)]" : "bg-white/10"}`} />
+                                                        <div className={`size-2.5 rounded-full ${formData.propertyType === opt.id ? "bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),1)]" : "bg-white/10"}`} />
                                                         <div>
                                                             <p className={`text-sm font-black tracking-tight ${formData.propertyType === opt.id ? "text-primary" : "text-white"}`}>{opt.label}</p>
                                                             <p className="text-[10px] text-white/30 font-medium uppercase tracking-wider">{opt.desc}</p>
@@ -538,7 +538,7 @@ function NewAssetContent() {
                                                             className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl border transition-all text-left ${formData.utilityBilling === opt.id ? "bg-primary/10 border-primary/50 shadow-lg shadow-primary/5" : "bg-white/5 border-white/5 hover:bg-white/[0.08]"}`}
                                                         >
                                                             <div className="flex items-center gap-4">
-                                                                <div className={`w-2.5 h-2.5 rounded-full ${formData.utilityBilling === opt.id ? "bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),1)]" : "bg-white/10"}`} />
+                                                                <div className={`size-2.5 rounded-full ${formData.utilityBilling === opt.id ? "bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),1)]" : "bg-white/10"}`} />
                                                                 <div>
                                                                     <p className={`text-sm font-black tracking-tight ${formData.utilityBilling === opt.id ? "text-primary" : "text-white"}`}>{opt.label}</p>
                                                                     <p className="text-[10px] text-white/30 font-medium uppercase tracking-wider">{opt.desc}</p>

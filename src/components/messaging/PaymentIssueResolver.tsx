@@ -79,7 +79,7 @@ export function PaymentIssueResolver({ message, onClose, onResolved }: PaymentIs
                         </div>
                         <button 
                             onClick={onClose}
-                            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-surface-2 text-text-medium transition-all hover:bg-surface-3 active:scale-95 shadow-lg"
+                            className="flex size-10 items-center justify-center rounded-full border border-white/10 bg-surface-2 text-text-medium transition-all hover:bg-surface-3 active:scale-95 shadow-lg"
                         >
                             <X className="h-5 w-5" />
                         </button>

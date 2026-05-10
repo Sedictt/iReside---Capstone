@@ -186,7 +186,7 @@ export function MessagesTour() {
                         onClick={completeTour}
                         className="text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
                     >
-                        <SkipForward className="w-3.5 h-3.5" />
+                        <SkipForward className="size-3.5" />
                         Skip
                     </button>
                     
@@ -204,7 +204,7 @@ export function MessagesTour() {
                             className="h-8 px-4 flex items-center justify-center gap-2 rounded-lg bg-primary text-black font-bold text-xs hover:bg-primary/90 transition-colors"
                         >
                             {isLastStep ? "Finish" : "Next"}
-                            {isLastStep ? <CheckCircle2 className="w-3.5 h-3.5" /> : <ArrowRight className="w-3.5 h-3.5" />}
+                            {isLastStep ? <CheckCircle2 className="size-3.5" /> : <ArrowRight className="size-3.5" />}
                         </button>
                     </div>
                 </div>

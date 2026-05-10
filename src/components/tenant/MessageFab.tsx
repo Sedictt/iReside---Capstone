@@ -26,7 +26,7 @@ export function MessageFab() {
                 <div className="relative">
                     <MessageSquare className="size-5" />
                     <div className="absolute -top-1 -right-1">
-                        <Sparkles className="w-2.5 h-2.5 text-yellow-300 animate-pulse" />
+                        <Sparkles className="size-2.5 text-yellow-300 animate-pulse" />
                     </div>
                 </div>
                 <span className="font-semibold text-sm pr-1">Chat with iRis</span>

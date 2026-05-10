@@ -159,7 +159,7 @@ export function CommunityTour() {
                         onClick={completeTour}
                         className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground dark:text-white/40 dark:hover:text-white"
                     >
-                        <SkipForward className="w-3.5 h-3.5" />
+                        <SkipForward className="size-3.5" />
                         Skip tour
                     </button>
                     

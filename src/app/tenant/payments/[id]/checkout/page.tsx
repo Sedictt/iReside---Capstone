@@ -582,7 +582,7 @@ export default function CheckoutPage() {
 
         return (
             <div className="mx-auto max-w-3xl rounded-[2rem] border border-emerald-500/20 bg-card p-10 text-center shadow-sm relative overflow-hidden">
-                <div className="absolute -top-24 -right-24 w-48 h-48 bg-emerald-500/10 blur-3xl rounded-full" />
+                <div className="absolute -top-24 -right-24 size-48 bg-emerald-500/10 blur-3xl rounded-full" />
                 <CheckCircle2 className={cn("mx-auto mb-5 h-12 w-12", isSettled ? "text-emerald-400" : "text-amber-400")} />
                 <h1 className="text-3xl font-black text-foreground">
                     {isSettled ? "Invoice already paid" : "Payment submitted for review"}
@@ -841,7 +841,7 @@ export default function CheckoutPage() {
                                     return (
                                         <div key={item.id} className="flex items-center gap-3 py-1 opacity-40 grayscale-[0.8]">
                                             <div className={cn(
-                                                "w-5 h-5 rounded-md border flex items-center justify-center",
+                                                "size-5 rounded-md border flex items-center justify-center",
                                                 isAlreadyPaid ? "border-emerald-500/30 bg-emerald-500/10" : "border-amber-500/30 bg-amber-500/10"
                                             )}>
                                                 {isAlreadyPaid ? (
@@ -883,7 +883,7 @@ export default function CheckoutPage() {
                                     >
                                         {!isMandatory && (
                                             <div className={cn(
-                                                "w-5 h-5 rounded-md border flex items-center justify-center transition-all cursor-pointer",
+                                                "size-5 rounded-md border flex items-center justify-center transition-all cursor-pointer",
                                                 isSelected ? "bg-primary border-primary text-white shadow-sm shadow-primary/20" : "bg-card border-border group-hover:border-primary/50"
                                             )}>
                                                 {isSelected && <CheckCircle2 className="w-3.5 h-3.5" />}
@@ -909,7 +909,7 @@ export default function CheckoutPage() {
                                     return (
                                         <div key={reading.id} className="flex items-center gap-3 py-1 opacity-40 grayscale-[0.8]">
                                             <div className={cn(
-                                                "w-5 h-5 rounded-md border flex items-center justify-center",
+                                                "size-5 rounded-md border flex items-center justify-center",
                                                 isAlreadyPaid ? "border-emerald-500/30 bg-emerald-500/10" : "border-amber-500/30 bg-amber-500/10"
                                             )}>
                                                 {isAlreadyPaid ? (
@@ -953,7 +953,7 @@ export default function CheckoutPage() {
                                     >
                                         {!isMandatory && (
                                             <div className={cn(
-                                                "w-5 h-5 rounded-md border flex items-center justify-center transition-all cursor-pointer",
+                                                "size-5 rounded-md border flex items-center justify-center transition-all cursor-pointer",
                                                 isSelected ? "bg-primary border-primary text-white shadow-sm shadow-primary/20" : "bg-card border-border group-hover:border-primary/50"
                                             )}>
                                                 {isSelected && <CheckCircle2 className="w-3.5 h-3.5" />}

@@ -43,7 +43,7 @@ export default function LeaseModal({ open, onOpenChange, leaseData }: LeaseModal
                             </button>
                             <div className="w-px h-6 bg-border mx-2" />
                             <Dialog.Close className="h-10 w-10 rounded-xl bg-muted/50 border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-                                <X className="h-5 h-5" />
+                                <X className="size-5" />
                             </Dialog.Close>
                         </div>
                     </div>

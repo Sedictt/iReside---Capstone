@@ -108,7 +108,7 @@ export function ProfileCoverUploader({ initialCoverUrl, fullName, className }: P
                     disabled={isUploading}
                     className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white text-white hover:text-black border border-white/20 backdrop-blur-md text-[10px] font-bold tracking-widest uppercase transition-all duration-300 shadow-xl disabled:opacity-50"
                 >
-                    <Camera className="w-3.5 h-3.5" />
+                    <Camera className="size-3.5" />
                     {isUploading ? "Uploading..." : "Change Cover"}
                 </button>
             </div>
