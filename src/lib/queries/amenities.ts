@@ -78,17 +78,25 @@ export async function deleteAmenity(id: string) {
 export async function getTenantAmenities(tenantId: string) {
     const supabase = await createClient()
     
-    // Get tenant's active lease to find their property_ids
+    // Get tenant's active lease with unit/property info
     const { data: leases, error: leaseError } = await supabase
         .from('leases')
-        .select('property_id')
+        .select(`
+            unit:units (
+                property_id
+            )
+        `)
         .eq('tenant_id', tenantId)
         .eq('status', 'active')
 
     if (leaseError) throw leaseError
     if (!leases || leases.length === 0) return []
 
-    const propertyIds = leases.map(l => l.property_id)
+    const propertyIds = leases
+        .map(l => (l.unit as unknown as { property_id: string })?.property_id)
+        .filter(Boolean)
+
+    if (propertyIds.length === 0) return []
 
     const { data, error } = await supabase
         .from('amenities')
