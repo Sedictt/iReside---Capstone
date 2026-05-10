@@ -52,7 +52,14 @@ function LeaseHubContent() {
 
     const [activeTab, setActiveTab] = useState<TabId>(moveOutPreviewStatus ? "services" : "agreement");
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [renewalRequest, setRenewalRequest] = useState<any>(null);
+    type RenewalStatus = "pending" | "approved" | "rejected";
+
+const [renewalRequest, setRenewalRequest] = useState<{
+  status: RenewalStatus;
+  landlord_notes?: string | null;
+  requested_date?: string;
+  created_at?: string;
+} | null>(null);
 
     // Add mock data for previewing different move-out states
     const mockMoveOutRequest = useMemo(() => {
@@ -233,7 +240,11 @@ function LeaseHubContent() {
     return (
         <div className="space-y-6 max-w-[1400px] mx-auto pb-12">
             <LeaseTour />
-            <LeaseRenewalReminder daysRemaining={progressData.daysRemaining} leaseId={lease?.id} />
+            <LeaseRenewalReminder 
+                                    daysRemaining={progressData.daysRemaining} 
+                                    leaseId={lease?.id}
+                                    teamMembers={lease?.landlord ? [{ avatar_url: lease.landlord.avatar_url, name: lease.landlord.full_name }] : undefined}
+                                />
             
             {/* Consistent Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -472,7 +483,7 @@ function LeaseHubContent() {
                                                 </div>
                                                 <div>
                                                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Floor Area</p>
-                                                    <p className="text-base font-black text-foreground">{lease.unit.sqft || '35'} SQFT</p>
+                                                    <p className="text-base font-black text-foreground">{lease.unit.sqft ? `${lease.unit.sqft} SQFT` : 'Contact for size'}</p>
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-4">

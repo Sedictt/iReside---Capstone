@@ -3,18 +3,26 @@
 import { useState, useEffect } from "react";
 import { RefreshCw, X, ArrowRight, Clock, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
+import Image from "next/image";
+import Image from "next/image";
 import LeaseRenewalRequest from "./LeaseRenewalRequest";
 
 interface LeaseRenewalReminderProps {
     daysRemaining: number;
     leaseId?: string;
+    teamMembers?: Array<{
+        avatar_url?: string;
+        name?: string;
+    }>;
 }
 
-export default function LeaseRenewalReminder({ daysRemaining, leaseId }: LeaseRenewalReminderProps) {
+export default function LeaseRenewalReminder({ daysRemaining, leaseId, teamMembers }: LeaseRenewalReminderProps) {
     const [isVisible, setIsVisible] = useState(false);
     const [showRenewalRequest, setShowRenewalRequest] = useState(false);
     const [dontShowAgain, setDontShowAgain] = useState(false);
+
+    // Use provided team members or fall back to empty array for placeholders
+    const displayMembers = teamMembers && teamMembers.length > 0 ? teamMembers : null;
 
     useEffect(() => {
         // Eligibility check: Within 90 days
@@ -135,9 +143,33 @@ export default function LeaseRenewalReminder({ daysRemaining, leaseId }: LeaseRe
                                         <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest group-hover:text-foreground transition-colors">Do not show again</span>
                                     </label>
                                     <div className="flex -space-x-2">
-                                        {[1, 2, 3].map((i) => (
-                                            <div key={i} className="size-6 rounded-full border-2 border-card bg-muted" />
-                                        ))}
+                                        {displayMembers ? (
+                                            displayMembers.slice(0, 3).map((member, i) => (
+                                                <div 
+                                                    key={i} 
+                                                    className="size-6 rounded-full border-2 border-card bg-muted overflow-hidden"
+                                                    title={member.name}
+                                                >
+                                                    {member.avatar_url ? (
+                                                        <Image 
+                                                            src={member.avatar_url} 
+                                                            alt={member.name || `Team member ${i + 1}`}
+                                                            width={24}
+                                                            height={24}
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-muted-foreground">
+                                                            {member.name?.charAt(0) || "?"}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))
+                                        ) : (
+                                            [1, 2, 3].map((i) => (
+                                                <div key={i} className="size-6 rounded-full border-2 border-card bg-muted" />
+                                            ))
+                                        )}
                                     </div>
                                 </div>
                             </div>

@@ -224,7 +224,7 @@ export default function UnitTransferRequest({ currentUnitId }: UnitTransferReque
                                                         </div>
                                                         <div className="flex items-center gap-2 text-muted-foreground group-hover:text-foreground transition-colors">
                                                             <Maximize className="w-3.5 h-3.5" />
-                                                            <span className="text-[10px] font-bold uppercase tracking-widest">{unit.sqft || '35'} SQFT</span>
+                                                            <span className="text-[10px] font-bold uppercase tracking-widest">{unit.sqft ? `${unit.sqft} SQFT` : 'Size Varies'}</span>
                                                         </div>
                                                         <div className="flex items-center gap-2 text-muted-foreground group-hover:text-foreground transition-colors">
                                                             <Bed className="w-3.5 h-3.5" />

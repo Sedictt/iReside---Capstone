@@ -1,3 +1,9 @@
+export interface RenewalSettings {
+  enabled?: boolean;
+  min_notice_days?: number;
+  auto_renew?: boolean;
+}
+
 export interface LeaseData {
     id: string;
     start_date: string;
@@ -6,6 +12,11 @@ export interface LeaseData {
     security_deposit: number;
     signed_at: string | null;
     signed_document_url: string | null;
+    terms?: {
+        rent_due_day?: number;
+        late_fee_day?: number;
+        grace_period_days?: number;
+    };
     unit: {
         id: string;
         name: string;
@@ -20,7 +31,7 @@ export interface LeaseData {
             city: string;
             images: string[];
             house_rules: string[];
-            renewal_settings?: any;
+            renewal_settings?: RenewalSettings;
             renewal_window_days?: number;
             amenities: Array<{
                 id: string;

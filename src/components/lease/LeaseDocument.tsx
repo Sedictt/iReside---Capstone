@@ -32,9 +32,20 @@ export function LeaseDocument(props: LeaseData) {
         end: end_date
     };
 
-    const rent = {
+const rent = {
         monthly: monthly_rent,
-        due: "1st of the month" // Default or from DB if available
+        due: props.terms?.rent_due_day ? `${props.terms.rent_due_day}${getOrdinalSuffix(props.terms.rent_due_day)} of the month` : "1st of the month"
+    };
+
+    // Helper function to get ordinal suffix (1st, 2nd, 3rd, etc.)
+    const getOrdinalSuffix = (day: number): string => {
+        if (day > 3 && day < 21) return 'th';
+        switch (day % 10) {
+            case 1: return 'st';
+            case 2: return 'nd';
+            case 3: return 'rd';
+            default: return 'th';
+        }
     };
 
     const deposit = security_deposit;

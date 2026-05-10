@@ -17,8 +17,21 @@ interface LeaseRenewalRequestProps {
         new_rules: string[];
         landlord_memo: string;
         is_enabled: boolean;
+        renewal_terms?: Array<{
+            months: number;
+            label: string;
+            price_label: string;
+            is_popular?: boolean;
+        }>;
     };
 }
+
+// Default term options when not provided by renewalSettings
+const DEFAULT_RENEWAL_TERMS = [
+    { months: 6, label: "Short Term", price_label: "Market Rate" },
+    { months: 12, label: "Annual Standard", price_label: "Policy Rate", is_popular: true },
+    { months: 24, label: "Long Term Duo", price_label: "Policy Rate" }
+];
 
 export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining, leaseId, autoOpen = false, renewalSettings }: LeaseRenewalRequestProps) {
     const [isOpen, setIsOpen] = useState(autoOpen);
@@ -66,7 +79,7 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                 setIsOpen(false);
                 setSubmitted(false);
             }, 3500);
-        } catch (error) {
+} catch {
             toast.error("Renewal Request Failed", {
                 description: "Network error. Please try again."
             });
@@ -243,12 +256,8 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                         <p className="text-sm text-muted-foreground">Choose your preferred extension period.</p>
                                     </div>
 
-                                    <div className="grid grid-cols-1 gap-3">
-                                        {[
-                                            { months: 6, label: "Short Term", price: "Market Rate" },
-                                            { months: 12, label: "Annual Standard", price: "Policy Rate", popular: true },
-                                            { months: 24, label: "Long Term Duo", price: "Policy Rate" }
-                                        ].map((opt) => (
+<div className="grid grid-cols-1 gap-3">
+                                        {(renewalSettings?.renewal_terms?.length ? renewalSettings.renewal_terms : DEFAULT_RENEWAL_TERMS).map((opt) => (
                                             <button
                                                 key={opt.months}
                                                 onClick={() => setSelectedTerm(opt.months)}
@@ -275,8 +284,8 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                                     <p className={cn(
                                                         "text-[10px] font-black uppercase tracking-widest",
                                                         selectedTerm === opt.months ? "text-primary" : "text-muted-foreground"
-                                                    )}>{opt.price}</p>
-                                                    {opt.popular && <span className="text-[8px] font-black text-white bg-primary px-2 py-0.5 rounded-full uppercase tracking-tighter">Popular</span>}
+                                                    )}>{opt.price_label}</p>
+                                                    {opt.is_popular && <span className="text-[8px] font-black text-white bg-primary px-2 py-0.5 rounded-full uppercase tracking-tighter">Popular</span>}
                                                 </div>
                                             </button>
                                         ))}
