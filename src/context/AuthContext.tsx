@@ -207,6 +207,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         if (!supabase) return
         let cancelled = false // prevent state updates after unmount
+        let timeoutId: ReturnType<typeof setTimeout> | undefined
 
         const clearAuthState = () => {
             setState({
@@ -242,17 +243,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         const boot = async () => {
-            // 1. Get the session (fast, from cookie/local-storage)
-            const {
-                data: { session },
-            } = await supabase.auth.getSession()
+            // 2-second timeout to prevent perpetual loading
+            timeoutId = setTimeout(() => {
+                if (!cancelled) {
+                    console.warn('[AuthProvider] Boot timeout - clearing auth state to prevent perpetual loading')
+                    clearAuthState()
+                }
+            }, 2000)
 
-            if (!session) {
-                if (!cancelled) clearAuthState()
-                return
+            try {
+                // 1. Get the session (fast, from cookie/local-storage)
+                const {
+                    data: { session },
+                } = await supabase.auth.getSession()
+
+                if (cancelled) return
+
+                if (!session) {
+                    clearAuthState()
+                    return
+                }
+
+                await applyAuthedState(session)
+            } finally {
+                if (timeoutId) clearTimeout(timeoutId)
             }
-
-            await applyAuthedState(session)
         }
 
         boot()
@@ -273,6 +288,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         return () => {
             cancelled = true
+            if (timeoutId) clearTimeout(timeoutId)
             subscription.unsubscribe()
         }
     }, [resolveUserFromSession, fetchProfile])
