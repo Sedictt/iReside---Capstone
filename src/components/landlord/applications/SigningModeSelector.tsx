@@ -45,7 +45,7 @@ export function SigningModeSelector({
     <div className={cn("space-y-4", className)}>
       <div className="flex items-center gap-3 text-purple-400">
         <UserCheck size={18} strokeWidth={2.5} />
-        <h3 className="text-[11px] font-black uppercase tracking-[0.3em]">
+        <h3 className="text-[11px] font-semibold uppercase tracking-[0.3em]">
           Signing Mode
         </h3>
       </div>

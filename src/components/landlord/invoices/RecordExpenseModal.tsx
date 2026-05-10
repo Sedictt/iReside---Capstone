@@ -84,9 +84,9 @@ export function RecordExpenseModal({ isOpen, onClose, onSaved }: RecordExpenseMo
                                 <div className="flex size-10 items-center justify-center rounded-xl bg-background border border-border shadow-inner">
                                     <Receipt className="size-5 text-rose-500" />
                                 </div>
-                                <span className="text-[10px] font-black uppercase tracking-[0.25em] text-primary">Financial Ledger</span>
+                                <span className="text-[10px] font-semibold uppercase tracking-[0.25em] text-primary">Financial Ledger</span>
                             </div>
-                            <h2 className="text-3xl font-black tracking-tight text-foreground">Record Expense</h2>
+                            <h2 className="text-3xl font-semibold tracking-tight text-foreground">Record Expense</h2>
                             <p className="text-sm font-medium text-muted-foreground">Log a manual outflow transaction to keep your net income accurate.</p>
                         </div>
                         <button
@@ -100,7 +100,7 @@ export function RecordExpenseModal({ isOpen, onClose, onSaved }: RecordExpenseMo
 
                 <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-8 custom-scrollbar space-y-6">
                     <div className="space-y-3">
-                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Expense Category</label>
+                        <label className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Expense Category</label>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                             {categories.map((cat) => (
                                 <button
@@ -125,7 +125,7 @@ export function RecordExpenseModal({ isOpen, onClose, onSaved }: RecordExpenseMo
 
                     <div className="grid gap-6 sm:grid-cols-2">
                         <div className="space-y-3">
-                            <label htmlFor="expense-amount" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Amount (PHP)</label>
+                            <label htmlFor="expense-amount" className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Amount (PHP)</label>
                             <div className="relative group">
                                 <DollarSign className="absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
                                 <input
@@ -143,7 +143,7 @@ export function RecordExpenseModal({ isOpen, onClose, onSaved }: RecordExpenseMo
                         </div>
 
                         <div className="space-y-3">
-                            <label htmlFor="expense-date" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Date Incurred</label>
+                            <label htmlFor="expense-date" className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Date Incurred</label>
                             <div className="relative group">
                                 <Calendar className="absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
                                 <input

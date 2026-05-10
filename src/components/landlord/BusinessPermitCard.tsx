@@ -74,7 +74,7 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
                 <div className="size-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/10">
                     <Building2 className="text-[#6d9838]" size={32} />
                 </div>
-                <h4 className="text-2xl font-display font-black text-white mb-2 tracking-tight">Business Verification</h4>
+                <h4 className="text-2xl font-display font-semibold text-white mb-2 tracking-tight">Business Verification</h4>
                 <p className="text-sm text-neutral-500 mb-8 max-w-sm mx-auto">Complete your professional profile by uploading your business permit to build trust with potential tenants.</p>
                 <button 
                     onClick={handleUploadClick}
@@ -100,7 +100,7 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
                             <Building2 size={32} className="text-[#6d9838]" />
                         </div>
                         <div>
-                            <h3 className="text-3xl font-display font-black text-white mb-1 tracking-tight">{businessName || "Registered Business"}</h3>
+                            <h3 className="text-3xl font-display font-semibold text-white mb-1 tracking-tight">{businessName || "Registered Business"}</h3>
                             <p className="text-[11px] font-black tracking-[0.2em] uppercase text-neutral-500">Official Business Identification</p>
                         </div>
                     </div>

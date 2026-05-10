@@ -280,9 +280,9 @@ export function TenantInviteManager({
                 <div className="max-w-2xl">
                     <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1">
                         <Link2 className="size-3.5 text-primary" />
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Private Share Links</span>
+                        <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">Private Share Links</span>
                     </div>
-                    <h2 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl text-balance">
+                    <h2 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl text-balance">
                         Private Links & QR Codes
                     </h2>
                     <p className="mt-3 text-base leading-relaxed text-muted-foreground">
@@ -293,7 +293,7 @@ export function TenantInviteManager({
                     <button
                         type="button"
                         onClick={() => setShowHistory(!showHistory)}
-                        className={`inline-flex h-12 items-center gap-2 rounded-2xl border px-5 text-xs font-black uppercase tracking-[0.2em] transition-all hover:bg-muted active:scale-95 ${
+                        className={`inline-flex h-12 items-center gap-2 rounded-2xl border px-5 text-xs font-semibold uppercase tracking-[0.2em] transition-all hover:bg-muted active:scale-95 ${
                             showHistory 
                                 ? "border-primary bg-primary/5 text-primary" 
                                 : "border-border bg-background text-foreground"
@@ -305,7 +305,7 @@ export function TenantInviteManager({
                     <button
                         type="button"
                         onClick={onRefresh}
-                        className="inline-flex h-12 items-center gap-2 rounded-2xl border border-border bg-background px-5 text-xs font-black uppercase tracking-[0.2em] text-foreground transition-all hover:bg-muted active:scale-95"
+                        className="inline-flex h-12 items-center gap-2 rounded-2xl border border-border bg-background px-5 text-xs font-semibold uppercase tracking-[0.2em] text-foreground transition-all hover:bg-muted active:scale-95"
                     >
                         <RefreshCw className="size-4" />
                         Refresh
@@ -388,7 +388,7 @@ export function TenantInviteManager({
                                 >
                                     <CircleHelp className="size-4" />
                                     <div className="pointer-events-none absolute right-0 top-10 z-30 hidden w-64 rounded-xl border border-border bg-background p-3 text-left text-[11px] font-semibold leading-relaxed text-foreground shadow-xl group-hover:block group-focus-visible:block">
-                                        <p className="font-black uppercase tracking-wider text-muted-foreground">Quick Help</p>
+                                        <p className="font-semibold uppercase tracking-wider text-muted-foreground">Quick Help</p>
                                         <p className="mt-2">First buttons: choose if this link is for one unit or the whole property.</p>
                                         <p>Second buttons: choose how tenants will apply.</p>
                                         <p className="mt-1 text-muted-foreground">Online asks tenants to upload required photos. Face-to-face lets you check documents in person later.</p>
@@ -397,7 +397,7 @@ export function TenantInviteManager({
                             </div>
                         </div>
                     </div>
-                    <div className="mb-2 inline-flex w-fit items-center gap-1 whitespace-nowrap rounded-lg border border-border bg-card px-2 py-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                    <div className="mb-2 inline-flex w-fit items-center gap-1 whitespace-nowrap rounded-lg border border-border bg-card px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                         <Users className="size-3" />
                         {applicationType === "online" ? "Online" : "In-person"}
                     </div>
@@ -458,19 +458,19 @@ export function TenantInviteManager({
 
                     {showPaymentPreview && (
                         <div className="mb-5 rounded-2xl border border-amber-500/20 bg-amber-500/5 dark:bg-amber-500/10 p-4">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">
+                            <p className="text-[10px] font-semibold uppercase tracking-widest text-amber-600 dark:text-amber-400">
                                 Estimated Move-in Payment Preview
                             </p>
                             <div className="mt-3 grid gap-3 sm:grid-cols-2">
                                 <div className="rounded-xl border border-amber-200/50 bg-amber-50/50 dark:border-white/5 dark:bg-black/20 p-3">
                                     <p className="text-[10px] font-bold uppercase tracking-widest text-amber-700/60 dark:text-amber-100/50">Advance Rent</p>
-                                    <p className="mt-1 text-lg font-black text-amber-700 dark:text-amber-50">
+                                    <p className="mt-1 text-lg font-semibold text-amber-700 dark:text-amber-50">
                                         PHP {currentPaymentPreview.advanceAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </p>
                                 </div>
                                 <div className="rounded-xl border border-amber-200/50 bg-amber-50/50 dark:border-white/5 dark:bg-black/20 p-3">
                                     <p className="text-[10px] font-bold uppercase tracking-widest text-amber-700/60 dark:text-amber-100/50">Security Deposit</p>
-                                    <p className="mt-1 text-lg font-black text-amber-700 dark:text-amber-50">
+                                    <p className="mt-1 text-lg font-semibold text-amber-700 dark:text-amber-50">
                                         PHP {currentPaymentPreview.securityDepositAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </p>
                                 </div>
@@ -610,7 +610,7 @@ export function TenantInviteManager({
                                             const tz = d.getTimezoneOffset() * 60000;
                                             setExpiresAt(new Date(d.getTime() - tz).toISOString().slice(0, 16));
                                         }}
-                                        className="rounded-lg border border-border bg-background px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-muted-foreground transition-colors hover:border-primary/30 hover:bg-primary/5 hover:text-foreground active:scale-95"
+                                        className="rounded-lg border border-border bg-background px-3 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground transition-colors hover:border-primary/30 hover:bg-primary/5 hover:text-foreground active:scale-95"
                                     >
                                         {preset.label}
                                     </button>
@@ -630,7 +630,7 @@ export function TenantInviteManager({
                                 !expiresAt ||
                                 (applicationType === "online" && requiredRequirements.length === 0)
                             }
-                            className="inline-flex h-12 items-center gap-2 rounded-xl bg-primary px-6 text-sm font-black text-primary-foreground shadow-[0_8px_16px_-6px_rgba(var(--primary-rgb),0.4)] transition-all hover:scale-[1.02] hover:bg-primary/90 active:scale-95 disabled:pointer-events-none disabled:opacity-50"
+                            className="inline-flex h-12 items-center gap-2 rounded-xl bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-[0_8px_16px_-6px_rgba(var(--primary-rgb),0.4)] transition-all hover:scale-[1.02] hover:bg-primary/90 active:scale-95 disabled:pointer-events-none disabled:opacity-50"
                         >
                             <Link2 className="size-5" />
                             {submitting ? "Generating..." : "Generate Invite"}
@@ -643,18 +643,18 @@ export function TenantInviteManager({
                         <div className="flex w-full flex-col items-center animate-in fade-in zoom-in duration-500">
                             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1">
                                 <ShieldCheck className="size-4 text-primary" />
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Generated Invite</span>
+                                <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">Generated Invite</span>
                             </div>
                             <div className="relative mb-6 rounded-3xl border-2 border-border bg-white p-3 shadow-xl">
                                 <img src={freshInvite.qrUrl} alt="Invite QR code" className="size-44 rounded-xl" />
                             </div>
                             <div className="mb-6 w-full rounded-2xl border border-border bg-background p-4 text-left">
-                                <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Share URL</p>
+                                <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Share URL</p>
                                 <p className="text-sm font-medium text-foreground break-all">{freshInvite.shareUrl}</p>
                             </div>
                             {freshInvite.paymentPreview && (
                                 <div className="mb-6 w-full rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-left">
-                                    <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-amber-200">Estimated Payment Preview</p>
+                                    <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-amber-200">Estimated Payment Preview</p>
                                     <p className="text-xs text-amber-50">
                                         Advance: PHP {freshInvite.paymentPreview.advanceAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </p>

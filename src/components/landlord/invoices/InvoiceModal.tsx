@@ -324,7 +324,7 @@ export function InvoiceModal({
                                 <span className="text-xs font-bold uppercase tracking-[0.25em] text-text-medium">Invoice Specification</span>
                             </div>
                             
-                            <h2 className="text-4xl font-black tracking-tight text-text-high">
+                            <h2 className="text-4xl font-semibold tracking-tight text-text-high">
                                 {invoice?.invoiceNumber ?? "Loading..."}
                             </h2>
                             
@@ -358,7 +358,7 @@ export function InvoiceModal({
                         
                         <div className="flex items-center gap-4">
                             {invoice && (
-                                <div className={cn("flex items-center gap-2 rounded-full border px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.1em] shadow-lg", statusStyle.classes)}>
+                                <div className={cn("flex items-center gap-2 rounded-full border px-4 py-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] shadow-lg", statusStyle.classes)}>
                                     <span className={cn("size-1.5 rounded-full animate-pulse", statusStyle.dot)} />
                                     {statusStyle.label}
                                 </div>
@@ -387,7 +387,7 @@ export function InvoiceModal({
                         ) : (
                             <>
                                 <div className="space-y-1">
-                                    <h3 className="text-xl font-black text-text-high tracking-tight">Financial Overview</h3>
+                                    <h3 className="text-xl font-semibold text-text-high tracking-tight">Financial Overview</h3>
                                     <p className="text-[10px] font-bold uppercase tracking-widest text-text-disabled">Ledger Reconciliation</p>
                                 </div>
 
@@ -406,27 +406,27 @@ export function InvoiceModal({
                                                     <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-disabled">{item.category}</p>
                                                 </div>
                                                 <div className="text-right">
-                                                    <p className="text-base font-black text-text-high">{formatPhpCurrency(item.amount)}</p>
+                                                    <p className="text-base font-semibold text-text-high">{formatPhpCurrency(item.amount)}</p>
                                                 </div>
                                             </div>
                                         ))}
 
                                         {invoice.paidAmount === 0 && (
                                             <div className="flex items-center justify-between rounded-2xl border border-primary/20 bg-primary/5 px-5 py-4 shadow-inner">
-                                                <p className="text-xs font-black uppercase tracking-[0.2em] text-primary">Total Payable</p>
-                                                <p className="text-lg font-black text-primary">{formatPhpCurrency(invoice.totalAmount)}</p>
+                                                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Total Payable</p>
+                                                <p className="text-lg font-semibold text-primary">{formatPhpCurrency(invoice.totalAmount)}</p>
                                             </div>
                                         )}
 
                                         {invoice.paidAmount > 0 && (
                                             <>
                                                 <div className="flex items-center justify-between rounded-2xl border border-white/5 bg-surface-2/30 px-5 py-3 mt-4">
-                                                    <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">Paid to Date</p>
+                                                    <p className="text-[10px] font-semibold uppercase tracking-widest text-text-disabled">Paid to Date</p>
                                                     <p className="text-sm font-bold text-emerald-400">-{formatPhpCurrency(invoice.paidAmount)}</p>
                                                 </div>
                                                 <div className="flex items-center justify-between rounded-2xl border border-primary/20 bg-primary/5 px-5 py-4 shadow-inner">
-                                                    <p className="text-xs font-black uppercase tracking-[0.2em] text-primary">Remaining Balance</p>
-                                                    <p className="text-lg font-black text-primary">{formatPhpCurrency(invoice.balanceRemaining)}</p>
+                                                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Remaining Balance</p>
+                                                    <p className="text-lg font-semibold text-primary">{formatPhpCurrency(invoice.balanceRemaining)}</p>
                                                 </div>
                                             </>
                                         )}
@@ -451,7 +451,7 @@ export function InvoiceModal({
                                                         <div className="size-2 rounded-full bg-primary" />
                                                         <p className="text-sm font-bold capitalize text-text-high">{reading.utility_type} Service</p>
                                                     </div>
-                                                    <span className={cn("rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider", reading.billing_mode === "included_in_rent" ? "bg-white/5 text-text-medium" : "bg-primary/10 text-primary")}>
+                                                    <span className={cn("rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-wider", reading.billing_mode === "included_in_rent" ? "bg-white/5 text-text-medium" : "bg-primary/10 text-primary")}>
                                                         {reading.billing_mode === "included_in_rent" ? "Bundled" : "Unit Standard"}
                                                     </span>
                                                 </div>

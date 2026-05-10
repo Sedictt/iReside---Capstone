@@ -109,7 +109,7 @@ export default function ConsultationDashboard() {
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-bold tracking-widest uppercase">
               Consultation Manager
             </div>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter bg-gradient-to-br from-white via-zinc-200 to-zinc-500 bg-clip-text text-transparent">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tighter bg-gradient-to-br from-white via-zinc-200 to-zinc-500 bg-clip-text text-transparent">
               Document Dashboard
             </h1>
             <p className="text-zinc-500 font-medium max-w-md text-sm md:text-base">
@@ -154,7 +154,7 @@ export default function ConsultationDashboard() {
                 <div className="space-y-6">
                   <div className="flex justify-between items-start">
                     <div className={cn(
-                      "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border",
+                      "px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-widest border",
                       doc.status === 'signed' 
                         ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" 
                         : "bg-amber-500/10 border-amber-500/20 text-amber-400"
@@ -167,7 +167,7 @@ export default function ConsultationDashboard() {
                   </div>
 
                   <div>
-                    <h3 className="text-xl font-black truncate text-zinc-100 mb-1">{doc.file_name}</h3>
+                    <h3 className="text-xl font-semibold truncate text-zinc-100 mb-1">{doc.file_name}</h3>
                     <p className="text-xs text-zinc-500 font-medium">Prepared {new Date(doc.created_at).toLocaleDateString()}</p>
                   </div>
                 </div>

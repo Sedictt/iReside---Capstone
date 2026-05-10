@@ -61,7 +61,7 @@ export function CashPaymentInterface({ isOpen, onClose, payment, onConfirm }: Ca
                             <HandCoins className="size-8 text-primary" />
                         </div>
                         <div>
-                            <h2 className="text-2xl font-black tracking-tight text-foreground">Cash Payment</h2>
+                            <h2 className="text-2xl font-semibold tracking-tight text-foreground">Cash Payment</h2>
                             <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground/60">Face-to-Face Transaction</p>
                         </div>
                     </div>

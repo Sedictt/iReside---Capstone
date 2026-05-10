@@ -241,7 +241,7 @@ export default function LandlordRenewalReview() {
                 <div className="p-4 rounded-3xl bg-primary/5">
                     <RefreshCw className="size-8 animate-spin text-primary" />
                 </div>
-                <p className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground animate-pulse">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground animate-pulse">
                     Loading Requests...
                 </p>
             </div>
@@ -252,9 +252,9 @@ export default function LandlordRenewalReview() {
         <div className="space-y-8">
             <div className="flex items-center justify-between px-2">
                 <div className="flex items-center gap-4">
-                    <h3 className="text-xl font-black text-foreground tracking-tight">Pending Renewals</h3>
+                    <h3 className="text-xl font-semibold text-foreground tracking-tight">Pending Renewals</h3>
                     {isPreview && (
-                        <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest border border-primary/20">
+                        <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-semibold uppercase tracking-widest border border-primary/20">
                             Preview Mode
                         </span>
                     )}
@@ -263,7 +263,7 @@ export default function LandlordRenewalReview() {
                     <button
                         onClick={() => setIsSettingsOpen(true)}
                         disabled={!selectedPropertyId || selectedPropertyId === "all"}
-                        className="flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card text-[10px] font-black text-muted-foreground uppercase tracking-widest hover:bg-muted hover:text-foreground transition-all disabled:opacity-30"
+                        className="flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card text-[10px] font-semibold text-muted-foreground uppercase tracking-widest hover:bg-muted hover:text-foreground transition-all disabled:opacity-30"
                         title={(!selectedPropertyId || selectedPropertyId === "all") ? "Select a property to configure its renewal policy" : "Configure Renewal Policy"}
                     >
                         <Settings2 className="size-3.5" />
@@ -271,7 +271,7 @@ export default function LandlordRenewalReview() {
                     </button>
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50 border border-border">
                         <div className="size-1.5 rounded-full bg-amber-500 animate-pulse" />
-                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
                             {requests.length} Pending
                         </span>
                     </div>
@@ -292,28 +292,28 @@ export default function LandlordRenewalReview() {
                         <div key={request.id} className="group relative bg-card border border-border rounded-[2.5rem] p-8 shadow-sm transition-all hover:border-primary/20 hover:shadow-xl hover:shadow-black/5">
                             <div className="flex justify-between items-start mb-8">
                                 <div className="flex items-center gap-4">
-                                    <div className="size-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black text-xl">
+                                    <div className="size-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-semibold text-xl">
                                         {request.tenant.full_name.charAt(0)}
                                     </div>
                                     <div>
-                                        <h4 className="text-lg font-black text-foreground group-hover:text-primary transition-colors">{request.tenant.full_name}</h4>
-                                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                                        <h4 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">{request.tenant.full_name}</h4>
+                                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
                                             {request.current_lease.unit.property.name} • Unit {request.current_lease.unit.name}
                                         </p>
                                     </div>
                                 </div>
-                                <span className="px-3 py-1 rounded-full bg-amber-500/10 text-amber-600 text-[10px] font-black uppercase tracking-widest border border-amber-500/20">
+                                <span className="px-3 py-1 rounded-full bg-amber-500/10 text-amber-600 text-[10px] font-semibold uppercase tracking-widest border border-amber-500/20">
                                     Pending Review
                                 </span>
                             </div>
                             
                             <div className="grid grid-cols-2 gap-6 mb-8">
                                 <div className="space-y-1">
-                                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">Current End Date</p>
+                                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">Current End Date</p>
                                     <p className="font-bold text-foreground">{new Date(request.current_lease.end_date).toLocaleDateString()}</p>
                                 </div>
                                 <div className="space-y-1">
-                                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">Proposed Length</p>
+                                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">Proposed Length</p>
                                     <p className="font-bold text-foreground">
                                         {Math.round((new Date(request.proposed_end_date).getTime() - new Date(request.proposed_start_date).getTime()) / (86400000 * 30.44))} Months
                                     </p>

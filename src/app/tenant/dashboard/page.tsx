@@ -410,13 +410,13 @@ export default function TenantDashboard() {
                         <div className="md:col-span-2 space-y-6">
                             <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20 shadow-sm">
                                 <span className="size-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(109,152,56,0.6)]" />
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em]">
+                                <span className="text-[10px] font-semibold uppercase tracking-[0.2em]">
                                     {isInitialLoading ? "Loading status..." : nextPayment ? "Payment Due • Active Standing" : "Account Up to Date • Excellent"}
                                 </span>
                             </div>
 
                             <div className="space-y-1">
-                                <h2 className={cn("text-5xl font-black tracking-tight text-foreground", isInitialLoading && "animate-pulse")}>
+                                <h2 className={cn("text-5xl font-semibold tracking-tight text-foreground", isInitialLoading && "animate-pulse")}>
                                     {"\u20B1"}{displayPaymentParts.whole}
                                     <span className="text-2xl text-muted-foreground font-medium">.{displayPaymentParts.decimal}</span>
                                 </h2>
@@ -449,7 +449,7 @@ export default function TenantDashboard() {
                         <div className="bg-muted/30 rounded-3xl p-6 border border-border/50 space-y-4">
                             <div className="flex items-center justify-between">
                                 <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Lease Progress</p>
-                                <span className="text-xs font-black text-primary">{leaseProgress.progressPercent}%</span>
+                                <span className="text-xs font-semibold text-primary">{leaseProgress.progressPercent}%</span>
                             </div>
                             <div className="h-2.5 bg-muted rounded-full overflow-hidden">
                                 <motion.div 
@@ -532,7 +532,7 @@ export default function TenantDashboard() {
                             </div>
                             <button
                                 onClick={() => setShowBanner(false)}
-                                className="text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors px-3 py-2"
+                                className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors px-3 py-2"
                             >
                                 Dismiss
                             </button>
@@ -557,7 +557,7 @@ export default function TenantDashboard() {
                             </div>
                             <Link
                                 href={`/tenant/payments/${overduePayments[0]?.id}/checkout`}
-                                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-red-500/20 transition-all"
+                                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl text-[10px] font-semibold uppercase tracking-widest shadow-lg shadow-red-500/20 transition-all"
                             >
                                 Pay Now
                             </Link>
@@ -571,7 +571,7 @@ export default function TenantDashboard() {
                         {/* Quick Actions - More compact & elegant */}
                         <div data-tour-id="tour-quick-actions">
                             <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Quick Services</h3>
+                                <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Quick Services</h3>
                             </div>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 {[
@@ -601,7 +601,7 @@ export default function TenantDashboard() {
                                     <h3 className="text-xl font-semibold text-foreground tracking-tight">Recent Activity</h3>
                                     <p className="text-xs text-muted-foreground mt-1">Your latest updates and transactions</p>
                                 </div>
-                                <Link href="/tenant/payments" className="text-[10px] font-black uppercase tracking-widest text-primary hover:text-primary-dark transition-colors">
+                                <Link href="/tenant/payments" className="text-[10px] font-semibold uppercase tracking-widest text-primary hover:text-primary-dark transition-colors">
                                     Full History
                                 </Link>
                             </div>
@@ -627,7 +627,7 @@ export default function TenantDashboard() {
                                                                 {payment.description ?? "Payment"}
                                                             </p>
                                                             {(isAdvanceRent || isSecurityDeposit) && (
-                                                                <span className="px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-primary/10 text-primary border border-primary/20 shrink-0">
+                                                                <span className="px-2 py-0.5 rounded-full text-[8px] font-semibold uppercase tracking-widest bg-primary/10 text-primary border border-primary/20 shrink-0">
                                                                     {isAdvanceRent ? "Advance" : "Deposit"}
                                                                 </span>
                                                             )}
@@ -638,9 +638,9 @@ export default function TenantDashboard() {
                                                     </div>
                                                 </div>
                                                 <div className="text-right shrink-0">
-                                                    <p className="font-black text-sm text-foreground tracking-tight">₱{formatCurrency(payment.amount, 2)}</p>
+                                                    <p className="font-semibold text-sm text-foreground tracking-tight">₱{formatCurrency(payment.amount, 2)}</p>
                                                     <p className={cn(
-                                                        "text-[8px] font-black uppercase tracking-[0.2em] mt-0.5",
+                                                        "text-[8px] font-semibold uppercase tracking-[0.2em] mt-0.5",
                                                         payment.status === 'completed' ? "text-emerald-500" : "text-amber-500"
                                                     )}>
                                                         {payment.status}

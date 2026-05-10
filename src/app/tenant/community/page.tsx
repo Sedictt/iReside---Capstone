@@ -390,7 +390,7 @@ export default function TenantCommunityHubPage() {
 
                     {(activeTab === "approvals" || (activeTab === "mine" && !isManagementUser)) && (
                         <div className="space-y-6">
-                            <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground">
+                            <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
                                 {activeTab === "approvals" ? "Moderation Queue" : "Your Pending Posts"}
                             </h3>
                             <div className="grid gap-6 md:grid-cols-2">
@@ -460,7 +460,7 @@ export default function TenantCommunityHubPage() {
                                     <button 
                                         onClick={() => loadPosts("append")}
                                         disabled={loadingFeed}
-                                        className="rounded-full border border-border px-10 py-3 text-sm font-black transition-all hover:bg-muted"
+                                        className="rounded-full border border-border px-10 py-3 text-sm font-semibold transition-all hover:bg-muted"
                                     >
                                         {loadingFeed ? "Loading..." : "Load More"}
                                     </button>
@@ -480,7 +480,7 @@ export default function TenantCommunityHubPage() {
                             exit={{ opacity: 0, scale: 0.95 }}
                             className="w-full max-w-md rounded-3xl border border-border bg-card p-8 shadow-2xl"
                         >
-                            <h3 className="text-xl font-black text-foreground">Report Content</h3>
+                            <h3 className="text-xl font-semibold text-foreground">Report Content</h3>
                             <p className="mt-2 text-sm text-muted-foreground">Help us understand what's wrong with this post. Your report is confidential.</p>
                             
                             <textarea

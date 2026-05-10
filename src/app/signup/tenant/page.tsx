@@ -156,7 +156,7 @@ export default function TenantInformationPage() {
                         Private Residency — Invite Only
                     </motion.div>
 
-                    <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.1] mb-6">
+                    <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight leading-[1.1] mb-6">
                         Your all-in-one<br />
                         <span className="text-primary">resident hub</span>
                     </h1>
@@ -190,7 +190,7 @@ export default function TenantInformationPage() {
                     className="mb-20"
                 >
                     <div className="text-center mb-12">
-                        <h2 className="text-3xl sm:text-4xl font-black tracking-tight mb-4">
+                        <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-4">
                             Getting started is simple
                         </h2>
                         <p className="text-muted-foreground text-lg max-w-xl mx-auto">
@@ -207,7 +207,7 @@ export default function TenantInformationPage() {
                                 transition={{ delay: 0.3 + idx * 0.1 }}
                                 className="relative rounded-3xl border border-border bg-card p-8 shadow-sm"
                             >
-                                <div className="absolute -top-4 left-8 px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-black uppercase tracking-widest">
+                                <div className="absolute -top-4 left-8 px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-semibold uppercase tracking-widest">
                                     Step {step.number}
                                 </div>
                                 <div className="mt-4">
@@ -231,7 +231,7 @@ export default function TenantInformationPage() {
                     className="mb-20"
                 >
                     <div className="text-center mb-12">
-                        <h2 className="text-3xl sm:text-4xl font-black tracking-tight mb-4">
+                        <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-4">
                             Everything you need, one platform
                         </h2>
                         <p className="text-muted-foreground text-lg max-w-xl mx-auto">
@@ -302,7 +302,7 @@ export default function TenantInformationPage() {
                         <CheckCircle2 className="size-3.5" />
                         Invite Only Community
                     </div>
-                    <h2 className="text-3xl sm:text-4xl font-black tracking-tight mb-4">
+                    <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-4">
                         Ready to get started?
                     </h2>
                     <p className="text-muted-foreground text-lg max-w-xl mx-auto mb-8">

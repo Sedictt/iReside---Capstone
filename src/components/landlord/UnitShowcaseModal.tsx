@@ -149,7 +149,7 @@ export function UnitShowcaseModal({
                     {/* Unit title & rent */}
                     <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                         <div>
-                            <h2 className="text-3xl font-black text-white tracking-tight">
+                            <h2 className="text-3xl font-semibold text-white tracking-tight">
                                 {unit.name}
                             </h2>
                             <p className="text-neutral-400 text-sm mt-1">
@@ -157,7 +157,7 @@ export function UnitShowcaseModal({
                             </p>
                         </div>
                         <div className="text-right">
-                            <p className="text-3xl font-black text-primary">
+                            <p className="text-3xl font-semibold text-primary">
                                 ₱{(unit.rent_amount || 0).toLocaleString()}
                             </p>
                             <p className="text-neutral-500 text-sm font-medium">per month</p>

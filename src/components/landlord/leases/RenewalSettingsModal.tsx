@@ -97,8 +97,8 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
                             <Settings2 className="size-6" />
                         </div>
                         <div>
-                            <h3 className="text-xl font-black text-foreground tracking-tight">Renewal Policy</h3>
-                            <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">
+                            <h3 className="text-xl font-semibold text-foreground tracking-tight">Renewal Policy</h3>
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">
                                 Configure terms for {propertyName}
                             </p>
                         </div>
@@ -111,7 +111,7 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
                 {loading ? (
                     <div className="p-20 text-center">
                         <div className="animate-spin size-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
-                        <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Syncing Configuration...</p>
+                        <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Syncing Configuration...</p>
                     </div>
                 ) : (
                     <div className="p-8 overflow-y-auto space-y-8">
@@ -125,10 +125,10 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
 
                         {/* Rent Adjustment Section */}
                         <section className="space-y-4">
-                            <h4 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground border-b border-border pb-2">Rent Adjustment</h4>
+                            <h4 className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground border-b border-border pb-2">Rent Adjustment</h4>
                             <div className="grid grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label htmlFor="adjustment-type" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Adjustment Type</label>
+                                    <label htmlFor="adjustment-type" className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Adjustment Type</label>
                                     <select 
                                         id="adjustment-type"
                                         value={settings.adjustment_type}

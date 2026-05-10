@@ -420,7 +420,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                     <div className="size-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto border border-primary/20 shadow-[0_0_30px_rgba(109,152,56,0.2)] mb-6">
                         <CheckCircle className="size-12 text-emerald-500" />
                     </div>
-                    <h2 className="text-3xl font-black text-white mb-2">All Set!</h2>
+                    <h2 className="text-3xl font-semibold text-white mb-2">All Set!</h2>
                     <p className="text-white/60 mb-6">
                         Your landlord account has been created. Redirecting you to login...
                     </p>
@@ -483,16 +483,16 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                             <div className="text-center mb-4">
                                 <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full mb-3">
                                     <Lock className="size-3 text-primary" />
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-white/60">Secure Authentication</span>
+                                    <span className="text-[10px] font-semibold uppercase tracking-widest text-white/60">Secure Authentication</span>
                                 </div>
-                                <h2 className="text-3xl font-black tracking-tight text-white">Create Credentials</h2>
+                                <h2 className="text-3xl font-semibold tracking-tight text-white">Create Credentials</h2>
                                 <p className="text-white/50 text-sm mt-1">Establish your administrative access</p>
                             </div>
                             
                             <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-8 space-y-6 backdrop-blur-xl shadow-2xl">
                                 <div>
                                     <div className="flex items-center justify-between mb-3">
-                                        <label htmlFor="admin-identity" className="block text-[10px] font-black uppercase tracking-widest text-white/40 px-1">
+                                        <label htmlFor="admin-identity" className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 px-1">
                                             Administrative Identity
                                         </label>
                                         <div className="flex items-center gap-1.5 px-2 py-0.5 bg-primary/10 border border-primary/20 rounded-full">
@@ -514,7 +514,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                 </div>
                                 
                                 <div className="space-y-3">
-                                    <label htmlFor="password" className="block text-[10px] font-black uppercase tracking-widest text-white/40 px-1">
+                                    <label htmlFor="password" className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 px-1">
                                         Password
                                     </label>
                                     <div className="relative group">
@@ -556,8 +556,8 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                     {password && (
                                         <div className="pt-4 border-t border-white/5">
                                             <div className="flex justify-between items-center mb-2">
-                                                <span className="text-[10px] font-black uppercase tracking-widest text-white/30">Entropy Strength</span>
-                                                <span className={`text-[10px] font-black uppercase tracking-widest ${getPasswordStrength(password).color.replace('bg-', 'text-')}`}>
+                                                <span className="text-[10px] font-semibold uppercase tracking-widest text-white/30">Entropy Strength</span>
+                                                <span className={`text-[10px] font-semibold uppercase tracking-widest ${getPasswordStrength(password).color.replace('bg-', 'text-')}`}>
                                                     {getPasswordStrength(password).label}
                                                 </span>
                                             </div>
@@ -574,7 +574,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                 </div>
                                 
                                 <div className="space-y-3">
-                                    <label htmlFor="confirm-password" className="block text-[10px] font-black uppercase tracking-widest text-white/40 px-1">
+                                    <label htmlFor="confirm-password" className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 px-1">
                                         Confirm Password
                                     </label>
                                     <div className="relative">
@@ -599,10 +599,10 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                             {password === confirmPassword ? (
                                                 <>
                                                     <CheckCircle2 className="size-3 text-primary" />
-                                                    <span className="text-[10px] text-primary font-black uppercase tracking-widest">Passwords Synchronized</span>
+                                                    <span className="text-[10px] text-primary font-semibold uppercase tracking-widest">Passwords Synchronized</span>
                                                 </>
                                             ) : (
-                                                <p className="text-red-400 text-[10px] font-black uppercase tracking-widest">Mismatched credentials</p>
+                                                <p className="text-red-400 text-[10px] font-semibold uppercase tracking-widest">Mismatched credentials</p>
                                             )}
                                         </div>
                                     )}
@@ -614,7 +614,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                     {currentStep === "property" && (
                         <div className="space-y-8">
                             <div className="text-center mb-4">
-                                <h2 className="text-3xl font-black tracking-tight text-white">Property Configuration</h2>
+                                <h2 className="text-3xl font-semibold tracking-tight text-white">Property Configuration</h2>
                                 <p className="text-white/50 text-sm mt-1">Initialize your asset's operational parameters</p>
                             </div>
                             
@@ -625,7 +625,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                     <div className="space-y-3">
                                         <div className="flex items-center gap-2 px-1">
                                             <ImageIcon className="size-3.5 text-primary" />
-                                            <label htmlFor="cover-photo-input" className="text-[10px] font-black uppercase tracking-widest text-white/40">Cover Identity</label>
+                                            <label htmlFor="cover-photo-input" className="text-[10px] font-semibold uppercase tracking-widest text-white/40">Cover Identity</label>
                                         </div>
                                         <div className="relative group cursor-pointer overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 hover:bg-white/10 transition-all aspect-[16/10] shadow-2xl">
                                             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
@@ -659,12 +659,12 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                     <div className="bg-white/[0.03] border border-white/5 rounded-[2rem] p-5 space-y-4 backdrop-blur-md">
                                         <div className="flex items-center gap-2 px-1">
                                             <ShieldCheck className="size-3.5 text-primary" />
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Verified Identity</span>
+                                            <span className="text-[10px] font-semibold uppercase tracking-widest text-white/40">Verified Identity</span>
                                         </div>
                                         <div className="grid gap-3">
                                             <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-4">
                                                 <p className="text-[9px] font-bold uppercase tracking-wider text-white/30 mb-1">Formal Name</p>
-                                                <p className="text-sm font-black text-white truncate leading-none">{data?.propertyName}</p>
+                                                <p className="text-sm font-semibold text-white truncate leading-none">{data?.propertyName}</p>
                                             </div>
                                             <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-4">
                                                 <p className="text-[9px] font-bold uppercase tracking-wider text-white/30 mb-1">Location</p>
@@ -677,7 +677,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                     <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-6 space-y-6">
                                         <div className="flex items-center gap-2">
                                             <Grid className="size-4 text-primary" />
-                                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Architectural Scope</h3>
+                                            <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Architectural Scope</h3>
                                         </div>
                                         
                                         <div className="grid gap-4">

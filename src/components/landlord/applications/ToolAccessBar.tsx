@@ -344,7 +344,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
             <div className="w-full bg-[#fdfdfd] text-black p-8 sm:p-14 font-serif min-h-[700px] relative cursor-text">
                 {/* Watermark */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03] overflow-hidden">
-                    <h1 className="text-[12rem] font-black rotate-[-45deg] select-none text-black tracking-tighter uppercase">Agreement</h1>
+                    <h1 className="text-[12rem] font-semibold rotate-[-45deg] select-none text-black tracking-tighter uppercase">Agreement</h1>
                 </div>
 
                 <div className="relative z-10 max-w-2xl mx-auto space-y-8">

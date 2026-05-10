@@ -164,7 +164,7 @@ function ConfirmationModal({
                         <div className="size-16 rounded-2xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
                             <AlertCircle size={32} />
                         </div>
-                        <h2 className="text-3xl font-black italic tracking-tight">Final Approval</h2>
+                        <h2 className="text-3xl font-semibold italic tracking-tight">Final Approval</h2>
                     </div>
 
                     {missingFields.length > 0 ? (
@@ -173,10 +173,10 @@ function ConfirmationModal({
                                 System detected that the application is not yet 100% complete. Do you want to override and approve anyway?
                             </p>
                             <div className="space-y-3">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-amber-500/80">Missing Requirements:</p>
+                                <p className="text-[10px] font-semibold uppercase tracking-widest text-amber-500/80">Missing Requirements:</p>
                                 <div className="flex flex-wrap gap-2 max-h-[120px] overflow-y-auto pr-2 custom-scrollbar">
                                     {missingFields.map(field => (
-                                        <span key={field} className="px-3 py-1.5 rounded-lg bg-amber-500/5 border border-amber-500/10 text-[10px] font-black text-amber-500/80 uppercase tracking-wider">
+                                        <span key={field} className="px-3 py-1.5 rounded-lg bg-amber-500/5 border border-amber-500/10 text-[10px] font-semibold text-amber-500/80 uppercase tracking-wider">
                                             {field}
                                         </span>
                                     ))}

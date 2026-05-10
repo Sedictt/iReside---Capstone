@@ -70,7 +70,7 @@ export function CommunityAnnouncement({
                                 <span>{formatRelative(announcement.created_at)}</span>
                             </div>
                         </div>
-                        <h2 className="text-xl font-black tracking-tight text-foreground dark:text-white">
+                        <h2 className="text-xl font-semibold tracking-tight text-foreground dark:text-white">
                             {announcement.title || "Community Announcement"}
                         </h2>
                         <p className="text-base leading-relaxed text-muted-foreground dark:text-white/70">

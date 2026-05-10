@@ -10,7 +10,7 @@ const ConsultationDashboard = dynamic(() => import('./ConsultationDashboard'), {
         <div className="size-20 border-2 border-indigo-500/20 rounded-full" />
         <div className="absolute inset-0 size-20 border-t-2 border-indigo-500 rounded-full animate-spin" />
       </div>
-      <h2 className="text-2xl font-black tracking-tighter uppercase text-indigo-400">Loading Dashboard</h2>
+      <h2 className="text-2xl font-semibold tracking-tighter uppercase text-indigo-400">Loading Dashboard</h2>
     </div>
   )
 });

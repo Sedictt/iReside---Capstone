@@ -287,11 +287,11 @@ export default function RentApplicationPage() {
                             <div className="p-5 grid grid-cols-2 gap-3">
                                 <div className="space-y-1">
                                     <p className="text-[10px] text-white/30 uppercase font-bold tracking-widest leading-none">Monthly Rent</p>
-                                    <p className="text-lg font-black text-white">{property.price}</p>
+                                    <p className="text-lg font-semibold text-white">{property.price}</p>
                                 </div>
                                 <div className="space-y-1 text-right">
                                     <p className="text-[10px] text-white/30 uppercase font-bold tracking-widest leading-none">Refundable</p>
-                                    <p className="text-lg font-black text-primary">₱25K</p>
+                                    <p className="text-lg font-semibold text-primary">₱25K</p>
                                 </div>
                             </div>
                         </div>
@@ -353,7 +353,7 @@ export default function RentApplicationPage() {
                                                 <div className="md:col-span-2">
                                                     <div className="flex items-center gap-2 mb-4">
                                                         <div className="h-px flex-1 bg-white/10" />
-                                                        <span className="text-[10px] font-black uppercase tracking-widest text-white/20 whitespace-nowrap">Emergency Contact</span>
+                                                        <span className="text-[10px] font-semibold uppercase tracking-widest text-white/20 whitespace-nowrap">Emergency Contact</span>
                                                         <div className="h-px flex-1 bg-white/10" />
                                                     </div>
                                                 </div>
@@ -390,7 +390,7 @@ export default function RentApplicationPage() {
                                             <div className="md:col-span-2">
                                                 <div className="flex items-center gap-2 mb-4">
                                                     <div className="h-px flex-1 bg-white/10" />
-                                                    <span className="text-[10px] font-black uppercase tracking-widest text-white/20 whitespace-nowrap">Background Reference (Mandatory)</span>
+                                                    <span className="text-[10px] font-semibold uppercase tracking-widest text-white/20 whitespace-nowrap">Background Reference (Mandatory)</span>
                                                     <div className="h-px flex-1 bg-white/10" />
                                                 </div>
                                                 <p className="text-[10px] text-amber-400 font-bold uppercase tracking-wider mb-2 text-center opacity-60">
@@ -433,7 +433,7 @@ export default function RentApplicationPage() {
                                             {/* Requirements Roadmap - Tenant View */}
                                             <div className="space-y-4">
                                                 <div className="flex items-center justify-between">
-                                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-white/40">Acceptance Roadmap</h4>
+                                                    <h4 className="text-[10px] font-semibold uppercase tracking-widest text-white/40">Acceptance Roadmap</h4>
                                                     <span className="text-[8px] font-black bg-primary/20 text-primary border border-primary/20 px-2 py-0.5 rounded uppercase tracking-tighter">7 Mandatory Steps</span>
                                                 </div>
 
@@ -449,7 +449,7 @@ export default function RentApplicationPage() {
                                                     ].map((item) => (
                                                         <div key={item.id} className="flex items-start gap-3 p-3 rounded-2xl bg-white/[0.02] border border-white/5 group hover:bg-white/[0.04] transition-all">
                                                             <div className="size-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-primary group-hover:text-black transition-all">
-                                                                <span className="text-[10px] font-black">{item.id}</span>
+                                                                <span className="text-[10px] font-semibold">{item.id}</span>
                                                             </div>
                                                             <div>
                                                                 <p className="text-[11px] font-bold text-white tracking-tight">{item.label}</p>
@@ -482,7 +482,7 @@ export default function RentApplicationPage() {
                                                     <CheckCircle2 className="size-6 text-emerald-500" />
                                                 </div>
                                                 <div>
-                                                    <h4 className="text-sm font-black text-white uppercase tracking-tight">Data Ready for Vault</h4>
+                                                    <h4 className="text-sm font-semibold text-white uppercase tracking-tight">Data Ready for Vault</h4>
                                                     <p className="text-xs text-white/40 font-medium">By submitting, you agree to the background verification process.</p>
                                                 </div>
                                             </div>
@@ -613,10 +613,10 @@ function UnitSelector({ label, value, onChange, options, onSeeMore, propertyId }
                     </div>
 
                     <div className="space-y-0.5">
-                        <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Residence Configuration</p>
+                        <p className="text-[10px] font-semibold text-white/30 uppercase tracking-[0.2em]">Residence Configuration</p>
                         {isSelected ? (
                             <div className="flex items-baseline gap-2">
-                                <span className="text-lg font-black text-white tracking-tighter">
+                                <span className="text-lg font-semibold text-white tracking-tighter">
                                     {selectedUnit.name}
                                 </span>
                                 <span className="text-xs font-bold text-primary italic">
@@ -632,15 +632,15 @@ function UnitSelector({ label, value, onChange, options, onSeeMore, propertyId }
                 <div className="pr-1 gap-2 flex items-center">
                     {isSelected && (
                         <div className="hidden sm:flex flex-col items-end mr-4">
-                            <p className="text-[8px] font-black text-white/20 uppercase tracking-widest">Pricing Adjust.</p>
-                            <p className="text-[10px] font-black text-primary">{selectedUnit.price}</p>
+                            <p className="text-[8px] font-semibold text-white/20 uppercase tracking-widest">Pricing Adjust.</p>
+                            <p className="text-[10px] font-semibold text-primary">{selectedUnit.price}</p>
                         </div>
                     )}
                     <button
                         type="button"
                         onClick={onSeeMore}
                         className={cn(
-                            "h-14 px-10 rounded-[1.75rem] font-black text-[11px] uppercase tracking-[0.15em] transition-all relative overflow-hidden group/btn flex items-center gap-3",
+                            "h-14 px-10 rounded-[1.75rem] font-semibold text-[11px] uppercase tracking-[0.15em] transition-all relative overflow-hidden group/btn flex items-center gap-3",
                             isSelected
                                 ? "bg-white/5 text-white/60 hover:bg-white/10 hover:text-white border border-white/10"
                                 : "bg-primary text-black shadow-2xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98]"
@@ -686,7 +686,7 @@ function UnitSelectionModal({ isOpen, onClose, value, onChange, options }: any) 
                     >
                         {/* Sidebar Selector */}
                         <div className="w-full md:w-[240px] bg-white/[0.02] border-b md:border-b-0 md:border-r border-white/5 p-8 flex flex-col shrink-0">
-                            <h4 className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em] mb-8 px-2">Level Gallery</h4>
+                            <h4 className="text-[10px] font-semibold text-white/30 uppercase tracking-[0.3em] mb-8 px-2">Level Gallery</h4>
                             <div className="space-y-2 overflow-y-auto custom-scrollbar flex-1 -mx-2 px-2">
                                 {floors.map((floor: any) => (
                                     <button
@@ -695,7 +695,7 @@ function UnitSelectionModal({ isOpen, onClose, value, onChange, options }: any) 
                                         className={cn(
                                             "w-full flex items-center gap-4 p-4 rounded-2xl transition-all duration-300 group/floor",
                                             selectedFloor === floor
-                                                ? "bg-primary text-black font-black shadow-[0_10px_20px_rgba(109,152,56,0.3)]"
+                                                ? "bg-primary text-black font-semibold shadow-[0_10px_20px_rgba(109,152,56,0.3)]"
                                                 : "text-white/40 hover:text-white hover:bg-white/5"
                                         )}
                                     >
