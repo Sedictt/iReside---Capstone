@@ -58,7 +58,7 @@ const tools = [
 ] as const;
 
 const TOOL_GLOWS: Record<(typeof tools)[number]["key"], { c1: string, c2: string }> = {
-  templates: { c1: "bg-violet-500/20", c2: "bg-indigo-500/15" },
+  templates: { c1: "bg-violet-500/20", c2: "bg-primary/15" },
   policies: { c1: "bg-blue-500/20", c2: "bg-cyan-500/15" },
   amenities: { c1: "bg-emerald-500/20", c2: "bg-lime-500/15" },
 };
@@ -171,7 +171,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
             className="flex flex-col items-center gap-4 rounded-3xl border border-border bg-card/95 px-8 py-6 shadow-sm backdrop-blur-md"
           >
             <Loader2 className="size-8 animate-spin text-primary" />
-            <span className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Loading property data...</span>
+            <span className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Loading property data...</span>
           </motion.div>
         </div>
       );
@@ -189,7 +189,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
               <AlertCircle className="size-7 text-red-400" />
             </div>
             <div>
-              <p className="text-lg font-semibold text-red-300 tracking-tight">Unable to Load Tools</p>
+              <p className="text-lg font-bold text-red-300 tracking-tight">Unable to Load Tools</p>
               <p className="text-sm font-medium text-red-200/80 mt-2">{loadError}</p>
             </div>
           </motion.div>
@@ -210,7 +210,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
         if (n.includes("security")) return { icon: ShieldCheck, color: "text-orange-400", bg: "bg-orange-500/10" };
         if (n.includes("cctv") || n.includes("camera")) return { icon: Camera, color: "text-red-400", bg: "bg-red-500/10" };
         if (n.includes("garden") || n.includes("park") || n.includes("leaf")) return { icon: Leaf, color: "text-green-400", bg: "bg-green-500/10" };
-        if (n.includes("elevator") || n.includes("lift")) return { icon: ArrowUpCircle, color: "text-indigo-400", bg: "bg-indigo-500/10" };
+        if (n.includes("elevator") || n.includes("lift")) return { icon: ArrowUpCircle, color: "text-primary", bg: "bg-primary/10" };
         if (n.includes("lobby") || n.includes("front")) return { icon: DoorOpen, color: "text-amber-400", bg: "bg-amber-500/10" };
         if (n.includes("roof") || n.includes("deck")) return { icon: Cloud, color: "text-blue-400", bg: "bg-blue-500/10" };
         if (n.includes("kitchen") || n.includes("dining")) return { icon: Utensils, color: "text-rose-400", bg: "bg-rose-500/10" };
@@ -243,10 +243,10 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
                       <AmenityIcon className={cn("size-6", color)} strokeWidth={1.5} />
                     </div>
                     <div className="flex flex-col gap-0.5">
-                        <span className="text-[15px] font-semibold tracking-tight text-foreground/90 leading-tight">{item}</span>
+                        <span className="text-[15px] font-bold tracking-tight text-foreground/90 leading-tight">{item}</span>
                         <div className="flex items-center gap-1.5">
                             <div className="size-1 rounded-full bg-primary/50" />
-                            <span className="text-[8px] font-semibold uppercase tracking-widest text-muted-foreground/50">Verified Facility</span>
+                            <span className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground/50">Verified Facility</span>
                         </div>
                     </div>
                   </motion.div>
@@ -278,15 +278,15 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
                 >
                   <div className="flex items-center gap-6">
                         <div className="shrink-0 flex flex-col items-center gap-1 min-w-[50px]">
-                            <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/40 leading-none">Clause</span>
-                            <span className="text-xl font-semibold italic text-blue-500/60 leading-none">{String(index + 1).padStart(2, '0')}</span>
+                            <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40 leading-none">Clause</span>
+                            <span className="text-xl font-bold italic text-blue-500/60 leading-none">{String(index + 1).padStart(2, '0')}</span>
                         </div>
                         <div className="w-px h-8 bg-border/40" />
                         <div className="flex-1">
                             <p className="text-[15px] font-bold leading-relaxed text-foreground/90 tracking-tight">{rule}</p>
                         </div>
                         <div className="shrink-0 px-2.5 py-1 rounded-lg bg-blue-500/5 border border-blue-500/10 opacity-0 group-hover:opacity-100 transition-all duration-500">
-                            <span className="text-[8px] font-semibold uppercase tracking-widest text-blue-400">Binding</span>
+                            <span className="text-[8px] font-bold uppercase tracking-widest text-blue-400">Binding</span>
                         </div>
                   </div>
                 </motion.div>
@@ -344,12 +344,12 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
             <div className="w-full bg-[#fdfdfd] text-black p-8 sm:p-14 font-serif min-h-[700px] relative cursor-text">
                 {/* Watermark */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03] overflow-hidden">
-                    <h1 className="text-[12rem] font-semibold rotate-[-45deg] select-none text-black tracking-tighter uppercase">Agreement</h1>
+                    <h1 className="text-[12rem] font-bold rotate-[-45deg] select-none text-black tracking-tighter uppercase">Agreement</h1>
                 </div>
 
                 <div className="relative z-10 max-w-2xl mx-auto space-y-8">
                     <div className="text-center space-y-2 border-b-2 border-neutral-300 pb-8 mb-8">
-                        <h1 className="text-[1.35rem] font-semibold uppercase tracking-widest text-black">{contractTitle}</h1>
+                        <h1 className="text-[1.35rem] font-bold uppercase tracking-widest text-black">{contractTitle}</h1>
                         <p className="text-neutral-500 italic text-sm">This is the configured lease agreement for {propertyData.name}.</p>
                     </div>
 
@@ -392,7 +392,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
                                     {/* Inject Custom Clauses here */}
                                     {customClauses.filter(c => c.title && c.description).length > 0 && (
                                         <div className="pt-6 mt-6 border-t border-neutral-200 space-y-4">
-                                            <h3 className="font-semibold text-black uppercase tracking-wider text-sm mb-4">Additional Clauses</h3>
+                                            <h3 className="font-bold text-black uppercase tracking-wider text-sm mb-4">Additional Clauses</h3>
                                             {customClauses.filter(c => c.title && c.description).map((clause, idx) => (
                                                 <p key={clause.title}>
                                                     <strong className="text-black uppercase">{(idx + 6)}. {clause.title}:</strong> {clause.description}
@@ -455,7 +455,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
                 
                 {/* Custom Tooltip - adjusted for vertical/horizontal visibility */}
                 <div className={cn(
-                  "pointer-events-none absolute select-none whitespace-nowrap rounded-md border border-border bg-popover px-3 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-popover-foreground opacity-0 shadow-xl transition-all duration-200 group-hover:opacity-100 z-50",
+                  "pointer-events-none absolute select-none whitespace-nowrap rounded-md border border-border bg-popover px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-popover-foreground opacity-0 shadow-xl transition-all duration-200 group-hover:opacity-100 z-50",
                   direction === "vertical" 
                     ? "right-full mr-3 top-1/2 -translate-y-1/2 group-hover:-translate-x-1" 
                     : "-top-10 left-1/2 -translate-x-1/2 translate-y-2 group-hover:-translate-y-1"
@@ -507,8 +507,8 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
                     {activeTool.key === "amenities" && <Sparkles className="size-6 text-emerald-300" />}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[10px] font-semibold text-primary uppercase tracking-[0.25em] opacity-80 mb-1">Property Configuration</p>
-                    <p className="truncate text-xl font-semibold tracking-tight text-foreground sm:text-2xl">{activeTool.label}</p>
+                    <p className="text-[10px] font-bold text-primary uppercase tracking-[0.25em] opacity-80 mb-1">Property Configuration</p>
+                    <p className="truncate text-xl font-bold tracking-tight text-foreground sm:text-2xl">{activeTool.label}</p>
                   </div>
                 </div>
 
@@ -560,7 +560,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
                   setActiveTool(tool);
                 }}
                 className={cn(
-                  "group inline-flex flex-1 sm:flex-none justify-center items-center gap-3 rounded-[1.1rem] border px-6 py-3.5 text-[11px] font-semibold uppercase tracking-[0.2em] transition-all duration-300 whitespace-nowrap",
+                  "group inline-flex flex-1 sm:flex-none justify-center items-center gap-3 rounded-[1.1rem] border px-6 py-3.5 text-[11px] font-bold uppercase tracking-[0.2em] transition-all duration-300 whitespace-nowrap",
                   disabled
                     ? "cursor-not-allowed border-border bg-muted/30 text-muted-foreground"
                     : "cursor-pointer border-border bg-background text-foreground hover:-translate-y-0.5 hover:border-primary/20 hover:bg-muted active:translate-y-0"

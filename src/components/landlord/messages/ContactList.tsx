@@ -53,7 +53,7 @@ export function ContactList({
                         >
                             <ArrowLeft className="size-4 text-high" />
                         </Link>
-                        <h2 className="text-xl font-semibold tracking-tight text-high">Messages</h2>
+                        <h2 className="text-xl font-bold tracking-tight text-high">Messages</h2>
                     </div>
                     <ThemeToggle variant="sidebar" className="size-9" />
                 </div>

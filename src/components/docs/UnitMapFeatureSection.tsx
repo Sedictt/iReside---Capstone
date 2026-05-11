@@ -48,7 +48,7 @@ export function UnitMapFeatureSection() {
             
             {/* Top hint */}
             <div className="absolute top-10 left-1/2 -translate-x-1/2 pointer-events-none z-[110]">
-              <p className="text-white/40 text-[10px] font-semibold uppercase tracking-[0.4em] bg-black/40 backdrop-blur-md px-10 py-3.5 rounded-full border border-white/10 shadow-2xl">
+              <p className="text-white/40 text-[10px] font-bold uppercase tracking-[0.4em] bg-black/40 backdrop-blur-md px-10 py-3.5 rounded-full border border-white/10 shadow-2xl">
                 ESC TO EXIT PREVIEW
               </p>
             </div>
@@ -62,11 +62,11 @@ export function UnitMapFeatureSection() {
     <section id="unit-map" className="scroll-mt-24 space-y-8 rounded-3xl border border-divider bg-surface-1 p-8 lg:p-12 shadow-sm">
       <div className="flex flex-col gap-8 lg:flex-row lg:items-center">
         <div className="flex-1 space-y-4">
-          <div className="inline-flex items-center gap-2 text-primary font-semibold">
+          <div className="inline-flex items-center gap-2 text-primary font-bold">
             <Map className="size-6" />
             <span>Signature Feature</span>
           </div>
-          <h2 className="text-3xl font-semibold text-text-high">Interactive Unit Map</h2>
+          <h2 className="text-3xl font-bold text-text-high">Interactive Unit Map</h2>
           <p className="text-lg text-text-medium leading-relaxed">
             Visualize your entire property layout at a glance. The Unit Map feature transforms standard, text-based property lists into an interactive, visual grid that mirrors your actual building layout.
           </p>

@@ -103,7 +103,7 @@ export function SignaturePad({
             <Maximize2 size={20} strokeWidth={2.5} />
           </div>
           <div className="flex flex-col items-start gap-0.5">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Open Advanced Signer</span>
+            <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary">Open Advanced Signer</span>
             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">Full Document Review & Signature</span>
           </div>
         </button>
@@ -118,7 +118,7 @@ export function SignaturePad({
             {isEmpty && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none opacity-20">
                     <FileText className="size-12 mb-2 text-white" />
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white">Sign Here</p>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-white">Sign Here</p>
                 </div>
             )}
 
@@ -129,7 +129,7 @@ export function SignaturePad({
                     className="absolute top-4 right-4 p-3 rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary transition-all flex items-center gap-2 group/btn"
                 >
                     <Maximize2 size={16} className="group-hover/btn:scale-110 transition-transform" />
-                    <span className="text-[10px] font-semibold uppercase tracking-widest hidden sm:inline">Advanced Signer</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:inline">Advanced Signer</span>
                 </button>
             )}
           </div>
@@ -140,7 +140,7 @@ export function SignaturePad({
               onClick={clear}
               disabled={isEmpty}
               className={cn(
-                "flex-1 h-14 rounded-2xl font-semibold text-[11px] uppercase tracking-[0.2em] transition-all duration-300",
+                "flex-1 h-14 rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] transition-all duration-300",
                 "flex items-center justify-center gap-2",
                 isEmpty
                   ? "bg-white/5 text-neutral-600 cursor-not-allowed"
@@ -156,7 +156,7 @@ export function SignaturePad({
               onClick={save}
               disabled={isEmpty}
               className={cn(
-                "flex-1 h-14 rounded-2xl font-semibold text-[11px] uppercase tracking-[0.2em] transition-all duration-300",
+                "flex-1 h-14 rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] transition-all duration-300",
                 "flex items-center justify-center gap-3",
                 isEmpty
                   ? "bg-primary/20 text-neutral-600 cursor-not-allowed"

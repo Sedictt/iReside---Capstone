@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { m as motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { Unit } from "./VisualBuilder";
+import { Unit } from "./types";
 
 export function UnitListingWizard({
   isOpen,
@@ -70,7 +70,7 @@ export function UnitListingWizard({
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-border bg-zinc-50/80">
             <div>
-              <h2 className="text-xl font-semibold text-zinc-900 flex items-center gap-2">
+              <h2 className="text-xl font-bold text-zinc-900 flex items-center gap-2">
                 <span className="material-icons-round text-primary">storefront</span>
                 List Unit {unit.name || "Unit"}
               </h2>
@@ -113,14 +113,14 @@ export function UnitListingWizard({
                   <div className="size-16 bg-primary/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <span className="material-icons-round text-3xl text-primary">campaign</span>
                   </div>
-                  <h3 className="text-2xl font-semibold text-zinc-900">Let's get this unit rented!</h3>
+                  <h3 className="text-2xl font-bold text-zinc-900">Let's get this unit rented!</h3>
                   <p className="text-zinc-500 max-w-sm mx-auto mt-2 text-sm leading-relaxed">
                     We'll guide you through setting up pricing, uploading photos, and preparing this unit for your future tenants.
                   </p>
                 </div>
                 
                 <div className="bg-background border border-border rounded-2xl p-5">
-                  <h4 className="text-sm font-semibold text-zinc-900 mb-3 flex items-center gap-2">
+                  <h4 className="text-sm font-bold text-zinc-900 mb-3 flex items-center gap-2">
                     <span className="size-6 rounded-full bg-primary/10 flex items-center justify-center text-xs text-primary font-bold">1</span>
                     Review Basic Information
                   </h4>
@@ -147,12 +147,12 @@ export function UnitListingWizard({
                 transition={stepTransition}
                 className="space-y-6 transform-gpu"
               >
-                <h3 className="text-xl font-semibold text-zinc-900 mb-2">Set Rental Pricing</h3>
+                <h3 className="text-xl font-bold text-zinc-900 mb-2">Set Rental Pricing</h3>
                 <p className="text-zinc-500 text-sm mb-6">Determine your monthly rent and deposit requirements.</p>
                 
                 <div className="space-y-4">
                   <div>
-                    <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2 block">Monthly Rent (PHP)</label>
+                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Monthly Rent (PHP)</label>
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 font-bold">₱</span>
                       <input 
@@ -169,14 +169,14 @@ export function UnitListingWizard({
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2 block">Security Deposit</label>
+                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Security Deposit</label>
                       <div className="relative">
                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 font-bold">₱</span>
                         <input type="number" defaultValue="50000" className="w-full bg-white border border-border rounded-xl py-3 pl-10 pr-4 text-zinc-900 font-medium focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all" />
                       </div>
                     </div>
                     <div>
-                      <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2 flex items-center justify-between">
+                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 flex items-center justify-between">
                         <span>Advance Rent</span>
                       </label>
                       <div className="flex gap-2">
@@ -229,14 +229,14 @@ export function UnitListingWizard({
                 transition={stepTransition}
                 className="space-y-6 transform-gpu"
               >
-                <h3 className="text-xl font-semibold text-zinc-900 mb-2">Upload Photos</h3>
+                <h3 className="text-xl font-bold text-zinc-900 mb-2">Upload Photos</h3>
                 <p className="text-zinc-500 text-sm mb-6">Properties with high-quality photos get 3x more applications.</p>
                 
                 <div className="space-y-6">
                   {/* Main Thumbnail */}
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <label className="text-sm font-semibold text-zinc-900 flex items-center gap-2">
+                      <label className="text-sm font-bold text-zinc-900 flex items-center gap-2">
                         <span className="material-icons-round text-primary text-[18px]">star</span>
                         Main Thumbnail <span className="text-rose-400">*</span>
                       </label>
@@ -253,7 +253,7 @@ export function UnitListingWizard({
                   {/* Additional Rooms */}
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <label className="text-sm font-semibold text-zinc-900 block">Room Details</label>
+                      <label className="text-sm font-bold text-zinc-900 block">Room Details</label>
                       <button 
                         onClick={() => setPhotoSlots(prev => [...prev, { id: Date.now().toString(), name: 'Custom View', icon: 'image' }])}
                         className="text-xs text-primary font-medium hover:text-primary/80 transition-colors flex items-center gap-1"
@@ -319,7 +319,7 @@ export function UnitListingWizard({
                   <div className="size-20 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
                     <span className="material-icons-round text-4xl text-emerald-400">check_circle</span>
                   </div>
-                  <h3 className="text-2xl font-semibold text-zinc-900 mb-3">Ready to Activate!</h3>
+                  <h3 className="text-2xl font-bold text-zinc-900 mb-3">Ready to Activate!</h3>
                   <p className="text-zinc-500 text-sm max-w-sm mx-auto leading-relaxed">
                     Your unit configuration is looking great. It will be ready for tenant invitations immediately.
                   </p>

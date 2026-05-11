@@ -118,7 +118,7 @@ export function ProfileWidget() {
                         style={{ transformStyle: "preserve-3d" }}
                     >
                         {/* User Info Header */}
-                        <div className="border-b border-border bg-gradient-to-br from-slate-100 to-slate-200 p-4 dark:border-white/10 dark:from-neutral-800/50 dark:to-neutral-900/50">
+                        <div className="border-b border-border bg-gradient-to-br from-surface-0 to-surface-1 p-4 dark:border-white/10 dark:from-neutral-800/50 dark:to-neutral-900/50">
                             <div className="flex items-center gap-3">
                                 <ProfileCardTrigger 
                                     userId={user?.id || ""} 

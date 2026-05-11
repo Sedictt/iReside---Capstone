@@ -5,9 +5,9 @@ export default function DashboardPage() {
     return (
         <div className="space-y-8">
             <div className="flex items-center justify-between">
-                <h1 className="text-3xl font-semibold tracking-tight text-white">Dashboard</h1>
+                <h1 className="text-3xl font-bold tracking-tight text-white">Dashboard</h1>
                 <div className="flex items-center gap-2">
-                    <button className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">
+                    <button className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-bold text-white shadow-sm transition-colors hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">
                         Add Property
                     </button>
                 </div>
@@ -59,14 +59,14 @@ export default function DashboardPage() {
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
                 <div className="col-span-4 rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 backdrop-blur-xl">
-                    <h3 className="mb-4 text-lg font-semibold text-white">Overview</h3>
+                    <h3 className="mb-4 text-lg font-bold text-white">Overview</h3>
                     <div className="h-[300px] w-full rounded-lg bg-zinc-800/50 p-2">
                         <RevenueChart />
                     </div>
                 </div>
 
                 <div className="col-span-3 rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 backdrop-blur-xl">
-                    <h3 className="mb-4 text-lg font-semibold text-white">Recent Activity</h3>
+                    <h3 className="mb-4 text-lg font-bold text-white">Recent Activity</h3>
                     <div className="space-y-4">
                         {[1, 2, 3, 4, 5].map((i) => (
                             <div key={`feature-${i}`} className="flex items-center gap-4">

@@ -30,7 +30,7 @@ export function PropertyAmenities({ amenities }: { amenities: Amenity[] }) {
         return (
             <div className="py-12 flex flex-col items-center justify-center border-2 border-dashed border-border rounded-[2.5rem] bg-muted/5 gap-3">
                 <LucideIcons.Sparkle className="size-8 text-muted-foreground/20" />
-                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">No active amenities listed</p>
+                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">No active amenities listed</p>
             </div>
         );
     }
@@ -65,7 +65,7 @@ export function PropertyAmenities({ amenities }: { amenities: Amenity[] }) {
                             
                             {/* Type Badge */}
                             <div className="absolute top-5 left-5 z-10">
-                                <span className="px-4 py-1.5 bg-white/10 backdrop-blur-md border border-white/20 text-[10px] font-semibold uppercase tracking-[0.15em] text-white rounded-full">
+                                <span className="px-4 py-1.5 bg-white/10 backdrop-blur-md border border-white/20 text-[10px] font-bold uppercase tracking-[0.15em] text-white rounded-full">
                                     {amenity.type}
                                 </span>
                             </div>
@@ -79,11 +79,11 @@ export function PropertyAmenities({ amenities }: { amenities: Amenity[] }) {
                         {/* Content Area */}
                         <div className="p-8 flex flex-col flex-1">
                             <div className="space-y-2 mb-4">
-                                <div className="flex items-center gap-2 text-[10px] font-semibold text-primary uppercase tracking-[0.2em]">
+                                <div className="flex items-center gap-2 text-[10px] font-bold text-primary uppercase tracking-[0.2em]">
                                     <LucideIcons.MapPin className="size-3.5" />
                                     {amenity.location_details || "Main Wing"}
                                 </div>
-                                <h4 className="text-xl font-semibold text-foreground tracking-tight group-hover:text-primary transition-colors leading-tight">
+                                <h4 className="text-xl font-bold text-foreground tracking-tight group-hover:text-primary transition-colors leading-tight">
                                     {amenity.name}
                                 </h4>
                             </div>
@@ -96,14 +96,14 @@ export function PropertyAmenities({ amenities }: { amenities: Amenity[] }) {
                             <div className="mt-auto flex items-center justify-between pt-6 border-t border-border/50">
                                 <div className="flex items-center gap-5">
                                     <div className="flex flex-col gap-0.5">
-                                        <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/40">Capacity</span>
+                                        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">Capacity</span>
                                         <div className="flex items-center gap-2 text-[11px] font-bold text-foreground">
                                             <LucideIcons.Users className="size-3.5 text-primary" />
                                             {amenity.capacity || 0} People
                                         </div>
                                     </div>
                                     <div className="flex flex-col gap-0.5">
-                                        <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/40">Status</span>
+                                        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">Status</span>
                                         <div className="flex items-center gap-2 text-[11px] font-bold text-emerald-500">
                                             <LucideIcons.CheckCircle2 className="size-3.5" />
                                             {amenity.status}
@@ -112,9 +112,9 @@ export function PropertyAmenities({ amenities }: { amenities: Amenity[] }) {
                                 </div>
                                 
                                 <div className="flex flex-col items-end gap-0.5">
-                                    <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/40">Usage Fee</span>
+                                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">Usage Fee</span>
                                     <div className="flex items-baseline gap-1">
-                                        <span className="text-2xl font-semibold text-foreground tracking-tight">
+                                        <span className="text-2xl font-bold text-foreground tracking-tight">
                                             {amenity.price_per_unit === 0 ? "Free" : `₱${amenity.price_per_unit}`}
                                         </span>
                                         {amenity.price_per_unit > 0 && <span className="text-[10px] font-bold text-muted-foreground lowercase tracking-normal">/{amenity.unit_type}</span>}

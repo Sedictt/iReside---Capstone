@@ -110,7 +110,7 @@ export default function InvoicesPage() {
     const configs: Record<string, { label: string; classes: string }> = {
       pending: { label: "Awaiting Payment", classes: "border-zinc-500/20 bg-zinc-500/10 text-zinc-500 dark:text-zinc-400" },
       under_review: { label: "Verify Payment", classes: "border-amber-500/30 bg-amber-500/15 text-amber-600 dark:text-amber-400" },
-      intent_submitted: { label: "Payment Reported", classes: "border-indigo-500/30 bg-indigo-500/15 text-indigo-600 dark:text-indigo-400" },
+      intent_submitted: { label: "Payment Reported", classes: "border-primary/30 bg-primary/15 text-primary dark:text-primary" },
       awaiting_in_person: { label: "Cash Collection", classes: "border-cyan-500/30 bg-cyan-500/15 text-cyan-600 dark:text-cyan-400" },
       paid: { label: "Settled", classes: "border-emerald-500/30 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" },
       receipted: { label: "Finalized", classes: "border-emerald-500/30 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" },
@@ -126,11 +126,11 @@ export default function InvoicesPage() {
     <div className="mx-auto max-w-[1600px] space-y-10 px-4 py-8 md:px-8 lg:py-10">
       <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/80 px-4 py-1.5 text-[10px] font-semibold uppercase tracking-[0.25em] text-primary shadow-sm backdrop-blur-md">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/80 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.25em] text-primary shadow-sm backdrop-blur-md">
             <FileText className="size-3.5" />
             Financial Center
           </div>
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground md:text-4xl">Finance Hub</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">Finance Hub</h1>
           <p className="mt-2 text-sm text-muted-foreground">Manage your unified ledger, track expenses, and oversee rent invoices.</p>
         </div>
       </div>
@@ -177,7 +177,7 @@ export default function InvoicesPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-primary">Ledger</p>
-              <h2 className="mt-2 text-2xl font-semibold text-foreground lg:text-3xl">Issued invoices</h2>
+              <h2 className="mt-2 text-2xl font-bold text-foreground lg:text-3xl">Issued invoices</h2>
             </div>
             <div className="relative w-full md:max-w-xs">
               <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -234,25 +234,25 @@ export default function InvoicesPage() {
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
                   <div className="space-y-3">
                     <div className="flex flex-wrap items-center gap-3">
-                      <p className="text-lg font-semibold tracking-tight text-foreground">{invoice.invoiceNumber}</p>
+                      <p className="text-lg font-bold tracking-tight text-foreground">{invoice.invoiceNumber}</p>
                       <div className="flex items-center gap-2">
                         {(() => {
                           const config = getStatusConfig(invoice.workflowStatus ?? invoice.status);
                           return (
-                            <span className={cn("inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] shadow-sm", config.classes)}>
+                            <span className={cn("inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-[0.15em] shadow-sm", config.classes)}>
                               <div className="mr-1.5 size-1 rounded-full bg-current animate-pulse" />
                               {config.label}
                             </span>
                           );
                         })()}
                         {invoice.proofStatus === "submitted" && (
-                          <span className="relative overflow-hidden rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-blue-500 shadow-sm">
+                          <span className="relative overflow-hidden rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-blue-500 shadow-sm">
                             <span className="absolute inset-0 -translate-x-[100%] animate-shimmer bg-gradient-to-r from-transparent via-white/20 to-transparent" />
                             Proof Attached
                           </span>
                         )}
                         {invoice.hasRefundRequest && (
-                          <span className="relative overflow-hidden rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-amber-500 shadow-sm">
+                          <span className="relative overflow-hidden rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-amber-500 shadow-sm">
                             <span className="absolute inset-0 -translate-x-[100%] animate-shimmer bg-gradient-to-r from-transparent via-white/20 to-transparent" />
                             Refund Details Sent
                           </span>
@@ -297,7 +297,7 @@ export default function InvoicesPage() {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-primary">Overview</p>
-                <h2 className="mt-2 text-2xl font-semibold text-foreground lg:text-3xl">Financial Ledger</h2>
+                <h2 className="mt-2 text-2xl font-bold text-foreground lg:text-3xl">Financial Ledger</h2>
               </div>
               <button className="group inline-flex items-center gap-2.5 rounded-full border border-border/50 bg-background/80 px-6 py-3 text-sm font-bold shadow-sm transition-all hover:bg-muted active:scale-95">
                 Download Statement
@@ -310,7 +310,7 @@ export default function InvoicesPage() {
                   <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-4">
                     <FileText className="size-8" />
                   </div>
-                  <p className="text-lg font-semibold text-foreground">No entries yet.</p>
+                  <p className="text-lg font-bold text-foreground">No entries yet.</p>
                   <p className="mt-2 max-w-md mx-auto">Your timeline of paid invoices and recorded expenses will appear here.</p>
                 </div>
             ) : (
@@ -329,7 +329,7 @@ export default function InvoicesPage() {
                                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground" suppressHydrationWarning>{item.desc} • <span suppressHydrationWarning>{item.date.toLocaleDateString()}</span></p>
                                 </div>
                             </div>
-                            <p className={cn("text-base font-semibold", item.type === 'income' ? 'text-emerald-500' : 'text-rose-500')}>
+                            <p className={cn("text-base font-bold", item.type === 'income' ? 'text-emerald-500' : 'text-rose-500')}>
                                 {item.type === 'income' ? '+' : '-'}{formatPhpCurrency(item.amount)}
                             </p>
                         </div>
@@ -347,7 +347,7 @@ export default function InvoicesPage() {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-primary">Outflow</p>
-                <h2 className="mt-2 text-2xl font-semibold text-foreground lg:text-3xl">Expense Log</h2>
+                <h2 className="mt-2 text-2xl font-bold text-foreground lg:text-3xl">Expense Log</h2>
               </div>
               <button 
                 onClick={() => setIsExpenseModalOpen(true)}
@@ -364,7 +364,7 @@ export default function InvoicesPage() {
                   <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-500 mb-4">
                     <Filter className="size-8" />
                   </div>
-                  <p className="text-lg font-semibold text-foreground">No expenses recorded yet.</p>
+                  <p className="text-lg font-bold text-foreground">No expenses recorded yet.</p>
                   <p className="mt-2 max-w-md mx-auto">Click &quot;Record Expense&quot; to log maintenance costs, utility bills you cover, and property taxes to keep your accounting accurate.</p>
                 </div>
             ) : (
@@ -381,7 +381,7 @@ export default function InvoicesPage() {
                             </div>
                         </div>
                         <div className="text-right">
-                            <p className="text-base font-semibold text-foreground">{formatPhpCurrency(expense.amount)}</p>
+                            <p className="text-base font-bold text-foreground">{formatPhpCurrency(expense.amount)}</p>
                         </div>
                     </div>
                 ))
@@ -400,7 +400,7 @@ function HeroStat({ label, value, highlight }: { label: string; value: string; h
   return (
     <div className="group rounded-[2rem] border border-border/50 bg-background/60 p-5 shadow-sm backdrop-blur-md transition-all hover:bg-background/80 hover:border-border/80">
       <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">{label}</p>
-      <p className={cn("mt-3 text-3xl font-semibold md:text-2xl lg:text-3xl", highlight ?? "text-foreground")}>{value}</p>
+      <p className={cn("mt-3 text-3xl font-bold md:text-2xl lg:text-3xl", highlight ?? "text-foreground")}>{value}</p>
     </div>
   );
 }
@@ -408,8 +408,8 @@ function HeroStat({ label, value, highlight }: { label: string; value: string; h
 function LedgerMetric({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/60">{label}</p>
-      <p className={cn("whitespace-nowrap text-base font-semibold lg:text-lg tracking-tight", highlight ? "text-primary" : "text-foreground")}>{value}</p>
+      <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">{label}</p>
+      <p className={cn("whitespace-nowrap text-base font-bold lg:text-lg tracking-tight", highlight ? "text-primary" : "text-foreground")}>{value}</p>
     </div>
   );
 }

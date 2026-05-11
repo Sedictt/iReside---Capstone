@@ -61,7 +61,7 @@ export function LandlordProfile() {
                 return (
                     <div className="space-y-8 max-w-4xl">
                         <div>
-                            <h2 className="text-xl font-semibold text-white mb-6">Security</h2>
+                            <h2 className="text-xl font-bold text-white mb-6">Security</h2>
 
                             {/* Email Address */}
                             <div className="py-6 border-b border-white/5">
@@ -105,7 +105,7 @@ export function LandlordProfile() {
                                     <button
                                         onClick={() => setIsTwoFactorEnabled(!isTwoFactorEnabled)}
                                         className={cn(
-                                            "relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900",
+                                            "relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-border",
                                             isTwoFactorEnabled ? "bg-blue-600" : "bg-zinc-700"
                                         )}
                                     >
@@ -170,7 +170,7 @@ export function LandlordProfile() {
                                     </div>
                                     <div>
                                         <div className="flex items-center gap-2 mb-1">
-                                            <h1 className="text-xl font-semibold text-white">Elite Property Management Group</h1>
+                                            <h1 className="text-xl font-bold text-white">Elite Property Management Group</h1>
                                             <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-blue-400 border border-blue-500/20">
                                                 <CheckCircle className="size-3" /> Verified
                                             </span>
@@ -180,14 +180,14 @@ export function LandlordProfile() {
                                         </p>
                                         <div className="flex gap-4">
                                             <div className="rounded-lg bg-[#0f172a] px-3 py-1.5 border border-white/5">
-                                                <p className="text-[10px] uppercase text-zinc-500 font-semibold tracking-wider">Total Properties</p>
+                                                <p className="text-[10px] uppercase text-zinc-500 font-bold tracking-wider">Total Properties</p>
                                                 <div className="flex items-baseline gap-2">
                                                     <span className="text-lg font-bold text-white">24</span>
                                                     <span className="text-xs font-medium text-emerald-500">+2%</span>
                                                 </div>
                                             </div>
                                             <div className="rounded-lg bg-[#0f172a] px-3 py-1.5 border border-white/5">
-                                                <p className="text-[10px] uppercase text-zinc-500 font-semibold tracking-wider">Total Units</p>
+                                                <p className="text-[10px] uppercase text-zinc-500 font-bold tracking-wider">Total Units</p>
                                                 <div className="flex items-baseline gap-2">
                                                     <span className="text-lg font-bold text-white">148</span>
                                                     <span className="text-xs font-medium text-emerald-500">+12%</span>
@@ -210,7 +210,7 @@ export function LandlordProfile() {
                 return (
                     <div className="space-y-6">
                         <div className="border-b border-white/5 pb-6">
-                            <h2 className="text-xl font-semibold text-white mb-2">Payment & Payout Settings</h2>
+                            <h2 className="text-xl font-bold text-white mb-2">Payment & Payout Settings</h2>
                             <p className="text-sm text-zinc-400">Configure how you receive rental payments from your tenants.</p>
                         </div>
 
@@ -234,7 +234,7 @@ export function LandlordProfile() {
                                         type="text"
                                         value={phone}
                                         onChange={(e) => setPhone(e.target.value)}
-                                        className="w-full rounded-lg bg-[#0f172a] border border-white/10 pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-600 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
+                                        className="w-full rounded-lg bg-[#0f172a] border border-white/10 pl-10 pr-4 py-2.5 text-sm text-white placeholder-muted-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
                                     />
                                 </div>
                             </div>
@@ -247,7 +247,7 @@ export function LandlordProfile() {
                                 </div>
                                 <div>
                                     <div className="flex items-center gap-2 mb-1">
-                                        <span className="font-semibold text-white text-sm">Verified GCash Account</span>
+                                        <span className="font-bold text-white text-sm">Verified GCash Account</span>
                                     </div>
                                     <p className="text-xs text-zinc-400 max-w-sm">Your QR code is active and will be shown to tenants during their payment flow. Last updated on Oct 12, 2023.</p>
                                     <button className="mt-2 text-xs font-medium text-blue-400 hover:text-blue-300">Replace QR Code</button>
@@ -263,7 +263,7 @@ export function LandlordProfile() {
                 return (
                     <div className="space-y-6">
                         <div className="border-b border-white/5 pb-6">
-                            <h2 className="text-xl font-semibold text-white mb-2">Notification Matrix</h2>
+                            <h2 className="text-xl font-bold text-white mb-2">Notification Matrix</h2>
                             <p className="text-sm text-zinc-400">Control how and when you want to be alerted about your properties.</p>
                         </div>
 
@@ -341,7 +341,7 @@ export function LandlordProfile() {
             <aside className="w-full lg:w-64 flex-shrink-0">
                 <div className="sticky top-24 space-y-8">
                     <div>
-                        <h2 className="text-xl font-semibold text-white mb-6 px-3">Account Settings</h2>
+                        <h2 className="text-xl font-bold text-white mb-6 px-3">Account Settings</h2>
                         <nav className="space-y-1">
                             {SIDEBAR_ITEMS.map((item) => (
                                 <button

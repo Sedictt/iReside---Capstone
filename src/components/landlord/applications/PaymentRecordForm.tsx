@@ -47,13 +47,13 @@ export function PaymentRecordForm({
       {/* Compact Header */}
       <div className="flex items-center justify-between border-b border-border/40 pb-4">
         <div className="space-y-0.5">
-          <p className="text-[9px] font-semibold uppercase tracking-[0.4em] text-primary/80">Ledger Entry</p>
-          <h3 className="text-lg font-semibold tracking-tight text-foreground">
+          <p className="text-[9px] font-bold uppercase tracking-[0.4em] text-primary/80">Ledger Entry</p>
+          <h3 className="text-lg font-bold tracking-tight text-foreground">
               {label}
           </h3>
         </div>
         <div className={cn(
-            "flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-semibold uppercase tracking-widest border transition-all",
+            "flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest border transition-all",
             status === "completed" 
                 ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500" 
                 : "bg-amber-500/10 border-amber-500/20 text-amber-500"
@@ -66,7 +66,7 @@ export function PaymentRecordForm({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
         {/* Amount */}
         <div className="space-y-2">
-          <label htmlFor="amount-due" className="ml-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+          <label htmlFor="amount-due" className="ml-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
             Amount Due
           </label>
           <div className="relative isolate group/input">
@@ -91,7 +91,7 @@ export function PaymentRecordForm({
 
         {/* Method */}
         <div className="space-y-2">
-          <label htmlFor="payment-method" className="ml-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+          <label htmlFor="payment-method" className="ml-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
             Method
           </label>
           <div className="relative isolate group/input">
@@ -118,7 +118,7 @@ export function PaymentRecordForm({
 
         {/* Reference */}
         <div className="space-y-2">
-          <label htmlFor="ref-number" className="ml-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+          <label htmlFor="ref-number" className="ml-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
             Ref Number
           </label>
           <div className="relative isolate group/input">
@@ -139,7 +139,7 @@ export function PaymentRecordForm({
 
         {/* Date */}
         <div className="space-y-2">
-          <label htmlFor="payment-date" className="ml-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+          <label htmlFor="payment-date" className="ml-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
             Payment Date
           </label>
           <div className="relative isolate group/input">
@@ -164,7 +164,7 @@ export function PaymentRecordForm({
           type="button"
           onClick={() => onStatusChange("completed")}
           className={cn(
-            "flex-1 h-12 rounded-xl text-[10px] font-semibold uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 border",
+            "flex-1 h-12 rounded-xl text-[10px] font-bold uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 border",
             status === "completed"
               ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/10"
               : "bg-background/30 text-muted-foreground border-border hover:bg-muted"
@@ -177,7 +177,7 @@ export function PaymentRecordForm({
           type="button"
           onClick={() => onStatusChange("pending")}
           className={cn(
-            "flex-1 h-12 rounded-xl text-[10px] font-semibold uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 border",
+            "flex-1 h-12 rounded-xl text-[10px] font-bold uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 border",
             status === "pending"
               ? "bg-amber-500 text-black border-amber-600 shadow-lg shadow-amber-500/10"
               : "bg-background/30 text-muted-foreground border-border hover:bg-muted"

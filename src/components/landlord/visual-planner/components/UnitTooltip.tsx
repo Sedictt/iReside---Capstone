@@ -31,7 +31,7 @@ export const UnitTooltip = ({
         >
             <div className="flex flex-col gap-1">
                 <div className="px-3 py-2 mb-1 border-b border-white/5">
-                    <p className="text-[10px] font-semibold text-white/40 uppercase tracking-[0.2em]">Unit {unit.name}</p>
+                    <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Unit {unit.name}</p>
                     <p className="text-xs font-bold text-white mt-0.5">Quick Actions</p>
                 </div>
                 
@@ -44,11 +44,11 @@ export const UnitTooltip = ({
                         }}
                         className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/70 hover:text-white hover:bg-white/5 transition-all text-left"
                     >
-                        <div className="size-8 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400">
+                        <div className="size-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary">
                             <span className="material-icons-round text-lg">move_down</span>
                         </div>
                         <div>
-                            <p className="text-xs font-semibold tracking-tight">Transfer Request</p>
+                            <p className="text-xs font-bold tracking-tight">Transfer Request</p>
                             <p className="text-[9px] font-bold text-white/30 uppercase tracking-widest mt-0.5">Move into this unit</p>
                         </div>
                     </button>
@@ -66,7 +66,7 @@ export const UnitTooltip = ({
                         <span className="material-icons-round text-lg">report_problem</span>
                     </div>
                     <div>
-                        <p className="text-xs font-semibold tracking-tight">Report / Complain</p>
+                        <p className="text-xs font-bold tracking-tight">Report / Complain</p>
                         <p className="text-[9px] font-bold text-white/30 uppercase tracking-widest mt-0.5">Report an issue</p>
                     </div>
                 </button>

@@ -1072,7 +1072,7 @@ export function ContactsSidebar() {
                                     </div>
                                     <div className="flex flex-col min-w-0">
                                         <div className="flex min-w-0 items-center gap-2">
-                                            <h4 className="truncate text-sm font-semibold text-foreground hover:underline dark:text-white">{chat.name}</h4>
+                                            <h4 className="truncate text-sm font-bold text-foreground hover:underline dark:text-white">{chat.name}</h4>
                                             <RoleBadge role={chat.role} />
                                         </div>
                                         {chat.isActive && (
@@ -1505,7 +1505,7 @@ function ContactCard({ name, role, unit, avatar, avatarBgColor, status, isExpand
                 <div className="flex-1 min-w-0 animate-in fade-in duration-300">
                     <div className="flex items-center justify-between mb-0.5">
                         <div className="flex min-w-0 items-center gap-2">
-                            <h4 className="truncate text-sm font-semibold text-foreground transition-colors group-hover:text-primary dark:text-white">{name}</h4>
+                            <h4 className="truncate text-sm font-bold text-foreground transition-colors group-hover:text-primary dark:text-white">{name}</h4>
                             <RoleBadge role={role} />
                         </div>
                     </div>

@@ -150,7 +150,7 @@ export function UnitShowcaseModal({
                     {/* Unit title & rent */}
                     <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                         <div>
-                            <h2 className="text-3xl font-semibold text-white tracking-tight">
+                            <h2 className="text-3xl font-bold text-white tracking-tight">
                                 {unit.name}
                             </h2>
                             <p className="text-neutral-400 text-sm mt-1">
@@ -158,7 +158,7 @@ export function UnitShowcaseModal({
                             </p>
                         </div>
                         <div className="text-right">
-                            <p className="text-3xl font-semibold text-primary">
+                            <p className="text-3xl font-bold text-primary">
                                 ₱{(unit.rent_amount || 0).toLocaleString()}
                             </p>
                             <p className="text-neutral-500 text-sm font-medium">per month</p>
@@ -184,7 +184,7 @@ export function UnitShowcaseModal({
                     {/* Description */}
                     {unit.description && (
                         <div className="bg-white/5 border border-white/5 rounded-xl p-5">
-                            <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-400 mb-2">
+                            <h3 className="text-xs font-bold uppercase tracking-wide text-neutral-400 mb-2">
                                 Description
                             </h3>
                             <p className="text-neutral-300 text-sm leading-relaxed">
@@ -196,7 +196,7 @@ export function UnitShowcaseModal({
                     {/* Amenities */}
                     {unit.property.amenities?.length > 0 && (
                         <div>
-                            <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-400 mb-3 flex items-center gap-2">
+                            <h3 className="text-xs font-bold uppercase tracking-wide text-neutral-400 mb-3 flex items-center gap-2">
                                 <Sparkles className="size-3.5" />
                                 Amenities
                             </h3>

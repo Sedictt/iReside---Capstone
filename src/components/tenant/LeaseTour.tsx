@@ -173,7 +173,7 @@ export function LeaseTour() {
                     </button>
                 </div>
                 
-                <h3 className="text-lg font-semibold text-foreground mb-2">
+                <h3 className="text-lg font-bold text-foreground mb-2">
                     {activeStep.title}
                 </h3>
                 
@@ -184,7 +184,7 @@ export function LeaseTour() {
                 <div className="flex items-center justify-between mt-auto">
                     <button
                         onClick={completeTour}
-                        className="text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                        className="text-xs font-bold text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
                     >
                         <SkipForward className="size-3.5" />
                         Skip

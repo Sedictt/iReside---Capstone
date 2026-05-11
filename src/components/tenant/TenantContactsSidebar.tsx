@@ -931,10 +931,10 @@ export function TenantContactsSidebar() {
                                     {isHovered && (
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center justify-between mb-0.5">
-                                                <h4 className="text-sm font-semibold text-primary truncate pr-2 transition-colors">
+                                                <h4 className="text-sm font-bold text-primary truncate pr-2 transition-colors">
                                                     iRis Assistant
                                                 </h4>
-                                                <span className="text-[10px] text-primary shrink-0 opacity-80 uppercase tracking-widest font-semibold">AI</span>
+                                                <span className="text-[10px] text-primary shrink-0 opacity-80 uppercase tracking-widest font-bold">AI</span>
                                             </div>
                                             <p className="text-xs text-zinc-600 dark:text-neutral-300 font-medium truncate">
                                                 How can I help you today?
@@ -1099,7 +1099,7 @@ export function TenantContactsSidebar() {
                                     </div>
                                     <div className="flex flex-col min-w-0">
                                         <div className="flex min-w-0 items-center gap-2">
-                                            <h4 className="text-sm font-semibold text-foreground truncate hover:underline">{chat.name}</h4>
+                                            <h4 className="text-sm font-bold text-foreground truncate hover:underline">{chat.name}</h4>
                                             <RoleBadge role={chat.role} />
                                         </div>
                                         {chat.isActive && (
@@ -1538,7 +1538,7 @@ function ContactCard({ name, role, unit, avatar, avatarBgColor, status, isExpand
                 <div className="flex-1 min-w-0 animate-in fade-in duration-300">
                     <div className="flex items-center justify-between mb-0.5">
                         <div className="flex min-w-0 items-center gap-2">
-                            <h4 className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors truncate">{name}</h4>
+                            <h4 className="font-bold text-foreground text-sm group-hover:text-primary transition-colors truncate">{name}</h4>
                             <RoleBadge role={role} />
                         </div>
                     </div>

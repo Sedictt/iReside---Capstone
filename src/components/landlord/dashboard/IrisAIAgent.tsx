@@ -35,8 +35,10 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
     const [isLoading, setIsLoading] = useState(false);
     const [lastRefresh, setLastRefresh] = useState<number>(0);
     const [cooldown, setCooldown] = useState(0);
-    const [bubbleMessageIndex, setBubbleMessageIndex] = useState(0);
-    const [isBubbleExpanded, setIsBubbleExpanded] = useState(true);
+    const [bubbleState, setBubbleState] = useState({
+        messageIndex: 0,
+        isExpanded: true,
+    });
     const bubbleSwapTimeoutRef = useRef<number | null>(null);
     const safeFirstName = useMemo(() => {
         const cleaned = landlordFirstName?.trim();
@@ -79,7 +81,7 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
 
     // Load persisted analysis from localStorage
     useEffect(() => {
-        const saved = localStorage.getItem("iris_stats_analysis");
+        const saved = localStorage.getItem("iris_stats_analysis:v1");
         if (saved) {
             try {
                 const parsed = JSON.parse(saved) as IrisAnalysis;
@@ -126,7 +128,7 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
 
     useEffect(() => {
         if (!resolvedIsVisible || isOpen) {
-            setIsBubbleExpanded(true);
+            setBubbleState((prev) => ({ ...prev, isExpanded: true }));
             if (bubbleSwapTimeoutRef.current !== null) {
                 window.clearTimeout(bubbleSwapTimeoutRef.current);
                 bubbleSwapTimeoutRef.current = null;
@@ -135,17 +137,16 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
         }
 
         const rotationInterval = window.setInterval(() => {
-            setIsBubbleExpanded(false);
+            setBubbleState((prev) => ({ ...prev, isExpanded: false }));
             bubbleSwapTimeoutRef.current = window.setTimeout(() => {
-                setBubbleMessageIndex((prev) => {
-                    if (bubbleMessages.length <= 1) return 0;
-                    let nextIndex = prev;
-                    while (nextIndex === prev) {
+                setBubbleState((prev) => {
+                    if (bubbleMessages.length <= 1) return { ...prev, messageIndex: 0 };
+                    let nextIndex = prev.messageIndex;
+                    while (nextIndex === prev.messageIndex) {
                         nextIndex = Math.floor(Math.random() * bubbleMessages.length);
                     }
-                    return nextIndex;
+                    return { ...prev, messageIndex: nextIndex, isExpanded: true };
                 });
-                setIsBubbleExpanded(true);
                 bubbleSwapTimeoutRef.current = null;
             }, 260);
         }, 12000);
@@ -187,7 +188,7 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
 
             setAnalysis(newAnalysis);
             setLastRefresh(newAnalysis.timestamp);
-            localStorage.setItem("iris_stats_analysis", JSON.stringify(newAnalysis));
+            localStorage.setItem("iris_stats_analysis:v1", JSON.stringify(newAnalysis));
 
             if (force) {
                 setCooldown(30); // 30 seconds cooldown for refresh
@@ -256,30 +257,30 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
                                 <motion.div
                                     initial={{ opacity: 0, x: 20, y: 20, scale: 0.85 }}
                                     animate={
-                                        isBubbleExpanded
+                                        bubbleState.isExpanded
                                             ? { opacity: 1, x: 0, y: 0, scale: 1, scaleY: 1, filter: "blur(0px)" }
                                             : { opacity: 0, x: 4, y: 10, scale: 0.92, scaleY: 0.7, filter: "blur(4px)" }
                                     }
                                     exit={{ opacity: 0, x: 20, y: 20, scale: 0.85 }}
-                                    transition={{ duration: isBubbleExpanded ? 0.32 : 0.22, ease: "easeOut" }}
+                                    transition={{ duration: bubbleState.isExpanded ? 0.32 : 0.22, ease: "easeOut" }}
                                     style={{ transformOrigin: "left bottom" }}
-                                    className="absolute left-[85%] ml-1 bottom-[6.25rem] whitespace-nowrap rounded-2xl border border-white/10 bg-card/80 px-4 py-2 text-[10px] font-semibold uppercase tracking-widest text-foreground backdrop-blur-xl shadow-2xl"
+                                    className="absolute left-[85%] ml-1 bottom-[6.25rem] whitespace-nowrap rounded-2xl border border-white/10 bg-card/80 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-foreground backdrop-blur-xl shadow-2xl"
                                 >
                                     <AnimatePresence mode="wait" initial={false}>
                                         <motion.span
-                                            key={`iris-bubble-${bubbleMessageIndex}`}
+                                            key={`iris-bubble-${bubbleState.messageIndex}`}
                                             initial={{ opacity: 0, y: 5 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             exit={{ opacity: 0, y: -4 }}
                                             transition={{ duration: 0.18, ease: "easeOut" }}
                                             className="block"
                                         >
-                                            {bubbleMessages[bubbleMessageIndex % bubbleMessages.length]}
+                                            {bubbleMessages[bubbleState.messageIndex % bubbleMessages.length]}
                                         </motion.span>
                                     </AnimatePresence>
                                     <motion.div
                                         animate={
-                                            isBubbleExpanded
+                                            bubbleState.isExpanded
                                                 ? { opacity: 1, scale: 1 }
                                                 : { opacity: 0, scale: 0.7 }
                                         }
@@ -304,7 +305,7 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
                             setInternalIsVisible(nextVisible);
                         }
                     }}
-                    className="fixed left-[240px] bottom-8 z-[101] pointer-events-auto flex items-center gap-2 rounded-full border border-primary/30 bg-card/90 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary shadow-xl backdrop-blur-xl transition-all hover:scale-[1.03] active:scale-95"
+                    className="fixed left-[240px] bottom-8 z-[101] pointer-events-auto flex items-center gap-2 rounded-full border border-primary/30 bg-card/90 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.14em] text-primary shadow-xl backdrop-blur-xl transition-all hover:scale-[1.03] active:scale-95"
                     aria-pressed={!resolvedIsVisible}
                     aria-label={resolvedIsVisible ? "Hide iRis assistant" : "Show iRis assistant"}
                 >
@@ -330,8 +331,8 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
                                 <div className="flex items-center justify-between mb-8">
                                     <div className="flex items-center gap-4">
                                         <div>
-                                            <h3 className="text-xl font-semibold tracking-tight text-foreground">iRis Property Analysis</h3>
-                                            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/60">Portfolio Intelligence</p>
+                                            <h3 className="text-xl font-bold tracking-tight text-foreground">iRis Property Analysis</h3>
+                                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">Portfolio Intelligence</p>
                                         </div>
                                     </div>
                                     <button
@@ -367,7 +368,7 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
 
                                             <div className="grid gap-6 md:grid-cols-2">
                                                 <div className="space-y-4">
-                                                    <h4 className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-emerald-400">
+                                                    <h4 className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-emerald-400">
                                                         <div className="size-1.5 rounded-full bg-emerald-400" />
                                                         Good Things
                                                     </h4>
@@ -382,7 +383,7 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
                                                 </div>
 
                                                 <div className="space-y-4">
-                                                    <h4 className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-amber-400">
+                                                    <h4 className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-amber-400">
                                                         <div className="size-1.5 rounded-full bg-amber-400" />
                                                         Things to Watch
                                                     </h4>
@@ -403,7 +404,7 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
                                                         <MessageSquare className="size-5 text-primary" />
                                                     </div>
                                                     <div>
-                                                        <p className="text-xs font-semibold text-foreground">Need deeper insights?</p>
+                                                        <p className="text-xs font-bold text-foreground">Need deeper insights?</p>
                                                         <p className="text-[10px] font-medium text-muted-foreground">Ask iRis in the command center.</p>
                                                     </div>
                                                 </div>
@@ -415,7 +416,7 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
                                             <p className="text-sm font-bold text-muted-foreground">No analysis available for this period.</p>
                                             <button
                                                 onClick={() => fetchAnalysis(true)}
-                                                className="mt-4 text-xs font-semibold uppercase tracking-widest text-primary hover:underline"
+                                                className="mt-4 text-xs font-bold uppercase tracking-widest text-primary hover:underline"
                                             >
                                                 Generate Now
                                             </button>
@@ -432,7 +433,7 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
                                         onClick={() => fetchAnalysis(true)}
                                         disabled={isLoading || cooldown > 0}
                                         className={cn(
-                                            "flex items-center gap-2 rounded-xl px-4 py-2 text-[10px] font-semibold uppercase tracking-widest transition-all active:scale-95",
+                                            "flex items-center gap-2 rounded-xl px-4 py-2 text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95",
                                             cooldown > 0
                                                 ? "bg-muted/20 text-muted-foreground cursor-not-allowed opacity-50"
                                                 : "bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground"

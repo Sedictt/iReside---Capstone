@@ -101,7 +101,7 @@ export function SmartContractPreviewModal({
                                 <Shield className="size-5 text-primary" />
                             </div>
                             <div>
-                                <h3 className="text-sm font-semibold text-white uppercase tracking-widest">Digital Asset Agreement</h3>
+                                <h3 className="text-sm font-bold text-white uppercase tracking-widest">Digital Asset Agreement</h3>
                                 <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Universal iReside Format</p>
                             </div>
                         </div>
@@ -129,7 +129,7 @@ export function SmartContractPreviewModal({
                     </div>
                     <button
                         onClick={onClose}
-                        className="px-8 py-3 bg-primary text-black rounded-xl font-semibold uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20 hover:scale-105 transition-all"
+                        className="px-8 py-3 bg-primary text-black rounded-xl font-bold uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20 hover:scale-105 transition-all"
                     >
                         Acknowledged
                     </button>

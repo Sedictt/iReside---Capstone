@@ -259,7 +259,7 @@ export function ChatWidget({
                                 </div>
                             </div>
                             <div>
-                                <h3 className="font-semibold text-base tracking-tight">iRis Assistant</h3>
+                                <h3 className="font-bold text-base tracking-tight">iRis Assistant</h3>
                                 <div className="flex items-center gap-1.5">
                                     <span className="size-1.5 rounded-full bg-white/60 animate-pulse"></span>
                                     <p className="text-[10px] text-white/80 uppercase tracking-widest font-bold">Ask iRis</p>

@@ -97,8 +97,8 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
                             <Settings2 className="size-6" />
                         </div>
                         <div>
-                            <h3 className="text-xl font-semibold text-foreground tracking-tight">Renewal Policy</h3>
-                            <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">
+                            <h3 className="text-xl font-bold text-foreground tracking-tight">Renewal Policy</h3>
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
                                 Configure terms for {propertyName}
                             </p>
                         </div>
@@ -111,7 +111,7 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
                 {loading ? (
                     <div className="p-20 text-center">
                         <div className="animate-spin size-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
-                        <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Syncing Configuration...</p>
+                        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Syncing Configuration...</p>
                     </div>
                 ) : (
                     <div className="p-8 overflow-y-auto space-y-8">
@@ -125,22 +125,22 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
 
                         {/* Rent Adjustment Section */}
                         <section className="space-y-4">
-                            <h4 className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground border-b border-border pb-2">Rent Adjustment</h4>
+                            <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground border-b border-border pb-2">Rent Adjustment</h4>
                             <div className="grid grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label htmlFor="adjustment-type" className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Adjustment Type</label>
+                                    <label htmlFor="adjustment-type" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Adjustment Type</label>
                                     <select 
                                         id="adjustment-type"
                                         value={settings.adjustment_type}
                                         onChange={(e) => setSettings(prev => ({ ...prev, adjustment_type: e.target.value as any }))}
-                                        className="w-full p-4 rounded-2xl border border-border bg-background text-sm font-semibold focus:ring-2 focus:ring-primary/20 outline-none"
+                                        className="w-full p-4 rounded-2xl border border-border bg-background text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
                                     >
                                         <option value="percentage">Percentage (%)</option>
                                         <option value="fixed">Fixed Amount (PHP)</option>
                                     </select>
                                 </div>
                                 <div className="space-y-2">
-                                    <label htmlFor="rent-adjustment" className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                                    <label htmlFor="rent-adjustment" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                                         {settings.adjustment_type === "percentage" ? "Increase (%)" : "Increase (PHP)"}
                                     </label>
                                     <input 
@@ -148,7 +148,7 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
                                         type="number"
                                         value={settings.base_rent_adjustment}
                                         onChange={(e) => setSettings(prev => ({ ...prev, base_rent_adjustment: parseFloat(e.target.value) || 0 }))}
-                                        className="w-full p-4 rounded-2xl border border-border bg-background text-sm font-semibold focus:ring-2 focus:ring-primary/20 outline-none"
+                                        className="w-full p-4 rounded-2xl border border-border bg-background text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
                                     />
                                 </div>
                             </div>
@@ -156,7 +156,7 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
 
                         {/* New Rules Section */}
                         <section className="space-y-4">
-                            <h4 className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground border-b border-border pb-2">Updated Rules & Clauses</h4>
+                            <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground border-b border-border pb-2">Updated Rules & Clauses</h4>
                             <div className="space-y-3">
                                 {settings.new_rules.map((rule, idx) => (
                                     <div key={rule} className="flex items-center gap-3 bg-muted/30 p-3 rounded-xl border border-border/50">
@@ -188,7 +188,7 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
 
                         {/* Landlord Memo */}
                         <section className="space-y-4">
-                            <h4 className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground border-b border-border pb-2">Landlord's Note to Residents</h4>
+                            <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground border-b border-border pb-2">Landlord's Note to Residents</h4>
                             <textarea 
                                 value={settings.landlord_memo}
                                 onChange={(e) => setSettings(prev => ({ ...prev, landlord_memo: e.target.value }))}
@@ -201,13 +201,13 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
 
                 {/* Footer */}
                 <div className="p-6 border-t border-border bg-muted/20 flex gap-4">
-                    <button onClick={onClose} className="flex-1 px-6 py-4 rounded-2xl border border-border text-muted-foreground hover:bg-muted font-semibold uppercase tracking-widest text-xs transition-all">
+                    <button onClick={onClose} className="flex-1 px-6 py-4 rounded-2xl border border-border text-muted-foreground hover:bg-muted font-bold uppercase tracking-widest text-xs transition-all">
                         Cancel
                     </button>
                     <button 
                         onClick={handleSave}
                         disabled={saving || loading}
-                        className="flex-[2] px-6 py-4 rounded-2xl bg-primary text-white font-semibold uppercase tracking-widest text-xs hover:bg-primary-dark transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-50"
+                        className="flex-[2] px-6 py-4 rounded-2xl bg-primary text-white font-bold uppercase tracking-widest text-xs hover:bg-primary-dark transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-50"
                     >
                         {saving ? "Saving Policy..." : "Update Renewal Policy"}
                         <Save className="size-4" />

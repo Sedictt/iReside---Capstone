@@ -31,7 +31,7 @@ export function TenantDirectory({ tenants, loading, error, onViewProfile }: Tena
         return (
             <div className="flex flex-col items-center justify-center rounded-[2rem] border border-red-500/10 bg-red-500/5 py-12 text-center">
                 <AlertCircle className="mb-4 size-12 text-red-500" />
-                <h3 className="text-lg font-semibold text-red-700">Failed to load tenants</h3>
+                <h3 className="text-lg font-bold text-red-700">Failed to load tenants</h3>
                 <p className="mt-1 text-sm text-red-600/70">{error}</p>
                 <button 
                     onClick={() => window.location.reload()}
@@ -76,7 +76,7 @@ export function TenantDirectory({ tenants, loading, error, onViewProfile }: Tena
                             <div className="mb-4 rounded-full bg-muted p-6">
                                 <Users className="size-10 text-muted-foreground/40" />
                             </div>
-                            <h3 className="text-xl font-semibold text-foreground">No residents found</h3>
+                            <h3 className="text-xl font-bold text-foreground">No residents found</h3>
                             <p className="mt-2 text-muted-foreground">Adjust your search or filters to find what you&apos;re looking for.</p>
                             <button 
                                 onClick={() => { setSearchQuery(""); setStatusFilter("All"); }}

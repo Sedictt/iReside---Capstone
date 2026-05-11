@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import Link from "next/link";
 import { 
   ArrowRight, 
@@ -46,7 +46,7 @@ export default function DocsPage() {
       {/* Hero Section */}
       <section className="space-y-6">
         <div className="space-y-4">
-          <h1 className="text-4xl font-semibold tracking-tight text-text-high sm:text-5xl">
+          <h1 className="text-4xl font-bold tracking-tight text-text-high sm:text-5xl">
             Welcome to <span className="text-primary">iReside Docs</span>
           </h1>
           <p className="text-xl text-text-medium max-w-3xl leading-relaxed">
@@ -54,12 +54,12 @@ export default function DocsPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-4 pt-2">
-          <Button className="bg-primary hover:bg-primary-dark text-white h-12 px-8 text-lg font-semibold rounded-xl" asChild>
+          <Button className="bg-primary hover:bg-primary-dark text-white h-12 px-8 text-lg font-bold rounded-xl" asChild>
             <Link href="/docs/getting-started/quick-start">
               Get Started <Rocket className="ml-2 size-5" />
             </Link>
           </Button>
-          <Button variant="outline" className="h-12 px-8 text-lg font-semibold rounded-xl border-divider hover:bg-surface-2" asChild>
+          <Button variant="outline" className="h-12 px-8 text-lg font-bold rounded-xl border-divider hover:bg-surface-2" asChild>
             <Link href="/docs/support/faq">
               Search FAQ
             </Link>
@@ -70,7 +70,7 @@ export default function DocsPage() {
       {/* What is iReside Section */}
       <section className="space-y-6">
         <div className="space-y-3">
-          <h2 id="what-is-ireside" className="text-3xl font-semibold text-text-high">What is iReside?</h2>
+          <h2 id="what-is-ireside" className="text-3xl font-bold text-text-high">What is iReside?</h2>
           <p className="text-text-medium leading-relaxed max-w-3xl">
             iReside is a modern property management platform designed to make renting easier and more transparent for everyone involved. Instead of juggling spreadsheets and scattered documents, everything happens in one secure place.
           </p>
@@ -82,7 +82,7 @@ export default function DocsPage() {
 
       {/* Who Should Use This Section */}
       <section className="space-y-6">
-        <h2 id="who-is-this-for" className="text-3xl font-semibold text-text-high">Who is This For?</h2>
+        <h2 id="who-is-this-for" className="text-3xl font-bold text-text-high">Who is This For?</h2>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {categories.map((category) => (
             <Link 
@@ -94,14 +94,14 @@ export default function DocsPage() {
                 <category.icon className="size-6" />
               </div>
               <div className="space-y-2">
-                <h3 className="text-xl font-semibold text-text-high group-hover:text-primary transition-colors">
+                <h3 className="text-xl font-bold text-text-high group-hover:text-primary transition-colors">
                   {category.title}
                 </h3>
                 <p className="text-sm text-text-medium leading-relaxed">
                   {category.description}
                 </p>
               </div>
-              <div className="mt-auto flex items-center text-sm font-semibold text-primary">
+              <div className="mt-auto flex items-center text-sm font-bold text-primary">
                 Learn more <ArrowRight className="ml-1 size-4 transition-transform group-hover:translate-x-1" />
               </div>
             </Link>
@@ -113,7 +113,7 @@ export default function DocsPage() {
       <section className="rounded-3xl bg-surface-2/50 border border-divider p-8 lg:p-12 text-center md:text-left">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
           <div className="space-y-4 max-w-2xl">
-            <h2 id="features" className="text-3xl font-semibold text-text-high">Platform Capabilities</h2>
+            <h2 id="features" className="text-3xl font-bold text-text-high">Platform Capabilities</h2>
             <p className="text-lg text-text-medium leading-relaxed">
               We built iReside with practical features that solve real problems in property management. This includes our signature <strong>Unit Map</strong> visualizing your properties entirely, the <strong>Financial Hub</strong> for tracking payments, built-in <strong>Communication</strong>, and <strong>Maintenance Tracking</strong>.
             </p>
@@ -131,7 +131,7 @@ export default function DocsPage() {
       {/* How It Works Section */}
       <section className="space-y-6">
         <div className="space-y-3">
-          <h2 id="how-it-works" className="text-3xl font-semibold text-text-high">How iReside Works</h2>
+          <h2 id="how-it-works" className="text-3xl font-bold text-text-high">How iReside Works</h2>
           <p className="text-text-medium max-w-3xl leading-relaxed">
             The process is straightforward and designed to be fast without cutting corners on safety.
           </p>
@@ -174,7 +174,7 @@ export default function DocsPage() {
               <div className="mb-4 flex items-center justify-center rounded-lg bg-primary/10">
                 <span className="text-lg font-bold text-primary">{item.step}</span>
               </div>
-              <h4 className="mb-2 font-semibold text-text-high">{item.title}</h4>
+              <h4 className="mb-2 font-bold text-text-high">{item.title}</h4>
               <p className="text-sm text-text-medium leading-relaxed">{item.description}</p>
             </div>
           ))}
@@ -183,7 +183,7 @@ export default function DocsPage() {
 
       {/* Why Choose iReside Section */}
       <section className="space-y-6">
-        <h2 id="why-choose" className="text-3xl font-semibold text-text-high">Why Choose iReside</h2>
+        <h2 id="why-choose" className="text-3xl font-bold text-text-high">Why Choose iReside</h2>
         <div className="rounded-2xl border border-divider bg-surface-1 p-8">
           <div className="space-y-6">
             <div className="flex gap-4">
@@ -191,7 +191,7 @@ export default function DocsPage() {
                 <BookOpen className="size-5 text-primary" />
               </div>
               <div>
-                <h4 className="mb-1 font-semibold text-text-high">Your Information is Protected</h4>
+                <h4 className="mb-1 font-bold text-text-high">Your Information is Protected</h4>
                 <p className="text-sm text-text-medium leading-relaxed">
                   We use industry-standard encryption to keep all your personal and financial information safe. Only the people who need to see it can access it.
                 </p>
@@ -203,7 +203,7 @@ export default function DocsPage() {
                 <LifeBuoy className="size-5 text-teal-500" />
               </div>
               <div>
-                <h4 className="mb-1 font-semibold text-text-high">Built for Simplicity</h4>
+                <h4 className="mb-1 font-bold text-text-high">Built for Simplicity</h4>
                 <p className="text-sm text-text-medium leading-relaxed">
                   You do not need to be tech savvy to use iReside. The interface is intuitive and straightforward, with helpful guidance every step of the way.
                 </p>
@@ -215,7 +215,7 @@ export default function DocsPage() {
                 <Users className="size-5 text-blue-500" />
               </div>
               <div>
-                <h4 className="mb-1 font-semibold text-text-high">Direct Relationships</h4>
+                <h4 className="mb-1 font-bold text-text-high">Direct Relationships</h4>
                 <p className="text-sm text-text-medium leading-relaxed">
                   Work directly with tenants or landlords without middlemen. This means faster decisions, better communication, and more transparency for everyone.
                 </p>
@@ -227,7 +227,7 @@ export default function DocsPage() {
                 <CheckCircle2 className="size-5 text-primary" />
               </div>
               <div>
-                <h4 className="mb-1 font-semibold text-text-high">Clear Communication</h4>
+                <h4 className="mb-1 font-bold text-text-high">Clear Communication</h4>
                 <p className="text-sm text-text-medium leading-relaxed">
                   All agreements and terms are documented and signed digitally. Both landlords and tenants have records of everything, reducing misunderstandings.
                 </p>
@@ -239,7 +239,7 @@ export default function DocsPage() {
 
       {/* Getting Started Section */}
       <section className="space-y-6">
-        <h2 id="get-started" className="text-3xl font-semibold text-text-high">Ready to Get Started?</h2>
+        <h2 id="get-started" className="text-3xl font-bold text-text-high">Ready to Get Started?</h2>
         <div className="rounded-2xl bg-primary/5 border border-primary/20 p-8">
           <p className="mb-6 text-text-medium leading-relaxed">
             Follow these steps to begin your property management journey. Whether you are a landlord or tenant, we will guide you through the process.
@@ -248,7 +248,7 @@ export default function DocsPage() {
             <Link href="/docs/getting-started/quick-start" className="flex items-center gap-3 rounded-lg border border-divider bg-surface-1 p-4 transition-all hover:border-primary/50 hover:bg-surface-2">
               <Rocket className="size-5 text-primary flex-shrink-0" />
               <div className="flex-1">
-                <h4 className="font-semibold text-text-high">Quick Start Guide</h4>
+                <h4 className="font-bold text-text-high">Quick Start Guide</h4>
                 <p className="text-sm text-text-medium">Get up and running in 5 minutes</p>
               </div>
               <ArrowRight className="size-4 text-primary flex-shrink-0" />
@@ -256,7 +256,7 @@ export default function DocsPage() {
             <Link href="/docs/tenant/applications" className="flex items-center gap-3 rounded-lg border border-divider bg-surface-1 p-4 transition-all hover:border-primary/50 hover:bg-surface-2">
               <Users className="size-5 text-primary flex-shrink-0" />
               <div className="flex-1">
-                <h4 className="font-semibold text-text-high">Tenant Guide</h4>
+                <h4 className="font-bold text-text-high">Tenant Guide</h4>
                 <p className="text-sm text-text-medium">Learn how to apply and manage your tenancy</p>
               </div>
               <ArrowRight className="size-4 text-primary flex-shrink-0" />
@@ -264,7 +264,7 @@ export default function DocsPage() {
             <Link href="/docs/landlord/screening" className="flex items-center gap-3 rounded-lg border border-divider bg-surface-1 p-4 transition-all hover:border-primary/50 hover:bg-surface-2">
               <Shield className="size-5 text-primary flex-shrink-0" />
               <div className="flex-1">
-                <h4 className="font-semibold text-text-high">Landlord Guide</h4>
+                <h4 className="font-bold text-text-high">Landlord Guide</h4>
                 <p className="text-sm text-text-medium">Find tenants and manage your properties</p>
               </div>
               <ArrowRight className="size-4 text-primary flex-shrink-0" />
@@ -276,7 +276,7 @@ export default function DocsPage() {
       {/* Support Section */}
       <section className="flex flex-col items-center justify-between gap-6 rounded-2xl border border-divider bg-primary p-8 text-white sm:flex-row">
         <div className="space-y-2">
-          <h3 className="text-2xl font-semibold">Need Help?</h3>
+          <h3 className="text-2xl font-bold">Need Help?</h3>
           <p className="text-white/90">Our support team is available to answer your questions and help you succeed on iReside.</p>
         </div>
         <Button className="bg-white text-primary hover:bg-white/90 h-12 px-8 rounded-xl font-bold whitespace-nowrap" asChild>

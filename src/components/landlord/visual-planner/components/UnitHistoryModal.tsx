@@ -23,7 +23,7 @@ export const UnitHistoryModal = ({
 
     // Mock data for history
     const tenantHistory = [
-        { id: '1', name: 'James Wilson', leaseStart: '2025-01-01', leaseEnd: '2026-01-01', rent: 1200, status: 'Completed', avatarBg: 'bg-indigo-500' },
+        { id: '1', name: 'James Wilson', leaseStart: '2025-01-01', leaseEnd: '2026-01-01', rent: 1200, status: 'Completed', avatarBg: 'bg-primary' },
         { id: '2', name: 'Elena Rodriguez', leaseStart: '2024-01-01', leaseEnd: '2025-01-01', rent: 1150, status: 'Completed', avatarBg: 'bg-emerald-500' },
         { id: '3', name: 'Marcus Chen', leaseStart: '2023-01-01', leaseEnd: '2024-01-01', rent: 1100, status: 'Terminated Early', avatarBg: 'bg-rose-500' },
     ];
@@ -63,7 +63,7 @@ export const UnitHistoryModal = ({
                                     <span className="material-icons-round text-2xl">history</span>
                                 </div>
                                 <div>
-                                    <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+                                    <h2 className="text-2xl font-bold tracking-tight text-foreground">
                                         Unit {unit.name} History
                                     </h2>
                                     <p className="text-sm font-medium text-muted-foreground">Full audit trail and historical logs</p>
@@ -75,13 +75,13 @@ export const UnitHistoryModal = ({
                             <div className="flex gap-2 p-1.5 rounded-2xl bg-muted w-fit">
                                 <button 
                                     onClick={() => setActiveTab("tenants")}
-                                    className={`px-6 py-2 rounded-xl text-sm font-semibold transition-all ${activeTab === "tenants" ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                    className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === "tenants" ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                                 >
                                     Tenant History
                                 </button>
                                 <button 
                                     onClick={() => setActiveTab("maintenance")}
-                                    className={`px-6 py-2 rounded-xl text-sm font-semibold transition-all ${activeTab === "maintenance" ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                    className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === "maintenance" ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                                 >
                                     Maintenance
                                 </button>
@@ -99,7 +99,7 @@ export const UnitHistoryModal = ({
                                                         {item.name.charAt(0)}
                                                     </div>
                                                     <div>
-                                                        <p className="font-semibold">{item.name}</p>
+                                                        <p className="font-bold">{item.name}</p>
                                                         <p className="text-xs text-muted-foreground">{item.leaseStart} to {item.leaseEnd}</p>
                                                     </div>
                                                 </div>
@@ -121,7 +121,7 @@ export const UnitHistoryModal = ({
                                             <div className="flex items-center justify-between mb-2">
                                                 <div className="flex items-center gap-2">
                                                     <Wrench className="size-4 text-primary" />
-                                                    <p className="font-semibold">{item.title}</p>
+                                                    <p className="font-bold">{item.title}</p>
                                                 </div>
                                                 <span className="text-xs font-mono text-muted-foreground">{item.date}</span>
                                             </div>

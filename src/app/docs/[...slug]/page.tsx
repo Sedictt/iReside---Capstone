@@ -1756,7 +1756,7 @@ export default async function DocDetailPage({ params }: { params: Promise<{ slug
   return (
     <div className="space-y-10">
       <header className="space-y-4">
-        <h1 className="text-4xl font-semibold tracking-tight text-text-high">
+        <h1 className="text-4xl font-bold tracking-tight text-text-high">
           {doc.title}
         </h1>
         {doc.subtitle && (

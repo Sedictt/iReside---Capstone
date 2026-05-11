@@ -155,7 +155,7 @@ export function RoleSidebar({
                         <span
                             className={cn(
                                 "whitespace-nowrap text-sm tracking-tight",
-                                isActive ? "font-bold" : "font-semibold"
+                                isActive ? "font-bold" : "font-bold"
                             )}
                         >
                             {item.label}
@@ -172,7 +172,7 @@ export function RoleSidebar({
                     </span>
                 ) : isCollapsed && item.badge ? (
                     <span className={cn(
-                        "absolute right-2 top-2 size-2.5 rounded-full bg-red-500 ring-2 ring-white dark:ring-slate-900",
+                        "absolute right-2 top-2 size-2.5 rounded-full bg-red-500 ring-2 ring-white dark:ring-border",
                         item.urgent && "animate-ping"
                     )} />
                 ) : null}
@@ -309,7 +309,7 @@ export function RoleSidebar({
                     )}
                 >
                     <LogOut className="size-5 shrink-0" />
-                    {!isCollapsed && <span className="text-sm font-semibold">{logoutLabel}</span>}
+                    {!isCollapsed && <span className="text-sm font-bold">{logoutLabel}</span>}
                 </button>
             </div>
         </aside>

@@ -102,7 +102,7 @@ function GlassCard({ children, className, title, description }: { children: Reac
         <div className={cn("relative overflow-hidden rounded-[2rem] border border-white/5 bg-white/[0.03] backdrop-blur-xl transition-all duration-500 hover:bg-white/[0.05]", className)}>
             {(title || description) && (
                 <div className="border-b border-white/5 px-8 py-6">
-                    {title && <h3 className="text-lg font-semibold text-white">{title}</h3>}
+                    {title && <h3 className="text-lg font-bold text-white">{title}</h3>}
                     {description && <p className="text-sm text-neutral-400">{description}</p>}
                 </div>
             )}
@@ -308,11 +308,11 @@ export function LandlordSettings() {
                     const { data, error } = await (supabase as any).from('user_sessions').select('*').order('updated_at', { ascending: false });
                     console.log("[Sessions] Fetch result:", { data, error });
                     if (error) throw error;
-                    if (data) setSessions(data);
                     
                     const { data: { session } } = await supabase.auth.getSession();
                     console.log("[Sessions] Current auth session:", (session as any)?.id);
-                    if (session) setCurrentSessionId((session as any).id);
+                    setSessions(data || []);
+                    setCurrentSessionId(session ? (session as any).id : null);
                 } catch (err) {
                     console.error("[Sessions] Failed to fetch sessions:", err);
                 } finally {
@@ -640,7 +640,7 @@ export function LandlordSettings() {
                                         {profile?.avatar_url ? (
                                             <Image src={profile.avatar_url} alt="Avatar" fill sizes="160px" className="rounded-[2.8rem] object-cover" />
                                         ) : (
-                                            <span className="text-5xl font-semibold text-white">
+                                            <span className="text-5xl font-bold text-white">
                                                 {profile?.full_name?.charAt(0).toUpperCase()}
                                             </span>
                                         )}
@@ -651,7 +651,7 @@ export function LandlordSettings() {
                                             <Camera className="size-6" />
                                         </button>
                                     </div>
-                                    <h4 className="mt-6 text-xl font-semibold text-white">{profile?.full_name}</h4>
+                                    <h4 className="mt-6 text-xl font-bold text-white">{profile?.full_name}</h4>
                                     <p className="text-sm text-neutral-500">Verified Landlord</p>
                                 </div>
                             </GlassCard>
@@ -765,7 +765,7 @@ export function LandlordSettings() {
             >
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div>
-                        <h2 className="text-3xl font-semibold text-white">Identity</h2>
+                        <h2 className="text-3xl font-bold text-white">Identity</h2>
                         <p className="text-neutral-400">Control how you appear to others.</p>
                     </div>
                     <button
@@ -848,7 +848,7 @@ export function LandlordSettings() {
             >
                 <div className="flex flex-col md:flex-row md:items-center gap-4">
                     <div className="flex-1">
-                        <h2 className="text-3xl font-semibold text-white">Finance & Utilities</h2>
+                        <h2 className="text-3xl font-bold text-white">Finance & Utilities</h2>
                         <p className="text-neutral-400">Configure how you receive payments and manage utility rates.</p>
                     </div>
                     
@@ -1028,13 +1028,13 @@ export function LandlordSettings() {
                         <Smartphone className="size-8" />
                     </div>
                     <div className="space-y-1">
-                        <h4 className="text-base font-semibold text-white">Email OTP Protection</h4>
+                        <h4 className="text-base font-bold text-white">Email OTP Protection</h4>
                         <p className="text-xs text-neutral-500 leading-relaxed">Connect your Gmail account to receive secure one-time passwords for account verification.</p>
                     </div>
                 </div>
                 <button 
                     onClick={handleConnectGmail}
-                    className="group relative w-full overflow-hidden rounded-2xl bg-primary py-4 text-sm font-semibold text-black transition-all hover:scale-[1.02] active:scale-95"
+                    className="group relative w-full overflow-hidden rounded-2xl bg-primary py-4 text-sm font-bold text-black transition-all hover:scale-[1.02] active:scale-95"
                 >
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                     <span className="relative flex items-center justify-center gap-2">
@@ -1061,7 +1061,7 @@ export function LandlordSettings() {
                         <div className="pt-4">
                             <button 
                                 onClick={handleSendOTP}
-                                className="w-full rounded-2xl bg-primary py-4 text-sm font-semibold text-black transition-all hover:bg-primary/90 shadow-lg shadow-primary/20"
+                                className="w-full rounded-2xl bg-primary py-4 text-sm font-bold text-black transition-all hover:bg-primary/90 shadow-lg shadow-primary/20"
                             >
                                 Send Verification Code
                             </button>
@@ -1091,7 +1091,7 @@ export function LandlordSettings() {
                         <button 
                             onClick={handleVerifyOTP}
                             disabled={isVerifyingOTP || otpInput.length !== 6}
-                            className="w-full rounded-2xl bg-primary py-4 text-sm font-semibold text-black transition-all hover:bg-primary/90 disabled:opacity-50 shadow-lg shadow-primary/20"
+                            className="w-full rounded-2xl bg-primary py-4 text-sm font-bold text-black transition-all hover:bg-primary/90 disabled:opacity-50 shadow-lg shadow-primary/20"
                         >
                             {isVerifyingOTP ? "Verifying…" : "Verify & Enable 2FA"}
                         </button>
@@ -1116,7 +1116,7 @@ export function LandlordSettings() {
                 <div className="pt-6 border-t border-white/5">
                     <div className="space-y-4">
                         <div className="flex items-center gap-2">
-                            <h4 className="text-sm font-semibold text-white">Disable Protection</h4>
+                            <h4 className="text-sm font-bold text-white">Disable Protection</h4>
                             <div className="h-px flex-1 bg-white/5"></div>
                         </div>
                         <p className="text-xs text-neutral-500">To disable two-factor authentication, please provide your current account password.</p>
@@ -1173,14 +1173,14 @@ export function LandlordSettings() {
                                                 <div className="flex items-center gap-4">
                                                     <Icon className={cn("size-5", isCurrent ? "text-primary" : "text-neutral-400")} />
                                                     <div>
-                                                        <h4 className="text-sm font-semibold text-white">{browser} on {os}</h4>
+                                                        <h4 className="text-sm font-bold text-white">{browser} on {os}</h4>
                                                         <p className="text-[10px] text-neutral-500 uppercase tracking-wider">
                                                             {isCurrent ? "Current Session" : <>Last seen <ClientOnlyDate date={sess.updated_at} format={{ month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }} /></>} • IP: {sess.ip}
                                                         </p>
                                                     </div>
                                                 </div>
                                                 {isCurrent && (
-                                                    <span className="rounded-lg bg-primary/20 px-2 py-1 text-[10px] font-semibold text-primary">ACTIVE</span>
+                                                    <span className="rounded-lg bg-primary/20 px-2 py-1 text-[10px] font-bold text-primary">ACTIVE</span>
                                                 )}
                                             </div>
                                         );
@@ -1210,7 +1210,7 @@ export function LandlordSettings() {
                 className="space-y-8"
             >
                 <div>
-                    <h2 className="text-3xl font-semibold text-white">Security & Login</h2>
+                    <h2 className="text-3xl font-bold text-white">Security & Login</h2>
                     <p className="text-neutral-400">Protect your account and manage active sessions.</p>
                 </div>
 
@@ -1234,7 +1234,7 @@ export function LandlordSettings() {
             className="space-y-8"
         >
             <div>
-                <h2 className="text-3xl font-semibold text-white">Notifications</h2>
+                <h2 className="text-3xl font-bold text-white">Notifications</h2>
                 <p className="text-neutral-400">Choose how and when you want to be alerted.</p>
             </div>
 
@@ -1249,10 +1249,10 @@ export function LandlordSettings() {
                     <table className="w-full text-left">
                         <thead>
                             <tr className="border-b border-white/5 bg-white/[0.02]">
-                                <th className="px-8 py-5 text-xs font-semibold uppercase tracking-widest text-neutral-500">Activity Type</th>
-                                <th className="px-4 py-5 text-center text-xs font-semibold uppercase tracking-widest text-neutral-500">Email</th>
-                                <th className="px-4 py-5 text-center text-xs font-semibold uppercase tracking-widest text-neutral-500">Push</th>
-                                <th className="px-4 py-5 text-center text-xs font-semibold uppercase tracking-widest text-neutral-500">SMS</th>
+                                <th className="px-8 py-5 text-xs font-bold uppercase tracking-widest text-neutral-500">Activity Type</th>
+                                <th className="px-4 py-5 text-center text-xs font-bold uppercase tracking-widest text-neutral-500">Email</th>
+                                <th className="px-4 py-5 text-center text-xs font-bold uppercase tracking-widest text-neutral-500">Push</th>
+                                <th className="px-4 py-5 text-center text-xs font-bold uppercase tracking-widest text-neutral-500">SMS</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
@@ -1265,7 +1265,7 @@ export function LandlordSettings() {
                             ].map((item) => (
                                 <tr key={item.label} className="transition-colors hover:bg-white/[0.01]">
                                     <td className="px-8 py-6">
-                                        <h4 className="text-sm font-semibold text-white">{item.label}</h4>
+                                        <h4 className="text-sm font-bold text-white">{item.label}</h4>
                                         <p className="text-xs text-neutral-500">{item.desc}</p>
                                     </td>
                                     <td className="px-4 py-6 text-center"><ToggleSwitch enabled={true} onToggle={() => {}} /></td>
@@ -1304,7 +1304,7 @@ export function LandlordSettings() {
                             <div className="space-y-6 max-w-lg">
                                 <div className="flex items-center justify-between">
                                     <div className="space-y-1">
-                                        <h4 className="text-sm font-semibold text-white">Show Completed Quests</h4>
+                                        <h4 className="text-sm font-bold text-white">Show Completed Quests</h4>
                                         <p className="text-xs text-neutral-400">Keep the mastery board visible even after completion.</p>
                                     </div>
                                     <ToggleSwitch 
@@ -1314,7 +1314,7 @@ export function LandlordSettings() {
                                 </div>
                                 
                                 <div className="pt-6 border-t border-white/5">
-                                    <h4 className="text-sm font-semibold text-white">Hard Reset</h4>
+                                    <h4 className="text-sm font-bold text-white">Hard Reset</h4>
                                     <p className="mt-1 text-xs text-neutral-400">This will wipe all tour progress and event logs, allowing you to start all quests from zero.</p>
                                     <button 
                                         onClick={handleHardResetTour}
@@ -1350,7 +1350,7 @@ export function LandlordSettings() {
                 className="space-y-8"
             >
                 <div>
-                    <h2 className="text-3xl font-semibold text-white">Data & Privacy</h2>
+                    <h2 className="text-3xl font-bold text-white">Data & Privacy</h2>
                     <p className="text-neutral-400">Manage your data and account longevity.</p>
                 </div>
 
@@ -1387,7 +1387,7 @@ export function LandlordSettings() {
                         <Layout className="size-6" />
                     </div>
                     <div>
-                        <h1 className="text-xl font-semibold text-white">Settings</h1>
+                        <h1 className="text-xl font-bold text-white">Settings</h1>
                         <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">Control Center</p>
                     </div>
                 </div>

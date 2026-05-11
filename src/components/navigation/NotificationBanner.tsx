@@ -54,7 +54,7 @@ export function NotificationBanner() {
         switch (type) {
             case "lease": return "bg-gradient-to-r from-amber-500/30 to-orange-500/30 border-amber-500/40 text-amber-100 shadow-[0_0_20px_rgba(245,158,11,0.2)]";
             case "payment": return "bg-gradient-to-r from-red-500/30 to-pink-500/30 border-red-500/40 text-red-100 shadow-[0_0_20px_rgba(239,68,68,0.2)]";
-            case "maintenance": return "bg-gradient-to-r from-blue-500/30 to-indigo-500/30 border-blue-500/40 text-blue-100 shadow-[0_0_20px_rgba(59,130,246,0.2)]";
+            case "maintenance": return "bg-gradient-to-r from-blue-500/30 to-primary/30 border-blue-500/40 text-blue-100 shadow-[0_0_20px_rgba(59,130,246,0.2)]";
             default: return "bg-gradient-to-r from-primary/40 to-emerald-500/40 border-primary/40 text-emerald-50 shadow-[0_0_20px_rgba(109,152,56,0.2)]";
         }
     };
@@ -77,7 +77,7 @@ export function NotificationBanner() {
                                 {getIcon(current.type)}
                             </div>
                             <div className="flex flex-col">
-                                <span className="font-semibold uppercase tracking-widest text-[9px] opacity-60">
+                                <span className="font-bold uppercase tracking-widest text-[9px] opacity-60">
                                     {current.title}
                                 </span>
                                 <span className="line-clamp-1 text-sm font-bold tracking-tight">{current.message}</span>
@@ -148,7 +148,7 @@ export function NotificationBanner() {
                                             }
                                         }
                                     }}
-                                    className="flex items-center gap-2 rounded-xl bg-white/15 px-3 py-1.5 hover:bg-white/25 transition-all font-semibold text-[10px] uppercase tracking-widest border border-white/10 shadow-sm"
+                                    className="flex items-center gap-2 rounded-xl bg-white/15 px-3 py-1.5 hover:bg-white/25 transition-all font-bold text-[10px] uppercase tracking-widest border border-white/10 shadow-sm"
                                 >
                                     {activeNotifications.length > 1 ? (
                                         <>Next <ChevronRight className="size-3" /></>

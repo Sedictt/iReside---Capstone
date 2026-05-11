@@ -45,10 +45,10 @@ export function PropertyEnvironmentBanner({
                     <Icon className="size-6" />
                 </div>
                 <div>
-                    <h3 className="text-sm font-semibold text-foreground flex flex-wrap items-center gap-2">
+                    <h3 className="text-sm font-bold text-foreground flex flex-wrap items-center gap-2">
                         {label} Environment Scope
                         {needsReview && (
-                            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-[10px] font-semibold uppercase tracking-wider">
+                            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-[10px] font-bold uppercase tracking-wider">
                                 <AlertCircle className="size-4" /> Needs Review
                             </span>
                         )}

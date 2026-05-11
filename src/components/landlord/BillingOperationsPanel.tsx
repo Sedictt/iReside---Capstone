@@ -352,7 +352,7 @@ export function BillingOperationsPanel({
                 >
                     <div className="p-8 border-b border-border flex items-center justify-between sticky top-0 bg-card z-10">
                         <div>
-                            <h3 className="text-xl font-semibold text-foreground">Configuration Breakdown</h3>
+                            <h3 className="text-xl font-bold text-foreground">Configuration Breakdown</h3>
                             <p className="text-xs text-muted-foreground mt-1">Reviewing {pendingChangesCount} strategies being applied</p>
                         </div>
                         <button 
@@ -383,10 +383,10 @@ export function BillingOperationsPanel({
                                                 {unit ? unit.name : property?.name || "Global"}
                                             </p>
                                             <div className="flex items-center gap-2">
-                                                <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">{c.utility_type}</span>
+                                                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">{c.utility_type}</span>
                                                 <div className="size-1 rounded-full bg-border" />
                                                 <span className={cn(
-                                                    "text-[10px] font-semibold uppercase tracking-widest",
+                                                    "text-[10px] font-bold uppercase tracking-widest",
                                                     strategyLabel === "Included" ? "text-emerald-600" : (strategyLabel === "Direct" ? "text-blue-600" : "text-amber-600")
                                                 )}>
                                                     {strategyLabel}
@@ -396,11 +396,11 @@ export function BillingOperationsPanel({
                                     </div>
                                     <div className="text-right">
                                         {c.billing_mode === "tenant_paid" && c.responsibility_mode !== "tenant_direct" ? (
-                                            <p className="text-sm font-semibold text-foreground">
+                                            <p className="text-sm font-bold text-foreground">
                                                 ₱{c.rate_per_unit}<span className="text-[10px] text-muted-foreground/40 ml-1">/{c.unit_label === "kwh" ? "kWh" : "m³"}</span>
                                             </p>
                                         ) : (
-                                            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/40">No Rate</p>
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">No Rate</p>
                                         )}
                                     </div>
                                 </div>
@@ -411,7 +411,7 @@ export function BillingOperationsPanel({
                     <div className="p-6 border-t border-border bg-muted/5">
                         <button 
                             onClick={() => dispatch({ type: 'SET_SHOW_BREAKDOWN', payload: false })}
-                            className="w-full py-4 rounded-2xl bg-foreground text-background text-xs font-semibold uppercase tracking-widest hover:opacity-90 transition-all"
+                            className="w-full py-4 rounded-2xl bg-foreground text-background text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all"
                         >
                             Back to Editor
                         </button>
@@ -454,7 +454,7 @@ export function BillingOperationsPanel({
                 </div>
 
                 <div className="space-y-2">
-                    <h4 className="text-2xl font-semibold text-foreground">{helpContent.title}</h4>
+                    <h4 className="text-2xl font-bold text-foreground">{helpContent.title}</h4>
                     <div className="size-12 bg-primary rounded-full" />
                 </div>
 
@@ -552,7 +552,7 @@ export function BillingOperationsPanel({
           )}
         >
           {message.type === "success" ? <CheckCircle2 className="size-5" /> : <Info className="size-5" />}
-          <span className="text-sm font-semibold">{message.value}</span>
+          <span className="text-sm font-bold">{message.value}</span>
         </motion.div>
       )}
 
@@ -567,7 +567,7 @@ export function BillingOperationsPanel({
                     <Smartphone className="size-6" />
                   </div>
                   <div>
-                    <h4 className="text-lg font-semibold text-foreground">GCash Integration</h4>
+                    <h4 className="text-lg font-bold text-foreground">GCash Integration</h4>
                     <p className="text-xs text-muted-foreground">Receive payments directly from tenants</p>
                   </div>
                 </div>
@@ -578,7 +578,7 @@ export function BillingOperationsPanel({
                       value={accountName}
                       placeholder="e.g. Juan Dela Cruz"
                       onChange={(event) => dispatch({ type: 'UPDATE_PAYMENT', payload: { accountName: event.target.value } })}
-                      className="w-full rounded-xl border border-border bg-muted/20 dark:bg-white/[0.03] px-4 py-3 text-sm font-semibold text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10"
+                      className="w-full rounded-xl border border-border bg-muted/20 dark:bg-white/[0.03] px-4 py-3 text-sm font-bold text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10"
                     />
                   </Field>
                   <Field label="GCash Number">
@@ -586,7 +586,7 @@ export function BillingOperationsPanel({
                       value={accountNumber}
                       placeholder="0917 XXX XXXX"
                       onChange={(event) => dispatch({ type: 'UPDATE_PAYMENT', payload: { accountNumber: event.target.value } })}
-                      className="w-full rounded-xl border border-border bg-muted/20 dark:bg-white/[0.03] px-4 py-3 text-sm font-semibold text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10"
+                      className="w-full rounded-xl border border-border bg-muted/20 dark:bg-white/[0.03] px-4 py-3 text-sm font-bold text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10"
                     />
                   </Field>
                 </div>
@@ -649,7 +649,7 @@ export function BillingOperationsPanel({
                 </div>
 
                 <div className="space-y-1.5 py-4 border-t border-border">
-                  <h5 className="text-lg font-semibold text-foreground truncate">{accountName || "Juan Dela Cruz"}</h5>
+                  <h5 className="text-lg font-bold text-foreground truncate">{accountName || "Juan Dela Cruz"}</h5>
                   <div className="flex items-center justify-center gap-2">
                     <CreditCard className="size-3.5" />
                     <p className="font-mono text-sm font-bold text-primary tracking-tight">{accountNumber || "0000 000 0000"}</p>
@@ -685,7 +685,7 @@ export function BillingOperationsPanel({
                         <Building2 className="size-8" />
                       </div>
                       <div className="space-y-1">
-                        <h4 className="text-2xl font-semibold text-foreground">{property.name}</h4>
+                        <h4 className="text-2xl font-bold text-foreground">{property.name}</h4>
                         <div className="flex items-center gap-3">
                           <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                             <Target className="size-3" />
@@ -965,7 +965,7 @@ function UtilityConfigEditor({
           <div className="space-y-6">
             {!isOverride && (
               <div className="relative flex items-center gap-4">
-                <span className="text-[10px] font-semibold uppercase tracking-[0.25em] text-muted-foreground/30">1. Select Logic</span>
+                <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground/30">1. Select Logic</span>
                 <div className="h-px flex-1 bg-border/40" />
               </div>
             )}
@@ -979,7 +979,7 @@ function UtilityConfigEditor({
                   <button 
                     onClick={() => onChange(config.localId, { billing_mode: "included_in_rent", responsibility_mode: "landlord_bills" })}
                     className={cn(
-                      "flex items-center justify-center gap-2 rounded-xl py-3 text-[10px] font-semibold uppercase tracking-widest transition-all",
+                      "flex items-center justify-center gap-2 rounded-xl py-3 text-[10px] font-bold uppercase tracking-widest transition-all",
                       strategy === "included" 
                         ? "bg-primary text-white shadow-lg shadow-primary/20 scale-[1.02]" 
                         : "text-muted-foreground hover:bg-white/5"
@@ -991,7 +991,7 @@ function UtilityConfigEditor({
                   <button 
                     onClick={() => onChange(config.localId, { billing_mode: "tenant_paid", responsibility_mode: "landlord_bills" })}
                     className={cn(
-                      "flex items-center justify-center gap-2 rounded-xl py-3 text-[10px] font-semibold uppercase tracking-widest transition-all",
+                      "flex items-center justify-center gap-2 rounded-xl py-3 text-[10px] font-bold uppercase tracking-widest transition-all",
                       strategy === "submetered" 
                         ? "bg-primary text-white shadow-lg shadow-primary/20 scale-[1.02]" 
                         : "text-muted-foreground hover:bg-white/5"
@@ -1003,7 +1003,7 @@ function UtilityConfigEditor({
                   <button 
                     onClick={() => onChange(config.localId, { billing_mode: "tenant_paid", responsibility_mode: "tenant_direct" })}
                     className={cn(
-                      "flex items-center justify-center gap-2 rounded-xl py-3 text-[10px] font-semibold uppercase tracking-widest transition-all",
+                      "flex items-center justify-center gap-2 rounded-xl py-3 text-[10px] font-bold uppercase tracking-widest transition-all",
                       strategy === "direct" 
                         ? "bg-primary text-white shadow-lg shadow-primary/20 scale-[1.02]" 
                         : "text-muted-foreground hover:bg-white/5"
@@ -1029,7 +1029,7 @@ function UtilityConfigEditor({
               >
                 {!isOverride && (
                   <div className="relative flex items-center gap-4">
-                    <span className="text-[10px] font-semibold uppercase tracking-[0.25em] text-muted-foreground/30">2. Rates & Billing</span>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground/30">2. Rates & Billing</span>
                     <div className="h-px flex-1 bg-border/40" />
                   </div>
                 )}
@@ -1118,7 +1118,7 @@ function UtilityConfigEditor({
                 <div className="flex items-center gap-2">
                     <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground">Operational Strategy</p>
                     {isSubmetered && config.rate_per_unit === 0 && (
-                        <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-[8px] font-semibold uppercase text-amber-600 tracking-tighter">Action Required</span>
+                        <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-[8px] font-bold uppercase text-amber-600 tracking-tighter">Action Required</span>
                     )}
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed font-medium">

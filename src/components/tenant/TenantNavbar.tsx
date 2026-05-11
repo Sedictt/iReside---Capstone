@@ -169,7 +169,7 @@ export function TenantSidebar() {
         <nav className={cn("space-y-8", compact && "pt-2")}>
             {NAV_SECTIONS.map((section) => (
                 <div key={section.category}>
-                    <h3 className="mb-4 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    <h3 className="mb-4 px-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
                         {section.category}
                     </h3>
                     <div className="space-y-1">
@@ -295,7 +295,7 @@ export function TenantSidebar() {
                                     userId={user?.id || ""} 
                                     initialData={{ full_name: displayName, avatar_url: avatarUrl, role: profile?.role as Profile["role"] }}
                                 >
-                                    <p className="truncate text-sm font-semibold text-foreground hover:text-primary transition-colors cursor-pointer">{displayName}</p>
+                                    <p className="truncate text-sm font-bold text-foreground hover:text-primary transition-colors cursor-pointer">{displayName}</p>
                                 </ProfileCardTrigger>
                                 <RoleBadge role={profile?.role ?? null} />
                             </div>
@@ -444,7 +444,7 @@ function NotificationPanelContent({
     return (
         <>
             <div className="flex items-center justify-between border-b border-border/50 px-6 py-4">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-foreground">Notifications</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-foreground">Notifications</p>
                 <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">{unreadCount} New</span>
             </div>
 
@@ -495,7 +495,7 @@ function NotificationPanelContent({
                         e.stopPropagation();
                         onMarkAllAsRead();
                     }}
-                    className="w-full rounded-xl py-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground transition-all hover:bg-card hover:text-primary hover:shadow-sm"
+                    className="w-full rounded-xl py-2 text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground transition-all hover:bg-card hover:text-primary hover:shadow-sm"
                 >
                     Mark all as read
                 </button>

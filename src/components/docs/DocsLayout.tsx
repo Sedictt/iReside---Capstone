@@ -66,7 +66,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
                 <div className="h-[calc(100vh-8rem)] overflow-y-auto custom-scrollbar-premium">
                   {DOCS_NAV.map((section) => (
                     <div key={section.title} className="mb-8">
-                      <h4 className="mb-3 text-xs font-semibold uppercase tracking-widest text-text-disabled">
+                      <h4 className="mb-3 text-xs font-bold uppercase tracking-widest text-text-disabled">
                         {section.title}
                       </h4>
                       <div className="space-y-1">

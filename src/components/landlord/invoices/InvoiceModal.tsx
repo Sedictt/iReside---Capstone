@@ -62,7 +62,6 @@ export function InvoiceModal({
         setPendingAction(null);
         setConfirmCountdown(0);
         setShowRejectionWarning(false);
-        setRefundActionError(null);
         
         let alive = true;
         setLoading(true);
@@ -249,9 +248,9 @@ export function InvoiceModal({
             dot: "bg-blue-400",
         },
         intent_submitted: {
-            classes: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
+            classes: "bg-primary/10 text-primary border-primary/20",
             label: "Intent Submitted",
-            dot: "bg-indigo-400",
+            dot: "bg-primary",
         },
         under_review: {
             classes: "bg-amber-500/10 text-amber-400 border-amber-500/20",
@@ -323,7 +322,7 @@ export function InvoiceModal({
                                 <span className="text-xs font-bold uppercase tracking-[0.25em] text-text-medium">Invoice Specification</span>
                             </div>
                             
-                            <h2 className="text-4xl font-semibold tracking-tight text-text-high">
+                            <h2 className="text-4xl font-bold tracking-tight text-text-high">
                                 {invoice?.invoiceNumber ?? "Loading..."}
                             </h2>
                             
@@ -357,7 +356,7 @@ export function InvoiceModal({
                         
                         <div className="flex items-center gap-4">
                             {invoice && (
-                                <div className={cn("flex items-center gap-2 rounded-full border px-4 py-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] shadow-lg", statusStyle.classes)}>
+                                <div className={cn("flex items-center gap-2 rounded-full border px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] shadow-lg", statusStyle.classes)}>
                                     <span className={cn("size-1.5 rounded-full animate-pulse", statusStyle.dot)} />
                                     {statusStyle.label}
                                 </div>
@@ -386,13 +385,13 @@ export function InvoiceModal({
                         ) : (
                             <>
                                 <div className="space-y-1">
-                                    <h3 className="text-xl font-semibold text-text-high tracking-tight">Financial Overview</h3>
+                                    <h3 className="text-xl font-bold text-text-high tracking-tight">Financial Overview</h3>
                                     <p className="text-[10px] font-bold uppercase tracking-widest text-text-disabled">Ledger Reconciliation</p>
                                 </div>
 
                                 <section className="space-y-4">
                                     <div className="flex items-center justify-between">
-                                        <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-text-high">
+                                        <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-text-high">
                                             <Hash className="size-4 text-primary" />
                                             Itemized Breakdown
                                         </h3>
@@ -405,27 +404,27 @@ export function InvoiceModal({
                                                     <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-disabled">{item.category}</p>
                                                 </div>
                                                 <div className="text-right">
-                                                    <p className="text-base font-semibold text-text-high">{formatPhpCurrency(item.amount)}</p>
+                                                    <p className="text-base font-bold text-text-high">{formatPhpCurrency(item.amount)}</p>
                                                 </div>
                                             </div>
                                         ))}
 
                                         {invoice.paidAmount === 0 && (
                                             <div className="flex items-center justify-between rounded-2xl border border-primary/20 bg-primary/5 px-5 py-4 shadow-inner">
-                                                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Total Payable</p>
-                                                <p className="text-lg font-semibold text-primary">{formatPhpCurrency(invoice.totalAmount)}</p>
+                                                <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Total Payable</p>
+                                                <p className="text-lg font-bold text-primary">{formatPhpCurrency(invoice.totalAmount)}</p>
                                             </div>
                                         )}
 
                                         {invoice.paidAmount > 0 && (
                                             <>
                                                 <div className="flex items-center justify-between rounded-2xl border border-white/5 bg-surface-2/30 px-5 py-3 mt-4">
-                                                    <p className="text-[10px] font-semibold uppercase tracking-widest text-text-disabled">Paid to Date</p>
+                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-text-disabled">Paid to Date</p>
                                                     <p className="text-sm font-bold text-emerald-400">-{formatPhpCurrency(invoice.paidAmount)}</p>
                                                 </div>
                                                 <div className="flex items-center justify-between rounded-2xl border border-primary/20 bg-primary/5 px-5 py-4 shadow-inner">
-                                                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Remaining Balance</p>
-                                                    <p className="text-lg font-semibold text-primary">{formatPhpCurrency(invoice.balanceRemaining)}</p>
+                                                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Remaining Balance</p>
+                                                    <p className="text-lg font-bold text-primary">{formatPhpCurrency(invoice.balanceRemaining)}</p>
                                                 </div>
                                             </>
                                         )}
@@ -433,7 +432,7 @@ export function InvoiceModal({
                                 </section>
 
                                 <section className="space-y-4">
-                                    <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-text-high">
+                                    <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-text-high">
                                         <Clock3 className="size-4 text-primary" />
                                         Utility Consumption
                                     </h3>
@@ -450,7 +449,7 @@ export function InvoiceModal({
                                                         <div className="size-2 rounded-full bg-primary" />
                                                         <p className="text-sm font-bold capitalize text-text-high">{reading.utility_type} Service</p>
                                                     </div>
-                                                    <span className={cn("rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-wider", reading.billing_mode === "included_in_rent" ? "bg-white/5 text-text-medium" : "bg-primary/10 text-primary")}>
+                                                    <span className={cn("rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider", reading.billing_mode === "included_in_rent" ? "bg-white/5 text-text-medium" : "bg-primary/10 text-primary")}>
                                                         {reading.billing_mode === "included_in_rent" ? "Bundled" : "Unit Standard"}
                                                     </span>
                                                 </div>
@@ -474,7 +473,7 @@ export function InvoiceModal({
 
                                 <section className="space-y-4 pt-4 border-t border-white/5">
                                     <div className="flex items-center justify-between">
-                                        <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-text-high">
+                                        <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-text-high">
                                             <Receipt className="size-4 text-primary" />
                                             Proof of Payment
                                         </h3>
@@ -522,7 +521,7 @@ export function InvoiceModal({
 
                                     {(invoice.metadata as any)?.refund_proof_url && (
                                         <div className="space-y-4 pt-8 border-t border-white/5 text-left">
-                                            <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-text-high">
+                                            <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-text-high">
                                                 <Wallet className="size-4 text-amber-400" />
                                                 Proof of Refund
                                             </h3>
@@ -561,7 +560,7 @@ export function InvoiceModal({
                                     {/* Verification Section */}
                                     <section className="space-y-4">
                                         <div className="flex items-center justify-between">
-                                            <h3 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-text-medium">Payment Verification</h3>
+                                            <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-medium">Payment Verification</h3>
                                             {invoice.paymentProofUrl && (
                                                 <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
                                                     <ShieldCheck className="size-3" />
@@ -599,7 +598,7 @@ export function InvoiceModal({
 
                                             {invoice.paymentDestination && (
                                                 <div className="rounded-2xl border border-white/10 bg-surface-2 p-5 space-y-3 shadow-sm">
-                                                    <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-text-disabled">
+                                                    <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-text-disabled">
                                                         <QrCode className="size-3.5" />
                                                         Paid To
                                                     </div>
@@ -615,7 +614,7 @@ export function InvoiceModal({
                                     {/* Decisions Hub */}
                                     <section className="space-y-4 pt-4 border-t border-white/5">
                                         <div className="flex items-center justify-between">
-                                            <h3 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-text-medium">Action Center</h3>
+                                            <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-medium">Action Center</h3>
                                             <div className="flex bg-surface-2 p-1 rounded-xl border border-white/5 shadow-inner">
                                                 <button 
                                                     onClick={() => setActiveTab("approve")}
@@ -721,7 +720,7 @@ export function InvoiceModal({
                                                     className="space-y-6"
                                                 >
                                                     <div className="space-y-1">
-                                                        <h4 className="text-sm font-semibold text-text-high">Resolution Wizard</h4>
+                                                        <h4 className="text-sm font-bold text-text-high">Resolution Wizard</h4>
                                                         <p className="text-[10px] font-medium text-text-disabled uppercase tracking-widest">Step-by-step issue management</p>
                                                     </div>
 
@@ -781,7 +780,7 @@ export function InvoiceModal({
                                     <section className="space-y-4 pt-4 border-t border-white/5">
                                         <div className="flex items-center gap-2">
                                             <History className="size-3.5 text-text-disabled" />
-                                            <h3 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-text-medium">Audit History</h3>
+                                            <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-medium">Audit History</h3>
                                         </div>
                                         <div className="space-y-3">
                                             {invoice.receipts.length === 0 && (
@@ -794,12 +793,12 @@ export function InvoiceModal({
                                                     <div className="flex items-center gap-4">
                                                         <div className="size-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
                                                         <div>
-                                                            <p className="text-[11px] font-semibold text-text-high tracking-tight">{receipt.receipt_number}</p>
+                                                            <p className="text-[11px] font-bold text-text-high tracking-tight">{receipt.receipt_number}</p>
                                                             <p className="text-[9px] font-medium uppercase tracking-wider text-text-disabled mt-0.5">{formatDateLong(receipt.issued_at)}</p>
                                                         </div>
                                                     </div>
                                                     <div className="text-right">
-                                                        <p className="text-xs font-semibold text-text-high">{formatPhpCurrency(receipt.amount)}</p>
+                                                        <p className="text-xs font-bold text-text-high">{formatPhpCurrency(receipt.amount)}</p>
                                                         <p className="text-[8px] font-bold uppercase text-emerald-400 mt-0.5">Verified</p>
                                                     </div>
                                                 </div>
@@ -821,7 +820,7 @@ export function InvoiceModal({
                                     </div>
                                 </div>
                                 <div className="space-y-3">
-                                    <h3 className="text-2xl font-semibold text-text-high tracking-tight">Verified Statement</h3>
+                                    <h3 className="text-2xl font-bold text-text-high tracking-tight">Verified Statement</h3>
                                     <p className="text-sm text-text-medium leading-relaxed max-w-[280px]">
                                         This invoice has been officially logged in the iReside ledger. You can download a digital copy or pay through the checkout.
                                     </p>
@@ -829,7 +828,7 @@ export function InvoiceModal({
                                 {invoice?.status !== 'paid' && (
                                     <Link 
                                         href={`/tenant/payments/${invoiceId}/checkout`}
-                                        className="w-full bg-primary hover:bg-primary-dark text-white py-5 px-8 rounded-3xl font-semibold text-xs uppercase tracking-[0.2em] shadow-2xl shadow-primary/20 transition-all hover:-translate-y-1 flex items-center justify-center gap-3"
+                                        className="w-full bg-primary hover:bg-primary-dark text-white py-5 px-8 rounded-3xl font-bold text-xs uppercase tracking-[0.2em] shadow-2xl shadow-primary/20 transition-all hover:-translate-y-1 flex items-center justify-center gap-3"
                                     >
                                         Proceed to Payment <ArrowUpRight className="size-5" />
                                     </Link>
@@ -865,7 +864,7 @@ export function InvoiceModal({
                                 </div>
 
                                 <div className="space-y-3 text-center">
-                                    <h3 className="text-2xl font-semibold text-text-high tracking-tight">Confirm Action</h3>
+                                    <h3 className="text-2xl font-bold text-text-high tracking-tight">Confirm Action</h3>
                                     <p className="text-sm font-medium leading-relaxed text-text-medium">
                                         You are about to <span className="text-amber-400 font-bold underline decoration-amber-500/30 underline-offset-4">{pendingAction.label}</span>. 
                                         {pendingAction.desc}
@@ -877,7 +876,7 @@ export function InvoiceModal({
                                         disabled={confirmCountdown > 0}
                                         onClick={() => runAction(pendingAction.type)}
                                         className={cn(
-                                            "relative h-14 overflow-hidden rounded-2xl text-sm font-semibold uppercase tracking-widest transition-all active:scale-[0.98]",
+                                            "relative h-14 overflow-hidden rounded-2xl text-sm font-bold uppercase tracking-widest transition-all active:scale-[0.98]",
                                             confirmCountdown > 0 
                                                 ? "bg-white/5 text-text-disabled cursor-not-allowed" 
                                                 : "bg-primary text-primary-foreground hover:brightness-110 shadow-lg"
@@ -948,7 +947,7 @@ export function InvoiceModal({
                                 </button>
                             </div>
                             <div className="absolute bottom-6 left-1/2 -translate-x-1/2">
-                                <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/60 bg-black/40 backdrop-blur-md px-6 py-2 rounded-full border border-white/5">
+                                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/60 bg-black/40 backdrop-blur-md px-6 py-2 rounded-full border border-white/5">
                                     Full Evidence Inspection
                                 </p>
                             </div>
@@ -984,7 +983,7 @@ function F2FActionCenter({
                     </div>
                 </div>
                 <div className="space-y-1">
-                    <p className="text-sm font-semibold text-white">Physical Cash Collection</p>
+                    <p className="text-sm font-bold text-white">Physical Cash Collection</p>
                     <p className="text-[10px] font-medium text-cyan-100/60 leading-relaxed uppercase tracking-wider">Face-to-Face Transaction</p>
                 </div>
             </div>
@@ -992,12 +991,12 @@ function F2FActionCenter({
             <div className="space-y-5">
                 <div className="rounded-2xl border border-white/5 bg-surface-2 p-5 space-y-4">
                     <div className="flex items-center justify-between">
-                        <p className="text-[10px] font-semibold uppercase tracking-widest text-text-disabled">Amount to Receive</p>
-                        <p className="text-sm font-semibold text-primary">{formatPhpCurrency(invoice?.balanceRemaining ?? 0)}</p>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-text-disabled">Amount to Receive</p>
+                        <p className="text-sm font-bold text-primary">{formatPhpCurrency(invoice?.balanceRemaining ?? 0)}</p>
                     </div>
                     <div className="h-[1px] bg-white/5" />
                     <div className="space-y-2">
-                        <p className="text-[10px] font-semibold uppercase tracking-widest text-text-disabled">Handover Status</p>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-text-disabled">Handover Status</p>
                         <div className="grid grid-cols-2 gap-2">
                             <div className="rounded-xl border border-primary/20 bg-primary/10 p-3 text-center">
                                 <p className="text-[10px] font-bold text-primary">In Person</p>
@@ -1135,19 +1134,19 @@ function WizardFlow({
 
                         <div className="rounded-2xl border border-white/10 bg-surface-2 p-5 space-y-4 shadow-inner">
                             <div className="flex items-center justify-between">
-                                <p className="text-[10px] font-semibold uppercase tracking-widest text-text-disabled">Expected Amount</p>
-                                <p className="text-sm font-semibold text-text-high">{formatPhpCurrency(invoice.balanceRemaining)}</p>
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-text-disabled">Expected Amount</p>
+                                <p className="text-sm font-bold text-text-high">{formatPhpCurrency(invoice.balanceRemaining)}</p>
                             </div>
                             <div className="h-[1px] bg-white/5" />
                             <div className="space-y-2">
-                                <p className="text-[10px] font-semibold uppercase tracking-widest text-text-disabled">Actual Amount Received</p>
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-text-disabled">Actual Amount Received</p>
                                 <div className="relative group">
-                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-text-disabled group-focus-within:text-primary transition-colors font-semibold text-sm">â‚±</div>
+                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-text-disabled group-focus-within:text-primary transition-colors font-bold text-sm">â‚±</div>
                                     <input 
                                         type="number"
                                         value={receivedAmount}
                                         onChange={(e) => setReceivedAmount(e.target.value ? Number(e.target.value) : "")}
-                                        className="w-full rounded-xl border border-white/10 bg-surface-3 pl-8 pr-4 py-3 text-sm font-semibold text-text-high outline-none focus:border-primary/50 transition-all"
+                                        className="w-full rounded-xl border border-white/10 bg-surface-3 pl-8 pr-4 py-3 text-sm font-bold text-text-high outline-none focus:border-primary/50 transition-all"
                                         placeholder="0.00"
                                     />
                                 </div>
@@ -1189,9 +1188,9 @@ function WizardFlow({
                             {diagnosis === "amount" && (
                                 <>
                                     <div className="rounded-xl bg-surface-2 p-3 flex items-center justify-between border border-white/5">
-                                        <p className="text-[9px] font-semibold uppercase tracking-widest text-text-disabled">Adjustment</p>
+                                        <p className="text-[9px] font-bold uppercase tracking-widest text-text-disabled">Adjustment</p>
                                         <p className={cn(
-                                            "text-[10px] font-semibold",
+                                            "text-[10px] font-bold",
                                             (shortfallAmount as number) > 0 ? "text-amber-400" : "text-emerald-400"
                                         )}>
                                             {(shortfallAmount as number) > 0 
@@ -1273,7 +1272,7 @@ function WizardFlow({
                         </div>
 
                         <div className="rounded-2xl bg-amber-500/5 border border-amber-500/20 p-4 space-y-2">
-                            <p className="text-[10px] font-semibold uppercase text-amber-500/80 tracking-widest flex items-center gap-2">
+                            <p className="text-[10px] font-bold uppercase text-amber-500/80 tracking-widest flex items-center gap-2">
                                 <Info className="size-3" />
                                 Effect of this action
                             </p>
@@ -1376,9 +1375,9 @@ function Metric({ label, value, accent, warning }: { label: string; value: strin
             warning && !accent && "border-amber-500/20 bg-amber-500/5 shadow-[0_20px_40px_-20px_rgba(245,158,11,0.1)]"
         )}>
             {accent && <div className="absolute -top-6 -right-6 size-24 bg-primary/10 blur-3xl rounded-full animate-pulse" />}
-            <p className="text-[8px] sm:text-[9px] font-semibold uppercase tracking-[0.3em] text-text-medium group-hover:text-primary transition-colors">{label}</p>
+            <p className="text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.3em] text-text-medium group-hover:text-primary transition-colors">{label}</p>
             <p className={cn(
-                "mt-2 sm:mt-3 text-lg sm:text-xl lg:text-2xl font-semibold tracking-tight transition-transform group-hover:scale-[1.02] origin-left break-words leading-tight",
+                "mt-2 sm:mt-3 text-lg sm:text-xl lg:text-2xl font-bold tracking-tight transition-transform group-hover:scale-[1.02] origin-left break-words leading-tight",
                 accent ? "text-primary" : "text-text-high",
                 warning && !accent && "text-amber-400"
             )}>
@@ -1394,7 +1393,7 @@ function ReadingField({ label, value, highlight }: { label: string; value: strin
             "space-y-1.5 rounded-2xl p-4 border transition-all", 
             highlight ? "bg-surface-2 border-white/10 shadow-sm" : "bg-transparent border-white/5"
         )}>
-            <p className="text-[9px] font-semibold uppercase tracking-widest text-text-disabled">{label}</p>
+            <p className="text-[9px] font-bold uppercase tracking-widest text-text-disabled">{label}</p>
             <p className={cn("text-sm font-bold leading-none", highlight ? "text-primary" : "text-text-high")}>{value}</p>
         </div>
     );
@@ -1405,7 +1404,7 @@ function StatusLine({ label, value, icon }: { label: string; value: string; icon
         <div className="flex flex-col gap-2 rounded-2xl border border-white/10 bg-surface-1 p-4 shadow-sm hover:border-white/20 transition-all group">
             <div className="flex items-center gap-2">
                 <span className="text-text-disabled group-hover:text-primary transition-colors">{icon}</span>
-                <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-text-disabled">{label}</span>
+                <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-text-disabled">{label}</span>
             </div>
             <span className="text-xs font-bold text-text-high truncate">{value}</span>
         </div>
@@ -1440,7 +1439,7 @@ function ActionButton({
             onClick={onClick} 
             disabled={loading || disabled} 
             className={cn(
-                "group relative flex items-center justify-center gap-3 rounded-2xl px-6 py-4 text-xs font-semibold uppercase tracking-widest transition-all active:scale-[0.98] disabled:opacity-40 overflow-hidden", 
+                "group relative flex items-center justify-center gap-3 rounded-2xl px-6 py-4 text-xs font-bold uppercase tracking-widest transition-all active:scale-[0.98] disabled:opacity-40 overflow-hidden", 
                 fullWidth ? "w-full" : "",
                 variants[variant]
             )}
@@ -1490,13 +1489,13 @@ function RefundCenter({
                         </div>
                     </div>
                     <div className="space-y-1">
-                        <p className="text-lg font-semibold text-white">Refund Processed</p>
+                        <p className="text-lg font-bold text-white">Refund Processed</p>
                         <p className="text-xs font-medium text-emerald-100/60 leading-relaxed uppercase tracking-widest">Transaction Reconciled</p>
                     </div>
                 </div>
 
                 <div className="space-y-3">
-                    <p className="text-[10px] font-semibold uppercase tracking-widest text-text-disabled ml-1">Submitted Proof</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-text-disabled ml-1">Submitted Proof</p>
                     <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-white/10 bg-surface-2 shadow-lg">
                         <Image
                             src={refundProofUrl}
@@ -1533,18 +1532,18 @@ function RefundCenter({
 
                 <div className="grid gap-3 p-3 rounded-xl bg-surface-2 border border-white/5 shadow-inner">
                     <div className="flex items-center justify-between">
-                        <p className="text-[10px] font-semibold uppercase tracking-widest text-text-disabled">Method</p>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-text-disabled">Method</p>
                         <p className="text-[10px] font-bold text-text-high uppercase tracking-widest">GCash</p>
                     </div>
                     <div className="flex items-center justify-between">
-                        <p className="text-[10px] font-semibold uppercase tracking-widest text-text-disabled">Account Number</p>
-                        <p className="text-sm font-semibold text-primary tracking-wider font-mono">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-text-disabled">Account Number</p>
+                        <p className="text-sm font-bold text-primary tracking-wider font-mono">
                             {refund.gcash_number || "Provided via QR"}
                         </p>
                     </div>
                     {refund.qr_url && (
                         <div className="pt-2">
-                            <p className="text-[10px] font-semibold uppercase tracking-widest text-text-disabled mb-2">Recipient QR Code</p>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-text-disabled mb-2">Recipient QR Code</p>
                             <div className="relative group aspect-square w-full max-w-[200px] mx-auto overflow-hidden rounded-xl border border-white/10 bg-white p-2">
                                 <Image
                                     src={refund.qr_url}
@@ -1562,7 +1561,7 @@ function RefundCenter({
             </div>
 
             <div className="space-y-3">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-text-disabled ml-1">Upload Proof of Refund</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-text-disabled ml-1">Upload Proof of Refund</p>
                 <div className="relative">
                     {!proofFile ? (
                         <label className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-white/10 bg-surface-1 py-8 text-text-disabled transition-all hover:border-primary/30 hover:bg-surface-2 cursor-pointer group">
@@ -1664,7 +1663,7 @@ function RefundSubmitButton({
                     <p className="text-[10px] font-medium text-rose-400 leading-relaxed">{error}</p>
                 </div>
             )}
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-text-disabled text-center mb-1">Finalize Resolution</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-text-disabled text-center mb-1">Finalize Resolution</p>
             <ActionButton
                 onClick={handleSubmit}
                 loading={isSubmitting}

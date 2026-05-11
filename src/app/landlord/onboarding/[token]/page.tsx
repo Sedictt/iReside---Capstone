@@ -408,7 +408,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                     <div className="size-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
                         <Lock className="size-8 text-red-500" />
                     </div>
-                    <h2 className="text-2xl font-semibold text-white mb-2">Link Invalid</h2>
+                    <h2 className="text-2xl font-bold text-white mb-2">Link Invalid</h2>
                     <p className="text-white/60 mb-6">{error}</p>
                     <Link 
                         href="/login" 
@@ -428,7 +428,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                     <div className="size-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto border border-primary/20 shadow-[0_0_30px_rgba(109,152,56,0.2)] mb-6">
                         <CheckCircle className="size-12 text-emerald-500" />
                     </div>
-                    <h2 className="text-3xl font-semibold text-white mb-2">All Set!</h2>
+                    <h2 className="text-3xl font-bold text-white mb-2">All Set!</h2>
                     <p className="text-white/60 mb-6">
                         Your landlord account has been created. Redirecting you to login...
                     </p>
@@ -491,16 +491,16 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                             <div className="text-center mb-4">
                                 <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full mb-3">
                                     <Lock className="size-3 text-primary" />
-                                    <span className="text-[10px] font-semibold uppercase tracking-widest text-white/60">Secure Authentication</span>
+                                    <span className="text-[10px] font-bold uppercase tracking-widest text-white/60">Secure Authentication</span>
                                 </div>
-                                <h2 className="text-3xl font-semibold tracking-tight text-white">Create Credentials</h2>
+                                <h2 className="text-3xl font-bold tracking-tight text-white">Create Credentials</h2>
                                 <p className="text-white/50 text-sm mt-1">Establish your administrative access</p>
                             </div>
                             
                             <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-8 space-y-6 backdrop-blur-xl shadow-2xl">
                                 <div>
                                     <div className="flex items-center justify-between mb-3">
-                                        <label htmlFor="admin-identity" className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 px-1">
+                                        <label htmlFor="admin-identity" className="block text-[10px] font-bold uppercase tracking-widest text-white/40 px-1">
                                             Administrative Identity
                                         </label>
                                         <div className="flex items-center gap-1.5 px-2 py-0.5 bg-primary/10 border border-primary/20 rounded-full">
@@ -522,7 +522,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                 </div>
                                 
                                 <div className="space-y-3">
-                                    <label htmlFor="password" className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 px-1">
+                                    <label htmlFor="password" className="block text-[10px] font-bold uppercase tracking-widest text-white/40 px-1">
                                         Password
                                     </label>
                                     <div className="relative group">
@@ -564,8 +564,8 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                     {password && (
                                         <div className="pt-4 border-t border-white/5">
                                             <div className="flex justify-between items-center mb-2">
-                                                <span className="text-[10px] font-semibold uppercase tracking-widest text-white/30">Entropy Strength</span>
-                                                <span className={`text-[10px] font-semibold uppercase tracking-widest ${getPasswordStrength(password).color.replace('bg-', 'text-')}`}>
+                                                <span className="text-[10px] font-bold uppercase tracking-widest text-white/30">Entropy Strength</span>
+                                                <span className={`text-[10px] font-bold uppercase tracking-widest ${getPasswordStrength(password).color.replace('bg-', 'text-')}`}>
                                                     {getPasswordStrength(password).label}
                                                 </span>
                                             </div>
@@ -582,7 +582,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                 </div>
                                 
                                 <div className="space-y-3">
-                                    <label htmlFor="confirm-password" className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 px-1">
+                                    <label htmlFor="confirm-password" className="block text-[10px] font-bold uppercase tracking-widest text-white/40 px-1">
                                         Confirm Password
                                     </label>
                                     <div className="relative">
@@ -607,10 +607,10 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                             {password === confirmPassword ? (
                                                 <>
                                                     <CheckCircle2 className="size-3 text-primary" />
-                                                    <span className="text-[10px] text-primary font-semibold uppercase tracking-widest">Passwords Synchronized</span>
+                                                    <span className="text-[10px] text-primary font-bold uppercase tracking-widest">Passwords Synchronized</span>
                                                 </>
                                             ) : (
-                                                <p className="text-red-400 text-[10px] font-semibold uppercase tracking-widest">Mismatched credentials</p>
+                                                <p className="text-red-400 text-[10px] font-bold uppercase tracking-widest">Mismatched credentials</p>
                                             )}
                                         </div>
                                     )}
@@ -622,7 +622,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                     {currentStep === "property" && (
                         <div className="space-y-8">
                             <div className="text-center mb-4">
-                                <h2 className="text-3xl font-semibold tracking-tight text-white">Property Configuration</h2>
+                                <h2 className="text-3xl font-bold tracking-tight text-white">Property Configuration</h2>
                                 <p className="text-white/50 text-sm mt-1">Initialize your asset's operational parameters</p>
                             </div>
                             
@@ -633,7 +633,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                     <div className="space-y-3">
                                         <div className="flex items-center gap-2 px-1">
                                             <ImageIcon className="size-3.5 text-primary" />
-                                            <label htmlFor="cover-photo-input" className="text-[10px] font-semibold uppercase tracking-widest text-white/40">Cover Identity</label>
+                                            <label htmlFor="cover-photo-input" className="text-[10px] font-bold uppercase tracking-widest text-white/40">Cover Identity</label>
                                         </div>
                                         <div className="relative group cursor-pointer overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 hover:bg-white/10 transition-all aspect-[16/10] shadow-2xl">
                                             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
@@ -667,12 +667,12 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                     <div className="bg-white/[0.03] border border-white/5 rounded-[2rem] p-5 space-y-4 backdrop-blur-md">
                                         <div className="flex items-center gap-2 px-1">
                                             <ShieldCheck className="size-3.5 text-primary" />
-                                            <span className="text-[10px] font-semibold uppercase tracking-widest text-white/40">Verified Identity</span>
+                                            <span className="text-[10px] font-bold uppercase tracking-widest text-white/40">Verified Identity</span>
                                         </div>
                                         <div className="grid gap-3">
                                             <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-4">
                                                 <p className="text-[9px] font-bold uppercase tracking-wider text-white/30 mb-1">Formal Name</p>
-                                                <p className="text-sm font-semibold text-white truncate leading-none">{data?.propertyName}</p>
+                                                <p className="text-sm font-bold text-white truncate leading-none">{data?.propertyName}</p>
                                             </div>
                                             <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-4">
                                                 <p className="text-[9px] font-bold uppercase tracking-wider text-white/30 mb-1">Location</p>
@@ -685,7 +685,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                     <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-6 space-y-6">
                                         <div className="flex items-center gap-2">
                                             <Grid className="size-4 text-primary" />
-                                            <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Architectural Scope</h3>
+                                            <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-white/60">Architectural Scope</h3>
                                         </div>
                                         
                                         <div className="grid gap-4">
@@ -742,7 +742,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                     <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-7 space-y-6">
                                         <div className="flex items-center gap-2">
                                             <Zap className="size-4 text-primary" />
-                                            <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Billing Strategy</h3>
+                                            <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-white/60">Billing Strategy</h3>
                                         </div>
 
                                         <div className="grid gap-6">
@@ -763,9 +763,9 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                                 <div className={`size-2.5 rounded-full ${utilityBilling === opt.id ? "bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),1)]" : "bg-white/10"}`} />
                                                                 <div>
                                                                     <div className="flex items-center gap-2">
-                                                                        <p className={`text-sm font-semibold tracking-tight ${utilityBilling === opt.id ? "text-primary" : "text-white"}`}>{opt.label}</p>
+                                                                        <p className={`text-sm font-bold tracking-tight ${utilityBilling === opt.id ? "text-primary" : "text-white"}`}>{opt.label}</p>
                                                                         {opt.popular && (
-                                                                            <span className="text-[7px] font-semibold uppercase tracking-widest bg-primary/20 text-primary px-1.5 py-0.5 rounded-full border border-primary/20">Most Popular</span>
+                                                                            <span className="text-[7px] font-bold uppercase tracking-widest bg-primary/20 text-primary px-1.5 py-0.5 rounded-full border border-primary/20">Most Popular</span>
                                                                         )}
                                                                     </div>
                                                                     <p className="text-[10px] text-white/30 font-medium uppercase tracking-wider">{opt.desc}</p>
@@ -784,7 +784,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                         <HelpCircle className="size-5 text-primary" />
                                                     </div>
                                                     <div className="space-y-2">
-                                                        <h4 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">How this works</h4>
+                                                        <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">How this works</h4>
                                                         <p className="text-xs text-white/60 font-medium leading-relaxed">
                                                             {utilityBilling === "included_in_rent" && "The utility cost is part of the rent. Your tenants do not pay anything extra for their water or electricity usage."}
                                                             {utilityBilling === "separate_metered" && "Tenants have their own separate accounts and meters. They receive and pay their own bills directly to the utility company."}
@@ -805,7 +805,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                             <div className="space-y-3">
                                                 <label className="text-[10px] font-bold uppercase tracking-wider text-white/30 px-1">Standard Base Rent (PHP)</label>
                                                 <div className="relative group">
-                                                    <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none text-xl font-semibold text-primary/40 group-focus-within:text-primary transition-colors">₱</div>
+                                                    <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none text-xl font-bold text-primary/40 group-focus-within:text-primary transition-colors">â‚±</div>
                                                     <input 
                                                         type="text" 
                                                         value={baseRent === 0 ? "" : baseRent.toLocaleString('en-US')}
@@ -815,7 +815,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                             setBaseRent(num);
                                                         }}
                                                         placeholder="0.00"
-                                                        className="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-6 py-5 text-2xl font-semibold text-white outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all"
+                                                        className="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-6 py-5 text-2xl font-bold text-white outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all"
                                                     />
                                                 </div>
                                             </div>
@@ -827,9 +827,9 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">
                                                 <Settings className="size-4 text-primary" />
-                                                <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Amenities</h3>
+                                                <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-white/60">Amenities</h3>
                                             </div>
-                                            <span className="text-[10px] font-semibold text-primary px-3 py-1 bg-primary/10 rounded-full border border-primary/20 uppercase tracking-widest">{amenities.length} Selected</span>
+                                            <span className="text-[10px] font-bold text-primary px-3 py-1 bg-primary/10 rounded-full border border-primary/20 uppercase tracking-widest">{amenities.length} Selected</span>
                                         </div>
                                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                             {[
@@ -842,7 +842,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                         if (amenities.includes(amenity)) setAmenities(prev => prev.filter(a => a !== amenity));
                                                         else setAmenities(prev => [...prev, amenity]);
                                                     }}
-                                                    className={`px-4 py-3 rounded-2xl text-[10px] font-semibold uppercase tracking-widest border transition-all text-center ${amenities.includes(amenity) ? "bg-primary text-black border-primary shadow-lg shadow-primary/20" : "bg-white/5 border-white/5 text-white/30 hover:text-white/50"}`}
+                                                    className={`px-4 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-widest border transition-all text-center ${amenities.includes(amenity) ? "bg-primary text-black border-primary shadow-lg shadow-primary/20" : "bg-white/5 border-white/5 text-white/30 hover:text-white/50"}`}
                                                 >
                                                     {amenity}
                                                 </button>
@@ -857,9 +857,9 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">
                                                 <ShieldCheck className="size-4 text-primary" />
-                                                <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Building Rules & Conduct</h3>
+                                                <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-white/60">Building Rules & Conduct</h3>
                                             </div>
-                                            <span className="text-[10px] font-semibold text-primary px-3 py-1 bg-primary/10 rounded-full border border-primary/20 uppercase tracking-widest">{buildingRules.length} Defined</span>
+                                            <span className="text-[10px] font-bold text-primary px-3 py-1 bg-primary/10 rounded-full border border-primary/20 uppercase tracking-widest">{buildingRules.length} Defined</span>
                                         </div>
 
                                         <div className="space-y-4">
@@ -915,7 +915,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                     <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-7 space-y-6">
                                         <div className="flex items-center gap-2">
                                             <FileText className="size-4 text-primary" />
-                                            <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Final Validation</h3>
+                                            <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-white/60">Final Validation</h3>
                                         </div>
                                         
                                         <div
@@ -959,8 +959,8 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                         <FileText className="size-8 text-primary" />
                                                     </div>
                                                     <div className="text-center px-4 relative z-10">
-                                                        <span className="block text-xs font-semibold text-white uppercase tracking-widest mb-1">Contract Preview</span>
-                                                        <span className="block text-[8px] text-white/30 uppercase tracking-widest font-semibold">Digital Agreement v2.1</span>
+                                                        <span className="block text-xs font-bold text-white uppercase tracking-widest mb-1">Contract Preview</span>
+                                                        <span className="block text-[8px] text-white/30 uppercase tracking-widest font-bold">Digital Agreement v2.1</span>
                                                     </div>
                                                 </>
                                             ) : (
@@ -969,7 +969,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                         {contractFile ? <CheckCircle2 className="size-8 text-primary" /> : <Upload className="size-8 text-white/20" />}
                                                     </div>
                                                     <div className="text-center px-4">
-                                                        <span className={`block text-xs font-semibold uppercase tracking-widest ${contractFile ? "text-primary" : "text-white/40"}`}>
+                                                        <span className={`block text-xs font-bold uppercase tracking-widest ${contractFile ? "text-primary" : "text-white/40"}`}>
                                                             {contractFile ? "Upload Complete" : "Click to Upload"}
                                                         </span>
                                                         {contractFile && <span className="block text-[8px] text-white/30 uppercase tracking-widest font-bold mt-1 truncate max-w-[150px] mx-auto">{contractFile}</span>}
@@ -980,7 +980,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                             <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
                                                 <div className="bg-white text-black px-5 py-2.5 rounded-full flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
                                                     {contractMode === "generate" ? <Maximize2 className="size-4" /> : <Upload className="size-4" />}
-                                                    <span className="text-[10px] font-semibold uppercase tracking-widest">
+                                                    <span className="text-[10px] font-bold uppercase tracking-widest">
                                                         {contractMode === "generate" ? "Review & Export" : (contractFile ? "Change Document" : "Upload File")}
                                                     </span>
                                                 </div>
@@ -994,7 +994,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                     <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-7 space-y-6 h-full">
                                         <div className="flex items-center gap-2">
                                             <Lock className="size-4 text-primary" />
-                                            <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Execution Strategy</h3>
+                                            <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-white/60">Execution Strategy</h3>
                                         </div>
                                         
                                         <div className="grid gap-5">
@@ -1006,7 +1006,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                     <button 
                                                         key={mode.id}
                                                         onClick={() => setContractMode(mode.id as any)}
-                                                        className={`flex-1 py-4 text-[10px] font-semibold uppercase tracking-widest rounded-xl transition-all ${contractMode === mode.id ? "bg-primary text-black shadow-lg shadow-primary/10" : "text-white/30 hover:text-white/50"}`}
+                                                        className={`flex-1 py-4 text-[10px] font-bold uppercase tracking-widest rounded-xl transition-all ${contractMode === mode.id ? "bg-primary text-black shadow-lg shadow-primary/10" : "text-white/30 hover:text-white/50"}`}
                                                     >
                                                         {mode.label}
                                                     </button>
@@ -1037,8 +1037,8 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                     <FileText className="size-5 text-primary" />
                                                 </div>
                                                 <div>
-                                                    <h4 className="text-sm font-semibold text-white uppercase tracking-widest">Lease Agreement Preview</h4>
-                                                    <p className="text-[10px] text-white/30 font-bold uppercase tracking-tighter">Draft Version • iReside Standard Protocol</p>
+                                                    <h4 className="text-sm font-bold text-white uppercase tracking-widest">Lease Agreement Preview</h4>
+                                                    <p className="text-[10px] text-white/30 font-bold uppercase tracking-tighter">Draft Version â€¢ iReside Standard Protocol</p>
                                                 </div>
                                             </div>
 
@@ -1094,7 +1094,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                                     setExporting(false);
                                                                 }
                                                             }}
-                                                            className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-full border border-white/10 text-white/60 hover:text-white transition-all text-[10px] font-semibold uppercase tracking-widest disabled:opacity-50"
+                                                            className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-full border border-white/10 text-white/60 hover:text-white transition-all text-[10px] font-bold uppercase tracking-widest disabled:opacity-50"
                                                         >
                                                             {exporting ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-3.5" />}
                                                             Export PDF
@@ -1130,7 +1130,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                                     setExporting(false);
                                                                 }
                                                             }}
-                                                            className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-full border border-white/10 text-white/60 hover:text-white transition-all text-[10px] font-semibold uppercase tracking-widest disabled:opacity-50"
+                                                            className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-full border border-white/10 text-white/60 hover:text-white transition-all text-[10px] font-bold uppercase tracking-widest disabled:opacity-50"
                                                         >
                                                             <ImageIcon className="size-3.5" />
                                                             Save Photo
@@ -1207,7 +1207,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                         <FilePlus className="size-10 text-white/10" />
                                                     </div>
                                                     <div className="text-center max-w-sm">
-                                                        <h5 className="text-lg font-semibold text-white uppercase tracking-widest mb-2">Awaiting Documentation</h5>
+                                                        <h5 className="text-lg font-bold text-white uppercase tracking-widest mb-2">Awaiting Documentation</h5>
                                                         <p className="text-xs text-white/30 font-medium leading-relaxed">
                                                             Custom lease agreements can be uploaded via your administrative dashboard immediately after completing this onboarding flow.
                                                         </p>
@@ -1226,9 +1226,9 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                             <div className="text-center mb-4">
                                 <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full mb-3">
                                     <User className="size-3 text-primary" />
-                                    <span className="text-[10px] font-semibold uppercase tracking-widest text-white/60">Operator Profile</span>
+                                    <span className="text-[10px] font-bold uppercase tracking-widest text-white/60">Operator Profile</span>
                                 </div>
-                                <h2 className="text-3xl font-semibold tracking-tight text-white">Final Details</h2>
+                                <h2 className="text-3xl font-bold tracking-tight text-white">Final Details</h2>
                                 <p className="text-white/50 text-sm mt-1">Complete your administrative identity</p>
                             </div>
                             
@@ -1240,7 +1240,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                     ) : (
                                         <div className="w-full h-full flex flex-col items-center justify-center gap-2">
                                             <ImageIcon className="size-6 text-white/10" />
-                                            <span className="text-[9px] font-semibold text-white/20 uppercase tracking-widest">Set Cover Banner</span>
+                                            <span className="text-[9px] font-bold text-white/20 uppercase tracking-widest">Set Cover Banner</span>
                                         </div>
                                     )}
                                     <input 
@@ -1252,7 +1252,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center backdrop-blur-[2px] pointer-events-none">
                                         <div className="bg-white/10 border border-white/20 px-4 py-2 rounded-full flex items-center gap-2">
                                             <Camera className="size-4 text-white" />
-                                            <span className="text-[10px] font-semibold text-white uppercase tracking-widest">Change Cover</span>
+                                            <span className="text-[10px] font-bold text-white uppercase tracking-widest">Change Cover</span>
                                         </div>
                                     </div>
                                 </div>
@@ -1276,7 +1276,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                     <Image src={profilePhoto} alt="Profile" fill className="object-cover" />
                                                 ) : (
                                                     <div className="w-full h-full flex items-center justify-center">
-                                                        <span className="text-4xl font-semibold text-white/20">
+                                                        <span className="text-4xl font-bold text-white/20">
                                                             {(fullName || "C").split(" ").filter(Boolean).slice(0, 1).map(p => p[0]?.toUpperCase()).join("")}
                                                         </span>
                                                     </div>
@@ -1293,10 +1293,10 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                         </div>
 
                                         <div className="flex-1 pb-2">
-                                            <h3 className="text-xl font-semibold text-white uppercase tracking-widest leading-none mb-1">
+                                            <h3 className="text-xl font-bold text-white uppercase tracking-widest leading-none mb-1">
                                                 {fullName || "New Landlord"}
                                             </h3>
-                                            <p className="text-[10px] font-semibold text-primary uppercase tracking-widest flex items-center gap-2">
+                                            <p className="text-[10px] font-bold text-primary uppercase tracking-widest flex items-center gap-2">
                                                 <ShieldCheck className="size-3" />
                                                 Authorized Operator
                                             </p>
@@ -1305,7 +1305,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="space-y-3">
-                                            <label htmlFor="full-name" className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 px-1">
+                                            <label htmlFor="full-name" className="block text-[10px] font-bold uppercase tracking-widest text-white/40 px-1">
                                                 Full Legal Name
                                             </label>
                                             <div className="relative group">
@@ -1321,7 +1321,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                         </div>
                                         
                                         <div className="space-y-3">
-                                            <label htmlFor="admin-contact" className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 px-1">
+                                            <label htmlFor="admin-contact" className="block text-[10px] font-bold uppercase tracking-widest text-white/40 px-1">
                                                 Administrative Contact
                                             </label>
                                             <div className="relative group">

@@ -47,7 +47,7 @@ import { LeaseAuditTrail, type LeaseAuditEvent } from "@/components/landlord/lea
 import type { LeaseStatus } from "@/types/database";
 const SignaturePad = dynamic(() => import("./SignaturePad").then(mod => mod.SignaturePad), {
     ssr: false,
-    loading: () => <div className="h-[200px] w-full bg-muted/50 rounded-2xl animate-pulse flex items-center justify-center text-xs font-semibold uppercase tracking-widest text-muted-foreground">Loading Signer...</div>
+    loading: () => <div className="h-[200px] w-full bg-muted/50 rounded-2xl animate-pulse flex items-center justify-center text-xs font-bold uppercase tracking-widest text-muted-foreground">Loading Signer...</div>
 });
 import { useProperty } from "@/context/PropertyContext";
 import { generateLeasePdf } from "@/lib/lease-pdf";
@@ -708,7 +708,7 @@ export function RentApplications() {
             {/* ─── Page Header ─────────────────────────────────────────── */}
             <div className="flex flex-col justify-between gap-6 md:flex-row md:items-center">
                 <div className="space-y-1">
-                    <h1 className="text-4xl font-semibold tracking-tight text-foreground">
+                    <h1 className="text-4xl font-bold tracking-tight text-foreground">
                         Applications
                     </h1>
                     <p className="text-sm font-medium text-muted-foreground">
@@ -719,14 +719,14 @@ export function RentApplications() {
                 <div className="flex flex-wrap items-center gap-3">
                     <button
                         onClick={() => setShowInviteTools(true)}
-                        className="flex h-11 items-center gap-2 rounded-2xl border border-border bg-card px-5 text-xs font-semibold uppercase tracking-widest text-foreground transition-all hover:border-primary/30 hover:bg-muted active:scale-95"
+                        className="flex h-11 items-center gap-2 rounded-2xl border border-border bg-card px-5 text-xs font-bold uppercase tracking-widest text-foreground transition-all hover:border-primary/30 hover:bg-muted active:scale-95"
                     >
                         <Plus className="size-4" />
                         Invite Manager
                     </button>
                     <button
                         onClick={() => setShowTenantApplicationModal(true)}
-                        className="flex h-11 items-center gap-2 rounded-2xl bg-primary px-6 text-xs font-semibold uppercase tracking-widest text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95"
+                        className="flex h-11 items-center gap-2 rounded-2xl bg-primary px-6 text-xs font-bold uppercase tracking-widest text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95"
                     >
                         <QrCode className="size-4" />
                         Walk-in Intake
@@ -745,7 +745,7 @@ export function RentApplications() {
                                 key={tab.value}
                                 onClick={() => setActiveFilter(tab.value as any)}
                                 className={cn(
-                                    "flex items-center gap-2 rounded-xl px-4 py-2 text-[10px] font-semibold uppercase tracking-widest transition-all",
+                                    "flex items-center gap-2 rounded-xl px-4 py-2 text-[10px] font-bold uppercase tracking-widest transition-all",
                                     activeFilter === tab.value
                                         ? "bg-card text-foreground shadow-sm ring-1 ring-border"
                                         : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
@@ -773,7 +773,7 @@ export function RentApplications() {
                                 className="h-11 w-full rounded-2xl border border-border bg-background/50 pl-10 pr-4 text-xs font-bold text-foreground focus:border-primary/50 focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all"
                             />
                         </div>
-                        <button className="flex h-11 items-center gap-2 rounded-2xl border border-border bg-background px-5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground hover:bg-muted hover:text-foreground transition-all">
+                        <button className="flex h-11 items-center gap-2 rounded-2xl border border-border bg-background px-5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:bg-muted hover:text-foreground transition-all">
                             <Filter className="size-4" />
                             <span className="hidden sm:inline">Advanced</span>
                         </button>
@@ -787,12 +787,12 @@ export function RentApplications() {
                     ) : error ? (
                         <div className="flex flex-col items-center justify-center py-12 text-center">
                             <AlertCircle className="size-12 text-red-500/50 mb-4" />
-                            <p className="text-sm font-semibold text-foreground">{error}</p>
+                            <p className="text-sm font-bold text-foreground">{error}</p>
                         </div>
                     ) : filteredApplications.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-24 text-center">
                             <Users className="size-12 text-muted-foreground/30 mb-4" />
-                            <h3 className="text-xl font-semibold text-foreground">No Applications Found</h3>
+                            <h3 className="text-xl font-bold text-foreground">No Applications Found</h3>
                             <p className="text-sm font-medium text-muted-foreground max-w-xs mt-2">
                                 We couldn&apos;t find any applications matching your current criteria.
                             </p>
@@ -815,17 +815,17 @@ export function RentApplications() {
                                             <div className="relative h-20 w-28 shrink-0 overflow-hidden rounded-2xl bg-muted">
                                                 <Image src={resolveImage(app.propertyImage)} alt="" fill sizes="112px" className="object-cover transition-transform duration-700 group-hover:scale-110" />
                                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                                                <span className="absolute bottom-2 left-2 text-[10px] font-semibold text-white">{app.unitNumber}</span>
+                                                <span className="absolute bottom-2 left-2 text-[10px] font-bold text-white">{app.unitNumber}</span>
                                             </div>
 
                                             <div className="grid flex-1 grid-cols-1 items-center gap-6 px-6 lg:grid-cols-[1fr_120px_180px] xl:grid-cols-[1fr_120px_120px_180px]">
                                                 <div className="flex items-center gap-4 min-w-0">
-                                                    <div className="relative size-12 shrink-0 rounded-full border-2 border-border bg-muted flex items-center justify-center font-semibold text-muted-foreground" style={{ backgroundColor: app.applicant.avatarBgColor || "" }}>
+                                                    <div className="relative size-12 shrink-0 rounded-full border-2 border-border bg-muted flex items-center justify-center font-bold text-muted-foreground" style={{ backgroundColor: app.applicant.avatarBgColor || "" }}>
                                                         {app.applicant.avatar ? <Image src={app.applicant.avatar} alt={`${app.applicant.name} avatar`} fill sizes="48px" className="object-cover" /> : app.applicant.name[0]}
                                                     </div>
                                                     <div className="min-w-0 flex-1">
-                                                        <h3 className="truncate text-lg font-semibold tracking-tight text-foreground">{app.applicant.name}</h3>
-                                                        <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground truncate">
+                                                        <h3 className="truncate text-lg font-bold tracking-tight text-foreground">{app.applicant.name}</h3>
+                                                        <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground truncate">
                                                             <Briefcase className="size-3 shrink-0" />
                                                             {app.applicant.occupation || "Unspecified"}
                                                         </p>
@@ -833,18 +833,18 @@ export function RentApplications() {
                                                 </div>
 
                                                 <div className="hidden lg:flex flex-col">
-                                                    <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground">Rent</span>
-                                                    <span className="text-sm font-semibold text-foreground">{formatCurrency(app.monthlyRent)}</span>
+                                                    <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Rent</span>
+                                                    <span className="text-sm font-bold text-foreground">{formatCurrency(app.monthlyRent)}</span>
                                                 </div>
 
                                                 <div className="hidden xl:flex flex-col">
-                                                    <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground">Move-in</span>
-                                                    <span className="text-sm font-semibold text-foreground">{formatDate(app.requestedMoveIn)}</span>
+                                                    <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Move-in</span>
+                                                    <span className="text-sm font-bold text-foreground">{formatDate(app.requestedMoveIn)}</span>
                                                 </div>
 
                                                 <div className="flex items-center justify-end gap-3">
                                                     <div className={cn(
-                                                        "flex items-center gap-2 rounded-xl border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-widest whitespace-nowrap",
+                                                        "flex items-center gap-2 rounded-xl border px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap",
                                                         config.bgColor, config.borderColor, config.color
                                                     )}>
                                                         <config.icon className="size-3.5" />
@@ -872,7 +872,7 @@ export function RentApplications() {
                             initial={{ opacity: 0 }} 
                             animate={{ opacity: 1 }} 
                             exit={{ opacity: 0 }} 
-                            onClick={() => { setSelectedApp(null); cancelEdit(); }} 
+                            onClick={() => setSelectedApp(null)} 
                             className="fixed inset-0 z-[110] bg-black/40 backdrop-blur-md cursor-default"
                             aria-label="Close application detail"
                         />
@@ -885,16 +885,16 @@ export function RentApplications() {
                         >
                             <div className="flex items-center justify-between border-b border-border p-8 bg-card/50 backdrop-blur-xl">
                                 <div>
-                                    <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-primary mb-1">
+                                    <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.3em] text-primary mb-1">
                                         <div className="size-1.5 rounded-full bg-primary" />
                                         Application Record
                                     </div>
-                                    <h2 className="text-3xl font-semibold tracking-tighter text-foreground">
+                                    <h2 className="text-3xl font-bold tracking-tighter text-foreground">
                                         Dossier <span className="text-muted-foreground/30">Review</span>
                                     </h2>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <button onClick={() => { setSelectedApp(null); cancelEdit(); }} className="flex size-11 items-center justify-center rounded-2xl border border-border bg-background transition-all hover:bg-muted active:scale-95">
+                                    <button onClick={() => setSelectedApp(null)} className="flex size-11 items-center justify-center rounded-2xl border border-border bg-background transition-all hover:bg-muted active:scale-95">
                                         <X className="size-5" />
                                     </button>
                                 </div>
@@ -907,7 +907,7 @@ export function RentApplications() {
                                             <button
                                                 onClick={() => handleQuickApprove()}
                                                 disabled={updatingStatusId === selectedApp.id}
-                                                className="flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-semibold uppercase tracking-widest text-white transition-all hover:bg-emerald-500 disabled:opacity-50"
+                                                className="flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-white transition-all hover:bg-emerald-500 disabled:opacity-50"
                                             >
                                                 {updatingStatusId === selectedApp.id ? (
                                                     <Loader2 className="size-4 animate-spin" />
@@ -918,7 +918,7 @@ export function RentApplications() {
                                             </button>
                                             <button
                                                 onClick={() => openApprovalModal(selectedApp)}
-                                                className="flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-5 py-2.5 text-xs font-semibold uppercase tracking-widest text-primary transition-all hover:bg-primary/20"
+                                                className="flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-primary transition-all hover:bg-primary/20"
                                             >
                                                 <Wallet className="size-4" />
                                                 {selectedApp.status === "payment_pending" ? "Finalize" : "Request Payment"}
@@ -934,12 +934,12 @@ export function RentApplications() {
                                     <Image src={resolveImage(selectedApp.propertyImage)} alt="" fill sizes="(max-width: 768px) 100vw, 800px" className="object-cover opacity-60" />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                                     <div className="absolute bottom-6 left-8">
-                                        <h3 className="text-2xl font-semibold text-white">{selectedApp.propertyName}</h3>
-                                        <span className="mt-1 inline-block rounded-lg bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">{selectedApp.unitNumber}</span>
+                                        <h3 className="text-2xl font-bold text-white">{selectedApp.propertyName}</h3>
+                                        <span className="mt-1 inline-block rounded-lg bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">{selectedApp.unitNumber}</span>
                                     </div>
                                     <div className="absolute bottom-6 right-8 text-right">
-                                        <span className="text-[10px] font-semibold uppercase tracking-widest text-white/60">Monthly Rent</span>
-                                        <p className="text-2xl font-semibold text-white">{formatCurrency(selectedApp.monthlyRent)}</p>
+                                        <span className="text-[10px] font-bold uppercase tracking-widest text-white/60">Monthly Rent</span>
+                                        <p className="text-2xl font-bold text-white">{formatCurrency(selectedApp.monthlyRent)}</p>
                                     </div>
                                 </div>
 
@@ -949,9 +949,9 @@ export function RentApplications() {
                                     return (
                                         <div className="space-y-4">
                                             <div className="flex items-center justify-between px-2">
-                                                <h4 className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Onboarding Progress</h4>
+                                                <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Onboarding Progress</h4>
                                                 <span className={cn(
-                                                    "text-[10px] font-semibold uppercase tracking-widest",
+                                                    "text-[10px] font-bold uppercase tracking-widest",
                                                     percentage === 100 ? "text-emerald-500" : "text-primary"
                                                 )}>
                                                     {percentage}% Complete
@@ -971,7 +971,7 @@ export function RentApplications() {
                                                 <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-5 flex items-start gap-4">
                                                     <AlertCircle className="size-5 text-amber-500 shrink-0 mt-0.5" />
                                                     <div className="space-y-3">
-                                                        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-500">Missing Prerequisites</p>
+                                                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-500">Missing Prerequisites</p>
                                                         <ul className="space-y-1.5">
                                                             {missing.map((item) => (
                                                                 <li key={item} className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground/80">
@@ -989,57 +989,57 @@ export function RentApplications() {
 
                                 {/* Applicant Profile */}
                                 <div className="space-y-4">
-                                    <h4 className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground px-2">Tenant Profile</h4>
+                                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-2">Tenant Profile</h4>
                                     <div className="rounded-[2.5rem] border border-border bg-background/50 p-8 space-y-8">
                                         <div className="flex items-center gap-6">
-                                            <div className="relative size-20 rounded-full border-4 border-border shadow-xl flex items-center justify-center text-3xl font-semibold text-white" style={{ backgroundColor: selectedApp.applicant.avatarBgColor || "#171717" }}>
+                                            <div className="relative size-20 rounded-full border-4 border-border shadow-xl flex items-center justify-center text-3xl font-bold text-white" style={{ backgroundColor: selectedApp.applicant.avatarBgColor || "#171717" }}>
                                                 {selectedApp.applicant.avatar ? <Image src={selectedApp.applicant.avatar} alt={`${selectedApp.applicant.name} avatar`} fill sizes="80px" className="object-cover" /> : selectedApp.applicant.name[0]}
                                             </div>
                                             <div>
-                                                <h3 className="text-2xl font-semibold text-foreground">{selectedApp.applicant.name}</h3>
+                                                <h3 className="text-2xl font-bold text-foreground">{selectedApp.applicant.name}</h3>
                                                 <p className="text-sm font-bold text-muted-foreground">{selectedApp.applicant.occupation || "Unspecified Occupation"}</p>
                                             </div>
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-6">
                                             <div className="space-y-1">
-                                                <span className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                                                <span className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                                                     <Mail className="size-3" /> Email
                                                 </span>
-                                                <p className="text-sm font-semibold text-foreground">{selectedApp.applicant.email}</p>
+                                                <p className="text-sm font-bold text-foreground">{selectedApp.applicant.email}</p>
                                             </div>
                                             <div className="space-y-1">
-                                                <span className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                                                <span className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                                                     <Phone className="size-3" /> Phone
                                                 </span>
-                                                <p className="text-sm font-semibold text-foreground">{selectedApp.applicant.phone || "Not provided"}</p>
+                                                <p className="text-sm font-bold text-foreground">{selectedApp.applicant.phone || "Not provided"}</p>
                                             </div>
                                             <div className="space-y-1">
-                                                <span className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                                                <span className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                                                     <Banknote className="size-3" /> Income
                                                 </span>
-                                                <p className="text-sm font-semibold text-foreground">{formatCurrency(selectedApp.applicant.monthlyIncome)}</p>
+                                                <p className="text-sm font-bold text-foreground">{formatCurrency(selectedApp.applicant.monthlyIncome)}</p>
                                             </div>
 
                                             <div className="space-y-1">
-                                                <span className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                                                <span className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                                                     <Clock className="size-3" /> Application Date
                                                 </span>
-                                                <p className="text-sm font-semibold text-foreground">{formatDate(selectedApp.submittedDate)}</p>
+                                                <p className="text-sm font-bold text-foreground">{formatDate(selectedApp.submittedDate)}</p>
                                             </div>
 
                                             <div className="space-y-1">
-                                                <span className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                                                <span className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                                                     <Calendar className="size-3" /> Preferred Move-in
                                                 </span>
-                                                <p className="text-sm font-semibold text-foreground">{formatDate(selectedApp.requestedMoveIn)}</p>
+                                                <p className="text-sm font-bold text-foreground">{formatDate(selectedApp.requestedMoveIn)}</p>
                                             </div>
 
                                             <div className="space-y-1">
-                                                <span className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                                                <span className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                                                     <Filter className="size-3" /> Intake Source
                                                 </span>
-                                                <p className="text-sm font-semibold text-foreground capitalize">
+                                                <p className="text-sm font-bold text-foreground capitalize">
                                                     {selectedApp.source?.replace(/_/g, ' ') || "Online"}
                                                 </p>
                                             </div>
@@ -1049,7 +1049,7 @@ export function RentApplications() {
 
                                 {/* Compliance Checklist */}
                                 <div className="space-y-4">
-                                    <h4 className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground px-2">Compliance Roadmap</h4>
+                                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-2">Compliance Roadmap</h4>
                                     <div className="grid grid-cols-2 gap-3">
                                         {[
                                             { key: 'valid_id', label: 'Identity Verify' },
@@ -1065,7 +1065,7 @@ export function RentApplications() {
                                                         isDone ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500" : "bg-background border-border text-muted-foreground hover:border-primary/30"
                                                     )}
                                                 >
-                                                    <span className="text-[10px] font-semibold uppercase tracking-widest">{req.label}</span>
+                                                    <span className="text-[10px] font-bold uppercase tracking-widest">{req.label}</span>
                                                     {isDone ? <CheckCircle2 className="size-4" /> : <div className="size-4 rounded-full border-2 border-current opacity-20" />}
                                                 </button>
                                             );
@@ -1075,13 +1075,13 @@ export function RentApplications() {
 
                                 {/* Documents */}
                                 <div className="space-y-4">
-                                    <h4 className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground px-2">Supporting Files</h4>
+                                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-2">Supporting Files</h4>
                                     <div className="grid grid-cols-1 gap-3">
                                         {selectedApp.documents.map((doc) => (
                                             <button key={doc} onClick={() => setPreviewUrl(doc)} className="flex items-center justify-between rounded-2xl border border-border bg-background p-4 hover:border-primary/30 transition-all">
                                                 <div className="flex items-center gap-3">
                                                     <FileText className="size-5 text-muted-foreground" />
-                                                    <span className="text-[11px] font-semibold text-foreground">{formatDocumentLabel(doc)}</span>
+                                                    <span className="text-[11px] font-bold text-foreground">{formatDocumentLabel(doc)}</span>
                                                 </div>
                                                 <Eye className="size-4 text-primary" />
                                             </button>
@@ -1092,7 +1092,7 @@ export function RentApplications() {
                                 {/* Lease Agreement (§6.4) */}
                                 {selectedApp.status === "approved" && (
                                     <div className="space-y-4">
-                                        <h4 className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground px-2">Lease Agreement</h4>
+                                        <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-2">Lease Agreement</h4>
                                         <div className="rounded-[2.5rem] border border-border bg-background/50 p-6 space-y-6">
                                             {selectedApp.lease ? (
                                                 <>
@@ -1102,7 +1102,7 @@ export function RentApplications() {
                                                                 <FileText className="size-6 text-primary" />
                                                             </div>
                                                             <div>
-                                                                <p className="text-sm font-semibold text-foreground">Digital Lease Contract</p>
+                                                                <p className="text-sm font-bold text-foreground">Digital Lease Contract</p>
                                                                 <div className="flex items-center gap-2 mt-0.5">
                                                                     <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">ID: {selectedApp.lease.id.slice(0, 8)}…</span>
                                                                 </div>
@@ -1117,14 +1117,14 @@ export function RentApplications() {
                                                                 <Clock className="size-4" />
                                                             </div>
                                                             <div className="space-y-1">
-                                                                <p className="text-[10px] font-semibold uppercase tracking-widest text-amber-600">Awaiting Signature</p>
+                                                                <p className="text-[10px] font-bold uppercase tracking-widest text-amber-600">Awaiting Signature</p>
                                                                 <p className="text-[11px] font-medium text-amber-600/70 leading-relaxed">
                                                                     The lease has been generated and is ready for the tenant to sign. You can use the button below to send or resend the signing magic link via email.
                                                                 </p>
                                                                 <button 
                                                                     onClick={(e) => { e.stopPropagation(); handleGenerateSigningLink(selectedApp.id); }} 
                                                                     disabled={signingLinkState.loading}
-                                                                    className="mt-4 inline-flex items-center gap-2 rounded-xl bg-amber-500 px-6 py-2.5 text-[10px] font-semibold uppercase tracking-widest text-black shadow-lg shadow-amber-500/20 transition-all hover:bg-amber-400 active:scale-95 disabled:opacity-50"
+                                                                    className="mt-4 inline-flex items-center gap-2 rounded-xl bg-amber-500 px-6 py-2.5 text-[10px] font-bold uppercase tracking-widest text-black shadow-lg shadow-amber-500/20 transition-all hover:bg-amber-400 active:scale-95 disabled:opacity-50"
                                                                 >
                                                                     {signingLinkState.loading ? (
                                                                         <Loader2 className="size-3.5 animate-spin" />
@@ -1136,7 +1136,7 @@ export function RentApplications() {
 
                                                                 {signingLinkState.message && (
                                                                     <div className="mt-2 space-y-1">
-                                                                        <p className="text-[10px] font-semibold uppercase text-emerald-500 animate-pulse">
+                                                                        <p className="text-[10px] font-bold uppercase text-emerald-500 animate-pulse">
                                                                             {signingLinkState.message}
                                                                         </p>
                                                                         {signingLinkState.emailSent === false && (
@@ -1152,13 +1152,13 @@ export function RentApplications() {
                                                                         {signingLinkState.signingUrl && signingLinkState.emailSent === false && (
                                                                             <div className="mt-2 flex items-center gap-2">
                                                                                 <input readOnly value={signingLinkState.signingUrl} className="flex-1 rounded-lg border border-border bg-muted/50 px-3 py-1.5 text-[10px] font-mono text-muted-foreground truncate" />
-                                                                                <button onClick={() => navigator.clipboard.writeText(signingLinkState.signingUrl!)} className="shrink-0 rounded-lg bg-primary/10 border border-primary/20 px-3 py-1.5 text-[10px] font-semibold uppercase text-primary hover:bg-primary/20">Copy</button>
+                                                                                <button onClick={() => navigator.clipboard.writeText(signingLinkState.signingUrl!)} className="shrink-0 rounded-lg bg-primary/10 border border-primary/20 px-3 py-1.5 text-[10px] font-bold uppercase text-primary hover:bg-primary/20">Copy</button>
                                                                             </div>
                                                                         )}
                                                                     </div>
                                                                 )}
                                                                 {signingLinkState.error && (
-                                                                    <p className="mt-2 text-[10px] font-semibold uppercase text-red-500">
+                                                                    <p className="mt-2 text-[10px] font-bold uppercase text-red-500">
                                                                         {signingLinkState.error}
                                                                     </p>
                                                                 )}
@@ -1172,14 +1172,14 @@ export function RentApplications() {
                                                                 <FileText className="size-4" />
                                                             </div>
                                                             <div className="space-y-1 w-full">
-                                                                <p className="text-[10px] font-semibold uppercase tracking-widest text-emerald-600">Awaiting Your Signature</p>
+                                                                <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-600">Awaiting Your Signature</p>
                                                                 <p className="text-[11px] font-medium text-emerald-600/70 leading-relaxed">
                                                                     The tenant has successfully signed the lease! Please review and countersign to officially activate the lease.
                                                                 </p>
                                                                 <button 
                                                                     onClick={(e) => { e.stopPropagation(); void handleCountersignRedirect(selectedApp.lease!.id); }} 
                                                                     disabled={countersignRedirectLoading}
-                                                                    className="mt-4 w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-6 py-3 text-[10px] font-semibold uppercase tracking-widest text-black shadow-lg shadow-emerald-500/20 transition-all hover:bg-emerald-400 active:scale-95 disabled:opacity-50"
+                                                                    className="mt-4 w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-black shadow-lg shadow-emerald-500/20 transition-all hover:bg-emerald-400 active:scale-95 disabled:opacity-50"
                                                                 >
                                                                     {countersignRedirectLoading ? (
                                                                         <Loader2 className="size-3.5 animate-spin" />
@@ -1198,7 +1198,7 @@ export function RentApplications() {
                                                         <FileText className="size-8" />
                                                     </div>
                                                     <div className="space-y-1">
-                                                        <p className="text-sm font-semibold text-foreground">No Lease Generated</p>
+                                                        <p className="text-sm font-bold text-foreground">No Lease Generated</p>
                                                         <p className="text-[11px] font-medium text-muted-foreground max-w-[240px] mx-auto leading-relaxed">
                                                             This approved application doesn&apos;t have an active lease record linked. 
                                                         </p>
@@ -1206,13 +1206,13 @@ export function RentApplications() {
                                                     <button 
                                                         onClick={() => handleGenerateSigningLink(selectedApp.id)} 
                                                         disabled={signingLinkState.loading}
-                                                        className="rounded-2xl bg-primary px-8 py-3 text-[10px] font-semibold uppercase tracking-widest text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-50"
+                                                        className="rounded-2xl bg-primary px-8 py-3 text-[10px] font-bold uppercase tracking-widest text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-50"
                                                     >
                                                         {signingLinkState.loading ? <Loader2 className="size-4 animate-spin" /> : "Generate & Link Lease"}
                                                     </button>
                                                     {signingLinkState.message && (
                                                         <div className="space-y-1 text-center">
-                                                            <p className="text-[10px] font-semibold uppercase text-emerald-500 animate-pulse">{signingLinkState.message}</p>
+                                                            <p className="text-[10px] font-bold uppercase text-emerald-500 animate-pulse">{signingLinkState.message}</p>
                                                             {signingLinkState.emailSent === false && (
                                                                 <p className="text-[10px] font-bold text-amber-500">⚠ Email delivery failed — copy the link below</p>
                                                             )}
@@ -1222,13 +1222,13 @@ export function RentApplications() {
                                                             {signingLinkState.signingUrl && (
                                                                 <div className="mt-2 flex items-center gap-2">
                                                                     <input readOnly value={signingLinkState.signingUrl} className="flex-1 rounded-lg border border-border bg-muted/50 px-3 py-1.5 text-[10px] font-mono text-muted-foreground truncate" />
-                                                                    <button onClick={() => navigator.clipboard.writeText(signingLinkState.signingUrl!)} className="shrink-0 rounded-lg bg-primary/10 border border-primary/20 px-3 py-1.5 text-[10px] font-semibold uppercase text-primary hover:bg-primary/20">Copy</button>
+                                                                    <button onClick={() => navigator.clipboard.writeText(signingLinkState.signingUrl!)} className="shrink-0 rounded-lg bg-primary/10 border border-primary/20 px-3 py-1.5 text-[10px] font-bold uppercase text-primary hover:bg-primary/20">Copy</button>
                                                                 </div>
                                                             )}
                                                         </div>
                                                     )}
                                                     {signingLinkState.error && (
-                                                        <p className="text-[10px] font-semibold uppercase text-red-500">{signingLinkState.error}</p>
+                                                        <p className="text-[10px] font-bold uppercase text-red-500">{signingLinkState.error}</p>
                                                     )}
                                                 </div>
                                             )}
@@ -1240,10 +1240,10 @@ export function RentApplications() {
                             <div className="border-t border-border bg-card/80 p-8 backdrop-blur-xl">
                                 {selectedApp.status === "pending" || selectedApp.status === "reviewing" ? (
                                     <div className="flex gap-4">
-                                        <button onClick={() => { setDeclineReason(""); setShowDeclineConfirm(true); }} className="flex-1 rounded-2xl border border-red-500/20 bg-red-500/5 py-4 text-xs font-semibold uppercase tracking-widest text-red-500 hover:bg-red-500 hover:text-white transition-all active:scale-95">
+                                        <button onClick={() => { setDeclineReason(""); setShowDeclineConfirm(true); }} className="flex-1 rounded-2xl border border-red-500/20 bg-red-500/5 py-4 text-xs font-bold uppercase tracking-widest text-red-500 hover:bg-red-500 hover:text-white transition-all active:scale-95">
                                             Decline
                                         </button>
-                                        <button onClick={() => openApprovalModal(selectedApp)} className="flex-[2] rounded-2xl bg-primary py-4 text-xs font-semibold uppercase tracking-widest text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95">
+                                        <button onClick={() => openApprovalModal(selectedApp)} className="flex-[2] rounded-2xl bg-primary py-4 text-xs font-bold uppercase tracking-widest text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95">
                                             Move to Approval
                                         </button>
                                     </div>
@@ -1254,7 +1254,7 @@ export function RentApplications() {
                                                 <div className="mb-2 flex items-center justify-center">
                                                     <XCircle className="size-6 text-red-500" />
                                                 </div>
-                                                <p className="text-sm font-semibold text-red-500">Application Declined</p>
+                                                <p className="text-sm font-bold text-red-500">Application Declined</p>
                                                 {declineReason && (
                                                     <p className="mt-2 text-xs font-medium text-muted-foreground">
                                                         Reason: {declineReason}
@@ -1269,7 +1269,7 @@ export function RentApplications() {
                                                         <button 
                                                             onClick={() => handleGenerateSigningLink(selectedApp.id)} 
                                                             disabled={signingLinkState.loading}
-                                                            className="w-full rounded-2xl border border-amber-500/20 bg-amber-500/10 py-4 text-xs font-semibold uppercase tracking-widest text-amber-500 hover:bg-amber-500 hover:text-white transition-all active:scale-95 disabled:opacity-50"
+                                                            className="w-full rounded-2xl border border-amber-500/20 bg-amber-500/10 py-4 text-xs font-bold uppercase tracking-widest text-amber-500 hover:bg-amber-500 hover:text-white transition-all active:scale-95 disabled:opacity-50"
                                                         >
                                                             {signingLinkState.loading ? (
                                                                 <Loader2 className="size-4 animate-spin mx-auto" />
@@ -1280,7 +1280,7 @@ export function RentApplications() {
                                                         </button>
                                                         {signingLinkState.message && (
                                                             <div className="space-y-1 text-center">
-                                                                <p className="text-[10px] font-semibold uppercase text-emerald-500 animate-pulse">{signingLinkState.message}</p>
+                                                                <p className="text-[10px] font-bold uppercase text-emerald-500 animate-pulse">{signingLinkState.message}</p>
                                                                 {signingLinkState.emailSent === false && (
                                                                     <p className="text-[10px] font-bold text-amber-500">⚠ Email delivery failed — copy the link below</p>
                                                                 )}
@@ -1290,20 +1290,20 @@ export function RentApplications() {
                                                                 {signingLinkState.signingUrl && (
                                                                     <div className="mt-2 flex items-center gap-2">
                                                                         <input readOnly value={signingLinkState.signingUrl} className="flex-1 rounded-lg border border-border bg-muted/50 px-3 py-1.5 text-[10px] font-mono text-muted-foreground truncate" />
-                                                                        <button onClick={() => navigator.clipboard.writeText(signingLinkState.signingUrl!)} className="shrink-0 rounded-lg bg-primary/10 border border-primary/20 px-3 py-1.5 text-[10px] font-semibold uppercase text-primary hover:bg-primary/20">Copy</button>
+                                                                        <button onClick={() => navigator.clipboard.writeText(signingLinkState.signingUrl!)} className="shrink-0 rounded-lg bg-primary/10 border border-primary/20 px-3 py-1.5 text-[10px] font-bold uppercase text-primary hover:bg-primary/20">Copy</button>
                                                                     </div>
                                                                 )}
                                                             </div>
                                                         )}
                                                         {signingLinkState.error && (
-                                                            <p className="text-[10px] font-semibold uppercase text-red-500 text-center">{signingLinkState.error}</p>
+                                                            <p className="text-[10px] font-bold uppercase text-red-500 text-center">{signingLinkState.error}</p>
                                                         )}
                                                     </div>
                                                 )}
                                                 <button 
                                                     onClick={() => handleSendCredentials(selectedApp.id)} 
                                                     disabled={sendingCredentials}
-                                                    className="w-full rounded-2xl border border-blue-500/20 bg-blue-500/10 py-4 text-xs font-semibold uppercase tracking-widest text-blue-500 hover:bg-blue-500 hover:text-white transition-all active:scale-95 disabled:opacity-50"
+                                                    className="w-full rounded-2xl border border-blue-500/20 bg-blue-500/10 py-4 text-xs font-bold uppercase tracking-widest text-blue-500 hover:bg-blue-500 hover:text-white transition-all active:scale-95 disabled:opacity-50"
                                                 >
                                                     {sendingCredentials ? <Loader2 className="size-4 animate-spin mx-auto" /> : "Resend Access Portal Link"}
                                                 </button>
@@ -1334,7 +1334,7 @@ export function RentApplications() {
                         />
                         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative z-[210] flex h-full w-full max-w-6xl flex-col overflow-hidden rounded-[2.5rem] border border-white/10 bg-card shadow-2xl">
                             <div className="flex items-center justify-between border-b border-white/5 bg-white/5 px-8 py-6 backdrop-blur-md">
-                                <h3 className="text-xl font-semibold text-white">{formatDocumentLabel(previewUrl)}</h3>
+                                <h3 className="text-xl font-bold text-white">{formatDocumentLabel(previewUrl)}</h3>
                                 <button onClick={() => setPreviewUrl(null)} className="flex size-12 items-center justify-center rounded-xl bg-red-500/10 text-red-500 transition-all hover:bg-red-500 hover:text-white">
                                     <X className="size-6" />
                                 </button>
@@ -1366,22 +1366,22 @@ export function RentApplications() {
                             <div className="mb-6 flex items-center gap-4">
                                 <div className="flex size-12 items-center justify-center rounded-2xl bg-emerald-500/10 border border-emerald-500/20"><CheckCircle2 className="size-6 text-emerald-500" /></div>
                                 <div>
-                                    <h3 className="text-xl font-semibold text-foreground">Access Generated</h3>
-                                    <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Tenant credentials provisioned</p>
+                                    <h3 className="text-xl font-bold text-foreground">Access Generated</h3>
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Tenant credentials provisioned</p>
                                 </div>
                             </div>
                             <div className="space-y-4">
                                 <div className="rounded-2xl border border-border bg-background p-4">
-                                    <span className="text-[9px] font-semibold uppercase text-muted-foreground">Tenant Email</span>
+                                    <span className="text-[9px] font-bold uppercase text-muted-foreground">Tenant Email</span>
                                     <p className="font-mono text-sm font-bold text-foreground">{tenantCredentials.email}</p>
                                 </div>
                                 {tenantCredentials.tempPassword && (
                                     <div className="rounded-2xl border border-border bg-background p-4">
-                                        <span className="text-[9px] font-semibold uppercase text-muted-foreground">Initial Password</span>
+                                        <span className="text-[9px] font-bold uppercase text-muted-foreground">Initial Password</span>
                                         <p className="font-mono text-sm font-bold text-emerald-500 tracking-widest">{tenantCredentials.tempPassword}</p>
                                     </div>
                                 )}
-                                <button onClick={() => setTenantCredentials(null)} className="w-full rounded-2xl bg-primary py-4 text-xs font-semibold uppercase tracking-widest text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all">
+                                <button onClick={() => setTenantCredentials(null)} className="w-full rounded-2xl bg-primary py-4 text-xs font-bold uppercase tracking-widest text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all">
                                     Close Secure Panel
                                 </button>
                             </div>
@@ -1403,7 +1403,7 @@ export function RentApplications() {
                         />
                         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="relative z-[160] h-[90vh] w-full max-w-6xl overflow-hidden rounded-[2.5rem] border border-border bg-background shadow-2xl">
                             <div className="flex items-center justify-between border-b border-border bg-card px-8 py-6">
-                                <h3 className="text-xl font-semibold tracking-tighter text-foreground">Intake Manager</h3>
+                                <h3 className="text-xl font-bold tracking-tighter text-foreground">Intake Manager</h3>
                                 <button onClick={() => setShowInviteTools(false)} className="rounded-xl border border-border bg-background p-2 transition-all hover:bg-muted"><X className="size-6" /></button>
                             </div>
                             <div className="h-full overflow-y-auto p-8 pb-24"><TenantInviteManager availableUnits={scopedAvailableUnits} invites={scopedTenantInvites} onRefresh={loadInvites} /></div>
@@ -1425,14 +1425,14 @@ export function RentApplications() {
                             aria-label="Close countersign modal"
                         />
                         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative z-[410] w-full max-w-2xl rounded-[2.5rem] border border-border bg-card p-8 shadow-2xl">
-                            <h3 className="text-2xl font-semibold text-foreground mb-6">Countersign Lease</h3>
+                            <h3 className="text-2xl font-bold text-foreground mb-6">Countersign Lease</h3>
                             <div className="space-y-6">
                                 <div className="rounded-2xl border border-border bg-muted/30 p-4">
-                                    <p className="text-[10px] font-semibold uppercase text-muted-foreground mb-2">Tenant Signature</p>
+                                    <p className="text-[10px] font-bold uppercase text-muted-foreground mb-2">Tenant Signature</p>
                                     <Image src={selectedApp.lease.tenant_signature || ""} alt="" width={300} height={96} className="object-contain" style={{maxHeight: '6rem'}} />
                                 </div>
                                 <div className="space-y-2">
-                                    <p className="text-[10px] font-semibold uppercase text-muted-foreground">Your Signature</p>
+                                    <p className="text-[10px] font-bold uppercase text-muted-foreground">Your Signature</p>
                                     <SignaturePad 
                                         onSave={setPendingCountersignature} 
                                         onClear={() => setPendingCountersignature(null)} 
@@ -1442,7 +1442,7 @@ export function RentApplications() {
                                         documentTitle={`Lease - ${selectedApp.propertyName} ${selectedApp.unitNumber}`}
                                     />
                                 </div>
-                                <button disabled={countersignState.loading || !pendingCountersignature} onClick={() => handleCountersignLease(selectedApp.lease!.id, pendingCountersignature!)} className="w-full rounded-2xl bg-emerald-500 py-4 text-xs font-semibold uppercase tracking-widest text-black hover:bg-emerald-400 disabled:opacity-50">
+                                <button disabled={countersignState.loading || !pendingCountersignature} onClick={() => handleCountersignLease(selectedApp.lease!.id, pendingCountersignature!)} className="w-full rounded-2xl bg-emerald-500 py-4 text-xs font-bold uppercase tracking-widest text-black hover:bg-emerald-400 disabled:opacity-50">
                                     {countersignState.loading ? "Signing..." : "Complete Execution"}
                                 </button>
                             </div>
@@ -1469,18 +1469,18 @@ export function RentApplications() {
                                     <AlertCircle className="size-6 text-red-500" />
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-semibold text-foreground">Decline Application</h3>
-                                    <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">This action cannot be undone</p>
+                                    <h3 className="text-xl font-bold text-foreground">Decline Application</h3>
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">This action cannot be undone</p>
                                 </div>
                             </div>
                             <div className="space-y-4">
                                 <div className="rounded-2xl border border-border bg-muted/30 p-4">
                                     <p className="text-sm font-medium text-foreground">
-                                        You are about to decline the application from <span className="font-semibold">{selectedApp.applicant.name}</span> for <span className="font-semibold">{selectedApp.propertyName} - {selectedApp.unitNumber}</span>.
+                                        You are about to decline the application from <span className="font-bold">{selectedApp.applicant.name}</span> for <span className="font-bold">{selectedApp.propertyName} - {selectedApp.unitNumber}</span>.
                                     </p>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Rejection Reason (Required)</label>
+                                    <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Rejection Reason (Required)</label>
                                     <textarea
                                         id="rejection-reason"
                                         placeholder="Enter the reason for declining this application..."
@@ -1498,7 +1498,7 @@ export function RentApplications() {
                                             setShowDeclineConfirm(false);
                                             setDeclineReason("");
                                         }} 
-                                        className="flex-1 rounded-2xl border border-border bg-background py-4 text-xs font-semibold uppercase tracking-widest text-foreground hover:bg-muted transition-all"
+                                        className="flex-1 rounded-2xl border border-border bg-background py-4 text-xs font-bold uppercase tracking-widest text-foreground hover:bg-muted transition-all"
                                     >
                                         Cancel
                                     </button>
@@ -1529,7 +1529,7 @@ export function RentApplications() {
                                             }
                                         }} 
                                         disabled={updatingStatusId === selectedApp.id}
-                                        className="flex-1 rounded-2xl bg-red-500 py-4 text-xs font-semibold uppercase tracking-widest text-white shadow-lg shadow-red-500/20 hover:bg-red-400 transition-all active:scale-95 disabled:opacity-50"
+                                        className="flex-1 rounded-2xl bg-red-500 py-4 text-xs font-bold uppercase tracking-widest text-white shadow-lg shadow-red-500/20 hover:bg-red-400 transition-all active:scale-95 disabled:opacity-50"
                                     >
                                         {updatingStatusId === selectedApp.id ? (
                                             <Loader2 className="size-4 animate-spin mx-auto" />
@@ -1539,7 +1539,7 @@ export function RentApplications() {
                                     </button>
                                 </div>
                                 {actionError && (
-                                    <p className="text-[11px] font-semibold text-red-500 text-center">{actionError}</p>
+                                    <p className="text-[11px] font-bold text-red-500 text-center">{actionError}</p>
                                 )}
                             </div>
                         </motion.div>

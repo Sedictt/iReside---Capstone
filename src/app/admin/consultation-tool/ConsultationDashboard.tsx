@@ -106,10 +106,10 @@ export default function ConsultationDashboard() {
       <div className="max-w-6xl mx-auto">
         <header className="mb-12 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
           <div className="space-y-2 w-full md:w-auto">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-bold tracking-widest uppercase">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold tracking-widest uppercase">
               Consultation Manager
             </div>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tighter bg-gradient-to-br from-white via-zinc-200 to-zinc-500 bg-clip-text text-transparent">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tighter text-white">
               Document Dashboard
             </h1>
             <p className="text-zinc-500 font-medium max-w-md text-sm md:text-base">
@@ -118,7 +118,7 @@ export default function ConsultationDashboard() {
           </div>
 
           <label className="group relative w-full md:w-auto">
-            <div className="w-full md:px-8 py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 transition-all flex items-center justify-center md:justify-start gap-3 text-sm font-bold shadow-[0_0_30px_-10px_rgba(79,70,229,0.5)] cursor-pointer">
+            <div className="w-full md:px-8 py-4 rounded-2xl bg-primary hover:bg-primary/90 transition-all flex items-center justify-center md:justify-start gap-3 text-sm font-bold shadow-[0_0_30px_-10px_rgba(109,152,56,0.5)] cursor-pointer">
               {isUploading ? <div className="size-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <Plus className="size-5" />}
               {isUploading ? 'Uploading...' : 'Prepare New Document'}
             </div>
@@ -137,7 +137,7 @@ export default function ConsultationDashboard() {
             <div className="size-20 rounded-3xl bg-zinc-900 flex items-center justify-center mb-6 text-zinc-700">
               <FileText className="size-10" />
             </div>
-            <h3 className="text-xl font-semibold mb-2">No documents prepared</h3>
+            <h3 className="text-xl font-bold mb-2">No documents prepared</h3>
             <p className="text-zinc-500">Upload your first PDF to get started.</p>
           </div>
         ) : (
@@ -147,14 +147,14 @@ export default function ConsultationDashboard() {
                 key={doc.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="group relative p-8 rounded-[2.5rem] bg-zinc-900/40 border border-zinc-800 hover:border-indigo-500/30 transition-all backdrop-blur-xl flex flex-col justify-between h-full overflow-hidden"
+                className="group relative p-8 rounded-[2.5rem] bg-zinc-900/40 border border-zinc-800 hover:border-primary/30 transition-all backdrop-blur-xl flex flex-col justify-between h-full overflow-hidden"
               >
-                <div className="absolute -top-10 -right-10 size-40 bg-indigo-500/5 blur-[60px] rounded-full group-hover:bg-indigo-500/10 transition-all" />
+                <div className="absolute -top-10 -right-10 size-40 bg-primary/5 blur-[60px] rounded-full group-hover:bg-primary/10 transition-all" />
                 
                 <div className="space-y-6">
                   <div className="flex justify-between items-start">
                     <div className={cn(
-                      "px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-widest border",
+                      "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border",
                       doc.status === 'signed' 
                         ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" 
                         : "bg-amber-500/10 border-amber-500/20 text-amber-400"
@@ -167,7 +167,7 @@ export default function ConsultationDashboard() {
                   </div>
 
                   <div>
-                    <h3 className="text-xl font-semibold truncate text-zinc-100 mb-1">{doc.file_name}</h3>
+                    <h3 className="text-xl font-bold truncate text-zinc-100 mb-1">{doc.file_name}</h3>
                     <p className="text-xs text-zinc-500 font-medium">Prepared <span suppressHydrationWarning>{new Date(doc.created_at).toLocaleDateString()}</span></p>
                   </div>
 
@@ -177,7 +177,7 @@ export default function ConsultationDashboard() {
                         onClick={() => copySigningLink(doc.id)}
                         className="w-full py-4 rounded-2xl bg-zinc-800 hover:bg-zinc-700 border border-zinc-700/50 transition-all flex items-center justify-center gap-3 text-sm font-bold group/btn"
                       >
-                        <Copy className="size-4 text-indigo-400 group-hover/btn:scale-110 transition-transform" />
+                        <Copy className="size-4 text-primary group-hover/btn:scale-110 transition-transform" />
                         Copy Signing Link
                       </button>
                     ) : (

@@ -73,7 +73,7 @@ export function LeaseHeader({ currentStep, steps, leaseId }: LeaseHeaderProps) {
                         <p className="text-xs text-zinc-400 uppercase tracking-wider">Lease ID</p>
                         <p className="text-sm font-medium text-white">{leaseId}</p>
                     </div>
-                    <div className="size-10 overflow-hidden rounded-full ring-2 ring-slate-700">
+                    <div className="size-10 overflow-hidden rounded-full ring-2 ring-border">
                         {/* Placeholder Avatar */}
                         <div className="flex h-full w-full items-center justify-center bg-zinc-600 font-bold text-white">
                             AR

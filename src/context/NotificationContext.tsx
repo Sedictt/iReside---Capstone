@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import React, { createContext, useContext, useEffect, useReducer, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useOptionalProperty } from "@/context/PropertyContext";
@@ -27,20 +27,123 @@ interface NotificationContextType {
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
+type NotificationState = {
+    notifications: Notification[];
+    importantNotifications: Notification[];
+    unreadCount: number;
+    urgentCount: number;
+    loading: boolean;
+    error: string | null;
+    counts: {
+        applications: number;
+        maintenance: number;
+        messages: number;
+    };
+};
+
+type NotificationAction =
+    | { type: 'SET_NOTIFICATIONS'; payload: Notification[] }
+    | { type: 'SET_IMPORTANT_NOTIFICATIONS'; payload: Notification[] }
+    | { type: 'SET_UNREAD_COUNT'; payload: number }
+    | { type: 'SET_URGENT_COUNT'; payload: number }
+    | { type: 'SET_LOADING'; payload: boolean }
+    | { type: 'SET_ERROR'; payload: string | null }
+    | { type: 'SET_COUNTS'; payload: { applications: number; maintenance: number; messages: number } }
+    | { type: 'RESET_STATE' }
+    | { type: 'MARK_AS_READ'; payload: string }
+    | { type: 'MARK_ALL_AS_READ' }
+    | { type: 'DELETE_NOTIFICATION'; payload: string }
+    | { type: 'ADD_NOTIFICATION'; payload: Notification }
+    | { type: 'UPDATE_NOTIFICATION'; payload: Notification }
+    | { type: 'REMOVE_NOTIFICATION'; payload: string };
+
+function notificationReducer(state: NotificationState, action: NotificationAction): NotificationState {
+    switch (action.type) {
+        case 'SET_NOTIFICATIONS':
+            return { ...state, notifications: action.payload };
+        case 'SET_IMPORTANT_NOTIFICATIONS':
+            return { ...state, importantNotifications: action.payload };
+        case 'SET_UNREAD_COUNT':
+            return { ...state, unreadCount: action.payload };
+        case 'SET_URGENT_COUNT':
+            return { ...state, urgentCount: action.payload };
+        case 'SET_LOADING':
+            return { ...state, loading: action.payload };
+        case 'SET_ERROR':
+            return { ...state, error: action.payload };
+        case 'SET_COUNTS':
+            return { ...state, counts: action.payload };
+        case 'RESET_STATE':
+            return {
+                notifications: [],
+                importantNotifications: [],
+                unreadCount: 0,
+                urgentCount: 0,
+                loading: false,
+                error: null,
+                counts: { applications: 0, maintenance: 0, messages: 0 },
+            };
+        case 'MARK_AS_READ':
+            return {
+                ...state,
+                notifications: state.notifications.map(n =>
+                    n.id === action.payload ? { ...n, read: true } : n
+                ),
+                unreadCount: Math.max(0, state.unreadCount - 1),
+            };
+        case 'MARK_ALL_AS_READ':
+            return {
+                ...state,
+                notifications: state.notifications.map(n => ({ ...n, read: true })),
+                unreadCount: 0,
+            };
+        case 'DELETE_NOTIFICATION':
+            const wasUnread = state.notifications.find(n => n.id === action.payload && !n.read);
+            return {
+                ...state,
+                notifications: state.notifications.filter(n => n.id !== action.payload),
+                unreadCount: wasUnread ? Math.max(0, state.unreadCount - 1) : state.unreadCount,
+            };
+        case 'ADD_NOTIFICATION':
+            return {
+                ...state,
+                notifications: [action.payload, ...state.notifications],
+                unreadCount: action.payload.read ? state.unreadCount : state.unreadCount + 1,
+            };
+        case 'UPDATE_NOTIFICATION':
+            return {
+                ...state,
+                notifications: state.notifications.map(n =>
+                    n.id === action.payload.id ? action.payload : n
+                ),
+            };
+        case 'REMOVE_NOTIFICATION':
+            return {
+                ...state,
+                notifications: state.notifications.filter(n => n.id !== action.payload),
+            };
+        default:
+            return state;
+    }
+}
+
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
     const { user, profile } = useAuth();
     const propertyContext = useOptionalProperty();
     const selectedPropertyId = propertyContext?.selectedPropertyId ?? "all";
-    const [notifications, setNotifications] = useState<Notification[]>([]);
-    const [importantNotifications, setImportantNotifications] = useState<Notification[]>([]);
-    const [unreadCount, setUnreadCount] = useState(0);
-    const [urgentCount, setUrgentCount] = useState(0);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [counts, setCounts] = useState({
-        applications: 0,
-        maintenance: 0,
-        messages: 0,
+
+    const [state, dispatch] = useReducer(notificationReducer, {
+        notifications: [],
+        importantNotifications: [],
+        unreadCount: 0,
+        urgentCount: 0,
+        loading: true,
+        error: null,
+        counts: {
+            applications: 0,
+            maintenance: 0,
+            messages: 0,
+        },
     });
 
     const supabase = createClient();
@@ -110,10 +213,13 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
                     .neq("sender_id", user.id)
                     .is("read_at", null);
 
-                setCounts({
-                    applications: appCount || 0,
-                    maintenance: maintCount || 0,
-                    messages: msgCount || 0,
+                dispatch({
+                    type: 'SET_COUNTS',
+                    payload: {
+                        applications: appCount || 0,
+                        maintenance: maintCount || 0,
+                        messages: msgCount || 0,
+                    },
                 });
             } else if (profile.role === "tenant") {
                  // Fetch unread messages count
@@ -123,20 +229,23 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
                     .neq("sender_id", user.id)
                     .is("read_at", null);
 
-                setCounts(prev => ({
-                    ...prev,
-                    messages: msgCount || 0,
-                }));
+                dispatch({
+                    type: 'SET_COUNTS',
+                    payload: {
+                        ...state.counts,
+                        messages: msgCount || 0,
+                    },
+                });
             }
         } catch (err) {
             console.error("Error fetching counts:", err);
         }
-    }, [user, profile, selectedPropertyId, supabase]);
+    }, [user, profile, selectedPropertyId, supabase, state.counts]);
 
     const fetchNotifications = useCallback(async () => {
         if (!user) return;
 
-        setLoading(true);
+        dispatch({ type: 'SET_LOADING', payload: true });
         try {
             const { data, error } = await supabase
                 .from("notifications")
@@ -185,8 +294,6 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
             }
 
             const unread = finalData.filter(n => !n.read);
-            setNotifications(finalData);
-            setUnreadCount(unread.length);
             
             // Define what counts as an "important" notification
             const importantTypes: NotificationType[] = [
@@ -198,12 +305,16 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
             ];
             
             const important = unread.filter(n => importantTypes.includes(n.type));
-            setImportantNotifications(important);
-            setUrgentCount(important.length);
+
+            // Batch all state updates
+            dispatch({ type: 'SET_NOTIFICATIONS', payload: finalData });
+            dispatch({ type: 'SET_UNREAD_COUNT', payload: unread.length });
+            dispatch({ type: 'SET_IMPORTANT_NOTIFICATIONS', payload: important });
+            dispatch({ type: 'SET_URGENT_COUNT', payload: important.length });
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to fetch notifications");
+            dispatch({ type: 'SET_ERROR', payload: err instanceof Error ? err.message : "Failed to fetch notifications" });
         } finally {
-            setLoading(false);
+            dispatch({ type: 'SET_LOADING', payload: false });
         }
     }, [user, supabase]);
 
@@ -220,10 +331,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
             if (error) throw error;
 
-            setNotifications(prev =>
-                prev.map(n => (n.id === id ? { ...n, read: true } : n))
-            );
-            setUnreadCount(prev => Math.max(0, prev - 1));
+            dispatch({ type: 'MARK_AS_READ', payload: id });
         } catch (err) {
             console.error("Error marking notification as read:", err);
         }
@@ -240,8 +348,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
             if (error) throw error;
 
-            setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-            setUnreadCount(0);
+            dispatch({ type: 'MARK_ALL_AS_READ' });
         } catch (err) {
             console.error("Error marking all notifications as read:", err);
         }
@@ -256,12 +363,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
             if (error) throw error;
 
-            setNotifications(prev => {
-                const filtered = prev.filter(n => n.id !== id);
-                const wasUnread = prev.find(n => n.id === id && !n.read);
-                if (wasUnread) setUnreadCount(c => Math.max(0, c - 1));
-                return filtered;
-            });
+            dispatch({ type: 'DELETE_NOTIFICATION', payload: id });
         } catch (err) {
             console.error("Error deleting notification:", err);
         }
@@ -270,9 +372,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     // eslint-disable-next-line react-doctor/effect-needs-cleanup
     useEffect(() => {
         if (!user) {
-            setNotifications([]);
-            setUnreadCount(0);
-            setLoading(false);
+            dispatch({ type: 'RESET_STATE' });
             return () => {};
         }
 
@@ -293,9 +393,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
                     console.log("Realtime notification change:", payload);
                     if (payload.eventType === "INSERT") {
                         const newNotification = payload.new as Notification;
-                        setNotifications(prev => [newNotification, ...prev]);
+                        dispatch({ type: 'ADD_NOTIFICATION', payload: newNotification });
                         if (!newNotification.read) {
-                            setUnreadCount(prev => prev + 1);
                             if (newNotification.type === "message") {
                                 playSound("message");
                             } else {
@@ -304,13 +403,11 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
                         }
                     } else if (payload.eventType === "UPDATE") {
                         const updatedNotification = payload.new as Notification;
-                        setNotifications(prev =>
-                            prev.map(n => (n.id === updatedNotification.id ? updatedNotification : n))
-                        );
+                        dispatch({ type: 'UPDATE_NOTIFICATION', payload: updatedNotification });
                         // Recalculate unread count
                         fetchNotifications();
                     } else if (payload.eventType === "DELETE") {
-                        setNotifications(prev => prev.filter(n => n.id !== payload.old.id));
+                        dispatch({ type: 'REMOVE_NOTIFICATION', payload: payload.old.id });
                         fetchNotifications();
                     }
                 }
@@ -384,17 +481,17 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     return (
         <NotificationContext.Provider
             value={{
-                notifications,
-                importantNotifications,
-                unreadCount,
-                urgentCount,
-                loading,
-                error,
+                notifications: state.notifications,
+                importantNotifications: state.importantNotifications,
+                unreadCount: state.unreadCount,
+                urgentCount: state.urgentCount,
+                loading: state.loading,
+                error: state.error,
                 markAsRead,
                 markAllAsRead,
                 deleteNotification,
                 refresh,
-                counts,
+                counts: state.counts,
             }}
         >
             {children}

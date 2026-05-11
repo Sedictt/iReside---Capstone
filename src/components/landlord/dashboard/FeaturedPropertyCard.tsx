@@ -58,7 +58,7 @@ export function FeaturedPropertyCard({
                         <p className="text-sm font-bold tracking-wider text-white/90 mb-1 uppercase drop-shadow-md">
                             {simplifiedMode ? "Your Best House" : "Best Performing Property"}
                         </p>
-                        <h3 className="text-3xl font-semibold leading-tight max-w-[250px] text-white drop-shadow-lg">
+                        <h3 className="text-3xl font-bold leading-tight max-w-[250px] text-white drop-shadow-lg">
                             {propertyName}
                         </h3>
                     </div>
@@ -71,13 +71,13 @@ export function FeaturedPropertyCard({
                 <div className="relative z-20 mt-auto">
                     <div className="flex gap-8 backdrop-blur-sm bg-black/20 p-4 rounded-2xl border border-white/10 inline-flex">
                         <div>
-                            <p className="text-xs font-semibold text-white/70 uppercase tracking-wide">
+                            <p className="text-xs font-bold text-white/70 uppercase tracking-wide">
                                 {simplifiedMode ? "Money Made" : "Total Revenue"}
                             </p>
                             <p className="text-2xl font-bold tracking-tight mt-0.5">{totalSales}</p>
                         </div>
                         <div>
-                            <p className="text-xs font-semibold text-white/70 uppercase tracking-wide">
+                            <p className="text-xs font-bold text-white/70 uppercase tracking-wide">
                                 {simplifiedMode ? "People Looking" : "Total Views"}
                             </p>
                             <p className="text-2xl font-bold tracking-tight mt-0.5">{totalViews}</p>
@@ -108,7 +108,7 @@ export function FeaturedPropertyCard({
                             <span className="mb-3 inline-block rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-700 dark:text-emerald-400">
                                 {simplifiedMode ? "Best Performing" : "Top Asset MTD"}
                             </span>
-                            <h2 className="mb-1 text-2xl font-semibold text-foreground">{propertyName}</h2>
+                            <h2 className="mb-1 text-2xl font-bold text-foreground">{propertyName}</h2>
                             <p className="text-sm text-muted-foreground">
                                 {simplifiedMode ? "Here is why this is your best house this month." : "Performance overview for your top property."}
                             </p>

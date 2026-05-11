@@ -242,7 +242,7 @@ export default function TenantMaintenancePage() {
         <div className="flex-1 w-full max-w-6xl mx-auto">
             {previewMode && (
                 <div className="mb-6 p-4 bg-primary/10 border border-primary/20 rounded-2xl flex flex-wrap items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
-                    <span className="text-sm font-semibold text-primary uppercase tracking-widest flex items-center gap-2">
+                    <span className="text-sm font-bold text-primary uppercase tracking-widest flex items-center gap-2">
                         <Zap className="size-4" />
                         Preview Mode Active
                     </span>
@@ -274,7 +274,7 @@ export default function TenantMaintenancePage() {
 
             <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-semibold tracking-tight flex items-center gap-3">
+                    <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
                         <Wrench className="size-8 text-primary" />
                         Maintenance Requests
                     </h1>
@@ -326,7 +326,7 @@ export default function TenantMaintenancePage() {
                     <div className="size-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
                         <CheckCircle2 className="size-10 text-muted-foreground" />
                     </div>
-                    <h3 className="text-xl font-semibold mb-2">No requests found</h3>
+                    <h3 className="text-xl font-bold mb-2">No requests found</h3>
                     <p className="text-muted-foreground max-w-xs mx-auto mb-8">
                         {filter === 'All' 
                             ? "You haven't submitted any maintenance requests yet."
@@ -426,7 +426,7 @@ function TenantMaintenanceCard({ request, onClick }: { request: MaintenanceReque
 
                 {/* Title */}
                 <div className="mb-4 shrink-0">
-                    <h3 className="text-base font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1 leading-tight tracking-tight">
+                    <h3 className="text-base font-bold text-foreground group-hover:text-primary transition-colors line-clamp-1 leading-tight tracking-tight">
                         {request.title}
                     </h3>
                 </div>
@@ -435,13 +435,13 @@ function TenantMaintenanceCard({ request, onClick }: { request: MaintenanceReque
                 <div className="flex flex-col gap-2 mb-4 shrink-0">
                     <div className="flex items-center gap-1.5 text-muted-foreground">
                         <Home className="size-3 shrink-0" />
-                        <span className="text-[10px] font-semibold uppercase tracking-widest truncate">
+                        <span className="text-[10px] font-bold uppercase tracking-widest truncate">
                             {request.property}
                         </span>
                     </div>
                     <div className="flex items-center gap-1.5 text-primary/80">
                         <Zap className="size-3 shrink-0" />
-                        <span className="text-[10px] font-semibold uppercase tracking-widest">
+                        <span className="text-[10px] font-bold uppercase tracking-widest">
                             {request.unit}
                         </span>
                     </div>
@@ -466,7 +466,7 @@ function TenantMaintenanceCard({ request, onClick }: { request: MaintenanceReque
 
                 {/* Footer Info */}
                 <div className="flex items-center justify-between gap-4 shrink-0 pt-4 border-t border-border/50 mt-auto">
-                    <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70 min-w-0">
+                    <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 min-w-0">
                         <Clock className="size-3.5 shrink-0" />
                         <span className="truncate">{request.reportedAt}</span>
                     </div>
@@ -475,7 +475,7 @@ function TenantMaintenanceCard({ request, onClick }: { request: MaintenanceReque
                             e.stopPropagation();
                             onClick?.();
                         }}
-                        className="text-[10px] font-semibold uppercase tracking-widest text-primary hover:text-white hover:bg-primary bg-primary/10 border border-primary/20 px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 whitespace-nowrap shadow-sm group/btn active:scale-95"
+                        className="text-[10px] font-bold uppercase tracking-widest text-primary hover:text-white hover:bg-primary bg-primary/10 border border-primary/20 px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 whitespace-nowrap shadow-sm group/btn active:scale-95"
                     >
                         Details
                         <ArrowRight className="size-3.5 transition-transform group-hover/btn:translate-x-0.5" />
@@ -501,7 +501,7 @@ function PriorityBadge({ priority }: { priority: Priority }) {
 
     return (
         <span className={cn(
-            "px-2.5 py-1 rounded-lg border text-[10px] font-semibold uppercase tracking-wider flex items-center gap-1.5",
+            "px-2.5 py-1 rounded-lg border text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5",
             config[priority]
         )}>
             {priority === "Critical" && <AlertTriangle className="size-3" />}
@@ -536,7 +536,7 @@ function StatusBadge({ status, tenantRepairStatus, isSelfRepair }: { status: Mai
 
     return (
         <span className={cn(
-            "px-2.5 py-1 rounded-lg border text-[10px] font-semibold uppercase tracking-wider",
+            "px-2.5 py-1 rounded-lg border text-[10px] font-bold uppercase tracking-wider",
             customClass
         )}>
             {displayStatus}

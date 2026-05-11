@@ -26,9 +26,11 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
     const [activeChat, setActiveChat] = useState<Inquiry | null>(null);
     const [messageInput, setMessageInput] = useState("");
     const [sentMessages, setSentMessages] = useState<Record<string, string[]>>({});
-    const [inquiries, setInquiries] = useState<Inquiry[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const [fetchState, setFetchState] = useState({
+        inquiries: [] as Inquiry[],
+        loading: true,
+        error: null as string | null,
+    });
 
     const applyInquiryAction = async (inquiryId: string, action: "read" | "unread" | "archive" | "delete") => {
         try {
@@ -42,20 +44,16 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                 return;
             }
 
-            setInquiries((prev) => {
-                if (action === "archive" || action === "delete") {
-                    return prev.filter((item) => item.id !== inquiryId);
-                }
-
-                return prev.map((item) =>
+            setFetchState((prev) => ({
+                ...prev,
+                inquiries: prev.inquiries.map((item) =>
                     item.id === inquiryId
-                        ? {
-                              ...item,
-                              isUnread: action === "unread",
-                          }
+                        ? action === "archive" || action === "delete"
+                            ? null
+                            : { ...item, isUnread: action === "unread" }
                         : item
-                );
-            });
+                ).filter((item): item is Inquiry => item !== null),
+            }));
 
             if (activeChat?.id === inquiryId && (action === "archive" || action === "delete")) {
                 setActiveChat(null);
@@ -72,8 +70,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
         const controller = new AbortController();
 
         const loadInquiries = async () => {
-            setLoading(true);
-            setError(null);
+            setFetchState((prev) => ({ ...prev, loading: true, error: null }));
 
             try {
                 const response = await fetch("/api/landlord/inquiries/recent", {
@@ -86,16 +83,13 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                 }
 
                 const payload = (await response.json()) as { inquiries?: Inquiry[] };
-                setInquiries(Array.isArray(payload.inquiries) ? payload.inquiries : []);
+                setFetchState((prev) => ({ ...prev, loading: false, error: null, inquiries: Array.isArray(payload.inquiries) ? payload.inquiries : [] }));
             } catch (fetchError) {
                 if ((fetchError as Error).name === "AbortError") {
                     return;
                 }
 
-                setError("Unable to load inquiries right now.");
-                setInquiries([]);
-            } finally {
-                setLoading(false);
+                setFetchState((prev) => ({ ...prev, loading: false, error: "Unable to load inquiries right now.", inquiries: [] }));
             }
         };
 
@@ -139,7 +133,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
 
     return (
         <>
-            <div className="w-full rounded-3xl border border-border bg-gradient-to-br from-white to-slate-100 shadow-xl dark:border-white/5 dark:from-[#171717] dark:to-[#0a0a0a]">
+            <div className="w-full rounded-3xl border border-border bg-gradient-to-br from-white to-surface-0 shadow-xl dark:border-white/5 dark:from-[#171717] dark:to-[#0a0a0a]">
                 {/* Header */}
                 <div className="border-b border-border p-6 dark:border-white/5">
                     <div className="flex items-center justify-between">
@@ -148,7 +142,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                                 <MessageSquare className="size-5 text-primary" />
                             </div>
                             <div>
-                                <h2 className="text-xl font-semibold text-foreground dark:text-white">
+                                <h2 className="text-xl font-bold text-foreground dark:text-white">
                                     {simplifiedMode ? "Messages from People" : "Recent Inquiries"}
                                 </h2>
                                 <p className="text-sm text-muted-foreground">
@@ -168,7 +162,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
 
                 {/* Inquiries Grid - Compact Card Layout */}
                 <div className="p-6">
-                    {loading ? (
+                    {fetchState.loading ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             {[1, 2, 3, 4].map((i) => (
                                 <div key={`inquiry-skeleton-${i}`} className="group relative overflow-hidden rounded-2xl border border-border bg-card animate-pulse dark:border-white/5 dark:bg-neutral-900">
@@ -187,13 +181,13 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                                 </div>
                             ))}
                         </div>
-                    ) : error ? (
+                    ) : fetchState.error ? (
                         <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6">
-                            <p className="text-sm text-red-600 dark:text-red-300">{error}</p>
+                            <p className="text-sm text-red-600 dark:text-red-300">{fetchState.error}</p>
                         </div>
-                    ) : inquiries.length > 0 ? (
+                    ) : fetchState.inquiries.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                            {inquiries.map((inquiry, index) => (
+                            {fetchState.inquiries.map((inquiry, index) => (
                             <motion.div
                                 key={inquiry.id}
                                 initial={{ opacity: 0, y: 20 }}
@@ -273,7 +267,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                                 <div className="p-4 space-y-3">
                                     {/* Name and Property */}
                                     <div>
-                                        <h3 className="mb-1 truncate text-base font-semibold text-foreground dark:text-white">
+                                        <h3 className="mb-1 truncate text-base font-bold text-foreground dark:text-white">
                                             {inquiry.prospectName}
                                         </h3>
                                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground dark:text-neutral-400">
@@ -311,7 +305,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                             <div className="mb-4 inline-flex size-16 items-center justify-center rounded-full bg-muted dark:bg-neutral-800/50">
                                 <MessageSquare className="size-8 text-muted-foreground dark:text-neutral-600" />
                             </div>
-                            <h3 className="mb-2 text-lg font-semibold text-foreground dark:text-white">No Recent Inquiries</h3>
+                            <h3 className="mb-2 text-lg font-bold text-foreground dark:text-white">No Recent Inquiries</h3>
                             <p className="mx-auto max-w-sm text-sm text-muted-foreground dark:text-neutral-400">
                                 When potential tenants message you through applications, they will appear here.
                             </p>
@@ -334,7 +328,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                     <div className="py-1">
                         <button
                             onClick={() => {
-                                const inquiry = inquiries.find((item) => item.id === openMenuId);
+                                const inquiry = fetchState.inquiries.find((item) => item.id === openMenuId);
                                 if (!inquiry) {
                                     setOpenMenuId(null);
                                     return;
@@ -346,7 +340,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                         >
                             <CheckCircle className="size-4 text-muted-foreground transition-colors group-hover/item:text-foreground dark:group-hover/item:text-white" />
                             <span className="text-sm text-muted-foreground transition-colors group-hover/item:text-foreground dark:text-neutral-300 dark:group-hover/item:text-white">
-                                {simplifiedMode ? "Got it" : (inquiries.find(i => i.id === openMenuId)?.isUnread ? 'Mark as Read' : 'Mark as Unread')}
+                                {simplifiedMode ? "Got it" : (fetchState.inquiries.find(i => i.id === openMenuId)?.isUnread ? 'Mark as Read' : 'Mark as Unread')}
                             </span>
                         </button>
 
@@ -465,33 +459,38 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
 
                         {/* Chat Input */}
                         <div className="border-t border-border bg-card p-3 dark:border-white/10 dark:bg-neutral-900">
-                            <form 
-                                onSubmit={(e) => {
-                                    e.preventDefault();
-                                    if (!messageInput.trim()) return;
-                                    setSentMessages(prev => ({
-                                        ...prev,
-                                        [activeChat.id]: [...(prev[activeChat.id] || []), messageInput]
-                                    }));
-                                    setMessageInput("");
-                                }}
-                                className="flex items-center gap-2"
-                            >
+                            <div className="flex items-center gap-2">
                                 <input
                                     type="text"
                                     value={messageInput}
                                     onChange={(e) => setMessageInput(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter" && messageInput.trim()) {
+                                            setSentMessages(prev => ({
+                                                ...prev,
+                                                [activeChat.id]: [...(prev[activeChat.id] || []), messageInput]
+                                            }));
+                                            setMessageInput("");
+                                        }
+                                    }}
                                     placeholder="Type a message…"
                                     className="flex-1 rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-lime-500/50 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-neutral-500"
                                 />
                                 <button
-                                    type="submit"
+                                    onClick={() => {
+                                        if (!messageInput.trim()) return;
+                                        setSentMessages(prev => ({
+                                            ...prev,
+                                            [activeChat.id]: [...(prev[activeChat.id] || []), messageInput]
+                                        }));
+                                        setMessageInput("");
+                                    }}
                                     disabled={!messageInput.trim()}
                                     className="p-2.5 rounded-xl bg-lime-600 hover:bg-lime-500 disabled:opacity-50 disabled:cursor-not-allowed text-white transition-colors"
                                 >
                                     <Send className="size-4" />
                                 </button>
-                            </form>
+                            </div>
                         </div>
                     </motion.div>
                 )}

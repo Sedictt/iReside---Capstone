@@ -66,7 +66,7 @@ export const TransferRequestModal = ({
                                     <span className="material-icons-round text-3xl">move_down</span>
                                 </div>
                                 <div>
-                                    <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+                                    <h2 className="text-2xl font-bold tracking-tight text-foreground">
                                         Transfer Request
                                     </h2>
                                     <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Target Unit {unit.name}</p>
@@ -82,7 +82,7 @@ export const TransferRequestModal = ({
                                     <div className="size-20 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500 mb-6">
                                         <span className="material-icons-round text-5xl">check_circle</span>
                                     </div>
-                                    <h3 className="text-xl font-semibold text-foreground mb-2">Request Submitted</h3>
+                                    <h3 className="text-xl font-bold text-foreground mb-2">Request Submitted</h3>
                                     <p className="text-muted-foreground">Your transfer request for Unit {unit.name} has been sent to the administration for review.</p>
                                 </motion.div>
                             ) : (
@@ -94,7 +94,7 @@ export const TransferRequestModal = ({
                                     </div>
 
                                     <div className="space-y-3">
-                                        <label className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground ml-1">Transfer Justification</label>
+                                        <label className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground ml-1">Transfer Justification</label>
                                         <textarea
                                             required
                                             value={reason}
@@ -114,7 +114,7 @@ export const TransferRequestModal = ({
                                     <button
                                         type="submit"
                                         disabled={isSubmitting}
-                                        className="w-full py-5 rounded-2xl bg-primary text-primary-foreground text-sm font-semibold uppercase tracking-[0.2em] transition-all hover:opacity-90 active:scale-[0.98] shadow-xl shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                                        className="w-full py-5 rounded-2xl bg-primary text-primary-foreground text-sm font-bold uppercase tracking-[0.2em] transition-all hover:opacity-90 active:scale-[0.98] shadow-xl shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
                                     >
                                         {isSubmitting ? (
                                             <>

@@ -82,7 +82,7 @@ export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorP
     return (
         <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-3xl p-6 w-full max-w-sm animate-in fade-in zoom-in duration-300">
             <div className="flex items-center justify-between mb-6">
-                <h4 className="text-xs font-semibold tracking-widest uppercase text-white">Edit Social Links</h4>
+                <h4 className="text-xs font-bold tracking-widest uppercase text-white">Edit Social Links</h4>
                 <button onClick={() => setIsEditing(false)} className="text-neutral-500 hover:text-white transition-colors">
                     <X size={18} />
                 </button>

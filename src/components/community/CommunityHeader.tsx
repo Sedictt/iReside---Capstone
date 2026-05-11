@@ -53,7 +53,7 @@ export function CommunityHeader({
                 
                 <div className="relative z-10 flex flex-col gap-8 xl:flex-row xl:items-start xl:justify-between">
                     <div className="space-y-4">
-                        <h1 className="text-4xl font-semibold tracking-tight text-foreground md:text-5xl dark:text-white">
+                        <h1 className="text-4xl font-bold tracking-tight text-foreground md:text-5xl dark:text-white">
                             {title}
                         </h1>
                         <p className="max-w-2xl text-lg font-light text-muted-foreground dark:text-white/60">

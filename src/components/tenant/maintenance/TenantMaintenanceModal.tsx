@@ -130,14 +130,14 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                         ) : (
                             <div className="flex flex-col items-center justify-center text-muted-foreground/50">
                                 <ImageIcon className="size-16 mb-4 opacity-20" />
-                                <p className="text-sm font-semibold">No images provided</p>
+                                <p className="text-sm font-bold">No images provided</p>
                             </div>
                         )}
 
                         {/* Location HUD Overlay */}
                         <div className="absolute top-4 left-4 flex flex-col gap-2">
                             <span className={cn(
-                                "px-3 py-1 rounded-lg text-[10px] font-semibold uppercase tracking-wider border backdrop-blur-md shadow-sm w-fit",
+                                "px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border backdrop-blur-md shadow-sm w-fit",
                                 request.priority === "Critical" ? "bg-red-500/90 text-white border-red-400" :
                                 request.priority === "High" ? "bg-orange-500/90 text-white border-orange-400" :
                                 request.priority === "Medium" ? "bg-blue-500/90 text-white border-blue-400" :
@@ -148,12 +148,12 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                             <div className="bg-background/80 backdrop-blur-md px-3 py-2 rounded-xl border border-border/50 shadow-sm flex flex-col gap-1 w-fit">
                                 <div className="flex items-center gap-1.5 text-muted-foreground">
                                     <MapPin className="size-3 shrink-0" />
-                                    <span className="text-[10px] font-semibold uppercase tracking-widest truncate max-w-[150px]">
+                                    <span className="text-[10px] font-bold uppercase tracking-widest truncate max-w-[150px]">
                                         {request.property}
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-1.5 text-foreground">
-                                    <span className="text-sm font-semibold truncate max-w-[150px]">
+                                    <span className="text-sm font-bold truncate max-w-[150px]">
                                         Unit {request.unit}
                                     </span>
                                 </div>
@@ -168,7 +168,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                     <div className="p-6 md:p-8 flex items-start justify-between gap-4 border-b border-border/50 shrink-0">
                         <div>
                             <div className="flex items-center gap-2 mb-2">
-                                <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground bg-muted px-2 py-1 rounded-md border border-border/50">
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground bg-muted px-2 py-1 rounded-md border border-border/50">
                                     ID: {request.id.split('-')[0]}
                                 </span>
                                 <span className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground uppercase">
@@ -176,7 +176,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                     {request.reportedAt}
                                 </span>
                             </div>
-                            <h2 className="text-2xl font-semibold text-foreground leading-tight tracking-tight mb-2">
+                            <h2 className="text-2xl font-bold text-foreground leading-tight tracking-tight mb-2">
                                 {request.title}
                             </h2>
                             <p className="text-sm text-muted-foreground line-clamp-2">
@@ -196,7 +196,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                     <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-muted/10 relative custom-scrollbar">
                         <div className="absolute top-0 inset-x-0 h-12 bg-gradient-to-b from-background to-transparent pointer-events-none z-10" />
                         
-                        <h3 className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-6 pl-2">
+                        <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-6 pl-2">
                             Repair Status Timeline
                         </h3>
                         
@@ -215,7 +215,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                     currentStep === 1 ? "bg-card border-border shadow-sm ring-1 ring-primary/10" : "bg-transparent border-transparent hover:bg-muted/50",
                                     currentStep > 1 ? "opacity-70" : "opacity-100"
                                 )}>
-                                    <h4 className={cn("text-sm font-semibold tracking-tight", currentStep === 1 ? "text-primary" : "text-foreground")}>Request Submitted</h4>
+                                    <h4 className={cn("text-sm font-bold tracking-tight", currentStep === 1 ? "text-primary" : "text-foreground")}>Request Submitted</h4>
                                     <p className="text-xs font-medium text-muted-foreground mt-1 leading-relaxed">Your request was successfully sent to your landlord.</p>
                                 </div>
                             </div>
@@ -236,7 +236,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                         currentStep >= 2 ? "bg-card border-border shadow-sm ring-1 ring-border" : "bg-transparent border-transparent hover:bg-muted/50",
                                         currentStep > 2 || (request.selfRepairDecision === "rejected" && request.repairMethod) ? "opacity-70" : "opacity-100"
                                     )}>
-                                        <h4 className={cn("text-sm font-semibold tracking-tight", currentStep >= 2 ? "text-primary" : "text-foreground")}>
+                                        <h4 className={cn("text-sm font-bold tracking-tight", currentStep >= 2 ? "text-primary" : "text-foreground")}>
                                             {request.selfRepairDecision === "approved" 
                                                 ? "Self-Repair Approved" 
                                                 : request.selfRepairDecision === "rejected"
@@ -255,7 +255,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                             <>
                                                 {/* Update Repair Progress */}
                                                 <div className="mt-5 bg-muted/50 border border-border/60 rounded-2xl p-4 shadow-sm animate-in fade-in slide-in-from-top-2">
-                                                    <h5 className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+                                                    <h5 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">
                                                         Update Repair Progress
                                                     </h5>
                                                     
@@ -275,7 +275,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                             )}>
                                                                 <Wrench className="size-5" />
                                                             </div>
-                                                            <span className="text-[9px] font-semibold uppercase tracking-widest">Repairing</span>
+                                                            <span className="text-[9px] font-bold uppercase tracking-widest">Repairing</span>
                                                             {request.tenantRepairStatus === "repairing" && (
                                                                 <div className="absolute -top-1 -right-1 size-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center border-2 border-background animate-in zoom-in duration-300">
                                                                     <CheckCircle2 className="size-2.5" />
@@ -297,7 +297,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                             )}>
                                                                 <CheckCircle2 className="size-5" />
                                                             </div>
-                                                            <span className="text-[9px] font-semibold uppercase tracking-widest">Done</span>
+                                                            <span className="text-[9px] font-bold uppercase tracking-widest">Done</span>
                                                             {request.tenantRepairStatus === "done" && (
                                                                 <div className="absolute -top-1 -right-1 size-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center border-2 border-background animate-in zoom-in duration-300">
                                                                     <CheckCircle2 className="size-2.5" />
@@ -331,7 +331,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                                     {request.tenantProvidedPhotos && request.tenantProvidedPhotos.length > 0 ? <CheckCircle2 className="size-3.5" /> : <AlertCircle className="size-3.5" />}
                                                                 </div>
                                                                 <h5 className={cn(
-                                                                    "text-xs font-semibold uppercase tracking-widest",
+                                                                    "text-xs font-bold uppercase tracking-widest",
                                                                     request.tenantProvidedPhotos && request.tenantProvidedPhotos.length > 0 ? "text-emerald-700 dark:text-emerald-400" : "text-amber-700 dark:text-amber-400"
                                                                 )}>
                                                                     {request.tenantProvidedPhotos && request.tenantProvidedPhotos.length > 0 ? "Photo Uploaded" : "Action Required"}
@@ -395,7 +395,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                         currentStep >= 2 && request.repairMethod ? "bg-card border-border shadow-sm ring-1 ring-border" : "bg-transparent border-transparent hover:bg-muted/50",
                                         currentStep < 2 || !request.repairMethod || currentStep === 3 ? "opacity-70" : "opacity-100"
                                     )}>
-                                        <h4 className={cn("text-sm font-semibold tracking-tight", currentStep >= 2 && request.repairMethod ? "text-cyan-600 dark:text-cyan-500" : "text-foreground")}>
+                                        <h4 className={cn("text-sm font-bold tracking-tight", currentStep >= 2 && request.repairMethod ? "text-cyan-600 dark:text-cyan-500" : "text-foreground")}>
                                             {request.repairMethod === "landlord" ? "Landlord Repair" : request.repairMethod === "third_party" ? "Third-Party Repair" : "Repair Pending Assignment"}
                                         </h4>
                                         <p className="text-xs font-medium text-muted-foreground mt-1 leading-relaxed">
@@ -414,7 +414,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                             <>
                                                 {/* Update Repair Progress for Third-Party */}
                                                 <div className="mt-5 bg-muted/50 border border-border/60 rounded-2xl p-4 shadow-sm animate-in fade-in slide-in-from-top-2">
-                                                    <h5 className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+                                                    <h5 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">
                                                         Update Repair Progress
                                                     </h5>
                                                     
@@ -434,7 +434,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                             )}>
                                                                 <UserRound className="size-5" />
                                                             </div>
-                                                            <span className="text-[9px] font-semibold uppercase tracking-widest">Arrived</span>
+                                                            <span className="text-[9px] font-bold uppercase tracking-widest">Arrived</span>
                                                             {request.tenantRepairStatus === "personnel_arrived" && (
                                                                 <div className="absolute -top-1 -right-1 size-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center border-2 border-background animate-in zoom-in duration-300">
                                                                     <CheckCircle2 className="size-2.5" />
@@ -456,7 +456,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                             )}>
                                                                 <Wrench className="size-5" />
                                                             </div>
-                                                            <span className="text-[9px] font-semibold uppercase tracking-widest">Repairing</span>
+                                                            <span className="text-[9px] font-bold uppercase tracking-widest">Repairing</span>
                                                             {request.tenantRepairStatus === "repairing" && (
                                                                 <div className="absolute -top-1 -right-1 size-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center border-2 border-background animate-in zoom-in duration-300">
                                                                     <CheckCircle2 className="size-2.5" />
@@ -478,7 +478,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                             )}>
                                                                 <CheckCircle2 className="size-5" />
                                                             </div>
-                                                            <span className="text-[9px] font-semibold uppercase tracking-widest">Done</span>
+                                                            <span className="text-[9px] font-bold uppercase tracking-widest">Done</span>
                                                             {request.tenantRepairStatus === "done" && (
                                                                 <div className="absolute -top-1 -right-1 size-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center border-2 border-background animate-in zoom-in duration-300">
                                                                     <CheckCircle2 className="size-2.5" />
@@ -512,7 +512,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                                     {request.tenantProvidedPhotos && request.tenantProvidedPhotos.length > 0 ? <CheckCircle2 className="size-3.5" /> : <AlertCircle className="size-3.5" />}
                                                                 </div>
                                                                 <h5 className={cn(
-                                                                    "text-xs font-semibold uppercase tracking-widest",
+                                                                    "text-xs font-bold uppercase tracking-widest",
                                                                     request.tenantProvidedPhotos && request.tenantProvidedPhotos.length > 0 ? "text-emerald-700 dark:text-emerald-400" : "text-amber-700 dark:text-amber-400"
                                                                 )}>
                                                                     {request.tenantProvidedPhotos && request.tenantProvidedPhotos.length > 0 ? "Photo Uploaded" : "Action Required"}
@@ -573,7 +573,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                     currentStep === 3 ? "bg-emerald-500/5 border-emerald-500/20 shadow-sm ring-1 ring-emerald-500/20" : "bg-transparent border-transparent hover:bg-muted/50",
                                     currentStep < 3 ? "opacity-70" : "opacity-100"
                                 )}>
-                                    <h4 className={cn("text-sm font-semibold tracking-tight", currentStep === 3 ? "text-emerald-600 dark:text-emerald-500" : "text-foreground")}>Resolved</h4>
+                                    <h4 className={cn("text-sm font-bold tracking-tight", currentStep === 3 ? "text-emerald-600 dark:text-emerald-500" : "text-foreground")}>Resolved</h4>
                                     <p className="text-xs font-medium text-muted-foreground mt-1 leading-relaxed">
                                         The maintenance request has been completed and closed.
                                     </p>

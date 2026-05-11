@@ -146,7 +146,7 @@ export function CommunityTour() {
                     </button>
                 </div>
                 
-                <h3 className="mb-2 text-xl font-semibold text-foreground dark:text-white">
+                <h3 className="mb-2 text-xl font-bold text-foreground dark:text-white">
                     {activeStep.title}
                 </h3>
                 
@@ -157,7 +157,7 @@ export function CommunityTour() {
                 <div className="flex items-center justify-between mt-auto">
                     <button
                         onClick={completeTour}
-                        className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground dark:text-white/40 dark:hover:text-white"
+                        className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground transition-colors hover:text-foreground dark:text-white/40 dark:hover:text-white"
                     >
                         <SkipForward className="size-3.5" />
                         Skip tour

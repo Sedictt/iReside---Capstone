@@ -107,7 +107,7 @@ function KpiCard({ icon: Icon, label, value, accentText }: {
                     <Icon className="size-5" strokeWidth={1.5} />
                 </div>
                 <div>
-                    <p className="text-3xl font-semibold tracking-tight text-white">{value}</p>
+                    <p className="text-3xl font-bold tracking-tight text-white">{value}</p>
                     <p className="mt-1 text-[11px] font-bold uppercase tracking-widest text-white/40">{label}</p>
                 </div>
             </div>
@@ -236,13 +236,13 @@ export default function AdminRegistrationsPage() {
                     <section className="relative overflow-hidden rounded-[2.5rem] border border-border/70 bg-card p-8 md:p-12">
                         <div className="relative z-10 space-y-8">
                             <div className="space-y-4">
-                                <div className="inline-flex items-center gap-3 rounded-full border border-amber-500/20 bg-amber-500/10 px-4 py-2 text-[10px] font-semibold uppercase tracking-widest text-amber-300/80">
+                                <div className="inline-flex items-center gap-3 rounded-full border border-amber-500/20 bg-amber-500/10 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-amber-300/80">
                                     <span className="relative flex size-2">
                                         <span className="relative inline-flex size-2 rounded-full bg-amber-400" />
                                     </span>
                                     Registration Queue
                                 </div>
-                                <h1 className="text-4xl font-semibold tracking-tight text-white md:text-5xl lg:leading-[1.1]">
+                                <h1 className="text-4xl font-bold tracking-tight text-white md:text-5xl lg:leading-[1.1]">
                                     Incoming Landlord Registrations
                                 </h1>
                                 <p className="max-w-2xl text-base font-medium leading-relaxed text-white/50">
@@ -262,7 +262,7 @@ export default function AdminRegistrationsPage() {
                     {error && (
                         <div className="flex items-center gap-3 rounded-2xl border border-red-500/20 bg-red-500/5 px-5 py-4">
                             <ShieldX className="size-5 shrink-0 text-red-400" />
-                            <p className="text-sm font-semibold text-red-300">{error}</p>
+                            <p className="text-sm font-bold text-red-300">{error}</p>
                         </div>
                     )}
 
@@ -271,7 +271,7 @@ export default function AdminRegistrationsPage() {
 
                         <div className="relative z-10">
                             <div className="mb-6 flex items-center justify-between">
-                                <h2 className="text-lg font-semibold tracking-wide text-white/80">Applicant Queue</h2>
+                                <h2 className="text-lg font-bold tracking-wide text-white/80">Applicant Queue</h2>
                                 <span className="text-xs font-bold uppercase tracking-widest text-white/30">{incoming.length} record{incoming.length !== 1 ? "s" : ""}</span>
                             </div>
 
@@ -379,9 +379,9 @@ export default function AdminRegistrationsPage() {
                                         )} />
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary/60">Prospective Landlord</p>
+                                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary/60">Prospective Landlord</p>
                                         <div className="mt-1 flex items-center gap-3">
-                                            <h2 className="text-2xl font-semibold tracking-tight text-white">{selected.applicant?.full_name || "Unknown applicant"}</h2>
+                                            <h2 className="text-2xl font-bold tracking-tight text-white">{selected.applicant?.full_name || "Unknown applicant"}</h2>
                                             <RoleBadge role={selected.applicant?.role ?? null} className="text-[9px]" />
                                         </div>
                                         <div className="mt-2 flex items-center gap-3" suppressHydrationWarning>
@@ -422,7 +422,7 @@ export default function AdminRegistrationsPage() {
                                         </div>
                                         <div className="min-w-0">
                                             <p className="text-[10px] font-bold uppercase tracking-widest text-white/25">Email Address</p>
-                                            <p className="truncate text-sm font-semibold text-white/80">{selected.applicant?.email || "No email"}</p>
+                                            <p className="truncate text-sm font-bold text-white/80">{selected.applicant?.email || "No email"}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-4 rounded-2xl border border-white/[0.06] bg-white/[0.02] px-5 py-4">
@@ -431,7 +431,7 @@ export default function AdminRegistrationsPage() {
                                         </div>
                                         <div className="min-w-0">
                                             <p className="text-[10px] font-bold uppercase tracking-widest text-white/25">Phone Number</p>
-                                            <p className="text-sm font-semibold text-white/80">{selected.phone}</p>
+                                            <p className="text-sm font-bold text-white/80">{selected.phone}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -532,16 +532,16 @@ export default function AdminRegistrationsPage() {
                                                         <table className="w-full min-w-[560px] text-xs">
                                                             <thead className="bg-white/[0.02]">
                                                                 <tr className="text-white/30">
-                                                                    <th className="px-4 py-3 text-left font-semibold uppercase tracking-wider">Business Name</th>
-                                                                    <th className="px-4 py-3 text-left font-semibold uppercase tracking-wider">District</th>
-                                                                    <th className="px-4 py-3 text-left font-semibold uppercase tracking-wider">Barangay</th>
-                                                                    <th className="px-4 py-3 text-left font-semibold uppercase tracking-wider">Industry</th>
+                                                                    <th className="px-4 py-3 text-left font-bold uppercase tracking-wider">Business Name</th>
+                                                                    <th className="px-4 py-3 text-left font-bold uppercase tracking-wider">District</th>
+                                                                    <th className="px-4 py-3 text-left font-bold uppercase tracking-wider">Barangay</th>
+                                                                    <th className="px-4 py-3 text-left font-bold uppercase tracking-wider">Industry</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
                                                                 {rows.map((r) => (
                                                                     <tr key={r.businessName} className="border-t border-white/[0.04] text-white/55">
-                                                                        <td className="px-4 py-3 font-semibold text-white/90">{r.businessName}</td>
+                                                                        <td className="px-4 py-3 font-bold text-white/90">{r.businessName}</td>
                                                                         <td className="px-4 py-3">{r.district}</td>
                                                                         <td className="px-4 py-3">{r.barangay}</td>
                                                                         <td className="px-4 py-3">{r.industry}</td>

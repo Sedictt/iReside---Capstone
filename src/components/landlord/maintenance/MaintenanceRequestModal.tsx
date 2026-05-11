@@ -281,7 +281,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                         <div className="absolute top-6 left-6 flex flex-col gap-2 z-10 max-w-[80%]">
                             <div className="flex flex-wrap gap-2">
                                 <span className={cn(
-                                    "px-3 py-1.5 rounded-xl border text-[10px] font-semibold uppercase tracking-widest shadow-lg backdrop-blur-md",
+                                    "px-3 py-1.5 rounded-xl border text-[10px] font-bold uppercase tracking-widest shadow-lg backdrop-blur-md",
                                     request.status === "Pending" ? "bg-amber-500/90 text-black border-amber-400" :
                                         request.status === "In Progress" ? "bg-primary/90 text-primary-foreground border-primary/50" :
                                             request.status === "Assigned" ? "bg-cyan-500/90 text-white border-cyan-400/50" :
@@ -290,7 +290,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                     {request.status}
                                 </span>
                                 <span className={cn(
-                                    "px-3 py-1.5 rounded-xl border text-[10px] font-semibold uppercase tracking-widest shadow-lg backdrop-blur-md",
+                                    "px-3 py-1.5 rounded-xl border text-[10px] font-bold uppercase tracking-widest shadow-lg backdrop-blur-md",
                                     request.priority === "Critical" ? "bg-red-500/90 text-white border-red-400" :
                                         request.priority === "High" ? "bg-orange-500/90 text-white border-orange-400/50" :
                                             request.priority === "Medium" ? "bg-blue-500/90 text-white border-blue-400/50" :
@@ -307,7 +307,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                         <Home className="size-3.5 text-white" />
                                     </div>
                                     <div className="min-w-0">
-                                        <span className="text-[9px] font-semibold text-white/70 uppercase tracking-widest block">Property</span>
+                                        <span className="text-[9px] font-bold text-white/70 uppercase tracking-widest block">Property</span>
                                         <span className="text-sm font-bold text-white block line-clamp-1">{request.property}</span>
                                     </div>
                                 </div>
@@ -317,7 +317,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                         <Zap className="size-3.5 text-white" />
                                     </div>
                                     <div className="min-w-0">
-                                        <span className="text-[9px] font-semibold text-white/70 uppercase tracking-widest block">Unit</span>
+                                        <span className="text-[9px] font-bold text-white/70 uppercase tracking-widest block">Unit</span>
                                         <span className="text-sm font-bold text-white block line-clamp-1">{request.unit}</span>
                                     </div>
                                 </div>
@@ -338,7 +338,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                         <div className="flex-1 p-6 md:p-10 space-y-10 overflow-y-auto custom-scrollbar">
                             {/* Header Group */}
                             <div>
-                                <div className="mb-6 flex flex-wrap items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                                <div className="mb-6 flex flex-wrap items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
                                     <div className="flex items-center bg-muted/50 rounded-lg border border-border px-3 py-1.5 text-foreground/70">
                                         ID: {request.id.split('-')[0]}
                                     </div>
@@ -348,7 +348,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                     </div>
                                 </div>
 
-                                <h2 className="text-4xl font-semibold text-foreground leading-tight tracking-tighter mb-4">{request.title}</h2>
+                                <h2 className="text-4xl font-bold text-foreground leading-tight tracking-tighter mb-4">{request.title}</h2>
                                 <p className="text-muted-foreground text-base leading-relaxed whitespace-pre-wrap">{parsedDescription}</p>
                                 
                                 {request.triageReason && (
@@ -359,7 +359,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                             <div className="p-2 bg-primary/10 rounded-xl">
                                                 <Sparkles className="size-4 text-primary" />
                                             </div>
-                                            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">
+                                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
                                                 IRIS AI Smart Triage
                                             </p>
                                         </div>
@@ -378,7 +378,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                             <ShieldCheck className="size-6 text-emerald-500" />
                                         </div>
                                         <div>
-                                            <p className="text-base font-semibold text-foreground">Self-Repair Requested</p>
+                                            <p className="text-base font-bold text-foreground">Self-Repair Requested</p>
                                             <p className="text-sm font-medium text-muted-foreground">
                                                 {selfRepairDecision === "allow" ? "You have approved this request." : selfRepairDecision === "reject" ? "You have denied this request." : "The tenant asks to handle this repair themselves."}
                                             </p>
@@ -407,11 +407,11 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
 
                             {/* Involved Parties */}
                             <div className="space-y-4">
-                                <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.2em] pl-1">Involved Parties</h3>
+                                <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] pl-1">Involved Parties</h3>
                                 
                                 <div className="flex items-center gap-4 bg-muted/30 p-5 rounded-3xl border border-border">
                                     <div
-                                        className="size-14 rounded-2xl overflow-hidden border border-border shrink-0 flex items-center justify-center text-lg font-semibold text-white relative"
+                                        className="size-14 rounded-2xl overflow-hidden border border-border shrink-0 flex items-center justify-center text-lg font-bold text-white relative"
                                         style={{ backgroundColor: request.tenantAvatarBgColor || '#6d9838' }}
                                     >
                                         {request.tenantAvatar ? (
@@ -427,8 +427,8 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                         )}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.2em]">Primary Tenant</span>
-                                        <p className="text-lg font-semibold text-foreground truncate leading-tight">{request.tenant}</p>
+                                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">Primary Tenant</span>
+                                        <p className="text-lg font-bold text-foreground truncate leading-tight">{request.tenant}</p>
                                     </div>
                                     <button className="p-3 rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-sm active:scale-90 shrink-0">
                                         <MessageSquare className="size-5" />
@@ -441,8 +441,8 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                             <Calendar className="size-6 text-amber-500" />
                                         </div>
                                         <div>
-                                            <span className="text-[10px] font-semibold text-amber-500/70 uppercase tracking-[0.2em]">Scheduled Window</span>
-                                            <p className="text-base font-semibold text-foreground">{request.scheduledFor}</p>
+                                            <span className="text-[10px] font-bold text-amber-500/70 uppercase tracking-[0.2em]">Scheduled Window</span>
+                                            <p className="text-base font-bold text-foreground">{request.scheduledFor}</p>
                                         </div>
                                     </div>
                                 )}
@@ -493,7 +493,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
 
                                     {request.tenantProvidedPhotos && request.tenantProvidedPhotos.length > 0 && (
                                         <div className="space-y-2">
-                                            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Verification Photos</p>
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Verification Photos</p>
                                             <div className="flex gap-2">
                                                 {request.tenantProvidedPhotos.map((img, i) => (
                                                     <button
@@ -521,7 +521,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                 <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-3xl p-5 sm:p-6 space-y-3 animate-in fade-in slide-in-from-bottom-2">
                                     <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
                                         <CheckCircle2 className="size-5 shrink-0" />
-                                        <h3 className="text-sm font-semibold">Action Confirmed</h3>
+                                        <h3 className="text-sm font-bold">Action Confirmed</h3>
                                     </div>
                                     <p className="text-sm text-emerald-700/80 dark:text-emerald-300/80 font-medium">{processSummary}</p>
                                 </div>
@@ -532,14 +532,14 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                 <div className={cn("bg-muted/20 border border-border/50 rounded-3xl p-5 sm:p-6 space-y-5 transition-all duration-300", selfRepairDecision === "allow" ? "opacity-50 pointer-events-none" : "")}>
                                     <div className="flex items-center gap-2 mb-2">
                                         <div className={cn("size-2 rounded-full", selfRepairDecision === "allow" ? "bg-muted-foreground" : "bg-amber-500 animate-pulse")} />
-                                        <h3 className="text-xs font-semibold text-foreground uppercase tracking-widest">
+                                        <h3 className="text-xs font-bold text-foreground uppercase tracking-widest">
                                             {selfRepairDecision === "allow" ? "Action Managed by Tenant" : "Action Required"}
                                         </h3>
                                     </div>
                                     
                                     <div className="space-y-4">
                                         <div>
-                                            <label htmlFor="select-action" className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2 block">
+                                            <label htmlFor="select-action" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 block">
                                                 Select Action
                                             </label>
                                             <div className="relative group">
@@ -564,7 +564,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                         {/* Dynamic Fields based on selection */}
                                         {processPlan === "third_party" && (
                                             <div className="pt-2 animate-in slide-in-from-top-2 fade-in duration-200">
-                                                <label htmlFor="repair-person-name" className="mb-2 block text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                                                <label htmlFor="repair-person-name" className="mb-2 block text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                                                     Repair Person Name <span className="text-red-500">*</span>
                                                 </label>
                                                 <div className="relative group">
@@ -577,7 +577,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                                         value={thirdPartyPerson}
                                                         onChange={(event) => setThirdPartyPerson(event.target.value)}
                                                         placeholder="Enter full name for tenant safety"
-                                                        className="w-full rounded-xl border border-border bg-card/50 py-3.5 pl-[3.25rem] pr-4 text-sm font-semibold text-foreground outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all shadow-sm placeholder:text-muted-foreground/40 hover:border-border"
+                                                        className="w-full rounded-xl border border-border bg-card/50 py-3.5 pl-[3.25rem] pr-4 text-sm font-bold text-foreground outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all shadow-sm placeholder:text-muted-foreground/40 hover:border-border"
                                                     />
                                                 </div>
                                             </div>
@@ -585,7 +585,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                     </div>
                                     
                                     {formError && (
-                                        <div className="flex items-center gap-2 rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm font-semibold text-red-600 dark:text-red-400">
+                                        <div className="flex items-center gap-2 rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm font-bold text-red-600 dark:text-red-400">
                                             <ShieldCheck className="size-4 shrink-0" />
                                             {formError}
                                         </div>
@@ -600,7 +600,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                 onClick={() => void handleProcess()}
                                 disabled={processStep === "completed" || isSaving}
                                 className={cn(
-                                    "w-full sm:flex-1 px-6 py-4 rounded-2xl font-semibold uppercase tracking-wider text-sm transition-all shadow-sm flex items-center justify-center gap-2 group/btn relative overflow-hidden",
+                                    "w-full sm:flex-1 px-6 py-4 rounded-2xl font-bold uppercase tracking-wider text-sm transition-all shadow-sm flex items-center justify-center gap-2 group/btn relative overflow-hidden",
                                     processStep === "pending" 
                                         ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_20px_rgba(var(--primary),0.2)] active:scale-[0.98]" 
                                         : (processStep === "in_progress" || processStep === "assigned")

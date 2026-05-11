@@ -51,10 +51,10 @@ export function KpiCard({
                 <div className="relative z-10 w-full">
                     <div className="flex items-center gap-3 mb-5">
                         <span className={cn("size-2.5 rounded-full shadow-sm", iconColor)}></span>
-                        <span className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">{displayTitle}</span>
+                        <span className="text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground">{displayTitle}</span>
                     </div>
 
-                    <h3 className="mb-2 text-3xl font-semibold tracking-tight text-foreground md:text-4xl">{value}</h3>
+                    <h3 className="mb-2 text-3xl font-bold tracking-tight text-foreground md:text-4xl">{value}</h3>
 
                     <div className={cn(
                         "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold tracking-wide",

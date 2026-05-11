@@ -228,7 +228,7 @@ export function TenantIrisChat() {
                         </div>
                     </div>
                     <div>
-                        <h3 className="font-semibold text-foreground text-base">iRis Assistant</h3>
+                        <h3 className="font-bold text-foreground text-base">iRis Assistant</h3>
                         <div className="flex items-center gap-2">
                             <span className="text-[10px] uppercase font-bold text-primary tracking-widest bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded">AI Concierge</span>
                             <span className="text-[10px] text-muted-foreground font-medium">Always Available</span>

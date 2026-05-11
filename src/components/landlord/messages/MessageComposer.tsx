@@ -126,7 +126,7 @@ export function MessageComposer({
                                         {att.status === 'uploading' && (
                                             <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[1px]">
                                                 <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                                <span className="absolute bottom-1 text-[8px] font-semibold text-white">{att.progress}%</span>
+                                                <span className="absolute bottom-1 text-[8px] font-bold text-white">{att.progress}%</span>
                                             </div>
                                         )}
 
@@ -243,7 +243,7 @@ export function MessageComposer({
                                 Processing uploads...
                             </span>
                         ) : pendingAttachments.length > 0 ? (
-                            <span className="text-primary font-semibold">
+                            <span className="text-primary font-bold">
                                 {pendingAttachments.length} {pendingAttachments.length === 1 ? 'file' : 'files'} selected
                             </span>
                         ) : (

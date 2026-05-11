@@ -88,7 +88,7 @@ function TenantsContent() {
                 {/* Header Block */}
                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                     <div>
-                        <h1 className="text-3xl font-semibold tracking-tight text-foreground md:text-4xl">Tenants Hub</h1>
+                        <h1 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">Tenants Hub</h1>
                         <p className="mt-1 text-muted-foreground">Manage resident records and lease timelines across your portfolio.</p>
                     </div>
                     <div className="flex items-center gap-3">
@@ -112,7 +112,7 @@ function TenantsContent() {
                             key={tab.id}
                             onClick={() => setTab(tab.id)}
                             className={cn(
-                                "flex items-center gap-2 px-6 py-4 text-sm font-semibold uppercase tracking-widest transition-all relative",
+                                "flex items-center gap-2 px-6 py-4 text-sm font-bold uppercase tracking-widest transition-all relative",
                                 currentTab === tab.id ? "text-primary" : "text-muted-foreground hover:text-foreground"
                             )}
                         >

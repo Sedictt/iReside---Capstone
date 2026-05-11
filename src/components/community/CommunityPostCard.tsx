@@ -108,11 +108,11 @@ export function CommunityPostCard({
                     </div>
                     <div>
                         <div className="flex items-center gap-2">
-                            <h4 className="text-[15px] font-semibold text-foreground dark:text-white">
+                            <h4 className="text-[15px] font-bold text-foreground dark:text-white">
                                 {post.author_name}
                             </h4>
                             {post.author_role === 'landlord' && (
-                                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary border border-primary/20">
+                                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary border border-primary/20">
                                     Management
                                 </span>
                             )}
@@ -131,7 +131,7 @@ export function CommunityPostCard({
 
             <div className="space-y-4">
                 {post.title && (
-                    <h3 className="text-lg font-semibold tracking-tight text-foreground dark:text-white">
+                    <h3 className="text-lg font-bold tracking-tight text-foreground dark:text-white">
                         {post.title}
                     </h3>
                 )}
@@ -189,7 +189,7 @@ export function CommunityPostCard({
                                             </span>
                                         </div>
                                         {hasVoted && (
-                                            <span className={`text-xs font-semibold ${selected ? 'text-primary' : 'text-muted-foreground'}`}>
+                                            <span className={`text-xs font-bold ${selected ? 'text-primary' : 'text-muted-foreground'}`}>
                                                 {pct}%
                                             </span>
                                         )}
@@ -382,7 +382,7 @@ function PhotoGrid({ photos, onPhotoClick }: { photos: { id: string; url: string
                     <Image src={photo.url} alt={`Photo ${i}`} fill className="object-cover transition-transform hover:scale-110 duration-500" />
                     {photos.length > 4 && i === 3 && (
                         <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm group-hover:bg-black/40 transition-colors">
-                            <span className="text-xl font-semibold text-white">+{photos.length - 4}</span>
+                            <span className="text-xl font-bold text-white">+{photos.length - 4}</span>
                         </div>
                     )}
                 </div>

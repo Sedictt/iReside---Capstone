@@ -292,11 +292,11 @@ export function UtilityBillingDashboard() {
         <div className="flex flex-col space-y-8 pb-20 max-w-7xl mx-auto">
             {/* Page Header */}
             <div className="space-y-2">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-semibold uppercase tracking-[0.2em]">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-[0.2em]">
                     <Building2 className="size-3" />
                     Property Management
                 </div>
-                <h1 className="text-4xl font-semibold tracking-tight text-foreground">Utility Billing</h1>
+                <h1 className="text-4xl font-bold tracking-tight text-foreground">Utility Billing</h1>
                 <p className="text-sm text-muted-foreground font-medium">
                     Centralized command for meter readings, billing strategies, and automated recovery.
                 </p>
@@ -316,7 +316,7 @@ export function UtilityBillingDashboard() {
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id as "readings" | "rates" | "payments" | "history")}
                                 className={cn(
-                                    "relative flex items-center gap-2.5 px-6 py-4 text-[10px] font-semibold uppercase tracking-[0.15em] transition-all border-b-2 whitespace-nowrap",
+                                    "relative flex items-center gap-2.5 px-6 py-4 text-[10px] font-bold uppercase tracking-[0.15em] transition-all border-b-2 whitespace-nowrap",
                                     activeTab === tab.id 
                                         ? "border-primary text-primary" 
                                         : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
@@ -336,7 +336,7 @@ export function UtilityBillingDashboard() {
                     </div>
 
                     <div className="flex items-center gap-3 pb-4 md:pb-0">
-                        <div className="px-4 py-2 rounded-2xl bg-muted/50 border border-border text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                        <div className="px-4 py-2 rounded-2xl bg-muted/50 border border-border text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                             Latest Cycle
                         </div>
                     </div>
@@ -525,11 +525,11 @@ export function UtilityBillingDashboard() {
                             </div>
                             <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
                                 <div className="space-y-3">
-                                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-semibold uppercase tracking-[0.2em]">
+                                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-[0.2em]">
                                         <BarChart3 className="size-3" />
                                         Billing Archives
                                     </div>
-                                    <h3 className="text-3xl font-semibold text-foreground tracking-tight">Audit Trail & History</h3>
+                                    <h3 className="text-3xl font-bold text-foreground tracking-tight">Audit Trail & History</h3>
                                     <p className="text-sm text-muted-foreground max-w-md leading-relaxed font-medium">
                                         Review past billing cycles, verify consumption reports, and monitor collection recovery performance across your portfolio.
                                     </p>
@@ -539,10 +539,10 @@ export function UtilityBillingDashboard() {
                                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                                         <input 
                                             placeholder="Search month, year or status..."
-                                            className="w-full pl-11 pr-4 py-3.5 rounded-2xl border border-border bg-muted/20 dark:bg-white/[0.03] text-sm font-semibold outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all"
+                                            className="w-full pl-11 pr-4 py-3.5 rounded-2xl border border-border bg-muted/20 dark:bg-white/[0.03] text-sm font-bold outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all"
                                         />
                                     </div>
-                                    <button className="h-12 px-6 rounded-2xl bg-foreground text-background text-xs font-semibold uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-foreground/10 active:scale-95">
+                                    <button className="h-12 px-6 rounded-2xl bg-foreground text-background text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-foreground/10 active:scale-95">
                                         Export History
                                     </button>
                                 </div>
@@ -551,7 +551,7 @@ export function UtilityBillingDashboard() {
 
                         <div className="space-y-6">
                             <div className="flex items-center gap-4 px-2 mb-4">
-                                <span className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground/40 whitespace-nowrap">Audit Trail History</span>
+                                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground/40 whitespace-nowrap">Audit Trail History</span>
                                 <div className="h-px flex-1 bg-border/40" />
                             </div>
 
@@ -581,13 +581,13 @@ export function UtilityBillingDashboard() {
                                             <div className="md:col-span-2 flex md:flex-col items-center md:items-start gap-4">
                                                 <div className="size-16 flex items-center justify-center rounded-2xl bg-muted/50 border border-border group-hover:border-primary/20 group-hover:bg-primary/5 transition-all">
                                                     <div className="text-center">
-                                                        <p className="text-[10px] font-semibold uppercase leading-none text-muted-foreground group-hover:text-primary transition-colors">{monthLabel}</p>
-                                                        <p className="text-xl font-semibold mt-1 text-foreground">{yearLabel}</p>
+                                                        <p className="text-[10px] font-bold uppercase leading-none text-muted-foreground group-hover:text-primary transition-colors">{monthLabel}</p>
+                                                        <p className="text-xl font-bold mt-1 text-foreground">{yearLabel}</p>
                                                     </div>
                                                 </div>
                                                 <div className="md:hidden h-8 w-px bg-border" />
                                                 <div className={cn(
-                                                    "px-2.5 py-1 rounded-full text-[8px] font-semibold uppercase tracking-[0.2em] border whitespace-nowrap",
+                                                    "px-2.5 py-1 rounded-full text-[8px] font-bold uppercase tracking-[0.2em] border whitespace-nowrap",
                                                     isCurrentMonth 
                                                         ? "bg-blue-500/10 text-blue-600 border-blue-500/10" 
                                                         : hasData 
@@ -600,7 +600,7 @@ export function UtilityBillingDashboard() {
 
                                             {/* Report Title & Metrics */}
                                             <div className="md:col-span-6 space-y-3">
-                                                <h4 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
+                                                <h4 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">
                                                     {reportTitle} Report
                                                 </h4>
                                                 <div className="flex flex-wrap gap-6">
@@ -628,9 +628,9 @@ export function UtilityBillingDashboard() {
                                             {/* Status & Actions */}
                                             <div className="md:col-span-4 flex items-center justify-between md:justify-end gap-10">
                                                  <div className="text-right space-y-2 flex-1 md:flex-initial">
-                                                     <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Readings Logged</p>
+                                                     <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Readings Logged</p>
                                                      <div className="flex items-center justify-end gap-3">
-                                                         <span className="text-[10px] font-semibold text-foreground">
+                                                         <span className="text-[10px] font-bold text-foreground">
                                                              {historySummariesLoading ? "--" : `${readingCount} reading${readingCount !== 1 ? "s" : ""}`}
                                                          </span>
                                                      </div>
@@ -683,7 +683,7 @@ export function UtilityBillingDashboard() {
                                 <AlertCircle className="size-8" />
                             </div>
                             <div className="space-y-2 mb-8">
-                                <h3 className="text-xl font-semibold text-foreground">Apply Property Defaults?</h3>
+                                <h3 className="text-xl font-bold text-foreground">Apply Property Defaults?</h3>
                                 <p className="text-sm text-muted-foreground leading-relaxed">
                                     This will overwrite all individual unit settings with the property-wide default rates. This action cannot be undone.
                                 </p>
@@ -759,10 +759,10 @@ function HistoryDetailModal({ month, isOpen, onClose }: { month: string | null, 
                         {/* Header */}
                         <div className="flex items-center justify-between border-b border-border/50 p-8">
                             <div>
-                                <h2 className="text-2xl font-semibold text-foreground">
+                                <h2 className="text-2xl font-bold text-foreground">
                                     {month ? <ClientOnlyDate date={month + "-01"} format={{ month: 'long', year: 'numeric' }} /> : ""} Archive
                                 </h2>
-                                <p className="text-xs text-muted-foreground font-semibold uppercase tracking-widest mt-1">Detailed Consumption Audit</p>
+                                <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest mt-1">Detailed Consumption Audit</p>
                             </div>
                             <button 
                                 onClick={onClose} 
@@ -777,7 +777,7 @@ function HistoryDetailModal({ month, isOpen, onClose }: { month: string | null, 
                             {loading ? (
                                 <div className="flex flex-col items-center justify-center py-20 space-y-4">
                                     <Loader2 className="size-8 animate-spin text-primary" />
-                                    <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Retrieving archive data...</p>
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Retrieving archive data...</p>
                                 </div>
                             ) : (
                                 <div className="space-y-8">
@@ -794,20 +794,20 @@ function HistoryDetailModal({ month, isOpen, onClose }: { month: string | null, 
                                                 <div className="p-8 rounded-3xl bg-amber-500/[0.03] border border-amber-500/10 transition-all hover:bg-amber-500/[0.05]">
                                                     <div className="flex items-center gap-3 text-amber-500 mb-4">
                                                         <Zap className="size-5" />
-                                                        <span className="text-[10px] font-semibold uppercase tracking-widest">Total Electricity</span>
+                                                        <span className="text-[10px] font-bold uppercase tracking-widest">Total Electricity</span>
                                                     </div>
                                                     <div className="flex items-baseline gap-2">
-                                                        <span className="text-4xl font-semibold text-foreground tracking-tight">{totalElec.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                                                        <span className="text-4xl font-bold text-foreground tracking-tight">{totalElec.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
                                                         <span className="text-xs font-bold text-muted-foreground uppercase">kWh</span>
                                                     </div>
                                                 </div>
                                                 <div className="p-8 rounded-3xl bg-sky-500/[0.03] border border-sky-500/10 transition-all hover:bg-sky-500/[0.05]">
                                                     <div className="flex items-center gap-3 text-sky-500 mb-4">
                                                         <Droplets className="size-5" />
-                                                        <span className="text-[10px] font-semibold uppercase tracking-widest">Total Water</span>
+                                                        <span className="text-[10px] font-bold uppercase tracking-widest">Total Water</span>
                                                     </div>
                                                     <div className="flex items-baseline gap-2">
-                                                        <span className="text-4xl font-semibold text-foreground tracking-tight">{totalWater.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                                                        <span className="text-4xl font-bold text-foreground tracking-tight">{totalWater.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
                                                         <span className="text-xs font-bold text-muted-foreground uppercase">m³</span>
                                                     </div>
                                                 </div>
@@ -818,7 +818,7 @@ function HistoryDetailModal({ month, isOpen, onClose }: { month: string | null, 
                                     <div className="rounded-[2rem] border border-border overflow-hidden bg-card/50">
                                         <div className="overflow-x-auto">
                                             <table className="w-full text-left">
-                                                <thead className="bg-muted/30 border-b border-border text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                                                <thead className="bg-muted/30 border-b border-border text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
                                                     <tr>
                                                         <th className="px-8 py-5">Unit</th>
                                                         <th className="px-8 py-5">Utility</th>
@@ -830,7 +830,7 @@ function HistoryDetailModal({ month, isOpen, onClose }: { month: string | null, 
                                                 <tbody className="divide-y divide-border/50">
                                                     {data.length > 0 ? data.map((reading, idx) => (
                                                         <tr key={`${reading.unit_name || 'unknown'}-${reading.utility_type}`} className="hover:bg-muted/10 transition-colors group">
-                                                            <td className="px-8 py-5 text-sm font-semibold text-foreground group-hover:text-primary transition-colors">{reading.unit_name || "N/A"}</td>
+                                                            <td className="px-8 py-5 text-sm font-bold text-foreground group-hover:text-primary transition-colors">{reading.unit_name || "N/A"}</td>
                                                             <td className="px-8 py-5 capitalize text-[10px] font-bold text-muted-foreground tracking-widest">
                                                                 <div className="flex items-center gap-2.5">
                                                                     {reading.utility_type === 'water' ? (
@@ -846,10 +846,10 @@ function HistoryDetailModal({ month, isOpen, onClose }: { month: string | null, 
                                                                 </div>
                                                             </td>
                                                             <td className="px-8 py-5 text-sm font-mono text-muted-foreground">{reading.previous_reading}</td>
-                                                            <td className="px-8 py-5 text-sm font-mono font-semibold text-foreground">{reading.current_reading}</td>
+                                                            <td className="px-8 py-5 text-sm font-mono font-bold text-foreground">{reading.current_reading}</td>
                                                             <td className="px-8 py-5">
                                                                 <div className="flex items-center gap-2">
-                                                                    <span className="text-sm font-mono font-semibold text-primary">
+                                                                    <span className="text-sm font-mono font-bold text-primary">
                                                                         {(reading.current_reading - reading.previous_reading).toFixed(2)}
                                                                     </span>
                                                                     <span className="text-[10px] font-bold text-muted-foreground/40 uppercase">{reading.utility_type === 'water' ? 'm³' : 'kWh'}</span>
@@ -859,7 +859,7 @@ function HistoryDetailModal({ month, isOpen, onClose }: { month: string | null, 
                                                     )) : (
                                                         <tr>
                                                             <td colSpan={5} className="px-8 py-20 text-center">
-                                                                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">No records found for this cycle</p>
+                                                                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">No records found for this cycle</p>
                                                             </td>
                                                         </tr>
                                                     )}
@@ -875,7 +875,7 @@ function HistoryDetailModal({ month, isOpen, onClose }: { month: string | null, 
                         <div className="border-t border-border/50 p-8 bg-muted/5">
                             <button 
                                 onClick={onClose}
-                                className="w-full py-4 rounded-2xl bg-foreground text-background text-xs font-semibold uppercase tracking-widest hover:opacity-90 transition-all shadow-lg active:scale-95"
+                                className="w-full py-4 rounded-2xl bg-foreground text-background text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all shadow-lg active:scale-95"
                             >
                                 Close Audit View
                             </button>
@@ -914,7 +914,7 @@ function UnitDetailModal({ isOpen, onClose, draft, onUpdate }: { isOpen: boolean
                                     <Building2 className="size-6" />
                                 </div>
                                 <div>
-                                    <h2 className="text-xl font-semibold text-foreground">{draft.unitName}</h2>
+                                    <h2 className="text-xl font-bold text-foreground">{draft.unitName}</h2>
                                     <p className="text-xs text-muted-foreground">Unit Billing Profile</p>
                                 </div>
                             </div>
@@ -974,7 +974,7 @@ function UnitDetailModal({ isOpen, onClose, draft, onUpdate }: { isOpen: boolean
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
                                         <DollarSign className="size-4 text-primary" />
-                                        <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground">Service Add-ons</h3>
+                                        <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">Service Add-ons</h3>
                                     </div>
                                     <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Optional Charges</span>
                                 </div>
@@ -1049,7 +1049,7 @@ function ResourceSection({ label, icon: Icon, colorClass, draft, onUpdate }: {
         <div className="space-y-4">
             <div className={cn("flex items-center gap-2", accentClass)}>
                 <Icon className="size-5" />
-                <h3 className="text-sm font-semibold uppercase tracking-wider">{label}</h3>
+                <h3 className="text-sm font-bold uppercase tracking-wider">{label}</h3>
             </div>
             <div className={cn("grid grid-cols-1 md:grid-cols-5 gap-6 rounded-3xl border p-6 overflow-hidden", borderClass, bgClass)}>
                 <div className="md:col-span-3 space-y-4">

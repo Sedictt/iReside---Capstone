@@ -41,6 +41,8 @@ import {
     ACTIVE_FLOOR_STORAGE_KEY, UNIT_NOTES_STORAGE_KEY, EMPTY_FLOOR_LAYOUT, 
     DEFAULT_ACTIVE_FLOOR, DEFAULT_FLOOR_LAYOUTS 
 } from "./constants";
+import { UnitTooltip } from "./components/UnitTooltip";
+import { TransferRequestModal } from "./components/TransferRequestModal";
 
 /** Unit History Modal Component */
 const UnitHistoryModal = ({
@@ -60,7 +62,7 @@ const UnitHistoryModal = ({
 
     // Mock data for history
     const tenantHistory = [
-        { id: '1', name: 'James Wilson', leaseStart: '2025-01-01', leaseEnd: '2026-01-01', rent: 1200, status: 'Completed', avatarBg: 'bg-indigo-500' },
+        { id: '1', name: 'James Wilson', leaseStart: '2025-01-01', leaseEnd: '2026-01-01', rent: 1200, status: 'Completed', avatarBg: 'bg-primary' },
         { id: '2', name: 'Elena Rodriguez', leaseStart: '2024-01-01', leaseEnd: '2025-01-01', rent: 1150, status: 'Completed', avatarBg: 'bg-emerald-500' },
         { id: '3', name: 'Marcus Chen', leaseStart: '2023-01-01', leaseEnd: '2024-01-01', rent: 1100, status: 'Terminated Early', avatarBg: 'bg-rose-500' },
     ];
@@ -100,7 +102,7 @@ const UnitHistoryModal = ({
                                     <span className="material-icons-round text-2xl">history</span>
                                 </div>
                                 <div>
-                                    <h2 className={`text-2xl font-semibold tracking-tight text-foreground`}>
+                                    <h2 className={`text-2xl font-bold tracking-tight text-foreground`}>
                                         Unit {unit.name} History
                                     </h2>
                                     <p className={`text-sm font-medium text-muted-foreground`}>Full audit trail and historical logs</p>
@@ -112,13 +114,13 @@ const UnitHistoryModal = ({
                             <div className="flex gap-2 p-1.5 rounded-2xl bg-muted w-fit">
                                 <button 
                                     onClick={() => setActiveTab("tenants")}
-                                    className={`px-6 py-2 rounded-xl text-xs font-semibold uppercase tracking-widest transition-all ${activeTab === "tenants" ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                    className={`px-6 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${activeTab === "tenants" ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                                 >
                                     Tenants
                                 </button>
                                 <button 
                                     onClick={() => setActiveTab("maintenance")}
-                                    className={`px-6 py-2 rounded-xl text-xs font-semibold uppercase tracking-widest transition-all ${activeTab === "maintenance" ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                    className={`px-6 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${activeTab === "maintenance" ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                                 >
                                     Maintenance
                                 </button>
@@ -130,13 +132,13 @@ const UnitHistoryModal = ({
                                 {activeTab === "tenants" ? (
                                     tenantHistory.map((item) => (
                                         <div key={item.id} className={`flex items-center gap-4 p-5 rounded-2xl border border-border bg-muted/30 transition-colors hover:bg-muted/50`}>
-                                            <div className={`flex size-10 shrink-0 items-center justify-center rounded-full text-white text-[10px] font-semibold ${item.avatarBg}`}>
+                                            <div className={`flex size-10 shrink-0 items-center justify-center rounded-full text-white text-[10px] font-bold ${item.avatarBg}`}>
                                                 {item.name.charAt(0)}
                                             </div>
                                             <div className="flex-1">
                                                 <div className="flex items-center justify-between">
-                                                    <p className={`text-sm font-semibold text-foreground`}>{item.name}</p>
-                                                    <span className={`text-[9px] font-semibold uppercase tracking-widest px-2 py-1 rounded-full ${
+                                                    <p className={`text-sm font-bold text-foreground`}>{item.name}</p>
+                                                    <span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-full ${
                                                         item.status === 'Completed' 
                                                             ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' 
                                                             : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
@@ -149,7 +151,7 @@ const UnitHistoryModal = ({
                                                 </p>
                                             </div>
                                             <div className="text-right">
-                                                <p className={`text-xs font-semibold text-foreground`}>â‚±{item.rent.toLocaleString()}</p>
+                                                <p className={`text-xs font-bold text-foreground`}>â‚±{item.rent.toLocaleString()}</p>
                                                 <p className="text-[9px] font-bold text-muted-foreground">Monthly Rent</p>
                                             </div>
                                         </div>
@@ -162,15 +164,15 @@ const UnitHistoryModal = ({
                                             </div>
                                             <div className="flex-1">
                                                 <div className="flex items-center justify-between">
-                                                    <p className={`text-sm font-semibold text-foreground`}>{item.title}</p>
-                                                    <span className="text-[9px] font-semibold uppercase tracking-widest px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                                                    <p className={`text-sm font-bold text-foreground`}>{item.title}</p>
+                                                    <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
                                                         {item.status}
                                                     </span>
                                                 </div>
                                                 <p className="text-[10px] font-bold text-muted-foreground mt-1"><ClientOnlyDate date={item.date} /> &bull; {item.description}</p>
                                             </div>
                                             <div className="text-right">
-                                                <p className={`text-xs font-semibold text-foreground`}>â‚±{item.cost.toLocaleString()}</p>
+                                                <p className={`text-xs font-bold text-foreground`}>â‚±{item.cost.toLocaleString()}</p>
                                                 <p className="text-[9px] font-bold text-muted-foreground">Cost</p>
                                             </div>
                                         </div>
@@ -182,7 +184,7 @@ const UnitHistoryModal = ({
                         <div className="p-8 border-t border-border bg-muted/20">
                             <button 
                                 onClick={onClose}
-                                className="w-full py-4 rounded-2xl bg-primary text-primary-foreground text-xs font-semibold uppercase tracking-[0.2em] transition-all hover:opacity-90 active:scale-[0.98] shadow-lg shadow-primary/20"
+                                className="w-full py-4 rounded-2xl bg-primary text-primary-foreground text-xs font-bold uppercase tracking-[0.2em] transition-all hover:opacity-90 active:scale-[0.98] shadow-lg shadow-primary/20"
                             >
                                 Close History View
                             </button>
@@ -269,7 +271,7 @@ const ComplaintModal = ({
                                     <span className="material-icons-round text-3xl">report_problem</span>
                                 </div>
                                 <div>
-                                    <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+                                    <h2 className="text-2xl font-bold tracking-tight text-foreground">
                                         Submit a Complaint
                                     </h2>
                                     <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Unit {unit.name}</p>
@@ -285,13 +287,13 @@ const ComplaintModal = ({
                                     <div className="size-20 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500 mb-6">
                                         <span className="material-icons-round text-5xl">check_circle</span>
                                     </div>
-                                    <h3 className="text-xl font-semibold text-foreground mb-2">Complaint Received</h3>
+                                    <h3 className="text-xl font-bold text-foreground mb-2">Complaint Received</h3>
                                     <p className="text-muted-foreground">Thank you for your report. Our team will investigate this matter immediately.</p>
                                 </motion.div>
                             ) : (
                                 <form onSubmit={handleSubmit} className="space-y-6">
                                     <div className="space-y-3">
-                                        <label className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground ml-1">Nature of Complaint</label>
+                                        <label className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground ml-1">Nature of Complaint</label>
                                         <div className="grid grid-cols-2 gap-3">
                                             {predefinedComplaints.map((type) => (
                                                 <button
@@ -316,7 +318,7 @@ const ComplaintModal = ({
                                             animate={{ opacity: 1, height: 'auto' }}
                                             className="space-y-3"
                                         >
-                                            <label className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground ml-1">Details</label>
+                                            <label className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground ml-1">Details</label>
                                             <textarea
                                                 required
                                                 value={customComplaint}
@@ -328,7 +330,7 @@ const ComplaintModal = ({
                                     )}
 
                                     <div className="space-y-3">
-                                        <label className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground ml-1">Evidence / Photos</label>
+                                        <label className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground ml-1">Evidence / Photos</label>
                                         <div 
                                             className={`relative group cursor-pointer rounded-2xl border-2 border-dashed transition-all p-8 flex flex-col items-center justify-center gap-3 ${
                                                 attachment ? 'border-primary/50 bg-primary/5' : 'border-border hover:border-primary/30 hover:bg-muted/30'
@@ -348,7 +350,7 @@ const ComplaintModal = ({
                                                         <span className="material-icons-round text-2xl">image</span>
                                                     </div>
                                                     <div className="text-center">
-                                                        <p className="text-sm font-semibold text-foreground">{attachment.name}</p>
+                                                        <p className="text-sm font-bold text-foreground">{attachment.name}</p>
                                                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">
                                                             {(attachment.size / 1024 / 1024).toFixed(2)} MB &bull; Click to change
                                                         </p>
@@ -360,7 +362,7 @@ const ComplaintModal = ({
                                                         <span className="material-icons-round text-2xl">add_a_photo</span>
                                                     </div>
                                                     <div className="text-center">
-                                                        <p className="text-sm font-semibold text-foreground">Upload Evidence</p>
+                                                        <p className="text-sm font-bold text-foreground">Upload Evidence</p>
                                                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">JPG, PNG up to 10MB</p>
                                                     </div>
                                                 </>
@@ -371,7 +373,7 @@ const ComplaintModal = ({
                                     <button
                                         type="submit"
                                         disabled={isSubmitting || !complaintType}
-                                        className="w-full py-5 rounded-2xl bg-primary text-primary-foreground text-sm font-semibold uppercase tracking-[0.2em] transition-all hover:opacity-90 active:scale-[0.98] shadow-xl shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                                        className="w-full py-5 rounded-2xl bg-primary text-primary-foreground text-sm font-bold uppercase tracking-[0.2em] transition-all hover:opacity-90 active:scale-[0.98] shadow-xl shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
                                     >
                                         {isSubmitting ? (
                                             <>
@@ -2658,7 +2660,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                     </div>
                     <div className={`mx-2 h-6 w-px ${isDark ? 'bg-zinc-700' : 'bg-zinc-300'}`}></div>
                     <div>
-                        <h1 className={`text-sm font-semibold ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{propertyContext?.selectedProperty?.name || "All Properties"}</h1>
+                        <h1 className={`text-sm font-bold ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{propertyContext?.selectedProperty?.name || "All Properties"}</h1>
                         <div className={`flex items-center gap-1 text-xs ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
                             <span className="size-1.5 rounded-full bg-green-500"></span>
                             <span>All systems operational</span>
@@ -2667,7 +2669,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                     {readOnly && (
                         <div className="flex items-center gap-1.5 ml-3 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30">
                             <span className="material-icons-round text-emerald-400 text-[14px]">visibility</span>
-                                <span className={`text-xs font-semibold tracking-wide ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>View Only</span>
+                                <span className={`text-xs font-bold tracking-wide ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>View Only</span>
                         </div>
                     )}
                 </div>
@@ -2684,20 +2686,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                         </div>
                         
                         {!readOnly && isRenamingFloor ? (
-                            <form 
-                                onSubmit={(e) => {
-                                    e.preventDefault();
-                                    setFloorLayouts(prev => ({
-                                        ...prev,
-                                        [activeFloor]: {
-                                            ...prev[activeFloor],
-                                            name: editingFloorName.trim() || undefined
-                                        }
-                                    }));
-                                    setIsRenamingFloor(false);
-                                }}
-                                className="flex items-center mx-1"
-                            >
+                            <div className="flex items-center mx-1">
                                 <input
                                     type="text"
                                     value={editingFloorName}
@@ -2712,10 +2701,23 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                         }));
                                         setIsRenamingFloor(false);
                                     }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                            setFloorLayouts(prev => ({
+                                                ...prev,
+                                                [activeFloor]: {
+                                                    ...prev[activeFloor],
+                                                    name: editingFloorName.trim() || undefined
+                                                }
+                                            }));
+                                            setIsRenamingFloor(false);
+                                        }
+                                    }}
                                     className={`border border-primary text-sm font-bold px-2 py-1 rounded w-[120px] md:w-[150px] focus:outline-none ${isDark ? 'bg-background-dark text-zinc-100' : 'bg-card text-zinc-800'}`}
                                     placeholder="Floor Name"
+                                    autoFocus
                                 />
-                            </form>
+                            </div>
                         ) : (
                             <div className={`relative flex items-center mx-1 group cursor-pointer transition-colors rounded-lg ${isDark ? 'hover:bg-zinc-800' : 'hover:bg-white'}`}>
                                 <select
@@ -2770,7 +2772,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                     {!readOnly && (
                         <>
                             <div className={`h-6 w-px mx-1 ${isDark ? 'bg-zinc-700' : 'bg-border'}`}></div>
-                            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-widest transition-all ${
+                            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${
                                 saveStatus === "idle" ? "text-zinc-400" :
                                 saveStatus === "waiting" ? "text-amber-500 animate-pulse" :
                                 saveStatus === "saving" ? "text-primary animate-pulse" :
@@ -2820,7 +2822,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                 }}
                             >
                                 <div className="absolute inset-0 pointer-events-none flex items-center justify-center select-none">
-                                    <span className={`text-[72px] md:text-[110px] font-semibold tracking-[0.18em] ${isDark ? 'text-white/5' : 'text-zinc-400/20'}`}>
+                                    <span className={`text-[72px] md:text-[110px] font-bold tracking-[0.18em] ${isDark ? 'text-white/5' : 'text-zinc-400/20'}`}>
                                         {floorWatermarkLabel}
                                     </span>
                                 </div>
@@ -3207,7 +3209,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                 </div>
                                                 <div className={`absolute top-[8%] left-1/2 -translate-x-1/2 size-2 rounded-full ${isDark ? 'bg-neutral-400' : 'bg-zinc-500'}`}></div>
                                                 <div className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity bg-blue-500"></div>
-                                                <div className={`absolute bottom-[6px] left-1/2 -translate-x-1/2 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider ${isDark ? 'text-zinc-300' : 'text-zinc-500'}`}>
+                                                <div className={`absolute bottom-[6px] left-1/2 -translate-x-1/2 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider ${isDark ? 'text-zinc-300' : 'text-zinc-500'}`}>
                                                     <span className="material-icons-round text-[12px]">elevator</span>
                                                     <span>Elevator</span>
                                                 </div>
@@ -3523,7 +3525,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                             unit={tooltipUnit} 
                                             onClose={() => setTooltipUnit(null)} 
                                             isDark={isDark}
-                                            onAction={(action) => {
+                                            onAction={(action: "transfer" | "complain") => {
                                                 if (action === "transfer") {
                                                     setTransferModalUnit(tooltipUnit);
                                                     setTransferReason("");
@@ -3561,13 +3563,13 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                     <div className="flex items-center gap-4 bg-zinc-900/80 backdrop-blur-xl border border-white/10 px-4 py-2.5 rounded-2xl shadow-2xl pointer-events-auto transition-all hover:bg-zinc-900/90 hover:scale-[1.02]">
                                         <div className="flex items-center gap-4 px-2 py-1">
                                             <div className="flex flex-col">
-                                                <span className="text-[8px] font-semibold text-white/40 uppercase tracking-[0.2em]">Live Units</span>
-                                                <span className="font-mono text-lg font-semibold text-white leading-none mt-1">{units.filter(u => statusFilters.includes(u.status)).length}</span>
+                                                <span className="text-[8px] font-bold text-white/40 uppercase tracking-[0.2em]">Live Units</span>
+                                                <span className="font-mono text-lg font-bold text-white leading-none mt-1">{units.filter(u => statusFilters.includes(u.status)).length}</span>
                                             </div>
                                             <div className="h-8 w-px bg-white/10" />
                                             <div className="flex flex-col">
-                                                <span className="text-[8px] font-semibold text-white/40 uppercase tracking-[0.2em]">Footprint</span>
-                                                <span className="font-mono text-lg font-semibold text-white leading-none mt-1">
+                                                <span className="text-[8px] font-bold text-white/40 uppercase tracking-[0.2em]">Footprint</span>
+                                                <span className="font-mono text-lg font-bold text-white leading-none mt-1">
                                                     {totalArea.toLocaleString()} <span className="text-[10px] font-normal text-white/40">sqft</span>
                                                 </span>
                                             </div>
@@ -3591,7 +3593,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                 <div className={`size-3.5 rounded border flex items-center justify-center transition-all ${statusFilters.includes("vacant") ? 'bg-emerald-500 border-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-transparent border-white/30'}`}>
                                                     {statusFilters.includes("vacant") && <span className="material-icons-round text-[10px] text-white">check</span>}
                                                 </div>
-                                                <span className="text-[9px] font-semibold text-white/90 uppercase tracking-[0.1em]">Available</span>
+                                                <span className="text-[9px] font-bold text-white/90 uppercase tracking-[0.1em]">Available</span>
                                             </button>
                                             <button 
                                                 onClick={() => toggleStatusFilter("occupied")}
@@ -3600,7 +3602,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                 <div className={`size-3.5 rounded border flex items-center justify-center transition-all ${statusFilters.includes("occupied") ? 'bg-blue-500 border-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]' : 'bg-transparent border-white/30'}`}>
                                                     {statusFilters.includes("occupied") && <span className="material-icons-round text-[10px] text-white">check</span>}
                                                 </div>
-                                                <span className="text-[9px] font-semibold text-white/90 uppercase tracking-[0.1em]">Occupied</span>
+                                                <span className="text-[9px] font-bold text-white/90 uppercase tracking-[0.1em]">Occupied</span>
                                             </button>
                                             <button 
                                                 onClick={() => toggleStatusFilter("maintenance")}
@@ -3609,7 +3611,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                 <div className={`size-3.5 rounded border flex items-center justify-center transition-all ${statusFilters.includes("maintenance") ? 'bg-rose-500 border-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]' : 'bg-transparent border-white/30'}`}>
                                                     {statusFilters.includes("maintenance") && <span className="material-icons-round text-[10px] text-white">check</span>}
                                                 </div>
-                                                <span className="text-[9px] font-semibold text-white/90 uppercase tracking-[0.1em]">Maintenance</span>
+                                                <span className="text-[9px] font-bold text-white/90 uppercase tracking-[0.1em]">Maintenance</span>
                                             </button>
                                             <button 
                                                 onClick={() => toggleStatusFilter("neardue")}
@@ -3618,7 +3620,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                 <div className={`size-3.5 rounded border flex items-center justify-center transition-all ${statusFilters.includes("neardue") ? 'bg-amber-500 border-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]' : 'bg-transparent border-white/30'}`}>
                                                     {statusFilters.includes("neardue") && <span className="material-icons-round text-[10px] text-white">check</span>}
                                                 </div>
-                                                <span className="text-[9px] font-semibold text-white/90 uppercase tracking-[0.1em]">Near Due</span>
+                                                <span className="text-[9px] font-bold text-white/90 uppercase tracking-[0.1em]">Near Due</span>
                                             </button>
                                         </div>
                                     </div>
@@ -3815,7 +3817,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                     </button>
                                     <button 
                                         onClick={toggleFullscreen}
-                                        className={`size-10 rounded-xl flex items-center justify-center transition-all ${isCanvasFullscreen ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/20' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                                        className={`size-10 rounded-xl flex items-center justify-center transition-all ${isCanvasFullscreen ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
                                         title="Toggle Canvas Fullscreen (F)"
                                     >
                                         <span className="material-icons-round text-xl">{isCanvasFullscreen ? 'fullscreen_exit' : 'fullscreen'}</span>
@@ -3873,7 +3875,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                     <span className="material-icons-round">keyboard</span>
                                                 </div>
                                                 <div>
-                                                    <h2 className="text-xl font-semibold text-white tracking-tight">Command Center</h2>
+                                                    <h2 className="text-xl font-bold text-white tracking-tight">Command Center</h2>
                                                     <p className="text-xs text-white/40 font-bold uppercase tracking-widest mt-0.5">Quick Access Shortcuts</p>
                                                 </div>
                                             </div>
@@ -3888,7 +3890,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
                                     <div className="p-8 grid grid-cols-1 gap-6">
                                         <div className="space-y-4">
-                                            <h3 className="text-[10px] font-semibold text-white/30 uppercase tracking-[0.2em] px-1">Viewport Modes</h3>
+                                            <h3 className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] px-1">Viewport Modes</h3>
                                             <div className="grid grid-cols-2 gap-4">
                                                 <HotkeyItem label="Toggle Fullscreen" shortcut="F" />
                                                 <HotkeyItem label="Toggle HUD Overlay" shortcut="H" />
@@ -3899,7 +3901,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                         </div>
 
                                         <div className="space-y-4">
-                                            <h3 className="text-[10px] font-semibold text-white/30 uppercase tracking-[0.2em] px-1">Editor Actions</h3>
+                                            <h3 className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] px-1">Editor Actions</h3>
                                             <div className="grid grid-cols-2 gap-4">
                                                 <HotkeyItem label="Undo Last Action" shortcut="Ctrl + Z" />
                                                 <HotkeyItem label="Delete Selection" shortcut="Delete / Backspace" />
@@ -3946,7 +3948,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                         <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/55 backdrop-blur-sm p-4">
                             <div className="w-full max-w-sm rounded-xl border border-border bg-card shadow-2xl">
                                 <div className="p-5">
-                                    <h3 className="text-sm font-semibold text-zinc-900">Confirm deletion</h3>
+                                    <h3 className="text-sm font-bold text-zinc-900">Confirm deletion</h3>
                                     <p className="mt-2 text-xs text-zinc-600">
                                         Delete {getCanvasItemLabel(pendingDelete.item)}?
                                     </p>
@@ -3963,7 +3965,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                     </button>
                                     <button
                                         onClick={confirmDeleteItem}
-                                        className="rounded-md border border-red-500/30 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100"
+                                        className="rounded-md border border-red-500/30 bg-red-50 px-3 py-1.5 text-xs font-bold text-red-700 hover:bg-red-100"
                                     >
                                         Delete
                                     </button>
@@ -3983,7 +3985,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                     <div className="flex size-14 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-500 mb-6">
                                         <span className="material-icons-round text-3xl">ink_eraser</span>
                                     </div>
-                                    <h3 className={`text-2xl font-semibold tracking-tight ${isDark ? 'text-white' : 'text-zinc-900'}`}>Clear entire floor?</h3>
+                                    <h3 className={`text-2xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-zinc-900'}`}>Clear entire floor?</h3>
                                     <p className={`mt-3 text-sm leading-relaxed ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
                                         This will remove all units, corridors, and structures from <span className="font-bold text-primary">{floorLayouts[activeFloor]?.name || getFloorDisplayLabel(activeFloor)}</span>. 
                                         <br/><br/>
@@ -4002,7 +4004,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                             executeClearCanvas();
                                             setPendingClearFloor(false);
                                         }}
-                                        className="px-6 py-2.5 rounded-xl bg-rose-500 text-white text-sm font-semibold shadow-lg shadow-rose-500/25 hover:bg-rose-600 transition-all active:scale-95"
+                                        className="px-6 py-2.5 rounded-xl bg-rose-500 text-white text-sm font-bold shadow-lg shadow-rose-500/25 hover:bg-rose-600 transition-all active:scale-95"
                                     >
                                         Clear Floor
                                     </button>
@@ -4023,7 +4025,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                     <div className={`mb-6 flex size-16 items-center justify-center rounded-2xl ${isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-600'}`}>
                                         <span className="material-icons-round text-3xl">auto_awesome_mosaic</span>
                                     </div>
-                                    <h3 className={`text-2xl font-semibold tracking-tight ${isDark ? 'text-white' : 'text-zinc-900'}`}>Apply Layout Preset?</h3>
+                                    <h3 className={`text-2xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-zinc-900'}`}>Apply Layout Preset?</h3>
                                     <p className={`mt-3 text-sm leading-relaxed ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
                                         Applying a preset will clear your current floor plan on <span className="font-bold text-primary">{floorLayouts[activeFloor]?.name || getFloorDisplayLabel(activeFloor)}</span> and generate a new layout.
                                         <br/><br/>
@@ -4039,7 +4041,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                     </button>
                                     <button
                                         onClick={() => confirmApplyPreset(presetConfirm.presetType!)}
-                                        className="px-6 py-2.5 rounded-xl bg-amber-500 text-zinc-900 text-sm font-semibold shadow-lg shadow-amber-500/25 hover:bg-amber-400 transition-all active:scale-95"
+                                        className="px-6 py-2.5 rounded-xl bg-amber-500 text-amber-950 text-sm font-bold shadow-lg shadow-amber-500/25 hover:bg-amber-400 transition-all active:scale-95"
                                     >
                                         Apply Preset
                                     </button>
@@ -4052,13 +4054,6 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                         isOpen={!!transferModalUnit}
                         onClose={() => setTransferModalUnit(null)}
                         unit={transferModalUnit}
-                        isDark={isDark}
-                        onSubmit={handleTransferSubmit}
-                        isSubmitting={isSubmittingTransfer}
-                        success={transferSuccess}
-                        error={transferError}
-                        reason={transferReason}
-                        setReason={setTransferReason}
                     />
 
                     <ComplaintModal 
@@ -4235,7 +4230,7 @@ const StructureDetailsPanel = ({
                     </motion.button>
                 </div>
                 <div className="absolute bottom-8 left-8 right-8 z-20">
-                    <h1 className="text-[2rem] font-semibold leading-tight text-white capitalize">{structure.label}</h1>
+                    <h1 className="text-[2rem] font-bold leading-tight text-white capitalize">{structure.label}</h1>
                     <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest mt-1">
                         {structure.type} {structure.variant ? `â€¢ ${structure.variant}` : ''}
                     </p>
@@ -4407,11 +4402,11 @@ const UnitDetailsPanel = ({
             {/* Hero Header Section */}
             <div className="relative h-72 w-full shrink-0 group overflow-hidden">
                 {/* Background Image / Gradient */}
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-slate-500/10 to-sky-500/20 z-0"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-zinc-500/10 to-sky-500/20 z-0"></div>
                 <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-60 z-0 grayscale-[0.2] transition-transform duration-1000 group-hover:scale-110"></div>
 
                 {/* Depth Gradients */}
-                <div className="absolute inset-0 z-10 bg-gradient-to-t from-slate-50 via-slate-50/40 to-transparent dark:from-[#0a0a0a] dark:via-[#0a0a0a]/60 dark:to-transparent"></div>
+                <div className="absolute inset-0 z-10 bg-gradient-to-t from-surface-0 via-surface-0/40 to-transparent dark:from-[#0a0a0a] dark:via-[#0a0a0a]/60 dark:to-transparent"></div>
                 <div className="absolute inset-0 z-10 bg-white/5 opacity-50 dark:bg-black/20"></div>
 
                 {/* Top Actions */}
@@ -4446,12 +4441,12 @@ const UnitDetailsPanel = ({
                         animate={{ opacity: 1, y: 0 }}
                         className="mb-1 flex items-center gap-2"
                     >
-                        <span className="text-[10px] font-semibold uppercase tracking-[0.3em] text-primary dark:text-primary-400">UNIT {unit.id}</span>
+                        <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary dark:text-primary-400">UNIT {unit.id}</span>
                         <div className="size-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
                         <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{unit.type}</span>
                     </motion.div>
                     
-                    <h1 className="mb-4 text-[3.2rem] font-semibold leading-[0.9] tracking-tighter text-zinc-900 drop-shadow-[0_2px_10px_rgba(255,255,255,0.8)] dark:text-white dark:drop-shadow-[0_2px_20px_rgba(0,0,0,0.5)]">
+                    <h1 className="mb-4 text-[3.2rem] font-bold leading-[0.9] tracking-tighter text-zinc-900 drop-shadow-[0_2px_10px_rgba(255,255,255,0.8)] dark:text-white dark:drop-shadow-[0_2px_20px_rgba(0,0,0,0.5)]">
                         {unit.name}
                     </h1>
 
@@ -4486,7 +4481,7 @@ const UnitDetailsPanel = ({
                 >
                     {/* Residence Configuration (Always Editable) */}
                     <section className="space-y-4">
-                        <h3 className="px-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-zinc-400">RESIDENCE CONFIGURATION</h3>
+                        <h3 className="px-1 text-[10px] font-bold uppercase tracking-[0.25em] text-zinc-400">RESIDENCE CONFIGURATION</h3>
                         <div className="space-y-4 rounded-[24px] border border-zinc-200 bg-white p-6 dark:border-white/5 dark:bg-zinc-900/40">
                             <div>
                                 <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Area (sqm)</label>
@@ -4513,9 +4508,9 @@ const UnitDetailsPanel = ({
                     {unit.status !== 'vacant' && (
                         <section className="relative">
                         <div className="mb-4 flex items-center justify-between px-1">
-                            <h3 className="text-[10px] font-semibold uppercase tracking-[0.25em] text-zinc-400 dark:text-zinc-500">RESIDENT PROFILE</h3>
+                            <h3 className="text-[10px] font-bold uppercase tracking-[0.25em] text-zinc-400 dark:text-zinc-500">RESIDENT PROFILE</h3>
                             {unit.status === 'occupied' && (
-                                <div className="flex h-5 items-center rounded-full bg-primary/10 px-2 text-[9px] font-semibold uppercase text-primary">Lease Holder</div>
+                                <div className="flex h-5 items-center rounded-full bg-primary/10 px-2 text-[9px] font-bold uppercase text-primary">Lease Holder</div>
                             )}
                         </div>
                         
@@ -4552,7 +4547,7 @@ const UnitDetailsPanel = ({
                                         </div>
                                     </div>
                                     <div className="flex-1">
-                                        <p className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-white">{unit.tenant || "VACANT UNIT"}</p>
+                                        <p className="text-xl font-bold tracking-tight text-zinc-900 dark:text-white">{unit.tenant || "VACANT UNIT"}</p>
                                         <div className="mt-1 flex items-center gap-2">
                                             <span className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">{unit.tenant ? "Active Tenant" : "Ready for Move-in"}</span>
                                             <div className="size-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
@@ -4575,7 +4570,7 @@ const UnitDetailsPanel = ({
                                     >
                                         <Link
                                             href={`/landlord/messages?unitId=${encodeURIComponent(unit.id)}`}
-                                            className="flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-sm font-semibold text-zinc-700 transition-all hover:bg-primary/10 hover:text-primary dark:text-zinc-200"
+                                            className="flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-sm font-bold text-zinc-700 transition-all hover:bg-primary/10 hover:text-primary dark:text-zinc-200"
                                         >
                                             <div className="flex size-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
                                                 <span className="material-icons-round text-base">chat_bubble</span>
@@ -4585,7 +4580,7 @@ const UnitDetailsPanel = ({
                                         {canViewTenantProfile ? (
                                             <Link
                                                 href={tenantProfileHref}
-                                                className="flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-sm font-semibold text-zinc-700 transition-all hover:bg-primary/10 hover:text-primary dark:text-zinc-200"
+                                                className="flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-sm font-bold text-zinc-700 transition-all hover:bg-primary/10 hover:text-primary dark:text-zinc-200"
                                             >
                                                 <div className="flex size-8 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
                                                     <span className="material-icons-round text-base">person</span>
@@ -4595,7 +4590,7 @@ const UnitDetailsPanel = ({
                                         ) : (
                                             <div
                                                 title="No tenant identity available for this unit yet."
-                                                className="flex w-full cursor-not-allowed items-center gap-3 rounded-2xl px-4 py-3.5 text-sm font-semibold text-zinc-400 dark:text-zinc-600"
+                                                className="flex w-full cursor-not-allowed items-center gap-3 rounded-2xl px-4 py-3.5 text-sm font-bold text-zinc-400 dark:text-zinc-600"
                                             >
                                                 <div className="flex size-8 items-center justify-center rounded-xl bg-zinc-100 text-zinc-300 dark:bg-white/5">
                                                     <span className="material-icons-round text-base">person_off</span>
@@ -4616,7 +4611,7 @@ const UnitDetailsPanel = ({
                                 whileHover={{ scale: 1.02, backgroundColor: "rgba(var(--primary), 0.1)" }}
                                 whileTap={{ scale: 0.98 }}
                                 onClick={onOpenWalkIn}
-                                className="flex w-full items-center justify-center gap-3 rounded-[32px] border-2 border-dashed border-primary/30 bg-primary/5 p-8 text-[11px] font-semibold tracking-[0.2em] text-primary transition-all hover:border-primary/50"
+                                className="flex w-full items-center justify-center gap-3 rounded-[32px] border-2 border-dashed border-primary/30 bg-primary/5 p-8 text-[11px] font-bold tracking-[0.2em] text-primary transition-all hover:border-primary/50"
                             >
                                 <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                                     <span className="material-icons-round text-2xl">person_add</span>
@@ -4624,21 +4619,21 @@ const UnitDetailsPanel = ({
                                 START WALK-IN APPLICATION
                             </motion.button>
 
-                            <div className="group relative overflow-hidden rounded-[32px] border border-indigo-500/20 bg-indigo-500/5 p-6 shadow-xl shadow-indigo-500/5 dark:bg-indigo-950/20">
-                                <div className="absolute -right-4 -top-4 size-24 rounded-full bg-indigo-500/10 blur-2xl transition-all group-hover:bg-indigo-500/20" />
+                            <div className="group relative overflow-hidden rounded-[32px] border border-primary/20 bg-primary/5 p-6 shadow-xl shadow-primary/5 dark:bg-primary-950/20">
+                                <div className="absolute -right-4 -top-4 size-24 rounded-full bg-primary/10 blur-2xl transition-all group-hover:bg-primary/20" />
                                 <div className="flex items-center justify-between mb-4">
-                                    <h3 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-400">INVITE RESIDENT</h3>
-                                    <div className="flex size-8 items-center justify-center rounded-xl bg-indigo-500 text-white">
+                                    <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary dark:text-primary">INVITE RESIDENT</h3>
+                                    <div className="flex size-8 items-center justify-center rounded-xl bg-primary text-white">
                                         <span className="material-icons-round text-lg">qr_code_2</span>
                                     </div>
                                 </div>
-                                <p className="text-[11px] font-bold leading-relaxed text-indigo-800/70 dark:text-indigo-300/70 mb-4">
+                                <p className="text-[11px] font-bold leading-relaxed text-primary/70 dark:text-primary/70 mb-4">
                                     Share this unit&apos;s unique application link with prospective tenants to start their digital journey.
                                 </p>
                                 <div className="flex flex-col gap-2">
                                     <button 
                                         onClick={onOpenInvite}
-                                        className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-indigo-500 text-white text-[10px] font-semibold uppercase tracking-widest transition-all hover:bg-indigo-600 active:scale-95 shadow-lg shadow-indigo-500/20"
+                                        className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-primary text-white text-[10px] font-bold uppercase tracking-widest transition-all hover:bg-primary/90 active:scale-95 shadow-lg shadow-primary/20"
                                     >
                                         <span className="material-icons-round text-sm">qr_code_2</span>
                                         Generate Invite Link
@@ -4664,10 +4659,10 @@ const UnitDetailsPanel = ({
                                     </div>
                                     <div className="flex-1">
                                         <div className="flex items-center justify-between">
-                                            <h3 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-rose-600 dark:text-rose-400">ACTIVE REPAIR</h3>
-                                            <Link href={`/landlord/maintenance?unitId=${unit.id}`} className="text-[9px] font-semibold text-rose-600 hover:underline dark:text-rose-400">DETAILS</Link>
+                                            <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-rose-600 dark:text-rose-400">ACTIVE REPAIR</h3>
+                                            <Link href={`/landlord/maintenance?unitId=${unit.id}`} className="text-[9px] font-bold text-rose-600 hover:underline dark:text-rose-400">DETAILS</Link>
                                         </div>
-                                        <p className="mt-2 text-lg font-semibold leading-tight text-zinc-900 dark:text-white line-clamp-2">
+                                        <p className="mt-2 text-lg font-bold leading-tight text-zinc-900 dark:text-white line-clamp-2">
                                             {unit.maintenanceTitle || unit.details?.trim() || "Unspecified Repair"}
                                         </p>
                                         <div className="mt-3 flex items-center gap-2">
@@ -4682,8 +4677,8 @@ const UnitDetailsPanel = ({
 
                         {/* Lease Analytics & Timeline */}
                         {(unit.status === 'occupied' || unit.status === 'neardue') && (
-                            <div className="group relative overflow-hidden rounded-[32px] border border-zinc-200 bg-white p-8 shadow-xl shadow-slate-200/20 dark:border-white/5 dark:bg-zinc-900/40 dark:shadow-none">
-                                <h3 className="mb-8 text-[10px] font-semibold uppercase tracking-[0.3em] text-zinc-400">LEASE ANALYTICS</h3>
+                            <div className="group relative overflow-hidden rounded-[32px] border border-zinc-200 bg-white p-8 shadow-xl shadow-zinc-200/20 dark:border-white/5 dark:bg-zinc-900/40 dark:shadow-none">
+                                <h3 className="mb-8 text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-400">LEASE ANALYTICS</h3>
                                 
                                 <div className="flex flex-col items-center">
                                     <div className="relative h-44 w-72">
@@ -4724,10 +4719,10 @@ const UnitDetailsPanel = ({
                                         </svg>
                                         
                                         <div className="absolute inset-x-0 bottom-0 flex flex-col items-center text-center">
-                                            <p className="text-3xl font-semibold tracking-tighter text-zinc-900 dark:text-white">
+                                            <p className="text-3xl font-bold tracking-tighter text-zinc-900 dark:text-white">
                                                 {daysRemaining !== null ? `${Math.abs(daysRemaining)}` : "--"}
                                             </p>
-                                            <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
                                                 DAYS {daysRemaining && daysRemaining < 0 ? "OVERDUE" : "REMAINING"}
                                             </p>
                                         </div>
@@ -4736,12 +4731,12 @@ const UnitDetailsPanel = ({
                                     <div className="mt-8 flex w-full items-center justify-between gap-4">
                                         <div className="flex-1 space-y-1">
                                             <p className="text-[10px] font-bold text-zinc-400">Lease Commenced</p>
-                                            <p className="text-xs font-semibold text-zinc-800 dark:text-zinc-100">{unit.leaseStart ? <ClientOnlyDate date={unit.leaseStart} format={{ month: 'short', day: 'numeric', year: 'numeric' }} /> : "--"}</p>
+                                            <p className="text-xs font-bold text-zinc-800 dark:text-zinc-100">{unit.leaseStart ? <ClientOnlyDate date={unit.leaseStart} format={{ month: 'short', day: 'numeric', year: 'numeric' }} /> : "--"}</p>
                                         </div>
                                         <div className="h-8 w-px bg-zinc-100 dark:bg-white/5" />
                                         <div className="flex-1 text-right space-y-1">
                                             <p className="text-[10px] font-bold text-zinc-400">Renewal Window</p>
-                                            <p className="text-xs font-semibold text-zinc-800 dark:text-zinc-100">{unit.leaseEnd ? <ClientOnlyDate date={unit.leaseEnd} format={{ month: 'short', day: 'numeric', year: 'numeric' }} /> : "--"}</p>
+                                            <p className="text-xs font-bold text-zinc-800 dark:text-zinc-100">{unit.leaseEnd ? <ClientOnlyDate date={unit.leaseEnd} format={{ month: 'short', day: 'numeric', year: 'numeric' }} /> : "--"}</p>
                                         </div>
                                     </div>
 
@@ -4762,7 +4757,7 @@ const UnitDetailsPanel = ({
 
                     {/* Recent Activity / Status */}
                     <section className="space-y-4">
-                        <h3 className="px-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-zinc-400 dark:text-zinc-500">RECENT ACTIVITY</h3>
+                        <h3 className="px-1 text-[10px] font-bold uppercase tracking-[0.25em] text-zinc-400 dark:text-zinc-500">RECENT ACTIVITY</h3>
                         
                         <div className="grid grid-cols-1 gap-3">
                             {unit.applicationCount && unit.applicationCount > 0 ? (
@@ -4771,10 +4766,10 @@ const UnitDetailsPanel = ({
                                         <span className="material-icons-round text-xl">assignment_ind</span>
                                     </div>
                                     <div className="flex-1">
-                                        <p className="text-xs font-semibold text-zinc-900 dark:text-white">{unit.applicationCount} Pending Application{unit.applicationCount === 1 ? "" : "s"}</p>
+                                        <p className="text-xs font-bold text-zinc-900 dark:text-white">{unit.applicationCount} Pending Application{unit.applicationCount === 1 ? "" : "s"}</p>
                                         <p className="text-[10px] font-bold text-zinc-500">Awaiting landlord review</p>
                                     </div>
-                                    <Link href={`/landlord/applications?unitId=${unit.id}`} className="text-[10px] font-semibold text-primary hover:underline">VIEW ALL</Link>
+                                    <Link href={`/landlord/applications?unitId=${unit.id}`} className="text-[10px] font-bold text-primary hover:underline">VIEW ALL</Link>
                                 </div>
                             ) : null}
 
@@ -4786,7 +4781,7 @@ const UnitDetailsPanel = ({
                                     <span className="material-icons-round text-xl">history</span>
                                 </div>
                                 <div className="flex-1">
-                                    <p className="text-xs font-semibold text-zinc-900 dark:text-white">Full Unit History</p>
+                                    <p className="text-xs font-bold text-zinc-900 dark:text-white">Full Unit History</p>
                                     <p className="text-[10px] font-bold text-zinc-500">View past leases & maintenance</p>
                                 </div>
                                 <span className="material-icons-round text-zinc-400 text-sm">chevron_right</span>
@@ -4796,7 +4791,7 @@ const UnitDetailsPanel = ({
 
                     {/* Command Center Quick Actions */}
                     <section className="rounded-[32px] border border-zinc-200 bg-zinc-900 p-6 shadow-2xl dark:border-white/5">
-                        <h3 className="mb-4 text-[10px] font-semibold uppercase tracking-[0.3em] text-zinc-500">COMMAND CENTER</h3>
+                        <h3 className="mb-4 text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-500">COMMAND CENTER</h3>
                         <div className="grid grid-cols-2 gap-3">
                             {quickActions.map((action) => (
                                 <motion.button
@@ -4805,7 +4800,7 @@ const UnitDetailsPanel = ({
                                     whileTap={{ scale: 0.98 }}
                                     type="button"
                                     onClick={() => handleQuickAction(action)}
-                                    className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-white/10 p-4 text-[11px] font-semibold text-white transition-all hover:shadow-xl hover:shadow-black/20"
+                                    className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-white/10 p-4 text-[11px] font-bold text-white transition-all hover:shadow-xl hover:shadow-black/20"
                                 >
                                     <div className="flex size-10 items-center justify-center rounded-xl bg-white/10">
                                         <span className="material-icons-round text-xl">{QUICK_ACTION_META[action].icon}</span>
@@ -4816,7 +4811,7 @@ const UnitDetailsPanel = ({
                         </div>
                         
                         {quickActionError && (
-                            <p className="mt-3 text-xs font-semibold text-rose-300">{quickActionError}</p>
+                            <p className="mt-3 text-xs font-bold text-rose-300">{quickActionError}</p>
                         )}
                     </section>
                 </motion.div>
@@ -4825,7 +4820,7 @@ const UnitDetailsPanel = ({
             {pendingQuickAction && (
                 <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/45 p-6">
                     <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-5 shadow-2xl">
-                        <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Confirm Status Change</h4>
+                        <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">Confirm Status Change</h4>
                         <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
                             {evaluateQuickAction(unit, pendingQuickAction).confirmMessage || "Are you sure you want to continue?"}
                         </p>
@@ -4833,7 +4828,7 @@ const UnitDetailsPanel = ({
                             <button
                                 type="button"
                                 onClick={() => setPendingQuickAction(null)}
-                                className="rounded-lg border border-zinc-300 px-3 py-2 text-xs font-semibold text-zinc-700 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                                className="rounded-lg border border-zinc-300 px-3 py-2 text-xs font-bold text-zinc-700 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
                             >
                                 Cancel
                             </button>
@@ -4844,7 +4839,7 @@ const UnitDetailsPanel = ({
                                     setPendingQuickAction(null);
                                     executeQuickAction(action);
                                 }}
-                                className="rounded-lg bg-rose-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-rose-500"
+                                className="rounded-lg bg-rose-600 px-3 py-2 text-xs font-bold text-white transition-colors hover:bg-rose-500"
                             >
                                 Confirm
                             </button>
@@ -4888,7 +4883,7 @@ const UnitNotesPanel = ({
                 <button
                     type="button"
                     onClick={onToggle}
-                    className="group relative flex w-[52px] items-center justify-center border-r border-border bg-gradient-to-b from-slate-100 to-slate-200 text-zinc-600 transition-colors hover:from-slate-200 hover:to-slate-300 dark:from-slate-900 dark:to-slate-950 dark:text-zinc-300 dark:hover:from-slate-800 dark:hover:to-slate-900"
+                    className="group relative flex w-[52px] items-center justify-center border-r border-border bg-gradient-to-b from-surface-0 to-surface-1 text-zinc-600 transition-colors hover:from-surface-1 hover:to-surface-2 dark:from-zinc-900 dark:to-zinc-950 dark:text-zinc-300 dark:hover:from-zinc-800 dark:hover:to-zinc-900"
                     title={isOpen ? "Collapse notes" : "Open notes"}
                 >
                     <div className="flex flex-col items-center gap-2">
@@ -4899,11 +4894,11 @@ const UnitNotesPanel = ({
                     </div>
                 </button>
                 {isOpen && (
-                    <div className="flex min-w-0 flex-1 flex-col bg-gradient-to-b from-white to-slate-100/80 p-4 dark:from-slate-900 dark:to-slate-950/90">
+                    <div className="flex min-w-0 flex-1 flex-col bg-gradient-to-b from-white to-surface-0/80 p-4 dark:from-zinc-900 dark:to-zinc-950/90">
                         <div className="rounded-2xl border border-zinc-200 bg-white/80 p-3 shadow-sm backdrop-blur dark:border-zinc-700/80 dark:bg-zinc-900/70">
                             <div className="flex items-start justify-between gap-2">
                                 <div>
-                                    <h3 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-400">
+                                    <h3 className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em] text-primary-400">
                                         <span className="material-icons-round text-base">sticky_note_2</span>
                                         Unit Notes
                                     </h3>
@@ -4922,7 +4917,7 @@ const UnitNotesPanel = ({
                         />
                         <div className="mt-2 flex items-center justify-between px-1">
                             <p className="text-[11px] text-zinc-500 dark:text-zinc-400">Tip: Use short action-oriented notes.</p>
-                            <p className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">{noteLength} chars</p>
+                            <p className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400">{noteLength} chars</p>
                         </div>
                     </div>
                 )}
@@ -4972,7 +4967,7 @@ const SidebarBlockLibrary = ({
                                     draggable
                                     onDragStart={onDragStart(blockType, u.id)}
                                     onClick={() => onUnitClick?.(u)}
-                                    className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-semibold cursor-grab active:cursor-grabbing transition-all ${isDark ? 'border-amber-500/20 bg-amber-500/10 text-amber-300 hover:border-amber-400/40' : 'border-amber-300 bg-amber-100/80 text-amber-800 hover:border-amber-400'}`}
+                                    className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-bold cursor-grab active:cursor-grabbing transition-all ${isDark ? 'border-amber-500/20 bg-amber-500/10 text-amber-300 hover:border-amber-400/40' : 'border-amber-300 bg-amber-100/80 text-amber-800 hover:border-amber-400'}`}
                                 >
                                     <span className="material-icons-round text-sm">apartment</span>
                                     {u.name}
@@ -4988,12 +4983,12 @@ const SidebarBlockLibrary = ({
                     <span className="absolute inset-y-0 left-0 flex items-center pl-3">
                         <span className="material-icons-round text-zinc-400 text-lg">search</span>
                     </span>
-                    <input className={`w-full rounded-lg border pl-10 pr-3 py-2 text-sm placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary ${isDark ? 'border-zinc-700 bg-background-dark text-zinc-200' : 'border-border bg-zinc-50 text-zinc-700'}`} placeholder="Search components..." type="text" />
+                    <input className={`w-full rounded-lg border pl-10 pr-3 py-2 text-sm placeholder-muted-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary ${isDark ? 'border-zinc-700 bg-background-dark text-zinc-200' : 'border-border bg-zinc-50 text-zinc-700'}`} placeholder="Search components..." type="text" />
                 </div>
             </div>
             <div className={`flex-1 overflow-y-auto p-4 space-y-6 ${styles['scrollbarHide'] || ''}`}>
                 <div>
-                    <h3 className={`mb-3 flex items-center gap-2 text-sm font-semibold ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>
+                    <h3 className={`mb-3 flex items-center gap-2 text-sm font-bold ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>
                         <span className="material-icons-round text-primary text-sm">auto_awesome_mosaic</span>
                         Layout Presets
                     </h3>
@@ -5043,7 +5038,7 @@ const SidebarBlockLibrary = ({
 
                 {!isPropertyMode && (
                     <div>
-                        <h3 className={`mb-3 flex items-center gap-2 text-sm font-semibold ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>
+                        <h3 className={`mb-3 flex items-center gap-2 text-sm font-bold ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>
                             <span className="material-icons-round text-primary text-sm">bedroom_parent</span>
                             Living Units
                         </h3>
@@ -5100,7 +5095,7 @@ const SidebarBlockLibrary = ({
                 </div>
                 )}
                 <div>
-                    <h3 className={`mb-3 flex items-center gap-2 text-sm font-semibold ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>
+                    <h3 className={`mb-3 flex items-center gap-2 text-sm font-bold ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>
                         <span className="material-icons-round text-primary text-sm">architecture</span>
                         Structural
                     </h3>
@@ -5129,7 +5124,7 @@ const SidebarBlockLibrary = ({
                 </div>
 
                 <div>
-                    <h3 className={`mb-3 flex items-center gap-2 text-sm font-semibold ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>
+                    <h3 className={`mb-3 flex items-center gap-2 text-sm font-bold ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>
                         <span className="material-icons-round text-primary text-sm">stairs</span>
                         Stairwells
                     </h3>
@@ -5206,7 +5201,7 @@ const SidebarBlockLibrary = ({
                 </div>
 
                 <div className="pt-4 mt-4 border-t border-border">
-                    <h3 className={`mb-3 flex items-center gap-2 text-sm font-semibold ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>
+                    <h3 className={`mb-3 flex items-center gap-2 text-sm font-bold ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>
                         <span className="material-icons-round text-primary text-sm">meeting_room</span>
                         Facilities
                     </h3>
@@ -5241,7 +5236,7 @@ const SidebarBlockLibrary = ({
                 </div>
 
                 <div className="pt-4 mt-4 border-t border-border pb-10">
-                    <h3 className={`mb-3 flex items-center gap-2 text-sm font-semibold ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>
+                    <h3 className={`mb-3 flex items-center gap-2 text-sm font-bold ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>
                         <span className="material-icons-round text-primary text-sm">construction</span>
                         Canvas Tools
                     </h3>
@@ -5259,7 +5254,7 @@ const SidebarBlockLibrary = ({
                                 <span className="material-icons-round text-xl">layers_clear</span>
                             </div>
                             <div className="flex-1">
-                                <p className="text-sm font-semibold leading-tight">Clear Entire Floor</p>
+                                <p className="text-sm font-bold leading-tight">Clear Entire Floor</p>
                                 <p className="text-[10px] opacity-70">Resets the current level canvas</p>
                             </div>
                         </button>
@@ -5273,7 +5268,7 @@ const SidebarBlockLibrary = ({
 const HotkeyItem = ({ label, shortcut }: { label: string; shortcut: string }) => (
     <div className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-2xl">
         <span className="text-xs font-bold text-white/80">{label}</span>
-        <kbd className="px-2 py-1 rounded-md bg-white/10 border border-white/10 text-[10px] font-semibold text-primary font-mono shadow-sm">{shortcut}</kbd>
+        <kbd className="px-2 py-1 rounded-md bg-white/10 border border-white/10 text-[10px] font-bold text-primary font-mono shadow-sm">{shortcut}</kbd>
     </div>
 );
 

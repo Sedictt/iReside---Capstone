@@ -39,11 +39,7 @@ export function LandlordQuestTriggerGuide() {
         const selector = `[data-tour-id="tour-quest-trigger"]`;
         const updateAnchorRect = () => {
             const target = document.querySelector<HTMLElement>(selector);
-            if (!target) {
-                setAnchorRect(null);
-                return;
-            }
-            setAnchorRect(target.getBoundingClientRect());
+            setAnchorRect(target ? target.getBoundingClientRect() : null);
         };
 
         updateAnchorRect();
@@ -122,10 +118,10 @@ export function LandlordQuestTriggerGuide() {
                     <div className="flex size-8 items-center justify-center rounded-xl bg-primary/20 text-primary">
                         <Sparkles className="size-4" />
                     </div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">Action Required</p>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Action Required</p>
                 </div>
                 
-                <h3 className="text-sm font-semibold text-foreground mb-2 leading-tight">
+                <h3 className="text-sm font-bold text-foreground mb-2 leading-tight">
                     Start Your First Mission
                 </h3>
                 

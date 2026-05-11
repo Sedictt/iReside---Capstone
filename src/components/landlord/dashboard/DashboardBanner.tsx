@@ -419,7 +419,7 @@ export function DashboardBanner({
                     >
                         <Bell className="size-5 text-muted-foreground transition-colors group-hover:text-foreground" />
                         {unreadCount > 0 && (
-                            <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-semibold text-primary-foreground shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)]">
+                            <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)]">
                                 {unreadCount > 9 ? "9+" : unreadCount}
                             </span>
                         )}
@@ -428,7 +428,7 @@ export function DashboardBanner({
                     {isNotificationsOpen && (
                         <div className="absolute right-0 z-50 mt-4 w-[340px] overflow-hidden rounded-[2rem] border border-white/10 bg-surface-4 shadow-[0_20px_50px_rgba(0,0,0,0.35)] backdrop-blur-3xl animate-in fade-in zoom-in-95 duration-200">
                             <div className="flex items-center justify-between border-b border-white/5 px-6 py-4">
-                                <p className="text-sm font-semibold uppercase tracking-widest text-foreground">Notifications</p>
+                                <p className="text-sm font-bold uppercase tracking-widest text-foreground">Notifications</p>
                                 <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">{unreadCount} New</span>
                             </div>
 
@@ -513,12 +513,12 @@ export function DashboardBanner({
                             <div className="size-2 rounded-full bg-primary animate-ping" />
                             <div className="absolute inset-0 size-2 rounded-full bg-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.8)]" />
                         </div>
-                        <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground/80">
+                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/80">
                             {time.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                         </span>
                     </div>
 
-                    <h1 className="mb-4 text-4xl font-semibold tracking-tight text-foreground md:text-6xl leading-[1.1]">
+                    <h1 className="mb-4 text-4xl font-bold tracking-tight text-foreground md:text-6xl leading-[1.1]">
                         {displayTitle}
                         <span className="text-primary prose-invert">.</span>
                     </h1>
@@ -535,14 +535,14 @@ export function DashboardBanner({
                                 className="group relative flex items-center gap-3 overflow-hidden rounded-2xl bg-primary px-8 py-4 text-primary-foreground shadow-[0_8px_18px_rgba(var(--primary-rgb),0.28)] transition-all hover:brightness-105 active:scale-95"
                             >
                                 <div className="absolute inset-0 bg-white/15 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                                <UserPlus className="size-5 font-semibold relative z-10" />
-                                <span className="text-sm font-semibold uppercase tracking-tight relative z-10">New Application</span>
+                                <UserPlus className="size-5 font-bold relative z-10" />
+                                <span className="text-sm font-bold uppercase tracking-tight relative z-10">New Application</span>
                             </button>
                         ) : (
                             <Link href="/landlord/applications?action=tenant-application" className="group relative flex items-center gap-3 overflow-hidden rounded-2xl bg-primary px-8 py-4 text-primary-foreground shadow-[0_8px_18px_rgba(var(--primary-rgb),0.28)] transition-all hover:brightness-105 active:scale-95">
                                 <div className="absolute inset-0 bg-white/15 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                                <UserPlus className="size-5 font-semibold relative z-10" />
-                                <span className="text-sm font-semibold uppercase tracking-tight relative z-10">New Application</span>
+                                <UserPlus className="size-5 font-bold relative z-10" />
+                                <span className="text-sm font-bold uppercase tracking-tight relative z-10">New Application</span>
                             </Link>
                         )}
                         
@@ -577,14 +577,14 @@ className="flex size-14 items-center justify-center rounded-2xl border border-wh
                 {/* Right Side - Digital Clock */}
                 <div className="hidden lg:flex flex-col items-end mt-16 self-center">
                     <div className="flex items-baseline gap-2">
-                        <span className="font-mono text-7xl font-semibold tracking-tighter text-foreground tabular-nums">
+                        <span className="font-mono text-7xl font-bold tracking-tighter text-foreground tabular-nums">
                             {time.getHours().toString().padStart(2, '0')}:{time.getMinutes().toString().padStart(2, '0')}
                         </span>
-                        <span className="text-2xl font-semibold uppercase tracking-[0.2em] text-primary">
+                        <span className="text-2xl font-bold uppercase tracking-[0.2em] text-primary">
                             {time.getHours() >= 12 ? 'PM' : 'AM'}
                         </span>
                     </div>
-                    <div className="mt-2 text-[10px] font-semibold uppercase tracking-[0.4em] text-muted-foreground/60">
+                    <div className="mt-2 text-[10px] font-bold uppercase tracking-[0.4em] text-muted-foreground/60">
                         Local Operation Time
                     </div>
                 </div>

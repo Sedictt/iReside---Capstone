@@ -247,7 +247,7 @@ export default function SignUpPage() {
                     <CheckCircle2 className="size-12 text-primary" />
                 </div>
                 <div className="space-y-2">
-                    <h2 className="text-3xl font-semibold tracking-tight">Application Submitted</h2>
+                    <h2 className="text-3xl font-bold tracking-tight">Application Submitted</h2>
                     <p className="text-white/60 font-medium leading-relaxed">
                         Your landlord registration has been submitted successfully. Our system administrator will review your documents and verify your application shortly.
                     </p>
@@ -288,7 +288,7 @@ export default function SignUpPage() {
                         Partner Portal
                     </div>
                     
-                    <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-white via-white/90 to-white/40 drop-shadow-sm pb-1">
+                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-white drop-shadow-sm pb-1">
                         Landlord Registration
                     </h1>
                 </div>
@@ -318,7 +318,7 @@ export default function SignUpPage() {
                                 }`}>
                                     {currentStep > s.step ? <Check className="size-5" /> : s.step}
                                 </div>
-                                <span className={`text-[10px] font-semibold uppercase tracking-widest transition-colors duration-300 relative z-10 text-center ${
+                                <span className={`text-[10px] font-bold uppercase tracking-widest transition-colors duration-300 relative z-10 text-center ${
                                     currentStep >= s.step ? "text-white/87" : "text-white/40"
                                 }`}>
                                     {s.label}
@@ -334,7 +334,7 @@ export default function SignUpPage() {
                     {currentStep === 1 && (
                     <section className="bg-[#1E1E1E]/60 backdrop-blur-md rounded-3xl p-6 sm:p-8 shadow-[0_8px_30px_rgba(0,0,0,0.12),inset_0_1px_0_0_rgba(255,255,255,0.05)] relative group transition-all duration-500 animate-in fade-in slide-in-from-right-8 duration-500 flex-1 flex flex-col justify-center">
                         <div className="mb-6">
-                            <h2 className="text-2xl font-semibold text-white/87 tracking-tight">Personal Details</h2>
+                            <h2 className="text-2xl font-bold text-white/87 tracking-tight">Personal Details</h2>
                             <p className="text-sm text-white/60 mt-1 font-medium">We need this to create your administrative profile.</p>
                         </div>
 
@@ -413,7 +413,7 @@ export default function SignUpPage() {
                     {currentStep === 2 && (
                     <section className="bg-[#1E1E1E]/60 backdrop-blur-md rounded-3xl p-6 sm:p-8 shadow-[0_8px_30px_rgba(0,0,0,0.12),inset_0_1px_0_0_rgba(255,255,255,0.05)] relative group transition-all duration-500 animate-in fade-in slide-in-from-right-8 duration-500 flex-1 flex flex-col justify-center">
                         <div className="mb-6">
-                            <h2 className="text-2xl font-semibold text-white/87 tracking-tight">Primary Property</h2>
+                            <h2 className="text-2xl font-bold text-white/87 tracking-tight">Primary Property</h2>
                             <p className="text-sm text-white/60 mt-1 font-medium">Details of the first property you wish to manage.</p>
                         </div>
 
@@ -434,7 +434,7 @@ export default function SignUpPage() {
                     {currentStep === 3 && (
                     <section className="bg-[#1E1E1E]/60 backdrop-blur-md rounded-3xl p-6 sm:p-8 shadow-[0_8px_30px_rgba(0,0,0,0.12),inset_0_1px_0_0_rgba(255,255,255,0.05)] relative group transition-all duration-500 animate-in fade-in slide-in-from-right-8 duration-500 flex-1 flex flex-col justify-center">
                         <div className="mb-4 sm:mb-6">
-                            <h2 className="text-2xl font-semibold text-white/87 tracking-tight">Identity & Credentials</h2>
+                            <h2 className="text-2xl font-bold text-white/87 tracking-tight">Identity & Credentials</h2>
                             <p className="text-sm text-white/60 mt-1 font-medium">Upload clear, legible copies to ensure swift approval.</p>
                         </div>
                         <div className="grid grid-cols-2 gap-3 sm:gap-4">
@@ -453,7 +453,7 @@ export default function SignUpPage() {
                                             <div className="relative w-full h-24 mb-2 rounded-lg overflow-hidden border border-white/10 group-hover/upload:scale-105 transition-transform duration-500">
                                                 <Image src={idPreview} alt="ID Preview" fill sizes="(max-width: 768px) 50vw, 200px" className="object-cover" />
                                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/upload:opacity-100 transition-opacity flex items-center justify-center">
-                                                    <span className="text-[8px] font-semibold uppercase tracking-widest text-white">Change Image</span>
+                                                    <span className="text-[8px] font-bold uppercase tracking-widest text-white">Change Image</span>
                                                 </div>
                                             </div>
                                         ) : (
@@ -536,7 +536,7 @@ export default function SignUpPage() {
                                             <div className="relative w-full h-24 mb-2 rounded-lg overflow-hidden border border-white/10 group-hover/upload:scale-105 transition-transform duration-500">
                                                 <Image src={permitPreview} alt="Permit Preview" fill sizes="(max-width: 768px) 50vw, 200px" className="object-cover" />
                                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/upload:opacity-100 transition-opacity flex items-center justify-center">
-                                                    <span className="text-[8px] font-semibold uppercase tracking-widest text-white">Change Image</span>
+                                                    <span className="text-[8px] font-bold uppercase tracking-widest text-white">Change Image</span>
                                                 </div>
                                             </div>
                                         ) : (
@@ -564,7 +564,7 @@ export default function SignUpPage() {
                                             <div className="size-6 rounded-full border border-blue-800/30 flex items-center justify-center mb-1">
                                                 <div className="size-3 bg-blue-800/20 rounded-full"></div>
                                             </div>
-                                            <div className="text-[4px] font-semibold text-blue-900 text-center uppercase tracking-widest leading-tight">City<br/>Permit</div>
+                                            <div className="text-[4px] font-bold text-blue-900 text-center uppercase tracking-widest leading-tight">City<br/>Permit</div>
                                             <div className="w-10 h-[1px] bg-blue-900/30 mt-1 mb-1.5"></div>
                                             
                                             <div className="w-full space-y-1 mt-1">
@@ -601,7 +601,7 @@ export default function SignUpPage() {
                                             <div className="relative w-full h-24 mb-2 rounded-lg overflow-hidden border border-white/10 group-hover/upload:scale-105 transition-transform duration-500">
                                                 <Image src={permitCardPreview} alt="Card Preview" fill sizes="(max-width: 768px) 50vw, 200px" className="object-cover" />
                                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/upload:opacity-100 transition-opacity flex items-center justify-center">
-                                                    <span className="text-[8px] font-semibold uppercase tracking-widest text-white">Change Image</span>
+                                                    <span className="text-[8px] font-bold uppercase tracking-widest text-white">Change Image</span>
                                                 </div>
                                             </div>
                                         ) : (
@@ -631,11 +631,11 @@ export default function SignUpPage() {
                                             
                                             <div className="absolute top-1.5 left-2 flex flex-col z-10 text-left">
                                                 <span className="text-[3px] font-bold text-white/60 leading-none">City Government</span>
-                                                <span className="text-[5px] font-semibold text-blue-800 leading-none mt-[1px]">BUSINESS PERMIT</span>
-                                                <span className="text-[4px] font-semibold text-blue-600 leading-none mt-[1px]">2026</span>
+                                                <span className="text-[5px] font-bold text-blue-800 leading-none mt-[1px]">BUSINESS PERMIT</span>
+                                                <span className="text-[4px] font-bold text-blue-600 leading-none mt-[1px]">2026</span>
                                             </div>
                                             
-                                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 text-[18px] font-semibold text-blue-900 tracking-tighter w-full text-center drop-shadow-sm">
+                                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 text-[18px] font-bold text-blue-900 tracking-tighter w-full text-center drop-shadow-sm">
                                                 C-09241
                                             </div>
                                             
@@ -680,7 +680,7 @@ export default function SignUpPage() {
                                                 <div className="relative w-full h-24 mb-2 rounded-lg overflow-hidden border border-white/10 group-hover/upload:scale-105 transition-transform duration-500">
                                                     <Image src={ownershipPreview} alt="Ownership Preview" fill sizes="(max-width: 768px) 50vw, 200px" className="object-cover" />
                                                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/upload:opacity-100 transition-opacity flex items-center justify-center">
-                                                        <span className="text-[8px] font-semibold uppercase tracking-widest text-white">Change Image</span>
+                                                        <span className="text-[8px] font-bold uppercase tracking-widest text-white">Change Image</span>
                                                     </div>
                                                 </div>
                                             ) : (
@@ -706,7 +706,7 @@ export default function SignUpPage() {
                                         {/* CSS Proof of Ownership Illustration */}
                                         <div className="relative w-20 h-24 bg-[#fdfbf7] rounded-sm shadow-lg overflow-hidden mx-auto mb-4 group-hover/upload:scale-110 transition-transform duration-500 border border-zinc-300 p-2.5 flex flex-col">
                                             <div className="absolute top-1 left-1 right-1 h-[2px] border-t border-b border-amber-700/30"></div>
-                                            <div className="text-[4px] font-semibold text-amber-900 text-center uppercase tracking-widest mt-1">Title of Deed</div>
+                                            <div className="text-[4px] font-bold text-amber-900 text-center uppercase tracking-widest mt-1">Title of Deed</div>
                                             <div className="w-4 h-[1px] bg-amber-700/50 mx-auto mt-[1px] mb-1.5"></div>
                                             
                                             <div className="space-y-1 flex-1">

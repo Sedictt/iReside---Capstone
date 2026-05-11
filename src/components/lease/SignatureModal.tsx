@@ -102,7 +102,7 @@ export function SignatureModal({
                     {/* Header */}
                     <div className="flex items-center justify-between border-b border-white/10 bg-[#0f172a] px-6 py-4">
                         <div>
-                            <h2 className="text-lg font-semibold text-white">Finalize Lease</h2>
+                            <h2 className="text-lg font-bold text-white">Finalize Lease</h2>
                             <p className="text-xs text-zinc-400">Review the document and provide your digital signature below.</p>
                         </div>
                         <button onClick={onClose} className="text-zinc-400 hover:text-white transition-colors">
@@ -158,7 +158,7 @@ export function SignatureModal({
                             onClick={handleComplete}
                             disabled={!hasSignature}
                             className={cn(
-                                "group relative mb-3 flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-3 font-semibold text-white shadow-lg transition-all hover:bg-blue-500 hover:shadow-blue-500/25 active:scale-[0.98]",
+                                "group relative mb-3 flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-3 font-bold text-white shadow-lg transition-all hover:bg-blue-500 hover:shadow-blue-500/25 active:scale-[0.98]",
                                 !hasSignature && "cursor-not-allowed opacity-50 grayscale hover:bg-blue-600 hover:shadow-none"
                             )}
                         >

@@ -228,12 +228,12 @@ export default function AdminChatModerationPage() {
 
                 <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-8">
                     <div className="space-y-4">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-amber-500">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-amber-500">
                             <ShieldAlert className="size-4" />
                             Safety Operations Center
                         </div>
                         <div className="space-y-1">
-                            <h1 className="text-4xl font-semibold tracking-tight text-foreground dark:text-white sm:text-5xl">
+                            <h1 className="text-4xl font-bold tracking-tight text-foreground dark:text-white sm:text-5xl">
                                 Moderation <span className="text-primary">Hub</span>
                             </h1>
                             <p className="max-w-2xl text-base font-medium text-muted-foreground dark:text-neutral-400">
@@ -268,7 +268,7 @@ export default function AdminChatModerationPage() {
                         <div className="flex items-center gap-4">
                             <div className="flex items-center gap-2">
                                 <Flag className="size-5 text-primary" />
-                                <h2 className="text-sm font-semibold text-foreground dark:text-white uppercase tracking-wider">Report Queue</h2>
+                                <h2 className="text-sm font-bold text-foreground dark:text-white uppercase tracking-wider">Report Queue</h2>
                             </div>
                             <div className="h-5 w-px bg-border/50" />
                             <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
@@ -297,7 +297,7 @@ export default function AdminChatModerationPage() {
                                     <button
                                         onClick={() => setStatusFilter("all")}
                                         className={cn(
-                                            "w-full text-left px-3 py-2 text-[11px] font-semibold uppercase tracking-wider rounded-lg transition-colors",
+                                            "w-full text-left px-3 py-2 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-colors",
                                             statusFilter === "all" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                                         )}
                                     >
@@ -308,7 +308,7 @@ export default function AdminChatModerationPage() {
                                             key={status}
                                             onClick={() => setStatusFilter(status)}
                                             className={cn(
-                                                "w-full text-left px-3 py-2 text-[11px] font-semibold uppercase tracking-wider rounded-lg transition-colors",
+                                                "w-full text-left px-3 py-2 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-colors",
                                                 statusFilter === status ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                                             )}
                                         >
@@ -332,7 +332,7 @@ export default function AdminChatModerationPage() {
                                     <button
                                         onClick={() => setCategoryFilter("all")}
                                         className={cn(
-                                            "w-full text-left px-3 py-2 text-[11px] font-semibold uppercase tracking-wider rounded-lg transition-colors",
+                                            "w-full text-left px-3 py-2 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-colors",
                                             categoryFilter === "all" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                                         )}
                                     >
@@ -343,7 +343,7 @@ export default function AdminChatModerationPage() {
                                             key={cat}
                                             onClick={() => setCategoryFilter(cat)}
                                             className={cn(
-                                                "w-full text-left px-3 py-2 text-[11px] font-semibold uppercase tracking-wider rounded-lg transition-colors",
+                                                "w-full text-left px-3 py-2 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-colors",
                                                 categoryFilter === cat ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                                             )}
                                         >
@@ -364,7 +364,7 @@ export default function AdminChatModerationPage() {
                     ) : filteredReports.length === 0 ? (
                         <div className="flex flex-col items-center justify-center rounded-[2.5rem] border border-dashed border-border/50 bg-card/20 py-20 text-center">
                             <CheckCircle2 className="size-12 text-muted-foreground/30 mb-4" />
-                            <h3 className="text-lg font-semibold text-foreground dark:text-white uppercase tracking-widest">Queue Clear</h3>
+                            <h3 className="text-lg font-bold text-foreground dark:text-white uppercase tracking-widest">Queue Clear</h3>
                             <p className="text-sm text-muted-foreground">Everything is under control.</p>
                         </div>
                     ) : (
@@ -391,13 +391,13 @@ export default function AdminChatModerationPage() {
                 <aside className="lg:col-span-4 space-y-6">
                     <div className="rounded-[2.5rem] border border-border/50 bg-card p-8 shadow-xl dark:border-white/5 dark:bg-neutral-900/40">
                         <div className="mb-6 space-y-2">
-                            <h2 className="text-lg font-semibold text-foreground dark:text-white uppercase tracking-wider">Vocabulary</h2>
+                            <h2 className="text-lg font-bold text-foreground dark:text-white uppercase tracking-wider">Vocabulary</h2>
                             <p className="text-xs font-medium text-muted-foreground">Manage active banned filters.</p>
                         </div>
 
                         <div className="space-y-6">
                             <div className="space-y-3">
-                                <label className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/60">Manual Entry</label>
+                                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">Manual Entry</label>
                                 <div className="flex flex-col gap-3">
                                     <input
                                         value={manualTerm}
@@ -408,7 +408,7 @@ export default function AdminChatModerationPage() {
                                     <button
                                         onClick={() => void addBannedTerm(manualTerm, null)}
                                         disabled={isAddingManualTerm || manualTerm.trim().length < 2}
-                                        className="flex items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-4 text-sm font-semibold text-black hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 shadow-lg shadow-primary/20"
+                                        className="flex items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-4 text-sm font-bold text-black hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 shadow-lg shadow-primary/20"
                                     >
                                         <Plus className="size-4" />
                                         Add Term
@@ -440,8 +440,8 @@ export default function AdminChatModerationPage() {
                                                 className="flex items-center justify-between rounded-2xl border border-border bg-background/50 p-4 transition-all hover:border-primary/20 hover:bg-muted/20 dark:border-white/5 dark:bg-black/20"
                                             >
                                                 <div className="flex flex-col gap-0.5">
-                                                    <span className="text-sm font-semibold text-foreground dark:text-white">{term.term}</span>
-                                                    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">{term.source}</span>
+                                                    <span className="text-sm font-bold text-foreground dark:text-white">{term.term}</span>
+                                                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{term.source}</span>
                                                 </div>
                                                 {term.reportId && (
                                                     <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-500">
@@ -511,7 +511,7 @@ function ModerationReportCard({
                 <div className="pointer-events-none absolute left-1/2 -top-14 z-[100] -translate-x-1/2 opacity-0 invisible translate-y-2 scale-95 transition-all duration-200 ease-out group-hover:opacity-100 group-hover:visible group-hover:-translate-y-1 group-hover:scale-100">
                     <div className="relative rounded-2xl border border-primary/30 bg-card px-6 py-4 shadow-[0_20px_50px_rgba(0,0,0,0.3)] backdrop-blur-2xl min-w-[320px] max-w-md">
                         <div className="flex flex-col gap-1.5">
-                            <span className="text-[9px] font-semibold uppercase tracking-widest text-primary">Incident Insight</span>
+                            <span className="text-[9px] font-bold uppercase tracking-widest text-primary">Incident Insight</span>
                             <p className="text-sm font-medium leading-relaxed text-foreground italic">
                                 &quot;{report.details || "No additional context provided."}&quot;
                             </p>
@@ -535,16 +535,16 @@ function ModerationReportCard({
                         </div>
                         <div className="flex flex-col min-w-0">
                             <div className="flex items-center gap-2">
-                                <span className="text-sm font-semibold text-foreground truncate">{report.reporter?.name || "Anon"}</span>
+                                <span className="text-sm font-bold text-foreground truncate">{report.reporter?.name || "Anon"}</span>
                                 <ArrowRight className="size-3.5 text-muted-foreground/30" />
-                                <span className="text-sm font-semibold text-primary truncate">{report.target?.name || "Target"}</span>
+                                <span className="text-sm font-bold text-primary truncate">{report.target?.name || "Target"}</span>
                             </div>
                             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest truncate">{report.category}</span>
                         </div>
                     </div>
 
                     {/* Meta Info (Right aligned) */}
-                    <div className="hidden md:flex items-center gap-6 ml-auto mr-4 text-[10px] font-semibold uppercase tracking-[0.15em]">
+                    <div className="hidden md:flex items-center gap-6 ml-auto mr-4 text-[10px] font-bold uppercase tracking-[0.15em]">
                         <div className="flex items-center gap-2 text-muted-foreground/60">
                             <Calendar className="size-3.5" />
                             <span suppressHydrationWarning>{new Date(report.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
@@ -589,7 +589,7 @@ function ModerationReportCard({
                                     {/* Left: Reporter Side */}
                                     <div className="flex flex-col p-8 border-r border-border/50 bg-muted/10 dark:bg-white/[0.01]">
                                         <div className="mb-10 flex flex-col gap-1">
-                                            <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
+                                            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/50">
                                                 <MessageSquare className="size-3.5" />
                                                 Reporter&apos;s Statement
                                             </div>
@@ -617,7 +617,7 @@ function ModerationReportCard({
                                     {/* Right: Evidence Side */}
                                     <div className="flex flex-col p-8 bg-red-500/[0.02]">
                                         <div className="mb-10 flex flex-col gap-1">
-                                            <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-red-500/80">
+                                            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-red-500/80">
                                                 <ShieldAlert className="size-3.5" />
                                                 Flagged Evidence
                                             </div>
@@ -629,13 +629,13 @@ function ModerationReportCard({
                                         <div className="flex-1 flex items-center justify-center">
                                             {report.reportedMessage ? (
                                                 <div className="relative bg-transparent py-2 overflow-hidden w-full">
-                                                    <p className="text-xl font-semibold text-foreground dark:text-neutral-200 leading-relaxed italic text-center">
+                                                    <p className="text-xl font-bold text-foreground dark:text-neutral-200 leading-relaxed italic text-center">
                                                         &quot;{report.reportedMessage.content}&quot;
                                                     </p>
                                                 </div>
                                             ) : report.exactMessage ? (
                                                 <div className="relative bg-transparent py-2 overflow-hidden w-full">
-                                                    <p className="text-xl font-semibold text-foreground dark:text-neutral-200 leading-relaxed italic text-center">
+                                                    <p className="text-xl font-bold text-foreground dark:text-neutral-200 leading-relaxed italic text-center">
                                                         "{report.exactMessage}"
                                                     </p>
                                                 </div>
@@ -667,7 +667,7 @@ function ModerationReportCard({
                                         <button
                                             onClick={() => void updateReportStatus(report.id, "dismissed")}
                                             disabled={savingId === report.id}
-                                            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-all active:scale-95 text-[11px] font-semibold uppercase tracking-widest"
+                                            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-all active:scale-95 text-[11px] font-bold uppercase tracking-widest"
                                         >
                                             <Trash2 className="size-4" />
                                             Dismiss Case
@@ -677,7 +677,7 @@ function ModerationReportCard({
                                             <button
                                                 onClick={() => void addBannedTerm(report.exactMessage!, report.id)}
                                                 disabled={addingTermId === report.id}
-                                                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-red-500/70 hover:text-red-500 hover:bg-red-500/10 transition-all active:scale-95 text-[11px] font-semibold uppercase tracking-widest border border-red-500/10"
+                                                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-red-500/70 hover:text-red-500 hover:bg-red-500/10 transition-all active:scale-95 text-[11px] font-bold uppercase tracking-widest border border-red-500/10"
                                             >
                                                 <Ban className="size-4" />
                                                 Add to Banned Terms
@@ -688,7 +688,7 @@ function ModerationReportCard({
                                     <button
                                         onClick={() => void updateReportStatus(report.id, "resolved")}
                                         disabled={savingId === report.id}
-                                        className="flex items-center gap-3 px-8 py-3 rounded-xl bg-emerald-500 text-white text-[11px] font-semibold uppercase tracking-widest hover:bg-emerald-600 transition-all active:scale-95 shadow-lg shadow-emerald-500/20"
+                                        className="flex items-center gap-3 px-8 py-3 rounded-xl bg-emerald-500 text-white text-[11px] font-bold uppercase tracking-widest hover:bg-emerald-600 transition-all active:scale-95 shadow-lg shadow-emerald-500/20"
                                     >
                                         <CheckCircle2 className="size-4" />
                                         Mark as Resolved

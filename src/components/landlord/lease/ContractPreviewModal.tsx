@@ -289,7 +289,7 @@ export function ContractPreviewModal({
             >
                 <div className="sticky top-0 z-20 bg-[#111] border-b border-white/5 p-6 flex items-center justify-between">
                     <div>
-                        <h2 className="text-xl font-semibold text-white">
+                        <h2 className="text-xl font-bold text-white">
                             {isFinalApproval ? "Finalize Approval" : "Request Payments"}
                         </h2>
                         <p className="text-xs text-neutral-400">
@@ -320,7 +320,7 @@ export function ContractPreviewModal({
                                 <div className="size-16 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-4">
                                     <CheckCircle2 className="size-8 text-emerald-400" />
                                 </div>
-                                <h3 className="text-2xl font-semibold text-white mb-2">
+                                <h3 className="text-2xl font-bold text-white mb-2">
                                     {result.status === "approved" ? "Approval Complete" : "Payment Request Sent"}
                                 </h3>
                                 <p className="text-neutral-400 text-sm max-w-md mx-auto">
@@ -445,7 +445,7 @@ export function ContractPreviewModal({
                             </div>
 
                             <div className="rounded-xl border border-amber-400/20 bg-amber-400/10 p-4 text-xs text-amber-100">
-                                <p className="font-semibold mb-1">Policy enforcement</p>
+                                <p className="font-bold mb-1">Policy enforcement</p>
                                 <p>
                                     Approval creates pending invoices only. Move-in payment completion is counted after
                                     landlord-confirmed proof, not at application submission.

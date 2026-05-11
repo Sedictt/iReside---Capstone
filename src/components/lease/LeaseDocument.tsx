@@ -66,7 +66,7 @@ return (
         >
             <header className="mb-6 border-b-2 border-zinc-900 pb-3 flex flex-col md:flex-row justify-between items-start md:items-end gap-4 relative z-10">
                 <div>
-                    <h1 className="mb-0.5 text-xl font-semibold tracking-tight text-zinc-950 md:text-2xl">
+                    <h1 className="mb-0.5 text-xl font-bold tracking-tight text-zinc-950 md:text-2xl">
                         RESIDENTIAL LEASE AGREEMENT
                     </h1>
                     <p className="text-sm text-zinc-600 italic leading-none">Official Binding Documentation</p>
@@ -80,7 +80,7 @@ return (
             <section className="space-y-6 relative z-10 leading-snug text-[13.5px]">
                 {/* Section 1: Parties */}
                 <div className="space-y-1.5">
-                    <h2 className="text-[12px] font-semibold uppercase tracking-widest text-zinc-950 border-b border-zinc-200 pb-0.5">
+                    <h2 className="text-[12px] font-bold uppercase tracking-widest text-zinc-950 border-b border-zinc-200 pb-0.5">
                         1. PARTIES
                     </h2>
                     <p className="text-zinc-800">
@@ -89,18 +89,18 @@ return (
                     <div className="grid gap-6 md:grid-cols-2 pt-0.5">
                         <div className="space-y-0">
                             <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-400">Landlord</p>
-                            <p className="text-sm font-bold text-zinc-950 underline decoration-slate-300 underline-offset-2">{parties.landlord}</p>
+                            <p className="text-sm font-bold text-zinc-950 underline decoration-border underline-offset-2">{parties.landlord}</p>
                         </div>
                         <div className="space-y-0">
                             <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-400">Tenant</p>
-                            <p className="text-sm font-bold text-zinc-950 underline decoration-slate-300 underline-offset-2">{parties.tenant}</p>
+                            <p className="text-sm font-bold text-zinc-950 underline decoration-border underline-offset-2">{parties.tenant}</p>
                         </div>
                     </div>
                 </div>
 
                 {/* Section 2: Property */}
                 <div className="space-y-1.5">
-                    <h2 className="text-[12px] font-semibold uppercase tracking-widest text-zinc-950 border-b border-zinc-200 pb-0.5">
+                    <h2 className="text-[12px] font-bold uppercase tracking-widest text-zinc-950 border-b border-zinc-200 pb-0.5">
                         2. THE PREMISES
                     </h2>
                     <div className="pl-4 border-l-2 border-zinc-100">
@@ -111,7 +111,7 @@ return (
 
                 {/* Section 3: Term */}
                 <div className="space-y-1.5">
-                    <h2 className="text-[12px] font-semibold uppercase tracking-widest text-zinc-950 border-b border-zinc-200 pb-0.5">
+                    <h2 className="text-[12px] font-bold uppercase tracking-widest text-zinc-950 border-b border-zinc-200 pb-0.5">
                         3. TERM OF LEASE
                     </h2>
                     <p className="text-zinc-800">
@@ -121,7 +121,7 @@ return (
 
                 {/* Section 4: Rent */}
                 <div className="space-y-1.5">
-                    <h2 className="text-[12px] font-semibold uppercase tracking-widest text-zinc-950 border-b border-zinc-200 pb-0.5">
+                    <h2 className="text-[12px] font-bold uppercase tracking-widest text-zinc-950 border-b border-zinc-200 pb-0.5">
                         4. RENT PAYMENTS
                     </h2>
                     <p className="text-zinc-800">
@@ -131,7 +131,7 @@ return (
 
                 {/* Section 5: Security Deposit */}
                 <div className="space-y-1.5">
-                    <h2 className="text-[12px] font-semibold uppercase tracking-widest text-zinc-950 border-b border-zinc-200 pb-0.5">
+                    <h2 className="text-[12px] font-bold uppercase tracking-widest text-zinc-950 border-b border-zinc-200 pb-0.5">
                         5. SECURITY DEPOSIT
                     </h2>
                     <p className="text-zinc-800">
@@ -141,7 +141,7 @@ return (
 
                 {/* Section 6: Utilities */}
                 <div className="space-y-1.5">
-                    <h2 className="text-[12px] font-semibold uppercase tracking-widest text-zinc-950 border-b border-zinc-200 pb-0.5">
+                    <h2 className="text-[12px] font-bold uppercase tracking-widest text-zinc-950 border-b border-zinc-200 pb-0.5">
                         6. UTILITIES AND SERVICES
                     </h2>
                     {props.unit.property.house_rules?.includes("strategy:inclusive") ? (
@@ -157,7 +157,7 @@ return (
 
                 {/* Section 7: Amenities & Facilities */}
                 <div className="space-y-1.5">
-                    <h2 className="text-[12px] font-semibold uppercase tracking-widest text-zinc-950 border-b border-zinc-200 pb-0.5">
+                    <h2 className="text-[12px] font-bold uppercase tracking-widest text-zinc-950 border-b border-zinc-200 pb-0.5">
                         7. AMENITIES AND FACILITIES
                     </h2>
                     <p className="text-zinc-800">
@@ -167,7 +167,7 @@ return (
 
                 {/* Section 8: Building Rules & Conduct */}
                 <div className="space-y-1.5">
-                    <h2 className="text-[12px] font-semibold uppercase tracking-widest text-zinc-950 border-b border-zinc-200 pb-0.5">
+                    <h2 className="text-[12px] font-bold uppercase tracking-widest text-zinc-950 border-b border-zinc-200 pb-0.5">
                         8. BUILDING RULES & CONDUCT
                     </h2>
                     <p className="text-zinc-800 leading-tight">
@@ -202,7 +202,7 @@ return (
 
             {/* Watermark */}
             <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center overflow-hidden opacity-[0.015]">
-                <p className="-rotate-45 text-[min(10rem,12vw)] font-semibold uppercase text-zinc-950 select-none">
+                <p className="-rotate-45 text-[min(10rem,12vw)] font-bold uppercase text-zinc-950 select-none">
                     LEGAL DRAFT
                 </p>
             </div>

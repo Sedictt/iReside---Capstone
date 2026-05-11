@@ -214,7 +214,7 @@ export function ProfileCard() {
                                         {profile?.avatar_url ? (
                                             <Image src={profile.avatar_url} alt={profile.full_name || "User"} fill sizes="80px" className="object-cover" unoptimized />
                                         ) : (
-                                            <span className="text-2xl font-semibold text-white/90">{initials}</span>
+                                            <span className="text-2xl font-bold text-white/90">{initials}</span>
                                         )}
                                         <div className="absolute -bottom-0.5 -right-0.5 size-5 rounded-full border-4 border-card bg-emerald-500" />
                                     </div>
@@ -240,18 +240,18 @@ export function ProfileCard() {
                         <div className="px-8 pb-4 space-y-3">
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="rounded-2xl bg-muted/40 p-4 border border-border/50">
-                                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary mb-1">Current Unit</p>
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-1">Current Unit</p>
                                     <div className="text-sm font-bold text-foreground">{loading && !leaseData ? <Skeleton className="h-4 w-20" /> : leaseData?.unitName || "—"}</div>
                                 </div>
                                 <div className="rounded-2xl bg-muted/40 p-4 border border-border/50">
-                                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary mb-1">Lease Status</p>
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-1">Lease Status</p>
                                     <div className="text-sm font-bold text-emerald-500 capitalize">{leaseData?.status || "—"}</div>
                                 </div>
                             </div>
                             {leaseData?.termMonths && (
                                 <div className="rounded-2xl bg-muted/20 p-4 border border-border/30 flex items-center justify-between">
                                     <div>
-                                        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Lease Analytics</p>
+                                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Lease Analytics</p>
                                         <p className="text-xs font-bold text-foreground">{leaseData.termMonths} Month Term</p>
                                     </div>
                                     <div className="text-right">

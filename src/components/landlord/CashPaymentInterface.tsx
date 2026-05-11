@@ -61,7 +61,7 @@ export function CashPaymentInterface({ isOpen, onClose, payment, onConfirm }: Ca
                             <HandCoins className="size-8 text-primary" />
                         </div>
                         <div>
-                            <h2 className="text-2xl font-semibold tracking-tight text-foreground">Cash Payment</h2>
+                            <h2 className="text-2xl font-bold tracking-tight text-foreground">Cash Payment</h2>
                             <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground/60">Face-to-Face Transaction</p>
                         </div>
                     </div>
@@ -72,8 +72,8 @@ export function CashPaymentInterface({ isOpen, onClose, payment, onConfirm }: Ca
                         <div className="rounded-3xl border border-divider bg-surface-2/50 p-6 space-y-4">
                             <div className="flex justify-between items-start">
                                 <div className="space-y-1">
-                                    <p className="text-[10px] font-semibold uppercase tracking-widest text-disabled">In-Person Handover</p>
-                                    <h3 className="text-lg font-semibold text-high">{payment.tenantName}</h3>
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-disabled">In-Person Handover</p>
+                                    <h3 className="text-lg font-bold text-high">{payment.tenantName}</h3>
                                     <div className="flex items-center gap-2 text-xs text-medium">
                                         <Home className="size-3" />
                                         <span>{payment.unit}</span>
@@ -81,7 +81,7 @@ export function CashPaymentInterface({ isOpen, onClose, payment, onConfirm }: Ca
                                 </div>
                                 <div className="text-right">
                                     <div className="rounded-xl bg-amber-500/10 px-3 py-1 border border-amber-500/20">
-                                        <span className="text-[10px] font-semibold text-amber-500 uppercase">{payment.invoiceNumber}</span>
+                                        <span className="text-[10px] font-bold text-amber-500 uppercase">{payment.invoiceNumber}</span>
                                     </div>
                                 </div>
                             </div>
@@ -95,7 +95,7 @@ export function CashPaymentInterface({ isOpen, onClose, payment, onConfirm }: Ca
                                     </div>
                                     <div>
                                         <p className="text-[10px] font-bold uppercase tracking-wider text-disabled">Amount to Receive</p>
-                                        <p className="text-xl font-semibold text-primary">PHP {payment.amount}</p>
+                                        <p className="text-xl font-bold text-primary">PHP {payment.amount}</p>
                                     </div>
                                 </div>
                                 <div className="text-right">
@@ -136,7 +136,7 @@ export function CashPaymentInterface({ isOpen, onClose, payment, onConfirm }: Ca
                             onClick={() => void handleOpenInvoiceReview()}
                             disabled={isSubmitting}
                             className={cn(
-                                "w-full group relative overflow-hidden rounded-2xl bg-primary py-4 font-semibold text-black transition-all hover:scale-[1.02] active:scale-[0.98] shadow-xl shadow-primary/20",
+                                "w-full group relative overflow-hidden rounded-2xl bg-primary py-4 font-bold text-black transition-all hover:scale-[1.02] active:scale-[0.98] shadow-xl shadow-primary/20",
                                 isSubmitting && "flex items-center justify-center"
                             )}
                         >
@@ -147,7 +147,7 @@ export function CashPaymentInterface({ isOpen, onClose, payment, onConfirm }: Ca
                 </div>
 
                 <div className="bg-surface-2 px-8 py-5 flex justify-between items-center border-t border-divider">
-                    <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-disabled">iReside Secure Payment Node</p>
+                    <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-disabled">iReside Secure Payment Node</p>
                     <div className="flex items-center gap-1.5 opacity-50">
                         <div className="size-1.5 rounded-full bg-emerald-500" />
                         <span className="text-[9px] font-bold text-medium">Live Connection</span>

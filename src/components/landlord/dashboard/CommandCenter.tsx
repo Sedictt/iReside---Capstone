@@ -135,7 +135,7 @@ export function CommandCenter({
                         <ShieldCheck className="size-7" />
                     </div>
                     <div>
-                        <h2 className="text-2xl font-semibold tracking-tight text-foreground">Intelligence Hub</h2>
+                        <h2 className="text-2xl font-bold tracking-tight text-foreground">Intelligence Hub</h2>
                         <p className="text-sm font-medium text-muted-foreground/80">
                             Orchestrating your property ecosystem from one dashboard.
                         </p>
@@ -155,8 +155,8 @@ export function CommandCenter({
                         >
                             <stat.icon className="size-4 opacity-80 transition-opacity group-hover:opacity-100" />
                             <div className="flex flex-col">
-                                <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{stat.label}</span>
-                                <span className="text-base font-semibold leading-none text-foreground">{stat.value}</span>
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{stat.label}</span>
+                                <span className="text-base font-bold leading-none text-foreground">{stat.value}</span>
                             </div>
                         </Link>
                     ))}
@@ -166,7 +166,7 @@ export function CommandCenter({
             <div className="grid gap-6 lg:grid-cols-[1fr_380px] relative z-10">
                 {/* Operations Center */}
                 <div className="rounded-[2rem] border border-white/10 bg-card/70 p-6 backdrop-blur-sm">
-                    <h3 className="mb-6 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground/80">
+                    <h3 className="mb-6 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground/80">
                         <span className="h-1 w-4 rounded-full bg-primary" />
                         Operations Center
                     </h3>
@@ -180,7 +180,7 @@ export function CommandCenter({
                             { label: "Utility Billing", icon: Zap, href: "/landlord/utility-billing", color: "text-sky-400", bgColor: "bg-sky-400/15" },
                             { label: "Maintenance Logs", icon: Hammer, href: "/landlord/maintenance", color: "text-rose-400", bgColor: "bg-rose-400/15" },
                             { label: "Lease Renewals", icon: RefreshCw, href: "/landlord/tenants?tab=renewals", color: "text-cyan-400", bgColor: "bg-cyan-400/15" },
-                            { label: "Document Vault", icon: FolderSearch2, href: "/landlord/documents", color: "text-indigo-400", bgColor: "bg-indigo-400/15" },
+                            { label: "Document Vault", icon: FolderSearch2, href: "/landlord/documents", color: "text-primary", bgColor: "bg-primary/15" },
                             { label: "Account Settings", icon: Settings2, href: "/landlord/settings", color: "text-zinc-400", bgColor: "bg-zinc-400/15" },
                         ].map((action, i) => {
                             const Content = (
@@ -194,7 +194,7 @@ export function CommandCenter({
                                     </div>
                                     <div className="flex flex-col gap-0.5">
                                         <span className={cn(
-                                            "text-sm font-semibold tracking-tight transition-colors",
+                                            "text-sm font-bold tracking-tight transition-colors",
                                             "text-foreground/90 group-hover:text-foreground"
                                         )}>
                                             {action.label}
@@ -218,7 +218,7 @@ export function CommandCenter({
 
                 {/* Insights Hub */}
                 <div className="rounded-[2rem] border border-white/10 bg-card/70 p-6 backdrop-blur-sm">
-                    <h3 className="mb-6 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground/80">
+                    <h3 className="mb-6 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground/80">
                         <span className="h-1 w-4 rounded-full bg-amber-500" />
                         Next Priorities
                     </h3>
@@ -230,15 +230,15 @@ export function CommandCenter({
                                     <Zap className="size-12" />
                                 </div>
                                 <div className="mb-2 flex items-center justify-between relative z-10">
-                                    <span className={cn("rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-widest", urgencyStyles[move.urgency])}>
+                                    <span className={cn("rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest", urgencyStyles[move.urgency])}>
                                         {move.urgency} Priority
                                     </span>
                                 </div>
-                                <h4 className="text-sm font-semibold text-foreground relative z-10">{move.title}</h4>
+                                <h4 className="text-sm font-bold text-foreground relative z-10">{move.title}</h4>
                                 <p className="mt-1 text-xs font-medium text-muted-foreground leading-relaxed relative z-10">{move.detail}</p>
                                 <Link
                                     href={move.href}
-                                    className="mt-4 inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-primary transition-all hover:gap-3 group/link"
+                                    className="mt-4 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-primary transition-all hover:gap-3 group/link"
                                 >
                                     {move.cta}
                                     <ArrowRight className="size-3.5 transition-transform group-hover/link:translate-x-1" />

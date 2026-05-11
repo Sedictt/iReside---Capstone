@@ -121,14 +121,14 @@ function SnapshotModal({ user, onClose }: { user: UserDetail; onClose: () => voi
                 </button>
 
                 <div className="mb-8">
-                    <h2 className="text-2xl font-semibold text-white">Registration Snapshot</h2>
+                    <h2 className="text-2xl font-bold text-white">Registration Snapshot</h2>
                     <p className="text-sm text-white/50 mt-1">{profile.full_name} - {profile.email}</p>
                 </div>
 
                 <div className="space-y-8">
                     {/* Personal Information */}
                     <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
-                        <h3 className="text-sm font-semibold uppercase tracking-wider text-white/60 mb-4">Personal Information</h3>
+                        <h3 className="text-sm font-bold uppercase tracking-wider text-white/60 mb-4">Personal Information</h3>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Full Name</p>
@@ -154,7 +154,7 @@ function SnapshotModal({ user, onClose }: { user: UserDetail; onClose: () => voi
                     {/* Business/Property Information */}
                     {app && (
                         <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
-                            <h3 className="text-sm font-semibold uppercase tracking-wider text-white/60 mb-4">Property Information</h3>
+                            <h3 className="text-sm font-bold uppercase tracking-wider text-white/60 mb-4">Property Information</h3>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="col-span-2">
                                     <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Business Name</p>
@@ -192,7 +192,7 @@ function SnapshotModal({ user, onClose }: { user: UserDetail; onClose: () => voi
                     {/* Documents */}
                     {app && (
                         <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
-                            <h3 className="text-sm font-semibold uppercase tracking-wider text-white/60 mb-4">Uploaded Documents</h3>
+                            <h3 className="text-sm font-bold uppercase tracking-wider text-white/60 mb-4">Uploaded Documents</h3>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 {app.identity_document_url && (
                                     <div className="space-y-2">
@@ -310,11 +310,11 @@ export default function AdminUsersPage() {
                 
                 <div className="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
                     <div className="max-w-2xl space-y-4">
-                        <div className="inline-flex items-center gap-3 rounded-full border border-primary/25 bg-primary/10 px-4 py-2 text-[10px] font-semibold uppercase tracking-widest text-primary">
+                        <div className="inline-flex items-center gap-3 rounded-full border border-primary/25 bg-primary/10 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-primary">
                             <Users className="size-3.5" />
                             Directory Access
                         </div>
-                        <h1 className="text-4xl font-semibold tracking-tight text-white md:text-5xl">
+                        <h1 className="text-4xl font-bold tracking-tight text-white md:text-5xl">
                             User Records
                         </h1>
                         <p className="text-base font-medium leading-relaxed text-white/50">
@@ -418,7 +418,7 @@ export default function AdminUsersPage() {
                                                     {roleInfo.label}
                                                 </span>
                                             </div>
-                                            <span className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-semibold text-white/60">
+                                            <span className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-bold text-white/60">
                                                 <Calendar className="size-3.5 text-white/30" />
                                                 <span suppressHydrationWarning>{dateObj.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
                                             </span>
@@ -450,7 +450,7 @@ export default function AdminUsersPage() {
                 <div className="hidden overflow-x-auto md:block">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="border-b border-border/70 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground bg-muted/30">
+                            <tr className="border-b border-border/70 text-[11px] font-bold uppercase tracking-widest text-muted-foreground bg-muted/30">
                                 <th className="px-8 py-5 font-bold">Identity</th>
                                 <th className="px-8 py-5 font-bold">Contact</th>
                                 <th className="px-8 py-5 font-bold">Clearance Role</th>

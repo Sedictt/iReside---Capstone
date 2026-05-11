@@ -149,7 +149,7 @@ export function PageLoader({ message }: { message?: string }) {
                     <span className="text-[9px] font-light text-white/10 tracking-[0.8em] uppercase mb-1">
                         Established 2024
                     </span>
-                    <span className="text-[12px] font-semibold text-white/30 tracking-[0.5em] uppercase">
+                    <span className="text-[12px] font-bold text-white/30 tracking-[0.5em] uppercase">
                         iReside
                     </span>
                 </motion.div>

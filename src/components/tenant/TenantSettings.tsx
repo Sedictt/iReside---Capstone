@@ -92,7 +92,7 @@ function GlassCard({ children, className, title, description }: { children: Reac
         <div className={cn("relative overflow-hidden rounded-[2rem] border border-white/5 bg-white/[0.03] backdrop-blur-xl transition-all duration-500 hover:bg-white/[0.05]", className)}>
             {(title || description) && (
                 <div className="border-b border-white/5 px-8 py-6">
-                    {title && <h3 className="text-lg font-semibold text-white">{title}</h3>}
+                    {title && <h3 className="text-lg font-bold text-white">{title}</h3>}
                     {description && <p className="text-sm text-neutral-400">{description}</p>}
                 </div>
             )}
@@ -278,10 +278,10 @@ export function TenantSettings() {
                 try {
                     const { data, error } = await (supabase as any).from('user_sessions').select('*').order('updated_at', { ascending: false });
                     if (error) throw error;
-                    if (data) setSessions(data);
                     
                     const { data: { session } } = await supabase.auth.getSession();
-                    if (session) setCurrentSessionId((session as any).id);
+                    setSessions(data || []);
+                    setCurrentSessionId(session ? (session as any).id : null);
                 } catch (err) {
                     console.error("[Sessions] Failed to fetch sessions:", err);
                 } finally {
@@ -489,7 +489,7 @@ export function TenantSettings() {
             >
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div>
-                        <h2 className="text-3xl font-semibold text-white">Profile</h2>
+                        <h2 className="text-3xl font-bold text-white">Profile</h2>
                         <p className="text-neutral-400">Control your personal information.</p>
                     </div>
                     <button
@@ -675,14 +675,14 @@ export function TenantSettings() {
                                                 <div className="flex items-center gap-4">
                                                     <Icon className={cn("size-5", isCurrent ? "text-primary" : "text-neutral-400")} />
                                                     <div>
-                                                        <h4 className="text-sm font-semibold text-white">{browser} on {os}</h4>
+                                                        <h4 className="text-sm font-bold text-white">{browser} on {os}</h4>
                                                         <p className="text-[10px] text-neutral-500 uppercase tracking-wider">
                                                             {isCurrent ? "Current Session" : <>Last seen <ClientOnlyDate date={sess.updated_at} format={{ month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }} /></>} • IP: {sess.ip}
                                                         </p>
                                                     </div>
                                                 </div>
                                                 {isCurrent && (
-                                                    <span className="rounded-lg bg-primary/20 px-2 py-1 text-[10px] font-semibold text-primary">ACTIVE</span>
+                                                    <span className="rounded-lg bg-primary/20 px-2 py-1 text-[10px] font-bold text-primary">ACTIVE</span>
                                                 )}
                                             </div>
                                         );
@@ -712,7 +712,7 @@ export function TenantSettings() {
                 className="space-y-8"
             >
                 <div>
-                    <h2 className="text-3xl font-semibold text-white">Security & Login</h2>
+                    <h2 className="text-3xl font-bold text-white">Security & Login</h2>
                     <p className="text-neutral-400">Protect your account and manage active sessions.</p>
                 </div>
 
@@ -736,7 +736,7 @@ export function TenantSettings() {
             className="space-y-8"
         >
             <div>
-                <h2 className="text-3xl font-semibold text-white">Notifications</h2>
+                <h2 className="text-3xl font-bold text-white">Notifications</h2>
                 <p className="text-neutral-400">Choose how and when you want to be alerted.</p>
             </div>
 
@@ -751,10 +751,10 @@ export function TenantSettings() {
                     <table className="w-full text-left">
                         <thead>
                             <tr className="border-b border-white/5 bg-white/[0.02]">
-                                <th className="px-8 py-5 text-xs font-semibold uppercase tracking-widest text-neutral-500">Activity Type</th>
-                                <th className="px-4 py-5 text-center text-xs font-semibold uppercase tracking-widest text-neutral-500">Email</th>
-                                <th className="px-4 py-5 text-center text-xs font-semibold uppercase tracking-widest text-neutral-500">Push</th>
-                                <th className="px-4 py-5 text-center text-xs font-semibold uppercase tracking-widest text-neutral-500">SMS</th>
+                                <th className="px-8 py-5 text-xs font-bold uppercase tracking-widest text-neutral-500">Activity Type</th>
+                                <th className="px-4 py-5 text-center text-xs font-bold uppercase tracking-widest text-neutral-500">Email</th>
+                                <th className="px-4 py-5 text-center text-xs font-bold uppercase tracking-widest text-neutral-500">Push</th>
+                                <th className="px-4 py-5 text-center text-xs font-bold uppercase tracking-widest text-neutral-500">SMS</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
@@ -767,7 +767,7 @@ export function TenantSettings() {
                             ].map((item) => (
                                 <tr key={item.key} className="transition-colors hover:bg-white/[0.01]">
                                     <td className="px-8 py-6">
-                                        <h4 className="text-sm font-semibold text-white">{item.label}</h4>
+                                        <h4 className="text-sm font-bold text-white">{item.label}</h4>
                                         <p className="text-xs text-neutral-500">{item.desc}</p>
                                     </td>
                                     <td className="px-4 py-6 text-center">
@@ -827,7 +827,7 @@ export function TenantSettings() {
                                                 <p className="text-xs text-neutral-500">Connected</p>
                                             </div>
                                         </div>
-                                        <span className="rounded-lg bg-primary/20 px-2 py-1 text-[10px] font-semibold text-primary">DEFAULT</span>
+                                        <span className="rounded-lg bg-primary/20 px-2 py-1 text-[10px] font-bold text-primary">DEFAULT</span>
                                     </div>
                                     
                                     <button className="flex items-center justify-center gap-2 w-full p-4 rounded-2xl border border-dashed border-white/10 text-sm text-neutral-500 hover:text-white hover:border-white/20 transition-all">
@@ -879,7 +879,7 @@ export function TenantSettings() {
                 className="space-y-8"
             >
                 <div>
-                    <h2 className="text-3xl font-semibold text-white">Billing & Payments</h2>
+                    <h2 className="text-3xl font-bold text-white">Billing & Payments</h2>
                     <p className="text-neutral-400">Manage your payment methods and view transaction history.</p>
                 </div>
 
@@ -947,13 +947,13 @@ export function TenantSettings() {
                                         <AlertTriangle className="size-6 text-red-500" />
                                     </div>
                                     <div>
-                                        <h4 className="text-base font-semibold text-red-400">Delete Account</h4>
+                                        <h4 className="text-base font-bold text-red-400">Delete Account</h4>
                                         <p className="text-sm text-neutral-400 mt-1">Permanently delete your account and all associated data. This action cannot be undone.</p>
                                     </div>
                                 </div>
 
                                 <div className="rounded-2xl bg-white/5 border border-white/5 p-4">
-                                    <h5 className="text-sm font-semibold text-white mb-3">What will be deleted:</h5>
+                                    <h5 className="text-sm font-bold text-white mb-3">What will be deleted:</h5>
                                     <ul className="space-y-2">
                                         {[
                                             "Your profile and personal information",
@@ -1029,7 +1029,7 @@ export function TenantSettings() {
                 className="space-y-8"
             >
                 <div>
-                    <h2 className="text-3xl font-semibold text-white">Data & Privacy</h2>
+                    <h2 className="text-3xl font-bold text-white">Data & Privacy</h2>
                     <p className="text-neutral-400">Manage your data and account longevity.</p>
                 </div>
 
@@ -1068,7 +1068,7 @@ export function TenantSettings() {
                         <Layout className="size-6" />
                     </div>
                     <div>
-                        <h1 className="text-xl font-semibold text-white">Settings</h1>
+                        <h1 className="text-xl font-bold text-white">Settings</h1>
                         <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">Control Center</p>
                     </div>
                 </div>

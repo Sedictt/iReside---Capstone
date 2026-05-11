@@ -293,14 +293,14 @@ export default function PropertyEnvironmentPage() {
             />
 
             <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-                <h1 className="text-2xl font-semibold tracking-tight text-foreground">Environment Configuration</h1>
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">Environment Configuration</h1>
                 <p className="mt-2 text-sm text-muted-foreground">
                     Configure the operating environment for {propertyName}. This affects occupancy rules, policies, and billing defaults.
                 </p>
             </section>
 
             <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-                <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
                     <Building2 className="size-5 text-primary" />
                     Property Type
                 </h2>
@@ -342,7 +342,7 @@ export default function PropertyEnvironmentPage() {
 
             <div className="grid gap-6 lg:grid-cols-2">
                 <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-                    <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                    <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
                         <Users className="size-5 text-primary" />
                         Occupancy Settings
                     </h2>
@@ -386,7 +386,7 @@ export default function PropertyEnvironmentPage() {
                 </section>
 
                 <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-                    <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                    <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
                         <Zap className="size-5 text-primary" />
                         Utility Policy
                     </h2>
@@ -435,7 +435,7 @@ export default function PropertyEnvironmentPage() {
             </div>
 
             <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-                <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
                     <Clock className="size-5 text-primary" />
                     Rules & Curfew Settings
                 </h2>

@@ -64,7 +64,7 @@ export function InPersonPaymentModal() {
                     <Wallet className="size-6 text-emerald-500" />
                 </div>
 
-                <h3 className="text-xl font-semibold text-white mb-2">In-Person Payment Confirmation</h3>
+                <h3 className="text-xl font-bold text-white mb-2">In-Person Payment Confirmation</h3>
                 <p className="text-neutral-400 text-sm mb-6">
                     A tenant has reported handing you cash for their rent. Please confirm you have received the exact amount.
                 </p>
