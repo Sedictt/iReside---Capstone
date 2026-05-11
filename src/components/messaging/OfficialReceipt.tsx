@@ -106,7 +106,7 @@ export function OfficialReceipt({
                 {/* Decorative cut marks at top/bottom */}
                 <div className="absolute top-0 left-0 right-0 h-1 flex justify-between px-2 overflow-hidden opacity-20">
                     {Array.from({ length: 20 }).map((_, i) => (
-                        <div key={i} className="size-2 bg-zinc-900 rotate-45 -translate-y-1" />
+                        <div key={`deco-top-${i}`} className="size-2 bg-zinc-900 rotate-45 -translate-y-1" />
                     ))}
                 </div>
 
@@ -208,7 +208,7 @@ export function OfficialReceipt({
                 {/* Decorative cut marks at bottom */}
                 <div className="absolute bottom-0 left-0 right-0 h-1 flex justify-between px-2 overflow-hidden opacity-20">
                     {Array.from({ length: 20 }).map((_, i) => (
-                        <div key={i} className="size-2 bg-zinc-900 rotate-45 translate-y-1" />
+                        <div key={`deco-bottom-${i}`} className="size-2 bg-zinc-900 rotate-45 translate-y-1" />
                     ))}
                 </div>
             </motion.div>

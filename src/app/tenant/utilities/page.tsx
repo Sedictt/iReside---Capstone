@@ -354,7 +354,7 @@ export default function TenantUtilitiesPage() {
                         {loading ? (
                             <div className="grid gap-6 sm:grid-cols-2">
                                 {[1, 2, 3].map(i => (
-                                    <div key={i} className="h-96 animate-pulse rounded-3xl bg-muted" />
+                                    <div key={`amenity-skeleton-${i}`} className="h-96 animate-pulse rounded-3xl bg-muted" />
                                 ))}
                             </div>
                         ) : filteredAmenities.length === 0 ? (
@@ -446,7 +446,7 @@ export default function TenantUtilitiesPage() {
                                 {loading ? (
                                     <div className="space-y-4">
                                         {[1, 2].map(i => (
-                                            <div key={i} className="h-24 animate-pulse rounded-2xl bg-muted" />
+                                            <div key={`booking-skeleton-${i}`} className="h-24 animate-pulse rounded-2xl bg-muted" />
                                         ))}
                                     </div>
                                 ) : bookings.length === 0 ? (

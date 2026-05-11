@@ -83,6 +83,7 @@ export function ProfileCoverUploader({ initialCoverUrl, fullName, className }: P
                         src={coverUrl}
                         alt={`${fullName}'s cover photo`}
                         fill
+                        sizes="100vw"
                         className="object-cover opacity-60 group-hover:scale-105 transition-transform duration-[10s]"
                     />
                 ) : (

@@ -29,7 +29,7 @@ export function OperationalSnapshotSkeleton({ className }: { className?: string 
 
                 <div className="mt-10 grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2">
                     {Array.from({ length: 4 }).map((_, index) => (
-                        <div key={index} className="rounded-3xl border border-white/5 bg-white/5 p-6 space-y-4">
+                        <div key={`snapshot-skeleton-${index}`} className="rounded-3xl border border-white/5 bg-white/5 p-6 space-y-4">
                             <div className="flex items-start justify-between gap-3">
                                 <div className="space-y-3">
                                     <Skeleton className="h-3 w-20 rounded-full opacity-60" />

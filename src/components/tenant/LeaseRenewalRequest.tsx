@@ -226,7 +226,7 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                                 <div className="space-y-3 pt-2">
                                                     <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">New Rules & Clauses</p>
                                                     {renewalSettings.new_rules.map((rule, i) => (
-                                                        <div key={i} className="flex items-start gap-3 p-3 bg-muted/20 rounded-xl border border-dashed border-border">
+                                                        <div key={rule} className="flex items-start gap-3 p-3 bg-muted/20 rounded-xl border border-dashed border-border">
                                                             <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />
                                                             <p className="text-[11px] font-medium text-foreground">{rule}</p>
                                                         </div>

@@ -11,13 +11,13 @@ import { m as motion } from "framer-motion";
 const ConsultationTool = dynamic(() => import('../../admin/consultation-tool/ConsultationTool'), { 
   ssr: false,
   loading: () => (
-    <div className="min-h-screen bg-[#050505] text-zinc-100 flex flex-col items-center justify-center font-sans">
+    <div className="min-h-screen bg-[#050505] text-text-high flex flex-col items-center justify-center font-sans">
       <div className="relative mb-8">
-        <div className="size-20 border-2 border-indigo-500/20 rounded-full" />
-        <div className="absolute inset-0 size-20 border-t-2 border-indigo-500 rounded-full animate-spin" />
+        <div className="size-20 border-2 border-primary/20 rounded-full" />
+        <div className="absolute inset-0 size-20 border-t-2 border-primary rounded-full animate-spin" />
       </div>
-      <h2 className="text-2xl font-semibold tracking-tighter uppercase text-indigo-400">Loading Viewer</h2>
-      <p className="text-zinc-500 text-sm mt-2 font-medium uppercase tracking-widest">Preparing high-fidelity environment</p>
+      <h2 className="text-2xl font-semibold tracking-tighter uppercase text-primary">Loading Viewer</h2>
+      <p className="text-text-medium text-sm mt-2 font-medium uppercase tracking-widest">Preparing high-fidelity environment</p>
     </div>
   )
 });
@@ -80,36 +80,30 @@ export default function SignPage() {
     }
   };
 
-  if (isLoading) return null;
-
-  if (isFinished) {
-    return (
-      <div className="min-h-screen bg-[#050505] text-zinc-100 flex flex-col items-center justify-center p-6 text-center">
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="size-24 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-8 border border-emerald-500/20"
-        >
-          <CheckCircle2 className="size-12" />
-        </motion.div>
-        <h1 className="text-4xl font-semibold tracking-tighter mb-4 uppercase">Document Signed</h1>
-        <p className="text-zinc-500 max-w-sm font-medium mb-10 leading-relaxed">
-          Thank you for your technical consultation. Your signature has been embedded and saved to our secure storage.
-        </p>
-        <div className="p-6 rounded-3xl bg-zinc-900 border border-zinc-800 flex items-center gap-4 max-w-xs w-full">
-           <div className="size-12 rounded-xl bg-zinc-800 flex items-center justify-center text-zinc-500">
-             <FileText className="size-6" />
-           </div>
-           <div className="text-left">
-             <div className="text-sm font-bold truncate max-w-[150px]">{docData?.file_name}</div>
-             <div className="text-[10px] text-zinc-500 font-semibold uppercase">Signed & Sealed</div>
-           </div>
-        </div>
+  return isLoading ? null : isFinished ? (
+    <div className="min-h-screen bg-[#050505] text-text-high flex flex-col items-center justify-center p-6 text-center">
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="size-24 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-8 border border-emerald-500/20"
+      >
+        <CheckCircle2 className="size-12" />
+      </motion.div>
+      <h1 className="text-4xl font-semibold tracking-tighter mb-4 uppercase">Document Signed</h1>
+      <p className="text-zinc-500 max-w-sm font-medium mb-10 leading-relaxed">
+        Thank you for your technical consultation. Your signature has been embedded and saved to our secure storage.
+      </p>
+      <div className="p-6 rounded-3xl bg-surface-dark border border-border flex items-center gap-4 max-w-xs w-full">
+         <div className="size-12 rounded-xl bg-surface-2 flex items-center justify-center text-text-medium">
+           <FileText className="size-6" />
+         </div>
+         <div className="text-left">
+           <div className="text-sm font-bold truncate max-w-[150px]">{docData?.file_name}</div>
+           <div className="text-[10px] text-zinc-500 font-semibold uppercase">Signed & Sealed</div>
+         </div>
       </div>
-    );
-  }
-
-  return (
+    </div>
+  ) : (
     <ConsultationTool 
       fileUrl={docData?.file_url} 
       onSigned={handleSigned}

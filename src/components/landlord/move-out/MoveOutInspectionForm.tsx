@@ -184,15 +184,11 @@ export function MoveOutInspectionForm({
     }
   };
 
-  if (initialLoading) {
-    return (
-      <div className="flex h-[400px] items-center justify-center rounded-[2.5rem] border border-border bg-card">
-        <Loader2 className="size-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  return (
+  return initialLoading ? (
+    <div className="flex h-[400px] items-center justify-center rounded-[2.5rem] border border-border bg-card">
+      <Loader2 className="size-8 animate-spin text-primary" />
+    </div>
+  ) : (
     <div className="relative">
       <div className={cn(
         "flex flex-col gap-8 rounded-[2.5rem] border border-border bg-card p-8 shadow-sm transition-all",

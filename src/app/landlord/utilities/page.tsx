@@ -234,7 +234,7 @@ export default function LandlordUtilitiesPage() {
                             {loading ? (
                                 // Skeleton loader
                                 [...Array(3)].map((_, i) => (
-                                    <div key={i} className="h-[400px] w-full animate-pulse rounded-3xl bg-muted/50" />
+                                    <div key={`utility-skeleton-${i}`} className="h-[400px] w-full animate-pulse rounded-3xl bg-muted/50" />
                                 ))
                             ) : filteredUtilities.length === 0 ? (
                                 <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">

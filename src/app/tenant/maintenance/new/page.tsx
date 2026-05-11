@@ -244,7 +244,7 @@ export default function NewMaintenanceRequest() {
                                             exit={{ opacity: 0, scale: 0.8 }}
                                             className="relative aspect-square rounded-2xl overflow-hidden border border-border"
                                         >
-                                            <Image src={preview} alt="Preview" fill className="object-cover" />
+                                            <Image src={preview} alt="Preview" fill sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 150px" className="object-cover" />
                                             <button
                                                 type="button"
                                                 onClick={() => removeFile(idx)}

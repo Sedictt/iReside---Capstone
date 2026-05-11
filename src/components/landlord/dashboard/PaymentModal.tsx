@@ -121,7 +121,7 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                                 <Search className="absolute left-5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
                                 <input
                                     type="text"
-                                    placeholder={`Filter ${categoryCopy.filterLabel} entries...`}
+                                    placeholder={`Filter ${categoryCopy.filterLabel} entries…`}
                                     className="w-full rounded-2xl border border-white/10 bg-black/40 py-4 pl-14 pr-6 text-sm text-white placeholder:text-neutral-500 transition-all focus:border-primary/40 focus:outline-none focus:ring-1 focus:ring-primary/40 focus:shadow-[0_0_20px_rgba(var(--primary-rgb),0.1)]"
                                 />
                             </div>
@@ -149,7 +149,7 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                                                     className="relative size-14 rounded-full border-2 border-background overflow-hidden transition-all duration-500 group-hover:scale-110"
                                                     style={{ backgroundColor: payment.avatarBgColor || '#171717' }}
                                                 >
-                                                    <Image src={payment.avatar || FALLBACK_AVATAR} alt={payment.tenant} fill className="object-cover" />
+                                                    <Image src={payment.avatar || FALLBACK_AVATAR} alt={payment.tenant} fill sizes="56px" className="object-cover" />
                                                 </div>
                                                 <div className={cn(
                                                     "absolute -bottom-0.5 -right-0.5 size-4 rounded-full border-2 border-background shadow-lg",
@@ -211,6 +211,7 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                                                         src={selectedActionPayment.avatar || FALLBACK_AVATAR}
                                                         alt={selectedActionPayment.tenant}
                                                         fill
+                                                        sizes="96px"
                                                         className="rounded-full border-4 border-primary/20 object-cover shadow-2xl shadow-primary/10"
                                                     />
                                                     <div className="absolute -bottom-1 -right-1 size-7 rounded-full border-4 border-neutral-900 bg-emerald-500 shadow-lg" />

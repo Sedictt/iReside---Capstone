@@ -11,7 +11,7 @@ export function CommunityPropertyGate() {
 
     if (loading && properties.length === 0) {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-100 via-background to-emerald-100/40 px-6 text-foreground dark:from-[#06070b] dark:via-[#0d1118] dark:to-[#08221a]">
+            <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-surface-0 via-background to-emerald-100/40 px-6 text-foreground dark:from-[#06070b] dark:via-[#0d1118] dark:to-[#08221a]">
                 <div className="rounded-3xl border border-border/60 bg-card/80 px-8 py-6 text-center shadow-xl backdrop-blur">
                     <p className="text-sm font-medium text-muted-foreground">Loading your properties...</p>
                 </div>
@@ -21,7 +21,7 @@ export function CommunityPropertyGate() {
 
     if (properties.length === 0) {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-100 via-background to-emerald-100/40 px-6 text-foreground dark:from-[#06070b] dark:via-[#0d1118] dark:to-[#08221a]">
+            <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-surface-0 via-background to-emerald-100/40 px-6 text-foreground dark:from-[#06070b] dark:via-[#0d1118] dark:to-[#08221a]">
                 <div className="w-full max-w-xl rounded-3xl border border-border/60 bg-card/85 p-8 shadow-2xl backdrop-blur">
                     <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/70 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                         <Building2 className="size-3.5" />
@@ -44,7 +44,7 @@ export function CommunityPropertyGate() {
     }
 
     return (
-        <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-100 via-background to-emerald-100/40 text-foreground dark:from-[#06070b] dark:via-[#0d1118] dark:to-[#08221a]">
+        <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-surface-0 via-background to-emerald-100/40 text-foreground dark:from-[#06070b] dark:via-[#0d1118] dark:to-[#08221a]">
             <div className="pointer-events-none absolute inset-0 overflow-hidden">
                 <div className="absolute -top-24 -left-24 size-72 rounded-full bg-emerald-500/20 blur-3xl dark:bg-emerald-400/20" />
                 <div className="absolute top-24 right-0 size-80 rounded-full bg-sky-500/20 blur-3xl dark:bg-sky-400/20" />

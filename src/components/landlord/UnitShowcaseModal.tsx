@@ -99,6 +99,7 @@ export function UnitShowcaseModal({
                         src={images[currentImage]}
                         alt={unit.name}
                         fill
+                        sizes="(max-width: 1024px) 100vw, 1024px"
                         className="object-cover transition-all duration-500"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#0e0e0e] via-transparent to-transparent" />
@@ -119,9 +120,9 @@ export function UnitShowcaseModal({
                             </button>
 
                             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
-                                {images.map((_, i) => (
+                                {images.map((img, i) => (
                                     <button
-                                        key={i}
+                                        key={img}
                                         onClick={() => setCurrentImage(i)}
                                         className={cn(
                                             "size-2 rounded-full transition-all",
@@ -200,9 +201,9 @@ export function UnitShowcaseModal({
                                 Amenities
                             </h3>
                             <div className="flex flex-wrap gap-2">
-                                {unit.property.amenities.map((amenity, i) => (
+                                {unit.property.amenities.map((amenity) => (
                                     <span
-                                        key={i}
+                                        key={amenity}
                                         className="px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-medium"
                                     >
                                         {amenity}

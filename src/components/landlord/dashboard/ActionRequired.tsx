@@ -366,7 +366,7 @@ export function ActionRequired() {
             <section className="rounded-[2.5rem] border border-white/10 bg-card/60 p-8 shadow-2xl shadow-black/30 backdrop-blur-xl">
                 <div className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-4">
-                        <div className="flex size-14 items-center justify-center rounded-[1.25rem] border border-indigo-500/20 bg-indigo-500/12 text-indigo-300">
+                        <div className="flex size-14 items-center justify-center rounded-[1.25rem] border border-primary/20 bg-primary/12 text-primary">
                             <Activity className="size-7" />
                         </div>
                         <div>

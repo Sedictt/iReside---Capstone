@@ -163,7 +163,7 @@ export function CommunityPostCard({
 
                             return (
                                 <button 
-                                    key={idx} 
+                                    key={option} 
                                     onClick={() => onVote(post, idx)} 
                                     disabled={isMutating}
                                     className={`group relative w-full overflow-hidden rounded-2xl border p-4 text-left transition-all ${
@@ -270,7 +270,7 @@ export function CommunityPostCard({
                             {loadingComments ? (
                                 <div className="space-y-4 py-2">
                                     {[1, 2].map(i => (
-                                        <div key={i} className="flex gap-4 animate-pulse">
+                                        <div key={`comment-skeleton-${i}`} className="flex gap-4 animate-pulse">
                                             <div className="size-9 rounded-full bg-muted dark:bg-white/5" />
                                             <div className="flex-1 space-y-2">
                                                 <div className="h-3 w-24 rounded bg-muted dark:bg-white/5" />

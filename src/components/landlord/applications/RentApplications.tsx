@@ -238,7 +238,7 @@ function ApplicationsSkeletonList() {
     return (
         <div className="space-y-4">
             {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="h-28 w-full animate-pulse rounded-3xl border border-border bg-card/50" />
+                <div key={`app-skeleton-${i}`} className="h-28 w-full animate-pulse rounded-3xl border border-border bg-card/50" />
             ))}
         </div>
     );
@@ -252,21 +252,9 @@ export function RentApplications() {
     const { get } = useSearchParams();
 
     const [activeTab, setActiveTab] = useState<"pending" | "approved" | "rejected" | "archived">("pending");
-    const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
-    const [isRefreshing, setIsRefreshing] = useState(false);
     const [activeFilter, setActiveFilterState] = useState<ApplicationStatus | "all">("all");
     const [filterLoading, setFilterLoading] = useState(false);
-
-    useEffect(() => {
-        const action = get("action");
-        if (action === "view-application") {
-            const deepLinkId = get("id");
-            if (deepLinkId) {
-                setSelectedApplicationId(deepLinkId);
-            }
-        }
-    }, [get]);
 
     const setActiveFilter = (filter: ApplicationStatus | "all") => {
         if (filter !== activeFilter) {
@@ -281,7 +269,6 @@ export function RentApplications() {
     const [selectedApp, setSelectedApp] = useState<RentApplication | null>(null);
     const [applications, setApplications] = useState<RentApplication[]>([]);
     const [loading, setLoading] = useState(true);
-    const [dataFetched, setDataFetched] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [actionError, setActionError] = useState<string | null>(null);
     const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
@@ -438,7 +425,6 @@ export function RentApplications() {
                 if (!controller.signal.aborted) {
                     const fetchedApps = Array.isArray(payload.applications) ? payload.applications : [];
                     setApplications(fetchedApps);
-                    setDataFetched(true);
 
                     // Handle deep linking via ?id=
                     const deepLinkId = get("id");
@@ -537,63 +523,6 @@ export function RentApplications() {
         accountExisted?: boolean;
     } | null>(null);
     const [sendingCredentials, setSendingCredentials] = useState(false);
-
-    const isEditing = useRef(false);
-    const [editDraft, setEditDraft] = useState<{
-        applicant_name: string; applicant_email: string; applicant_phone: string;
-        emergency_contact_name: string; emergency_contact_phone: string;
-        move_in_date: string; occupation: string; employer: string;
-        monthly_income: string; message: string;
-    } | null>(null);
-    const savingEdit = useRef(false);
-    const [editError, setEditError] = useState<string | null>(null);
-
-    const openEdit = (app: RentApplication) => {
-        setEditDraft({
-            applicant_name: app.applicant.name === "Unknown applicant" ? "" : app.applicant.name,
-            applicant_email: app.applicant.email === "Not provided" ? "" : app.applicant.email,
-            applicant_phone: app.applicant.phone === "Not provided" ? "" : app.applicant.phone,
-            emergency_contact_name: app.emergencyContact?.name ?? "",
-            emergency_contact_phone: app.emergencyContact?.phone ?? "",
-            move_in_date: app.requestedMoveIn ?? "",
-            occupation: app.applicant.occupation === "Not provided" ? "" : app.applicant.occupation,
-            employer: "",
-            monthly_income: app.applicant.monthlyIncome != null ? String(app.applicant.monthlyIncome) : "",
-            message: app.notes ?? "",
-        });
-        isEditing.current = true;
-    };
-
-    const cancelEdit = () => { isEditing.current = false; setEditDraft(null); setEditError(null); };
-
-    const saveEdit = async () => {
-        if (!selectedApp || !editDraft) return;
-        savingEdit.current = true;
-        try {
-            const res = await fetch("/api/landlord/applications/tenant-application", {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    application_id: selectedApp.id,
-                    applicant_name: editDraft.applicant_name,
-                    applicant_email: editDraft.applicant_email,
-                    applicant_phone: editDraft.applicant_phone || null,
-                    emergency_contact_name: editDraft.emergency_contact_name || null,
-                    emergency_contact_phone: editDraft.emergency_contact_phone || null,
-                    move_in_date: editDraft.move_in_date || null,
-                    message: editDraft.message || null,
-                    employment_info: {
-                        occupation: editDraft.occupation,
-                        employer: editDraft.employer,
-                        monthly_income: Number(editDraft.monthly_income),
-                    },
-                }),
-            });
-            if (!res.ok) throw new Error("Failed save");
-            reloadKey.current += 1;
-            isEditing.current = false;
-        } catch { setEditError("Failed to save changes."); } finally { savingEdit.current = false; }
-    };
 
     const handleSendCredentials = async (appId: string) => {
         setSendingCredentials(true);
@@ -884,7 +813,7 @@ export function RentApplications() {
                                             className="group relative flex cursor-pointer items-center overflow-hidden rounded-3xl border border-border bg-background/50 p-3 transition-all hover:border-primary/20 hover:bg-card hover:shadow-lg active:scale-[0.99]"
                                         >
                                             <div className="relative h-20 w-28 shrink-0 overflow-hidden rounded-2xl bg-muted">
-                                                <Image src={resolveImage(app.propertyImage)} alt="" fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
+                                                <Image src={resolveImage(app.propertyImage)} alt="" fill sizes="112px" className="object-cover transition-transform duration-700 group-hover:scale-110" />
                                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                                                 <span className="absolute bottom-2 left-2 text-[10px] font-semibold text-white">{app.unitNumber}</span>
                                             </div>
@@ -892,7 +821,7 @@ export function RentApplications() {
                                             <div className="grid flex-1 grid-cols-1 items-center gap-6 px-6 lg:grid-cols-[1fr_120px_180px] xl:grid-cols-[1fr_120px_120px_180px]">
                                                 <div className="flex items-center gap-4 min-w-0">
                                                     <div className="relative size-12 shrink-0 rounded-full border-2 border-border bg-muted flex items-center justify-center font-semibold text-muted-foreground" style={{ backgroundColor: app.applicant.avatarBgColor || "" }}>
-                                                        {app.applicant.avatar ? <Image src={app.applicant.avatar} alt={`${app.applicant.name} avatar`} fill className="object-cover" /> : app.applicant.name[0]}
+                                                        {app.applicant.avatar ? <Image src={app.applicant.avatar} alt={`${app.applicant.name} avatar`} fill sizes="48px" className="object-cover" /> : app.applicant.name[0]}
                                                     </div>
                                                     <div className="min-w-0 flex-1">
                                                         <h3 className="truncate text-lg font-semibold tracking-tight text-foreground">{app.applicant.name}</h3>
@@ -1002,7 +931,7 @@ export function RentApplications() {
                                 )}
                                 {/* Hero Card */}
                                 <div className="relative h-48 w-full overflow-hidden rounded-[2.5rem] border border-border bg-muted shadow-sm">
-                                    <Image src={resolveImage(selectedApp.propertyImage)} alt="" fill className="object-cover opacity-60" />
+                                    <Image src={resolveImage(selectedApp.propertyImage)} alt="" fill sizes="(max-width: 768px) 100vw, 800px" className="object-cover opacity-60" />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                                     <div className="absolute bottom-6 left-8">
                                         <h3 className="text-2xl font-semibold text-white">{selectedApp.propertyName}</h3>
@@ -1044,8 +973,8 @@ export function RentApplications() {
                                                     <div className="space-y-3">
                                                         <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-500">Missing Prerequisites</p>
                                                         <ul className="space-y-1.5">
-                                                            {missing.map((item, i) => (
-                                                                <li key={i} className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground/80">
+                                                            {missing.map((item) => (
+                                                                <li key={item} className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground/80">
                                                                     <div className="size-1 rounded-full bg-amber-500/40" />
                                                                     {item}
                                                                 </li>
@@ -1064,7 +993,7 @@ export function RentApplications() {
                                     <div className="rounded-[2.5rem] border border-border bg-background/50 p-8 space-y-8">
                                         <div className="flex items-center gap-6">
                                             <div className="relative size-20 rounded-full border-4 border-border shadow-xl flex items-center justify-center text-3xl font-semibold text-white" style={{ backgroundColor: selectedApp.applicant.avatarBgColor || "#171717" }}>
-                                                {selectedApp.applicant.avatar ? <Image src={selectedApp.applicant.avatar} alt={`${selectedApp.applicant.name} avatar`} fill className="object-cover" /> : selectedApp.applicant.name[0]}
+                                                {selectedApp.applicant.avatar ? <Image src={selectedApp.applicant.avatar} alt={`${selectedApp.applicant.name} avatar`} fill sizes="80px" className="object-cover" /> : selectedApp.applicant.name[0]}
                                             </div>
                                             <div>
                                                 <h3 className="text-2xl font-semibold text-foreground">{selectedApp.applicant.name}</h3>
@@ -1148,8 +1077,8 @@ export function RentApplications() {
                                 <div className="space-y-4">
                                     <h4 className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground px-2">Supporting Files</h4>
                                     <div className="grid grid-cols-1 gap-3">
-                                        {selectedApp.documents.map((doc, i) => (
-                                            <button key={i} onClick={() => setPreviewUrl(doc)} className="flex items-center justify-between rounded-2xl border border-border bg-background p-4 hover:border-primary/30 transition-all">
+                                        {selectedApp.documents.map((doc) => (
+                                            <button key={doc} onClick={() => setPreviewUrl(doc)} className="flex items-center justify-between rounded-2xl border border-border bg-background p-4 hover:border-primary/30 transition-all">
                                                 <div className="flex items-center gap-3">
                                                     <FileText className="size-5 text-muted-foreground" />
                                                     <span className="text-[11px] font-semibold text-foreground">{formatDocumentLabel(doc)}</span>
@@ -1175,7 +1104,7 @@ export function RentApplications() {
                                                             <div>
                                                                 <p className="text-sm font-semibold text-foreground">Digital Lease Contract</p>
                                                                 <div className="flex items-center gap-2 mt-0.5">
-                                                                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">ID: {selectedApp.lease.id.slice(0, 8)}...</span>
+                                                                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">ID: {selectedApp.lease.id.slice(0, 8)}…</span>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -1414,7 +1343,7 @@ export function RentApplications() {
                                 {previewUrl.toLowerCase().endsWith(".pdf") ? (
                                     <iframe src={previewUrl} className="h-full w-full rounded-2xl border-0" title="Preview" />
                                 ) : (
-                                    <div className="relative flex h-full w-full items-center justify-center overflow-hidden"><Image src={previewUrl} alt="Document preview" fill className="object-contain" /></div>
+                                    <div className="relative flex h-full w-full items-center justify-center overflow-hidden"><Image src={previewUrl} alt="Document preview" fill sizes="(max-width: 768px) 100vw, 640px" className="object-contain" /></div>
                                 )}
                             </div>
                         </motion.div>

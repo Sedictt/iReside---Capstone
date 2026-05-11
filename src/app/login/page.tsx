@@ -94,6 +94,7 @@ function LoginContent() {
                     src="/hero-images/apartment-03.png" 
                     alt="Background" 
                     fill 
+                    sizes="100vw"
                     className="object-cover opacity-20 dark:opacity-10 grayscale-[50%]"
                     priority
                 />

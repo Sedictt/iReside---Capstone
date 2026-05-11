@@ -480,8 +480,8 @@ export function ContractPreviewModal({
                                 {submitting ? <Loader2 className="size-5 animate-spin" /> : <ShieldCheck className="size-5" />}
                                 {submitting
                                     ? isFinalApproval
-                                        ? "Finalizing..."
-                                        : "Requesting..."
+                                        ? "Finalizing…"
+                                        : "Requesting…"
                                     : isFinalApproval
                                       ? "Finalize Approval"
                                       : "Request Payments"}

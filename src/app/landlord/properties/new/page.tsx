@@ -654,7 +654,7 @@ function NewAssetContent() {
                                                 <div className="flex flex-wrap gap-3">
                                                     {formData.buildingRules.map((rule, index) => (
                                                         <div 
-                                                            key={index}
+                                                            key={rule}
                                                             className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-2 group hover:border-primary/30 transition-all"
                                                         >
                                                             <span className="text-xs font-bold text-white/80">{rule}</span>

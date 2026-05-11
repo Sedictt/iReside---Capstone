@@ -110,59 +110,55 @@ export default function RentApplicationPage() {
         setIsSuccess(true);
     };
 
-    if (isSuccess) {
-        return (
-            <div className="min-h-[85vh] relative flex flex-col items-center justify-center p-6 overflow-hidden">
-                {/* Background Blobs for Success */}
-                <div className="absolute inset-0 pointer-events-none">
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/20 blur-[150px] rounded-full" />
-                </div>
-
-                <motion.div
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ type: "spring", damping: 15, stiffness: 100 }}
-                    className="relative z-10 text-center max-w-2xl px-8 py-16 rounded-[3rem] border border-white/10 bg-black/40 backdrop-blur-3xl shadow-2xl"
-                >
-                    <motion.div
-                        initial={{ rotate: -10, scale: 0.5 }}
-                        animate={{ rotate: 0, scale: 1 }}
-                        transition={{ delay: 0.3, type: "spring" }}
-                        className="mx-auto size-24 bg-gradient-to-br from-primary to-primary-dark rounded-3xl flex items-center justify-center shadow-2xl shadow-primary/40 mb-10"
-                    >
-                        <CheckCircle2 className="size-12 text-white" />
-                    </motion.div>
-
-                    <h1 className="text-4xl md:text-5xl font-semibold mb-6 tracking-tight text-white leading-tight">
-                        Application <br /><span className="text-primary italic">Successfully</span> Sent
-                    </h1>
-
-                    <p className="text-white/60 text-lg mb-12 leading-relaxed">
-                        Excellent Choice! Your application for <span className="text-white font-semibold">{property.name}</span> is now being reviewed by the team. We usually respond within 24 hours.
-                    </p>
-
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-                        <Link
-                            href="/tenant/applications"
-                            className="w-full sm:w-auto px-10 py-5 rounded-2xl bg-white text-black font-bold hover:bg-white/90 transition-all flex items-center justify-center gap-3 active:scale-95 shadow-xl shadow-white/5"
-                        >
-                            <Zap className="size-4" />
-                            Track Progress
-                        </Link>
-                        <Link
-                            href="/tenant/dashboard"
-                            className="w-full sm:w-auto px-10 py-5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold transition-all flex items-center justify-center gap-3 backdrop-blur-md active:scale-95"
-                        >
-                            Return to Dashboard
-                            <ArrowRight className="size-4 opacity-50" />
-                        </Link>
-                    </div>
-                </motion.div>
+    return isSuccess ? (
+        <div className="min-h-[85vh] relative flex flex-col items-center justify-center p-6 overflow-hidden">
+            {/* Background Blobs for Success */}
+            <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/20 blur-[150px] rounded-full" />
             </div>
-        );
-    }
 
-    return (
+            <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", damping: 15, stiffness: 100 }}
+                className="relative z-10 text-center max-w-2xl px-8 py-16 rounded-[3rem] border border-white/10 bg-black/40 backdrop-blur-3xl shadow-2xl"
+            >
+                <motion.div
+                    initial={{ rotate: -10, scale: 0.5 }}
+                    animate={{ rotate: 0, scale: 1 }}
+                    transition={{ delay: 0.3, type: "spring" }}
+                    className="mx-auto size-24 bg-gradient-to-br from-primary to-primary-dark rounded-3xl flex items-center justify-center shadow-2xl shadow-primary/40 mb-10"
+                >
+                    <CheckCircle2 className="size-12 text-white" />
+                </motion.div>
+
+                <h1 className="text-4xl md:text-5xl font-semibold mb-6 tracking-tight text-white leading-tight">
+                    Application <br /><span className="text-primary italic">Successfully</span> Sent
+                </h1>
+
+                <p className="text-white/60 text-lg mb-12 leading-relaxed">
+                    Excellent Choice! Your application for <span className="text-white font-semibold">{property.name}</span> is now being reviewed by the team. We usually respond within 24 hours.
+                </p>
+
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+                    <Link
+                        href="/tenant/applications"
+                        className="w-full sm:w-auto px-10 py-5 rounded-2xl bg-white text-black font-bold hover:bg-white/90 transition-all flex items-center justify-center gap-3 active:scale-95 shadow-xl shadow-white/5"
+                    >
+                        <Zap className="size-4" />
+                        Track Progress
+                    </Link>
+                    <Link
+                        href="/tenant/dashboard"
+                        className="w-full sm:w-auto px-10 py-5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold transition-all flex items-center justify-center gap-3 backdrop-blur-md active:scale-95"
+                    >
+                        Return to Dashboard
+                        <ArrowRight className="size-4 opacity-50" />
+                    </Link>
+                </div>
+            </motion.div>
+        </div>
+    ) : (
         <div className="relative min-h-screen">
             {/* Ambient Animated Background */}
             <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
@@ -270,6 +266,7 @@ export default function RentApplicationPage() {
                                     src={property.images[0]}
                                     alt={property.name}
                                     fill
+                                    sizes="(max-width: 768px) 100vw, 380px"
                                     className="object-cover grayscale-[0.2] transition-transform duration-1000 group-hover:scale-110 group-hover:grayscale-0"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />

@@ -12,11 +12,11 @@ import { ChevronRight, Home, X } from "lucide-react";
 export default function DocsLayout({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const pathname = usePathname();
-  const [prevPathname, setPrevPathname] = useState(pathname);
+  const prevPathname = React.useRef(pathname);
 
   // Close sidebar when route changes on mobile
-  if (pathname !== prevPathname) {
-    setPrevPathname(pathname);
+  if (pathname !== prevPathname.current) {
+    prevPathname.current = pathname;
     setIsSidebarOpen(false);
   }
 

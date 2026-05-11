@@ -814,7 +814,7 @@ export function WalkInApplicationModal({
                                     <p className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground mr-1">Ledger Page</p>
                                     {[0, 1].map((idx) => (
                                         <button 
-                                            key={idx}
+                                            key={`payment-step-${idx}`}
                                             onClick={() => setPaymentSubStep(idx)}
                                             className={cn(
                                                 "h-1 transition-all duration-500 rounded-full",

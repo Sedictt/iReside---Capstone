@@ -55,7 +55,7 @@ export function TenantDirectory({ tenants, loading, error, onViewProfile }: Tena
             {loading ? (
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {[1, 2, 3, 4, 5, 6].map((i) => (
-                        <div key={i} className="h-72 animate-pulse rounded-3xl border border-border bg-muted/40" />
+                        <div key={`skeleton-${i}`} className="h-72 animate-pulse rounded-3xl border border-border bg-muted/40" />
                     ))}
                 </div>
             ) : (

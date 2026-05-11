@@ -456,10 +456,10 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
               <div className="relative space-y-8">
                 <div className="absolute left-[15px] top-2 h-[calc(100%-16px)] w-px bg-border" />
 
-                {timelineEvents.map((event, idx) => {
+                {timelineEvents.map((event) => {
                   const Icon = event.icon;
                   return (
-                    <div key={idx} className="relative flex items-start gap-4">
+                    <div key={event.title} className="relative flex items-start gap-4">
                       <div className={cn(
                         "z-10 flex size-8 items-center justify-center rounded-xl transition-all ring-4 ring-card",
                         event.status === "completed" ? (event.color?.replace('text-', 'bg-') || "bg-primary text-white") : (event.status === "pending" ? "bg-amber-500 text-white animate-pulse" : "bg-muted text-muted-foreground")

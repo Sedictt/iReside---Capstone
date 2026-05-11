@@ -829,7 +829,7 @@ function HistoryDetailModal({ month, isOpen, onClose }: { month: string | null, 
                                                 </thead>
                                                 <tbody className="divide-y divide-border/50">
                                                     {data.length > 0 ? data.map((reading, idx) => (
-                                                        <tr key={idx} className="hover:bg-muted/10 transition-colors group">
+                                                        <tr key={`${reading.unit_name || 'unknown'}-${reading.utility_type}`} className="hover:bg-muted/10 transition-colors group">
                                                             <td className="px-8 py-5 text-sm font-semibold text-foreground group-hover:text-primary transition-colors">{reading.unit_name || "N/A"}</td>
                                                             <td className="px-8 py-5 capitalize text-[10px] font-bold text-muted-foreground tracking-widest">
                                                                 <div className="flex items-center gap-2.5">

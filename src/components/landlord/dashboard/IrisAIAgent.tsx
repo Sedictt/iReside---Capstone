@@ -373,7 +373,7 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
                                                     </h4>
                                                     <ul className="space-y-3">
                                                         {analysis.goodThings.map((item, i) => (
-                                                            <li key={i} className="flex gap-3 text-xs font-bold leading-relaxed text-foreground/80">
+                                                            <li key={item} className="flex gap-3 text-xs font-bold leading-relaxed text-foreground/80">
                                                                 <div className="mt-1 size-1.5 shrink-0 rounded-full bg-emerald-400/30" />
                                                                 {item}
                                                             </li>
@@ -388,7 +388,7 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
                                                     </h4>
                                                     <ul className="space-y-3">
                                                         {analysis.toLookOutFor.map((item, i) => (
-                                                            <li key={i} className="flex gap-3 text-xs font-bold leading-relaxed text-foreground/80">
+                                                            <li key={item} className="flex gap-3 text-xs font-bold leading-relaxed text-foreground/80">
                                                                 <div className="mt-1 size-1.5 shrink-0 rounded-full bg-amber-400/30" />
                                                                 {item}
                                                             </li>

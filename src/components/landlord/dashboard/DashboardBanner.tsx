@@ -311,12 +311,13 @@ export function DashboardBanner({
             )}>
             {/* Background Layer */}
             <div className="absolute inset-0 overflow-hidden rounded-[2.5rem]">
-<Image
-                        src={image}
-                        alt="Dashboard Banner"
-                        fill
-                        className="object-cover transition-transform duration-[2000ms] group-hover:scale-110 opacity-60 dark:opacity-40"
-                    />
+                <Image
+                    src={image}
+                    alt="Dashboard Banner"
+                    fill
+                    sizes="100vw"
+                    className="object-cover transition-transform duration-[2000ms] group-hover:scale-110 opacity-60 dark:opacity-40"
+                />
                 
                 {/* Noise Texture Overlay */}
                 <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
@@ -356,7 +357,7 @@ export function DashboardBanner({
                     <input
                         ref={inputRef}
                         type="text"
-                        placeholder="Search properties, tenants..."
+                        placeholder="Looking for something specific? Search unit, tenant, or concern…"
                         value={searchQuery}
                         onChange={(e) => {
                             setSearchQuery(e.target.value);
@@ -372,7 +373,7 @@ export function DashboardBanner({
                                 {searchLoading ? (
                                     <div className="px-4 py-4 space-y-3">
                                         {[1, 2, 3].map((i) => (
-                                            <div key={i} className="flex items-center gap-3">
+                                            <div key={`search-skeleton-${i}`} className="flex items-center gap-3">
                                                 <Skeleton className="size-8 rounded-lg" />
                                                 <div className="flex-1 space-y-2">
                                                     <Skeleton className="h-3 w-24 rounded-full" />
@@ -434,8 +435,8 @@ export function DashboardBanner({
                             <div className="max-h-[360px] overflow-y-auto custom-scrollbar-premium">
                                 {notificationsLoading ? (
                                     <div className="px-6 py-4 space-y-4">
-                                        {[1, 2, 3].map((i) => (
-                                            <div key={i} className="space-y-2">
+                                        {['skeleton-1', 'skeleton-2', 'skeleton-3'].map((skeletonKey) => (
+                                            <div key={skeletonKey} className="space-y-2">
                                                 <Skeleton className="h-4 w-3/4 rounded-full" />
                                                 <Skeleton className="h-3 w-full rounded-full opacity-60" />
                                                 <Skeleton className="h-2 w-16 rounded-full opacity-40 mt-2" />

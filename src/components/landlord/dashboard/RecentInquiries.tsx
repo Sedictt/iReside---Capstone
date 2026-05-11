@@ -171,7 +171,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                     {loading ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             {[1, 2, 3, 4].map((i) => (
-                                <div key={i} className="group relative overflow-hidden rounded-2xl border border-border bg-card animate-pulse dark:border-white/5 dark:bg-neutral-900">
+                                <div key={`inquiry-skeleton-${i}`} className="group relative overflow-hidden rounded-2xl border border-border bg-card animate-pulse dark:border-white/5 dark:bg-neutral-900">
                                     <div className="relative h-32 bg-muted/50 dark:bg-white/5">
                                         <div className="absolute bottom-3 left-4 size-14 rounded-full bg-muted ring-2 ring-card dark:bg-white/10 dark:ring-neutral-900" />
                                     </div>
@@ -208,6 +208,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                                         src={inquiry.propertyImage}
                                         alt={inquiry.propertyName}
                                         fill
+                                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 320px"
                                         className="object-cover"
                                     />
 
@@ -454,7 +455,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                             </div>
 
                             {sentMessages[activeChat.id]?.map((msg, idx) => (
-                                <div key={idx} className="flex flex-col gap-1 items-end">
+                                <div key={`${activeChat.id}-${idx}`} className="flex flex-col gap-1 items-end">
                                     <div className="bg-gradient-to-br from-lime-600 to-emerald-700 text-white text-sm p-3 rounded-2xl rounded-tr-sm max-w-[85%]">
                                         {msg}
                                     </div>
@@ -480,7 +481,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                                     type="text"
                                     value={messageInput}
                                     onChange={(e) => setMessageInput(e.target.value)}
-                                    placeholder="Type a message..."
+                                    placeholder="Type a message…"
                                     className="flex-1 rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-lime-500/50 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-neutral-500"
                                 />
                                 <button

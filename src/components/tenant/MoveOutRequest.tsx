@@ -334,8 +334,8 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                     <div className="pt-6 border-t border-border space-y-4">
                                         <h4 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Security Deposit Summary</h4>
                                         <div className="rounded-2xl border border-border bg-muted/20 p-4 space-y-3">
-                                            {existingRequest.deposit_deductions && Array.isArray(existingRequest.deposit_deductions) && existingRequest.deposit_deductions.map((d: any, i: number) => (
-                                                <div key={i} className="flex justify-between text-xs font-medium">
+                                            {existingRequest.deposit_deductions && Array.isArray(existingRequest.deposit_deductions) && existingRequest.deposit_deductions.map((d: any) => (
+                                                <div key={d.description} className="flex justify-between text-xs font-medium">
                                                     <span className="text-muted-foreground">{d.description}</span>
                                                     <span className="text-red-500 font-bold">- ₱{d.amount.toLocaleString()}</span>
                                                 </div>

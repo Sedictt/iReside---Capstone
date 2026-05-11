@@ -92,7 +92,7 @@ export function ContactList({
                                         className="relative size-10 shrink-0 rounded-full border border-border overflow-hidden flex items-center justify-center bg-surface-3 transition-transform group-hover:scale-105"
                                     >
                                         {result.avatarUrl ? (
-                                            <Image src={result.avatarUrl} alt={result.fullName} fill className="object-cover" />
+                                            <Image src={result.avatarUrl} alt={result.fullName} fill sizes="40px" className="object-cover" />
                                         ) : (
                                             <span className="text-xs font-bold text-high">
                                                 {(result.fullName || "C").charAt(0)}
@@ -128,7 +128,7 @@ export function ContactList({
                 {isSidebarLoading ? (
                     <div className="space-y-2">
                         {Array.from({ length: 6 }).map((_, i) => (
-                            <div key={i} className="flex items-center gap-3 p-3 rounded-2xl animate-pulse">
+                            <div key={`contact-skeleton-${i}`} className="flex items-center gap-3 p-3 rounded-2xl animate-pulse">
                                 <div className="size-12 rounded-full bg-surface-2" />
                                 <div className="flex-1 space-y-2">
                                     <div className="h-3 w-1/2 bg-surface-2 rounded" />

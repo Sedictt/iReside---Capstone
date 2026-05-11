@@ -24,7 +24,7 @@ export default function SignUpPage() {
     const [email, setEmail] = useState("");
     
     const [verificationCode, setVerificationCode] = useState("");
-    const [correctOtp, setCorrectOtp] = useState("");
+    const correctOtp = useRef("");
     const [propertyName, setPropertyName] = useState("");
     const [propertyAddress, setPropertyAddress] = useState("");
 
@@ -51,7 +51,7 @@ export default function SignUpPage() {
             if (savedState.propertyName) setPropertyName(savedState.propertyName as string);
             if (savedState.propertyAddress) setPropertyAddress(savedState.propertyAddress as string);
             if (savedState.otpSent) setOtpSent(savedState.otpSent as boolean);
-            if (savedState.correctOtp) setCorrectOtp(savedState.correctOtp as string);
+            if (savedState.correctOtp) correctOtp.current = savedState.correctOtp as string;
             
             toast.info("Progress restored", {
                 description: "We've loaded your previous registration progress."
@@ -109,7 +109,7 @@ export default function SignUpPage() {
             const data = await response.json();
             if (data.success) {
                 setOtpSent(true);
-                setCorrectOtp(data.otp);
+                correctOtp.current = data.otp;
                 toast.success("Verification code sent!", {
                     description: "A 6-digit code has been sent to your email address."
                 });
@@ -132,7 +132,7 @@ export default function SignUpPage() {
             return;
         }
 
-        if (verificationCode !== correctOtp) {
+        if (verificationCode !== correctOtp.current) {
             toast.error("Invalid code", {
                 description: "Incorrect verification code. Please check your email and try again."
             });
@@ -239,34 +239,30 @@ export default function SignUpPage() {
         }
     };
 
-    if (submitted) {
-        return (
-            <div className="flex min-h-screen bg-[#121212] text-white/87 font-sans items-center justify-center relative overflow-hidden">
-                <div className="absolute top-[-10%] right-[-5%] w-[40rem] h-[40rem] rounded-full bg-primary/10 blur-[120px] pointer-events-none" />
-                <div className="max-w-md w-full p-10 text-center space-y-6 bg-white/[0.02] border border-white/12 rounded-3xl backdrop-blur-xl relative z-10 shadow-2xl">
-                    <div className="size-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto border border-primary/20 shadow-[0_0_30px_rgba(109,152,56,0.2)]">
-                        <CheckCircle2 className="size-12 text-primary" />
-                    </div>
-                    <div className="space-y-2">
-                        <h2 className="text-3xl font-semibold tracking-tight">Application Submitted</h2>
-                        <p className="text-white/60 font-medium leading-relaxed">
-                            Your landlord registration has been submitted successfully. Our system administrator will review your documents and verify your application shortly.
-                        </p>
-                        <div className="mt-4 p-4 rounded-2xl bg-white/5 border border-white/10 text-sm font-medium text-white/80">
-                            Registration updates will be sent to <strong className="text-white font-bold">{email || "your email"}</strong>
-                        </div>
-                    </div>
-                    <div className="pt-4">
-                        <Link href="/login" className="inline-block w-full py-4 bg-primary text-white/87 rounded-xl font-bold hover:bg-primary-dark transition-all shadow-lg hover:shadow-primary/25">
-                            Return to Login
-                        </Link>
+    return submitted ? (
+        <div className="flex min-h-screen bg-[#121212] text-white/87 font-sans items-center justify-center relative overflow-hidden">
+            <div className="absolute top-[-10%] right-[-5%] w-[40rem] h-[40rem] rounded-full bg-primary/10 blur-[120px] pointer-events-none" />
+            <div className="max-w-md w-full p-10 text-center space-y-6 bg-white/[0.02] border border-white/12 rounded-3xl backdrop-blur-xl relative z-10 shadow-2xl">
+                <div className="size-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto border border-primary/20 shadow-[0_0_30px_rgba(109,152,56,0.2)]">
+                    <CheckCircle2 className="size-12 text-primary" />
+                </div>
+                <div className="space-y-2">
+                    <h2 className="text-3xl font-semibold tracking-tight">Application Submitted</h2>
+                    <p className="text-white/60 font-medium leading-relaxed">
+                        Your landlord registration has been submitted successfully. Our system administrator will review your documents and verify your application shortly.
+                    </p>
+                    <div className="mt-4 p-4 rounded-2xl bg-white/5 border border-white/10 text-sm font-medium text-white/80">
+                        Registration updates will be sent to <strong className="text-white font-bold">{email || "your email"}</strong>
                     </div>
                 </div>
+                <div className="pt-4">
+                    <Link href="/login" className="inline-block w-full py-4 bg-primary text-white/87 rounded-xl font-bold hover:bg-primary-dark transition-all shadow-lg hover:shadow-primary/25">
+                        Return to Login
+                    </Link>
+                </div>
             </div>
-        );
-    }
-
-    return (
+        </div>
+    ) : (
         <div className="h-[100svh] flex flex-col bg-[#121212] text-white/87 font-sans relative selection:bg-primary/30 overflow-hidden">
             {/* Abstract Background Elements */}
             <div className="absolute top-[-10%] left-[-10%] w-[50rem] h-[50rem] rounded-full bg-primary/10 blur-[150px] pointer-events-none opacity-50" />
@@ -428,7 +424,7 @@ export default function SignUpPage() {
                             </div>
                             <div className="space-y-1.5 group/input">
                                 <label htmlFor="property-address" className="text-[10px] font-bold uppercase tracking-widest text-white/60 group-focus-within/input:text-primary transition-colors ml-1">Complete Address</label>
-                                <textarea id="property-address" value={propertyAddress} onChange={e => setPropertyAddress(e.target.value)} required rows={2} placeholder="123 Main St, Suite 400..." className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-5 py-3 text-white/87 placeholder-white/20 focus:border-primary focus:bg-primary/5 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none text-base font-medium leading-relaxed shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]"></textarea>
+                                <textarea id="property-address" value={propertyAddress} onChange={e => setPropertyAddress(e.target.value)} required rows={2} placeholder="123 Main St, Suite 400…" className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-5 py-3 text-white/87 placeholder-white/20 focus:border-primary focus:bg-primary/5 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none text-base font-medium leading-relaxed shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]"></textarea>
                             </div>
                         </div>
                     </section>
@@ -455,7 +451,7 @@ export default function SignUpPage() {
                                     <div className="relative z-30 w-full h-full flex flex-col items-center justify-center p-2 pointer-events-none">
                                         {idPreview ? (
                                             <div className="relative w-full h-24 mb-2 rounded-lg overflow-hidden border border-white/10 group-hover/upload:scale-105 transition-transform duration-500">
-                                                <Image src={idPreview} alt="ID Preview" fill className="object-cover" />
+                                                <Image src={idPreview} alt="ID Preview" fill sizes="(max-width: 768px) 50vw, 200px" className="object-cover" />
                                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/upload:opacity-100 transition-opacity flex items-center justify-center">
                                                     <span className="text-[8px] font-semibold uppercase tracking-widest text-white">Change Image</span>
                                                 </div>
@@ -538,7 +534,7 @@ export default function SignUpPage() {
                                     <div className="relative z-30 w-full h-full flex flex-col items-center justify-center p-2 pointer-events-none">
                                         {permitPreview ? (
                                             <div className="relative w-full h-24 mb-2 rounded-lg overflow-hidden border border-white/10 group-hover/upload:scale-105 transition-transform duration-500">
-                                                <Image src={permitPreview} alt="Permit Preview" fill className="object-cover" />
+                                                <Image src={permitPreview} alt="Permit Preview" fill sizes="(max-width: 768px) 50vw, 200px" className="object-cover" />
                                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/upload:opacity-100 transition-opacity flex items-center justify-center">
                                                     <span className="text-[8px] font-semibold uppercase tracking-widest text-white">Change Image</span>
                                                 </div>
@@ -603,7 +599,7 @@ export default function SignUpPage() {
                                     <div className="relative z-30 w-full h-full flex flex-col items-center justify-center p-2 pointer-events-none">
                                         {permitCardPreview ? (
                                             <div className="relative w-full h-24 mb-2 rounded-lg overflow-hidden border border-white/10 group-hover/upload:scale-105 transition-transform duration-500">
-                                                <Image src={permitCardPreview} alt="Card Preview" fill className="object-cover" />
+                                                <Image src={permitCardPreview} alt="Card Preview" fill sizes="(max-width: 768px) 50vw, 200px" className="object-cover" />
                                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/upload:opacity-100 transition-opacity flex items-center justify-center">
                                                     <span className="text-[8px] font-semibold uppercase tracking-widest text-white">Change Image</span>
                                                 </div>
@@ -682,7 +678,7 @@ export default function SignUpPage() {
                                         <div className="relative z-30 w-full h-full flex flex-col items-center justify-center p-2 pointer-events-none">
                                             {ownershipPreview ? (
                                                 <div className="relative w-full h-24 mb-2 rounded-lg overflow-hidden border border-white/10 group-hover/upload:scale-105 transition-transform duration-500">
-                                                    <Image src={ownershipPreview} alt="Ownership Preview" fill className="object-cover" />
+                                                    <Image src={ownershipPreview} alt="Ownership Preview" fill sizes="(max-width: 768px) 50vw, 200px" className="object-cover" />
                                                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/upload:opacity-100 transition-opacity flex items-center justify-center">
                                                         <span className="text-[8px] font-semibold uppercase tracking-widest text-white">Change Image</span>
                                                     </div>
@@ -764,7 +760,7 @@ export default function SignUpPage() {
                             className={`group relative flex w-full items-center justify-center gap-2 rounded-2xl bg-white text-black py-3.5 px-6 font-bold text-sm transition-all duration-300 hover:bg-zinc-100 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden ${currentStep === 1 ? "sm:w-full" : "sm:flex-1"}`}
                         >
                             <span className="relative z-10 flex items-center gap-2 tracking-tight">
-                                {loading ? "Processing..." : currentStep === 3 ? "Submit Application" : "Continue"}
+                                {loading ? "Processing…" : currentStep === 3 ? "Submit Application" : "Continue"}
                                 {!loading && <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform duration-300" />}
                             </span>
                             <div className="absolute inset-0 -translate-x-full rotate-[45deg] bg-gradient-to-r from-transparent via-black/10 to-transparent group-hover:animate-[shimmer_1.5s_infinite] pointer-events-none" />

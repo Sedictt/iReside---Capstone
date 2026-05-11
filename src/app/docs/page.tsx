@@ -170,7 +170,7 @@ export default function DocsPage() {
               description: "When it's time to renew the lease or move out, the process is simple and clear for everyone."
             }
           ].map((item, index) => (
-            <div key={index} className="rounded-2xl border border-divider bg-surface-1 p-6">
+            <div key={item.step} className="rounded-2xl border border-divider bg-surface-1 p-6">
               <div className="mb-4 flex items-center justify-center rounded-lg bg-primary/10">
                 <span className="text-lg font-bold text-primary">{item.step}</span>
               </div>

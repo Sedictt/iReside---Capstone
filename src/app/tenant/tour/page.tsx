@@ -139,18 +139,14 @@ export default function TenantTourPage() {
         }
     };
 
-    if (loading) {
-        return (
-            <div className="min-h-[70vh] flex items-center justify-center">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="size-4 animate-spin" />
-                    Loading product tour...
-                </div>
+    return loading ? (
+        <div className="min-h-[70vh] flex items-center justify-center">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="size-4 animate-spin" />
+                Loading product tour...
             </div>
-        );
-    }
-
-    return (
+        </div>
+    ) : (
         <div className="mx-auto max-w-3xl py-10 space-y-6">
             <section className="rounded-2xl border border-border bg-card p-6 space-y-4">
                 <p className="text-xs uppercase tracking-[0.18em] text-primary font-semibold">Tenant Product Tour</p>

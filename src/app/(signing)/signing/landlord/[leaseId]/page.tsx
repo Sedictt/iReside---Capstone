@@ -142,88 +142,72 @@ function LandlordSigningContent({ params }: { params: Promise<{ leaseId: string 
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4">
-        <div className="text-center space-y-6">
-          <div className="relative size-24 mx-auto">
-            <div className="absolute inset-0 border-4 border-primary/10 rounded-full" />
-            <div className="absolute inset-0 border-4 border-t-primary rounded-full animate-spin" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <PenTool className="size-10 text-primary animate-pulse" />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <h2 className="text-2xl font-semibold tracking-tighter uppercase text-white italic">Validating Agreement</h2>
-            <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.3em]">Preparing for Countersign</p>
+  return loading ? (
+    <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4">
+      <div className="text-center space-y-6">
+        <div className="relative size-24 mx-auto">
+          <div className="absolute inset-0 border-4 border-primary/10 rounded-full" />
+          <div className="absolute inset-0 border-4 border-t-primary rounded-full animate-spin" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <PenTool className="size-10 text-primary animate-pulse" />
           </div>
         </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-semibold tracking-tighter uppercase text-white italic">Validating Agreement</h2>
+          <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.3em]">Preparing for Countersign</p>
+        </div>
       </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4">
-        <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="max-w-md w-full bg-zinc-900 border border-white/5 rounded-[2.5rem] p-12 text-center space-y-8 shadow-2xl backdrop-blur-3xl"
+    </div>
+  ) : error ? (
+    <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4">
+      <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="max-w-md w-full bg-zinc-900 border border-white/5 rounded-[2.5rem] p-12 text-center space-y-8 shadow-2xl backdrop-blur-3xl"
+      >
+        <div className="size-24 rounded-full bg-red-500/10 flex items-center justify-center mx-auto ring-1 ring-red-500/20">
+          <AlertCircle className="size-12 text-red-500" />
+        </div>
+        <div className="space-y-2">
+          <h1 className="text-4xl font-semibold tracking-tighter text-white uppercase italic">Access Denied</h1>
+          <p className="text-zinc-500 font-medium leading-relaxed">{error}</p>
+        </div>
+        <button
+          onClick={() => push("/landlord/dashboard")}
+          className="group w-full bg-white text-black hover:bg-primary hover:text-white px-8 py-5 rounded-2xl font-semibold uppercase tracking-widest transition-all flex items-center justify-center gap-3"
         >
-          <div className="size-24 rounded-full bg-red-500/10 flex items-center justify-center mx-auto ring-1 ring-red-500/20">
-            <AlertCircle className="size-12 text-red-500" />
-          </div>
-          <div className="space-y-2">
-            <h1 className="text-4xl font-semibold tracking-tighter text-white uppercase italic">Access Denied</h1>
-            <p className="text-zinc-500 font-medium leading-relaxed">{error}</p>
-          </div>
-          <button
-            onClick={() => push("/landlord/dashboard")}
-            className="group w-full bg-white text-black hover:bg-primary hover:text-white px-8 py-5 rounded-2xl font-semibold uppercase tracking-widest transition-all flex items-center justify-center gap-3"
-          >
-            <ArrowLeft className="size-5 group-hover:-translate-x-1 transition-transform" />
-            Return to Dashboard
-          </button>
-        </motion.div>
-      </div>
-    );
-  }
-
-  if (success) {
-    return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4">
-        <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="max-w-md w-full bg-zinc-900 border border-white/5 rounded-[2.5rem] p-12 text-center space-y-8 shadow-2xl backdrop-blur-3xl"
-        >
-          <div className="size-24 rounded-full bg-primary/10 flex items-center justify-center mx-auto ring-1 ring-primary/20">
-            <CheckCircle2 className="size-16 text-emerald-500 mx-auto" />
-          </div>
-          <div className="space-y-2">
-            <h1 className="text-4xl font-semibold tracking-tighter text-white uppercase italic">Lease Activated</h1>
-            <p className="text-zinc-500 font-medium leading-relaxed">
-              The agreement is now legally binding. Both parties have signed.
-            </p>
-          </div>
-          <div className="p-4 bg-zinc-800/50 rounded-2xl border border-white/5 flex items-center gap-4">
-             <Shield className="size-8 text-primary shrink-0" />
-             <div className="text-left">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Legal Enforcement</p>
-                <p className="text-xs text-white font-medium">Digital signatures finalized and archived.</p>
-             </div>
-          </div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-600 animate-pulse">Redirecting to Dashboard...</p>
-        </motion.div>
-      </div>
-    );
-  }
-
-  if (!lease || !leasePdf) {
-    return null;
-  }
-
-  return (
+          <ArrowLeft className="size-5 group-hover:-translate-x-1 transition-transform" />
+          Return to Dashboard
+        </button>
+      </motion.div>
+    </div>
+  ) : success ? (
+    <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4">
+      <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="max-w-md w-full bg-zinc-900 border border-white/5 rounded-[2.5rem] p-12 text-center space-y-8 shadow-2xl backdrop-blur-3xl"
+      >
+        <div className="size-24 rounded-full bg-primary/10 flex items-center justify-center mx-auto ring-1 ring-primary/20">
+          <CheckCircle2 className="size-16 text-emerald-500 mx-auto" />
+        </div>
+        <div className="space-y-2">
+          <h1 className="text-4xl font-semibold tracking-tighter text-white uppercase italic">Lease Activated</h1>
+          <p className="text-zinc-500 font-medium leading-relaxed">
+            The agreement is now legally binding. Both parties have signed.
+          </p>
+        </div>
+        <div className="p-4 bg-zinc-800/50 rounded-2xl border border-white/5 flex items-center gap-4">
+           <Shield className="size-8 text-primary shrink-0" />
+           <div className="text-left">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Legal Enforcement</p>
+              <p className="text-xs text-white font-medium">Digital signatures finalized and archived.</p>
+           </div>
+        </div>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-600 animate-pulse">Redirecting to Dashboard...</p>
+      </motion.div>
+    </div>
+  ) : (!lease || !leasePdf) ? null : (
     <DigitalSigner 
         initialFile={leasePdf}
         onSigned={handleSigned}

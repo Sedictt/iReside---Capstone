@@ -212,7 +212,7 @@ export function ProfileCard() {
                                         style={{ backgroundColor: profile?.avatar_bg_color || '#10b981' }}
                                     >
                                         {profile?.avatar_url ? (
-                                            <Image src={profile.avatar_url} alt={profile.full_name || "User"} fill className="object-cover" unoptimized />
+                                            <Image src={profile.avatar_url} alt={profile.full_name || "User"} fill sizes="80px" className="object-cover" unoptimized />
                                         ) : (
                                             <span className="text-2xl font-semibold text-white/90">{initials}</span>
                                         )}

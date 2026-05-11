@@ -278,7 +278,7 @@ export default function AdminRegistrationsPage() {
                             {loading ? (
                                 <div className="space-y-3">
                                     {Array.from({ length: 3 }).map((_, i) => (
-                                        <div key={i} className="h-20 animate-pulse rounded-2xl bg-white/5" />
+                                        <div key={`reg-skeleton-${i}`} className="h-20 animate-pulse rounded-2xl bg-white/5" />
                                     ))}
                                 </div>
                             ) : incoming.length === 0 ? (
@@ -539,8 +539,8 @@ export default function AdminRegistrationsPage() {
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
-                                                                {rows.map((r, i) => (
-                                                                    <tr key={`${r.businessName}-${i}`} className="border-t border-white/[0.04] text-white/55">
+                                                                {rows.map((r) => (
+                                                                    <tr key={r.businessName} className="border-t border-white/[0.04] text-white/55">
                                                                         <td className="px-4 py-3 font-semibold text-white/90">{r.businessName}</td>
                                                                         <td className="px-4 py-3">{r.district}</td>
                                                                         <td className="px-4 py-3">{r.barangay}</td>

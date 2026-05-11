@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef, FormEvent } from "react"
 import Image from "next/image"
 import { m as motion, AnimatePresence } from "framer-motion"
 import { ImageIcon, X, Send, Megaphone, BarChart3, MessageSquarePlus } from "lucide-react"
@@ -120,7 +120,7 @@ export function CommunityComposer({
                             {composerType === "poll" && (
                                 <div className="space-y-2 pt-2">
                                     {pollOptions.map((option, index) => (
-                                        <div key={index} className="group relative">
+                                        <div key={option || `option-${index}`} className="group relative">
                                             <input
                                                 type="text"
                                                 value={option}
@@ -167,7 +167,7 @@ export function CommunityComposer({
                                     initial={{ opacity: 0, scale: 0.8 }}
                                     animate={{ opacity: 1, scale: 1 }}
                                     exit={{ opacity: 0, scale: 0.8 }}
-                                    key={index} 
+                                    key={URL.createObjectURL(photo)} 
                                     className="group relative size-20 overflow-hidden rounded-xl border border-border dark:border-white/10"
                                 >
                                     <Image src={URL.createObjectURL(photo)} alt="Preview" fill className="object-cover" />

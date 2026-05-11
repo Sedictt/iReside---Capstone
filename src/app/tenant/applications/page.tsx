@@ -71,9 +71,9 @@ const mockApplications = [
 ];
 
 const recentActivity = [
-    { title: "Application Viewed", detail: "Landlord viewed \"The Obsidian Tower\"", time: "2 hours ago", active: true },
-    { title: "Message Received", detail: "From Sarah Jenkins re: Unit 12B", time: "Yesterday, 4:30 PM", active: false },
-    { title: "Status Updated", detail: "The Vertex moved to 'Negotiation'", time: "Oct 10, 9:00 AM", active: false },
+    { id: "act-1", title: "Application Viewed", detail: "Landlord viewed \"The Obsidian Tower\"", time: "2 hours ago", active: true },
+    { id: "act-2", title: "Message Received", detail: "From Sarah Jenkins re: Unit 12B", time: "Yesterday, 4:30 PM", active: false },
+    { id: "act-3", title: "Status Updated", detail: "The Vertex moved to 'Negotiation'", time: "Oct 10, 9:00 AM", active: false },
 ];
 
 export default function MyApplicationsPage() {
@@ -286,8 +286,8 @@ export default function MyApplicationsPage() {
                             </div>
 
                             <div className="relative pl-6 space-y-8 before:absolute before:left-0 before:top-2 before:bottom-2 before:w-px before:bg-white/10">
-                                {recentActivity.map((activity, i) => (
-                                    <div key={i} className="relative group cursor-default">
+                                {recentActivity.map((activity) => (
+                                    <div key={activity.id} className="relative group cursor-default">
                                         <div className={cn(
                                             "box-content absolute -left-[27.5px] top-1 size-2 rounded-full border-2 border-[#111111] transition-all",
                                             activity.active ? "bg-primary scale-125 shadow-[0_0_12px_rgba(109,152,56,0.8)]" : "bg-white/10"

@@ -295,8 +295,6 @@ export default function MessagesPage() {
     const [reportMessageId, setReportMessageId] = useState<string | undefined>(undefined);
      const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
      const [activeRefundMessage, setActiveRefundMessage] = useState<UiMessageType | null>(null);
-     const [issueToResolve, setIssueToResolve] = useState<UiMessageType | null>(null);
-
     const activeChannelRef = useRef<RealtimeChannel | null>(null);
     const handleDownloadFile = async (url: string, fileName: string) => {
         try {
@@ -1138,7 +1136,6 @@ if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation
                     messagesScrollRef={messagesScrollRef}
                     messagesEndRef={messagesEndRef}
                     onReportMessage={openReportWizard}
-                    onResolveIssue={(msg) => setIssueToResolve(msg)}
                 />
 
                 <MessageComposer 
@@ -1167,7 +1164,7 @@ if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation
                                 <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar-premium">
                                     <div className="flex flex-col items-center text-center">
 <div className="relative size-24 rounded-full border-4 border-surface-2 overflow-hidden mb-4 shadow-xl" style={{ backgroundColor: displayContact.avatarBgColor || 'var(--surface-3)' }}>
-                                                {displayContact.avatarUrl ? <Image src={displayContact.avatarUrl} alt={displayContact.name} fill className="object-cover" /> : <span className="text-2xl font-bold text-high">{displayContact.initials}</span>}
+                                                {displayContact.avatarUrl ? <Image src={displayContact.avatarUrl} alt={displayContact.name} fill sizes="64px" className="object-cover" /> : <span className="text-2xl font-bold text-high">{displayContact.initials}</span>}
                                         </div>
                                         <h4 className="text-xl font-semibold text-high">{displayContact.name}</h4>
                                         <div className="mt-2"><RoleBadge role={displayContact.role as BadgeRole} /></div>
@@ -1228,7 +1225,7 @@ if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation
                                                             setPreviewImageIndex(index >= 0 ? index : 0);
                                                         }}
                                                     >
-                                                        <Image src={file.url} fill className="object-cover" alt="" />
+                                                        <Image src={file.url} fill sizes="48px" className="object-cover" alt="" />
                                                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                                             <button 
                                                                 onClick={(e) => { e.stopPropagation(); handleDownloadFile(file.url, file.name); }}
@@ -1333,7 +1330,8 @@ if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation
                             <Image
                                 src={previewImages[previewImageIndex].url}
                                 alt={`Photo ${previewImageIndex + 1} of ${previewImages.length}`}
-                                width={900} height={630}
+                                fill
+                                sizes="100vw"
                                 className="object-contain rounded-3xl shadow-2xl border border-border"
                                 style={{maxWidth: '90vw', maxHeight: '70vh'}}
                             />
@@ -1359,6 +1357,7 @@ if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation
                                             src={img.url}
                                             alt={`Thumbnail ${idx + 1}`}
                                             fill
+                                            sizes="64px"
                                             className="object-cover"
                                         />
                                     </button>

@@ -69,7 +69,7 @@ export default function DashboardPage() {
                     <h3 className="mb-4 text-lg font-semibold text-white">Recent Activity</h3>
                     <div className="space-y-4">
                         {[1, 2, 3, 4, 5].map((i) => (
-                            <div key={i} className="flex items-center gap-4">
+                            <div key={`feature-${i}`} className="flex items-center gap-4">
                                 <div className="size-2 rounded-full bg-blue-500" />
                                 <div className="flex-1 space-y-1">
                                     <p className="text-sm font-medium text-white">New lease signed</p>

@@ -59,30 +59,24 @@ export default function TenantUnitMapPage() {
         fetchUnitMap();
     }, []);
 
-    if (loading) {
-        return (
-            <div className="flex-1 flex items-center justify-center bg-[#fafafa]">
-                <div className="flex flex-col items-center gap-4">
-                    <Loader2 className="size-8 text-primary animate-spin" />
-                    <p className="text-neutral-500 text-sm">Loading your unit map...</p>
-                </div>
+    return loading ? (
+        <div className="flex-1 flex items-center justify-center bg-[#fafafa]">
+            <div className="flex flex-col items-center gap-4">
+                <Loader2 className="size-8 text-primary animate-spin" />
+                <p className="text-neutral-500 text-sm">Loading your unit map...</p>
             </div>
-        );
-    }
-
-    if (error || !unitMapData) {
-        return (
-            <div className="flex-1 flex items-center justify-center bg-[#fafafa]">
-                <div className="flex flex-col items-center gap-4 text-center">
-                    <p className="text-neutral-500">{error || "No unit map found"}</p>
-                    <p className="text-sm text-neutral-400">
-                        You need an active lease to view your unit map.
-                    </p>
-                </div>
+        </div>
+    ) : error || !unitMapData ? (
+        <div className="flex-1 flex items-center justify-center bg-[#fafafa]">
+            <div className="flex flex-col items-center gap-4 text-center">
+                <p className="text-neutral-500">{error || "No unit map found"}</p>
+                <p className="text-sm text-neutral-400">
+                    You need an active lease to view your unit map.
+                </p>
             </div>
-        );
-    }
-
-    return <VisualBuilder readOnly propertyId={unitMapData.property.id} />;
+        </div>
+    ) : (
+        <VisualBuilder readOnly propertyId={unitMapData.property.id} />
+    );
 }
 

@@ -533,7 +533,7 @@ export function DigitalSigner({
           <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
             {pdfPages.map((page, idx) => (
               <button
-                key={idx}
+                key={`pdf-nav-${idx}`}
                 onClick={() => scrollToPage(idx)}
                 className={cn(
                   "w-full aspect-[1/1.4] rounded-xl border-2 transition-all relative group overflow-hidden bg-white",
@@ -583,7 +583,7 @@ export function DigitalSigner({
           <div className="max-w-fit mx-auto space-y-4 md:space-y-12 pb-48">
             {pdfPages.map((page, idx) => (
               <div 
-                key={idx}
+                key={`pdf-page-${idx}`}
                 ref={el => { pageRefs.current[idx] = el; }}
                 className={cn(
                   "relative bg-white shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] transition-all",

@@ -42,7 +42,7 @@ export function ChatHeader({
                     style={{ backgroundColor: contact.avatarBgColor || 'var(--surface-3)' }}
                 >
                     {contact.avatarUrl ? (
-                        <Image src={contact.avatarUrl} alt={contact.name} fill className="object-cover" />
+                        <Image src={contact.avatarUrl} alt={contact.name} fill sizes="48px" className="object-cover" />
                     ) : (
                         <span className="text-sm font-bold text-high">{contact.initials}</span>
                     )}

@@ -226,6 +226,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                         src={request.images[currentImageIndex]}
                                         alt="Maintenance Issue"
                                         fill
+                                        sizes="(max-width: 768px) 100vw, 45vw"
                                         className="object-cover transition-transform duration-700 group-hover:scale-105"
                                     />
                                 </button>
@@ -259,7 +260,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/40 backdrop-blur-md px-4 py-2.5 rounded-full border border-white/10 shadow-lg">
                                             {request.images.map((_, idx) => (
                                                 <button
-                                                    key={idx}
+                                                    key={`img-${idx}`}
                                                     onClick={() => setCurrentImageIndex(idx)}
                                                     className={cn(
                                                         "size-2 rounded-full transition-all",
@@ -418,6 +419,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                                 src={request.tenantAvatar}
                                                 alt={request.tenant}
                                                 fill
+                                                sizes="56px"
                                                 className="object-cover"
                                             />
                                         ) : (
@@ -495,14 +497,14 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                             <div className="flex gap-2">
                                                 {request.tenantProvidedPhotos.map((img, i) => (
                                                     <button
-                                                        key={i}
+                                                        key={`tenant-photo-${i}`}
                                                         onClick={() => {
                                                             setTenantPhotoIndex(i);
                                                             setIsTenantPhotoLightboxOpen(true);
                                                         }}
                                                         className="relative size-20 rounded-xl overflow-hidden border border-border shadow-sm hover:border-primary/50 hover:shadow-md transition-all group"
                                                     >
-                                                        <Image src={img} alt={`Tenant proof ${i + 1}`} fill className="object-cover" />
+                                                        <Image src={img} alt={`Tenant proof ${i + 1}`} fill sizes="80px" className="object-cover" />
                                                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
                                                             <Expand className="size-5 text-white" />
                                                         </div>
@@ -708,7 +710,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                             <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-black/50 px-5 py-3 rounded-full backdrop-blur-md border border-white/10">
                                 {request.images.map((_, idx) => (
                                     <button
-                                        key={idx}
+                                        key={`lightbox-img-${idx}`}
                                         onClick={() => setCurrentImageIndex(idx)}
                                         className={cn(
                                             "size-2.5 rounded-full transition-all",
@@ -764,7 +766,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                             <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-black/50 px-5 py-3 rounded-full backdrop-blur-md border border-white/10">
                                 {request.tenantProvidedPhotos.map((_, idx) => (
                                     <button
-                                        key={idx}
+                                        key={`tenant-lightbox-${idx}`}
                                         onClick={() => setTenantPhotoIndex(idx)}
                                         className={cn(
                                             "size-2.5 rounded-full transition-all",

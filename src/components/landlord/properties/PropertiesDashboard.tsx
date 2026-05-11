@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { m as motion, AnimatePresence } from "framer-motion";
@@ -68,51 +68,49 @@ export function PropertiesDashboard() {
     const [properties, setProperties] = useState<PropertyCard[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
-    const [reloadKey, setReloadKey] = useState(0);
     const [searchQuery, setSearchQuery] = useState("");
     const [activeTab, setActiveTab] = useState<"All" | "Performing" | "Attention Required">("All");
     const [hubModalId, setHubModalId] = useState<string | null>(null);
 
+    const loadProperties = useCallback(async (signal?: AbortSignal) => {
+        setIsLoading(true);
+        setLoadError(null);
+
+        try {
+            const response = await fetch("/api/landlord/properties/overview", {
+                method: "GET",
+                signal,
+            });
+
+            const payload = (await response.json()) as { properties?: PropertyCard[]; error?: string };
+
+            if (!response.ok) {
+                throw new Error(payload.error || "Failed to load properties.");
+            }
+
+            if (!signal?.aborted) {
+                setProperties(payload.properties ?? []);
+            }
+        } catch (error) {
+            if ((error as Error).name === "AbortError") return;
+            if (!signal?.aborted) {
+                setLoadError(error instanceof Error ? error.message : "Failed to load properties.");
+            }
+        } finally {
+            if (!signal?.aborted) {
+                setIsLoading(false);
+            }
+        }
+    }, []);
+
     useEffect(() => {
         const controller = new AbortController();
-
-        const loadProperties = async () => {
-            setIsLoading(true);
-            setLoadError(null);
-
-            try {
-                const response = await fetch("/api/landlord/properties/overview", {
-                    method: "GET",
-                    signal: controller.signal,
-                });
-
-                const payload = (await response.json()) as { properties?: PropertyCard[]; error?: string };
-
-                if (!response.ok) {
-                    throw new Error(payload.error || "Failed to load properties.");
-                }
-
-                if (!controller.signal.aborted) {
-                    setProperties(payload.properties ?? []);
-                }
-            } catch (error) {
-                if ((error as Error).name === "AbortError") return;
-                if (!controller.signal.aborted) {
-                    setLoadError(error instanceof Error ? error.message : "Failed to load properties.");
-                }
-            } finally {
-                if (!controller.signal.aborted) {
-                    setIsLoading(false);
-                }
-            }
-        };
-
-        void loadProperties();
+        void loadProperties(controller.signal);
 
         return () => {
             controller.abort();
         };
-    }, [reloadKey]);
+    }, [loadProperties]);
 
     const filteredProperties = useMemo(() => {
         return properties.filter((prop) => {
@@ -199,7 +197,7 @@ export function PropertiesDashboard() {
                 {isLoading && (
                     <div className="space-y-6">
                         {[1, 2, 3, 4].map((i) => (
-                            <PropertySkeleton key={i} />
+                            <PropertySkeleton key={`skeleton-${i}`} />
                         ))}
                     </div>
                 )}
@@ -210,7 +208,7 @@ export function PropertiesDashboard() {
                         <h3 className="mb-2 text-xl font-semibold text-foreground">Failed to load portfolio</h3>
                         <p className="mb-6 text-sm text-red-600 dark:text-red-300">{loadError}</p>
                         <button
-                            onClick={() => setReloadKey((value) => value + 1)}
+                            onClick={() => loadProperties()}
                             className="h-11 rounded-xl border border-border bg-background px-5 font-medium text-foreground transition-colors hover:bg-muted"
                         >
                             Retry

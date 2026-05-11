@@ -146,7 +146,7 @@ export default function LeaseRenewalReminder({ daysRemaining, leaseId, teamMembe
                                         {displayMembers ? (
                                             displayMembers.slice(0, 3).map((member, i) => (
                                                 <div 
-                                                    key={i} 
+                                                    key={member.name}
                                                     className="size-6 rounded-full border-2 border-card bg-muted overflow-hidden"
                                                     title={member.name}
                                                 >
@@ -167,7 +167,7 @@ export default function LeaseRenewalReminder({ daysRemaining, leaseId, teamMembe
                                             ))
                                         ) : (
                                             [1, 2, 3].map((i) => (
-                                                <div key={i} className="size-6 rounded-full border-2 border-card bg-muted" />
+                                                <div key={`avatar-skeleton-${i}`} className="size-6 rounded-full border-2 border-card bg-muted" />
                                             ))
                                         )}
                                     </div>

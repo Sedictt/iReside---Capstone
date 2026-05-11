@@ -1,0 +1,1784 @@
+﻿react-doctor v0.1.6
+
+[32mΓ£ö[39m Select projects to scan [2mΓÇ║[22m ireside
+[2mScanning C:\Users\JV\Documents\GitHub\iReside...[22m
+
+
+
+  [33mΓÜá[39m [33mreact-doctor/no-cascading-set-state                      [39m [90m├ù75[39m
+[90m      7 setState calls in a single useEffect ΓÇö consider using useReducer or deriving state[39m
+[90m      ΓåÆ Combine into useReducer: `const [state, dispatch] = useReducer(reducer, initialState)`[39m
+[90m      src/app/landlord/unit-map/page.tsx:17[39m
+[90m      src/app/landlord/properties/[id]/environment/page.tsx:144[39m
+[90m      src/context/NotificationContext.tsx:271[39m
+[90m      src/context/AuthContext.tsx:207[39m
+[90m      src/components/tenant/TenantSettings.tsx:274[39m
+[90m      src/components/tenant/TenantSettings.tsx:296[39m
+[90m      src/components/tenant/TenantProductTourOverlay.tsx:79[39m
+[90m      src/components/tenant/TenantIrisChat.tsx:59[39m
+[90m      src/components/tenant/TenantContactsSidebar.tsx:504[39m
+[90m      src/components/tenant/MessagesTour.tsx:43[39m
+[90m      src/app/tenant/maintenance/page.tsx:57[39m
+[90m      src/components/landlord/LandlordSettings.tsx:303[39m
+[90m      src/components/landlord/LandlordSettings.tsx:374[39m
+[90m      src/app/tenant/messages/page.tsx:357[39m
+[90m      src/app/tenant/messages/page.tsx:421[39m
+[90m      src/app/tenant/messages/page.tsx:591[39m
+[90m      src/app/tenant/messages/page.tsx:967[39m
+[90m      src/app/tenant/messages/page.tsx:978[39m
+[90m      src/app/tenant/messages/page.tsx:1042[39m
+[90m      src/components/messaging/OfficialReceipt.tsx:38[39m
+[90m      src/components/tenant/CommunityTour.tsx:43[39m
+[90m      src/components/tenant/ChatWidget.tsx:73[39m
+[90m      src/components/tenant/LeaseTour.tsx:43[39m
+[90m      src/components/tenant/invite/ProspectPaymentPortalClient.tsx:95[39m
+[90m      src/components/tenant/invite/InviteApplicationClient.tsx:101[39m
+[90m      src/components/tenant/DashboardTour.tsx:43[39m
+[90m      src/components/profile/AvatarPicker.tsx:43[39m
+[90m      src/components/navigation/NotificationBanner.tsx:32[39m
+[90m      src/app/(signing)/signing/landlord/[leaseId]/page.tsx:60[39m
+[90m      src/app/signup/page.tsx:43[39m
+[90m      src/app/admin/dashboard/page.tsx:106[39m
+[90m      src/components/landlord/lease/ContractPreviewModal.tsx:160[39m
+[90m      src/app/landlord/analytics/page.tsx:520[39m
+[90m      src/app/landlord/onboarding/[token]/page.tsx:164[39m
+[90m      src/app/landlord/onboarding/[token]/page.tsx:213[39m
+[90m      src/app/landlord/messages/page.tsx:473[39m
+[90m      src/app/landlord/messages/page.tsx:617[39m
+[90m      src/app/landlord/messages/page.tsx:993[39m
+[90m      src/app/landlord/messages/page.tsx:1004[39m
+[90m      src/app/landlord/messages/page.tsx:1067[39m
+[90m      src/components/landlord/invoices/InvoiceModal.tsx:50[39m
+[90m      src/components/landlord/dashboard/RecentInquiries.tsx:71[39m
+[90m      src/components/landlord/dashboard/LandlordQuestTriggerGuide.tsx:33[39m
+[90m      src/components/landlord/dashboard/IrisAIAgent.tsx:127[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:1040[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:1087[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:1181[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:1329[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:2073[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:2350[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:2409[39m
+[90m      src/components/landlord/utility/UtilityBillingDashboard.tsx:171[39m
+[90m      src/components/landlord/utility/UtilityBillingDashboard.tsx:722[39m
+[90m      src/app/(signing)/signing/tenant/[leaseId]/page.tsx:58[39m
+[90m      src/app/tenant/utilities/page.tsx:142[39m
+[90m      src/app/tenant/unit-map/page.tsx:31[39m
+[90m      src/app/tenant/payments/[id]/checkout/page.tsx:431[39m
+[90m      src/components/landlord/move-out/MoveOutRequestsList.tsx:55[39m
+[90m      src/components/landlord/move-out/MoveOutInspectionForm.tsx:63[39m
+[90m      src/components/landlord/move-out/MoveOutInspectionForm.tsx:79[39m
+[90m      src/components/landlord/maintenance/MaintenanceDashboard.tsx:73[39m
+[90m      src/components/ui/ProfileCard.tsx:94[39m
+[90m      src/app/tenant/dashboard/page.tsx:165[39m
+[90m      src/app/tenant/dashboard/page.tsx:178[39m
+[90m      src/app/tenant/lease/page.tsx:130[39m
+[90m      src/components/landlord/applications/WalkInApplicationModal.tsx:425[39m
+[90m      src/components/landlord/applications/WalkInApplicationModal.tsx:452[39m
+[90m      src/components/landlord/applications/ToolAccessBar.tsx:115[39m
+[90m      src/components/landlord/applications/RentApplications.tsx:409[39m
+[90m      src/components/landlord/dashboard/ActionRequired.tsx:199[39m
+[90m      src/components/landlord/dashboard/ContactsSidebar.tsx:507[39m
+[90m      src/app/landlord/documents/page.tsx:68[39m
+[90m      src/app/landlord/dashboard/page.tsx:150[39m
+[90m      src/app/landlord/dashboard/page.tsx:197[39m
+[90m      src/app/landlord/properties/new/page.tsx:106[39m
+
+  [33mΓÜá[39m [33mreact-doctor/no-giant-component                          [39m [90m├ù74[39m
+[90m      Component "LandlordUtilitiesPage" is 462 lines ΓÇö consider breaking it into smaller focused components[39m
+[90m      ΓåÆ Extract logical sections into focused components: `<UserHeader />`, `<UserActions />`, etc.[39m
+[90m      src/app/landlord/utilities/page.tsx:46[39m
+[90m      src/app/landlord/properties/[id]/environment/page.tsx:116[39m
+[90m      src/app/api/landlord/maintenance/route.ts:184[39m
+[90m      src/context/NotificationContext.tsx:30[39m
+[90m      src/components/tenant/TenantSettings.tsx:164[39m
+[90m      src/components/tenant/TenantNavbar.tsx:95[39m
+[90m      src/components/tenant/TenantIrisChat.tsx:38[39m
+[90m      src/components/tenant/TenantContactsSidebar.tsx:118[39m
+[90m      src/components/tenant/MoveOutRequest.tsx:35[39m
+[90m      src/components/tenant/maintenance/TenantMaintenanceModal.tsx:52[39m
+[90m      src/app/tenant/maintenance/page.tsx:43[39m
+[90m      src/app/tenant/payments/page.tsx:67[39m
+[90m      src/components/landlord/LandlordSettings.tsx:169[39m
+[90m      src/components/landlord/LandlordProfile.tsx:44[39m
+[90m      src/app/page.tsx:143[39m
+[90m      src/app/tenant/maintenance/new/page.tsx:38[39m
+[90m      src/app/tenant/messages/page.tsx:188[39m
+[90m      src/app/api/landlord/applications/route.ts:230[39m
+[90m      src/components/tenant/ChatWidget.tsx:43[39m
+[90m      src/components/shared/DigitalSigner/DigitalSigner.tsx:64[39m
+[90m      src/components/tenant/LeaseRenewalRequest.tsx:36[39m
+[90m      src/components/tenant/invite/ProspectPaymentPortalClient.tsx:83[39m
+[90m      src/components/tenant/invite/InviteApplicationClient.tsx:75[39m
+[90m      src/app/admin/chat-moderation/page.tsx:65[39m
+[90m      src/components/profile/AvatarPicker.tsx:32[39m
+[90m      src/app/signup/page.tsx:12[39m
+[90m      src/app/admin/users/page.tsx:241[39m
+[90m      src/app/admin/registrations/page.tsx:118[39m
+[90m      src/app/api/landlord/applications/[applicationId]/signing-link/route.ts:18[39m
+[90m      src/app/tenant/community/page.tsx:71[39m
+[90m      src/app/tenant/applications/[id]/apply/page.tsx:48[39m
+[90m      src/components/landlord/lease/ContractPreviewModal.tsx:144[39m
+[90m      src/app/api/landlord/analytics/overview/route.ts:341[39m
+[90m      src/app/landlord/analytics/page.tsx:234[39m
+[90m      src/app/landlord/onboarding/[token]/page.tsx:60[39m
+[90m      src/app/landlord/messages/page.tsx:253[39m
+[90m      src/components/landlord/invoices/InvoiceModal.tsx:22[39m
+[90m      src/components/landlord/dashboard/RecentInquiries.tsx:22[39m
+[90m      src/components/landlord/dashboard/IrisAIAgent.tsx:31[39m
+[90m      src/app/api/landlord/onboarding/[token]/route.ts:106[39m
+[90m      src/components/messaging/MessageReportWizard.tsx:86[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:890[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:4748[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5424[39m
+[90m      src/components/landlord/visual-planner/UnitListingWizard.tsx:8[39m
+[90m      src/components/landlord/visual-planner/MapSetupWizard.tsx:177[39m
+[90m      src/components/landlord/utility/UtilityBillingDashboard.tsx:60[39m
+[90m      src/components/landlord/tenants/AddTenantModal.tsx:34[39m
+[90m      src/components/landlord/properties/PropertiesDashboard.tsx:67[39m
+[90m      src/app/api/landlord/applications/[applicationId]/actions/route.ts:306[39m
+[90m      src/app/tenant/utilities/page.tsx:121[39m
+[90m      src/app/tenant/payments/[id]/checkout/page.tsx:410[39m
+[90m      src/components/landlord/move-out/MoveOutRequestsList.tsx:42[39m
+[90m      src/components/landlord/move-out/MoveOutRequestDetails.tsx:70[39m
+[90m      src/components/landlord/move-out/MoveOutInspectionForm.tsx:31[39m
+[90m      src/components/landlord/maintenance/MaintenanceRequestModal.tsx:39[39m
+[90m      src/components/landlord/maintenance/MaintenanceDashboard.tsx:58[39m
+[90m      src/components/landlord/leases/RenewalReview.tsx:45[39m
+[90m      src/app/tenant/dashboard/page.tsx:154[39m
+[90m      src/app/tenant/lease/page.tsx:42[39m
+[90m      src/components/landlord/BillingOperationsPanel.tsx:162[39m
+[90m      src/components/landlord/applications/WalkInApplicationModal.tsx:292[39m
+[90m      src/components/landlord/applications/ToolAccessBar.tsx:101[39m
+[90m      src/components/landlord/applications/TenantInviteManager.tsx:130[39m
+[90m      src/components/landlord/applications/RentApplications.tsx:249[39m
+[90m      src/components/landlord/AddAmenityModal.tsx:166[39m
+[90m      src/components/landlord/dashboard/DashboardBanner.tsx:83[39m
+[90m      src/components/landlord/dashboard/ContactsSidebar.tsx:121[39m
+[90m      src/app/landlord/leases/page.tsx:29[39m
+[90m      src/app/landlord/invoices/page.tsx:23[39m
+[90m      src/app/landlord/documents/page.tsx:52[39m
+[90m      src/app/landlord/dashboard/page.tsx:83[39m
+[90m      src/app/landlord/properties/new/page.tsx:62[39m
+[90m      src/app/api/landlord/invoices/[id]/review/route.ts:83[39m
+
+  [33mΓÜá[39m [33mreact-doctor/js-combine-iterations                       [39m [90m├ù70[39m
+[90m      .filter().filter() iterates the array twice ΓÇö combine into a single loop with .reduce() or for...of[39m
+[90m      ΓåÆ Combine `.map().filter()` (or similar chains) into a single pass with `.reduce()` or a `for...of` loop to avoid iterating the array twice[39m
+[90m      src/app/landlord/utilities/page.tsx:102[39m
+[90m      src/app/api/landlord/maintenance/route.ts:373[39m
+[90m      src/app/api/landlord/maintenance/route.ts:380[39m
+[90m      src/app/api/landlord/maintenance/route.ts:405[39m
+[90m      src/context/NotificationContext.tsx:66[39m
+[90m      src/app/tenant/payments/page.tsx:438[39m
+[90m      src/app/page.tsx:321[39m
+[90m      src/app/tenant/messages/page.tsx:1210[39m
+[90m      src/app/tenant/messages/page.tsx:1218[39m
+[90m      src/app/api/landlord/applications/route.ts:272[39m
+[90m      src/app/api/landlord/applications/route.ts:331[39m
+[90m      src/app/api/landlord/applications/route.ts:363[39m
+[90m      src/app/api/landlord/applications/route.ts:384[39m
+[90m      src/app/api/landlord/applications/route.ts:387[39m
+[90m      src/app/api/landlord/applications/route.ts:415[39m
+[90m      src/app/api/landlord/applications/route.ts:432[39m
+[90m      src/app/api/landlord/applications/route.ts:462[39m
+[90m      src/app/api/landlord/applications/route.ts:488[39m
+[90m      src/components/shared/DigitalSigner/DigitalSigner.tsx:614[39m
+[90m      src/app/api/invites/[token]/route.ts:115[39m
+[90m      src/app/api/invites/[token]/route.ts:327[39m
+[90m      src/lib/messages/engine.ts:128[39m
+[90m      src/lib/messages/engine.ts:131[39m
+[90m      src/lib/messages/engine.ts:337[39m
+[90m      src/lib/messages/engine.ts:351[39m
+[90m      src/lib/messages/censorship.ts:52[39m
+[90m      src/lib/billing/server.ts:799[39m
+[90m      src/app/api/landlord/applications/walk-in/route.ts:400[39m
+[90m      src/app/api/landlord/applications/tenant-application/route.ts:424[39m
+[90m      src/app/api/landlord/invoices/route.ts:52[39m
+[90m      src/app/api/admin/users/route.ts:33[39m
+[90m      src/lib/community/actions.ts:74[39m
+[90m      src/lib/community/actions.ts:834[39m
+[90m      src/app/landlord/messages/page.tsx:1222[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:1911[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:2154[39m
+[90m      src/lib/messages/redaction-service.ts:26[39m
+[90m      src/lib/messages/redaction-service.ts:79[39m
+[90m      src/lib/messages/profanity-lexicon.ts:17[39m
+[90m      src/lib/messages/spam-lexicon.ts:17[39m
+[90m      src/app/api/messages/conversations/[conversationId]/payments/route.ts:159[39m
+[90m      src/app/api/messages/conversations/route.ts:53[39m
+[90m      src/app/api/tenant/dashboard/route.ts:120[39m
+[90m      src/app/api/tenant/dashboard/route.ts:251[39m
+[90m      src/app/api/landlord/unit-map/route.ts:170[39m
+[90m      src/components/landlord/BillingOperationsPanel.tsx:672[39m
+[90m      src/components/landlord/BillingOperationsPanel.tsx:717[39m
+[90m      src/components/landlord/applications/ToolAccessBar.tsx:396[39m
+[90m      src/components/landlord/applications/RentApplications.tsx:228[39m
+[90m      src/components/landlord/dashboard/ActionRequired.tsx:279[39m
+[90m      src/components/landlord/dashboard/ActionRequired.tsx:279[39m
+[90m      src/app/api/landlord/inquiries/recent/route.ts:70[39m
+[90m      src/app/api/landlord/inquiries/recent/route.ts:73[39m
+[90m      src/app/api/landlord/inquiries/recent/route.ts:95[39m
+[90m      src/app/api/landlord/inquiries/recent/route.ts:135[39m
+[90m      src/app/api/landlord/inquiries/recent/route.ts:135[39m
+[90m      src/app/landlord/invoices/page.tsx:319[39m
+[90m      src/app/api/admin/chat-moderation/reports/route.ts:82[39m
+[90m      src/app/api/landlord/tenants/route.ts:122[39m
+[90m      src/app/api/landlord/tenants/route.ts:144[39m
+[90m      src/app/api/landlord/tenants/route.ts:147[39m
+[90m      src/app/api/landlord/tenants/route.ts:197[39m
+[90m      src/app/api/tenant/maintenance/route.ts:157[39m
+[90m      src/app/api/tenant/maintenance/route.ts:160[39m
+[90m      src/app/api/tenant/maintenance/route.ts:180[39m
+[90m      src/app/api/landlord/payments/overview/route.ts:99[39m
+[90m      src/app/api/landlord/payments/overview/route.ts:117[39m
+[90m      src/app/api/landlord/payments/overview/route.ts:135[39m
+[90m      src/app/api/landlord/payments/overview/route.ts:138[39m
+[90m      src/app/api/landlord/payments/overview/route.ts:160[39m
+
+  [33mΓÜá[39m [33mreact-doctor/prefer-useReducer                           [39m [90m├ù69[39m
+[90m      Component "LandlordUtilitiesPage" has 6 useState calls ΓÇö consider useReducer for related state[39m
+[90m      ΓåÆ Group related state: `const [state, dispatch] = useReducer(reducer, { field1, field2, ... })`[39m
+[90m      src/app/landlord/utilities/page.tsx:46[39m
+[90m      src/app/landlord/properties/[id]/environment/page.tsx:116[39m
+[90m      src/context/ProfileCardContext.tsx:23[39m
+[90m      src/context/NotificationContext.tsx:30[39m
+[90m      src/components/tenant/UnitTransferRequest.tsx:38[39m
+[90m      src/components/tenant/TenantSettings.tsx:164[39m
+[90m      src/components/tenant/TenantProductTourOverlay.tsx:33[39m
+[90m      src/components/tenant/TenantContactsSidebar.tsx:118[39m
+[90m      src/components/tenant/MoveOutRequest.tsx:35[39m
+[90m      src/app/tenant/maintenance/page.tsx:43[39m
+[90m      src/components/landlord/LandlordSettings.tsx:169[39m
+[90m      src/components/landlord/LandlordProfile.tsx:44[39m
+[90m      src/app/tenant/maintenance/new/page.tsx:38[39m
+[90m      src/app/tenant/messages/page.tsx:188[39m
+[90m      src/components/community/CommunityComposer.tsx:24[39m
+[90m      src/components/shared/DigitalSigner/DigitalSigner.tsx:72[39m
+[90m      src/components/tenant/LeaseRenewalRequest.tsx:36[39m
+[90m      src/components/tenant/invite/ProspectPaymentPortalClient.tsx:83[39m
+[90m      src/components/tenant/invite/InviteApplicationClient.tsx:75[39m
+[90m      src/app/admin/chat-moderation/page.tsx:65[39m
+[90m      src/components/profile/AvatarPicker.tsx:32[39m
+[90m      src/app/(signing)/signing/landlord/[leaseId]/page.tsx:46[39m
+[90m      src/app/signup/page.tsx:12[39m
+[90m      src/app/admin/users/page.tsx:241[39m
+[90m      src/app/admin/test-verification/page.tsx:34[39m
+[90m      src/app/admin/registrations/page.tsx:118[39m
+[90m      src/app/tenant/community/page.tsx:71[39m
+[90m      src/app/tenant/applications/[id]/apply/page.tsx:48[39m
+[90m      src/components/landlord/lease/ContractPreviewModal.tsx:149[39m
+[90m      src/app/landlord/analytics/page.tsx:234[39m
+[90m      src/app/landlord/onboarding/[token]/page.tsx:60[39m
+[90m      src/app/landlord/messages/page.tsx:253[39m
+[90m      src/components/landlord/invoices/RecordExpenseModal.tsx:15[39m
+[90m      src/components/landlord/invoices/InvoiceModal.tsx:34[39m
+[90m      src/components/landlord/dashboard/RecentInquiries.tsx:22[39m
+[90m      src/components/landlord/dashboard/IrisAIAgent.tsx:31[39m
+[90m      src/components/messaging/MessageReportWizard.tsx:93[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:496[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:898[39m
+[90m      src/components/landlord/visual-planner/UnitListingWizard.tsx:16[39m
+[90m      src/components/landlord/visual-planner/MapSetupWizard.tsx:177[39m
+[90m      src/components/landlord/utility/UtilityBillingDashboard.tsx:60[39m
+[90m      src/components/landlord/tenants/TenantDetailModal.tsx:58[39m
+[90m      src/components/landlord/tenants/AddTenantModal.tsx:34[39m
+[90m      src/components/landlord/properties/PropertiesDashboard.tsx:67[39m
+[90m      src/app/(signing)/signing/tenant/[leaseId]/page.tsx:44[39m
+[90m      src/app/tenant/utilities/page.tsx:121[39m
+[90m      src/app/tenant/tour/page.tsx:30[39m
+[90m      src/app/tenant/payments/[id]/checkout/page.tsx:410[39m
+[90m      src/components/landlord/move-out/MoveOutRequestsList.tsx:42[39m
+[90m      src/components/landlord/move-out/MoveOutRequestDetails.tsx:70[39m
+[90m      src/components/landlord/move-out/MoveOutInspectionForm.tsx:37[39m
+[90m      src/components/landlord/maintenance/MaintenanceRequestModal.tsx:39[39m
+[90m      src/components/landlord/maintenance/MaintenanceDashboard.tsx:58[39m
+[90m      src/components/landlord/leases/RenewalReview.tsx:45[39m
+[90m      src/app/tenant/dashboard/page.tsx:154[39m
+[90m      src/app/tenant/lease/page.tsx:42[39m
+[90m      src/components/landlord/applications/WalkInApplicationModal.tsx:299[39m
+[90m      src/components/landlord/applications/TenantInviteManager.tsx:138[39m
+[90m      src/components/landlord/applications/RentApplications.tsx:249[39m
+[90m      src/components/landlord/AddAmenityModal.tsx:166[39m
+[90m      src/components/landlord/dashboard/ActionRequired.tsx:186[39m
+[90m      src/components/landlord/dashboard/DashboardBanner.tsx:91[39m
+[90m      src/components/landlord/dashboard/ContactsSidebar.tsx:121[39m
+[90m      src/app/landlord/leases/page.tsx:29[39m
+[90m      src/app/landlord/invoices/page.tsx:23[39m
+[90m      src/app/landlord/documents/page.tsx:52[39m
+[90m      src/app/landlord/dashboard/page.tsx:83[39m
+[90m      src/app/landlord/properties/new/page.tsx:62[39m
+
+  [33mΓÜá[39m [33mreact-doctor/design-no-default-tailwind-palette          [39m [90m├ù65[39m
+[90m      placeholder-slate-600 reads as the Tailwind template default ΓÇö use zinc (true neutral), neutral (warmer), or stone (warmest)[39m
+[90m      ΓåÆ Replace `indigo-*` / `gray-*` / `slate-*` with project tokens, your brand color, or a less-default neutral (`zinc`, `neutral`, `stone`)[39m
+[90m      src/components/landlord/LandlordProfile.tsx:237[39m
+[90m      src/app/admin/consultation-tool/page.tsx:10[39m
+[90m      src/app/admin/consultation-tool/page.tsx:11[39m
+[90m      src/app/admin/consultation-tool/page.tsx:13[39m
+[90m      src/app/admin/consultation-tool/ConsultationDashboard.tsx:109[39m
+[90m      src/app/admin/consultation-tool/ConsultationDashboard.tsx:109[39m
+[90m      src/app/admin/consultation-tool/ConsultationDashboard.tsx:109[39m
+[90m      src/app/admin/consultation-tool/ConsultationDashboard.tsx:121[39m
+[90m      src/app/admin/consultation-tool/ConsultationDashboard.tsx:121[39m
+[90m      src/app/admin/consultation-tool/ConsultationDashboard.tsx:150[39m
+[90m      src/app/admin/consultation-tool/ConsultationDashboard.tsx:152[39m
+[90m      src/app/admin/consultation-tool/ConsultationDashboard.tsx:180[39m
+[90m      src/app/landlord/analytics/page.tsx:625[39m
+[90m      src/app/landlord/analytics/page.tsx:681[39m
+[90m      src/app/landlord/analytics/page.tsx:681[39m
+[90m      src/app/landlord/analytics/page.tsx:681[39m
+[90m      src/components/landlord/dashboard/RecentInquiries.tsx:142[39m
+[90m      src/components/lease/LeaseHeader.tsx:76[39m
+[90m      src/components/lease/LeaseDocument.tsx:92[39m
+[90m      src/components/lease/LeaseDocument.tsx:96[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:728[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:728[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:4899[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:4903[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:4903[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5116[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5116[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5116[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5116[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5117[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5119[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5119[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5120[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5124[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5124[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5130[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5130[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5130[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5174[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5380[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5380[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5380[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5380[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5380[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5380[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5380[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5380[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5391[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5391[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5391[39m
+[90m      src/components/landlord/ProfileWidget.tsx:121[39m
+[90m      src/components/landlord/ProfileWidget.tsx:121[39m
+[90m      src/components/landlord/applications/TenantInviteManager.tsx:716[39m
+[90m      src/components/landlord/applications/TenantInviteManager.tsx:716[39m
+[90m      src/app/tenant/lease/[id]/page.tsx:30[39m
+[90m      src/app/tenant/lease/[id]/page.tsx:30[39m
+[90m      src/app/tenant/lease/[id]/page.tsx:30[39m
+[90m      src/app/tenant/lease/[id]/page.tsx:48[39m
+[90m      src/app/tenant/lease/[id]/page.tsx:59[39m
+[90m      src/app/tenant/lease/[id]/page.tsx:70[39m
+[90m      src/app/tenant/lease/[id]/page.tsx:81[39m
+[90m      src/app/tenant/lease/[id]/page.tsx:81[39m
+[90m      src/app/tenant/lease/[id]/page.tsx:107[39m
+[90m      src/app/tenant/lease/[id]/page.tsx:107[39m
+[90m      src/app/tenant/lease/[id]/page.tsx:119[39m
+
+  [33mΓÜá[39m [33mknip/files                                               [39m [90m├ù65[39m
+[90m      Unused file[39m
+[90m      ΓåÆ This file is not imported by any other file in the project.[39m
+[90m      clean-dark.js[39m
+[90m      fix-blueprint.js[39m
+[90m      fix-colors-all.js[39m
+[90m      fix-colors.js[39m
+[90m      fix-oops.js[39m
+[90m      fix-page.js[39m
+[90m      fix-sidebar.js[39m
+[90m      fix.js[39m
+[90m      replace-background-dark.js[39m
+[90m      replace-blueprint-colors-more.js[39m
+[90m      replace-blueprint-colors.js[39m
+[90m      replace-ireside.js[39m
+[90m      replace_theme.js[39m
+[90m      sync-storage.js[39m
+[90m      scratch\check_db.js[39m
+[90m      scratch\check_db.ts[39m
+[90m      scratch\check_db_fetch.js[39m
+[90m      scratch\check_registrations.js[39m
+[90m      scratch\debug_tags.js[39m
+[90m      scratch\debug_tags_v2.js[39m
+[90m      scratch\fix_backdrops.js[39m
+[90m      scratch\fix_backdrops_v2.js[39m
+[90m      scratch\fix_landlords.ts[39m
+[90m      scratch\fix_property.ts[39m
+[90m      scratch\manual_activate_lease.ts[39m
+[90m      scratch\migrate_avatars_colors.ts[39m
+[90m      scratch\patch_contacts_sidebar.ts[39m
+[90m      scratch\patch_dashboard_page.ts[39m
+[90m      scratch\patch_messages_bubbles.ts[39m
+[90m      scratch\patch_messages_page.ts[39m
+[90m      scratch\patch_payment_modal.ts[39m
+[90m      scratch\refactor_state.js[39m
+[90m      scratch\test_storage.js[39m
+[90m      scripts\test-business-verification.ts[39m
+[90m      scripts\test-real-scraper.ts[39m
+[90m      scripts\verify-setup.ts[39m
+[90m      temp\reset-app.js[39m
+[90m      temp\reset-lease.js[39m
+[90m      src\components\TestComponent.tsx[39m
+[90m      src\styles\design-tokens.css[39m
+[90m      src\styles\globals.css[39m
+[90m      src\lib\supabase.ts[39m
+[90m      src\types\supabase.ts[39m
+[90m      src\components\lease\LeaseHeader.tsx[39m
+[90m      src\components\lease\SignatureModal.tsx[39m
+[90m      src\components\landlord\LandlordNavbar.tsx[39m
+[90m      src\components\landlord\LandlordProfile.tsx[39m
+[90m      src\components\landlord\UnitShowcaseModal.tsx[39m
+[90m      src\components\profile\SocialConnectivity.tsx[39m
+[90m      src\components\tenant\MessageFab.tsx[39m
+[90m      src\components\tenant\MessagesTour.tsx[39m
+[90m      src\lib\queries\index.ts[39m
+[90m      src\lib\queries\leases.ts[39m
+[90m      src\lib\queries\payments.ts[39m
+[90m      src\lib\queries\properties.ts[39m
+[90m      src\app\admin\registrations\revert_registration.ts[39m
+[90m      src\app\admin\registrations\sync_permit_card.ts[39m
+[90m      src\components\landlord\community\CommunityPropertyGate.tsx[39m
+[90m      src\components\landlord\dashboard\FeaturedPropertyCard.tsx[39m
+[90m      src\components\landlord\dashboard\FeaturedPropertySkeleton.tsx[39m
+[90m      src\components\landlord\dashboard\FloatingChatWidget.tsx[39m
+[90m      src\components\landlord\dashboard\OperationalSnapshotCard.tsx[39m
+[90m      src\components\landlord\dashboard\OperationalSnapshotSkeleton.tsx[39m
+[90m      src\components\landlord\dashboard\RecentInquiries.tsx[39m
+[90m      src\components\landlord\visual-planner\UnitListingWizard.tsx[39m
+
+  [33mΓÜá[39m [33mknip/exports                                             [39m [90m├ù62[39m
+[90m      Unused export: TENANT_PRODUCT_TOUR_ROUTE_PREFIX[39m
+[90m      src\lib\supabase\middleware.ts[39m
+[90m      src\components\cookie-consent.tsx[39m
+[90m      src\context\GlobalLoadingContext.tsx[39m
+[90m      src\components\ui\LoadingSpinner.tsx[39m
+[90m      src\lib\application-intake.ts[39m
+[90m      src\components\ui\button.tsx[39m
+[90m      src\components\tenant\TenantNavbar.tsx[39m
+[90m      src\lib\constants.ts[39m
+[90m      src\lib\email.ts[39m
+[90m      src\lib\jwt.ts[39m
+[90m      src\lib\product-tour.ts[39m
+[90m      src\lib\signature-validation.ts[39m
+[90m      src\lib\billing\server.ts[39m
+[90m      src\lib\billing\utils.ts[39m
+[90m      src\hooks\useSound.ts[39m
+[90m      src\lib\community\actions.ts[39m
+[90m      src\lib\community\queries.ts[39m
+[90m      src\lib\messages\censorship.ts[39m
+[90m      src\lib\messages\profanity-lexicon.ts[39m
+[90m      src\lib\messages\spam-lexicon.ts[39m
+[90m      src\lib\application-payment-pending.ts[39m
+[90m      src\lib\billing\storage.ts[39m
+[90m      src\lib\supabase\auth.ts[39m
+[90m      src\lib\landlord-product-tour.ts[39m
+[90m      src\lib\messages\engine.ts[39m
+[90m      src\app\api\tenant\tour\helpers.ts[39m
+
+  [33mΓÜá[39m [33mreact-doctor/rerender-state-only-in-handlers             [39m [90m├ù58[39m
+[90m      useState "mounted" is updated but never read in the component's return ΓÇö use useRef so updates don't trigger re-renders[39m
+[90m      ΓåÆ Replace useState with useRef when the value is only mutated and never read in render ΓÇö `ref.current = ...` updates without re-rendering the component[39m
+[90m      src/app/login/page.tsx:27[39m
+[90m      src/app/landlord/unit-map/page.tsx:14[39m
+[90m      src/app/landlord/properties/[id]/environment/page.tsx:122[39m
+[90m      src/components/tenant/TenantProductTourOverlay.tsx:36[39m
+[90m      src/components/tenant/TenantProductTourOverlay.tsx:39[39m
+[90m      src/components/tenant/MoveOutRequest.tsx:39[39m
+[90m      src/components/tenant/MessagesTour.tsx:10[39m
+[90m      src/app/tenant/payments/page.tsx:70[39m
+[90m      src/components/tenant/CommunityTour.tsx:10[39m
+[90m      src/components/RevenueChart.tsx:55[39m
+[90m      src/components/tenant/LeaseTour.tsx:10[39m
+[90m      src/components/tenant/invite/ProspectPaymentPortalClient.tsx:85[39m
+[90m      src/components/tenant/invite/InviteApplicationClient.tsx:78[39m
+[90m      src/components/tenant/invite/InviteApplicationClient.tsx:98[39m
+[90m      src/components/tenant/DashboardTour.tsx:10[39m
+[90m      src/components/profile/SocialLinksEditor.tsx:22[39m
+[90m      src/app/admin/users/page.tsx:247[39m
+[90m      src/app/tenant/community/page.tsx:91[39m
+[90m      src/app/tenant/community/page.tsx:92[39m
+[90m      src/app/tenant/applications/[id]/page.tsx:69[39m
+[90m      src/app/tenant/applications/[id]/page.tsx:70[39m
+[90m      src/app/landlord/analytics/page.tsx:237[39m
+[90m      src/app/landlord/onboarding/[token]/page.tsx:65[39m
+[90m      src/components/landlord/InPersonPaymentModal.tsx:7[39m
+[90m      src/components/landlord/EditableBio.tsx:15[39m
+[90m      src/components/landlord/dashboard/LandlordWelcomeLightbox.tsx:8[39m
+[90m      src/components/landlord/dashboard/LandlordQuestTriggerGuide.tsx:8[39m
+[90m      src/components/landlord/dashboard/LandlordQuestBoard.tsx:42[39m
+[90m      src/components/cookie-consent.tsx:11[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:943[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:946[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:949[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:950[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:951[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:952[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:953[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:974[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:997[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:1008[39m
+[90m      src/components/landlord/visual-planner/UnitListingWizard.tsx:18[39m
+[90m      src/components/landlord/visual-planner/MapSetupWizard.tsx:180[39m
+[90m      src/components/landlord/utility/UtilityBillingDashboard.tsx:63[39m
+[90m      src/components/landlord/utility/UtilityBillingDashboard.tsx:64[39m
+[90m      src/components/landlord/tenants/TenantDetailModal.tsx:64[39m
+[90m      src/app/tenant/payments/[id]/checkout/page.tsx:415[39m
+[90m      src/app/tenant/payments/[id]/checkout/page.tsx:424[39m
+[90m      src/components/landlord/leases/RenewalReview.tsx:51[39m
+[90m      src/app/tenant/lease/page.tsx:47[39m
+[90m      src/components/landlord/applications/ToolAccessBar.tsx:103[39m
+[90m      src/components/landlord/applications/ToolAccessBar.tsx:104[39m
+[90m      src/components/landlord/applications/ToolAccessBar.tsx:105[39m
+[90m      src/components/landlord/applications/ToolAccessBar.tsx:106[39m
+[90m      src/app/landlord/documents/page.tsx:55[39m
+[90m      src/app/landlord/dashboard/page.tsx:85[39m
+[90m      src/app/landlord/properties/new/page.tsx:74[39m
+[90m      src/app/landlord/properties/new/page.tsx:75[39m
+[90m      src/app/landlord/properties/new/page.tsx:76[39m
+[90m      src/app/tenant/lease/[id]/sign/page.tsx:21[39m
+
+  [33mΓÜá[39m [33mreact-doctor/rendering-hydration-mismatch-time           [39m [90m├ù53[39m
+[90m      new Date() reachable from JSX renders differently on server vs client ΓÇö wrap in useEffect+useState (client-only) or add suppressHydrationWarning to the parent if intentional[39m
+[90m      ΓåÆ Wrap dynamic time/random values in useEffect+useState (client-only) or add suppressHydrationWarning to the parent if intentional[39m
+[90m      src/app/admin/consultation-tool/ConsultationDashboard.tsx:171[39m
+[90m      src/app/admin/consultation-tool/ConsultationDashboard.tsx:171[39m
+[90m      src/app/admin/users/page.tsx:391[39m
+[90m      src/app/admin/users/page.tsx:391[39m
+[90m      src/app/admin/users/page.tsx:494[39m
+[90m      src/app/admin/test-verification/page.tsx:210[39m
+[90m      src/app/admin/registrations/page.tsx:332[39m
+[90m      src/app/admin/registrations/page.tsx:332[39m
+[90m      src/app/admin/registrations/page.tsx:332[39m
+[90m      src/app/admin/registrations/page.tsx:398[39m
+[90m      src/app/landlord/analytics/page.tsx:841[39m
+[90m      src/app/landlord/analytics/page.tsx:842[39m
+[90m      src/app/landlord/analytics/page.tsx:841[39m
+[90m      src/app/landlord/analytics/page.tsx:842[39m
+[90m      src/components/landlord/dashboard/IrisAIAgent.tsx:429[39m
+[90m      src/components/landlord/dashboard/IrisAIAgent.tsx:429[39m
+[90m      src/components/landlord/dashboard/IrisAIAgent.tsx:429[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5192[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5193[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5192[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5193[39m
+[90m      src/components/landlord/visual-planner/UnitListingWizard.tsx:258[39m
+[90m      src/components/landlord/visual-planner/UnitListingWizard.tsx:258[39m
+[90m      src/components/landlord/visual-planner/UnitListingWizard.tsx:258[39m
+[90m      src/components/landlord/utility/UtilityBillingDashboard.tsx:560[39m
+[90m      src/components/landlord/utility/UtilityBillingDashboard.tsx:560[39m
+[90m      src/components/landlord/move-out/MoveOutInspectionForm.tsx:334[39m
+[90m      src/components/landlord/leases/RenewalReview.tsx:319[39m
+[90m      src/components/landlord/leases/RenewalReview.tsx:319[39m
+[90m      src/components/landlord/leases/RenewalReview.tsx:319[39m
+[90m      src/components/landlord/leases/RenewalReview.tsx:319[39m
+[90m      src/components/landlord/leases/RenewalReview.tsx:319[39m
+[90m      src/components/landlord/leases/RenewalReview.tsx:319[39m
+[90m      src/components/landlord/applications/WalkInApplicationModal.tsx:1354[39m
+[90m      src/components/landlord/applications/WalkInApplicationModal.tsx:1354[39m
+[90m      src/components/landlord/applications/WalkInApplicationModal.tsx:1354[39m
+[90m      src/components/landlord/applications/WalkInApplicationModal.tsx:1354[39m
+[90m      src/components/landlord/applications/WalkInApplicationModal.tsx:1354[39m
+[90m      src/components/landlord/applications/TenantInviteManager.tsx:609[39m
+[90m      src/components/landlord/applications/TenantInviteManager.tsx:612[39m
+[90m      src/components/landlord/applications/TenantInviteManager.tsx:609[39m
+[90m      src/components/landlord/applications/TenantInviteManager.tsx:612[39m
+[90m      src/app/landlord/invoices/page.tsx:319[39m
+[90m      src/app/landlord/invoices/page.tsx:319[39m
+[90m      src/app/landlord/invoices/page.tsx:319[39m
+[90m      src/app/landlord/invoices/page.tsx:319[39m
+[90m      src/app/landlord/invoices/page.tsx:319[39m
+[90m      src/app/landlord/invoices/page.tsx:319[39m
+[90m      src/app/landlord/documents/page.tsx:265[39m
+[90m      src/app/landlord/documents/page.tsx:386[39m
+[90m      src/app/landlord/documents/page.tsx:265[39m
+[90m      src/app/landlord/documents/page.tsx:386[39m
+[90m      src/app/landlord/documents/page.tsx:386[39m
+
+  [33mΓÜá[39m [33mreact-doctor/design-no-three-period-ellipsis             [39m [90m├ù52[39m
+[90m      Three-period ellipsis ("...") in JSX text ΓÇö use the actual ellipsis character "ΓÇª" (or `&hellip;`)[39m
+[90m      ΓåÆ Use the typographic ellipsis "ΓÇª" (or `&hellip;`) instead of three periods ΓÇö pairs with action-with-followup labels ("RenameΓÇª", "LoadingΓÇª")[39m
+[90m      src/app/landlord/tenants/page.tsx:150[39m
+[90m      src/app/landlord/properties/[id]/environment/page.tsx:269[39m
+[90m      src/components/tenant/UnitTransferRequest.tsx:184[39m
+[90m      src/components/tenant/TenantSettings.tsx:653[39m
+[90m      src/app/tenant/payments/page.tsx:256[39m
+[90m      src/app/tenant/payments/page.tsx:465[39m
+[90m      src/app/tenant/payments/page.tsx:477[39m
+[90m      src/app/tenant/maintenance/new/page.tsx:300[39m
+[90m      src/components/RevenueChart.tsx:156[39m
+[90m      src/components/tenant/invite/InviteApplicationClient.tsx:333[39m
+[90m      src/components/tenant/invite/InviteApplicationClient.tsx:719[39m
+[90m      src/app/(signing)/signing/landlord/[leaseId]/page.tsx:207[39m
+[90m      src/app/admin/test-verification/page.tsx:149[39m
+[90m      src/app/tenant/applications/[id]/apply/page.tsx:513[39m
+[90m      src/app/tenant/applications/[id]/apply/page.tsx:624[39m
+[90m      src/app/landlord/analytics/page.tsx:697[39m
+[90m      src/app/landlord/onboarding/[token]/page.tsx:432[39m
+[90m      src/components/landlord/invoices/InvoiceModal.tsx:384[39m
+[90m      src/components/landlord/InPersonPaymentModal.tsx:104[39m
+[90m      src/components/messaging/MessageReportWizard.tsx:448[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:666[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:869[39m
+[90m      src/components/landlord/visual-planner/MapSetupWizard.tsx:527[39m
+[90m      src/components/landlord/utility/UtilityBillingDashboard.tsx:286[39m
+[90m      src/components/landlord/utility/UtilityBillingDashboard.tsx:780[39m
+[90m      src/components/landlord/tenants/TenantDetailModal.tsx:187[39m
+[90m      src/app/(signing)/signing/tenant/[leaseId]/page.tsx:203[39m
+[90m      src/app/landlord/applications/page.tsx:8[39m
+[90m      src/app/tenant/utilities/page.tsx:608[39m
+[90m      src/app/tenant/unit-map/page.tsx:66[39m
+[90m      src/app/tenant/tour/page.tsx:145[39m
+[90m      src/app/tenant/payments/[id]/checkout/page.tsx:574[39m
+[90m      src/components/landlord/messages/MessageComposer.tsx:100[39m
+[90m      src/components/landlord/messages/MessageComposer.tsx:242[39m
+[90m      src/components/landlord/messages/ContactList.tsx:77[39m
+[90m      src/components/landlord/leases/RenewalSettingsModal.tsx:114[39m
+[90m      src/components/landlord/leases/RenewalReview.tsx:245[39m
+[90m      src/app/tenant/lease/page.tsx:205[39m
+[90m      src/app/tenant/lease/page.tsx:662[39m
+[90m      src/components/landlord/BillingOperationsPanel.tsx:326[39m
+[90m      src/components/landlord/BillingOperationsPanel.tsx:950[39m
+[90m      src/components/landlord/applications/WalkInApplicationModal.tsx:36[39m
+[90m      src/components/landlord/applications/WalkInApplicationModal.tsx:883[39m
+[90m      src/components/landlord/applications/WalkInApplicationModal.tsx:1344[39m
+[90m      src/components/landlord/applications/ToolAccessBar.tsx:174[39m
+[90m      src/components/landlord/applications/TenantInviteManager.tsx:502[39m
+[90m      src/components/landlord/applications/RentApplications.tsx:50[39m
+[90m      src/components/landlord/applications/application-intake-shared.tsx:169[39m
+[90m      src/components/landlord/community/CommunityPropertyGate.tsx:16[39m
+[90m      src/app/landlord/leases/page.tsx:101[39m
+[90m      src/app/landlord/invoices/page.tsx:231[39m
+[90m      src/app/landlord/documents/page.tsx:112[39m
+
+  [33mΓÜá[39m [33mreact-doctor/server-sequential-independent-await         [39m [90m├ù51[39m
+[90m      Sequential `await` without a data dependency on the previous result ΓÇö wrap the independent calls in `Promise.all([...])` so they race instead of waterfalling[39m
+[90m      ΓåÆ Wrap independent awaits in `Promise.all([...])` so they race instead of waterfalling ΓÇö second call doesn't depend on the first[39m
+[90m      src/app/api/landlord/maintenance/route.ts:510[39m
+[90m      src/app/api/landlord/leases/[leaseId]/signing-link/route.ts:18[39m
+[90m      src/app/api/landlord/leases/[leaseId]/route.ts:16[39m
+[90m      src/app/api/landlord/invoices/[id]/mark-refunded/route.ts:27[39m
+[90m      src/app/api/tenant/lease/[id]/renew/route.ts:16[39m
+[90m      src/app/api/landlord/invoices/route.ts:17[39m
+[90m      src/app/api/landlord/invoices/route.ts:39[39m
+[90m      src/app/api/tenant/amenities/bookings/[id]/route.ts:10[39m
+[90m      src/app/api/landlord/move-out/[id]/complete/route.ts:14[39m
+[90m      src/lib/iris/context.ts:18[39m
+[90m      src/lib/iris/context.ts:45[39m
+[90m      src/app/api/tenant/payments/[id]/submit/route.ts:20[39m
+[90m      src/app/api/tenant/payments/[id]/route.ts:14[39m
+[90m      src/app/api/tenant/payments/[id]/refund-info/route.ts:9[39m
+[90m      src/app/api/landlord/applications/[applicationId]/signing-link/route.ts:23[39m
+[90m      src/app/api/landlord/applications/[applicationId]/signing-link/regenerate/route.ts:21[39m
+[90m      src/app/api/landlord/applications/[applicationId]/resend-credentials/route.ts:16[39m
+[90m      src/app/api/landlord/applications/[applicationId]/quick-approve/route.ts:56[39m
+[90m      src/app/api/landlord/analytics/overview/route.ts:343[39m
+[90m      src/app/api/landlord/properties/[id]/renewal-settings/route.ts:13[39m
+[90m      src/app/api/landlord/properties/[id]/renewal-settings/route.ts:45[39m
+[90m      src/app/api/landlord/lease/finalize/route.ts:18[39m
+[90m      src/app/api/landlord/renewals/[id]/route.ts:14[39m
+[90m      src/app/api/landlord/renewals/[id]/route.ts:61[39m
+[90m      src/app/api/landlord/applications/[applicationId]/payment-bypass/route.ts:17[39m
+[90m      src/app/api/landlord/applications/[applicationId]/actions/route.ts:311[39m
+[90m      src/app/api/landlord/applications/[applicationId]/payment-requests/[requestId]/review/route.ts:19[39m
+[90m      src/app/api/landlord/utility-readings/route.ts:23[39m
+[90m      src/app/api/landlord/utility-readings/route.ts:85[39m
+[90m      src/app/api/landlord/unit-map/units/[unitId]/floor/route.ts:9[39m
+[90m      src/app/api/landlord/inquiries/[inquiryId]/actions/route.ts:19[39m
+[90m      src/app/api/landlord/inquiries/recent/route.ts:53[39m
+[90m      src/app/api/tenant/payments/[id]/intent/route.ts:27[39m
+[90m      src/app/api/admin/registrations/[id]/verify/route.ts:33[39m
+[90m      src/app/api/landlord/invites/[id]/route.ts:10[39m
+[90m      src/app/api/landlord/invites/route.ts:100[39m
+[90m      src/app/api/landlord/invites/route.ts:205[39m
+[90m      src/app/api/landlord/properties/overview/route.ts:65[39m
+[90m      src/app/api/landlord/tenants/route.ts:85[39m
+[90m      src/app/api/admin/registrations/[id]/route.ts:51[39m
+[90m      src/app/api/landlord/move-out/[id]/approve/route.ts:15[39m
+[90m      src/app/api/tenant/leases/[leaseId]/route.ts:18[39m
+[90m      src/app/api/tenant/maintenance/media/route.ts:38[39m
+[90m      src/app/api/landlord/invoices/[id]/review/route.ts:85[39m
+[90m      src/app/api/landlord/invoices/[id]/reminder/route.ts:19[39m
+[90m      src/app/api/landlord/invoices/[id]/route.ts:14[39m
+[90m      src/lib/supabase/auth.ts:131[39m
+[90m      src/app/api/tenant/maintenance/route.ts:238[39m
+[90m      src/app/api/landlord/move-out/[id]/inspection/route.ts:14[39m
+[90m      src/app/api/landlord/move-out/[id]/inspection/route.ts:97[39m
+[90m      src/app/api/landlord/properties/[id]/route.ts:10[39m
+
+  [33mΓÜá[39m [33mreact-doctor/no-side-tab-border                          [39m [90m├ù51[39m
+[90m      Thick one-sided border (border-l-4) ΓÇö the most recognizable tell of AI-generated UIs. Use a subtler accent or remove it[39m
+[90m      ΓåÆ Use a subtler accent (box-shadow inset, background gradient, or border-bottom) instead of a thick one-sided border[39m
+[90m      src/app/page.tsx:763[39m
+[90m      src/components/landlord/invoices/InvoiceModal.tsx:770[39m
+[90m      src/app/docs/[...slug]/page.tsx:16[39m
+[90m      src/app/docs/[...slug]/page.tsx:28[39m
+[90m      src/app/docs/[...slug]/page.tsx:40[39m
+[90m      src/app/docs/[...slug]/page.tsx:82[39m
+[90m      src/app/docs/[...slug]/page.tsx:98[39m
+[90m      src/app/docs/[...slug]/page.tsx:138[39m
+[90m      src/app/docs/[...slug]/page.tsx:143[39m
+[90m      src/app/docs/[...slug]/page.tsx:172[39m
+[90m      src/app/docs/[...slug]/page.tsx:212[39m
+[90m      src/app/docs/[...slug]/page.tsx:217[39m
+[90m      src/app/docs/[...slug]/page.tsx:233[39m
+[90m      src/app/docs/[...slug]/page.tsx:243[39m
+[90m      src/app/docs/[...slug]/page.tsx:251[39m
+[90m      src/app/docs/[...slug]/page.tsx:270[39m
+[90m      src/app/docs/[...slug]/page.tsx:363[39m
+[90m      src/app/docs/[...slug]/page.tsx:380[39m
+[90m      src/app/docs/[...slug]/page.tsx:407[39m
+[90m      src/app/docs/[...slug]/page.tsx:415[39m
+[90m      src/app/docs/[...slug]/page.tsx:449[39m
+[90m      src/app/docs/[...slug]/page.tsx:466[39m
+[90m      src/app/docs/[...slug]/page.tsx:494[39m
+[90m      src/app/docs/[...slug]/page.tsx:518[39m
+[90m      src/app/docs/[...slug]/page.tsx:544[39m
+[90m      src/app/docs/[...slug]/page.tsx:587[39m
+[90m      src/app/docs/[...slug]/page.tsx:649[39m
+[90m      src/app/docs/[...slug]/page.tsx:694[39m
+[90m      src/app/docs/[...slug]/page.tsx:732[39m
+[90m      src/app/docs/[...slug]/page.tsx:812[39m
+[90m      src/app/docs/[...slug]/page.tsx:834[39m
+[90m      src/app/docs/[...slug]/page.tsx:843[39m
+[90m      src/app/docs/[...slug]/page.tsx:867[39m
+[90m      src/app/docs/[...slug]/page.tsx:885[39m
+[90m      src/app/docs/[...slug]/page.tsx:902[39m
+[90m      src/app/docs/[...slug]/page.tsx:939[39m
+[90m      src/app/docs/[...slug]/page.tsx:969[39m
+[90m      src/app/docs/[...slug]/page.tsx:993[39m
+[90m      src/app/docs/[...slug]/page.tsx:1066[39m
+[90m      src/app/docs/[...slug]/page.tsx:1094[39m
+[90m      src/app/docs/[...slug]/page.tsx:1118[39m
+[90m      src/app/docs/[...slug]/page.tsx:1172[39m
+[90m      src/app/docs/[...slug]/page.tsx:1188[39m
+[90m      src/app/docs/[...slug]/page.tsx:1223[39m
+[90m      src/app/docs/[...slug]/page.tsx:1265[39m
+[90m      src/app/docs/[...slug]/page.tsx:1297[39m
+[90m      src/app/docs/[...slug]/page.tsx:1385[39m
+[90m      src/app/docs/[...slug]/page.tsx:1414[39m
+[90m      src/app/docs/[...slug]/page.tsx:1656[39m
+[90m      src/app/docs/[...slug]/page.tsx:1690[39m
+[90m      src/app/docs/[...slug]/page.tsx:1725[39m
+
+  [33mΓÜá[39m [33mreact-doctor/no-array-index-as-key                       [39m [90m├ù50[39m
+[90m      Array index "i" used as key ΓÇö causes bugs when list is reordered or filtered[39m
+[90m      ΓåÆ Use a stable unique identifier: `key={item.id}` or `key={item.slug}` ΓÇö index keys break on reorder/filter[39m
+[90m      src/app/landlord/utilities/page.tsx:237[39m
+[90m      src/app/landlord/tenants/loading.tsx:22[39m
+[90m      src/app/landlord/tenants/loading.tsx:29[39m
+[90m      src/components/tenant/TenantSettings.tsx:574[39m
+[90m      src/components/tenant/TenantNavbar.tsx:455[39m
+[90m      src/components/tenant/maintenance/TenantMaintenanceModal.tsx:119[39m
+[90m      src/app/tenant/maintenance/page.tsx:316[39m
+[90m      src/components/shared/DigitalSigner/DigitalSigner.tsx:536[39m
+[90m      src/components/shared/DigitalSigner/DigitalSigner.tsx:586[39m
+[90m      src/components/tenant/LeaseRenewalReminder.tsx:170[39m
+[90m      src/app/admin/consultation-tool/ConsultationDashboard.tsx:132[39m
+[90m      src/app/admin/chat-moderation/page.tsx:361[39m
+[90m      src/components/navigation/NotificationBanner.tsx:93[39m
+[90m      src/app/landlord/onboarding/[token]/page.tsx:575[39m
+[90m      src/components/landlord/dashboard/RecentInquiries.tsx:174[39m
+[90m      src/components/landlord/dashboard/RecentInquiries.tsx:458[39m
+[90m      src/components/landlord/dashboard/KpiCardSkeleton.tsx:43[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:3367[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:3382[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:3387[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:3404[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:3409[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:3425[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:3715[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:3735[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:3741[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:3764[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:3770[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:3789[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5633[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5648[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5651[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5668[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5671[39m
+[90m      src/components/landlord/tenants/TenantDirectory.tsx:58[39m
+[90m      src/components/landlord/properties/PropertiesDashboard.tsx:200[39m
+[90m      src/app/tenant/utilities/page.tsx:357[39m
+[90m      src/app/tenant/utilities/page.tsx:449[39m
+[90m      src/components/landlord/maintenance/MaintenanceRequestModal.tsx:263[39m
+[90m      src/components/landlord/maintenance/MaintenanceRequestModal.tsx:500[39m
+[90m      src/components/landlord/maintenance/MaintenanceRequestModal.tsx:713[39m
+[90m      src/components/landlord/maintenance/MaintenanceRequestModal.tsx:769[39m
+[90m      src/components/landlord/maintenance/MaintenanceDashboard.tsx:355[39m
+[90m      src/components/landlord/applications/WalkInApplicationModal.tsx:817[39m
+[90m      src/components/landlord/AddAmenityModal.tsx:433[39m
+[90m      src/components/landlord/dashboard/ChartSkeleton.tsx:37[39m
+[90m      src/components/landlord/dashboard/DashboardBanner.tsx:376[39m
+[90m      src/app/dashboard/page.tsx:72[39m
+[90m      src/app/landlord/documents/page.tsx:449[39m
+[90m      src/components/community/CommunityPostCard.tsx:273[39m
+
+  [33mΓÜá[39m [33mreact-doctor/react-compiler-destructure-method           [39m [90m├ù48[39m
+[90m      Destructure for clarity: `const { get } = useSearchParams()` then call `get(...)` directly ΓÇö easier for React Compiler to memoize and clearer about which methods this component depends on[39m
+[90m      ΓåÆ Destructure the method up front: `const { push } = useRouter()` then call `push(...)` directly ΓÇö clearer dependency graph and easier for React Compiler to memoize[39m
+[90m      src/app/login/page.tsx:30[39m
+[90m      src/app/login/page.tsx:68[39m
+[90m      src/components/tenant/TenantSettings.tsx:1128[39m
+[90m      src/components/tenant/TenantProductTourOverlay.tsx:140[39m
+[90m      src/components/tenant/TenantProductTourOverlay.tsx:146[39m
+[90m      src/components/tenant/TenantProductTourOverlay.tsx:202[39m
+[90m      src/components/tenant/TenantProductTourOverlay.tsx:228[39m
+[90m      src/components/tenant/TenantProductTourOverlay.tsx:281[39m
+[90m      src/components/tenant/TenantNavbar.tsx:157[39m
+[90m      src/components/landlord/LandlordSettings.tsx:462[39m
+[90m      src/app/tenant/maintenance/new/page.tsx:127[39m
+[90m      src/app/tenant/maintenance/new/page.tsx:128[39m
+[90m      src/app/tenant/maintenance/new/page.tsx:140[39m
+[90m      src/app/tenant/messages/page.tsx:194[39m
+[90m      src/app/tenant/messages/page.tsx:195[39m
+[90m      src/app/tenant/messages/page.tsx:384[39m
+[90m      src/app/tenant/messages/page.tsx:388[39m
+[90m      src/app/tenant/messages/page.tsx:399[39m
+[90m      src/app/tenant/messages/page.tsx:955[39m
+[90m      src/app/tenant/messages/page.tsx:956[39m
+[90m      src/app/tenant/messages/page.tsx:957[39m
+[90m      src/components/messaging/PaymentIssueResolver.tsx:142[39m
+[90m      src/components/messaging/PaymentIssueResolver.tsx:240[39m
+[90m      src/components/messaging/PaymentIssueResolver.tsx:257[39m
+[90m      src/components/profile/ProfileCoverUploader.tsx:64[39m
+[90m      src/components/profile/ProfileAvatarUploader.tsx:47[39m
+[90m      src/components/navigation/RoleSidebar.tsx:75[39m
+[90m      src/app/tenant/applications/[id]/page.tsx:186[39m
+[90m      src/app/tenant/applications/[id]/apply/page.tsx:192[39m
+[90m      src/app/landlord/onboarding/[token]/page.tsx:193[39m
+[90m      src/app/landlord/onboarding/[token]/page.tsx:386[39m
+[90m      src/app/landlord/move-out/page.tsx:11[39m
+[90m      src/app/landlord/move-out/page.tsx:12[39m
+[90m      src/components/landlord/dashboard/LandlordQuestBoard.tsx:78[39m
+[90m      src/components/landlord/messages/MessageBubble.tsx:395[39m
+[90m      src/components/landlord/messages/MessageBubble.tsx:411[39m
+[90m      src/components/landlord/maintenance/MaintenanceDashboard.tsx:159[39m
+[90m      src/components/landlord/leases/RenewalReview.tsx:47[39m
+[90m      src/app/tenant/dashboard/page.tsx:156[39m
+[90m      src/app/tenant/dashboard/page.tsx:166[39m
+[90m      src/app/tenant/dashboard/page.tsx:172[39m
+[90m      src/app/tenant/lease/page.tsx:44[39m
+[90m      src/app/tenant/lease/page.tsx:50[39m
+[90m      src/app/tenant/lease/page.tsx:51[39m
+[90m      src/components/landlord/BusinessPermitCard.tsx:54[39m
+[90m      src/components/landlord/dashboard/DashboardBanner.tsx:175[39m
+[90m      src/components/landlord/dashboard/DashboardBanner.tsx:300[39m
+[90m      src/app/tenant/lease/[id]/sign/page.tsx:81[39m
+
+  [33mΓÜá[39m [33mjsx-a11y/label-has-associated-control                    [39m [90m├ù48[39m
+[90m      A form label must be associated with a control.[39m
+[90m      ΓåÆ Either give the label a `htmlFor` attribute with the id of the associated control, or wrap the label around the control.[39m
+[90m      src/app/landlord/properties/[id]/environment/page.tsx:352[39m
+[90m      src/app/landlord/properties/[id]/environment/page.tsx:369[39m
+[90m      src/app/landlord/properties/[id]/environment/page.tsx:396[39m
+[90m      src/app/landlord/properties/[id]/environment/page.tsx:415[39m
+[90m      src/app/landlord/properties/[id]/environment/page.tsx:466[39m
+[90m      src/app/landlord/properties/[id]/environment/page.tsx:499[39m
+[90m      src/components/tenant/TenantSettings.tsx:915[39m
+[90m      src/components/landlord/LandlordSettings.tsx:717[39m
+[90m      src/components/landlord/LandlordProfile.tsx:219[39m
+[90m      src/components/landlord/LandlordProfile.tsx:230[39m
+[90m      src/app/tenant/maintenance/new/page.tsx:201[39m
+[90m      src/app/admin/chat-moderation/page.tsx:400[39m
+[90m      src/app/admin/test-verification/page.tsx:112[39m
+[90m      src/app/admin/test-verification/page.tsx:126[39m
+[90m      src/app/landlord/analytics/page.tsx:932[39m
+[90m      src/app/landlord/analytics/page.tsx:981[39m
+[90m      src/app/landlord/onboarding/[token]/page.tsx:750[39m
+[90m      src/app/landlord/onboarding/[token]/page.tsx:806[39m
+[90m      src/components/landlord/invoices/RecordExpenseModal.tsx:103[39m
+[90m      src/components/messaging/MessageReportWizard.tsx:229[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:582[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:607[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:619[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:845[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:4981[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:4986[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:4990[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:4995[39m
+[90m      src/components/landlord/visual-planner/UnitListingWizard.tsx:155[39m
+[90m      src/components/landlord/visual-planner/UnitListingWizard.tsx:172[39m
+[90m      src/components/landlord/visual-planner/UnitListingWizard.tsx:179[39m
+[90m      src/components/landlord/visual-planner/UnitListingWizard.tsx:239[39m
+[90m      src/components/landlord/visual-planner/UnitListingWizard.tsx:256[39m
+[90m      src/components/landlord/utility/UtilityBillingDashboard.tsx:1058[39m
+[90m      src/components/landlord/utility/UtilityBillingDashboard.tsx:1069[39m
+[90m      src/components/landlord/move-out/MoveOutInspectionForm.tsx:230[39m
+[90m      src/components/landlord/applications/WalkInApplicationModal.tsx:1211[39m
+[90m      src/components/landlord/applications/WalkInApplicationModal.tsx:1226[39m
+[90m      src/components/landlord/applications/WalkInApplicationModal.tsx:1241[39m
+[90m      src/components/landlord/applications/WalkInApplicationModal.tsx:1261[39m
+[90m      src/components/landlord/applications/RentApplications.tsx:1483[39m
+[90m      src/components/landlord/AddAmenityModal.tsx:459[39m
+[90m      src/components/landlord/AddAmenityModal.tsx:516[39m
+[90m      src/app/landlord/properties/new/page.tsx:482[39m
+[90m      src/app/landlord/properties/new/page.tsx:491[39m
+[90m      src/app/landlord/properties/new/page.tsx:501[39m
+[90m      src/app/landlord/properties/new/page.tsx:531[39m
+[90m      src/app/landlord/properties/new/page.tsx:557[39m
+
+  [33mΓÜá[39m [33mreact-doctor/design-no-redundant-size-axes               [39m [90m├ù42[39m
+[90m      w-[60rem] h-[60rem] ΓåÆ use the shorthand size-[60rem] (Tailwind v3.4+)[39m
+[90m      ΓåÆ Collapse `w-N h-N` to `size-N` (Tailwind v3.4+) when both axes match[39m
+[90m      src/app/login/page.tsx:102[39m
+[90m      src/app/landlord/settings/page.tsx:15[39m
+[90m      src/app/landlord/settings/page.tsx:16[39m
+[90m      src/app/tenant/applications/page.tsx:108[39m
+[90m      src/app/tenant/applications/page.tsx:109[39m
+[90m      src/app/page.tsx:669[39m
+[90m      src/app/page.tsx:720[39m
+[90m      src/app/page.tsx:754[39m
+[90m      src/components/community/CommunityAnnouncement.tsx:29[39m
+[90m      src/components/community/CommunityAnnouncement.tsx:32[39m
+[90m      src/components/community/CommunityAnnouncement.tsx:33[39m
+[90m      src/components/community/CommunityAnnouncement.tsx:35[39m
+[90m      src/components/community/CommunityAnnouncement.tsx:52[39m
+[90m      src/components/community/CommunityAnnouncement.tsx:69[39m
+[90m      src/components/tenant/invite/InviteApplicationClient.tsx:344[39m
+[90m      src/components/tenant/invite/InviteApplicationClient.tsx:365[39m
+[90m      src/components/tenant/invite/InviteApplicationClient.tsx:412[39m
+[90m      src/components/tenant/invite/InviteApplicationClient.tsx:417[39m
+[90m      src/app/signup/page.tsx:244[39m
+[90m      src/app/signup/page.tsx:268[39m
+[90m      src/app/signup/page.tsx:269[39m
+[90m      src/app/tenant/applications/[id]/apply/page.tsx:117[39m
+[90m      src/app/tenant/applications/[id]/apply/page.tsx:172[39m
+[90m      src/app/tenant/applications/[id]/apply/page.tsx:181[39m
+[90m      src/app/landlord/analytics/page.tsx:624[39m
+[90m      src/app/landlord/analytics/page.tsx:625[39m
+[90m      src/app/landlord/analytics/page.tsx:626[39m
+[90m      src/app/landlord/onboarding/[token]/page.tsx:446[39m
+[90m      src/app/landlord/onboarding/[token]/page.tsx:447[39m
+[90m      src/app/tenant/settings/page.tsx:15[39m
+[90m      src/app/tenant/settings/page.tsx:16[39m
+[90m      src/app/tenant/payments/[id]/checkout/page.tsx:611[39m
+[90m      src/app/tenant/payments/[id]/checkout/page.tsx:612[39m
+[90m      src/components/ui/LoadingSpinner.tsx:106[39m
+[90m      src/components/ui/LoadingSpinner.tsx:107[39m
+[90m      src/components/landlord/applications/WalkInApplicationModal.tsx:221[39m
+[90m      src/components/landlord/applications/WalkInApplicationModal.tsx:222[39m
+[90m      src/app/landlord/dashboard/page.tsx:634[39m
+[90m      src/app/landlord/dashboard/page.tsx:639[39m
+[90m      src/app/landlord/properties/new/page.tsx:317[39m
+[90m      src/components/theme-toggle.tsx:42[39m
+[90m      src/components/theme-toggle.tsx:43[39m
+
+  [33mΓÜá[39m [33mreact-doctor/no-fetch-in-effect                          [39m [90m├ù41[39m
+[90m      fetch() inside useEffect ΓÇö use a data fetching library (react-query, SWR) or server component[39m
+[90m      ΓåÆ Use `useQuery()` from @tanstack/react-query, `useSWR()`, or fetch in a Server Component instead[39m
+[90m      src/app/landlord/unit-map/page.tsx:17[39m
+[90m      src/components/tenant/TenantSettings.tsx:296[39m
+[90m      src/app/tenant/maintenance/page.tsx:57[39m
+[90m      src/app/tenant/payments/page.tsx:74[39m
+[90m      src/components/landlord/LandlordSettings.tsx:327[39m
+[90m      src/components/landlord/LandlordSettings.tsx:374[39m
+[90m      src/components/messaging/OfficialReceipt.tsx:38[39m
+[90m      src/components/tenant/invite/ProspectPaymentPortalClient.tsx:95[39m
+[90m      src/components/tenant/invite/InviteApplicationClient.tsx:101[39m
+[90m      src/app/(signing)/signing/landlord/[leaseId]/page.tsx:60[39m
+[90m      src/app/admin/users/page.tsx:249[39m
+[90m      src/app/admin/dashboard/page.tsx:106[39m
+[90m      src/app/landlord/analytics/page.tsx:520[39m
+[90m      src/app/landlord/onboarding/[token]/page.tsx:164[39m
+[90m      src/components/landlord/invoices/InvoiceModal.tsx:50[39m
+[90m      src/components/landlord/dashboard/RecentInquiries.tsx:71[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:1023[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:1087[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:2409[39m
+[90m      src/components/landlord/utility/UtilityBillingDashboard.tsx:171[39m
+[90m      src/components/landlord/utility/UtilityBillingDashboard.tsx:722[39m
+[90m      src/app/(signing)/signing/tenant/[leaseId]/page.tsx:58[39m
+[90m      src/app/tenant/utilities/page.tsx:142[39m
+[90m      src/app/tenant/unit-map/page.tsx:31[39m
+[90m      src/app/tenant/payments/[id]/checkout/page.tsx:431[39m
+[90m      src/components/landlord/move-out/MoveOutRequestsList.tsx:55[39m
+[90m      src/components/landlord/move-out/MoveOutInspectionForm.tsx:79[39m
+[90m      src/components/landlord/maintenance/MaintenanceDashboard.tsx:73[39m
+[90m      src/app/tenant/dashboard/page.tsx:178[39m
+[90m      src/app/tenant/lease/page.tsx:130[39m
+[90m      src/components/landlord/BillingOperationsPanel.tsx:193[39m
+[90m      src/components/landlord/applications/ToolAccessBar.tsx:115[39m
+[90m      src/components/landlord/applications/RentApplications.tsx:409[39m
+[90m      src/components/landlord/applications/RentApplications.tsx:483[39m
+[90m      src/components/landlord/dashboard/ActionRequired.tsx:199[39m
+[90m      src/app/landlord/documents/page.tsx:68[39m
+[90m      src/app/landlord/dashboard/page.tsx:150[39m
+[90m      src/app/landlord/dashboard/page.tsx:197[39m
+[90m      src/app/landlord/dashboard/page.tsx:228[39m
+[90m      src/app/landlord/dashboard/page.tsx:266[39m
+[90m      src/app/landlord/properties/new/page.tsx:106[39m
+
+  [33mΓÜá[39m [33mreact-doctor/rerender-functional-setstate                [39m [90m├ù34[39m
+[90m      setFormData({ ...formData, ... }) ΓÇö use functional update `setFormData(prev => ({ ...prev, ... }))` to avoid stale closures[39m
+[90m      ΓåÆ Use the callback form: `setState(prev => prev + 1)` to always read the latest value[39m
+[90m      src/components/tenant/TenantSettings.tsx:416[39m
+[90m      src/components/tenant/TenantSettings.tsx:432[39m
+[90m      src/components/tenant/TenantSettings.tsx:440[39m
+[90m      src/components/tenant/TenantSettings.tsx:449[39m
+[90m      src/components/tenant/TenantSettings.tsx:465[39m
+[90m      src/components/tenant/TenantSettings.tsx:473[39m
+[90m      src/components/landlord/LandlordSettings.tsx:588[39m
+[90m      src/components/landlord/LandlordSettings.tsx:596[39m
+[90m      src/components/landlord/LandlordSettings.tsx:605[39m
+[90m      src/components/landlord/LandlordSettings.tsx:615[39m
+[90m      src/components/landlord/LandlordSettings.tsx:669[39m
+[90m      src/components/landlord/LandlordSettings.tsx:678[39m
+[90m      src/components/landlord/LandlordSettings.tsx:687[39m
+[90m      src/components/landlord/LandlordSettings.tsx:696[39m
+[90m      src/components/landlord/LandlordSettings.tsx:711[39m
+[90m      src/app/tenant/maintenance/new/page.tsx:61[39m
+[90m      src/components/community/CommunityComposer.tsx:140[39m
+[90m      src/app/tenant/applications/[id]/page.tsx:78[39m
+[90m      src/app/tenant/applications/[id]/apply/page.tsx:91[39m
+[90m      src/app/tenant/applications/[id]/apply/page.tsx:100[39m
+[90m      src/app/landlord/onboarding/[token]/page.tsx:873[39m
+[90m      src/app/landlord/onboarding/[token]/page.tsx:883[39m
+[90m      src/components/landlord/move-out/MoveOutInspectionForm.tsx:256[39m
+[90m      src/components/landlord/move-out/MoveOutInspectionForm.tsx:334[39m
+[90m      src/components/landlord/messages/MessageComposer.tsx:53[39m
+[90m      src/components/landlord/AddAmenityModal.tsx:300[39m
+[90m      src/components/landlord/AddAmenityModal.tsx:322[39m
+[90m      src/components/landlord/AddAmenityModal.tsx:336[39m
+[90m      src/components/landlord/AddAmenityModal.tsx:354[39m
+[90m      src/components/landlord/AddAmenityModal.tsx:398[39m
+[90m      src/components/landlord/AddAmenityModal.tsx:469[39m
+[90m      src/components/landlord/AddAmenityModal.tsx:475[39m
+[90m      src/components/landlord/AddAmenityModal.tsx:496[39m
+[90m      src/components/landlord/AddAmenityModal.tsx:510[39m
+
+  [33mΓÜá[39m [33mjsx-a11y/click-events-have-key-events                    [39m [90m├ù33[39m
+[90m      Enforce a clickable non-interactive element has at least one keyboard event listener.[39m
+[90m      ΓåÆ Visible, non-interactive elements with click handlers must have one of `keyup`, `keydown`, or `keypress` listener.[39m
+[90m      src/components/tenant/TenantNavbar.tsx:371[39m
+[90m      src/components/tenant/TenantNavbar.tsx:473[39m
+[90m      src/app/tenant/maintenance/page.tsx:373[39m
+[90m      src/components/landlord/LandlordProfile.tsx:279[39m
+[90m      src/components/landlord/LandlordProfile.tsx:288[39m
+[90m      src/components/landlord/LandlordProfile.tsx:307[39m
+[90m      src/components/landlord/LandlordProfile.tsx:316[39m
+[90m      src/app/admin/chat-moderation/page.tsx:526[39m
+[90m      src/app/admin/users/page.tsx:114[39m
+[90m      src/components/profile/SocialsHeader.tsx:101[39m
+[90m      src/app/tenant/applications/[id]/apply/page.tsx:260[39m
+[90m      src/app/landlord/onboarding/[token]/page.tsx:1030[39m
+[90m      src/app/landlord/messages/page.tsx:1218[39m
+[90m      src/app/landlord/messages/page.tsx:1326[39m
+[90m      src/app/landlord/messages/page.tsx:1341[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:620[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5270[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5459[39m
+[90m      src/app/tenant/payments/[id]/checkout/page.tsx:873[39m
+[90m      src/app/tenant/payments/[id]/checkout/page.tsx:943[39m
+[90m      src/components/landlord/maintenance/MaintenanceRequestModal.tsx:207[39m
+[90m      src/components/landlord/maintenance/MaintenanceRequestModal.tsx:212[39m
+[90m      src/components/landlord/maintenance/MaintenanceDashboard.tsx:406[39m
+[90m      src/components/ui/ProfileCardTrigger.tsx:41[39m
+[90m      src/components/ui/ProfileCard.tsx:195[39m
+[90m      src/components/landlord/BusinessPermitCard.tsx:134[39m
+[90m      src/components/landlord/BusinessPermitCard.tsx:178[39m
+[90m      src/components/landlord/BusinessPermitCard.tsx:189[39m
+[90m      src/components/landlord/AddAmenityModal.tsx:519[39m
+[90m      src/components/landlord/dashboard/DashboardBanner.tsx:457[39m
+[90m      src/app/landlord/documents/page.tsx:482[39m
+[90m      src/app/landlord/dashboard/page.tsx:701[39m
+[90m      src/app/landlord/properties/new/page.tsx:682[39m
+
+  [33mΓÜá[39m [33mjsx-a11y/no-static-element-interactions                  [39m [90m├ù33[39m
+[90m      Static HTML elements with event handlers require a role.[39m
+[90m      ΓåÆ Add a role attribute to this element, or use a semantic HTML element instead.[39m
+[90m      src/components/tenant/TenantNavbar.tsx:371[39m
+[90m      src/components/tenant/TenantNavbar.tsx:473[39m
+[90m      src/app/tenant/maintenance/page.tsx:373[39m
+[90m      src/components/landlord/LandlordProfile.tsx:279[39m
+[90m      src/components/landlord/LandlordProfile.tsx:288[39m
+[90m      src/components/landlord/LandlordProfile.tsx:307[39m
+[90m      src/components/landlord/LandlordProfile.tsx:316[39m
+[90m      src/app/admin/chat-moderation/page.tsx:526[39m
+[90m      src/app/admin/users/page.tsx:114[39m
+[90m      src/components/profile/SocialsHeader.tsx:101[39m
+[90m      src/app/tenant/applications/[id]/apply/page.tsx:260[39m
+[90m      src/app/landlord/onboarding/[token]/page.tsx:1030[39m
+[90m      src/app/landlord/messages/page.tsx:1218[39m
+[90m      src/app/landlord/messages/page.tsx:1326[39m
+[90m      src/app/landlord/messages/page.tsx:1341[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:620[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5270[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5459[39m
+[90m      src/app/tenant/payments/[id]/checkout/page.tsx:873[39m
+[90m      src/app/tenant/payments/[id]/checkout/page.tsx:943[39m
+[90m      src/components/landlord/maintenance/MaintenanceRequestModal.tsx:207[39m
+[90m      src/components/landlord/maintenance/MaintenanceRequestModal.tsx:212[39m
+[90m      src/components/landlord/maintenance/MaintenanceDashboard.tsx:406[39m
+[90m      src/components/ui/ProfileCardTrigger.tsx:41[39m
+[90m      src/components/ui/ProfileCard.tsx:195[39m
+[90m      src/components/landlord/BusinessPermitCard.tsx:134[39m
+[90m      src/components/landlord/BusinessPermitCard.tsx:178[39m
+[90m      src/components/landlord/BusinessPermitCard.tsx:189[39m
+[90m      src/components/landlord/AddAmenityModal.tsx:519[39m
+[90m      src/components/landlord/dashboard/DashboardBanner.tsx:457[39m
+[90m      src/app/landlord/documents/page.tsx:482[39m
+[90m      src/app/landlord/dashboard/page.tsx:701[39m
+[90m      src/app/landlord/properties/new/page.tsx:682[39m
+
+  [33mΓÜá[39m [33mreact-doctor/async-await-in-loop                         [39m [90m├ù32[39m
+[90m      await inside a forΓÇªof loop runs the calls sequentially ΓÇö for independent operations, collect them and use `await Promise.all(items.map(...))` to run them concurrently[39m
+[90m      ΓåÆ Collect the items and use `await Promise.all(items.map(...))` to run independent operations concurrently[39m
+[90m      scripts/test-business-verification.ts:23[39m
+[90m      src/lib/valenzuela-scraper.ts:183[39m
+[90m      src/app/api/landlord/applications/route.ts:321[39m
+[90m      src/app/api/landlord/applications/route.ts:450[39m
+[90m      scratch/test_storage.js:11[39m
+[90m      src/components/shared/DigitalSigner/DigitalSigner.tsx:224[39m
+[90m      src/components/shared/DigitalSigner/DigitalSigner.tsx:328[39m
+[90m      src/components/shared/DigitalSigner/DigitalSigner.tsx:333[39m
+[90m      src/app/api/community/media/route.ts:84[39m
+[90m      src/lib/billing/server.ts:898[39m
+[90m      src/lib/billing/server.ts:1184[39m
+[90m      src/lib/billing/workflow.ts:210[39m
+[90m      src/app/api/landlord/applications/walk-in/route.ts:228[39m
+[90m      src/app/api/landlord/applications/walk-in/route.ts:310[39m
+[90m      src/app/api/landlord/applications/walk-in/route.ts:379[39m
+[90m      src/app/api/landlord/applications/tenant-application/route.ts:208[39m
+[90m      src/app/api/landlord/applications/tenant-application/route.ts:324[39m
+[90m      src/app/api/landlord/applications/tenant-application/route.ts:403[39m
+[90m      scratch/fix_landlords.ts:39[39m
+[90m      scratch/migrate_avatars_colors.ts:44[39m
+[90m      src/app/api/messages/users/[targetUserId]/reports/route.ts:182[39m
+[90m      src/app/api/landlord/applications/[applicationId]/payment-bypass/route.ts:101[39m
+[90m      tests/tenant-product-tour.spec.js:68[39m
+[90m      sync-storage.js:37[39m
+[90m      sync-storage.js:67[39m
+[90m      sync-storage.js:106[39m
+[90m      src/app/api/landlord/utility-readings/route.ts:36[39m
+[90m      src/app/api/landlord/unit-map/route.ts:316[39m
+[90m      src/app/api/invites/[token]/documents/route.ts:135[39m
+[90m      src/app/api/landlord/properties/media/route.ts:101[39m
+[90m      src/app/api/tenant/maintenance/media/route.ts:76[39m
+[90m      src/lib/signature-validation.ts:283[39m
+
+  [33mΓÜá[39m [33mreact-doctor/nextjs-image-missing-sizes                  [39m [90m├ù32[39m
+[90m      next/image with fill but no sizes ΓÇö the browser downloads the largest image. Add a sizes attribute for responsive behavior[39m
+[90m      ΓåÆ Add sizes for responsive behavior: `sizes="(max-width: 768px) 100vw, 50vw"` matching your layout breakpoints[39m
+[90m      src/app/landlord/utilities/page.tsx:262[39m
+[90m      src/components/tenant/PropertyAmenities.tsx:53[39m
+[90m      src/app/tenant/applications/page.tsx:195[39m
+[90m      src/components/community/CommunityHeader.tsx:151[39m
+[90m      src/components/community/CommunityComposer.tsx:98[39m
+[90m      src/components/community/CommunityComposer.tsx:173[39m
+[90m      src/app/landlord/onboarding/[token]/page.tsx:641[39m
+[90m      src/app/landlord/onboarding/[token]/page.tsx:1239[39m
+[90m      src/app/landlord/onboarding/[token]/page.tsx:1276[39m
+[90m      src/components/landlord/invoices/InvoiceModal.tsx:489[39m
+[90m      src/components/landlord/invoices/InvoiceModal.tsx:534[39m
+[90m      src/components/landlord/invoices/InvoiceModal.tsx:1501[39m
+[90m      src/components/landlord/invoices/InvoiceModal.tsx:1549[39m
+[90m      src/components/landlord/invoices/InvoiceModal.tsx:1585[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5025[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5032[39m
+[90m      src/components/landlord/properties/PropertiesDashboard.tsx:230[39m
+[90m      src/components/landlord/properties/PropertiesDashboard.tsx:387[39m
+[90m      src/app/tenant/utilities/page.tsx:376[39m
+[90m      src/components/landlord/maintenance/MaintenanceDashboard.tsx:414[39m
+[90m      src/components/landlord/maintenance/MaintenanceDashboard.tsx:492[39m
+[90m      src/app/tenant/dashboard/page.tsx:351[39m
+[90m      src/components/landlord/community/PropertySelectorHub.tsx:110[39m
+[90m      src/components/landlord/community/PropertySelectorHub.tsx:164[39m
+[90m      src/components/landlord/community/PropertySelectorHub.tsx:222[39m
+[90m      src/components/landlord/community/CommunityPropertyGate.tsx:91[39m
+[90m      src/app/landlord/properties/new/page.tsx:383[39m
+[90m      src/components/community/CommunityPostCard.tsx:104[39m
+[90m      src/components/community/CommunityPostCard.tsx:291[39m
+[90m      src/components/community/CommunityPostCard.tsx:366[39m
+[90m      src/components/community/CommunityPostCard.tsx:382[39m
+[90m      src/components/community/CommunityPhotoLightbox.tsx:96[39m
+
+  [33mΓÜá[39m [33mreact-doctor/no-effect-chain                             [39m [90m├ù24[39m
+[90m      useEffect reacts to "messages" which is set by another useEffect ΓÇö chains of effects add an extra render per link and become rigid as code evolves. Compute what you can during render and write all related state inside the event handler that originally fires the chain[39m
+[90m      ΓåÆ Compute as much as possible during render (e.g. `const isGameOver = round > 5`) and write all related state inside the event handler that originally fires the chain. Each effect link adds an extra render and makes the code rigid as requirements evolve[39m
+[90m      src/components/tenant/TenantIrisChat.tsx:55[39m
+[90m      src/components/tenant/TenantIrisChat.tsx:125[39m
+[90m      src/app/tenant/messages/page.tsx:374[39m
+[90m      src/app/tenant/messages/page.tsx:387[39m
+[90m      src/app/tenant/messages/page.tsx:591[39m
+[90m      src/components/tenant/ChatWidget.tsx:67[39m
+[90m      src/components/tenant/ChatWidget.tsx:139[39m
+[90m      src/components/shared/DigitalSigner/DigitalSigner.tsx:247[39m
+[90m      src/components/landlord/lease/ContractPreviewModal.tsx:184[39m
+[90m      src/app/landlord/analytics/page.tsx:514[39m
+[90m      src/app/landlord/analytics/page.tsx:598[39m
+[90m      src/app/landlord/onboarding/[token]/page.tsx:241[39m
+[90m      src/app/landlord/messages/page.tsx:427[39m
+[90m      src/app/landlord/messages/page.tsx:439[39m
+[90m      src/app/landlord/messages/page.tsx:617[39m
+[90m      src/components/landlord/dashboard/IrisAIAgent.tsx:203[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:2115[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:2387[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:2346[39m
+[90m      src/components/landlord/move-out/MoveOutInspectionForm.tsx:73[39m
+[90m      src/components/landlord/applications/WalkInApplicationModal.tsx:326[39m
+[90m      src/components/landlord/applications/WalkInApplicationModal.tsx:384[39m
+[90m      src/components/landlord/applications/WalkInApplicationModal.tsx:452[39m
+[90m      src/components/landlord/applications/WalkInApplicationModal.tsx:425[39m
+
+  [33mΓÜá[39m [33mreact-doctor/design-no-space-on-flex-children            [39m [90m├ù23[39m
+[90m      space-y-8 on a flex/grid parent ΓÇö use gap-y-8 instead. Per-sibling margins phantom-gap on conditional render and don't mirror in RTL[39m
+[90m      ΓåÆ Use `gap-*` on the flex/grid parent. `space-x-*` / `space-y-*` produce phantom gaps when a sibling is conditionally rendered, lose vertical spacing on wrapped lines, and don't mirror in RTL[39m
+[90m      src/app/login/page.tsx:123[39m
+[90m      src/components/tenant/TenantIrisChat.tsx:254[39m
+[90m      src/components/tenant/TenantIrisChat.tsx:255[39m
+[90m      src/app/tenant/maintenance/page.tsx:557[39m
+[90m      src/components/shared/DigitalSigner/DigitalSigner.tsx:775[39m
+[90m      src/components/tenant/LeaseRenewalReminder.tsx:145[39m
+[90m      src/components/profile/AvatarPicker.tsx:252[39m
+[90m      src/app/signup/page.tsx:331[39m
+[90m      src/app/admin/dashboard/page.tsx:284[39m
+[90m      src/components/docs/UnitMapFeatureSection.tsx:97[39m
+[90m      src/components/landlord/utility/UtilityBillingDashboard.tsx:284[39m
+[90m      src/components/landlord/utility/UtilityBillingDashboard.tsx:292[39m
+[90m      src/components/landlord/utility/UtilityBillingDashboard.tsx:778[39m
+[90m      src/components/landlord/maintenance/MaintenanceDashboard.tsx:231[39m
+[90m      src/components/landlord/maintenance/MaintenanceDashboard.tsx:486[39m
+[90m      src/components/landlord/maintenance/MaintenanceDashboard.tsx:589[39m
+[90m      src/components/landlord/leases/RenewalReview.tsx:241[39m
+[90m      src/app/tenant/lease/page.tsx:212[39m
+[90m      src/components/landlord/BillingOperationsPanel.tsx:324[39m
+[90m      src/components/landlord/BillingOperationsPanel.tsx:782[39m
+[90m      src/components/landlord/applications/RentApplications.tsx:1196[39m
+[90m      src/app/landlord/properties/new/page.tsx:746[39m
+[90m      src/app/landlord/properties/new/page.tsx:773[39m
+
+  [33mΓÜá[39m [33mreact-doctor/async-defer-await                           [39m [90m├ù19[39m
+[90m      await blocks the function before an early-return that doesn't use the awaited value ΓÇö move the await after the synchronous guard so the skip path stays fast[39m
+[90m      ΓåÆ Move the `await` after the synchronous early-return guard so the skip path stays fast[39m
+[90m      src/app/api/admin/stats/route.ts:28[39m
+[90m      src/context/AuthContext.tsx:223[39m
+[90m      src/context/AuthContext.tsx:232[39m
+[90m      src/components/tenant/TenantIrisChat.tsx:91[39m
+[90m      src/components/tenant/TenantContactsSidebar.tsx:483[39m
+[90m      src/app/tenant/messages/page.tsx:1049[39m
+[90m      src/components/tenant/ChatWidget.tsx:105[39m
+[90m      src/app/api/landlord/search/route.ts:9[39m
+[90m      src/app/api/tenant/payments/[id]/refund-info/route.ts:10[39m
+[90m      src/app/api/landlord/analytics/overview/route.ts:377[39m
+[90m      src/app/landlord/messages/page.tsx:1073[39m
+[90m      src/app/api/tenant/dashboard/route.ts:132[39m
+[90m      src/app/api/landlord/unit-map/route.ts:475[39m
+[90m      src/app/api/landlord/unit-map/floor-configs/route.ts:126[39m
+[90m      src/app/api/landlord/tour/route.ts:71[39m
+[90m      src/components/landlord/dashboard/ContactsSidebar.tsx:486[39m
+[90m      src/app/api/landlord/properties/overview/route.ts:65[39m
+[90m      src/lib/supabase/auth.ts:131[39m
+[90m      src/app/api/tenant/maintenance/route.ts:163[39m
+
+  [33mΓÜá[39m [33mreact-doctor/no-render-in-render                         [39m [90m├ù18[39m
+[90m      Inline render function "renderSubContent()" ΓÇö extract to a separate component for proper reconciliation[39m
+[90m      ΓåÆ Extract to a named component: `const ListItem = ({ item }) => <div>{item.name}</div>`[39m
+[90m      src/components/tenant/TenantSettings.tsx:511[39m
+[90m      src/components/tenant/TenantSettings.tsx:726[39m
+[90m      src/components/tenant/TenantSettings.tsx:893[39m
+[90m      src/components/tenant/TenantSettings.tsx:1043[39m
+[90m      src/components/tenant/TenantSettings.tsx:1118[39m
+[90m      src/components/tenant/TenantNavbar.tsx:278[39m
+[90m      src/components/tenant/TenantNavbar.tsx:399[39m
+[90m      src/components/tenant/TenantContactsSidebar.tsx:1501[39m
+[90m      src/components/landlord/LandlordSettings.tsx:787[39m
+[90m      src/components/landlord/LandlordSettings.tsx:884[39m
+[90m      src/components/landlord/LandlordSettings.tsx:1224[39m
+[90m      src/components/landlord/LandlordSettings.tsx:1364[39m
+[90m      src/components/landlord/LandlordSettings.tsx:1437[39m
+[90m      src/components/landlord/LandlordProfile.tsx:378[39m
+[90m      src/components/landlord/messages/MessageBubble.tsx:467[39m
+[90m      src/components/landlord/applications/ToolAccessBar.tsx:471[39m
+[90m      src/components/landlord/applications/ToolAccessBar.tsx:578[39m
+[90m      src/components/landlord/dashboard/ContactsSidebar.tsx:1468[39m
+
+  [33mΓÜá[39m [33mreact-doctor/rendering-hydration-no-flicker              [39m [90m├ù17[39m
+[90m      useEffect(setState, []) on mount causes a flash ΓÇö consider useSyncExternalStore or suppressHydrationWarning[39m
+[90m      ΓåÆ Use `useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)` or add `suppressHydrationWarning` to the element[39m
+[90m      src/app/login/page.tsx:32[39m
+[90m      src/components/tenant/UnitTransferRequest.tsx:48[39m
+[90m      src/components/tenant/MoveOutRequest.tsx:44[39m
+[90m      src/components/tenant/LeaseRenewalRequest.tsx:45[39m
+[90m      src/components/navigation/RoleSidebar.tsx:101[39m
+[90m      src/app/signup/tenant/page.tsx:104[39m
+[90m      src/app/landlord/analytics/page.tsx:510[39m
+[90m      src/components/landlord/dashboard/KpiCardSkeleton.tsx:10[39m
+[90m      src/components/docs/UnitMapFeatureSection.tsx:14[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:1017[39m
+[90m      src/components/landlord/tenants/TenantDetailModal.tsx:66[39m
+[90m      src/app/tenant/utilities/page.tsx:90[39m
+[90m      src/components/landlord/BillingOperationsPanel.tsx:189[39m
+[90m      src/components/landlord/dashboard/ChartSkeleton.tsx:10[39m
+[90m      src/components/landlord/dashboard/ActionRequired.tsx:195[39m
+[90m      src/app/landlord/dashboard/page.tsx:146[39m
+[90m      src/components/theme-toggle.tsx:17[39m
+
+  [33mΓÜá[39m [33mreact-doctor/no-derived-useState                         [39m [90m├ù16[39m
+[90m      useState initialized from prop "initialRequest" ΓÇö if this value should stay in sync with the prop, derive it during render instead[39m
+[90m      ΓåÆ Remove useState and compute the value inline: `const value = transform(propName)`[39m
+[90m      src/components/tenant/MoveOutRequest.tsx:40[39m
+[90m      src/components/shared/DigitalSigner/DigitalSigner.tsx:75[39m
+[90m      src/components/shared/DigitalSigner/DigitalSigner.tsx:84[39m
+[90m      src/components/tenant/LeaseRenewalRequest.tsx:37[39m
+[90m      src/components/profile/ProfileCoverUploader.tsx:20[39m
+[90m      src/components/profile/ProfileAvatarUploader.tsx:23[39m
+[90m      src/components/profile/ProfileAvatarUploader.tsx:24[39m
+[90m      src/components/profile/AvatarPicker.tsx:34[39m
+[90m      src/components/profile/SocialLinksEditor.tsx:23[39m
+[90m      src/components/profile/SocialsHeader.tsx:32[39m
+[90m      src/components/landlord/EditableBio.tsx:16[39m
+[90m      src/components/landlord/EditableBio.tsx:17[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:997[39m
+[90m      src/components/landlord/tenants/TenantDetailModal.tsx:59[39m
+[90m      src/components/landlord/move-out/MoveOutRequestsList.tsx:48[39m
+[90m      src/components/community/CommunityPhotoLightbox.tsx:15[39m
+
+  [33mΓÜá[39m [33mreact-doctor/async-parallel                              [39m [90m├ù14[39m
+[90m      3 sequential await statements that appear independent ΓÇö use Promise.all() for parallel execution[39m
+[90m      ΓåÆ Use `const [a, b] = await Promise.all([fetchA(), fetchB()])` to run independent operations concurrently[39m
+[90m      src/app/api/landlord/expenses/route.ts:7[39m
+[90m      src/components/tenant/TenantContactsSidebar.tsx:407[39m
+[90m      src/components/tenant/TenantContactsSidebar.tsx:453[39m
+[90m      src/lib/valenzuela-scraper.ts:39[39m
+[90m      src/app/tenant/community/page.tsx:295[39m
+[90m      src/app/landlord/messages/page.tsx:1388[39m
+[90m      src/components/landlord/tenants/TenantDetailModal.tsx:74[39m
+[90m      src/components/landlord/dashboard/ContactsSidebar.tsx:410[39m
+[90m      src/components/landlord/dashboard/ContactsSidebar.tsx:456[39m
+[90m      src/app/api/tenant/payments/[id]/intent/route.ts:98[39m
+[90m      src/app/api/landlord/move-out-requests/[id]/complete/route.ts:59[39m
+[90m      src/lib/application-payment-pending.ts:292[39m
+[90m      src/app/api/landlord/invoices/[id]/reminder/route.ts:71[39m
+[90m      src/app/api/landlord/properties/[id]/route.ts:9[39m
+
+  [33mΓÜá[39m [33mreact-doctor/design-no-redundant-padding-axes            [39m [90m├ù14[39m
+[90m      px-4 py-4 ΓåÆ use the shorthand p-4[39m
+[90m      ΓåÆ Collapse `px-N py-N` to `p-N` when both axes match. Keep them split only when one axis varies at a breakpoint (`py-2 md:py-3`)[39m
+[90m      src/components/tenant/UnitTransferRequest.tsx:253[39m
+[90m      src/components/landlord/LandlordSettings.tsx:1088[39m
+[90m      src/components/landlord/LandlordSettings.tsx:1129[39m
+[90m      src/app/landlord/onboarding/[token]/page.tsx:878[39m
+[90m      src/components/landlord/invoices/RecordExpenseModal.tsx:78[39m
+[90m      src/components/landlord/invoices/InvoiceModal.tsx:314[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5410[39m
+[90m      src/components/landlord/visual-planner/UnitListingWizard.tsx:199[39m
+[90m      src/components/landlord/visual-planner/UnitListingWizard.tsx:210[39m
+[90m      src/components/landlord/applications/WalkInApplicationModal.tsx:1220[39m
+[90m      src/components/landlord/applications/WalkInApplicationModal.tsx:1235[39m
+[90m      src/components/landlord/dashboard/DashboardBanner.tsx:374[39m
+[90m      src/app/docs/features/page.tsx:152[39m
+[90m      src/app/landlord/properties/new/page.tsx:639[39m
+
+  [33mΓÜá[39m [33mreact-doctor/no-effect-event-handler                     [39m [90m├ù13[39m
+[90m      useEffect simulating an event handler ΓÇö move logic to an actual event handler instead[39m
+[90m      ΓåÆ Move the conditional logic into onClick, onChange, or onSubmit handlers directly[39m
+[90m      src/components/tenant/TenantSettings.tsx:259[39m
+[90m      src/components/tenant/MoveOutRequest.tsx:49[39m
+[90m      src/components/landlord/LandlordSettings.tsx:264[39m
+[90m      src/components/tenant/ChatWidget.tsx:67[39m
+[90m      src/components/shared/DigitalSigner/DigitalSigner.tsx:94[39m
+[90m      src/components/profile/AvatarPicker.tsx:43[39m
+[90m      src/app/landlord/analytics/page.tsx:514[39m
+[90m      src/components/landlord/dashboard/LandlordQuestBoard.tsx:58[39m
+[90m      src/app/tenant/sign-lease/[leaseId]/page.tsx:15[39m
+[90m      src/components/ui/ProfileCard.tsx:47[39m
+[90m      src/components/landlord/applications/WalkInApplicationModal.tsx:425[39m
+[90m      src/components/landlord/applications/RentApplications.tsx:392[39m
+[90m      src/app/landlord/leases/page.tsx:42[39m
+
+  [33mΓÜá[39m [33mreact/no-unknown-property                                [39m [90m├ù12[39m
+[90m      Unknown property found[39m
+[90m      ΓåÆ Remove unknown property[39m
+[90m      src/components/tenant/TenantIrisChat.tsx:418[39m
+[90m      src/components/tenant/ChatWidget.tsx:416[39m
+[90m      src/components/shared/DigitalSigner/DigitalSigner.tsx:842[39m
+[90m      src/components/shared/DigitalSigner/DigitalSigner.tsx:842[39m
+[90m      src/components/tenant/LeaseRenewalRequest.tsx:338[39m
+[90m      src/components/tenant/LeaseRenewalRequest.tsx:338[39m
+[90m      src/components/tenant/LeaseRenewalReminder.tsx:190[39m
+[90m      src/components/tenant/LeaseRenewalReminder.tsx:190[39m
+[90m      src/components/tenant/LeaseModal.tsx:68[39m
+[90m      src/components/tenant/LeaseModal.tsx:68[39m
+[90m      src/app/signup/page.tsx:788[39m
+[90m      src/app/signup/page.tsx:788[39m
+
+  [33mΓÜá[39m [33mreact-doctor/no-inline-bounce-easing                     [39m [90m├ù12[39m
+[90m      animate-bounce feels dated and tacky ΓÇö use a subtle ease-out transform for natural deceleration[39m
+[90m      ΓåÆ Use `cubic-bezier(0.16, 1, 0.3, 1)` (ease-out-expo) for natural deceleration ΓÇö objects in the real world don't bounce[39m
+[90m      src/components/tenant/TenantIrisChat.tsx:357[39m
+[90m      src/components/tenant/TenantIrisChat.tsx:358[39m
+[90m      src/components/tenant/TenantIrisChat.tsx:359[39m
+[90m      src/components/tenant/ChatWidget.tsx:365[39m
+[90m      src/components/tenant/ChatWidget.tsx:366[39m
+[90m      src/components/tenant/ChatWidget.tsx:367[39m
+[90m      src/app/tenant/applications/[id]/apply/page.tsx:647[39m
+[90m      src/components/landlord/dashboard/LandlordQuestTriggerGuide.tsx:136[39m
+[90m      src/components/landlord/messages/MessageComposer.tsx:95[39m
+[90m      src/components/landlord/messages/MessageComposer.tsx:96[39m
+[90m      src/components/landlord/messages/MessageComposer.tsx:97[39m
+[90m      src/components/landlord/maintenance/MaintenanceRequestModal.tsx:621[39m
+
+  [33mΓÜá[39m [33mreact-doctor/nextjs-no-use-search-params-without-suspense[39m [90m├ù12[39m
+[90m      useSearchParams() requires a <Suspense> boundary ΓÇö without one, the entire page bails out to client-side rendering[39m
+[90m      ΓåÆ Wrap the component using useSearchParams: `<Suspense fallback={<Skeleton />}><SearchComponent /></Suspense>`[39m
+[90m      src/app/tenant/messages/page.tsx:191[39m
+[90m      src/app/landlord/onboarding/[token]/page.tsx:62[39m
+[90m      src/app/landlord/move-out/page.tsx:10[39m
+[90m      src/app/landlord/messages/page.tsx:256[39m
+[90m      src/app/tenant/tour/page.tsx:32[39m
+[90m      src/app/tenant/sign-lease/[leaseId]/page.tsx:12[39m
+[90m      src/app/tenant/payments/[id]/checkout/page.tsx:413[39m
+[90m      src/app/tenant/payments/[id]/checkout/page.tsx:427[39m
+[90m      src/components/landlord/maintenance/MaintenanceDashboard.tsx:60[39m
+[90m      src/components/landlord/leases/RenewalReview.tsx:46[39m
+[90m      src/components/landlord/applications/RentApplications.tsx:252[39m
+[90m      src/app/landlord/invoices/page.tsx:25[39m
+
+  [33mΓÜá[39m [33mreact-doctor/js-set-map-lookups                          [39m [90m├ù12[39m
+[90m      array.includes() in a loop is O(n) per call ΓÇö convert to a Set for O(1) lookups[39m
+[90m      ΓåÆ Use a `Set` or `Map` for repeated membership tests / keyed lookups ΓÇö `Array.includes`/`find` is O(n) per call[39m
+[90m      src/app/api/landlord/applications/route.ts:330[39m
+[90m      src/app/api/landlord/applications/route.ts:461[39m
+[90m      src/app/api/community/media/route.ts:80[39m
+[90m      src/app/api/landlord/applications/walk-in/route.ts:399[39m
+[90m      src/app/api/landlord/applications/tenant-application/route.ts:423[39m
+[90m      src/app/admin/users/__tests__/page.test.tsx:141[39m
+[90m      src/app/admin/users/__tests__/page.test.tsx:142[39m
+[90m      src/app/admin/users/__tests__/page.test.tsx:163[39m
+[90m      src/app/admin/users/__tests__/page.test.tsx:164[39m
+[90m      src/app/api/invites/[token]/documents/route.ts:131[39m
+[90m      src/app/api/landlord/properties/media/route.ts:97[39m
+[90m      src/app/api/tenant/maintenance/media/route.ts:72[39m
+
+  [33mΓÜá[39m [33mreact-doctor/nextjs-no-img-element                       [39m [90m├ù11[39m
+[90m      Use next/image instead of <img> ΓÇö provides automatic optimization, lazy loading, and responsive srcset[39m
+[90m      ΓåÆ `import Image from 'next/image'` ΓÇö provides automatic WebP/AVIF, lazy loading, and responsive srcset[39m
+[90m      src/components/tenant/TenantIrisChat.tsx:353[39m
+[90m      src/components/messaging/NotificationCard.tsx:174[39m
+[90m      src/components/messaging/NotificationCard.tsx:196[39m
+[90m      src/components/shared/DigitalSigner/DigitalSigner.tsx:624[39m
+[90m      src/components/landlord/maintenance/MaintenanceRequestModal.tsx:687[39m
+[90m      src/components/landlord/maintenance/MaintenanceRequestModal.tsx:743[39m
+[90m      src/components/landlord/BusinessPermitCard.tsx:138[39m
+[90m      src/components/landlord/BusinessPermitCard.tsx:190[39m
+[90m      src/components/landlord/applications/WalkInApplicationModal.tsx:1314[39m
+[90m      src/components/landlord/applications/WalkInApplicationModal.tsx:1387[39m
+[90m      src/components/community/CommunityPhotoLightbox.tsx:59[39m
+
+  [33mΓÜá[39m [33mreact-doctor/design-no-em-dash-in-jsx-text               [39m [90m├ù11[39m
+[90m      Em dash (ΓÇö) in JSX text reads as model output ΓÇö replace with comma, colon, semicolon, or parentheses[39m
+[90m      ΓåÆ Replace em dashes in JSX text with commas, colons, semicolons, periods, or parentheses ΓÇö em dashes read as model-output filler[39m
+[90m      src/app/signup/tenant/page.tsx:153[39m
+[90m      src/app/signup/tenant/page.tsx:161[39m
+[90m      src/app/admin/registrations/page.tsx:636[39m
+[90m      src/app/tenant/applications/[id]/apply/page.tsx:393[39m
+[90m      src/app/tenant/profile/page.tsx:292[39m
+[90m      src/app/tenant/profile/page.tsx:354[39m
+[90m      src/components/landlord/applications/WalkInApplicationModal.tsx:886[39m
+[90m      src/components/landlord/applications/RentApplications.tsx:1143[39m
+[90m      src/components/landlord/applications/RentApplications.tsx:1217[39m
+[90m      src/components/landlord/applications/RentApplications.tsx:1285[39m
+[90m      src/app/docs/features/page.tsx:157[39m
+
+  [33mΓÜá[39m [33mreact-doctor/no-pure-black-background                    [39m [90m├ù11[39m
+[90m      Pure black background (bg-black) looks harsh ΓÇö use a near-black tinted toward your brand hue (e.g. bg-gray-950)[39m
+[90m      ΓåÆ Tint the background slightly toward your brand hue ΓÇö e.g. `#0a0a0f` or Tailwind's `bg-gray-950`. Pure black looks harsh on modern displays[39m
+[90m      src/app/landlord/onboarding/[token]/page.tsx:729[39m
+[90m      src/app/landlord/onboarding/[token]/page.tsx:730[39m
+[90m      src/components/transitions/PageTransitionProvider.tsx:180[39m
+[90m      src/components/transitions/PageTransitionProvider.tsx:190[39m
+[90m      src/components/landlord/BusinessPermitCard.tsx:165[39m
+[90m      src/components/landlord/applications/SignaturePad.tsx:175[39m
+[90m      src/components/landlord/applications/SignaturePad.tsx:189[39m
+[90m      src/app/docs/features/page.tsx:150[39m
+[90m      src/app/tenant/lease/[id]/sign/page.tsx:67[39m
+[90m      src/app/tenant/lease/[id]/sign/page.tsx:93[39m
+[90m      src/app/tenant/lease/[id]/sign/page.tsx:103[39m
+
+  [33mΓÜá[39m [33mreact-doctor/prefer-use-effect-event                     [39m [90m├ù9[39m
+[90m      "fetchCounts" is read only inside `on` ΓÇö wrap it with useEffectEvent and remove it from the dep array so the effect doesn't re-synchronize on every parent render[39m
+[90m      ΓåÆ Wrap the callback with `useEffectEvent(callback)` (React 19+) and call the resulting binding from inside the sub-handler. The Effect Event captures the latest props/state without being a reactive dep, so the effect doesn't re-subscribe on every parent render. See https://react.dev/reference/react/useEffectEvent[39m
+[90m      src/context/NotificationContext.tsx:382[39m
+[90m      src/context/NotificationContext.tsx:382[39m
+[90m      src/components/tenant/TenantProductTourOverlay.tsx:208[39m
+[90m      src/components/landlord/dashboard/LandlordQuestTriggerGuide.tsx:31[39m
+[90m      src/components/landlord/dashboard/LandlordQuestTriggerGuide.tsx:31[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:1377[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:1377[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:2503[39m
+[90m      src/components/transitions/PageTransitionProvider.tsx:163[39m
+
+  [33mΓÜá[39m [33mreact-doctor/js-hoist-intl                               [39m [90m├ù9[39m
+[90m      new Intl.NumberFormat() inside a function ΓÇö hoist to module scope or wrap in useMemo so it isn't recreated each call[39m
+[90m      ΓåÆ Hoist `new Intl.NumberFormat(...)` to module scope or wrap in `useMemo` ΓÇö Intl constructors allocate dozens of objects per locale lookup[39m
+[90m      src/components/tenant/UnitTransferRequest.tsx:109[39m
+[90m      src/components/messaging/OfficialReceipt.tsx:82[39m
+[90m      src/app/admin/dashboard/page.tsx:155[39m
+[90m      src/app/tenant/profile/page.tsx:33[39m
+[90m      src/app/tenant/dashboard/page.tsx:107[39m
+[90m      src/app/tenant/dashboard/page.tsx:114[39m
+[90m      src/app/tenant/lease/page.tsx:163[39m
+[90m      src/app/landlord/leases/page.tsx:71[39m
+[90m      src/app/landlord/profile/page.tsx:63[39m
+
+  [33mΓÜá[39m [33mreact-doctor/js-tosorted-immutable                       [39m [90m├ù9[39m
+[90m      [...array].sort() ΓÇö use array.toSorted() for immutable sorting (ES2023)[39m
+[90m      ΓåÆ Use `array.toSorted()` (ES2023) instead of `[...array].sort()` for immutable sorting without the spread allocation[39m
+[90m      src/lib/messages/censorship.ts:72[39m
+[90m      src/lib/messages/censorship.ts:73[39m
+[90m      src/lib/messages/censorship.ts:91[39m
+[90m      src/app/api/admin/users/__tests__/route.test.ts:15[39m
+[90m      src/components/landlord/visual-planner/MapSetupWizard.tsx:326[39m
+[90m      src/components/landlord/visual-planner/MapSetupWizard.tsx:475[39m
+[90m      src/components/landlord/maintenance/MaintenanceDashboard.tsx:207[39m
+[90m      src/components/landlord/leases/LeaseAuditTrail.tsx:56[39m
+[90m      src/components/landlord/applications/TenantInviteManager.tsx:167[39m
+
+  [33mΓÜá[39m [33mreact-doctor/js-flatmap-filter                           [39m [90m├ù8[39m
+[90m      .map().filter(Boolean) iterates twice ΓÇö use .flatMap() to transform and filter in a single pass[39m
+[90m      ΓåÆ Use `.flatMap(item => condition ? [value] : [])` ΓÇö transforms and filters in a single pass instead of creating an intermediate array[39m
+[90m      src/app/api/landlord/maintenance/route.ts:74[39m
+[90m      src/app/api/landlord/applications/route.ts:478[39m
+[90m      src/app/api/landlord/applications/route.ts:495[39m
+[90m      src/app/api/tenant/amenities/route.ts:12[39m
+[90m      src/lib/community/actions.ts:472[39m
+[90m      src/lib/queries/amenities.ts:95[39m
+[90m      src/app/api/tenant/maintenance/route.ts:40[39m
+[90m      src/app/api/tenant/maintenance/route.ts:68[39m
+
+  [33mΓÜá[39m [33mreact-doctor/js-batch-dom-css                            [39m [90m├ù8[39m
+[90m      Multiple sequential element.style assignments ΓÇö batch with cssText or classList for fewer reflows[39m
+[90m      ΓåÆ Batch DOM/CSS reads and writes ΓÇö interleaving them inside a loop causes layout thrashing. Read first, then write[39m
+[90m      src/components/tenant/MessagesTour.tsx:32[39m
+[90m      src/components/tenant/MessagesTour.tsx:36[39m
+[90m      src/components/tenant/CommunityTour.tsx:32[39m
+[90m      src/components/tenant/CommunityTour.tsx:36[39m
+[90m      src/components/tenant/LeaseTour.tsx:32[39m
+[90m      src/components/tenant/LeaseTour.tsx:36[39m
+[90m      src/components/tenant/DashboardTour.tsx:32[39m
+[90m      src/components/tenant/DashboardTour.tsx:36[39m
+
+  [33mΓÜá[39m [33mreact-doctor/no-derived-state-effect                     [39m [90m├ù7[39m
+[90m      Derived state in useEffect ΓÇö compute during render instead[39m
+[90m      ΓåÆ For derived state, compute inline: `const x = fn(dep)`. For state resets on prop change, use a key prop: `<Component key={prop} />`. See https://react.dev/learn/you-might-not-need-an-effect[39m
+[90m      src/components/profile/ProfileAvatarUploader.tsx:27[39m
+[90m      src/components/profile/ProfileAvatarUploader.tsx:31[39m
+[90m      src/components/docs/DocsSidebar.tsx:311[39m
+[90m      src/components/landlord/utility/UtilityBillingDashboard.tsx:77[39m
+[90m      src/components/landlord/move-out/MoveOutRequestsList.tsx:51[39m
+[90m      src/components/landlord/applications/WalkInApplicationModal.tsx:326[39m
+[90m      src/app/landlord/documents/page.tsx:88[39m
+
+  [33mΓÜá[39m [33mreact-doctor/no-react19-deprecated-apis                  [39m [90m├ù6[39m
+[90m      useContext is superseded by `use()` on React 19+ ΓÇö `use()` reads context conditionally inside hooks, branches, and loops; switch to `import { use } from 'react'`[39m
+[90m      ΓåÆ Pass `ref` as a regular prop on function components ΓÇö `forwardRef` is no longer needed in React 19+. Replace `useContext(X)` with `use(X)` for branch-aware context reads. Only enabled on projects detected as React 19+.[39m
+[90m      src/context/ProfileCardContext.tsx:3[39m
+[90m      src/context/NotificationContext.tsx:3[39m
+[90m      src/context/GlobalLoadingContext.tsx:3[39m
+[90m      src/context/AuthContext.tsx:5[39m
+[90m      src/context/PropertyContext.tsx:5[39m
+[90m      src/components/transitions/PageTransitionProvider.tsx:8[39m
+
+  [33mΓÜá[39m [33mreact-doctor/no-uncontrolled-input                       [39m [90m├ù6[39m
+[90m      <input value={...}> with no `onChange` or `readOnly` ΓÇö React renders this as a silently read-only field[39m
+[90m      ΓåÆ Pass an explicit initial value to `useState` (e.g. `useState("")` instead of `useState()`), add `onChange` (or `readOnly` to opt out) when you supply `value`, and drop `defaultValue` on controlled inputs ΓÇö React ignores it[39m
+[90m      src/components/tenant/TenantSettings.tsx:421[39m
+[90m      src/components/landlord/LandlordSettings.tsx:561[39m
+[90m      src/components/landlord/LandlordSettings.tsx:569[39m
+[90m      src/components/landlord/LandlordSettings.tsx:577[39m
+[90m      src/components/landlord/lease/ContractPreviewModal.tsx:392[39m
+[90m      src/app/landlord/onboarding/[token]/page.tsx:511[39m
+
+  [33mΓÜá[39m [33mreact-doctor/nextjs-no-client-side-redirect              [39m [90m├ù5[39m
+[90m      router.push() in useEffect ΓÇö use redirect() from next/navigation or handle navigation in an event handler[39m
+[90m      ΓåÆ Avoid redirects inside useEffect. Use an event handler, middleware, or server-side redirect (App Router: redirect() from next/navigation; Pages Router: getServerSideProps redirect)[39m
+[90m      src/components/tenant/TenantProductTourOverlay.tsx:202[39m
+[90m      src/app/tenant/messages/page.tsx:384[39m
+[90m      src/app/tenant/messages/page.tsx:399[39m
+[90m      src/app/landlord/onboarding/[token]/page.tsx:193[39m
+[90m      src/app/tenant/dashboard/page.tsx:172[39m
+
+  [33mΓÜá[39m [33mreact-doctor/design-no-bold-heading                      [39m [90m├ù5[39m
+[90m      font-black on <h1> crushes counter shapes at display sizes ΓÇö use font-semibold (600) or font-medium (500)[39m
+[90m      ΓåÆ Use `font-semibold` (600) or `font-medium` (500) on headings ΓÇö 700+ crushes letter counter shapes at display sizes[39m
+[90m      src/app/tenant/utilities/page.tsx:299[39m
+[90m      src/app/tenant/utilities/page.tsx:334[39m
+[90m      src/app/tenant/utilities/page.tsx:395[39m
+[90m      src/app/tenant/utilities/page.tsx:439[39m
+[90m      src/app/tenant/utilities/page.tsx:529[39m
+
+  [33mΓÜá[39m [33mreact-doctor/nextjs-no-font-link                         [39m [90m├ù4[39m
+[90m      Loading Google Fonts via <link> ΓÇö use next/font instead for self-hosting, zero layout shift, and no render-blocking requests[39m
+[90m      ΓåÆ `import { Inter } from "next/font/google"` ΓÇö self-hosted, zero layout shift, no render-blocking requests[39m
+[90m      src/app/layout.tsx:41[39m
+[90m      src/app/layout.tsx:43[39m
+[90m      src/app/layout.tsx:44[39m
+[90m      src/app/layout.tsx:45[39m
+
+  [33mΓÜá[39m [33mreact-doctor/prefer-dynamic-import                       [39m [90m├ù4[39m
+[90m      "chart.js" is a heavy library ΓÇö use React.lazy() or next/dynamic for code splitting[39m
+[90m      ΓåÆ Use `const Component = dynamic(() => import('library'), { ssr: false })` from next/dynamic or React.lazy()[39m
+[90m      src/components/RevenueChart.tsx:4[39m
+[90m      src/components/RevenueChart.tsx:14[39m
+[90m      src/components/landlord/dashboard/FinancialPerformanceChart.tsx:5[39m
+[90m      src/components/landlord/dashboard/FinancialPerformanceChart.tsx:13[39m
+
+  [33mΓÜá[39m [33mreact-doctor/rerender-lazy-state-init                    [39m [90m├ù4[39m
+[90m      useState(formatIsoDate()) calls initializer on every render ΓÇö use useState(() => formatIsoDate()) for lazy initialization[39m
+[90m      ΓåÆ Wrap in an arrow function so it only runs once: `useState(() => expensiveComputation())`[39m
+[90m      src/app/landlord/analytics/page.tsx:240[39m
+[90m      src/app/landlord/analytics/page.tsx:241[39m
+[90m      src/components/landlord/invoices/RecordExpenseModal.tsx:19[39m
+[90m      src/components/landlord/utility/UtilityBillingDashboard.tsx:68[39m
+
+  [33mΓÜá[39m [33mreact-doctor/no-long-transition-duration                 [39m [90m├ù3[39m
+[90m      2500ms transition is too slow for UI feedback ΓÇö keep transitions under 1000ms. Use longer durations only for page-load hero animations[39m
+[90m      ΓåÆ Keep UI transitions under 1s ΓÇö 100-150ms for instant feedback, 200-300ms for state changes, 300-500ms for layout changes. Use longer durations only for page-load hero animations[39m
+[90m      src/app/tenant/maintenance/page.tsx:552[39m
+[90m      src/components/landlord/properties/PropertiesDashboard.tsx:441[39m
+[90m      src/components/landlord/maintenance/MaintenanceDashboard.tsx:584[39m
+
+  [33mΓÜá[39m [33mreact-doctor/no-gradient-text                            [39m [90m├ù3[39m
+[90m      Gradient text (bg-clip-text + bg-gradient) is decorative rather than meaningful ΓÇö a common AI tell. Use solid colors for text[39m
+[90m      ΓåÆ Use solid text colors for readability. If you need emphasis, use font weight, size, or a distinct color instead of gradients[39m
+[90m      src/app/page.tsx:641[39m
+[90m      src/app/admin/consultation-tool/ConsultationDashboard.tsx:112[39m
+[90m      src/app/signup/page.tsx:291[39m
+
+  [33mΓÜá[39m [33mreact-doctor/no-mirror-prop-effect                       [39m [90m├ù3[39m
+[90m      useState "currentAvatarUrl" is mirrored from prop "initialAvatarUrl" via this effect ΓÇö delete both the useState and the effect, and read the prop directly in render[39m
+[90m      ΓåÆ Delete both the `useState` and the `useEffect` and read the prop directly during render. Mirroring a prop into local state forces a stale first render before the effect re-syncs[39m
+[90m      src/components/profile/ProfileAvatarUploader.tsx:27[39m
+[90m      src/components/profile/ProfileAvatarUploader.tsx:31[39m
+[90m      src/components/landlord/move-out/MoveOutRequestsList.tsx:51[39m
+
+  [33mΓÜá[39m [33mreact-doctor/no-generic-handler-names                    [39m [90m├ù3[39m
+[90m      Non-descriptive handler name "handleClick" ΓÇö name should describe what it does, not when it runs[39m
+[90m      ΓåÆ Rename to describe the action: e.g. `handleSubmit` ΓåÆ `saveUserProfile`, `handleClick` ΓåÆ `toggleSidebar`[39m
+[90m      src/components/navigation/RoleSidebar.tsx:79[39m
+[90m      src/components/ui/ProfileCardTrigger.tsx:42[39m
+[90m      src/components/ui/ClickSpark.tsx:155[39m
+
+  [33mΓÜá[39m [33mreact-doctor/no-many-boolean-props                       [39m [90m├ù2[39m
+[90m      Component "CommunityHeader" takes 4 boolean-like props (showRules, isManagementUser, isPropertyDropdownOpenΓÇª) ΓÇö consider compound components or explicit variants instead of stacking flags[39m
+[90m      ΓåÆ Split into compound components or named variants: `<Button.Primary />`, `<DialogConfirm />` instead of stacking `isPrimary`, `isConfirm` flags[39m
+[90m      src/components/community/CommunityHeader.tsx:28[39m
+[90m      src/components/community/CommunityPostCard.tsx:62[39m
+
+  [33mΓÜá[39m [33mreact-doctor/no-gray-on-colored-background               [39m [90m├ù2[39m
+[90m      Gray text (text-zinc-400) on colored background (bg-red-500) looks washed out ΓÇö use a darker shade of the background color or white[39m
+[90m      ΓåÆ Use a darker shade of the background color for text, or white/near-white for contrast. Gray text on colored backgrounds looks washed out[39m
+[90m      src/components/shared/DigitalSigner/DigitalSigner.tsx:698[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:4529[39m
+
+  [33mΓÜá[39m [33mreact-doctor/no-secrets-in-client-code                   [39m [90m├ù2[39m
+[90m      Possible hardcoded secret in "CREDENTIAL_KEYWORDS" ΓÇö use environment variables instead[39m
+[90m      ΓåÆ Move to server-side `process.env.SECRET_NAME`. Only `NEXT_PUBLIC_*` vars are safe for the client (and should not contain secrets)[39m
+[90m      src/lib/messages/censorship.ts:18[39m
+[90m      src/lib/jwt.ts:11[39m
+
+  [33mΓÜá[39m [33mreact-doctor/js-hoist-regexp                             [39m [90m├ù2[39m
+[90m      new RegExp() inside a loop ΓÇö hoist to a module-level constant[39m
+[90m      ΓåÆ Hoist `new RegExp(...)` (or large regex literals) to a module-level constant so it isn't recompiled on every loop iteration[39m
+[90m      src/lib/messages/censorship.ts:108[39m
+[90m      replace-blueprint-colors.js:38[39m
+
+  [33mΓÜá[39m [33mreact-doctor/js-index-maps                               [39m [90m├ù2[39m
+[90m      array.find() in a loop is O(n*m) ΓÇö build a Map for O(1) lookups[39m
+[90m      ΓåÆ Build an index `Map` once outside the loop instead of `array.find(...)` inside it[39m
+[90m      src/lib/billing/server.ts:869[39m
+[90m      scratch/fix_landlords.ts:36[39m
+
+  [33mΓÜá[39m [33mreact-doctor/no-prevent-default                          [39m [90m├ù2[39m
+[90m      preventDefault() on <form> onSubmit ΓÇö form won't work without JavaScript. Consider using a server action for progressive enhancement[39m
+[90m      ΓåÆ Use `<form action={serverAction}>` (works without JS) or `<button>` instead of `<a>` with preventDefault[39m
+[90m      src/components/landlord/dashboard/RecentInquiries.tsx:468[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:3176[39m
+
+  [33mΓÜá[39m [33mknip/types                                               [39m [90m├ù2[39m
+[90m      Unused type: PropertyType[39m
+[90m      src\types\database.ts[39m
+[90m      src\lib\application-payment-pending.ts[39m
+
+  [33mΓÜá[39m [33mknip/duplicates                                          [39m [90m├ù2[39m
+[90m      Duplicate export: CookieConsent|default[39m
+[90m      src\components\cookie-consent.tsx[39m
+[90m      src\components\tenant\TenantNavbar.tsx[39m
+
+  [33mΓÜá[39m [33mreact/no-danger[39m
+[90m      Do not use `dangerouslySetInnerHTML` prop[39m
+[90m      ΓåÆ `dangerouslySetInnerHTML` is a way to inject HTML into your React component. This is dangerous because it can easily lead to XSS vulnerabilities.[39m
+[90m      src/app/page.tsx:556[39m
+
+  [33mΓÜá[39m [33mreact-doctor/nextjs-no-a-element[39m
+[90m      Use next/link instead of <a> for internal links ΓÇö enables client-side navigation and prefetching[39m
+[90m      ΓåÆ `import Link from 'next/link'` ΓÇö enables client-side navigation, prefetching, and preserves scroll position[39m
+[90m      src/components/landlord/dashboard/RecentInquiries.tsx:159[39m
+
+  [33mΓÜá[39m [33mreact-doctor/rendering-usetransition-loading[39m
+[90m      useState for "isLoading" ΓÇö if this guards a state transition (not an async fetch), consider useTransition instead[39m
+[90m      ΓåÆ Replace with `const [isPending, startTransition] = useTransition()` ΓÇö avoids a re-render for the loading state[39m
+[90m      src/components/landlord/dashboard/IrisAIAgent.tsx:35[39m
+
+  [33mΓÜá[39m [33mreact-doctor/client-localstorage-no-version[39m
+[90m      localStorage.setItem("iris_stats_analysis", JSON.stringify(...)) ΓÇö bake a version into the key (e.g. "iris_stats_analysis:v1") so a future schema change can ignore old data instead of crashing on it[39m
+[90m      ΓåÆ Bake a version into the storage key (e.g. "myKey:v1"); a future schema change can ignore old data instead of crashing on it[39m
+[90m      src/components/landlord/dashboard/IrisAIAgent.tsx:190[39m
+
+  [33mΓÜá[39m [33mreact-doctor/no-flush-sync[39m
+[90m      flushSync from react-dom skips View Transition snapshots and concurrent rendering ΓÇö prefer startTransition for non-urgent updates[39m
+[90m      ΓåÆ Use startTransition for non-urgent updates ΓÇö flushSync forces a sync flush that skips View Transitions and concurrent rendering[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:6[39m
+
+  [33mΓÜá[39m [33mreact-doctor/client-passive-event-listeners[39m
+[90m      "wheel" listener without { passive: true } ΓÇö blocks scrolling performance. Only add { passive: true } if the handler does NOT call event.preventDefault() (passive listeners silently ignore preventDefault())[39m
+[90m      ΓåÆ Add `{ passive: true }` as the third argument: `addEventListener('scroll', handler, { passive: true })`. Only do this if the handler does NOT call `event.preventDefault()` ΓÇö passive listeners silently ignore `preventDefault()`, which breaks features like pull-to-refresh suppression, custom gestures, and nested-scroll containment.[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:2025[39m
+
+  [33mΓÜá[39m [33mreact-doctor/rerender-memo-with-default-value[39m
+[90m      Default prop value [] creates a new array reference every render ΓÇö extract to a module-level constant[39m
+[90m      ΓåÆ Move to module scope: `const EMPTY_ITEMS: Item[] = []` then use as the default value[39m
+[90m      src/components/landlord/visual-planner/VisualBuilder.tsx:5429[39m
+
+  [33mΓÜá[39m [33mreact-doctor/design-no-vague-button-label[39m
+[90m      Vague button label "Done" ΓÇö name the action ("Save changes", "Send invite", "Delete account") so screen readers and hesitant users know what happens[39m
+[90m      ΓåÆ Name the action: "Save changes" instead of "Continue", "Send invite" instead of "Submit", "Delete account" instead of "OK". The label IS the button's accessible name[39m
+[90m      src/components/landlord/tenants/AddTenantModal.tsx:574[39m
+
+  [33mΓÜá[39m [33mreact-doctor/no-z-index-9999[39m
+[90m      z-index: 9999 is arbitrarily high ΓÇö use a deliberate z-index scale (1ΓÇô50). Extreme values signal a stacking context problem, not a fix[39m
+[90m      ΓåÆ Define a z-index scale in your design tokens (e.g. dropdown: 10, modal: 20, toast: 30). Create a new stacking context with `isolation: isolate` instead of escalating values[39m
+[90m      src/components/ui/ClickSpark.tsx:171[39m
+
+  [33mΓÜá[39m [33mreact-doctor/no-inline-exhaustive-style[39m
+[90m      9 inline style properties ΓÇö extract to a CSS class, CSS module, or styled component for maintainability and reuse[39m
+[90m      ΓåÆ Move styles to a CSS class, CSS module, Tailwind utilities, or a styled component ΓÇö inline objects with many properties hurt readability and create new references every render[39m
+[90m      src/components/ui/ClickSpark.tsx:162[39m
+
+  [33mΓÜá[39m [33mreact-doctor/rerender-defer-reads-hook[39m
+[90m      usePathname() return is only read inside event handlers ΓÇö defer the read into the handler (e.g. `new URL(window.location.href).searchParams`) so the component doesn't re-render on every URL change[39m
+[90m      ΓåÆ Read the URL state inside the handler (e.g. `new URL(window.location.href).searchParams`) so the component doesn't subscribe and re-render on every URL change[39m
+[90m      src/components/transitions/PageTransitionProvider.tsx:34[39m
+
+  [33mΓÜá[39m [33mreact-doctor/rerender-memo-before-early-return[39m
+[90m      useMemo returning JSX runs before an early return ΓÇö extract the JSX into a memoized child component so the parent bails out before the subtree renders[39m
+[90m      ΓåÆ Extract the JSX into a memoized child component so the parent's early return short-circuits before the child renders[39m
+[90m      src/components/landlord/applications/ToolAccessBar.tsx:162[39m
+
+  [33mΓÜá[39m [33mreact-doctor/no-scale-from-zero[39m
+[90m      scale: 0 makes elements appear from nowhere ΓÇö use scale: 0.95 with opacity: 0 for natural entrance[39m
+[90m      ΓåÆ Use `initial={{ scale: 0.95, opacity: 0 }}` ΓÇö elements should deflate like a balloon, not vanish into a point[39m
+[90m      src/components/landlord/applications/SigningModeSelector.tsx:97[39m
+
+  [31mΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ[39m  [31m43[39m [2m/ 100[22m [31mCritical[39m
+  [31mΓöé x x Γöé[39m  [31mΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûê[39m[2mΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæ[22m
+  [31mΓöé  Γû╜  Γöé[39m  React Doctor [2m(www.react.doctor)[22m
+  [31mΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ[39m
+
+  [33m1502 issues[39m [2macross 335/491 files  in 4.1s[22m
+[90m  Full diagnostics written to C:\Users\JV\AppData\Local\Temp\react-doctor-7867559b-7242-4800-b7be-70a8979c55ff[39m
+
+  [1mΓåÆ Share your results:[22m [36mhttps://www.react.doctor/share?p=ireside&s=43&w=1502&f=335[39m
+

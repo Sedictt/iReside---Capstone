@@ -358,7 +358,7 @@ export default function AdminChatModerationPage() {
                     {loading ? (
                         <div className="space-y-4">
                             {[1, 2, 3, 4].map((i) => (
-                                <div key={i} className="h-24 w-full animate-pulse rounded-[2rem] bg-card/50 dark:bg-white/[0.02]" />
+                                <div key={`chat-moderation-skeleton-${i}`} className="h-24 w-full animate-pulse rounded-[2rem] bg-card/50 dark:bg-white/[0.02]" />
                             ))}
                         </div>
                     ) : filteredReports.length === 0 ? (

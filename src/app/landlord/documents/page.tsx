@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { 
     FileText, 
     ShieldCheck, 
@@ -41,11 +41,6 @@ interface Document {
     propertyId?: string;
 }
 
-interface VerificationInfo {
-    status: string;
-    verificationStatus: string;
-    verifiedAt: string;
-}
 
 interface LandlordProfile {
     full_name: string;
@@ -56,10 +51,8 @@ interface LandlordProfile {
 
 export default function DocumentsPage() {
     const [documents, setDocuments] = useState<Document[]>([]);
-    const [verification, setVerification] = useState<VerificationInfo | null>(null);
     const [profile, setProfile] = useState<LandlordProfile | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const [loadingState, setLoadingState] = useState(true);
     const [selectedTemplate, setSelectedTemplate] = useState<Document | null>(null);
     const [showPreview, setShowPreview] = useState(false);
     const [previewStartDate, setPreviewStartDate] = useState("");
@@ -81,12 +74,11 @@ export default function DocumentsPage() {
                 if (!res.ok) throw new Error(data.error || "Failed to fetch documents");
                 
                 setDocuments(data.documents);
-                setVerification(data.verification);
                 setProfile(data.profile);
             } catch (err: any) {
-                setError(err.message);
+                console.error("Error fetching documents:", err);
             } finally {
-                setLoading(false);
+                setLoadingState(false);
             }
         };
 
@@ -112,7 +104,7 @@ export default function DocumentsPage() {
         }
     };
 
-    if (loading) {
+    if (loadingState) {
         return (
             <div className="flex h-screen items-center justify-center bg-background">
                 <div className="flex flex-col items-center gap-4">
@@ -454,7 +446,7 @@ export default function DocumentsPage() {
                                                 <div className="flex items-center gap-2">
                                                     {[...Array(totalPages)].map((_, i) => (
                                                         <button
-                                                            key={i}
+                                                            key={`doc-page-${i}`}
                                                             onClick={() => setCurrentPage(i + 1)}
                                                             className={cn(
                                                                 "size-12 rounded-2xl text-[11px] font-semibold transition-all",

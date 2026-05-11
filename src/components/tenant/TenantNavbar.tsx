@@ -286,7 +286,7 @@ export function TenantSidebar() {
                             asChild
                         >
                             <div className="relative size-10 overflow-hidden rounded-full ring-2 ring-border cursor-pointer hover:ring-primary transition-all" style={{ backgroundColor: avatarBgColor }}>
-                                <Image src={avatarUrl} alt="Profile" fill className="object-cover" />
+                                <Image src={avatarUrl} alt="Profile" fill sizes="40px" className="object-cover" />
                             </div>
                         </ProfileCardTrigger>
                         <div className="min-w-0 flex-1">
@@ -452,7 +452,7 @@ function NotificationPanelContent({
                 {loading ? (
                     <div className="px-6 py-4 space-y-4">
                         {[1, 2, 3].map((i) => (
-                            <div key={i} className="space-y-2">
+                            <div key={`notif-skeleton-${i}`} className="space-y-2">
                                 <Skeleton className="h-4 w-3/4 rounded-full" />
                                 <Skeleton className="h-3 w-full rounded-full opacity-60" />
                             </div>

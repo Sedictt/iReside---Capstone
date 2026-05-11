@@ -12,7 +12,6 @@ import { createPortal } from "react-dom";
 import { m as motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 
-import Image from 'next/image';
 import { formatDateLong, formatPhpCurrency } from "@/lib/billing/utils";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
@@ -36,8 +35,6 @@ export function InvoiceModal({
     const [invoice, setInvoice] = useState<InvoiceDetail>(null);
     const [loading, setLoading] = useState(false);
     const [actionLoading, setActionLoading] = useState<"confirm" | "confirm_received" | "reject" | "request_completion" | "remind" | null>(null);
-    const [refundActionLoading, setRefundActionLoading] = useState(false);
-    const [refundActionError, setRefundActionError] = useState<string | null>(null);
     const [pendingAction, setPendingAction] = useState<{ type: any; label: string; desc: string; isCrucial?: boolean } | null>(null);
     const [confirmCountdown, setConfirmCountdown] = useState(0);
     const [reviewNote, setReviewNote] = useState("");

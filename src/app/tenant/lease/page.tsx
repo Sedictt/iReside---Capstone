@@ -313,6 +313,7 @@ const [renewalRequest, setRenewalRequest] = useState<{
                                             src={imgUrl}
                                             alt="Property"
                                             fill
+                                            sizes="(max-width: 1024px) 100vw, 850px"
                                             className="object-cover opacity-[0.08] grayscale"
                                         />
                                         <div className="absolute inset-0 bg-gradient-to-br from-background via-background/90 to-transparent" />
@@ -460,7 +461,7 @@ const [renewalRequest, setRenewalRequest] = useState<{
                                          <LeaseRenewalRequest 
                                              daysRemaining={progressData.daysRemaining} 
                                              leaseId={lease?.id} 
-                                             renewalSettings={lease?.unit.property.renewal_settings}
+                                             renewalSettings={undefined}
                                          />
                                     </div>
                                 </div>
@@ -539,7 +540,7 @@ const [renewalRequest, setRenewalRequest] = useState<{
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
                                         {lease.unit.property.house_rules.length > 0 ? (
                                             lease.unit.property.house_rules.map((rule, i) => (
-                                                <div key={i} className="flex items-start gap-4 group">
+                                                <div key={rule} className="flex items-start gap-4 group">
                                                     <div className="size-6 rounded-lg bg-primary/5 border border-primary/10 flex items-center justify-center text-primary shrink-0 mt-0.5 group-hover:bg-primary group-hover:text-white transition-all">
                                                         <p className="text-[10px] font-semibold">{i + 1}</p>
                                                     </div>

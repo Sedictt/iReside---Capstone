@@ -40,7 +40,7 @@ export function KpiCardSkeleton({ className }: { className?: string }) {
                     {barHeights.length > 0 ? (
                         barHeights.map((height, i) => (
                             <Skeleton 
-                                key={i} 
+                                key={`kpi-bar-${i}`}
                                 className="flex-1 rounded-t-lg" 
                                 style={{ 
                                     height: `${height}%`,
@@ -51,7 +51,7 @@ export function KpiCardSkeleton({ className }: { className?: string }) {
                     ) : (
                         Array.from({ length: 8 }).map((_, i) => (
                             <Skeleton 
-                                key={i} 
+                                key={`kpi-skeleton-${i}`}
                                 className="flex-1 rounded-t-lg" 
                                 style={{ 
                                     height: '20%',

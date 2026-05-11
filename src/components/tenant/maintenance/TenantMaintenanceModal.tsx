@@ -94,6 +94,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                     src={request.images[currentImageIndex]}
                                     alt={`Image ${currentImageIndex + 1}`}
                                     fill
+                                    sizes="(max-width: 768px) 100vw, 50vw"
                                     className="object-cover"
                                 />
                                 {request.images.length > 1 && (
@@ -115,7 +116,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-black/40 px-3 py-1.5 rounded-full backdrop-blur-md">
                                             {request.images.map((_, idx) => (
                                                 <div
-                                                    key={idx}
+                                                    key={`img-dot-${idx}`}
                                                     className={cn(
                                                         "size-1.5 rounded-full transition-all",
                                                         currentImageIndex === idx ? "bg-white w-4" : "bg-white/50"
@@ -341,8 +342,8 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                                 <div className="space-y-3 animate-in fade-in">
                                                                     <div className="flex gap-2">
                                                                         {request.tenantProvidedPhotos.map((img, i) => (
-                                                                            <div key={i} className="relative size-16 rounded-lg overflow-hidden border border-border shadow-sm">
-                                                                                <Image src={img} alt={`Proof ${i}`} fill className="object-cover" />
+                                                                            <div key={img} className="relative size-16 rounded-lg overflow-hidden border border-border shadow-sm">
+                                                                                <Image src={img} alt={`Proof ${i}`} fill sizes="64px" className="object-cover" />
                                                                             </div>
                                                                         ))}
                                                                     </div>
@@ -522,8 +523,8 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                                 <div className="space-y-3 animate-in fade-in">
                                                                     <div className="flex gap-2">
                                                                         {request.tenantProvidedPhotos.map((img, i) => (
-                                                                            <div key={i} className="relative size-16 rounded-lg overflow-hidden border border-border shadow-sm">
-                                                                                <Image src={img} alt={`Proof ${i}`} fill className="object-cover" />
+                                                                            <div key={img} className="relative size-16 rounded-lg overflow-hidden border border-border shadow-sm">
+                                                                                <Image src={img} alt={`Proof ${i}`} fill sizes="64px" className="object-cover" />
                                                                             </div>
                                                                         ))}
                                                                     </div>

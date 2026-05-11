@@ -313,6 +313,7 @@ function AlbumGrid({ attachments, isMe, onImageClick }: { attachments: UiMessage
                         <Image
                             src={att.fileUrl}
                             fill
+                            sizes="(max-width: 768px) 50vw, 33vw"
                             className={cn("object-cover", onImageClick && "cursor-pointer hover:opacity-90 transition-opacity")}
                             alt=""
                             onClick={() => onImageClick?.(attachments.map(a => ({ url: a.fileUrl!, id: a.id })), idx)}

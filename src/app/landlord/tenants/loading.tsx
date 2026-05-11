@@ -19,14 +19,14 @@ export default function TenantsLoading() {
                 <div className="hidden h-8 w-px bg-border sm:block" />
                 <div className="flex gap-2 p-2">
                     {[1, 2, 3, 4].map((i) => (
-                        <div key={i} className="h-9 w-20 rounded-lg bg-muted/50 animate-pulse" />
+                        <div key={`skeleton-btn-${i}`} className="h-9 w-20 rounded-lg bg-muted/50 animate-pulse" />
                     ))}
                 </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                    <div key={i} className="relative flex flex-col justify-between rounded-[2rem] border border-border bg-card/60 p-6 shadow-sm overflow-hidden">
+                    <div key={`skeleton-card-${i}`} className="relative flex flex-col justify-between rounded-[2rem] border border-border bg-card/60 p-6 shadow-sm overflow-hidden">
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent -translate-x-full animate-shimmer" />
                         
                         <div className="flex items-center justify-between mb-8">

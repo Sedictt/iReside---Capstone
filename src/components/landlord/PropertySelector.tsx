@@ -140,7 +140,7 @@ export function PropertySelector({ isCollapsed = false }: { isCollapsed?: boolea
                                 >
                                     <div className="relative size-10 shrink-0 overflow-hidden rounded-xl border border-white/10">
                                         {property.image ? (
-                                            <Image src={property.image} alt={property.name} fill className="object-cover" />
+                                            <Image src={property.image} alt={property.name} fill sizes="40px" className="object-cover" />
                                         ) : (
                                             <div className="flex h-full w-full items-center justify-center bg-white/5 text-muted-foreground/40">
                                                 <Building2 className="size-5" />

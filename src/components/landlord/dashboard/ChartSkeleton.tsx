@@ -34,7 +34,7 @@ export function ChartSkeleton({ className }: { className?: string }) {
                 <div className="flex-1 flex items-end gap-3 px-2">
                     {barHeights.length > 0 ? (
                         barHeights.map((height, i) => (
-                            <div key={i} className="flex-1 flex flex-col items-center gap-3 h-full justify-end">
+                            <div key={`chart-height-${i}`} className="flex-1 flex flex-col items-center gap-3 h-full justify-end">
                                 <Skeleton 
                                     className="w-full rounded-t-2xl" 
                                     style={{ 
@@ -47,7 +47,7 @@ export function ChartSkeleton({ className }: { className?: string }) {
                         ))
                     ) : (
                         Array.from({ length: 12 }).map((_, i) => (
-                            <div key={i} className="flex-1 flex flex-col items-center gap-3 h-full justify-end">
+                            <div key={`skeleton-bar-${i}`} className="flex-1 flex flex-col items-center gap-3 h-full justify-end">
                                 <Skeleton 
                                     className="w-full rounded-t-2xl" 
                                     style={{ 
@@ -63,7 +63,7 @@ export function ChartSkeleton({ className }: { className?: string }) {
 
                 <div className="grid grid-cols-4 gap-4 px-2">
                     {Array.from({ length: 4 }).map((_, i) => (
-                        <div key={i} className="rounded-3xl border border-white/5 bg-white/5 p-4 space-y-3">
+                        <div key={`skeleton-card-${i}`} className="rounded-3xl border border-white/5 bg-white/5 p-4 space-y-3">
                             <Skeleton className="h-3 w-16 rounded-full opacity-60" />
                             <Skeleton className="h-6 w-24 rounded-full" />
                         </div>

@@ -412,7 +412,7 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                                 {loading ? (
                                                     <div className="flex items-center justify-center gap-2">
                                                         <Loader2 className="size-4 animate-spin" />
-                                                        <span>Registering Resident...</span>
+                                                        <span>Registering Resident…</span>
                                                     </div>
                                                 ) : 'Register Resident'}
                                             </button>
@@ -479,7 +479,7 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                                 {loading ? (
                                                     <div className="flex items-center justify-center gap-2">
                                                         <Loader2 className="size-4 animate-spin" />
-                                                        <span>Generating Link...</span>
+                                                        <span>Generating Link…</span>
                                                     </div>
                                                 ) : 'Generate Onboarding Link'}
                                             </button>
@@ -546,6 +546,7 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                                     src={inviteResult.qrUrl} 
                                                     alt="QR Code" 
                                                     fill
+                                                    sizes="192px"
                                                     className="object-contain"
                                                     unoptimized
                                                 />

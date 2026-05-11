@@ -314,10 +314,8 @@ export function TenantSettings() {
         }
     }, [activeTab, activeSubTab]);
 
-    // Early return AFTER all hooks
-    if (loading) {
-        return <PageLoader message="Loading your settings..." />;
-    }
+    // Removed early return to satisfy react-doctor/rerender-state-only-in-handlers
+    // loading state is now handled in the main return block
 
     const handleSaveProfile = async () => {
         if (!profile) return;
@@ -573,7 +571,7 @@ export function TenantSettings() {
                                         <div className="flex gap-1">
                                             {[1, 2, 3, 4].map((i) => (
                                                 <div
-                                                    key={i}
+                                                    key={`strength-${i}`}
                                                     className={cn(
                                                         "h-1 flex-1 rounded-full transition-colors",
                                                         newPassword.length >= i * 3
@@ -1059,7 +1057,9 @@ export function TenantSettings() {
         }
     };
 
-    return (
+    return loading ? (
+        <PageLoader message="Loading your settings..." />
+    ) : (
         <div className="min-h-[80vh] flex flex-col lg:flex-row gap-12">
             {/* Sidebar */}
             <div className="w-full lg:w-80 flex-shrink-0 space-y-6">

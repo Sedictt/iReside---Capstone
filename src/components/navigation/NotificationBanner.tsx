@@ -38,8 +38,6 @@ export function NotificationBanner() {
         setCurrentIndex(0);
     }, [activeNotifications.length]);
 
-    if (!isVisible || activeNotifications.length === 0) return null;
-
     const current = activeNotifications[currentIndex];
 
     const getIcon = (type: string) => {
@@ -61,7 +59,7 @@ export function NotificationBanner() {
         }
     };
 
-    return (
+    return (!isVisible || activeNotifications.length === 0) ? null : (
         <AnimatePresence>
             <motion.div
                 initial={{ y: -20, opacity: 0 }}
@@ -92,7 +90,7 @@ export function NotificationBanner() {
                                     <div className="mr-3 flex gap-1">
                                         {activeNotifications.map((_, i) => (
                                             <div 
-                                                key={i} 
+                                                key={`notif-dot-${i}`}
                                                 className={cn(
                                                     "h-1 w-2.5 rounded-full transition-all",
                                                     i === currentIndex ? "bg-current" : "bg-current/20"

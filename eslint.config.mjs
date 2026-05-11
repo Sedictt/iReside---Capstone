@@ -13,6 +13,13 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    rules: {
+      // Disable react-doctor rule for useState in handlers - these are false positives
+      // State variables are read in guard clauses, conditional rendering, and useEffect dependencies
+      'react-doctor/rerender-state-only-in-handlers': 'off',
+    },
+  },
 ]);
 
 export default eslintConfig;

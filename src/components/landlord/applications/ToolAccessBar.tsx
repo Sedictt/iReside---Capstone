@@ -394,7 +394,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
                                         <div className="pt-6 mt-6 border-t border-neutral-200 space-y-4">
                                             <h3 className="font-semibold text-black uppercase tracking-wider text-sm mb-4">Additional Clauses</h3>
                                             {customClauses.filter(c => c.title && c.description).map((clause, idx) => (
-                                                <p key={idx}>
+                                                <p key={clause.title}>
                                                     <strong className="text-black uppercase">{(idx + 6)}. {clause.title}:</strong> {clause.description}
                                                 </p>
                                             ))}

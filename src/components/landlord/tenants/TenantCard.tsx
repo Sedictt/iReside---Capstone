@@ -99,6 +99,7 @@ export function TenantCard({ tenant, idx, onViewProfile }: TenantCardProps) {
                                     src={tenant.avatarUrl} 
                                     alt={tenant.name} 
                                     fill
+                                    sizes="64px"
                                     className="object-cover"
                                     unoptimized
                                 />

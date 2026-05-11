@@ -550,7 +550,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                             { label: "Number", met: /[0-9]/.test(password) },
                                             { label: "Special char", met: /[^A-Za-z0-9]/.test(password) },
                                         ].map((req, i) => (
-                                            <div key={i} className="flex items-center gap-2">
+                                            <div key={req.label} className="flex items-center gap-2">
                                                 <div className={`size-3.5 rounded-full flex items-center justify-center border transition-all duration-500 ${req.met ? "bg-primary border-primary text-black" : "border-white/10 text-transparent"}`}>
                                                     <CheckCircle2 className="size-2" />
                                                 </div>
@@ -572,7 +572,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                             <div className="h-1.5 bg-white/5 rounded-full overflow-hidden flex gap-1">
                                                 {[1, 2, 3, 4, 5, 6].map((i) => (
                                                     <div 
-                                                        key={i}
+                                                        key={`strength-bar-${i}`}
                                                         className={`h-full flex-1 transition-all duration-700 rounded-full ${i <= getPasswordStrength(password).score ? getPasswordStrength(password).color : "bg-white/5"}`}
                                                     />
                                                 ))}
@@ -893,7 +893,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                             <div className="flex flex-wrap gap-3">
                                                 {buildingRules.map((rule, index) => (
                                                     <div 
-                                                        key={index}
+                                                        key={rule}
                                                         className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-2 group hover:border-primary/30 transition-all"
                                                     >
                                                         <span className="text-xs font-bold text-white/80">{rule}</span>

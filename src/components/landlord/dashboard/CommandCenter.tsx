@@ -205,7 +205,7 @@ export function CommandCenter({
 
                             return (
                                 <Link 
-                                    key={i} 
+                                    key={action.href}
                                     href={action.href}
                                     className="group flex items-center gap-4 rounded-[1.25rem] border border-white/5 bg-card/40 p-3.5 transition-all hover:bg-card hover:border-white/10 hover:shadow-xl hover:shadow-black/20"
                                 >

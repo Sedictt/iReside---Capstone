@@ -18,19 +18,15 @@ export function ThemeToggle({ variant = "default", dataTourId, className, ...pro
     setMounted(true)
   }, [])
 
-  if (!mounted) {
-    return (
-      <div 
-        className={cn(
-          "size-10 rounded-xl border border-zinc-200 bg-zinc-50 dark:border-white/10 dark:bg-white/[0.02]",
-          variant === "sidebar" && "border-transparent bg-transparent",
-          className
-        )}
-      />
-    )
-  }
-
-  return (
+  return !mounted ? (
+    <div 
+      className={cn(
+        "size-10 rounded-xl border border-zinc-200 bg-zinc-50 dark:border-white/10 dark:bg-white/[0.02]",
+        variant === "sidebar" && "border-transparent bg-transparent",
+        className
+      )}
+    />
+  ) : (
     <button
       {...props}
       onClick={() => setTheme(theme === "light" ? "dark" : "light")}
@@ -47,5 +43,5 @@ export function ThemeToggle({ variant = "default", dataTourId, className, ...pro
       <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
       <span className="sr-only">Toggle theme</span>
     </button>
-  )
+  );
 }

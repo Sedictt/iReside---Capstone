@@ -98,7 +98,7 @@ export default async function LeaseDetailsPage({ params }: { params: Promise<{ i
                                 "Quiet Hours: 10PM - 7AM (Clause 6.3)",
                                 "Utilities: Tenant pays Electricity & Internet (Clause 3.1)"
                             ].map((clause, i) => (
-                                <li key={i} className="flex items-center gap-3 text-zinc-300 text-sm p-3 rounded-lg hover:bg-zinc-800/50 transition-colors">
+                                <li key={clause} className="flex items-center gap-3 text-zinc-300 text-sm p-3 rounded-lg hover:bg-zinc-800/50 transition-colors">
                                     <CheckCircle2 className="size-4 text-emerald-500 flex-shrink-0" />
                                     {clause}
                                 </li>

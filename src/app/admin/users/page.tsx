@@ -198,7 +198,7 @@ function SnapshotModal({ user, onClose }: { user: UserDetail; onClose: () => voi
                                     <div className="space-y-2">
                                         <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Identity Document</p>
 <a href={app.identity_document_url} target="_blank" rel="noopener noreferrer" className="relative block h-32 rounded-xl border border-white/10 overflow-hidden hover:border-primary/50 transition-colors">
-                                                <Image src={app.identity_document_url} alt="Identity" fill className="object-cover" />
+                                                <Image src={app.identity_document_url} alt="Identity" fill sizes="(max-width: 768px) 100vw, 256px" className="object-cover" />
                                         </a>
                                     </div>
                                 )}
@@ -206,7 +206,7 @@ function SnapshotModal({ user, onClose }: { user: UserDetail; onClose: () => voi
                                     <div className="space-y-2">
                                         <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Proof of Ownership</p>
 <a href={app.ownership_document_url} target="_blank" rel="noopener noreferrer" className="relative block h-32 rounded-xl border border-white/10 overflow-hidden hover:border-primary/50 transition-colors">
-                                                <Image src={app.ownership_document_url} alt="Ownership" fill className="object-cover" />
+                                                <Image src={app.ownership_document_url} alt="Ownership" fill sizes="(max-width: 768px) 100vw, 256px" className="object-cover" />
                                         </a>
                                     </div>
                                 )}
@@ -214,7 +214,7 @@ function SnapshotModal({ user, onClose }: { user: UserDetail; onClose: () => voi
                                     <div className="space-y-2">
                                         <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Business Permit (Paper)</p>
 <a href={app.business_permit_url} target="_blank" rel="noopener noreferrer" className="relative block h-32 rounded-xl border border-white/10 overflow-hidden hover:border-primary/50 transition-colors">
-                                                <Image src={app.business_permit_url} alt="Permit Paper" fill className="object-cover" />
+                                                <Image src={app.business_permit_url} alt="Permit Paper" fill sizes="(max-width: 768px) 100vw, 256px" className="object-cover" />
                                         </a>
                                     </div>
                                 )}
@@ -222,7 +222,7 @@ function SnapshotModal({ user, onClose }: { user: UserDetail; onClose: () => voi
                                     <div className="space-y-2">
                                         <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Business Permit (Card)</p>
 <a href={app.business_permit_card_url} target="_blank" rel="noopener noreferrer" className="relative block h-32 rounded-xl border border-white/10 overflow-hidden hover:border-primary/50 transition-colors">
-                                                <Image src={app.business_permit_card_url} alt="Permit Card" fill className="object-cover" />
+                                                <Image src={app.business_permit_card_url} alt="Permit Card" fill sizes="(max-width: 768px) 100vw, 256px" className="object-cover" />
                                         </a>
                                     </div>
                                 )}
@@ -369,7 +369,7 @@ export default function AdminUsersPage() {
                     {loading ? (
                         <div className="space-y-3">
                             {Array.from({ length: 4 }).map((_, i) => (
-                                <div key={i} className="animate-pulse rounded-2xl border border-border/70 bg-muted/30 p-4">
+                                <div key={`user-skeleton-${i}`} className="animate-pulse rounded-2xl border border-border/70 bg-muted/30 p-4">
                                     <div className="mb-3 h-4 w-1/2 rounded bg-white/10" />
                                     <div className="h-3 w-2/3 rounded bg-white/10" />
                                 </div>
@@ -392,16 +392,17 @@ export default function AdminUsersPage() {
 
                                 return (
                                     <article key={user.id} className="rounded-2xl border border-border/70 bg-background p-4">
-<div className="relative flex items-center gap-3">
+                                            <div className="relative size-10 shrink-0 overflow-hidden rounded-full border border-white/10">
                                                 {user.avatar_url ? (
-                                                    <Image src={user.avatar_url} alt="" fill className="object-cover rounded-full border border-white/10" />
-                                            ) : (
-                                                <div className="flex size-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-gradient-to-br from-white/10 to-white/5">
-                                                    <span className="text-xs font-bold text-white/70">
-                                                        {user.full_name.substring(0, 2).toUpperCase()}
-                                                    </span>
-                                                </div>
-                                            )}
+                                                    <Image src={user.avatar_url} alt="" fill sizes="40px" className="object-cover" />
+                                                ) : (
+                                                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-white/10 to-white/5">
+                                                        <span className="text-xs font-bold text-white/70">
+                                                            {user.full_name.substring(0, 2).toUpperCase()}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
                                             <div className="min-w-0">
                                                 <div className="flex min-w-0 items-center gap-2">
                                                     <p className="truncate text-sm font-bold text-white">{user.full_name}</p>
@@ -409,7 +410,6 @@ export default function AdminUsersPage() {
                                                 </div>
                                                 <p className="truncate text-xs text-white/50">{user.email}</p>
                                             </div>
-                                        </div>
 
                                         <div className="mt-3 flex flex-wrap items-center gap-2" suppressHydrationWarning>
                                             <div className={cn("inline-flex items-center gap-2 rounded-xl border px-3 py-1.5 shadow-inner", roleInfo.bgClass, roleInfo.borderClass)}>
@@ -461,7 +461,7 @@ export default function AdminUsersPage() {
                         <tbody className="divide-y divide-white/5">
                             {loading ? (
                                 Array.from({ length: 5 }).map((_, i) => (
-                                    <tr key={i} className="animate-pulse">
+                                    <tr key={`table-skeleton-${i}`} className="animate-pulse">
                                         <td className="p-8">
                                             <div className="flex items-center gap-4">
                                                 <div className="size-12 rounded-full bg-white/5" />
@@ -556,9 +556,9 @@ export default function AdminUsersPage() {
 
             {/* Snapshot Modal */}
             {snapshotUser && (
-                <SnapshotModal 
-                    user={snapshotUser} 
-                    onClose={() => setSnapshotUser(null)} 
+                <SnapshotModal
+                    user={snapshotUser}
+                    onClose={() => setSnapshotUser(null)}
                 />
             )}
         </div>

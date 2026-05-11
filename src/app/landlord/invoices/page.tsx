@@ -2,17 +2,15 @@
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
-import { CalendarDays, FileText, Loader2, Plus, Search, X, Filter } from "lucide-react";
+import { CalendarDays, FileText, Loader2, Plus, Search, Filter } from "lucide-react";
 
 import { InvoiceModal } from "@/components/landlord/invoices/InvoiceModal";
 import { RecordExpenseModal } from "@/components/landlord/invoices/RecordExpenseModal";
-import type { BillingWorkspace, InvoiceListItem } from "@/lib/billing/server";
+import type { InvoiceListItem } from "@/lib/billing/server";
 import { formatPhpCurrency } from "@/lib/billing/utils";
 import { cn } from "@/lib/utils";
 import { useProperty } from "@/context/PropertyContext";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
-
-type StudioStep = "rent" | "water" | "electricity";
 
 interface ExpenseItem {
   id: string;
@@ -28,31 +26,13 @@ export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<InvoiceListItem[]>([]);
   const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
   const [metrics, setMetrics] = useState({ totalOutstanding: 0, overdueAmount: 0, collectedLast30Days: 0, totalInvoices: 0 });
-  const [workspace, setWorkspace] = useState<BillingWorkspace | null>(null);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [filterMethod, setFilterMethod] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
   const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState<"generate" | "reading" | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const [generatorForm, setGeneratorForm] = useState({
-    leaseId: "",
-    billingMonth: new Date().toISOString().slice(0, 7),
-  });
-  const [studioStep, setStudioStep] = useState<StudioStep>("rent");
-  const [readingForm, setReadingForm] = useState({
-    leaseId: "",
-    utilityType: "water",
-    billingPeriodStart: new Date().toISOString().slice(0, 8) + "01",
-    billingPeriodEnd: new Date().toISOString().slice(0, 10),
-    previousReading: "0",
-    currentReading: "0",
-    note: "",
-  });
-  const [proofFile, setProofFile] = useState<File | null>(null);
-  const [isStudioOpen, setIsStudioOpen] = useState(false);
   
   // Finance Hub Tabs
   const [activeTab, setActiveTab] = useState<"ledger" | "invoices" | "expenses">("ledger");
@@ -62,23 +42,18 @@ export default function InvoicesPage() {
     setLoading(true);
     try {
       const invoiceParams = new URLSearchParams({ propertyId: selectedPropertyId });
-      const [invoiceRes, workspaceRes, expensesRes] = await Promise.all([
+      const [invoiceRes, expensesRes] = await Promise.all([
         fetch(`/api/landlord/invoices?${invoiceParams.toString()}`, { cache: "no-store" }),
-        fetch("/api/landlord/payment-settings", { cache: "no-store" }),
         fetch(`/api/landlord/expenses?${invoiceParams.toString()}`, { cache: "no-store" }),
       ]);
-      if (!invoiceRes.ok || !workspaceRes.ok || !expensesRes.ok) throw new Error();
+      if (!invoiceRes.ok || !expensesRes.ok) throw new Error();
 
       const invoicePayload = await invoiceRes.json();
-      const workspacePayload = (await workspaceRes.json()) as BillingWorkspace;
       const expensesPayload = await expensesRes.json();
 
       setInvoices(invoicePayload.invoices ?? []);
       setExpenses(expensesPayload.expenses ?? []);
       setMetrics(invoicePayload.metrics ?? { totalOutstanding: 0, overdueAmount: 0, collectedLast30Days: 0, totalInvoices: 0 });
-      setWorkspace(workspacePayload);
-      setGeneratorForm((current) => ({ ...current, leaseId: current.leaseId || workspacePayload.activeLeases[0]?.id || "" }));
-      setReadingForm((current) => ({ ...current, leaseId: current.leaseId || workspacePayload.activeLeases[0]?.id || "" }));
     } catch {
       setMessage("Unable to load billing operations.");
     } finally {
@@ -97,12 +72,6 @@ export default function InvoicesPage() {
       setActiveTab("invoices");
     }
   }, [get]);
-
-  const visibleActiveLeases = useMemo(() => {
-    const leases = workspace?.activeLeases ?? [];
-    if (selectedPropertyId === "all") return leases;
-    return leases.filter((lease) => lease.property?.id === selectedPropertyId);
-  }, [workspace, selectedPropertyId]);
 
   const processedInvoices = useMemo(() => {
     let result = invoices.filter((invoice) =>
@@ -137,63 +106,6 @@ export default function InvoicesPage() {
     return result;
   }, [invoices, search, filterMethod, filterStatus, sortBy]);
 
-  const selectedGeneratorLease = useMemo(
-    () => visibleActiveLeases.find((lease) => lease.id === generatorForm.leaseId) ?? null,
-    [generatorForm.leaseId, visibleActiveLeases],
-  );
-
-  const utilityStepState = useMemo(() => {
-    const resolveConfig = (utilityType: "water" | "electricity") => {
-      if (!workspace || !selectedGeneratorLease?.property?.id) return null;
-
-      return (
-        workspace.utilityConfigs.find((item) => item.property_id === selectedGeneratorLease.property?.id && item.unit_id === selectedGeneratorLease.unit?.id && item.utility_type === utilityType && item.is_active) ??
-        workspace.utilityConfigs.find((item) => item.property_id === selectedGeneratorLease.property?.id && item.unit_id === null && item.utility_type === utilityType && item.is_active)
-      );
-    };
-
-    const waterConfig = resolveConfig("water");
-    const electricityConfig = resolveConfig("electricity");
-
-    return {
-      water: { config: waterConfig, enabled: waterConfig?.billing_mode === "tenant_paid" },
-      electricity: { config: electricityConfig, enabled: electricityConfig?.billing_mode === "tenant_paid" },
-    };
-  }, [selectedGeneratorLease, workspace]);
-
-  const enabledStudioSteps = useMemo(
-    () => ["rent", utilityStepState.water.enabled ? "water" : null, utilityStepState.electricity.enabled ? "electricity" : null].filter((step): step is StudioStep => Boolean(step)),
-    [utilityStepState.electricity.enabled, utilityStepState.water.enabled],
-  );
-
-  const isLastStudioStep = studioStep === enabledStudioSteps[enabledStudioSteps.length - 1];
-
-  useEffect(() => {
-    if (generatorForm.leaseId) {
-      setReadingForm((current) => ({ ...current, leaseId: generatorForm.leaseId }));
-    }
-  }, [generatorForm.leaseId]);
-
-  useEffect(() => {
-    const firstVisibleLeaseId = visibleActiveLeases[0]?.id ?? "";
-    setGeneratorForm((current) =>
-      visibleActiveLeases.some((lease) => lease.id === current.leaseId)
-        ? current
-        : { ...current, leaseId: firstVisibleLeaseId },
-    );
-    setReadingForm((current) =>
-      visibleActiveLeases.some((lease) => lease.id === current.leaseId)
-        ? current
-        : { ...current, leaseId: firstVisibleLeaseId },
-    );
-  }, [visibleActiveLeases]);
-
-  useEffect(() => {
-    if (!enabledStudioSteps.includes(studioStep)) {
-      setStudioStep("rent");
-    }
-  }, [enabledStudioSteps, studioStep]);
-
   const getStatusConfig = (status: string) => {
     const configs: Record<string, { label: string; classes: string }> = {
       pending: { label: "Awaiting Payment", classes: "border-zinc-500/20 bg-zinc-500/10 text-zinc-500 dark:text-zinc-400" },
@@ -210,72 +122,6 @@ export default function InvoicesPage() {
     return configs[status] || { label: status, classes: "border-border bg-muted text-muted-foreground" };
   };
 
-  useEffect(() => {
-    if (studioStep === "water" || studioStep === "electricity") {
-      setReadingForm((current) => ({ ...current, utilityType: studioStep }));
-    }
-  }, [studioStep]);
-
-  const createInvoices = async () => {
-    setActionLoading("generate");
-    setMessage(null);
-    try {
-      const response = await fetch("/api/landlord/invoices", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          billingMonth: `${generatorForm.billingMonth}-01`,
-          leaseIds: generatorForm.leaseId ? [generatorForm.leaseId] : undefined,
-        }),
-      });
-      if (!response.ok) throw new Error();
-
-      await loadData();
-      setMessage("Invoice generated with rent prefilled from the active lease and tenant-paid utilities added when applicable.");
-      setIsStudioOpen(false);
-      setStudioStep("rent");
-    } catch {
-      setMessage("Unable to generate invoices right now.");
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const submitReading = async () => {
-    setActionLoading("reading");
-    setMessage(null);
-    try {
-      const formData = new FormData();
-      Object.entries(readingForm).forEach(([key, value]) => formData.append(key, value));
-      if (proofFile) formData.append("proof", proofFile);
-
-      const response = await fetch("/api/landlord/utility-readings", { method: "POST", body: formData });
-      if (!response.ok) throw new Error();
-
-      setMessage(`${readingForm.utilityType === "water" ? "Water" : "Electricity"} reading recorded.`);
-      await loadData();
-      setProofFile(null);
-    } catch {
-      setMessage("Unable to record the utility reading.");
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const goToPreviousStudioStep = () => {
-    const currentIndex = enabledStudioSteps.indexOf(studioStep);
-    if (currentIndex > 0) {
-      setStudioStep(enabledStudioSteps[currentIndex - 1]);
-    }
-  };
-
-  const goToNextStudioStep = () => {
-    const currentIndex = enabledStudioSteps.indexOf(studioStep);
-    if (currentIndex < enabledStudioSteps.length - 1) {
-      setStudioStep(enabledStudioSteps[currentIndex + 1]);
-    }
-  };
-
   return (
     <div className="mx-auto max-w-[1600px] space-y-10 px-4 py-8 md:px-8 lg:py-10">
       <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
@@ -287,13 +133,6 @@ export default function InvoicesPage() {
           <h1 className="text-3xl font-semibold tracking-tight text-foreground md:text-4xl">Finance Hub</h1>
           <p className="mt-2 text-sm text-muted-foreground">Manage your unified ledger, track expenses, and oversee rent invoices.</p>
         </div>
-        {/* Deprecated: Invoice Studio removed in favor of direct utility dashboard workflow */}
-        {/* 
-        <button onClick={() => setIsStudioOpen(true)} className="group inline-flex items-center gap-2.5 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-sm transition-all hover:scale-105 hover:bg-primary/90 active:scale-95">
-          <Plus className="size-4 transition-transform group-hover:rotate-90" />
-          Invoice Studio
-        </button>
-        */}
       </div>
 
       <div data-tour-id="tour-finance-hub" className="grid gap-4 sm:grid-cols-3">
@@ -479,8 +318,8 @@ export default function InvoicesPage() {
                     {/* Simplified Timeline View */}
                     {[...expenses.map(e => ({ type: 'expense' as const, date: new Date(e.date_incurred), amount: e.amount, label: e.category, desc: e.description })), ...invoices.filter(i => i.status === 'paid' || i.status === 'receipted' || i.status === 'confirmed').map(i => ({ type: 'income' as const, date: new Date(i.issuedDate), amount: i.amount, label: `Rent Payment`, desc: `Invoice ${i.invoiceNumber}` }))]
                     .sort((a, b) => b.date.getTime() - a.date.getTime())
-                    .map((item, idx) => (
-                        <div key={idx} className="flex items-center justify-between rounded-2xl border border-border/50 bg-card p-5">
+                    .map((item) => (
+                        <div key={`${item.type}-${item.date.getTime()}-${item.desc}`} className="flex items-center justify-between rounded-2xl border border-border/50 bg-card p-5">
                             <div className="flex items-center gap-4">
                                 <div className={cn("flex size-10 items-center justify-center rounded-full", item.type === 'income' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500')}>
                                     {item.type === 'income' ? <Plus className="size-5" /> : <Filter className="size-5" />}
@@ -551,178 +390,6 @@ export default function InvoicesPage() {
         </div>
       )}
 
-      {/* Deprecated: Invoice Studio Modal preserved but disabled in favor of Utility Billing Dashboard */}
-      {/* 
-      {isStudioOpen && (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md">
-          <div className="custom-scrollbar flex max-h-[92vh] w-full max-w-2xl flex-col overflow-y-auto rounded-[2.5rem] border border-border/60 bg-card p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-            <div className="mb-8 flex items-start justify-between gap-4">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-primary">Monthly billing</p>
-                <h2 className="mt-2 text-3xl font-semibold text-foreground">Invoice studio</h2>
-                <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-                  Step through rent first, then review water and electricity only when they are billed separately from rent.
-                </p>
-              </div>
-              <button onClick={() => setIsStudioOpen(false)} className="rounded-full border border-border/50 p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground">
-                <X className="size-5" />
-              </button>
-            </div>
-
-            <div className="mb-8 rounded-[2rem] border border-border/50 bg-background/60 p-6 shadow-inner backdrop-blur-md">
-              <div className="mb-6 grid gap-3 md:grid-cols-3">
-                {([
-                  { key: "rent", label: "Base Rent", enabled: true },
-                  { key: "water", label: "Water Bill", enabled: utilityStepState.water.enabled },
-                  { key: "electricity", label: "Electricity Bill", enabled: utilityStepState.electricity.enabled },
-                ] as const).map((step, index) => (
-                  <button
-                    key={step.key}
-                    type="button"
-                    disabled={!step.enabled}
-                    onClick={() => step.enabled && setStudioStep(step.key)}
-                    className={cn(
-                      "rounded-[1.5rem] border px-4 py-4 text-left transition-all",
-                      studioStep === step.key
-                        ? "border-primary/20 bg-primary/10 shadow-[0_18px_40px_-32px_rgba(var(--primary-rgb),0.8)]"
-                        : step.enabled
-                          ? "border-border/60 bg-card/70 hover:border-primary/15 hover:bg-card"
-                          : "cursor-not-allowed border-border/50 bg-background/60 opacity-45",
-                    )}
-                  >
-                    <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Step {index + 1}</p>
-                    <p className={cn("mt-2 text-base font-semibold", studioStep === step.key ? "text-primary" : "text-foreground")}>{step.label}</p>
-                    <p className="mt-1 text-sm text-muted-foreground">{step.enabled ? "Required in this invoice flow" : "Bundled into rent"}</p>
-                  </button>
-                ))}
-              </div>
-
-              {studioStep === "rent" && (
-                <div className="space-y-6">
-                  <div className="grid gap-5 md:grid-cols-2">
-                    <SelectField label="Lease" value={generatorForm.leaseId} onChange={(value) => setGeneratorForm((current) => ({ ...current, leaseId: value }))}>
-                      {visibleActiveLeases.map((lease) => <option key={lease.id} value={lease.id}>{lease.tenant?.full_name ?? "Tenant"} - {lease.property?.name ?? "Property"} - {lease.unit?.name ?? "Unit"}</option>)}
-                    </SelectField>
-                    <InputField label="Billing month" type="month" value={generatorForm.billingMonth} onChange={(value) => setGeneratorForm((current) => ({ ...current, billingMonth: value }))} />
-                  </div>
-
-                  <div className="rounded-[1.75rem] border border-border/50 bg-card/80 p-5">
-                    <div className="border-b border-border/50 pb-4">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-primary">Step 1</p>
-                      <h3 className="mt-2 text-lg font-semibold text-foreground">Verify lease rent details</h3>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        {selectedGeneratorLease
-                          ? `${selectedGeneratorLease.tenant?.full_name ?? "Tenant"} - ${selectedGeneratorLease.property?.name ?? "Property"} - ${selectedGeneratorLease.unit?.name ?? "Unit"}`
-                          : "Select a lease to review the pre-populated base rent."}
-                      </p>
-                    </div>
-
-                    <div className="mt-5 space-y-4">
-                      <StudioLineItem
-                        title="Monthly rent"
-                        description={selectedGeneratorLease ? "Verify that the lease amount is correct before continuing." : "Waiting for lease selection."}
-                        amount={selectedGeneratorLease ? formatPhpCurrency(selectedGeneratorLease.monthly_rent) : "Pending lease selection"}
-                        tone="primary"
-                      />
-                      <div className="rounded-[1.5rem] border border-border/50 bg-background/70 px-4 py-4 text-sm text-muted-foreground">
-                        Water bill step: {utilityStepState.water.enabled ? "enabled as a separate utility charge." : "disabled because water is bundled into rent."}
-                        <br />
-                        Electricity bill step: {utilityStepState.electricity.enabled ? "enabled as a separate utility charge." : "disabled because electricity is bundled into rent."}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {studioStep === "water" && (
-                <div className="space-y-6">
-                  <div className="rounded-[1.75rem] border border-sky-500/20 bg-sky-500/10 p-5">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-sky-400">Step 2</p>
-                    <h3 className="mt-2 text-lg font-semibold text-white">Water bill review</h3>
-                    <p className="mt-1 text-sm text-sky-100/80">
-                      {utilityStepState.water.config
-                        ? `Water is billed separately at ${formatPhpCurrency(Number(utilityStepState.water.config.rate_per_unit ?? 0))} per ${utilityStepState.water.config.unit_label === "cubic_meter" ? "cubic meter" : "kWh"}.`
-                        : "No active water billing config found."}
-                    </p>
-                  </div>
-                  <StudioLineItem
-                    title="Water bill"
-                    description="This utility appears as a separate invoice section because it is not bundled into rent."
-                    amount="Calculated from meter reading"
-                    tone="sky"
-                  />
-                  <UtilityReadingStep
-                    readingForm={readingForm}
-                    setReadingForm={setReadingForm}
-                    proofFile={proofFile}
-                    setProofFile={setProofFile}
-                    actionLoading={actionLoading}
-                    submitReading={submitReading}
-                    utilityLabel="Water"
-                  />
-                </div>
-              )}
-
-              {studioStep === "electricity" && (
-                <div className="space-y-6">
-                  <div className="rounded-[1.75rem] border border-amber-500/20 bg-amber-500/10 p-5">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-amber-400">Step 3</p>
-                    <h3 className="mt-2 text-lg font-semibold text-white">Electricity bill review</h3>
-                    <p className="mt-1 text-sm text-amber-100/80">
-                      {utilityStepState.electricity.config
-                        ? `Electricity is billed separately at ${formatPhpCurrency(Number(utilityStepState.electricity.config.rate_per_unit ?? 0))} per ${utilityStepState.electricity.config.unit_label === "cubic_meter" ? "cubic meter" : "kWh"}.`
-                        : "No active electricity billing config found."}
-                    </p>
-                  </div>
-                  <StudioLineItem
-                    title="Electricity bill"
-                    description="This utility appears as a separate invoice section because it is not bundled into rent."
-                    amount="Calculated from meter reading"
-                    tone="amber"
-                  />
-                  <UtilityReadingStep
-                    readingForm={readingForm}
-                    setReadingForm={setReadingForm}
-                    proofFile={proofFile}
-                    setProofFile={setProofFile}
-                    actionLoading={actionLoading}
-                    submitReading={submitReading}
-                    utilityLabel="Electricity"
-                  />
-                </div>
-              )}
-
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-between">
-                <button
-                  type="button"
-                  onClick={goToPreviousStudioStep}
-                  disabled={studioStep === "rent"}
-                  className="inline-flex items-center justify-center rounded-2xl border border-border bg-card px-5 py-3 text-sm font-bold text-foreground transition-all hover:bg-muted disabled:pointer-events-none disabled:opacity-50"
-                >
-                  Previous step
-                </button>
-                {isLastStudioStep ? (
-                  <button onClick={createInvoices} disabled={actionLoading === "generate" || !generatorForm.leaseId} className="group inline-flex items-center justify-center gap-2.5 rounded-2xl bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] hover:bg-primary/90 active:scale-95 disabled:pointer-events-none disabled:opacity-60">
-                    {actionLoading === "generate" ? <Loader2 className="size-5 animate-spin" /> : <Plus className="size-5 transition-transform group-hover:rotate-90" />}
-                    Generate invoice
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={goToNextStudioStep}
-                    disabled={!generatorForm.leaseId}
-                    className="inline-flex items-center justify-center rounded-2xl bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-60"
-                  >
-                    Next step
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-      */}
-
       <InvoiceModal invoiceId={selectedInvoiceId} onClose={() => setSelectedInvoiceId(null)} onUpdated={loadData} />
       <RecordExpenseModal isOpen={isExpenseModalOpen} onClose={() => setIsExpenseModalOpen(false)} />
     </div>
@@ -746,118 +413,3 @@ function LedgerMetric({ label, value, highlight }: { label: string; value: strin
     </div>
   );
 }
-
-function SelectField({
-  label,
-  value,
-  onChange,
-  children,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  children: ReactNode;
-}) {
-  return <label className="space-y-2.5"><span className="text-[11px] font-bold uppercase tracking-[0.25em] text-muted-foreground">{label}</span><select value={value} onChange={(event) => onChange(event.target.value)} className="w-full appearance-none rounded-2xl border border-border/50 bg-card px-5 py-4 text-sm font-medium text-foreground outline-none transition-all hover:border-border focus:border-primary/50 focus:ring-4 focus:ring-primary/10">{children}</select></label>;
-}
-
-function InputField({ label, type = "number", value, onChange }: { label: string; type?: string; value: string; onChange: (value: string) => void }) {
-  return <label className="space-y-2.5"><span className="text-[11px] font-bold uppercase tracking-[0.25em] text-muted-foreground">{label}</span><input type={type} value={value} onChange={(event) => onChange(event.target.value)} className="w-full rounded-2xl border border-border/50 bg-card px-5 py-4 text-sm font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground hover:border-border focus:border-primary/50 focus:ring-4 focus:ring-primary/10" /></label>;
-}
-
-function StudioLineItem({
-  title,
-  description,
-  amount,
-  tone,
-}: {
-  title: string;
-  description: string;
-  amount: string;
-  tone: "primary" | "sky" | "amber";
-}) {
-  const toneClassName = tone === "primary"
-    ? "border-primary/20 bg-primary/10 text-primary"
-    : tone === "sky"
-      ? "border-sky-500/20 bg-sky-500/10 text-sky-400"
-      : "border-amber-500/20 bg-amber-500/10 text-amber-400";
-
-  return (
-    <div className="flex flex-col gap-4 rounded-[1.5rem] border border-border/50 bg-background/70 p-4 md:flex-row md:items-center md:justify-between">
-      <div>
-        <p className="text-sm font-bold text-foreground">{title}</p>
-        <p className="mt-1 text-sm text-muted-foreground">{description}</p>
-      </div>
-      <div className={cn("rounded-full border px-3 py-1.5 text-xs font-bold uppercase tracking-[0.18em]", toneClassName)}>
-        {amount}
-      </div>
-    </div>
-  );
-}
-
-function UtilityReadingStep({
-  readingForm,
-  setReadingForm,
-  proofFile,
-  setProofFile,
-  actionLoading,
-  submitReading,
-  utilityLabel,
-}: {
-  readingForm: {
-    leaseId: string;
-    utilityType: string;
-    billingPeriodStart: string;
-    billingPeriodEnd: string;
-    previousReading: string;
-    currentReading: string;
-    note: string;
-  };
-  setReadingForm: React.Dispatch<React.SetStateAction<{
-    leaseId: string;
-    utilityType: string;
-    billingPeriodStart: string;
-    billingPeriodEnd: string;
-    previousReading: string;
-    currentReading: string;
-    note: string;
-  }>>;
-  proofFile: File | null;
-  setProofFile: (file: File | null) => void;
-  actionLoading: "generate" | "reading" | null;
-  submitReading: () => Promise<void>;
-  utilityLabel: string;
-}) {
-  return (
-    <div className="rounded-[2rem] border border-border/50 bg-background/60 p-6 shadow-inner backdrop-blur-md">
-      <div className="mb-6 flex items-center gap-3 text-sm font-bold text-foreground">
-        <div className="rounded-xl border border-primary/20 bg-primary/10 p-2 text-primary shadow-sm">
-          <CalendarDays className="size-5" />
-        </div>
-        {utilityLabel} reading
-      </div>
-      <p className="mb-5 text-sm text-muted-foreground">
-        Capture the reading now so the {utilityLabel.toLowerCase()} charge can be added as a separate invoice section.
-      </p>
-      <div className="grid gap-5 md:grid-cols-2">
-        <InputField label="Previous" value={readingForm.previousReading} onChange={(value) => setReadingForm((current) => ({ ...current, previousReading: value }))} />
-        <InputField label="Current" value={readingForm.currentReading} onChange={(value) => setReadingForm((current) => ({ ...current, currentReading: value }))} />
-        <InputField label="Period start" type="date" value={readingForm.billingPeriodStart} onChange={(value) => setReadingForm((current) => ({ ...current, billingPeriodStart: value }))} />
-        <InputField label="Period end" type="date" value={readingForm.billingPeriodEnd} onChange={(value) => setReadingForm((current) => ({ ...current, billingPeriodEnd: value }))} />
-      </div>
-      <label className="mt-5 block space-y-2.5">
-        <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-muted-foreground">Note</span>
-        <textarea rows={3} value={readingForm.note} onChange={(event) => setReadingForm((current) => ({ ...current, note: event.target.value }))} className="w-full rounded-2xl border border-border/50 bg-card px-5 py-4 text-sm font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground hover:border-border focus:border-primary/50 focus:ring-4 focus:ring-primary/10" placeholder={`Any internal notes for this ${utilityLabel.toLowerCase()} reading...`} />
-      </label>
-      <label className="mt-5 block space-y-2.5">
-        <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-rose-500">Required photo proof</span>
-        <input type="file" accept="image/*" onChange={(event) => setProofFile(event.target.files?.[0] || null)} className="w-full rounded-2xl border border-border/50 bg-card px-5 py-3 text-sm font-medium text-foreground outline-none transition-all file:mr-4 file:rounded-full file:border-0 file:bg-primary/20 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-primary hover:file:bg-primary/30 focus:border-primary/50 focus:ring-4 focus:ring-primary/10" />
-      </label>
-      <button onClick={submitReading} disabled={actionLoading === "reading" || !proofFile} className="group mt-6 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card px-6 py-4 text-sm font-bold text-foreground shadow-sm transition-all hover:bg-muted active:scale-95 disabled:pointer-events-none disabled:opacity-60">
-        {actionLoading === "reading" ? <Loader2 className="size-4 animate-spin" /> : <CalendarDays className="size-4 transition-transform group-hover:-translate-y-0.5" />}
-        Save {utilityLabel.toLowerCase()} reading
-      </button>
-    </div>
-  );
-}
-

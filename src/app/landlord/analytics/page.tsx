@@ -722,7 +722,7 @@ export default function AnalyticsPage() {
                     {/* Stats Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         {statsLoading ? (
-                            Array.from({ length: 4 }).map((_, i) => <KpiCardSkeleton key={i} />)
+                            Array.from({ length: 4 }).map((_, i) => <KpiCardSkeleton key={`analytics-kpi-${i}`} />)
                         ) : (
                             primaryKpis.map((kpi) => (
                                 <KpiCard
@@ -754,7 +754,7 @@ export default function AnalyticsPage() {
                                 showMoreKpis ? "translate-y-0" : "-translate-y-4"
                             )}>
                                 {statsLoading ? (
-                                    Array.from({ length: 4 }).map((_, i) => <KpiCardSkeleton key={i} />)
+                                    Array.from({ length: 4 }).map((_, i) => <KpiCardSkeleton key={`analytics-kpi-${i}`} />)
                                 ) : (
                                     extendedKpis.map((kpi) => (
                                         <KpiCard

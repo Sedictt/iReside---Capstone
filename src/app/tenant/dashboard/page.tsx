@@ -581,7 +581,7 @@ export default function TenantDashboard() {
                                     { icon: Home, label: "Unit View", href: "/tenant/unit-map", color: "text-blue-500", bg: "bg-blue-500/10" },
                                 ].map((action, i) => (
                                     <Link
-                                        key={i}
+                                        key={action.href}
                                         href={action.href}
                                         className="bg-card/50 border border-border hover:border-primary/40 rounded-3xl p-6 flex flex-col items-center justify-center gap-4 transition-all hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 group backdrop-blur-sm"
                                     >

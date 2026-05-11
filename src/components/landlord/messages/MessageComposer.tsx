@@ -116,7 +116,7 @@ export function MessageComposer({
                                 <div key={att.id} className="relative group">
                                     <div className="size-16 rounded-xl overflow-hidden border border-divider bg-surface-3 relative">
                                         {att.isImage && att.previewUrl ? (
-                                            <Image src={att.previewUrl} fill className="object-cover" alt="Preview" />
+                                            <Image src={att.previewUrl} fill sizes="80px" className="object-cover" alt="Preview" />
                                         ) : (
                                             <div className="h-full w-full flex items-center justify-center">
                                                 <Paperclip className="size-6 text-medium" />

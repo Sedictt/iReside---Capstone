@@ -61,6 +61,7 @@ export function ProfileAvatarUploader({ initialAvatarUrl, avatarBgColor, fullNam
                         src={currentAvatarUrl}
                         alt={fullName}
                         fill
+                        sizes="128px"
                         className="object-cover"
                     />
                 ) : (

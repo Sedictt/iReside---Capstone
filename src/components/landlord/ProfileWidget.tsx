@@ -92,11 +92,12 @@ export function ProfileWidget() {
                         src={displayAvatar as string}
                         alt={displayName}
                         fill
+                        sizes="40px"
                         className="object-cover"
                         onError={() => setAvatarFailed(true)}
                     />
                 ) : (
-                    <span className="relative z-10 text-sm font-bold text-zinc-900 dark:text-white">{initials}</span>
+                    <span className="relative z-10 text-sm font-bold text-text-high dark:text-white">{initials}</span>
                 )}
             </button>
 
@@ -133,6 +134,7 @@ export function ProfileWidget() {
                                                 src={displayAvatar as string}
                                                 alt={displayName}
                                                 fill
+                                                sizes="64px"
                                                 className="object-cover"
                                                 onError={() => setAvatarFailed(true)}
                                             />

@@ -129,7 +129,7 @@ export default function ConsultationDashboard() {
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map(i => (
-              <div key={i} className="h-64 rounded-[2.5rem] bg-zinc-900/40 border border-zinc-800 animate-pulse" />
+              <div key={`doc-skeleton-${i}`} className="h-64 rounded-[2.5rem] bg-zinc-900/40 border border-zinc-800 animate-pulse" />
             ))}
           </div>
         ) : documents.length === 0 ? (

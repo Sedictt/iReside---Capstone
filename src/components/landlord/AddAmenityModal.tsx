@@ -374,7 +374,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                         <input
                                             id="icon-search"
                                             type="text"
-                                            placeholder="Search icons..."
+                                            placeholder="Search icons…"
                                             value={searchTerm}
                                             onChange={handleSearch}
                                             className="w-full rounded-xl border border-border bg-muted/30 py-2 pl-9 pr-4 text-xs font-bold outline-none transition-all focus:border-primary/50 focus:bg-muted/50"
@@ -430,7 +430,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                             <div className="flex gap-1.5">
                                                 {[...Array(totalPages)].map((_, i) => (
                                                     <button
-                                                        key={i}
+                                                        key={`page-${i}`}
                                                         type="button"
                                                         onClick={() => setCurrentPage(i)}
                                                         className={cn(
@@ -505,7 +505,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                     </label>
                                     <textarea
                                         id="facility-description"
-                                        placeholder="Describe the facility's features and rules..."
+                                        placeholder="Describe the facility's features and rules…"
                                         value={formData.description}
                                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                         className="min-h-[120px] w-full resize-none rounded-2xl border border-border bg-muted/50 px-5 py-4 text-sm font-medium outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
@@ -526,6 +526,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                                     src={photoPreview}
                                                     alt="Preview"
                                                     fill
+                                                    sizes="(max-width: 640px) 100vw, 350px"
                                                     className="object-cover transition-transform group-hover:scale-105"
                                                 />
                                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -570,7 +571,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                 disabled={loading}
                                 className="flex-[2] rounded-2xl bg-primary py-4 text-sm font-semibold text-primary-foreground shadow-2xl shadow-primary/20 transition-all hover:bg-primary/90 hover:scale-[1.02] active:scale-95 disabled:opacity-50"
                             >
-                                {loading ? 'Creating...' : 'Create Facility'}
+                                {loading ? 'Creating…' : 'Create Facility'}
                             </button>
                         </div>
                     </form>

@@ -313,7 +313,7 @@ export default function TenantMaintenancePage() {
             {loading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                        <MaintenanceCardSkeleton key={i} />
+                        <MaintenanceCardSkeleton key={`maintenance-skeleton-${i}`} />
                     ))}
                 </div>
             ) : error ? (
@@ -378,10 +378,11 @@ function TenantMaintenanceCard({ request, onClick }: { request: MaintenanceReque
             <div className="relative h-44 w-full bg-muted border-b border-border overflow-hidden shrink-0">
                 {request.images && request.images.length > 0 ? (
                     <>
-<Image
+                            <Image
                                 src={request.images[0]}
                                 alt={request.title}
                                 fill
+                                sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 300px"
                                 className="object-cover transition-transform duration-700 group-hover:scale-105"
                             />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 dark:from-black/80 dark:via-transparent dark:to-black/40" />

@@ -143,6 +143,7 @@ export default function ApplicationDashboardPage() {
                                 src={property.images[0]}
                                 alt={property.name}
                                 fill
+                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 400px"
                                 className="object-cover transition-transform duration-700 group-hover:scale-105"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
@@ -159,8 +160,8 @@ export default function ApplicationDashboardPage() {
                                     { label: "Move-in", val: "Oct 1st" },
                                     { label: "Term", val: "12 Mo" },
                                     { label: "Deposit", val: `${property.price}` },
-                                ].map((item, i) => (
-                                    <div key={i} className="bg-neutral-900/50 rounded-2xl p-3 border border-white/5">
+                                ].map((item) => (
+                                    <div key={item.label} className="bg-neutral-900/50 rounded-2xl p-3 border border-white/5">
                                         <p className="text-white/40 text-[9px] font-bold uppercase tracking-widest mb-0.5">{item.label}</p>
                                         <p className="text-white font-semibold text-lg tracking-tight">
                                             {item.val}
@@ -173,8 +174,8 @@ export default function ApplicationDashboardPage() {
                             <div className="pt-4 border-t border-white/5">
                                 <h4 className="text-white font-semibold text-[10px] uppercase tracking-widest mb-3 opacity-40">Amenities included</h4>
                                 <div className="flex flex-wrap gap-2">
-                                    {property.amenities.slice(0, 5).map((amenity, i) => (
-                                        <span key={i} className="text-[10px] font-bold px-2 py-1 rounded-lg bg-white/5 text-white/70 border border-white/5">
+                                    {property.amenities.slice(0, 5).map((amenity) => (
+                                        <span key={amenity} className="text-[10px] font-bold px-2 py-1 rounded-lg bg-white/5 text-white/70 border border-white/5">
                                             {amenity}
                                         </span>
                                     ))}

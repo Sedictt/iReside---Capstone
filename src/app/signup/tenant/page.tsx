@@ -105,9 +105,7 @@ export default function TenantInformationPage() {
         setMounted(true);
     }, []);
 
-    if (!mounted) return null;
-
-    return (
+    return !mounted ? null : (
         <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/30">
             {/* Header */}
             <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-xl">

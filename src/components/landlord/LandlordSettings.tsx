@@ -414,7 +414,7 @@ export function LandlordSettings() {
 
     // Early return AFTER all hooks to satisfy Rules of Hooks
     if (loading) {
-        return <PageLoader message="Loading your settings..." />;
+        return <PageLoader message="Loading your settings…" />;
     }
 
     const fetchProperties = async () => {
@@ -638,7 +638,7 @@ export function LandlordSettings() {
                                         style={{ backgroundColor: profile?.avatar_bg_color || "#22C55E" }}
                                     >
                                         {profile?.avatar_url ? (
-                                            <Image src={profile.avatar_url} alt="Avatar" fill className="rounded-[2.8rem] object-cover" />
+                                            <Image src={profile.avatar_url} alt="Avatar" fill sizes="160px" className="rounded-[2.8rem] object-cover" />
                                         ) : (
                                             <span className="text-5xl font-semibold text-white">
                                                 {profile?.full_name?.charAt(0).toUpperCase()}
@@ -718,7 +718,7 @@ export function LandlordSettings() {
                                     <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
                                         <div className="relative h-48 w-full md:w-80 overflow-hidden rounded-2xl border border-dashed border-white/10 bg-white/5 transition-all hover:bg-white/[0.08]">
                                             {profile?.business_permit_url ? (
-                                                <Image src={profile.business_permit_url} alt="Business Permit" fill className="object-cover" />
+                                                <Image src={profile.business_permit_url} alt="Business Permit" fill sizes="(max-width: 768px) 100vw, 320px" className="object-cover" />
                                             ) : (
                                                 <div className="flex h-full flex-col items-center justify-center gap-2 text-neutral-500">
                                                     <UploadCloud className="size-8" />
@@ -738,7 +738,7 @@ export function LandlordSettings() {
                                                 className="inline-flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/10 px-6 py-3 text-sm font-bold text-primary transition-all hover:bg-primary/20 disabled:opacity-50"
                                             >
                                                 <UploadCloud className="size-5" /> 
-                                                {isUploadingPermit ? "Uploading..." : profile?.business_permit_url ? "Replace Document" : "Upload Document"}
+                                                {isUploadingPermit ? "Uploading…" : profile?.business_permit_url ? "Replace Document" : "Upload Document"}
                                             </button>
                                             <input 
                                                 ref={permitInputRef}
@@ -773,7 +773,7 @@ export function LandlordSettings() {
                         disabled={isSaving}
                         className="flex items-center gap-2 rounded-2xl bg-primary px-8 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
                     >
-                        {isSaving ? "Saving..." : <><Save className="size-5" /> Save Changes</>}
+                        {isSaving ? "Saving…" : <><Save className="size-5" /> Save Changes</>}
                     </button>
                 </div>
 
@@ -935,7 +935,7 @@ export function LandlordSettings() {
                     };
 
                     const handleSendOTP = async () => {
-                        const loadingToast = toast.loading("Sending OTP...");
+                        const loadingToast = toast.loading("Sending OTP…");
                         try {
                             const res = await fetch("/api/landlord/2fa", {
                                 method: "POST",
@@ -960,7 +960,7 @@ export function LandlordSettings() {
                             return;
                         }
                         setIsVerifyingOTP(true);
-                        const loadingToast = toast.loading("Verifying OTP...");
+                        const loadingToast = toast.loading("Verifying OTP…");
                         try {
                             const res = await fetch("/api/landlord/2fa", {
                                 method: "POST",
@@ -989,7 +989,7 @@ export function LandlordSettings() {
                             return;
                         }
                         setIsDisabling(true);
-                        const loadingToast = toast.loading("Disabling 2FA...");
+                        const loadingToast = toast.loading("Disabling 2FA…");
                         try {
                             const res = await fetch("/api/landlord/2fa", {
                                 method: "POST",
@@ -1093,7 +1093,7 @@ export function LandlordSettings() {
                             disabled={isVerifyingOTP || otpInput.length !== 6}
                             className="w-full rounded-2xl bg-primary py-4 text-sm font-semibold text-black transition-all hover:bg-primary/90 disabled:opacity-50 shadow-lg shadow-primary/20"
                         >
-                            {isVerifyingOTP ? "Verifying..." : "Verify & Enable 2FA"}
+                            {isVerifyingOTP ? "Verifying…" : "Verify & Enable 2FA"}
                         </button>
                     </div>
                 </div>
@@ -1133,7 +1133,7 @@ export function LandlordSettings() {
                                 disabled={isDisabling || !disablePassword}
                                 className="w-full rounded-2xl bg-red-500/10 border border-red-500/20 py-4 text-sm font-bold text-red-400 transition-all hover:bg-red-500/20 disabled:opacity-50 active:scale-[0.98]"
                             >
-                                {isDisabling ? "Disabling..." : "Disable 2FA"}
+                                {isDisabling ? "Disabling…" : "Disable 2FA"}
                             </button>
                         </div>
                     </div>
@@ -1147,7 +1147,7 @@ export function LandlordSettings() {
                         <GlassCard title="Active Sessions" description="Devices currently logged into your account.">
                             <div className="space-y-4 max-w-lg">
                                 {isSessionsLoading && sessions.length === 0 ? (
-                                    <div className="text-center py-4 text-xs text-neutral-500 uppercase tracking-widest font-bold">Loading sessions...</div>
+                                    <div className="text-center py-4 text-xs text-neutral-500 uppercase tracking-widest font-bold">Loading sessions…</div>
                                 ) : sessions.length === 0 ? (
                                     <div className="text-center py-4 text-xs text-neutral-500 uppercase tracking-widest font-bold">No sessions found</div>
                                 ) : (
@@ -1322,7 +1322,7 @@ export function LandlordSettings() {
                                         className="mt-4 flex items-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/5 px-6 py-3 text-sm font-bold text-red-500 transition-all hover:bg-red-500/10 disabled:opacity-50"
                                     >
                                         <RotateCcw className="size-4" /> 
-                                        {isResetting ? "Resetting..." : "Reset All Quests"}
+                                        {isResetting ? "Resetting…" : "Reset All Quests"}
                                     </button>
                                 </div>
                             </div>

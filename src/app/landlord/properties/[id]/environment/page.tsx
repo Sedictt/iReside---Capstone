@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useMemo, Suspense } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
     Building2,
@@ -116,7 +116,7 @@ const MODE_INFO: Record<EnvironmentMode, { label: string; description: string; i
 export default function PropertyEnvironmentPage() {
     const params = useParams();
     const { push } = useRouter();
-    const supabase = createClient();
+    const supabase = useMemo(() => createClient(), []);
     const propertyId = params.id as string;
 
     const [loading, setLoading] = useState(true);

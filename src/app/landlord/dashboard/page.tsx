@@ -368,7 +368,7 @@ export default function LandlordDashboard() {
                 <section className="relative z-0 h-auto w-full rounded-[2.5rem] border border-white/10 bg-card/60 p-8 shadow-2xl shadow-black/30 backdrop-blur-xl">
                     <div className="mb-10 flex flex-wrap items-center justify-between gap-4 px-2">
                         <div className="flex min-w-0 items-center gap-4">
-                            <div className="flex size-12 items-center justify-center rounded-[1rem] border border-indigo-500/20 bg-indigo-500/12 text-indigo-300">
+                            <div className="flex size-12 items-center justify-center rounded-[1rem] border border-primary/20 bg-primary/12 text-primary">
                                 <CreditCard className="size-6" />
                             </div>
                             <div>
@@ -386,7 +386,7 @@ export default function LandlordDashboard() {
                     <div className="relative z-0 h-auto w-full rounded-[2.5rem] border border-white/10 bg-card/60 p-8 shadow-2xl shadow-black/30 backdrop-blur-xl mb-8">
                         <div className="flex flex-wrap items-center justify-between gap-4 px-2">
                             <div className="flex min-w-0 items-center gap-4">
-                                <div className="flex size-12 items-center justify-center rounded-[1rem] border border-indigo-500/20 bg-indigo-500/12 text-indigo-300">
+                                <div className="flex size-12 items-center justify-center rounded-[1rem] border border-primary/20 bg-primary/12 text-primary">
                                     <RefreshCw className="size-6" />
                                 </div>
                                 <div>
@@ -568,6 +568,7 @@ export default function LandlordDashboard() {
                                                             src={selectedActionPayment.avatar}
                                                             alt={selectedActionPayment.tenant}
                                                             fill
+                                                            sizes="80px"
                                                             className="object-cover"
                                                         />
                                                     ) : (
@@ -707,7 +708,7 @@ function PaymentCard({ payment, fallbackAvatar, onClick }: { payment: PaymentLis
                         className="relative size-12 rounded-full border-2 border-background overflow-hidden transition-all duration-500 group-hover:scale-110"
                         style={{ backgroundColor: (payment as any).avatarBgColor || '#171717' }}
                     >
-                        <Image src={avatar || fallbackAvatar} alt={tenant} fill className="object-cover" />
+                        <Image src={avatar || fallbackAvatar} alt={tenant} fill sizes="48px" className="object-cover" />
                     </div>
                     <div className={cn(
                         "absolute -bottom-0.5 -right-0.5 size-4 rounded-full border-2 border-background",

@@ -850,8 +850,8 @@ export default function ScrollyTellingLandingPage() {
                                 Reimagining rental operations with intelligent workflows and a calm, centered experience for modern portfolios.
                             </p>
                             <div className="flex items-center gap-3">
-                                {[Github, Mail].map((Icon, i) => (
-                                    <button key={i} className="size-12 rounded-2xl border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all group shadow-sm cursor-pointer bg-transparent">
+                                {[Github, Mail].map((Icon) => (
+                                    <button key={Icon.name} className="size-12 rounded-2xl border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all group shadow-sm cursor-pointer bg-transparent">
                                         <Icon className="size-5 transition-transform group-hover:scale-110" />
                                     </button>
                                 ))}
