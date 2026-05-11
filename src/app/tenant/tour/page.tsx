@@ -28,9 +28,9 @@ const reasonLabel: Record<string, string> = {
 };
 
 export default function TenantTourPage() {
-    const router = useRouter();
-    const searchParams = useSearchParams();
-    const source = searchParams.get("source") ?? "manual";
+    const { push } = useRouter();
+    const { get } = useSearchParams();
+    const source = get("source") ?? "manual";
 
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
@@ -82,10 +82,11 @@ export default function TenantTourPage() {
     const openRequiredStep = () => {
         const step = requiredStep ?? (state ? getTenantProductTourRequiredStep(state) : null);
         if (!step) {
-            router.push("/tenant/dashboard");
+            push("/tenant/dashboard");
             return;
         }
-        router.push(step.route);
+
+        push(step.route);
     };
 
     const replayTour = async () => {
@@ -102,7 +103,7 @@ export default function TenantTourPage() {
             setState(payload.state);
             setEligible(true);
             setRequiredStep(getTenantProductTourRequiredStep(payload.state));
-            router.push((getTenantProductTourRequiredStep(payload.state) ?? TENANT_PRODUCT_TOUR_STEPS[0]).route);
+            push((getTenantProductTourRequiredStep(payload.state) ?? TENANT_PRODUCT_TOUR_STEPS[0]).route);
         } catch (caught) {
             setError(caught instanceof Error ? caught.message : "Failed to replay tour.");
         } finally {

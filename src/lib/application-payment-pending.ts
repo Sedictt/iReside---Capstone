@@ -6,14 +6,14 @@ export const PAYMENT_PENDING_DURATION_HOURS = 72;
 export const PAYMENT_PENDING_REQUIREMENT_TYPES = ["advance_rent", "security_deposit"] as const;
 export type ApplicationPaymentRequirementType = (typeof PAYMENT_PENDING_REQUIREMENT_TYPES)[number];
 
-export type ApplicationPaymentRequestStatus =
+type ApplicationPaymentRequestStatus =
     | "pending"
     | "processing"
     | "completed"
     | "rejected"
     | "expired";
 
-export type PaymentPendingLeaseData = {
+type PaymentPendingLeaseData = {
     start_date: string;
     end_date: string;
     monthly_rent: number;

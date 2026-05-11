@@ -30,7 +30,7 @@ import { useNotifications } from "@/context/NotificationContext";
 import { RoleBadge } from "@/components/profile/RoleBadge";
 import { ProfileCardTrigger } from "@/components/ui/ProfileCardTrigger";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import type { Notification, Profile } from "@/types/database";
 
 function formatTimeAgo(value: string) {

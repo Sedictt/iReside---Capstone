@@ -20,7 +20,8 @@ import {
     Trash2,
     BarChart3
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { ClientOnlyDate } from "@/components/ui/client-only-date";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useProperty } from "@/context/PropertyContext";
@@ -560,13 +561,16 @@ export function UtilityBillingDashboard() {
                                     d.setDate(1);
                                     d.setMonth(d.getMonth() - i);
                                     const monthStr = d.toISOString().slice(0, 7);
+                                    const monthLabel = d.toLocaleDateString('en-US', { month: 'short' });
+                                    const yearLabel = d.getFullYear().toString();
+                                    const reportTitle = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
                                     const summary = historySummaries[monthStr];
                                     const totalElec = summary?.totalElec ?? 0;
                                     const totalWater = summary?.totalWater ?? 0;
                                     const readingCount = summary?.readingCount ?? 0;
                                     const hasData = readingCount > 0;
                                     const isCurrentMonth = i === 0;
-                                    
+
                                     return (
                                         <button 
                                             key={monthStr}
@@ -577,8 +581,8 @@ export function UtilityBillingDashboard() {
                                             <div className="md:col-span-2 flex md:flex-col items-center md:items-start gap-4">
                                                 <div className="size-16 flex items-center justify-center rounded-2xl bg-muted/50 border border-border group-hover:border-primary/20 group-hover:bg-primary/5 transition-all">
                                                     <div className="text-center">
-                                                        <p className="text-[10px] font-semibold uppercase leading-none text-muted-foreground group-hover:text-primary transition-colors">{d.toLocaleDateString('en-US', { month: 'short' })}</p>
-                                                        <p className="text-xl font-semibold mt-1 text-foreground">{d.getFullYear()}</p>
+                                                        <p className="text-[10px] font-semibold uppercase leading-none text-muted-foreground group-hover:text-primary transition-colors">{monthLabel}</p>
+                                                        <p className="text-xl font-semibold mt-1 text-foreground">{yearLabel}</p>
                                                     </div>
                                                 </div>
                                                 <div className="md:hidden h-8 w-px bg-border" />
@@ -597,7 +601,7 @@ export function UtilityBillingDashboard() {
                                             {/* Report Title & Metrics */}
                                             <div className="md:col-span-6 space-y-3">
                                                 <h4 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
-                                                    {d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} Report
+                                                    {reportTitle} Report
                                                 </h4>
                                                 <div className="flex flex-wrap gap-6">
                                                     <div className="flex items-center gap-2">
@@ -756,7 +760,7 @@ function HistoryDetailModal({ month, isOpen, onClose }: { month: string | null, 
                         <div className="flex items-center justify-between border-b border-border/50 p-8">
                             <div>
                                 <h2 className="text-2xl font-semibold text-foreground">
-                                    {month ? new Date(month + "-01").toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : ""} Archive
+                                    {month ? <ClientOnlyDate date={month + "-01"} format={{ month: 'long', year: 'numeric' }} /> : ""} Archive
                                 </h2>
                                 <p className="text-xs text-muted-foreground font-semibold uppercase tracking-widest mt-1">Detailed Consumption Audit</p>
                             </div>

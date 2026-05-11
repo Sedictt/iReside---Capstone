@@ -1,8 +1,9 @@
 
 "use client";
 
+import Image from "next/image";
 import { useState, useMemo, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { X, Check, Upload, Loader2, RefreshCcw, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
@@ -301,7 +302,7 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
                                                             isSelected ? "ring-2 ring-primary bg-primary/10 shadow-xl" : "hover:bg-white/5"
                                                         )}
                                                     >
-                                                        <img src={url} alt="Avatar" className={cn("h-full w-full object-cover transition-transform duration-500", isSelected ? "scale-110" : "group-hover:scale-110")} />
+                                                        <Image src={url} alt="Avatar" className={cn("object-cover transition-transform duration-500", isSelected ? "scale-110" : "group-hover:scale-110")} fill />
                                                         {isSelected && (
                                                             <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
                                                                 <div className="bg-primary rounded-full p-1 shadow-xl border border-white/20">

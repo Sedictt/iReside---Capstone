@@ -21,7 +21,7 @@ import {
     ChevronRight,
     Maximize2
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 type ReportStatus = "open" | "reviewing" | "resolved" | "dismissed";
@@ -547,7 +547,7 @@ function ModerationReportCard({
                     <div className="hidden md:flex items-center gap-6 ml-auto mr-4 text-[10px] font-semibold uppercase tracking-[0.15em]">
                         <div className="flex items-center gap-2 text-muted-foreground/60">
                             <Calendar className="size-3.5" />
-                            <span>{new Date(report.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                            <span suppressHydrationWarning>{new Date(report.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
                         </div>
                         <div className="h-3 w-px bg-border/50" />
                         <div className={cn(

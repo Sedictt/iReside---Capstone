@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { generateLeasePdf } from "@/lib/lease-pdf";
 import { CheckCircle, Loader2, X } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 
 // Dynamic import for DigitalSigner to avoid SSR errors with pdfjs-dist
 const DigitalSigner = dynamic(

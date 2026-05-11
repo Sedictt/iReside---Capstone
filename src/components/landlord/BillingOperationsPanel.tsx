@@ -26,8 +26,9 @@ import {
   HelpCircle,
   X
 } from "lucide-react";
+import { ClientOnlyDate } from "@/components/ui/client-only-date";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 
 import type { BillingWorkspace } from "@/lib/billing/server";
 import { cn } from "@/lib/utils";
@@ -1075,7 +1076,7 @@ function UtilityConfigEditor({
                           isOverride ? "size-4" : "size-5"
                         )} />
                         <span className={cn("flex-1 text-left", isOverride ? "text-xs" : "text-sm")}>
-                          {mounted ? new Date(config.effective_from).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }) : "---"}
+                          <ClientOnlyDate date={config.effective_from} format={{ month: '2-digit', day: '2-digit', year: 'numeric' }} />
                         </span>
                         <div className="h-6 w-px bg-border/40 hidden md:block" />
                         <ArrowRight className="size-4 text-muted-foreground/20 group-hover:text-primary/40 transition-all" />

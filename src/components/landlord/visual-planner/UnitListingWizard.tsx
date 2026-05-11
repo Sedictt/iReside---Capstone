@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { m as motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Unit } from "./VisualBuilder";
 
 export function UnitListingWizard({

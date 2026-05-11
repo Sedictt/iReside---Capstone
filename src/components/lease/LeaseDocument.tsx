@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { LeaseData } from "@/types/lease";
 
 export function LeaseDocument(props: LeaseData) {

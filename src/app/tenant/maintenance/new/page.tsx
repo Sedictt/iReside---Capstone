@@ -1,5 +1,6 @@
 "use client";
 
+import Image from 'next/image';
 import { useState, useRef, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -23,7 +24,7 @@ import {
     Phone
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 
 const CATEGORIES = [
     { id: "plumbing", label: "Plumbing", icon: Droplets, color: "text-blue-500", bg: "bg-blue-500/10" },
@@ -243,7 +244,7 @@ export default function NewMaintenanceRequest() {
                                             exit={{ opacity: 0, scale: 0.8 }}
                                             className="relative aspect-square rounded-2xl overflow-hidden border border-border"
                                         >
-                                            <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+                                            <Image src={preview} alt="Preview" fill className="object-cover" />
                                             <button
                                                 type="button"
                                                 onClick={() => removeFile(idx)}

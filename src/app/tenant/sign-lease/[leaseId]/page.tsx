@@ -8,16 +8,16 @@ export default function LeaseSigningPage({
 }: {
   params: Promise<{ leaseId: string }>;
 }) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const { replace } = useRouter();
+  const { toString } = useSearchParams();
   const { leaseId } = use(params);
 
   useEffect(() => {
     if (leaseId) {
-      const search = searchParams.toString();
-      router.replace(`/signing/tenant/${leaseId}${search ? `?${search}` : ""}`);
+      const search = toString();
+      replace(`/signing/tenant/${leaseId}${search ? `?${search}` : ""}`);
     }
-  }, [leaseId, router, searchParams]);
+  }, [leaseId, replace, toString]);
 
   return (
     <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4 text-center">

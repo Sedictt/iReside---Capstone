@@ -17,7 +17,7 @@ import { useState, Suspense, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 function LoginContent() {
@@ -233,7 +233,7 @@ function LoginContent() {
                             onClick={handleGoogleLogin}
                             className="h-14 w-full flex items-center justify-center gap-4 rounded-2xl border border-border bg-background/50 hover:bg-surface-1 transition-all font-semibold text-sm active:scale-[0.98]"
                         >
-                            <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="size-6" alt="Google" />
+                            <Image src="https://www.svgrepo.com/show/475656/google-color.svg" width={24} height={24} alt="Google" />
                             Google Account
                         </button>
 

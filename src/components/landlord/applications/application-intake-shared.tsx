@@ -1,7 +1,7 @@
 "use client";
 
 import { startTransition, type ChangeEvent, type Dispatch, type ElementType, type InputHTMLAttributes, type ReactNode, type SetStateAction } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import {
     validateFormStep,

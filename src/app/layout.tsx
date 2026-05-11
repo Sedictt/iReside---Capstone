@@ -5,6 +5,7 @@ import { PageTransitionProvider } from "@/components/transitions/PageTransitionP
 import GlobalClickSpark from "@/components/ui/ClickSparkWrapper";
 import { Toaster } from "sonner";
 import { CookieConsent } from "@/components/cookie-consent";
+import { FramerMotionProvider } from "@/components/providers/FramerMotionProvider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -57,11 +58,13 @@ export default function RootLayout({
               storageKey="ireside-theme"
             >
               <PageTransitionProvider>
-                <GlobalClickSpark>
-                  {children}
-                  <Toaster position="top-right" richColors closeButton theme="dark" />
-                  <CookieConsent />
-                </GlobalClickSpark>
+                <FramerMotionProvider>
+                  <GlobalClickSpark>
+                    {children}
+                    <Toaster position="top-right" richColors closeButton theme="dark" />
+                    <CookieConsent />
+                  </GlobalClickSpark>
+                </FramerMotionProvider>
               </PageTransitionProvider>
             </ThemeProvider>
           </GlobalLoadingProvider>

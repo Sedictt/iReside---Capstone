@@ -207,7 +207,7 @@ export default function TestVerificationPage() {
                                 </span>
                             </div>
                             <p className="text-xs text-neutral-500">
-                                Checked: {new Date(result.checkedAt).toLocaleString()}
+                                Checked: <span suppressHydrationWarning>{new Date(result.checkedAt).toLocaleString()}</span>
                             </p>
                             <p className="text-xs text-neutral-500">
                                 Source: {result.source}

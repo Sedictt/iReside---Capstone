@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 import { MoveOutChecklist } from "./MoveOutChecklist";
+import { ClientOnlyDate } from "@/components/ui/client-only-date";
 
 type MoveOutStatus = "pending" | "approved" | "denied" | "completed";
 
@@ -131,7 +132,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                 </p>
                                 <div className="mt-4 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
                                     <Calendar className="size-3" />
-                                    Target Date: {new Date(existingRequest.requested_date).toLocaleDateString()}
+                                    Target Date: <ClientOnlyDate date={existingRequest.requested_date} />
                                 </div>
                             </div>
                         </div>
@@ -156,7 +157,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                             <h3 className="text-xl font-semibold text-foreground">Move-Out Status</h3>
                         </div>
                         <p className="text-sm text-muted-foreground leading-relaxed mb-6">
-                            Your request for {new Date(existingRequest.requested_date).toLocaleDateString()} is <strong>{existingRequest.status}</strong>.
+                            Your request for <ClientOnlyDate date={existingRequest.requested_date} /> is <strong>{existingRequest.status}</strong>.
                         </p>
                         <button
                             onClick={() => setIsOpen(true)}
@@ -266,7 +267,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                             </div>
                                             <div className="flex flex-col">
                                                 <p className="text-sm font-semibold text-foreground">Request Submitted</p>
-                                                <p className="text-xs font-medium text-muted-foreground">{new Date(existingRequest.created_at).toLocaleDateString()}</p>
+                                                <p className="text-xs font-medium text-muted-foreground"><ClientOnlyDate date={existingRequest.created_at} /></p>
                                             </div>
                                         </div>
 
@@ -279,13 +280,13 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                             )}>
                                                 {existingRequest.status === "denied" ? <XCircle className="size-4" /> : <CheckCircle2 className="size-4" />}
                                             </div>
-                                            <div className="flex flex-col">
+                                            <div className="flex flex-col" suppressHydrationWarning>
                                                 <p className={cn("text-sm font-semibold", existingRequest.status === "pending" ? "text-muted-foreground" : "text-foreground")}>
                                                     {existingRequest.status === "denied" ? "Request Denied" : "Landlord Approval"}
                                                 </p>
                                                 <p className="text-xs font-medium text-muted-foreground">
-                                                    {existingRequest.approved_at ? new Date(existingRequest.approved_at).toLocaleDateString() : 
-                                                     existingRequest.denied_at ? new Date(existingRequest.denied_at).toLocaleDateString() : "Awaiting review"}
+                                                    {existingRequest.approved_at ? <ClientOnlyDate date={existingRequest.approved_at} /> : 
+                                                     existingRequest.denied_at ? <ClientOnlyDate date={existingRequest.denied_at} /> : "Awaiting review"}
                                                 </p>
                                                 {existingRequest.status === "denied" && (
                                                     <div className="mt-2 rounded-xl bg-red-500/5 border border-red-500/10 p-3 text-[11px] font-medium text-red-600">
@@ -306,7 +307,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                             <div className="flex flex-col">
                                                 <p className={cn("text-sm font-semibold", !existingRequest.inspection_date ? "text-muted-foreground" : "text-foreground")}>Physical Inspection</p>
                                                 <p className="text-xs font-medium text-muted-foreground">
-                                                    {existingRequest.inspection_date ? new Date(existingRequest.inspection_date).toLocaleDateString() : "Scheduled after approval"}
+                                                    {existingRequest.inspection_date ? <ClientOnlyDate date={existingRequest.inspection_date} /> : "Scheduled after approval"}
                                                 </p>
                                             </div>
                                         </div>
@@ -322,7 +323,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                             <div className="flex flex-col">
                                                 <p className={cn("text-sm font-semibold", existingRequest.status !== "completed" ? "text-muted-foreground" : "text-foreground")}>Lease Terminated</p>
                                                 <p className="text-xs font-medium text-muted-foreground">
-                                                    {existingRequest.completed_at ? new Date(existingRequest.completed_at).toLocaleDateString() : "Final step"}
+                                                    {existingRequest.completed_at ? <ClientOnlyDate date={existingRequest.completed_at} /> : "Final step"}
                                                 </p>
                                             </div>
                                         </div>

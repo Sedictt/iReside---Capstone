@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import {
     User,
     Shield,
@@ -40,6 +40,7 @@ import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { updateTenantPassword } from "@/lib/supabase/client-auth";
 import { UAParser } from "ua-parser-js";
+import { ClientOnlyDate } from "@/components/ui/client-only-date";
 
 // --- Types ---
 type SettingsCategory = "Identity" | "Security" | "Notifications" | "Billing" | "Data";
@@ -331,7 +332,7 @@ export function TenantSettings() {
                     bio: formData.bio,
                     emergency_contact_name: formData.emergency_name,
                     emergency_contact_phone: formData.emergency_phone,
-                })
+                } as any)
                 .eq("id", profile.id);
 
             if (error) throw error;
@@ -665,8 +666,6 @@ export function TenantSettings() {
                                         const isMobile = deviceType === "mobile" || deviceType === "tablet";
                                         const Icon = isMobile ? Smartphone : Monitor;
 
-                                        const updatedDate = new Date(sess.updated_at);
-                                        const timeString = updatedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
                                         
                                         return (
                                             <div key={sess.id} className={cn(
@@ -680,7 +679,7 @@ export function TenantSettings() {
                                                     <div>
                                                         <h4 className="text-sm font-semibold text-white">{browser} on {os}</h4>
                                                         <p className="text-[10px] text-neutral-500 uppercase tracking-wider">
-                                                            {isCurrent ? "Current Session" : `Last seen ${timeString}`} • IP: {sess.ip}
+                                                            {isCurrent ? "Current Session" : <>Last seen <ClientOnlyDate date={sess.updated_at} format={{ month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }} /></>} • IP: {sess.ip}
                                                         </p>
                                                     </div>
                                                 </div>

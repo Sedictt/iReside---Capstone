@@ -3,7 +3,7 @@
 import { TenantSidebar } from "@/components/tenant/TenantNavbar";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { AuthProvider } from "@/context/AuthContext";
 import { TenantProductTourOverlay } from "@/components/tenant/TenantProductTourOverlay";
 import { ThemeProvider } from "@/components/theme-provider";

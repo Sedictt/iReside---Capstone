@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { m as motion, AnimatePresence } from "framer-motion"
 import { Cookie, X, Shield, Check } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"

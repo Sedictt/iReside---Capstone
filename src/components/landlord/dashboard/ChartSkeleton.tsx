@@ -1,7 +1,16 @@
+"use client";
+
 import { Skeleton } from "@/components/ui/Skeleton";
 import { cn } from "@/lib/utils";
+import { useState, useEffect } from "react";
 
 export function ChartSkeleton({ className }: { className?: string }) {
+    const [barHeights, setBarHeights] = useState<number[]>([]);
+
+    useEffect(() => {
+        setBarHeights(Array.from({ length: 12 }, () => Math.floor(Math.random() * 50) + 30));
+    }, []);
+
     return (
         <div className={cn(
             "relative h-full w-full overflow-hidden rounded-[2.5rem] border border-white/10 bg-surface-2 p-8 shadow-2xl shadow-black/30 backdrop-blur-xl",
@@ -23,18 +32,33 @@ export function ChartSkeleton({ className }: { className?: string }) {
                 </div>
 
                 <div className="flex-1 flex items-end gap-3 px-2">
-                    {Array.from({ length: 12 }).map((_, i) => (
-                        <div key={i} className="flex-1 flex flex-col items-center gap-3 h-full justify-end">
-                            <Skeleton 
-                                className="w-full rounded-t-2xl" 
-                                style={{ 
-                                    height: `${Math.floor(Math.random() * 50) + 30}%`,
-                                    opacity: 0.3 + (i * 0.05)
-                                }} 
-                            />
-                            <Skeleton className="h-3 w-12 rounded-full opacity-40" />
-                        </div>
-                    ))}
+                    {barHeights.length > 0 ? (
+                        barHeights.map((height, i) => (
+                            <div key={i} className="flex-1 flex flex-col items-center gap-3 h-full justify-end">
+                                <Skeleton 
+                                    className="w-full rounded-t-2xl" 
+                                    style={{ 
+                                        height: `${height}%`,
+                                        opacity: 0.3 + (i * 0.05)
+                                    }} 
+                                />
+                                <Skeleton className="h-3 w-12 rounded-full opacity-40" />
+                            </div>
+                        ))
+                    ) : (
+                        Array.from({ length: 12 }).map((_, i) => (
+                            <div key={i} className="flex-1 flex flex-col items-center gap-3 h-full justify-end">
+                                <Skeleton 
+                                    className="w-full rounded-t-2xl" 
+                                    style={{ 
+                                        height: '30%',
+                                        opacity: 0.3 + (i * 0.05)
+                                    }} 
+                                />
+                                <Skeleton className="h-3 w-12 rounded-full opacity-40" />
+                            </div>
+                        ))
+                    )}
                 </div>
 
                 <div className="grid grid-cols-4 gap-4 px-2">

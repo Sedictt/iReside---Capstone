@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
+import { m as motion, AnimatePresence } from "framer-motion";
 import {
     User,
     Shield,
@@ -49,6 +50,7 @@ import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { MAX_FILE_SIZE, MAX_FILE_SIZE_MB } from "@/lib/constants";
 import { UAParser } from "ua-parser-js";
+import { ClientOnlyDate } from "@/components/ui/client-only-date";
 
 // --- Types ---
 type SettingsCategory = "Identity" | "Finance" | "Security" | "Notifications" | "Data";
@@ -636,7 +638,7 @@ export function LandlordSettings() {
                                         style={{ backgroundColor: profile?.avatar_bg_color || "#22C55E" }}
                                     >
                                         {profile?.avatar_url ? (
-                                            <img src={profile.avatar_url} alt="Avatar" className="h-full w-full rounded-[2.8rem] object-cover" />
+                                            <Image src={profile.avatar_url} alt="Avatar" fill className="rounded-[2.8rem] object-cover" />
                                         ) : (
                                             <span className="text-5xl font-semibold text-white">
                                                 {profile?.full_name?.charAt(0).toUpperCase()}
@@ -716,11 +718,13 @@ export function LandlordSettings() {
                                     <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
                                         <div className="relative h-48 w-full md:w-80 overflow-hidden rounded-2xl border border-dashed border-white/10 bg-white/5 transition-all hover:bg-white/[0.08]">
                                             {profile?.business_permit_url ? (
-                                                <img src={profile.business_permit_url} alt="Business Permit" className="h-full w-full object-cover" />
+                                                <Image src={profile.business_permit_url} alt="Business Permit" fill className="object-cover" />
                                             ) : (
                                                 <div className="flex h-full flex-col items-center justify-center gap-2 text-neutral-500">
                                                     <UploadCloud className="size-8" />
-                                                    <span className="text-[10px] font-bold uppercase tracking-widest">No Document</span>
+                                                    <p className="text-[10px] text-neutral-500 uppercase tracking-wider">
+                                                        No document uploaded
+                                                    </p>
                                                 </div>
                                             )}
                                         </div>
@@ -1158,8 +1162,6 @@ export function LandlordSettings() {
                                         const Icon = isMobile ? Smartphone : Monitor;
 
                                         // Try to format relative time or just use the date
-                                        const updatedDate = new Date(sess.updated_at);
-                                        const timeString = updatedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
                                         
                                         return (
                                             <div key={sess.id} className={cn(
@@ -1173,7 +1175,7 @@ export function LandlordSettings() {
                                                     <div>
                                                         <h4 className="text-sm font-semibold text-white">{browser} on {os}</h4>
                                                         <p className="text-[10px] text-neutral-500 uppercase tracking-wider">
-                                                            {isCurrent ? "Current Session" : `Last seen ${timeString}`} • IP: {sess.ip}
+                                                            {isCurrent ? "Current Session" : <>Last seen <ClientOnlyDate date={sess.updated_at} format={{ month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }} /></>} • IP: {sess.ip}
                                                         </p>
                                                     </div>
                                                 </div>

@@ -18,6 +18,7 @@ import {
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
+import { ClientOnlyDate } from '@/components/ui/client-only-date'
 
 interface TenantDetailModalProps {
     isOpen: boolean
@@ -229,7 +230,7 @@ export function TenantDetailModal({ isOpen, onClose, tenantId, initialTab = 'pro
                                                                 <div>
                                                                     <p className="text-sm font-bold text-foreground">{activity.title}</p>
                                                                     <p className="text-[10px] text-muted-foreground">
-                                                                        {mounted ? new Date(activity.date).toLocaleDateString() : '---'}
+                                                                        <ClientOnlyDate date={activity.date} />
                                                                     </p>
                                                                 </div>
                                                             </div>
@@ -295,7 +296,7 @@ export function TenantDetailModal({ isOpen, onClose, tenantId, initialTab = 'pro
                                                             <div className="flex items-center justify-between">
                                                                 <p className="text-sm font-semibold text-foreground">{activity.title}</p>
                                                                 <p className="text-[10px] font-bold text-muted-foreground">
-                                                                    {mounted ? new Date(activity.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '---'}
+                                                                    <ClientOnlyDate date={activity.date} format={{ month: 'short', day: 'numeric', year: 'numeric' }} />
                                                                 </p>
                                                             </div>
                                                             <p className="text-xs text-muted-foreground">{activity.status}</p>

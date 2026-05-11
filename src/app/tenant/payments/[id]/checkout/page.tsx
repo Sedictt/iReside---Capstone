@@ -5,7 +5,7 @@ import { ArrowLeft, CheckCircle2, CreditCard, Loader2, QrCode, ShieldCheck, Uplo
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 
 import { formatDateLong, formatPhpCurrency } from "@/lib/billing/utils";
 import { cn } from "@/lib/utils";
@@ -423,8 +423,10 @@ export default function CheckoutPage() {
     const [selectedReadingIds, setSelectedReadingIds] = useState<string[]>([]);
     const [submitted, setSubmitted] = useState(false);
     const [inPersonTriggered, setInPersonTriggered] = useState(false);
-    const isFaceToFacePreview = searchParams.get("preview") === "face_to_face";
-    const isSelectivePreview = searchParams.get("preview") === "selective";
+    const { back } = useRouter();
+    const { get } = useSearchParams();
+    const isFaceToFacePreview = get("preview") === "face_to_face";
+    const isSelectivePreview = get("preview") === "selective";
 
     useEffect(() => {
         let alive = true;
@@ -616,7 +618,7 @@ export default function CheckoutPage() {
                     <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div className="flex items-center gap-4">
                             <button 
-                                onClick={() => router.back()} 
+                                onClick={() => back()} 
                                 className="group flex size-10 items-center justify-center rounded-full border border-border/50 bg-card/50 text-foreground transition-all hover:bg-muted hover:scale-105 active:scale-95"
                             >
                                 <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5" />

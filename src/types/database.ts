@@ -8,29 +8,29 @@ export type Json =
 
 export type UserRole = 'tenant' | 'landlord' | 'admin'
 export type PropertyType = 'apartment' | 'dormitory' | 'boarding_house'
-export type UtilitySplitMethod = 'equal_per_head' | 'equal_per_unit' | 'fixed_charge' | 'individual_meter'
+type UtilitySplitMethod = 'equal_per_head' | 'equal_per_unit' | 'fixed_charge' | 'individual_meter'
 export type UnitStatus = 'vacant' | 'occupied' | 'maintenance'
 export type LeaseStatus = 'draft' | 'pending_signature' | 'pending_tenant_signature' | 'pending_landlord_signature' | 'active' | 'expired' | 'terminated'
 export type PaymentStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'refunded'
 export type PaymentMethod = 'credit_card' | 'debit_card' | 'gcash' | 'maya' | 'bank_transfer' | 'cash'
 export type PaymentWorkflowStatus = 'pending' | 'reminder_sent' | 'intent_submitted' | 'under_review' | 'awaiting_in_person' | 'confirmed' | 'rejected' | 'receipted'
-export type PaymentIntentMethod = 'gcash' | 'in_person'
-export type PaymentAmountTag = 'exact' | 'partial' | 'overpaid' | 'short_paid'
-export type PaymentReviewAction = 'accept_partial' | 'request_completion' | 'reject' | 'confirm_received'
+type PaymentIntentMethod = 'gcash' | 'in_person'
+type PaymentAmountTag = 'exact' | 'partial' | 'overpaid' | 'short_paid'
+type PaymentReviewAction = 'accept_partial' | 'request_completion' | 'reject' | 'confirm_received'
 export type UtilityType = 'water' | 'electricity'
 export type UtilityBillingMode = 'included_in_rent' | 'tenant_paid'
 export type ApplicationStatus = 'pending' | 'reviewing' | 'payment_pending' | 'approved' | 'rejected' | 'withdrawn'
 export type MaintenanceStatus = 'open' | 'assigned' | 'in_progress' | 'resolved' | 'closed'
 export type MaintenancePriority = 'low' | 'medium' | 'high' | 'urgent'
 export type MoveOutStatus = 'pending' | 'approved' | 'denied' | 'completed'
-export type UnitTransferStatus = 'pending' | 'approved' | 'denied' | 'cancelled'
+type UnitTransferStatus = 'pending' | 'approved' | 'denied' | 'cancelled'
 export type MessageType = 'text' | 'system' | 'image' | 'file'
 export type NotificationType = 'payment' | 'lease' | 'maintenance' | 'announcement' | 'message' | 'application' | 'lease_renewal_request' | 'lease_renewal_approved' | 'lease_renewal_rejected' | 'move_out_approved' | 'move_out_denied' | 'move_out_inspection_completed' | 'move_out_finalized'
-export type LocationType = 'city' | 'barangay' | 'street'
-export type TenantInviteMode = 'property' | 'unit'
-export type TenantInviteStatus = 'active' | 'revoked' | 'expired' | 'consumed'
-export type TenantInviteApplicationType = 'online' | 'face_to_face' | 'existing_tenant'
-export type ApplicationSource = 'walk_in_application' | 'invite_link'
+type LocationType = 'city' | 'barangay' | 'street'
+type TenantInviteMode = 'property' | 'unit'
+type TenantInviteStatus = 'active' | 'revoked' | 'expired' | 'consumed'
+type TenantInviteApplicationType = 'online' | 'face_to_face' | 'existing_tenant'
+type ApplicationSource = 'walk_in_application' | 'invite_link'
 export type RenewalStatus = 'pending' | 'approved' | 'rejected' | 'signed'
 
 export interface Database {
@@ -50,6 +50,8 @@ export interface Database {
                     address: string | null
                     cover_url: string | null
                     socials: Json | null
+                    emergency_contact_name: string | null
+                    emergency_contact_phone: string | null
                     business_permit_url: string | null
                     business_permit_number: string | null
                     business_name: string | null
@@ -2076,44 +2078,44 @@ export type Profile = Database['public']['Tables']['profiles']['Row']
 export type Property = Database['public']['Tables']['properties']['Row']
 export type Unit = Database['public']['Tables']['units']['Row']
 export type Lease = Database['public']['Tables']['leases']['Row']
-export type LandlordReview = Database['public']['Tables']['landlord_reviews']['Row']
+type LandlordReview = Database['public']['Tables']['landlord_reviews']['Row']
 export type Payment = Database['public']['Tables']['payments']['Row']
 export type PaymentItem = Database['public']['Tables']['payment_items']['Row']
 export type LandlordPaymentDestination = Database['public']['Tables']['landlord_payment_destinations']['Row']
 export type UtilityConfig = Database['public']['Tables']['utility_configs']['Row']
 export type UtilityReading = Database['public']['Tables']['utility_readings']['Row']
 export type PaymentReceipt = Database['public']['Tables']['payment_receipts']['Row']
-export type PaymentWorkflowAuditEvent = Database['public']['Tables']['payment_workflow_audit_events']['Row']
-export type Application = Database['public']['Tables']['applications']['Row']
-export type LandlordInquiryAction = Database['public']['Tables']['landlord_inquiry_actions']['Row']
+type PaymentWorkflowAuditEvent = Database['public']['Tables']['payment_workflow_audit_events']['Row']
+type Application = Database['public']['Tables']['applications']['Row']
+type LandlordInquiryAction = Database['public']['Tables']['landlord_inquiry_actions']['Row']
 export type MaintenanceRequest = Database['public']['Tables']['maintenance_requests']['Row']
-export type MoveOutRequest = Database['public']['Tables']['move_out_requests']['Row']
-export type UnitTransferRequest = Database['public']['Tables']['unit_transfer_requests']['Row']
-export type Conversation = Database['public']['Tables']['conversations']['Row']
-export type ConversationParticipant = Database['public']['Tables']['conversation_participants']['Row']
-export type Message = Database['public']['Tables']['messages']['Row']
-export type MessageUserAction = Database['public']['Tables']['message_user_actions']['Row']
-export type MessageUserReport = Database['public']['Tables']['message_user_reports']['Row']
+type MoveOutRequest = Database['public']['Tables']['move_out_requests']['Row']
+type UnitTransferRequest = Database['public']['Tables']['unit_transfer_requests']['Row']
+type Conversation = Database['public']['Tables']['conversations']['Row']
+type ConversationParticipant = Database['public']['Tables']['conversation_participants']['Row']
+type Message = Database['public']['Tables']['messages']['Row']
+type MessageUserAction = Database['public']['Tables']['message_user_actions']['Row']
+type MessageUserReport = Database['public']['Tables']['message_user_reports']['Row']
 export type Notification = Database['public']['Tables']['notifications']['Row']
-export type SavedProperty = Database['public']['Tables']['saved_properties']['Row']
-export type ConsultationDocument = Database['public']['Tables']['consultation_documents']['Row']
-export type LandlordStatisticsExport = Database['public']['Tables']['landlord_statistics_exports']['Row']
-export type Amenity = Database['public']['Tables']['amenities']['Row']
-export type AmenityBooking = Database['public']['Tables']['amenity_bookings']['Row']
-export type Expense = Database['public']['Tables']['expenses']['Row']
+type SavedProperty = Database['public']['Tables']['saved_properties']['Row']
+type ConsultationDocument = Database['public']['Tables']['consultation_documents']['Row']
+type LandlordStatisticsExport = Database['public']['Tables']['landlord_statistics_exports']['Row']
+type Amenity = Database['public']['Tables']['amenities']['Row']
+type AmenityBooking = Database['public']['Tables']['amenity_bookings']['Row']
+type Expense = Database['public']['Tables']['expenses']['Row']
 
 // ---------- Joined / view types for common queries ----------
-export type UnitWithProperty = Unit & {
+type UnitWithProperty = Unit & {
     property: Property
 }
 
-export type LeaseWithDetails = Lease & {
+type LeaseWithDetails = Lease & {
     unit: UnitWithProperty
     tenant: Profile
     landlord: Profile
 }
 
-export type PaymentWithDetails = Payment & {
+type PaymentWithDetails = Payment & {
     lease: Lease
     tenant: Profile
     items: PaymentItem[]
@@ -2122,17 +2124,17 @@ export type PaymentWithDetails = Payment & {
     receipts?: PaymentReceipt[]
 }
 
-export type ApplicationWithDetails = Application & {
+type ApplicationWithDetails = Application & {
     unit: UnitWithProperty
     applicant: Profile
 }
 
-export type MaintenanceRequestWithDetails = MaintenanceRequest & {
+type MaintenanceRequestWithDetails = MaintenanceRequest & {
     unit: UnitWithProperty
     tenant: Profile
 }
 
-export type ConversationWithParticipants = Conversation & {
+type ConversationWithParticipants = Conversation & {
     participants: (ConversationParticipant & { profile: Profile })[]
     last_message?: Message
 }
@@ -2147,5 +2149,5 @@ export type AmenityBookingWithDetails = AmenityBooking & {
 }
 
 
-export type UserSession = { id: string; user_id: string; created_at: string; updated_at: string; ip: string; user_agent: string; not_after: string; }
+type UserSession = { id: string; user_id: string; created_at: string; updated_at: string; ip: string; user_agent: string; not_after: string; }
 

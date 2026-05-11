@@ -1,7 +1,16 @@
+"use client";
+
 import { Skeleton } from "@/components/ui/Skeleton";
 import { cn } from "@/lib/utils";
+import { useState, useEffect } from "react";
 
 export function KpiCardSkeleton({ className }: { className?: string }) {
+    const [barHeights, setBarHeights] = useState<number[]>([]);
+
+    useEffect(() => {
+        setBarHeights(Array.from({ length: 8 }, () => Math.floor(Math.random() * 60) + 20));
+    }, []);
+
     return (
         <div 
             className={cn(
@@ -28,16 +37,29 @@ export function KpiCardSkeleton({ className }: { className?: string }) {
 
                 {/* Chart Section Area */}
                 <div className="relative h-28 w-full mt-8 flex items-end gap-1.5">
-                    {Array.from({ length: 8 }).map((_, i) => (
-                        <Skeleton 
-                            key={i} 
-                            className="flex-1 rounded-t-lg" 
-                            style={{ 
-                                height: `${Math.floor(Math.random() * 60) + 20}%`,
-                                opacity: 0.4 + (i * 0.05)
-                            }} 
-                        />
-                    ))}
+                    {barHeights.length > 0 ? (
+                        barHeights.map((height, i) => (
+                            <Skeleton 
+                                key={i} 
+                                className="flex-1 rounded-t-lg" 
+                                style={{ 
+                                    height: `${height}%`,
+                                    opacity: 0.4 + (i * 0.05)
+                                }} 
+                            />
+                        ))
+                    ) : (
+                        Array.from({ length: 8 }).map((_, i) => (
+                            <Skeleton 
+                                key={i} 
+                                className="flex-1 rounded-t-lg" 
+                                style={{ 
+                                    height: '20%',
+                                    opacity: 0.4 + (i * 0.05)
+                                }} 
+                            />
+                        ))
+                    )}
                 </div>
             </div>
         </div>

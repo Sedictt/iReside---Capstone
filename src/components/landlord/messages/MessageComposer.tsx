@@ -1,5 +1,6 @@
 "use client";
 
+import Image from 'next/image';
 import { useState, useRef, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { 
@@ -12,7 +13,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PendingAttachment } from "./types";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import data from '@emoji-mart/data';
 import Picker from '@emoji-mart/react';
 
@@ -115,7 +116,7 @@ export function MessageComposer({
                                 <div key={att.id} className="relative group">
                                     <div className="size-16 rounded-xl overflow-hidden border border-divider bg-surface-3 relative">
                                         {att.isImage && att.previewUrl ? (
-                                            <img src={att.previewUrl} className="h-full w-full object-cover" alt="Preview" />
+                                            <Image src={att.previewUrl} fill className="object-cover" alt="Preview" />
                                         ) : (
                                             <div className="h-full w-full flex items-center justify-center">
                                                 <Paperclip className="size-6 text-medium" />

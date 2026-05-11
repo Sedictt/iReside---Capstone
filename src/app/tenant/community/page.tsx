@@ -1,7 +1,7 @@
 "use client"
 
 import { FormEvent, useEffect, useRef, useState, useTransition } from "react"
-import { AnimatePresence, motion } from "framer-motion"
+import { AnimatePresence, m as motion } from "framer-motion"
 import { MessageCircle } from "lucide-react"
 import {
     addComment,

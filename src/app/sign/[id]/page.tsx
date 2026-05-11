@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import dynamic from 'next/dynamic';
 import { toast } from 'sonner';
 import { CheckCircle2, FileText } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { m as motion } from "framer-motion";
 
 const ConsultationTool = dynamic(() => import('../../admin/consultation-tool/ConsultationTool'), { 
   ssr: false,

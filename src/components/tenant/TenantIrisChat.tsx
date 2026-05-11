@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Image from 'next/image';
 import { ArrowUp, Wifi, Copy, ShieldCheck, Search, Folder, MoreVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -219,8 +220,8 @@ export function TenantIrisChat() {
             <div className="h-20 border-b border-border px-6 flex items-center justify-between shrink-0 bg-card/80 backdrop-blur-md z-10">
                 <div className="flex items-center gap-4">
                     <div className="relative">
-                        <div className="size-10 rounded-full bg-white overflow-hidden border border-border flex items-center justify-center">
-                            <img src="/logos/favicon.png" alt="iRis" className="w-full h-full object-cover" />
+                        <div className="relative size-10 rounded-full bg-white overflow-hidden border border-border flex items-center justify-center">
+                            <Image src="/logos/favicon.png" alt="iRis" fill className="object-cover" />
                         </div>
                         <div className="absolute -bottom-1 -right-1 size-3.5 rounded-full bg-card border border-border flex items-center justify-center shadow-sm">
                             <div className="size-2 rounded-full bg-primary animate-pulse" />
@@ -253,8 +254,8 @@ export function TenantIrisChat() {
             <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8 flex flex-col items-center bg-background/60">
                 <div className="w-full max-w-4xl space-y-6 flex flex-col">
                     <div className="text-center py-6 flex flex-col items-center gap-3">
-                        <div className="size-20 rounded-full bg-white flex items-center justify-center overflow-hidden border-4 border-white/60 shadow-[0_18px_35px_-24px_rgba(15,23,42,0.45)]">
-                            <img src="/logos/favicon.png" alt="iRis" className="w-full h-full object-cover" />
+                        <div className="relative size-20 rounded-full bg-white flex items-center justify-center overflow-hidden border-4 border-white/60 shadow-[0_18px_35px_-24px_rgba(15,23,42,0.45)]">
+                            <Image src="/logos/favicon.png" alt="iRis" fill className="object-cover" />
                         </div>
                         <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest bg-card px-4 py-1.5 rounded-full border border-border shadow-sm">
                             Conversation with iRis • Private & Secured
@@ -289,7 +290,7 @@ export function TenantIrisChat() {
                                     {msg.role === "iris" && (
                                         <div className="shrink-0 mt-auto">
                                             <div className="size-8 rounded-full bg-white overflow-hidden flex items-center justify-center border border-border">
-                                                <img src="/logos/favicon.png" alt="iRis" className="size-7 object-cover" />
+                                                <Image src="/logos/favicon.png" alt="iRis" width={28} height={28} className="object-cover" />
                                             </div>
                                         </div>
                                     )}

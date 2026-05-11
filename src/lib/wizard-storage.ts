@@ -2,7 +2,7 @@ const WIZARD_STATE_KEY = "iReside_wizard_state";
 const STATE_VERSION = 1;
 const TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
-export interface WizardState {
+interface WizardState {
   version: number;
   timestamp: number;
   data: Record<string, unknown>;

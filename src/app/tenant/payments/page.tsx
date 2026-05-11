@@ -35,6 +35,7 @@ import { jsPDF } from "jspdf";
 import type { InvoiceListItem, InvoiceReadingDetail } from "@/lib/billing/server";
 import { formatPhpCurrency } from "@/lib/billing/utils";
 import { cn } from "@/lib/utils";
+import { ClientOnlyDate } from "@/components/ui/client-only-date";
 
 type EnrichedInvoice = InvoiceListItem & { 
     paymentItems?: Array<{ id: string; label: string; amount: number; category: string }>;
@@ -64,7 +65,7 @@ type PaymentsPayload = {
 type TabId = "bill" | "consumption" | "history";
 
 export default function FinanceHubPage() {
-    const router = useRouter();
+    const { push } = useRouter();
     const [payload, setPayload] = useState<PaymentsPayload | null>(null);
     const [loading, setLoading] = useState(true);
     const [creatingAdvance, setCreatingAdvance] = useState(false);
@@ -114,7 +115,7 @@ export default function FinanceHubPage() {
             if (invoiceId) {
                 const checkoutUrl = `/tenant/payments/${invoiceId}/checkout`;
                 console.log("Redirecting to:", checkoutUrl);
-                router.push(checkoutUrl);
+                push(checkoutUrl);
             } else {
                 console.error("No ID returned from advance payment API", data);
                 alert("Critical error: Server did not return a valid invoice ID.");
@@ -507,7 +508,7 @@ export default function FinanceHubPage() {
                                     </div>
                                     <div className="text-right">
                                         <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-[0.2em] mb-0.5">Last Reading</p>
-                                        <p className="text-base font-semibold text-foreground">{activeReadings.length > 0 ? new Date(activeReadings[0].billing_period_end).toLocaleDateString() : 'N/A'}</p>
+                                        <p className="text-base font-semibold text-foreground">{activeReadings.length > 0 ? <ClientOnlyDate date={activeReadings[0].billing_period_end} /> : 'N/A'}</p>
                                     </div>
                                 </div>
 

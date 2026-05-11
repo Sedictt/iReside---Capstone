@@ -1,7 +1,8 @@
 "use client";
 
+import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { ThemeToggle } from "@/components/theme-toggle";
 import {
     Paperclip,
@@ -250,13 +251,13 @@ const mergeCensorshipState = (incoming: UiMessageType, previous?: UiMessageType)
 };
 
 export default function MessagesPage() {
-    const router = useRouter();
+    const { push, replace } = useRouter();
     const pathname = usePathname();
-    const searchParams = useSearchParams();
+    const { get, toString } = useSearchParams();
     const { user } = useAuth();
     const supabase = useMemo(() => createSupabaseClient(), []);
-    const conversationFromUrl = searchParams.get("conversation")?.trim() || null;
-    const panelFromUrl = searchParams.get("panel")?.trim() || null;
+    const conversationFromUrl = get("conversation")?.trim() || null;
+    const panelFromUrl = get("panel")?.trim() || null;
 
     const [contacts, setContacts] = useState<ContactItemType[]>([]);
     const [activeConversationId, setActiveConversationId] = useState<string | null>(() => conversationFromUrl);
@@ -430,18 +431,18 @@ const seen = new Set<string>();
         if (!conversationFromUrl || activeConversationId !== conversationFromUrl) return;
         setShowInfoSidebar(false);
         setShowFilesSidebar(true);
-        const nextParams = new URLSearchParams(searchParams.toString());
+        const nextParams = new URLSearchParams(toString());
         nextParams.delete("panel");
         const nextQuery = nextParams.toString();
         const nextHref = nextQuery ? `${pathname}?${nextQuery}` : pathname;
-        router.replace(nextHref, { scroll: false });
-    }, [activeConversationId, conversationFromUrl, panelFromUrl, pathname, router, searchParams]);
+        replace(nextHref, { scroll: false });
+    }, [activeConversationId, conversationFromUrl, panelFromUrl, pathname, replace, toString]);
 
     useEffect(() => {
-        const currentConversationInUrl = searchParams.get("conversation")?.trim() || null;
+        const currentConversationInUrl = get("conversation")?.trim() || null;
         const nextConversationForUrl = activeConversationId;
         if (currentConversationInUrl === nextConversationForUrl) return;
-        const nextParams = new URLSearchParams(searchParams.toString());
+        const nextParams = new URLSearchParams(toString());
         if (!nextConversationForUrl) {
             nextParams.delete("conversation");
         } else {
@@ -449,8 +450,8 @@ const seen = new Set<string>();
         }
         const nextQuery = nextParams.toString();
         const nextHref = nextQuery ? `${pathname}?${nextQuery}` : pathname;
-        router.replace(nextHref, { scroll: false });
-    }, [activeConversationId, pathname, router, searchParams]);
+        replace(nextHref, { scroll: false });
+    }, [activeConversationId, pathname, replace, toString, get]);
 
     useEffect(() => {
         if (!user?.id) {
@@ -975,14 +976,14 @@ if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation
     const handleQuickAction = (key: string) => {
         switch (key) {
             case "request-payment": setMessageInput("Friendly reminder: please settle your outstanding rent balance."); break;
-            case "schedule-repair": router.push("/landlord/maintenance"); break;
-            case "view-lease": router.push("/landlord/tenants"); break;
+            case "schedule-repair": push("/landlord/maintenance"); break;
+            case "view-lease": push("/landlord/tenants"); break;
             case "send-notice": setMessageInput("Notice: "); break;
-            case "review-application": router.push("/landlord/applications"); break;
+            case "review-application": push("/landlord/applications"); break;
             case "schedule-viewing": setMessageInput("Share your preferred dates for viewing."); break;
             case "share-requirements": setMessageInput("Please submit required documents for screening."); break;
-            case "share-listing": router.push("/landlord/properties"); break;
-            case "view-profile": if (activeContact?.participantUserId) router.push(`/visitor/${activeContact.participantUserId}`); break;
+            case "share-listing": push("/landlord/properties"); break;
+            case "view-profile": if (activeContact?.participantUserId) push(`/visitor/${activeContact.participantUserId}`); break;
             case "archive-chat": setPendingConfirmAction("archive"); break;
             case "report-user": openReportWizard(); break;
             case "block-contact": setPendingConfirmAction("block"); break;
@@ -1165,8 +1166,8 @@ if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation
                                 </div>
                                 <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar-premium">
                                     <div className="flex flex-col items-center text-center">
-                                        <div className="size-24 rounded-full border-4 border-surface-2 overflow-hidden mb-4 shadow-xl" style={{ backgroundColor: displayContact.avatarBgColor || 'var(--surface-3)' }}>
-                                            {displayContact.avatarUrl ? <img src={displayContact.avatarUrl} alt={displayContact.name} className="h-full w-full object-cover" /> : <span className="text-2xl font-bold text-high">{displayContact.initials}</span>}
+<div className="relative size-24 rounded-full border-4 border-surface-2 overflow-hidden mb-4 shadow-xl" style={{ backgroundColor: displayContact.avatarBgColor || 'var(--surface-3)' }}>
+                                                {displayContact.avatarUrl ? <Image src={displayContact.avatarUrl} alt={displayContact.name} fill className="object-cover" /> : <span className="text-2xl font-bold text-high">{displayContact.initials}</span>}
                                         </div>
                                         <h4 className="text-xl font-semibold text-high">{displayContact.name}</h4>
                                         <div className="mt-2"><RoleBadge role={displayContact.role as BadgeRole} /></div>
@@ -1227,7 +1228,7 @@ if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation
                                                             setPreviewImageIndex(index >= 0 ? index : 0);
                                                         }}
                                                     >
-                                                        <img src={file.url} className="w-full h-full object-cover" alt="" />
+                                                        <Image src={file.url} fill className="object-cover" alt="" />
                                                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                                             <button 
                                                                 onClick={(e) => { e.stopPropagation(); handleDownloadFile(file.url, file.name); }}
@@ -1329,10 +1330,12 @@ if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation
                             className="relative max-w-full max-h-[70vh] flex items-center" 
                             onClick={(event) => event.stopPropagation()}
                         >
-                            <img 
-                                src={previewImages[previewImageIndex].url} 
-                                alt={`Photo ${previewImageIndex + 1} of ${previewImages.length}`} 
-                                className="max-w-[90vw] max-h-[70vh] object-contain rounded-3xl shadow-2xl border border-border" 
+                            <Image
+                                src={previewImages[previewImageIndex].url}
+                                alt={`Photo ${previewImageIndex + 1} of ${previewImages.length}`}
+                                width={900} height={630}
+                                className="object-contain rounded-3xl shadow-2xl border border-border"
+                                style={{maxWidth: '90vw', maxHeight: '70vh'}}
                             />
                         </div>
 
@@ -1346,16 +1349,17 @@ if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation
                                         key={img.id}
                                         onClick={() => setPreviewImageIndex(idx)}
                                         className={cn(
-                                            "flex-shrink-0 size-16 rounded-xl overflow-hidden border-2 transition-all",
+                                            "relative flex-shrink-0 size-16 rounded-xl overflow-hidden border-2 transition-all",
                                             idx === previewImageIndex 
                                                 ? "border-primary ring-2 ring-primary/30" 
                                                 : "border-transparent opacity-60 hover:opacity-100"
                                         )}
                                     >
-                                        <img 
-                                            src={img.url} 
-                                            alt={`Thumbnail ${idx + 1}`} 
-                                            className="w-full h-full object-cover"
+                                        <Image
+                                            src={img.url}
+                                            alt={`Thumbnail ${idx + 1}`}
+                                            fill
+                                            className="object-cover"
                                         />
                                     </button>
                                 ))}

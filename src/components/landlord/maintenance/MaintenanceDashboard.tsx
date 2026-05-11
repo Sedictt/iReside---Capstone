@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -410,10 +411,11 @@ function MaintenanceCard({ request, onClick }: { request: MaintenanceRequest, on
             <div className="relative h-48 w-full bg-muted border-b border-border overflow-hidden shrink-0">
                 {request.images && request.images.length > 0 ? (
                     <>
-                        <img
+                        <Image
                             src={request.images[0]}
                             alt={request.title}
-                            className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                            fill
+                            className="object-cover transition-transform duration-700 group-hover:scale-105"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
@@ -482,15 +484,16 @@ function MaintenanceCard({ request, onClick }: { request: MaintenanceRequest, on
                 {/* Footer Info */}
                 <div className="flex items-center justify-between gap-4 shrink-0 pt-5 border-t border-border/50 mt-auto">
                     <div className="flex -space-x-2 overflow-hidden">
-                        <div 
-                            className="inline-block size-8 rounded-full ring-2 ring-background flex items-center justify-center text-[10px] font-bold text-white overflow-hidden shrink-0"
+                        <div
+                            className="inline-block relative size-8 rounded-full ring-2 ring-background flex items-center justify-center text-[10px] font-bold text-white overflow-hidden shrink-0"
                             style={{ backgroundColor: request.tenantAvatarBgColor || '#6d9838' }}
                         >
                             {request.tenantAvatar ? (
-                                <img
-                                    className="h-full w-full object-cover"
+                                <Image
+                                    className="object-cover"
                                     src={request.tenantAvatar}
                                     alt={request.tenant}
+                                    fill
                                 />
                             ) : (
                                 request.tenant.split(' ').map(n => n[0]).join('')

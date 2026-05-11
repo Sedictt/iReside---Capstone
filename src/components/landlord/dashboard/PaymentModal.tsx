@@ -1,7 +1,8 @@
+import Image from "next/image";
 import { X, CreditCard, Search, CheckCircle2, Sparkles, ChevronRight, AlertTriangle } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 
 interface PaymentModalProps {
     isOpen: boolean;
@@ -144,11 +145,11 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                                     >
                                         <div className="flex items-center gap-5 relative z-10">
                                             <div className="relative">
-                                                <div 
-                                                    className="size-14 rounded-full border-2 border-background overflow-hidden transition-all duration-500 group-hover:scale-110"
+                                                <div
+                                                    className="relative size-14 rounded-full border-2 border-background overflow-hidden transition-all duration-500 group-hover:scale-110"
                                                     style={{ backgroundColor: payment.avatarBgColor || '#171717' }}
                                                 >
-                                                    <img src={payment.avatar || FALLBACK_AVATAR} alt={payment.tenant} className="h-full w-full object-cover" />
+                                                    <Image src={payment.avatar || FALLBACK_AVATAR} alt={payment.tenant} fill className="object-cover" />
                                                 </div>
                                                 <div className={cn(
                                                     "absolute -bottom-0.5 -right-0.5 size-4 rounded-full border-2 border-background shadow-lg",
@@ -206,10 +207,11 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                                         <>
                                             <div className="p-8 text-center pt-10">
                                                 <div className="relative mx-auto mb-6 size-24">
-                                                    <img 
-                                                        src={selectedActionPayment.avatar || FALLBACK_AVATAR} 
-                                                        alt={selectedActionPayment.tenant} 
-                                                        className="h-full w-full rounded-full border-4 border-primary/20 object-cover shadow-2xl shadow-primary/10"
+                                                    <Image
+                                                        src={selectedActionPayment.avatar || FALLBACK_AVATAR}
+                                                        alt={selectedActionPayment.tenant}
+                                                        fill
+                                                        className="rounded-full border-4 border-primary/20 object-cover shadow-2xl shadow-primary/10"
                                                     />
                                                     <div className="absolute -bottom-1 -right-1 size-7 rounded-full border-4 border-neutral-900 bg-emerald-500 shadow-lg" />
                                                 </div>

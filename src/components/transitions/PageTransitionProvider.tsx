@@ -57,7 +57,7 @@ export function TransitionLink({ href, onClick, ...props }: TransitionLinkProps)
 }
 
 export function PageTransitionProvider({ children }: PropsWithChildren) {
-    const router = useRouter();
+    const { push } = useRouter();
     const pathname = usePathname();
     const overlayRef = useRef<HTMLDivElement>(null);
     const pendingPathRef = useRef<string | null>(null);
@@ -134,9 +134,9 @@ export function PageTransitionProvider({ children }: PropsWithChildren) {
             pendingPathRef.current = href.split(/[?#]/)[0] || href;
             setIsTransitioning(true);
             await cover();
-            router.push(href);
+            push(href);
         },
-        [cover, isTransitioning, pathname, router]
+        [cover, isTransitioning, pathname, push]
     );
 
     useEffect(() => {

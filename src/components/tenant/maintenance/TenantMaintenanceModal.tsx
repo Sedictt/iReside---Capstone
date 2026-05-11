@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import {
     X,
@@ -18,10 +19,10 @@ import {
     MapPin
 } from "lucide-react";
 
-export type MaintenanceStatus = "Pending" | "Assigned" | "In Progress" | "Resolved";
-export type Priority = "Critical" | "High" | "Medium" | "Low";
+type MaintenanceStatus = "Pending" | "Assigned" | "In Progress" | "Resolved";
+type Priority = "Critical" | "High" | "Medium" | "Low";
 
-export interface MaintenanceRequest {
+interface MaintenanceRequest {
     id: string;
     title: string;
     description: string;
@@ -89,10 +90,11 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                     <div className="relative h-64 md:h-full bg-black/5 shrink-0 flex items-center justify-center overflow-hidden">
                         {request.images && request.images.length > 0 ? (
                             <>
-                                <img
+                                <Image
                                     src={request.images[currentImageIndex]}
                                     alt={`Image ${currentImageIndex + 1}`}
-                                    className="w-full h-full object-cover"
+                                    fill
+                                    className="object-cover"
                                 />
                                 {request.images.length > 1 && (
                                     <>
@@ -340,7 +342,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                                     <div className="flex gap-2">
                                                                         {request.tenantProvidedPhotos.map((img, i) => (
                                                                             <div key={i} className="relative size-16 rounded-lg overflow-hidden border border-border shadow-sm">
-                                                                                <img src={img} alt={`Proof ${i}`} className="w-full h-full object-cover" />
+                                                                                <Image src={img} alt={`Proof ${i}`} fill className="object-cover" />
                                                                             </div>
                                                                         ))}
                                                                     </div>
@@ -521,7 +523,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                                     <div className="flex gap-2">
                                                                         {request.tenantProvidedPhotos.map((img, i) => (
                                                                             <div key={i} className="relative size-16 rounded-lg overflow-hidden border border-border shadow-sm">
-                                                                                <img src={img} alt={`Proof ${i}`} className="w-full h-full object-cover" />
+                                                                                <Image src={img} alt={`Proof ${i}`} fill className="object-cover" />
                                                                             </div>
                                                                         ))}
                                                                     </div>

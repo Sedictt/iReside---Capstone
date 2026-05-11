@@ -1,5 +1,6 @@
 "use client";
 
+import Image from 'next/image';
 import { cn } from "@/lib/utils";
 import { RoleBadge } from "@/components/profile/RoleBadge";
 import { ContactItem as ContactItemType } from "./types";
@@ -22,12 +23,12 @@ export function ContactItem({ contact, isActive, onClick }: ContactItemProps) {
             )}
         >
             <div className="relative shrink-0">
-                <div 
-                    className="size-12 shrink-0 rounded-full border border-border overflow-hidden flex items-center justify-center transition-transform group-hover:scale-105"
+                <div
+                    className="relative size-12 shrink-0 rounded-full border border-border overflow-hidden flex items-center justify-center transition-transform group-hover:scale-105"
                     style={{ backgroundColor: contact.avatarBgColor || 'var(--surface-3)' }}
                 >
                     {contact.avatarUrl ? (
-                        <img src={contact.avatarUrl} alt={contact.name} className="h-full w-full object-cover" />
+                        <Image src={contact.avatarUrl} alt={contact.name} fill className="object-cover" />
                     ) : (
                         <span className="text-sm font-bold text-high">{contact.initials}</span>
                     )}

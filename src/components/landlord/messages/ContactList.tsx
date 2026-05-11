@@ -1,5 +1,6 @@
 "use client";
 
+import Image from 'next/image';
 import { Search, ArrowLeft, AlertTriangle, X } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import Link from "next/link";
@@ -88,10 +89,10 @@ export function ContactList({
                                     className="flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left transition-all hover:bg-primary/5 group"
                                 >
                                     <div 
-                                        className="size-10 shrink-0 rounded-full border border-border overflow-hidden flex items-center justify-center bg-surface-3 transition-transform group-hover:scale-105"
+                                        className="relative size-10 shrink-0 rounded-full border border-border overflow-hidden flex items-center justify-center bg-surface-3 transition-transform group-hover:scale-105"
                                     >
                                         {result.avatarUrl ? (
-                                            <img src={result.avatarUrl} alt={result.fullName} className="h-full w-full object-cover" />
+                                            <Image src={result.avatarUrl} alt={result.fullName} fill className="object-cover" />
                                         ) : (
                                             <span className="text-xs font-bold text-high">
                                                 {(result.fullName || "C").charAt(0)}

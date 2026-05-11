@@ -320,8 +320,8 @@
     "hash": "36cc0e972766ca46fe0753bac9e5b0cc"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\page.tsx": {
-    "mtime": 1778422266.0381157,
-    "hash": "0b8b2c71cf934d0218b92cc32d33f493"
+    "mtime": 1778424902.8330963,
+    "hash": "3e3a403dc1dde09768aa09df65aac556"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\template.tsx": {
     "mtime": 1778407339.1719038,
@@ -332,16 +332,16 @@
     "hash": "40cdeb7891cfe2e1bdbc8de7d2f290e7"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\(signing)\\signing\\landlord\\[leaseId]\\page.tsx": {
-    "mtime": 1778407922.8911505,
-    "hash": "8735fea48a4b052d47ad98388c1a64ce"
+    "mtime": 1778424897.7217584,
+    "hash": "90dea61141c321ded1d30efd5878412f"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\(signing)\\signing\\tenant\\[leaseId]\\page.tsx": {
-    "mtime": 1778407922.8911505,
-    "hash": "0e4e25ca7cb206e47ca85c97bab9a42d"
+    "mtime": 1778424897.7228458,
+    "hash": "96a42bf0c7f88e2003a33acb3240167a"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\about\\page.tsx": {
-    "mtime": 1778422265.7953005,
-    "hash": "cc40a335b4e8efb1bbc83622fdd9e0d0"
+    "mtime": 1778424897.7245455,
+    "hash": "808ea3df063ad83fb052077b8c1b6522"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\admin\\layout.tsx": {
     "mtime": 1778407339.0242958,
@@ -352,12 +352,12 @@
     "hash": "c5ecec1e0b266408db942e22ce2d0f0a"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\admin\\chat-moderation\\page.tsx": {
-    "mtime": 1778424194.42404,
-    "hash": "74eb50a29ff2123b1314de50872d2f13"
+    "mtime": 1778425585.2862875,
+    "hash": "d92a57f7334d91d6dcde7145f52bbf60"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\admin\\consultation-tool\\ConsultationDashboard.tsx": {
-    "mtime": 1778423384.4945126,
-    "hash": "23f4bbdb270dd357535efcabdf7baf6a"
+    "mtime": 1778425671.2579956,
+    "hash": "ed6b81e3960129672f215995f6588e2e"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\admin\\consultation-tool\\ConsultationTool.tsx": {
     "mtime": 1778407339.0222883,
@@ -368,12 +368,12 @@
     "hash": "ce96f1ddbba50a1d94550da750833a6e"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\admin\\dashboard\\page.tsx": {
-    "mtime": 1778422265.806571,
-    "hash": "05daeea192459b023988e99e0af8ca7a"
+    "mtime": 1778424897.7288196,
+    "hash": "51f42661b48668f58af3b758f6d4244a"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\admin\\registrations\\page.tsx": {
-    "mtime": 1778422265.81369,
-    "hash": "f99b1fb28781583bcd68dc8fb224a1ae"
+    "mtime": 1778425459.8285365,
+    "hash": "71fb70989812c2265b806c7a9b8bd321"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\admin\\registrations\\revert_registration.ts": {
     "mtime": 1778407339.0266924,
@@ -384,12 +384,12 @@
     "hash": "bbb249889afcb7fb30a7b0318025ee87"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\admin\\test-verification\\page.tsx": {
-    "mtime": 1778422265.8173156,
-    "hash": "6a104b28c1994f0cf952aa2afedee8ae"
+    "mtime": 1778425477.4777582,
+    "hash": "fc47ab6eb758794c04b4b318fa02fa52"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\admin\\users\\page.tsx": {
-    "mtime": 1778422346.501207,
-    "hash": "0c7c11c8ae55d30073390605330c978f"
+    "mtime": 1778425473.1446197,
+    "hash": "bc04318bf287070b6e42c408293885ff"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\admin\\users\\__tests__\\page.test.tsx": {
     "mtime": 1778407339.028699,
@@ -831,6 +831,18 @@
     "mtime": 1778407339.092995,
     "hash": "d937cd34fcc6143292291a5282318713"
   },
+  "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\api\\tenant\\amenities\\route.ts": {
+    "mtime": 1778426441.0021207,
+    "hash": "cedfc9fa57eac3e0a0073309146c0cd4"
+  },
+  "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\api\\tenant\\amenities\\bookings\\route.ts": {
+    "mtime": 1778425090.523177,
+    "hash": "d80bef1686b8aa1a9f97ccc034c43285"
+  },
+  "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\api\\tenant\\amenities\\bookings\\[id]\\route.ts": {
+    "mtime": 1778425523.4287565,
+    "hash": "325dea11085606e1a3b82584c6cdef74"
+  },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\api\\tenant\\applications\\route.ts": {
     "mtime": 1778407339.092995,
     "hash": "036aae96166f61fbcd29968e2fb770e7"
@@ -976,24 +988,24 @@
     "hash": "8943a0afc4d47241debce411f1bf2643"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\docs\\page.tsx": {
-    "mtime": 1778422569.876541,
-    "hash": "6ca4e01b3fc0386fbe0fae0fc2db2566"
+    "mtime": 1778424880.9725742,
+    "hash": "b37320d54bd21806b872f8ff595117ce"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\docs\\features\\page.tsx": {
-    "mtime": 1778422265.9510415,
-    "hash": "b855e367942d89ff8675bb1c83a76a33"
+    "mtime": 1778424880.9772863,
+    "hash": "bf9c7888c4560e4582df8c7cd9507465"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\docs\\[...slug]\\page.tsx": {
-    "mtime": 1778422097.6622317,
-    "hash": "cd99d2edd9963b1b667e198d93f3291d"
+    "mtime": 1778424883.0839722,
+    "hash": "18d99641722a96aa774bc8c1eb163c96"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\landlord\\layout.tsx": {
     "mtime": 1778410464.2823799,
     "hash": "666411d35d6aa56cc7f3a812d2ec92f4"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\landlord\\analytics\\page.tsx": {
-    "mtime": 1778422265.968899,
-    "hash": "ade7d0d0e78eeb5b086efcbb30d5d374"
+    "mtime": 1778425483.5943806,
+    "hash": "b4ff0a91db1ece534a0b67f9ae402097"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\landlord\\applications\\page.tsx": {
     "mtime": 1778407339.1409414,
@@ -1004,36 +1016,36 @@
     "hash": "e844fd5f78ba7d534b9a0d53a45745a2"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\landlord\\dashboard\\page.tsx": {
-    "mtime": 1778422265.9745278,
-    "hash": "d7f4ce2dc90cc1c9c577f8ddc7a85088"
+    "mtime": 1778424897.7404432,
+    "hash": "4853b9b2aaf069b38ccd260d8a0f2857"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\landlord\\documents\\page.tsx": {
-    "mtime": 1778422265.9796069,
-    "hash": "35b8916ebe485ba8c10f7aa9573950f7"
+    "mtime": 1778425549.9565496,
+    "hash": "92a4e1c0f0e76e7f3a3cc37bce238c8f"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\landlord\\invoices\\page.tsx": {
-    "mtime": 1778422265.9841065,
-    "hash": "2a1e9a8b089e871302c66c7206db743e"
+    "mtime": 1778425554.437354,
+    "hash": "6172c871d66a2d6d2a566d0bc3adafdc"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\landlord\\leases\\page.tsx": {
-    "mtime": 1778422265.987905,
-    "hash": "047d79dd99e683e2243640c30dde8b56"
+    "mtime": 1778424902.848485,
+    "hash": "0ef06657773ef2cae81e23cb9e87ddf1"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\landlord\\maintenance\\page.tsx": {
     "mtime": 1778407339.1477034,
     "hash": "0c4bb1dc6523f7157eb585a68ce0b4ba"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\landlord\\messages\\page.tsx": {
-    "mtime": 1778423573.6820755,
-    "hash": "e4dfdc50a8dcec4bac7b2b7f6fc6508c"
+    "mtime": 1778424897.7525098,
+    "hash": "ea09b2d443a8bb8d0194f0edac0d5c36"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\landlord\\move-out\\page.tsx": {
-    "mtime": 1778407339.1497097,
-    "hash": "117e72f6c50fab1a5f8ca9826c96e092"
+    "mtime": 1778424897.7541966,
+    "hash": "9e589e42e616ba642545632bd4779a53"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\landlord\\onboarding\\[token]\\page.tsx": {
-    "mtime": 1778423012.6311388,
-    "hash": "751151bdaeba82decb36e788ee59af6b"
+    "mtime": 1778424902.852612,
+    "hash": "a90fe9e5dd34b30e70cb7815c06d115e"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\landlord\\profile\\page.tsx": {
     "mtime": 1778407339.15144,
@@ -1044,12 +1056,12 @@
     "hash": "ee3df9719337c01ebb221d1a7a36cae2"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\landlord\\properties\\new\\page.tsx": {
-    "mtime": 1778422266.0088265,
-    "hash": "cfdb914bebcee1cec1c629915f59bbf1"
+    "mtime": 1778424902.8549767,
+    "hash": "e6d2f08b8eeed76e3a333bb56827ca28"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\landlord\\properties\\[id]\\environment\\page.tsx": {
-    "mtime": 1778422266.0133958,
-    "hash": "39e39cda5c5a19afb40707812552c0a5"
+    "mtime": 1778424888.3786328,
+    "hash": "5d66f190104d7b15c4fb34b93a2f6c3b"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\landlord\\settings\\page.tsx": {
     "mtime": 1778422266.0149176,
@@ -1060,24 +1072,24 @@
     "hash": "b1d607d4c6a067309df8401d528d2ff1"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\landlord\\tenants\\page.tsx": {
-    "mtime": 1778411123.144403,
-    "hash": "f8b2914d93a6e108fb8d6183714cd36c"
+    "mtime": 1778424897.7818494,
+    "hash": "1f3fbe8c86c0613543d28642d39139d9"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\landlord\\unit-map\\page.tsx": {
     "mtime": 1778422266.0186107,
     "hash": "6571954268158f5d4701f55ca690702c"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\landlord\\utilities\\page.tsx": {
-    "mtime": 1778422266.02414,
-    "hash": "77700ea31239e16eeb9b969356142c89"
+    "mtime": 1778424897.7831867,
+    "hash": "6f46aa4be217d71c6d146da82978982e"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\landlord\\utility-billing\\page.tsx": {
     "mtime": 1778407339.1596236,
     "hash": "e48acb812868b64f062854358053f4c3"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\login\\page.tsx": {
-    "mtime": 1778422266.0291667,
-    "hash": "3c41f21f3c05088493971b250c83b58e"
+    "mtime": 1778424902.857828,
+    "hash": "8f4658b7738e31fe56dc66a5abe8d573"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\login\\__tests__\\page.test.tsx": {
     "mtime": 1778407339.1644247,
@@ -1100,16 +1112,16 @@
     "hash": "91f933de59ea9c351149305b3bdbe5ca"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\preview\\move-out\\page.tsx": {
-    "mtime": 1778421414.7470722,
-    "hash": "24d43162e67eb74c8123918ece93a2b7"
+    "mtime": 1778424897.788975,
+    "hash": "9c46fd4a4766f1c44d691cbe897c5557"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\sign\\[id]\\page.tsx": {
     "mtime": 1778422986.4389865,
     "hash": "adc6c22a308d7f69c92a7dbbd8385ada"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\signup\\page.tsx": {
-    "mtime": 1778422975.1570933,
-    "hash": "a569095f54c87646cfca2c21234698b5"
+    "mtime": 1778424897.7899885,
+    "hash": "6152f5ffe4ccdeb7d4d4c8ece12beab9"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\signup\\tenant\\page.tsx": {
     "mtime": 1778422961.7510655,
@@ -1120,72 +1132,72 @@
     "hash": "be9c6afe31a8e1bfe8ba86aff52d4660"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\tenant\\applications\\page.tsx": {
-    "mtime": 1778422266.0524976,
-    "hash": "37b7bde9c445fdf823c34101019d06f5"
+    "mtime": 1778424902.8636158,
+    "hash": "9c63eaab601e38e45ab65e7aa8f431da"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\tenant\\applications\\[id]\\page.tsx": {
     "mtime": 1778423072.8225267,
     "hash": "58095a8487e865a67e4c5c35586ddaf9"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\tenant\\applications\\[id]\\apply\\page.tsx": {
-    "mtime": 1778423112.4767118,
-    "hash": "ecb86b8401231e5ca753e0162fabf0b7"
+    "mtime": 1778424897.798277,
+    "hash": "8ec0d6b825ceae355a48ef2a39924726"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\tenant\\community\\page.tsx": {
     "mtime": 1778423052.1631203,
     "hash": "f33daddb5e8e94a4612a09d811174672"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\tenant\\dashboard\\page.tsx": {
-    "mtime": 1778423042.01848,
-    "hash": "414055512dc2ceff37b9b88e698ed6c9"
+    "mtime": 1778425490.4610527,
+    "hash": "af021b83e4614214d69747dacce0627f"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\tenant\\lease\\page.tsx": {
-    "mtime": 1778407419.7877846,
-    "hash": "ef6021f8f66d27b3181475b55d1a3b92"
+    "mtime": 1778424902.8697622,
+    "hash": "4290a637308b4fe96d30339c7ef6eb96"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\tenant\\lease\\[id]\\page.tsx": {
     "mtime": 1778422266.0735378,
     "hash": "13455bfc3f73e265c7b2fe5075394856"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\tenant\\lease\\[id]\\sign\\page.tsx": {
-    "mtime": 1778422266.0750508,
-    "hash": "f80dbceb45519fa2ef5c21c1a565f3ea"
+    "mtime": 1778424897.8169048,
+    "hash": "75465606ab10fa1e75749cceb3723173"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\tenant\\maintenance\\page.tsx": {
-    "mtime": 1778422266.0806265,
-    "hash": "efa2b97a09308d42ef2e71f96434a21b"
+    "mtime": 1778424897.818572,
+    "hash": "cc328523e9757a2c40689c4bcc7559e5"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\tenant\\maintenance\\new\\page.tsx": {
-    "mtime": 1778422266.0785577,
-    "hash": "9cd1cff4164b8b7116ee75b4f9d58fd7"
+    "mtime": 1778424897.8223171,
+    "hash": "f1f193cab94a6eaa0a2756bd18aa0e96"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\tenant\\messages\\page.tsx": {
-    "mtime": 1778423573.6783128,
-    "hash": "e275e69871262e9a8214f1f01c4eaf9e"
+    "mtime": 1778424897.8328953,
+    "hash": "e81b58eb340ecec8afeac17faf8f8bce"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\tenant\\payments\\page.tsx": {
-    "mtime": 1778422266.1024773,
-    "hash": "295bcbbd2a5869c91b8ea0e5d0bcd98d"
+    "mtime": 1778425554.684665,
+    "hash": "8ed854a901eb64c65363b588707a3ca1"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\tenant\\payments\\checkout\\page.tsx": {
     "mtime": 1778407339.1836984,
     "hash": "d87bde03a8f318efd9bb31068c374ea5"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\tenant\\payments\\[id]\\checkout\\page.tsx": {
-    "mtime": 1778422266.107344,
-    "hash": "ffae4d9c6abccdd906c9bdffed871974"
+    "mtime": 1778424902.8751023,
+    "hash": "b6afb5e66aa3b82459d6559b0778d6f3"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\tenant\\profile\\page.tsx": {
-    "mtime": 1778407339.1873734,
-    "hash": "67d85e0285be8a1a4c01bb0e81b1c2a4"
+    "mtime": 1778425621.272525,
+    "hash": "ce41f33dc54a6644064d06abd8f23db9"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\tenant\\settings\\page.tsx": {
     "mtime": 1778422266.110064,
     "hash": "3ffcde4042e0d69e5f682c756b59df79"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\tenant\\sign-lease\\[leaseId]\\page.tsx": {
-    "mtime": 1778407867.606197,
-    "hash": "59c8cea960f510897a4a5e8c8f68baf4"
+    "mtime": 1778424888.4222815,
+    "hash": "b46be00849e5394a30774e197b2a3efd"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\tenant\\tour\\page.tsx": {
     "mtime": 1778422266.1124585,
@@ -1196,8 +1208,8 @@
     "hash": "22071f37899720c1d105db62ebdd0876"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\tenant\\utilities\\page.tsx": {
-    "mtime": 1778422266.1164474,
-    "hash": "1448a8c51de92511fc5c8b4ce0a4cd2e"
+    "mtime": 1778426027.0286293,
+    "hash": "949d9f6f88e2377636a5bd3b3d477bcd"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\cookie-consent.tsx": {
     "mtime": 1778422287.8606544,
@@ -1224,24 +1236,24 @@
     "hash": "dcd5ddd61f1ba095f7454126d975664e"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\community\\CommunityAnnouncement.tsx": {
-    "mtime": 1778422860.5038304,
-    "hash": "484fdfca5557ac6d0158655e01d189fb"
+    "mtime": 1778424897.8431897,
+    "hash": "b97ec0ca5c5e76933b303817d23f10f9"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\community\\CommunityComposer.tsx": {
-    "mtime": 1778422287.8513112,
-    "hash": "ad146b731097fdedfa2ba30ace5bceb5"
+    "mtime": 1778424897.8442512,
+    "hash": "5ddea7d75109f227e8f0759ace49461c"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\community\\CommunityHeader.tsx": {
-    "mtime": 1778422287.8536706,
-    "hash": "9158e2c179959e25571db62112027dfd"
+    "mtime": 1778424888.428758,
+    "hash": "6b5b5360d7c67744276f3143ff618933"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\community\\CommunityPhotoLightbox.tsx": {
     "mtime": 1778407339.1931703,
     "hash": "d8cc28f9dbd21f626b6d125bff1326fe"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\community\\CommunityPostCard.tsx": {
-    "mtime": 1778422287.8580856,
-    "hash": "619444fd915bfc5a31f3cb066ec35392"
+    "mtime": 1778424897.846846,
+    "hash": "649cf58bd4d5421fa5d2c78abccb684b"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\community\\CommunityRules.tsx": {
     "mtime": 1778422583.5097883,
@@ -1260,24 +1272,24 @@
     "hash": "41f513843e3c677c0f29c5976f688046"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\docs\\UnitMapFeatureSection.tsx": {
-    "mtime": 1778422287.868873,
-    "hash": "801c1ef3f9c69754badd95b6d285e372"
+    "mtime": 1778424897.8502867,
+    "hash": "b5086acbdb569e64ec4998f6e83f815c"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\AddAmenityModal.tsx": {
-    "mtime": 1778422287.8714683,
-    "hash": "5fd51d2ba0ae89c9a6f77469c152ac9f"
+    "mtime": 1778424897.852932,
+    "hash": "c19840f115e381664b60a74d48373071"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\BillingOperationsPanel.tsx": {
-    "mtime": 1778422346.536312,
-    "hash": "a538027921d514eff68f20c9cedc44e0"
+    "mtime": 1778424897.859929,
+    "hash": "35346c7e16004054cb6a743c4ba91abb"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\BusinessPermitCard.tsx": {
-    "mtime": 1778422867.5158918,
-    "hash": "64cbefb79e86486a81cff683ad587c07"
+    "mtime": 1778424897.862055,
+    "hash": "fff91ed1a5ff6cc74ef443256b9a31e8"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\CashPaymentInterface.tsx": {
-    "mtime": 1778422861.5600803,
-    "hash": "f6d6406d1e068a6835362d0a48d8d857"
+    "mtime": 1778424897.863921,
+    "hash": "e2176db06d66802305ac2618d4c6b03e"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\EditableBio.tsx": {
     "mtime": 1778421776.611456,
@@ -1296,20 +1308,20 @@
     "hash": "4dab8fb78edee1cab37d441063f9e4ec"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\LandlordSettings.tsx": {
-    "mtime": 1778422288.0278609,
-    "hash": "9c907a247b4b6c20ef51ba5c2a824f88"
+    "mtime": 1778425612.8564777,
+    "hash": "c9f6417cfc5a48528ca67ca67edd89ae"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\ProfileWidget.tsx": {
     "mtime": 1778422288.0729017,
     "hash": "3a2a9a5277edc47b269371486ffa696f"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\PropertyEnvironmentBanner.tsx": {
-    "mtime": 1778422192.3891113,
-    "hash": "6d709e1257c3f576210f69ba6dc9e6a2"
+    "mtime": 1778424897.8792875,
+    "hash": "50b48a430c60d44921b512a3cb0ccbb9"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\PropertySelector.tsx": {
-    "mtime": 1778422288.0784307,
-    "hash": "ac98bee78f9fe4826bf2b4f8b1477a23"
+    "mtime": 1778424897.8820922,
+    "hash": "2264447973541e17ebf2e39e4768581b"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\Sidebar.tsx": {
     "mtime": 1778415149.3291261,
@@ -1320,36 +1332,36 @@
     "hash": "112439e6052cc45880897a05648abfbd"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\applications\\application-intake-shared.tsx": {
-    "mtime": 1778415149.5431504,
-    "hash": "151d27bc95ecbeadae8228fa1c2898ea"
+    "mtime": 1778424897.8842494,
+    "hash": "ecdd29c92728b058b395d82172cc9456"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\applications\\PaymentRecordForm.tsx": {
-    "mtime": 1778417627.287855,
-    "hash": "1db0a1be2ffff98d434e445d09b1f80a"
+    "mtime": 1778424897.8861434,
+    "hash": "e0316a2eb37cd3ac60e53721080a2c92"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\applications\\RentApplications.tsx": {
-    "mtime": 1778422287.8846025,
-    "hash": "de09e1a387e82e409dfbd111fa95976b"
+    "mtime": 1778424902.906564,
+    "hash": "c8ad3807eac3660fcd154baf8658f717"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\applications\\SignaturePad.tsx": {
-    "mtime": 1778415152.0351727,
-    "hash": "22541f52315d0ac7ae876ac62c24ca48"
+    "mtime": 1778424897.8942633,
+    "hash": "b322135658e48bc966329cd8819d76c7"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\applications\\SigningModeSelector.tsx": {
     "mtime": 1778422954.6344066,
     "hash": "cc8aa57e5b7782a046c797bb96786bc1"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\applications\\TenantInviteManager.tsx": {
-    "mtime": 1778422892.0502248,
-    "hash": "7902b3d1d4b1c3ac772e509428059643"
+    "mtime": 1778424897.8973663,
+    "hash": "c5b2430db156542085cd9836d14184c0"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\applications\\ToolAccessBar.tsx": {
-    "mtime": 1778422882.218434,
-    "hash": "4764dfb2f788c68e229c6aa6986f07a2"
+    "mtime": 1778424897.9001756,
+    "hash": "9aa70485cf3b744a3bc9aac167c647ba"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\applications\\WalkInApplicationModal.tsx": {
-    "mtime": 1778422878.4211378,
-    "hash": "44ce4fe2d6c8160d90bdf26f228d8506"
+    "mtime": 1778424897.9068644,
+    "hash": "477ad8243074bec1840f6cbf103e94a8"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\applications\\__tests__\\PaymentRecordForm.test.tsx": {
     "mtime": 1778415155.990836,
@@ -1364,28 +1376,28 @@
     "hash": "c60eb815bc9813e633cdf53ddc410bba"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\community\\PropertySelectorHub.tsx": {
-    "mtime": 1778422287.9361,
-    "hash": "92f6b47bd692ba282b848c50d3141de5"
+    "mtime": 1778424902.9137976,
+    "hash": "8beb695607b323421c4667e2cfb9b225"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\dashboard\\ActionRequired.tsx": {
-    "mtime": 1778422287.9385934,
-    "hash": "61903aa5373b00aeb5a4a219f512772c"
+    "mtime": 1778424897.9122815,
+    "hash": "4723a1e3f39140a901837257c697674a"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\dashboard\\ChartSkeleton.tsx": {
     "mtime": 1778415156.3397093,
     "hash": "96e2fdfa658e23749641ae6602bfb5d4"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\dashboard\\CommandCenter.tsx": {
-    "mtime": 1778422287.9422183,
-    "hash": "006ca4e48bae328435c4ca9e543b20e4"
+    "mtime": 1778424897.9138641,
+    "hash": "2de4db04371afce55d52620c5e389b61"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\dashboard\\ContactsSidebar.tsx": {
     "mtime": 1778422287.9480054,
     "hash": "2a02f51707da877c414b4a19ca47d4af"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\dashboard\\DashboardBanner.tsx": {
-    "mtime": 1778422287.9601219,
-    "hash": "1bfca32271b17fbe7eb04e3bc64c1d75"
+    "mtime": 1778424897.9334319,
+    "hash": "7016405a8c37ef8f8c56c015476d103f"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\dashboard\\FeaturedPropertyCard.tsx": {
     "mtime": 1778421386.5010493,
@@ -1396,156 +1408,156 @@
     "hash": "40f02bb66dea136009ec0bdf0691a33e"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\dashboard\\FinancialPerformanceChart.tsx": {
-    "mtime": 1778422287.9648185,
-    "hash": "2603f103457d9f05d54e8734ed29216a"
+    "mtime": 1778424897.940349,
+    "hash": "30761d20126a3a0c625b3da7c54ff8d0"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\dashboard\\FloatingChatWidget.tsx": {
     "mtime": 1778422287.9722962,
     "hash": "51a3327ea219797482aa7a863f353c1c"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\dashboard\\IrisAIAgent.tsx": {
-    "mtime": 1778422287.9774773,
-    "hash": "3d4e89d51fd734aa84f408050825f0af"
+    "mtime": 1778425581.189709,
+    "hash": "ffd051c39f76832f31e106fbb57095ab"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\dashboard\\KpiCard.tsx": {
-    "mtime": 1778422287.979185,
-    "hash": "c6626f559809b2dcdce25dc57eb50762"
+    "mtime": 1778424897.946802,
+    "hash": "7a4f5e7ab375ae52a9f68802b22bc783"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\dashboard\\KpiCardSkeleton.tsx": {
     "mtime": 1778422287.9812133,
     "hash": "6d48c665e6c89b7487d279db97bcec94"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\dashboard\\LandlordQuestBoard.tsx": {
-    "mtime": 1778415159.183138,
-    "hash": "d37b4bd7c0ed97d1ca9c262b47259337"
+    "mtime": 1778424897.9503274,
+    "hash": "ed2b9e08e74cc547fc7e03e5c4a204fa"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\dashboard\\LandlordQuestTriggerGuide.tsx": {
-    "mtime": 1778422187.7961962,
-    "hash": "c5cb994170b124948e4fb549fd047806"
+    "mtime": 1778424897.9513357,
+    "hash": "f76dd1584534e525ba76545a9209a7d3"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\dashboard\\LandlordWelcomeLightbox.tsx": {
-    "mtime": 1778415159.2306406,
-    "hash": "3ee3f9e9e67955a965c994d50fd83b6d"
+    "mtime": 1778424897.9612277,
+    "hash": "3fb2e44ae237ae650eb9a9191d40c6f4"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\dashboard\\OperationalSnapshotCard.tsx": {
-    "mtime": 1778422287.9860084,
-    "hash": "05819e9f2c3e776eaf3939ad87ee4acc"
+    "mtime": 1778424897.9627354,
+    "hash": "85e6cb8a29083c09f78b687079d26aa9"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\dashboard\\OperationalSnapshotSkeleton.tsx": {
     "mtime": 1778422346.542861,
     "hash": "31b913452d860e2dee7597bfd0da9ebc"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\dashboard\\PaymentModal.tsx": {
-    "mtime": 1778422287.9897819,
-    "hash": "b535ea5805ee1b188ffec2c4b40b2bca"
+    "mtime": 1778424897.981015,
+    "hash": "c0975b2f1b66e2f6ac8987cbfbfdf97c"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\dashboard\\RecentInquiries.tsx": {
     "mtime": 1778415159.5315633,
     "hash": "047003e09917104479dff663d8e96221"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\invoices\\InvoiceModal.tsx": {
-    "mtime": 1778423175.3098762,
-    "hash": "894922d40e96b6d4e693ed31bdab9c11"
+    "mtime": 1778424902.920192,
+    "hash": "91fcad931a24a2914a6465457a4ba4f0"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\invoices\\RecordExpenseModal.tsx": {
-    "mtime": 1778423158.9445508,
-    "hash": "4b6dbffe2bf32e7bf5676f7d680d1bfc"
+    "mtime": 1778424897.988933,
+    "hash": "a9e1f53236fe75860cf42324f54c22ac"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\lease\\ContractPreviewModal.tsx": {
-    "mtime": 1778422288.0321262,
-    "hash": "bf8912097bf6a53d40ce6a0a56a502f0"
+    "mtime": 1778425609.8748963,
+    "hash": "79db0a8472f2c688e6f2ac48f0880707"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\leases\\LeaseAuditTrail.tsx": {
     "mtime": 1778415162.6837022,
     "hash": "4bdab87ecbe588e72865c81de49b0d6b"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\leases\\LeaseStatusBadge.tsx": {
-    "mtime": 1778415162.696405,
-    "hash": "7fbb9105adb97fb15cd1b301f23bdc7f"
+    "mtime": 1778424897.9933171,
+    "hash": "ce9c0bbf865f59cb09a516c2cd5c0891"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\leases\\RenewalReview.tsx": {
-    "mtime": 1778423306.7120533,
-    "hash": "c07edad59f26d0837328424aae58499e"
+    "mtime": 1778425450.4747205,
+    "hash": "198e789756d8c076473b1ad50ab565d0"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\leases\\RenewalSettingsModal.tsx": {
-    "mtime": 1778423263.8717203,
-    "hash": "1d324654a76cabab873c7861fa66eace"
+    "mtime": 1778424897.999394,
+    "hash": "36b70383dd090c2ee385a4a356206305"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\maintenance\\MaintenanceDashboard.tsx": {
-    "mtime": 1778422242.6195512,
-    "hash": "f2ec106497555f5e9d8ca5d08a8b1e04"
+    "mtime": 1778424898.0025423,
+    "hash": "17a0fa3a925996ba132a88e85a57357d"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\maintenance\\MaintenanceRequestModal.tsx": {
-    "mtime": 1778422288.0519917,
-    "hash": "51ae01a36226d198b674add007e81728"
+    "mtime": 1778424898.004556,
+    "hash": "bf203eec42d7ad7b8c0970378c4a0a6e"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\messages\\ChatHeader.tsx": {
-    "mtime": 1778422288.0539913,
-    "hash": "f259ca2476573000c49d57e8e224f510"
+    "mtime": 1778424898.0066652,
+    "hash": "18730e6523db5603434f2ae3b4706359"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\messages\\ContactItem.tsx": {
-    "mtime": 1778415164.1808038,
-    "hash": "7e06a4b53ad5b38311cb6efc6f37333d"
+    "mtime": 1778424898.0222628,
+    "hash": "da2e9ea656fd0428c3e507e2f751f69e"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\messages\\ContactList.tsx": {
-    "mtime": 1778422288.0566168,
-    "hash": "96806ff28c3595d201fda732194af5ba"
+    "mtime": 1778424888.5611088,
+    "hash": "7a1e133b35f3426f02896fa665f7327f"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\messages\\MessageBubble.tsx": {
-    "mtime": 1778423573.6783128,
-    "hash": "fe24aa9bff56410fa500b6656bc87547"
+    "mtime": 1778424902.9355986,
+    "hash": "543196a5630f4a104744a329421429cd"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\messages\\MessageComposer.tsx": {
-    "mtime": 1778422288.061641,
-    "hash": "72a4ca39f739a9a6bca0a6f634533c8e"
+    "mtime": 1778424902.9374697,
+    "hash": "5e0e9a519330750c7f1df9114b65f2da"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\messages\\MessageList.tsx": {
-    "mtime": 1778415164.4928834,
-    "hash": "fd943a20b8230d7b0acce2ff1830211c"
+    "mtime": 1778424898.0265484,
+    "hash": "cd8d75a5fac960d5064955c98ac480ba"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\messages\\types.ts": {
     "mtime": 1778407339.24444,
     "hash": "e7c2a1a50c2c75115c533cbcc8607bc1"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\move-out\\MoveOutInspectionForm.tsx": {
-    "mtime": 1778422288.0662737,
-    "hash": "c5b1af698ada6ec03c748619ced192bf"
+    "mtime": 1778424902.9396496,
+    "hash": "7b9460a36f8ff8cd110a38054bddc7b5"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\move-out\\MoveOutRequestDetails.tsx": {
-    "mtime": 1778422288.069596,
-    "hash": "9aa503d2d52df8fdc84d44e7aa0e91c2"
+    "mtime": 1778424902.9411647,
+    "hash": "8bdcd219155e599a7f73cd611df36083"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\move-out\\MoveOutRequestsList.tsx": {
-    "mtime": 1778422198.3928056,
-    "hash": "4b1e16dead5272b1e69b8ab850cb1e43"
+    "mtime": 1778424898.0358987,
+    "hash": "69dc6244468ed88b0482ec246564b0db"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\move-out\\MoveOutStatusBadge.tsx": {
-    "mtime": 1778422195.7699962,
-    "hash": "98c7e750f68406acb719435b77dd93e5"
+    "mtime": 1778424898.0376227,
+    "hash": "1715467c49307c81a9aa45352e94a7b8"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\properties\\PropertiesDashboard.tsx": {
-    "mtime": 1778422288.0769222,
-    "hash": "b3ab03537bf265754e858663f64d94f4"
+    "mtime": 1778424902.9439263,
+    "hash": "1a7584dc3267215cd3efc2fa93fd4270"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\properties\\SmartContractPreviewModal.tsx": {
-    "mtime": 1778415165.3765838,
-    "hash": "1e5a281a7fdc44ba854f96dd25806b10"
+    "mtime": 1778424898.0469873,
+    "hash": "cb0b9bd6c9cfa6f4cfd730e18933d761"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\tenants\\AddTenantModal.tsx": {
-    "mtime": 1778422288.0855656,
-    "hash": "a1945d08698487672f4e7c19ff0940dc"
+    "mtime": 1778424898.0489874,
+    "hash": "a9e4e4bd00d7d6c7c9c488c4c9f12b78"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\tenants\\GlobalDetailModal.tsx": {
     "mtime": 1778415165.6581912,
     "hash": "bdd5f3f040fe261afb9852b3bfcdb72e"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\tenants\\TenantCard.tsx": {
-    "mtime": 1778415165.6978867,
-    "hash": "3d93ca875fd69c07e4d57e2e488014a6"
+    "mtime": 1778424898.055138,
+    "hash": "77ec00efe30323fdd965d15f43ee1af0"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\tenants\\TenantDetailModal.tsx": {
-    "mtime": 1778415165.7933311,
-    "hash": "1ac9d588bd025309ad593a6059ffb88e"
+    "mtime": 1778424898.0570595,
+    "hash": "0b69545e1f1b71381834b015e9e7d375"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\tenants\\TenantDirectory.tsx": {
     "mtime": 1778415165.8067358,
@@ -1556,24 +1568,24 @@
     "hash": "d4ee400151efea16761a31eb6ac101cf"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\utility\\UtilityBillingDashboard.tsx": {
-    "mtime": 1778422288.1009507,
-    "hash": "1651e6321c900c4d36d91a09fc03ed6e"
+    "mtime": 1778425592.6786551,
+    "hash": "7e068d78b51a0478b903133e9187301b"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\visual-planner\\MapSetupWizard.tsx": {
-    "mtime": 1778422288.1054673,
-    "hash": "46ee5cd6d65d9ac9a49498d4fbf745a2"
+    "mtime": 1778424902.9570467,
+    "hash": "28516da8e9fa11e5a5056fe1dffed727"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\visual-planner\\UnitListingWizard.tsx": {
     "mtime": 1778421780.6259277,
     "hash": "b7dda83457577720e357001a16fbc082"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\visual-planner\\VisualBuilder.tsx": {
-    "mtime": 1778422288.1406848,
-    "hash": "474eaa2eff73eb218098011a1cdf866a"
+    "mtime": 1778425572.165742,
+    "hash": "c65b82178bf4a49d34295f555208f52b"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\lease\\LeaseDocument.tsx": {
-    "mtime": 1778407339.247796,
-    "hash": "208df313b13a4a1321f21cef59d92996"
+    "mtime": 1778424898.0801747,
+    "hash": "9caa55b3fb31c76b162b2292e51bf5c1"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\lease\\LeaseHeader.tsx": {
     "mtime": 1778422583.7450392,
@@ -1584,36 +1596,36 @@
     "hash": "dd0a2b6308592fda2679f8380b00ca4f"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\messaging\\MessageReportWizard.tsx": {
-    "mtime": 1778423573.6783128,
-    "hash": "5e4003ee7afff0af85d1290962275e3c"
+    "mtime": 1778424898.08469,
+    "hash": "0cdf2238bce4f91275e08f691871b6df"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\messaging\\NotificationCard.tsx": {
-    "mtime": 1778422288.1512592,
-    "hash": "a443294d0d15471dd72437bc76080ef6"
+    "mtime": 1778425450.4781334,
+    "hash": "2559fce0203647a01ceb079605301dd0"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\messaging\\OfficialReceipt.tsx": {
-    "mtime": 1778407339.257406,
-    "hash": "089df14d99926599d4f43de7b8f1aaa2"
+    "mtime": 1778424902.973855,
+    "hash": "8b3f90bfd8a5844ebb3197589ed0b57e"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\messaging\\PaymentIssueResolver.tsx": {
-    "mtime": 1778422288.1557648,
-    "hash": "04d96c03ce79f5f39ffa2f0e08b000bc"
+    "mtime": 1778424898.0921392,
+    "hash": "ac50860f0ed39e5fc67a39d22ff94f9c"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\navigation\\NotificationBanner.tsx": {
-    "mtime": 1778422288.1577754,
-    "hash": "25ec5041905347938e7675c9cef40fc5"
+    "mtime": 1778424898.094695,
+    "hash": "1c4a21840a27945659841bfb5ccfb18b"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\navigation\\RoleSidebar.tsx": {
     "mtime": 1778422288.1593032,
     "hash": "d0be06d631493fd628441a036ea3e61a"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\profile\\AvatarPicker.tsx": {
-    "mtime": 1778422288.164872,
-    "hash": "d02394ab6280a6de50c653ffbf3d6838"
+    "mtime": 1778424898.0967045,
+    "hash": "72990cb3525a88093d6ef30da6f8982e"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\profile\\ProfileAvatarUploader.tsx": {
-    "mtime": 1778422288.1668856,
-    "hash": "11bccb99aca522d2c9893dd9b870b771"
+    "mtime": 1778424898.0992217,
+    "hash": "827adb838ef773a8bc27837b32ba2584"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\profile\\ProfileCoverUploader.tsx": {
     "mtime": 1778407339.2615023,
@@ -1632,12 +1644,12 @@
     "hash": "8568776098f58f5b50ac3dac1f8b8ce2"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\profile\\SocialsHeader.tsx": {
-    "mtime": 1778407339.2645242,
-    "hash": "1157fcbd15f76c9bc57bc058b95f6ce6"
+    "mtime": 1778424888.6237028,
+    "hash": "2430998993e757ace75e79804e127e8c"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\shared\\DigitalSigner\\DigitalSigner.tsx": {
-    "mtime": 1778422288.1785395,
-    "hash": "3b6e58601804ca2c0d2ef52d882b9b05"
+    "mtime": 1778424898.1278903,
+    "hash": "4b7eab310c0188665e6d1fa1705f46de"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\tenant\\ChatWidget.tsx": {
     "mtime": 1778422288.1817195,
@@ -1652,16 +1664,16 @@
     "hash": "635755aa0fa8026798df62b615aee0e5"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\tenant\\LeaseModal.tsx": {
-    "mtime": 1778415202.0112107,
-    "hash": "0bef96b4bd209ed91c9133ec89718bde"
+    "mtime": 1778424902.980417,
+    "hash": "f793d112b9b1545f1d35268f34f1dcf9"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\tenant\\LeaseRenewalReminder.tsx": {
-    "mtime": 1778422288.1978052,
-    "hash": "b78c97dfcf4a7611d45d3d458cdf96a5"
+    "mtime": 1778424898.1336403,
+    "hash": "1ba28021294d4ce62ab3d694001c3761"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\tenant\\LeaseRenewalRequest.tsx": {
-    "mtime": 1778415202.1652913,
-    "hash": "5c9c0a86b9d6ec9097a2aa51aec2e1d0"
+    "mtime": 1778424898.136261,
+    "hash": "e133ecdffb27ce00e1e51a601b43565d"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\tenant\\LeaseTour.tsx": {
     "mtime": 1778420393.2671754,
@@ -1676,52 +1688,52 @@
     "hash": "6c8dabc3e992f84cccdb79b7332239d5"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\tenant\\MoveOutChecklist.tsx": {
-    "mtime": 1778422288.208401,
-    "hash": "d98a3cb773926d005ab6403b33666c21"
+    "mtime": 1778424898.1387935,
+    "hash": "3a572785a6874fe0beedbf513ac0442f"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\tenant\\MoveOutRequest.tsx": {
-    "mtime": 1778415202.45866,
-    "hash": "cc4a2d7d5b1effca507a9715c3dfe56a"
+    "mtime": 1778425571.8518603,
+    "hash": "7b6cb9c6ec5524f478b378f7484a6a6c"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\tenant\\PropertyAmenities.tsx": {
-    "mtime": 1778422242.7771027,
-    "hash": "9e4be3ee34f77574d4386237dfcef701"
+    "mtime": 1778424898.1533325,
+    "hash": "3fddca6c0a78b2a55d40ecc33d15d926"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\tenant\\TenantContactsSidebar.tsx": {
-    "mtime": 1778422288.2203014,
-    "hash": "6e05d13ef0d1822614d35c04ffd73a6d"
+    "mtime": 1778424902.9931402,
+    "hash": "5641b96a5fa5f692af620e75dd6d1f56"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\tenant\\TenantIrisChat.tsx": {
     "mtime": 1778422288.221821,
     "hash": "f81093840b85d46cb3ff4a97eb0b29a3"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\tenant\\TenantNavbar.tsx": {
-    "mtime": 1778422288.2268374,
-    "hash": "48b12334f0162b0eaa03e3a55790aaf8"
+    "mtime": 1778424898.177934,
+    "hash": "258266a285284d5a3b17bb4f690946cc"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\tenant\\TenantProductTourOverlay.tsx": {
     "mtime": 1778422288.2290387,
     "hash": "9725a8827aeea5d164df620237640b15"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\tenant\\TenantSettings.tsx": {
-    "mtime": 1778422288.2343652,
-    "hash": "fde60806a1a003f666cb15d3f14a6195"
+    "mtime": 1778426318.2290611,
+    "hash": "8fb01ff5e1db45524042519858e20b7e"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\tenant\\UnitTransferRequest.tsx": {
-    "mtime": 1778422242.8233867,
-    "hash": "be0256a0e2c127146792e58624d11f30"
+    "mtime": 1778424898.192754,
+    "hash": "5ae79a3e3385b714e29ae1b08b755974"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\tenant\\invite\\InviteApplicationClient.tsx": {
-    "mtime": 1778422288.1913445,
-    "hash": "555187cc2dc21d25334a5ef641edcfe5"
+    "mtime": 1778425450.4781334,
+    "hash": "8be9b01f71fcdff1536d707fe45abcaf"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\tenant\\invite\\ProspectPaymentPortalClient.tsx": {
-    "mtime": 1778415206.896019,
-    "hash": "ae1b28a59a8722c739fb7e193bd91d21"
+    "mtime": 1778424902.9965093,
+    "hash": "45178f61c734a1b0a31bfa3dfd3e276a"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\tenant\\maintenance\\TenantMaintenanceModal.tsx": {
-    "mtime": 1778415207.2454996,
-    "hash": "09c37d663ddc597f3108d3f8451608ee"
+    "mtime": 1778424898.2072523,
+    "hash": "79667728ec64a9dcc2ee2b658d67213a"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\transitions\\PageTransitionProvider.tsx": {
     "mtime": 1778407339.282053,
@@ -1748,8 +1760,8 @@
     "hash": "caa8756a98876cd3e152c6bd2e04412c"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\ui\\ProfileCard.tsx": {
-    "mtime": 1778413876.1509743,
-    "hash": "27d46279c816c72748a75f41f09f4e7f"
+    "mtime": 1778424898.2118015,
+    "hash": "4620ee3044a17045b21a01de7c8df5fe"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\ui\\ProfileCardTrigger.tsx": {
     "mtime": 1778407339.2851136,
@@ -1952,8 +1964,8 @@
     "hash": "72abc62863591e564c1a58cce306d3fd"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\lib\\queries\\amenities.ts": {
-    "mtime": 1778407339.3243797,
-    "hash": "ee740b88cc057c834c627e522a37ca30"
+    "mtime": 1778426726.4707942,
+    "hash": "d47c78487ff119989df3d6b3077078a5"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\lib\\queries\\index.ts": {
     "mtime": 1778407339.3243797,
@@ -2044,8 +2056,8 @@
     "hash": "f98d9f990142a88e5a18c557d7660b4e"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\types\\database.ts": {
-    "mtime": 1778415392.6468146,
-    "hash": "92a093d9857b27beb1cd6a9ff452066f"
+    "mtime": 1778425966.5228605,
+    "hash": "8d70a21e92ed75ab028809a0fbb9d242"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\types\\index.ts": {
     "mtime": 1778407339.3387465,
@@ -3452,11 +3464,11 @@
     "hash": "7e562ea90246d793b10aac04c091769b"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\graphify-out\\converted\\iReside-Feature-Based-Questionnaire-v2_06792d12.md": {
-    "mtime": 1778424251.3601582,
+    "mtime": 1778427827.511526,
     "hash": "c6ec95431135e464cc465c878314bcad"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\graphify-out\\converted\\iReside-Feature-Based-Questionnaire_3e984299.md": {
-    "mtime": 1778424251.4120655,
+    "mtime": 1778427827.556409,
     "hash": "f3b9f63d91e85ed4a98cab4a27ee9274"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\Chapter 3 Docs\\FEATURE-BASED-QUESTIONNAIRE\\iReside-Feature-Based-Questionnaire.md": {
@@ -3464,15 +3476,15 @@
     "hash": "bf0c526a89e3fe72666b450ae3878fea"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\graphify-out\\converted\\iReside-Feature-Based-Questionnaire_old_42ba5e5b.md": {
-    "mtime": 1778424251.4679997,
+    "mtime": 1778427827.602296,
     "hash": "70e47e911dc0e3507100a51bb59412ab"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\graphify-out\\converted\\iReside-ISO-Based-Questionnaire-updated_c604d84c.md": {
-    "mtime": 1778424251.5031314,
+    "mtime": 1778427827.638768,
     "hash": "4efb1a55142cf110da5b8330a5e93d17"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\graphify-out\\converted\\iReside-ISO-Based-Questionnaire_d70a262b.md": {
-    "mtime": 1778424251.5592465,
+    "mtime": 1778427827.6867416,
     "hash": "bced790dde9156e154af90a43c236493"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\Chapter 3 Docs\\FEATURE-BASED-QUESTIONNAIRE\\iReside-ISO-Based-Questionnaire.md": {
@@ -3496,7 +3508,7 @@
     "hash": "342c3853210925a80b2129b98980ff10"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\graphify-out\\converted\\3.5.5 Use Case Scenario_1215615e.md": {
-    "mtime": 1778424251.6613524,
+    "mtime": 1778427827.7779708,
     "hash": "72d40ffa5d2773b63fcc1ed3be1ab9ba"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\latest-documentations after major refactor\\activity-diagram.html": {
@@ -3808,7 +3820,7 @@
     "hash": "1374e03b48285c9f97f1b0e2f6c2ba4e"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\graphify-out\\converted\\iReside-3.4-Project-Description_d0a13cc3.md": {
-    "mtime": 1778424254.5276966,
+    "mtime": 1778427830.829711,
     "hash": "a6bcbadabc3235a48dfafa7a1c9d20c6"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\output\\doc\\ireside-component-diagram.html": {
@@ -3816,27 +3828,27 @@
     "hash": "5fc1e5a68e9c634e65525a71255dce11"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\graphify-out\\converted\\iReside_System_Feature_Specification_4ef0ea60.md": {
-    "mtime": 1778424254.6123185,
+    "mtime": 1778427830.9661973,
     "hash": "b601185920d056e54a9239275c86079e"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\graphify-out\\converted\\output-use-case-scenarios-3.5.5_3d2cce7a.md": {
-    "mtime": 1778424254.6901238,
+    "mtime": 1778427831.097115,
     "hash": "dfb344aacd6a06eec6977e9dc137585c"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\graphify-out\\converted\\system-data-dictionary_4191ba2a.md": {
-    "mtime": 1778424254.830272,
+    "mtime": 1778427831.3024368,
     "hash": "0567838c4784a622fb115ad01e790243"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\graphify-out\\converted\\iReside_UAT_Test_Cases_38867334.md": {
-    "mtime": 1778424256.3002472,
+    "mtime": 1778427831.9011822,
     "hash": "afbfb5d9f910f2e962c4028c7e7ce7f9"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\graphify-out\\converted\\iReside_UAT_Test_Cases_v2_8638991d.md": {
-    "mtime": 1778424256.3293476,
+    "mtime": 1778427831.9359715,
     "hash": "ec80f5c2bf3a8e7be3e8d3d9cd5413cc"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\graphify-out\\converted\\iReside_UAT_Test_Cases_v3_8f976840.md": {
-    "mtime": 1778424256.36023,
+    "mtime": 1778427831.9666107,
     "hash": "cf9930985ade91d615828b152264e784"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\Plans\\unit_map_plan.md": {

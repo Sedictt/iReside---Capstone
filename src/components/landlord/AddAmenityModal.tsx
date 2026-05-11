@@ -1,7 +1,8 @@
 'use client'
 
+import Image from 'next/image'
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m as motion, AnimatePresence } from "framer-motion"
 import { 
     X, 
     Zap, 
@@ -521,10 +522,11 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                     >
                                         {photoPreview ? (
                                             <>
-                                                <img 
-                                                    src={photoPreview} 
-                                                    alt="Preview" 
-                                                    className="absolute inset-0 h-full w-full object-cover transition-transform group-hover:scale-105"
+                                                <Image
+                                                    src={photoPreview}
+                                                    alt="Preview"
+                                                    fill
+                                                    className="object-cover transition-transform group-hover:scale-105"
                                                 />
                                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                                     <Camera className="size-6 text-white" />

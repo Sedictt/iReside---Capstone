@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import Image from "next/image";
+import { AnimatePresence, m as motion } from "framer-motion";
 import { flushSync } from "react-dom";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
@@ -19,6 +20,7 @@ const WalkInApplicationModal = dynamic(() => import("@/components/landlord/appli
 import { TenantInviteManager } from "@/components/landlord/applications/TenantInviteManager";
 import { QrCode, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ClientOnlyDate } from "@/components/ui/client-only-date";
 
 export interface Unit {
     id: string;       // local canvas id (same as dbId for real units)
@@ -431,7 +433,7 @@ const UnitHistoryModal = ({
                                                     </span>
                                                 </div>
                                                 <p className="text-[10px] font-bold text-muted-foreground mt-1">
-                                                    {new Date(item.leaseStart).toLocaleDateString()} &mdash; {new Date(item.leaseEnd).toLocaleDateString()}
+                                                    <ClientOnlyDate date={item.leaseStart} /> &mdash; <ClientOnlyDate date={item.leaseEnd} />
                                                 </p>
                                             </div>
                                             <div className="text-right">
@@ -453,7 +455,7 @@ const UnitHistoryModal = ({
                                                         {item.status}
                                                     </span>
                                                 </div>
-                                                <p className="text-[10px] font-bold text-muted-foreground mt-1">{new Date(item.date).toLocaleDateString()} &bull; {item.description}</p>
+                                                <p className="text-[10px] font-bold text-muted-foreground mt-1"><ClientOnlyDate date={item.date} /> &bull; {item.description}</p>
                                             </div>
                                             <div className="text-right">
                                                 <p className={`text-xs font-semibold text-foreground`}>â‚±{item.cost.toLocaleString()}</p>
@@ -5018,18 +5020,20 @@ const UnitDetailsPanel = ({
                                 <div className="flex items-center gap-5">
                                     <div className="relative">
                                         <div className="relative size-16 rounded-[22px] border-2 border-primary/20 p-1 transition-transform group-hover:scale-105">
-                                            <div className="h-full w-full overflow-hidden rounded-[18px] bg-zinc-100 dark:bg-zinc-800" style={unit.tenantAvatarBgColor ? { backgroundColor: unit.tenantAvatarBgColor } : undefined}>
+                                            <div className="h-full w-full overflow-hidden rounded-[18px] bg-zinc-100 dark:bg-zinc-800 relative" style={unit.tenantAvatarBgColor ? { backgroundColor: unit.tenantAvatarBgColor } : undefined}>
                                                 {unit.tenantAvatarUrl ? (
-                                                    <img
+                                                    <Image
                                                         src={unit.tenantAvatarUrl}
                                                         alt="Tenant"
-                                                        className="h-full w-full object-cover"
+                                                        fill
+                                                        className="object-cover"
                                                     />
                                                 ) : (
-                                                    <img
+                                                    <Image
                                                         src={unit.tenant ? `https://ui-avatars.com/api/?name=${encodeURIComponent(unit.tenant)}&background=random&color=fff` : "https://images.unsplash.com/photo-1529778456-9a2cf1fbe4a8?auto=format&fit=crop&w=150&q=80"}
                                                         alt="Tenant"
-                                                        className="h-full w-full object-cover"
+                                                        fill
+                                                        className="object-cover"
                                                     />
                                                 )}
                                             </div>
@@ -5221,12 +5225,12 @@ const UnitDetailsPanel = ({
                                     <div className="mt-8 flex w-full items-center justify-between gap-4">
                                         <div className="flex-1 space-y-1">
                                             <p className="text-[10px] font-bold text-zinc-400">Lease Commenced</p>
-                                            <p className="text-xs font-semibold text-zinc-800 dark:text-zinc-100">{unit.leaseStart ? new Date(unit.leaseStart).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : "--"}</p>
+                                            <p className="text-xs font-semibold text-zinc-800 dark:text-zinc-100">{unit.leaseStart ? <ClientOnlyDate date={unit.leaseStart} format={{ month: 'short', day: 'numeric', year: 'numeric' }} /> : "--"}</p>
                                         </div>
                                         <div className="h-8 w-px bg-zinc-100 dark:bg-white/5" />
                                         <div className="flex-1 text-right space-y-1">
                                             <p className="text-[10px] font-bold text-zinc-400">Renewal Window</p>
-                                            <p className="text-xs font-semibold text-zinc-800 dark:text-zinc-100">{unit.leaseEnd ? new Date(unit.leaseEnd).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : "--"}</p>
+                                            <p className="text-xs font-semibold text-zinc-800 dark:text-zinc-100">{unit.leaseEnd ? <ClientOnlyDate date={unit.leaseEnd} format={{ month: 'short', day: 'numeric', year: 'numeric' }} /> : "--"}</p>
                                         </div>
                                     </div>
 
@@ -5761,6 +5765,7 @@ const HotkeyItem = ({ label, shortcut }: { label: string; shortcut: string }) =>
         <kbd className="px-2 py-1 rounded-md bg-white/10 border border-white/10 text-[10px] font-semibold text-primary font-mono shadow-sm">{shortcut}</kbd>
     </div>
 );
+
 
 
 

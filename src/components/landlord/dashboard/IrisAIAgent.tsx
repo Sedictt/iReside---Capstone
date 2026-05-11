@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { X, RefreshCcw, ChevronRight, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ClientOnlyTime } from "@/components/ui/client-only-date";
 
 type IrisAnalysis = {
     goodThings: string[];
@@ -425,7 +426,7 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
                                 {/* Footer */}
                                 <div className="mt-8 flex items-center justify-between border-t border-white/10 pt-6">
                                     <div className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60">
-                                        Last Updated: {lastRefresh ? new Date(lastRefresh).toLocaleTimeString() : "Never"}
+                                        Last Updated: {lastRefresh ? <ClientOnlyTime date={new Date(lastRefresh)} /> : "Never"}
                                     </div>
                                     <button
                                         onClick={() => fetchAnalysis(true)}

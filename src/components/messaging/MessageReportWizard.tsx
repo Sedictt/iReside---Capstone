@@ -1,7 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { useMemo, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { 
   AlertTriangle, 
   ClipboardPaste, 
@@ -362,7 +363,7 @@ export function MessageReportWizard({
                         exit={{ opacity: 0, scale: 0.8 }}
                         className="group relative size-24 rounded-2xl border border-border overflow-hidden bg-surface-3 shadow-sm"
                       >
-                        <img src={url} alt={`Preview ${idx}`} className="w-full h-full object-cover" />
+                        <Image src={url} alt={`Preview ${idx}`} fill className="object-cover" />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
                           <button
                             type="button"

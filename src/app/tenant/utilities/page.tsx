@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Image from "next/image";
 import { 
     CheckCircle2,
@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import * as LucideIcons from 'lucide-react';
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 
 interface Amenity {
     id: string;
@@ -84,6 +84,15 @@ const formatBookingDate = (dateStr: string): string => {
     return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 };
 
+// Client-side date hook to avoid hydration
+const useClientDate = () => {
+    const [clientDate, setClientDate] = useState<string>('');
+    useEffect(() => {
+        setClientDate(new Date().toISOString().split('T')[0]);
+    }, []);
+    return clientDate;
+};
+
 // Time formatting
 const formatBookingTime = (start: string, end: string): string => {
     const formatTime = (t: string) => {
@@ -125,6 +134,9 @@ export default function TenantUtilitiesPage() {
     const [bookingDuration, setBookingDuration] = useState("2 Hours");
     const [bookingNotes, setBookingNotes] = useState("");
     const [submitting, setSubmitting] = useState(false);
+
+    // Compute min date once to avoid hydration issues
+    const minDate = useClientDate();
 
     // Fetch data on mount
     useEffect(() => {
@@ -544,7 +556,7 @@ export default function TenantUtilitiesPage() {
                                                 type="date" 
                                                 value={bookingDate}
                                                 onChange={(e) => setBookingDate(e.target.value)}
-                                                min={new Date().toISOString().split('T')[0]}
+                                                min={minDate}
                                                 className="bg-transparent text-sm font-medium outline-none"
                                             />
                                         </div>

@@ -325,11 +325,11 @@ export default function AdminRegistrationsPage() {
                                                     </div>
                                                 </div>
 
-                                                <div className="relative min-w-0">
+                                                <div className="relative min-w-0" suppressHydrationWarning>
                                                     <p className="truncate text-sm font-medium text-white/70">{row.business_name || "No business name"}</p>
                                                     <p className="mt-0.5 flex items-center gap-1.5 text-xs text-white/35">
                                                         <Calendar className="size-3 shrink-0" />
-                                                        {new Date(row.created_at).toLocaleDateString()}
+                                                        <span suppressHydrationWarning>{new Date(row.created_at).toLocaleDateString()}</span>
                                                     </p>
                                                 </div>
 
@@ -384,7 +384,7 @@ export default function AdminRegistrationsPage() {
                                             <h2 className="text-2xl font-semibold tracking-tight text-white">{selected.applicant?.full_name || "Unknown applicant"}</h2>
                                             <RoleBadge role={selected.applicant?.role ?? null} className="text-[9px]" />
                                         </div>
-                                        <div className="mt-2 flex items-center gap-3">
+                                        <div className="mt-2 flex items-center gap-3" suppressHydrationWarning>
                                             <span className={cn(
                                                 "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-widest",
                                                 STATUS_META[selected.status].bgClass,
@@ -393,9 +393,9 @@ export default function AdminRegistrationsPage() {
                                                 <span className={cn("size-1.5 rounded-full", STATUS_META[selected.status].dotClass)} />
                                                 {STATUS_META[selected.status].label}
                                             </span>
-                                            <span className="flex items-center gap-1.5 text-[11px] text-white/30">
+                                            <span className="flex items-center gap-1.5 text-[11px] text-white/30" suppressHydrationWarning>
                                                 <Calendar className="size-3" />
-                                                Applied {new Date(selected.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                                                <span suppressHydrationWarning>Applied {new Date(selected.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
                                             </span>
                                         </div>
                                     </div>

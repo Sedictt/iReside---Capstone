@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import {
     X,
@@ -221,10 +222,11 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                     className="absolute inset-0 w-full h-full outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset"
                                     aria-label="Enlarge photo"
                                 >
-                                    <img
+                                    <Image
                                         src={request.images[currentImageIndex]}
                                         alt="Maintenance Issue"
-                                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                        fill
+                                        className="object-cover transition-transform duration-700 group-hover:scale-105"
                                     />
                                 </button>
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/60 pointer-events-none" />
@@ -407,15 +409,16 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                 <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.2em] pl-1">Involved Parties</h3>
                                 
                                 <div className="flex items-center gap-4 bg-muted/30 p-5 rounded-3xl border border-border">
-                                    <div 
-                                        className="size-14 rounded-2xl overflow-hidden border border-border shrink-0 flex items-center justify-center text-lg font-semibold text-white"
+                                    <div
+                                        className="size-14 rounded-2xl overflow-hidden border border-border shrink-0 flex items-center justify-center text-lg font-semibold text-white relative"
                                         style={{ backgroundColor: request.tenantAvatarBgColor || '#6d9838' }}
                                     >
                                         {request.tenantAvatar ? (
-                                            <img
+                                            <Image
                                                 src={request.tenantAvatar}
                                                 alt={request.tenant}
-                                                className="w-full h-full object-cover"
+                                                fill
+                                                className="object-cover"
                                             />
                                         ) : (
                                             request.tenant.split(' ').map(n => n[0]).join('')
@@ -499,7 +502,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                                         }}
                                                         className="relative size-20 rounded-xl overflow-hidden border border-border shadow-sm hover:border-primary/50 hover:shadow-md transition-all group"
                                                     >
-                                                        <img src={img} alt={`Tenant proof ${i + 1}`} className="w-full h-full object-cover" />
+                                                        <Image src={img} alt={`Tenant proof ${i + 1}`} fill className="object-cover" />
                                                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
                                                             <Expand className="size-5 text-white" />
                                                         </div>

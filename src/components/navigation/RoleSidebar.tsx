@@ -16,7 +16,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/Logo";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
 
 export interface SidebarNavItem {

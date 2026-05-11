@@ -27,6 +27,7 @@ import { ProfileAvatarUploader } from '@/components/profile/ProfileAvatarUploade
 import { ProfileCoverUploader } from '@/components/profile/ProfileCoverUploader';
 import { RoleBadge } from '@/components/profile/RoleBadge';
 import { SocialsHeader } from '@/components/profile/SocialsHeader';
+import { ClientOnlyDate, ClientOnlyYear } from '@/components/ui/client-only-date';
 
 function formatCurrency(amount: number) {
     return new Intl.NumberFormat('en-PH', {
@@ -286,9 +287,11 @@ export default async function TenantProfilePage() {
                                             <Calendar size={16} className="text-[#6d9838]" />
                                             <p className="text-sm text-neutral-400">Lease Period</p>
                                         </div>
-                                        <p className="text-sm font-bold text-white">
-                                            {new Date(activeLease.start_date).toLocaleDateString('en-US', { month: 'short', year: '2-digit' })} — {new Date(activeLease.end_date).toLocaleDateString('en-US', { month: 'short', year: '2-digit' })}
-                                        </p>
+                                        <div>
+                                            <p className="text-sm font-bold text-white">
+                                                <ClientOnlyDate date={activeLease.start_date} format={{ month: 'short', year: '2-digit' }} /> — <ClientOnlyDate date={activeLease.end_date} format={{ month: 'short', year: '2-digit' }} />
+                                            </p>
+                                        </div>
                                     </div>
                                     <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
                                         <div
@@ -347,7 +350,7 @@ export default async function TenantProfilePage() {
                                         <div className="absolute inset-0 bg-gradient-to-t from-[#171717] via-transparent to-transparent" />
                                         <div className="absolute top-4 left-4">
                                             <span className="bg-black/40 backdrop-blur-md text-white border border-white/10 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase">
-                                                {new Date(lease.start_date).getFullYear()} — {new Date(lease.end_date).getFullYear()}
+                                                <ClientOnlyYear date={lease.start_date} /> — <ClientOnlyYear date={lease.end_date} />
                                             </span>
                                         </div>
                                     </div>

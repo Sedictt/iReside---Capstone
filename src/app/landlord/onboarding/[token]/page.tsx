@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { 
     Eye, 
@@ -89,6 +90,8 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
     const [baseRent, setBaseRent] = useState(0);
     const [contractMode, setContractMode] = useState<"upload" | "generate">("generate");
     const [contractFile, setContractFile] = useState<string | null>(null);
+    const [onboardingStartDate, setOnboardingStartDate] = useState("");
+    const [onboardingEndDate, setOnboardingEndDate] = useState("");
     const [buildingRules, setBuildingRules] = useState<string[]>(["No Smoking", "No Pets", "No Loud Music after 10PM"]);
     const [newRule, setNewRule] = useState("");
     
@@ -152,6 +155,11 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
             reader.readAsDataURL(file);
         }
     };
+
+    useEffect(() => {
+        setOnboardingStartDate(new Date().toISOString().split('T')[0]);
+        setOnboardingEndDate(new Date(Date.now() + 31536000000).toISOString().split('T')[0]);
+    }, []);
 
     useEffect(() => {
         const resolveParams = async () => {
@@ -630,7 +638,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                         <div className="relative group cursor-pointer overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 hover:bg-white/10 transition-all aspect-[16/10] shadow-2xl">
                                             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
                                                 {propertyPhoto ? (
-                                                    <img src={propertyPhoto} alt="Property Preview" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                                                    <Image src={propertyPhoto} alt="Property Preview" fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
                                                 ) : (
                                                     <>
                                                         <div className="size-14 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20">
@@ -1144,8 +1152,8 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                 <div id="contract-preview-container" className="max-w-4xl mx-auto shadow-2xl">
                                                     <LeaseDocument 
                                                         id="TEMP-0001"
-                                                        start_date={new Date().toISOString().split('T')[0]}
-                                                        end_date={new Date(Date.now() + 31536000000).toISOString().split('T')[0]} // +1 year
+                                                        start_date={onboardingStartDate}
+                                                        end_date={onboardingEndDate}
                                                         monthly_rent={baseRent}
                                                         security_deposit={baseRent} // Mock 1 month deposit
                                                         signed_at={null}
@@ -1228,7 +1236,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                 {/* Cover Photo Section */}
                                 <div className="relative h-40 group cursor-pointer bg-white/5 border-b border-white/5">
                                     {coverPhoto ? (
-                                        <img src={coverPhoto} alt="Cover" className="w-full h-full object-cover" />
+                                        <Image src={coverPhoto} alt="Cover" fill className="object-cover" />
                                     ) : (
                                         <div className="w-full h-full flex flex-col items-center justify-center gap-2">
                                             <ImageIcon className="size-6 text-white/10" />
@@ -1265,7 +1273,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                 style={{ backgroundColor: profileBgColor }}
                                             >
                                                 {profilePhoto ? (
-                                                    <img src={profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+                                                    <Image src={profilePhoto} alt="Profile" fill className="object-cover" />
                                                 ) : (
                                                     <div className="w-full h-full flex items-center justify-center">
                                                         <span className="text-4xl font-semibold text-white/20">

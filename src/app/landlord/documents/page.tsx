@@ -22,7 +22,7 @@ import {
 import { cn } from "@/lib/utils";
 import { LeaseDocument } from "@/components/lease/LeaseDocument";
 import { useProperty } from "@/context/PropertyContext";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { 
     UserCircle2, 
     Files
@@ -62,6 +62,8 @@ export default function DocumentsPage() {
     const [error, setError] = useState<string | null>(null);
     const [selectedTemplate, setSelectedTemplate] = useState<Document | null>(null);
     const [showPreview, setShowPreview] = useState(false);
+    const [previewStartDate, setPreviewStartDate] = useState("");
+    const [previewEndDate, setPreviewEndDate] = useState("");
     const [activeTab, setActiveTab] = useState<"compliance" | "leases">("compliance");
     const { selectedPropertyId } = useProperty();
     const [searchQuery, setSearchQuery] = useState("");
@@ -94,6 +96,11 @@ export default function DocumentsPage() {
     useEffect(() => {
         setCurrentPage(1);
     }, [searchQuery, activeTab, selectedPropertyId, statusFilter, typeFilter]);
+
+    useEffect(() => {
+        setPreviewStartDate(new Date().toISOString().split('T')[0]);
+        setPreviewEndDate(new Date(Date.now() + 31536000000).toISOString().split('T')[0]);
+    }, []);
 
     const getIcon = (category: string) => {
         switch (category) {
@@ -261,7 +268,7 @@ export default function DocumentsPage() {
                                                             </div>
                                                             <p className="text-sm text-neutral-500 truncate">{doc.description}</p>
                                                             <div className="flex items-center gap-4 pt-1">
-                                                                <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-neutral-600">
+                                                                <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-neutral-600" suppressHydrationWarning>
                                                                     <Clock className="size-3" />
                                                                     Uploaded {new Date(doc.updatedAt).toLocaleDateString()}
                                                                 </div>
@@ -384,7 +391,7 @@ export default function DocumentsPage() {
                                                                     <div className="flex items-center gap-4 pt-1">
                                                                         <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-neutral-600">
                                                                             <Clock className="size-3" />
-                                                                            Ref: {doc.id.slice(0, 8)} • {new Date(doc.updatedAt).toLocaleDateString()}
+                                                                            <span suppressHydrationWarning>Ref: {doc.id.slice(0, 8)} • <span suppressHydrationWarning>{new Date(doc.updatedAt).toLocaleDateString()}</span></span>
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -508,8 +515,8 @@ export default function DocumentsPage() {
                             <div className="max-w-3xl mx-auto shadow-2xl rounded-2xl overflow-hidden bg-white">
 <LeaseDocument 
                                     id="PREVIEW-MODE"
-                                    start_date={new Date().toISOString().split('T')[0]}
-                                    end_date={new Date(Date.now() + 31536000000).toISOString().split('T')[0]}
+                                    start_date={previewStartDate}
+                                    end_date={previewEndDate}
                                     monthly_rent={selectedTemplate.templateData?.base_rent_amount || 0}
                                     security_deposit={selectedTemplate.templateData?.base_rent_amount || 0}
                                     signed_at={null}

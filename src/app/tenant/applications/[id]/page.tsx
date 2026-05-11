@@ -46,7 +46,7 @@ const properties = [
         amenities: ["In-unit Laundry", "Parking", "City View"]
     },
 ];
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 
 export default function ApplicationDashboardPage() {
     const params = useParams();

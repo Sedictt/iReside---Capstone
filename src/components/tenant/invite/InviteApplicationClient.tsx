@@ -30,7 +30,7 @@ import {
     X,
     Zap
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import {
     ApplicationIdentityStep,
     ApplicationProfileStep,
@@ -43,6 +43,7 @@ import {
     validateFormStep,
 } from "@/components/landlord/applications/application-intake-shared";
 import { cn } from "@/lib/utils";
+import { ClientOnlyDate } from "@/components/ui/client-only-date";
 
 type InvitePayload = {
     id: string;
@@ -492,7 +493,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                 {invite.expiresAt && (
                                     <div className="pt-4 border-t border-white/10">
                                         <p className="text-[10px] font-semibold uppercase text-red-400">Expires At</p>
-                                        <p className="text-xs text-white/70 mt-1">{new Date(invite.expiresAt).toLocaleString()}</p>
+                                        <p className="text-xs text-white/70 mt-1"><ClientOnlyDate date={invite.expiresAt} format={{ dateStyle: 'full', timeStyle: 'short' }} /></p>
                                     </div>
                                 )}
                             </div>

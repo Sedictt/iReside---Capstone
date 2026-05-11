@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import Image from "next/image"
+import { m as motion, AnimatePresence } from "framer-motion"
 import { 
     MessageCircle, 
     ThumbsUp, 
@@ -95,12 +96,12 @@ export function CommunityPostCard({
         >
             <header className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                    <div 
-                        className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border shadow-inner dark:border-white/10"
+                    <div
+                        className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border shadow-inner dark:border-white/10 relative"
                         style={{ backgroundColor: post.author_avatar_bg_color || '#f3f4f6' }}
                     >
                         {post.author_avatar ? (
-                            <img src={post.author_avatar} alt={post.author_name} className="h-full w-full object-cover" />
+                            <Image src={post.author_avatar} alt={post.author_name} fill className="object-cover" />
                         ) : (
                             <span className="font-bold text-foreground/60">{post.author_name.charAt(0).toUpperCase()}</span>
                         )}
@@ -283,11 +284,11 @@ export function CommunityPostCard({
                                     {comments.map((comment: { id: string; authorAvatarBgColor?: string | null; authorAvatar?: string | null; authorName: string; createdAt: string; content: string }) => (
                                         <div key={comment.id} className="flex gap-4 group text-white">
                                             <div 
-                                                className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border dark:border-white/5"
+                                                className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border dark:border-white/5 relative"
                                                 style={{ backgroundColor: comment.authorAvatarBgColor || '#f3f4f6' }}
                                             >
                                                 {comment.authorAvatar ? (
-                                                    <img src={comment.authorAvatar} alt={comment.authorName} className="h-full w-full object-cover" />
+                                                    <Image src={comment.authorAvatar} alt={comment.authorName} fill className="object-cover" />
                                                 ) : (
                                                     <span className="text-[10px] font-bold text-foreground/50">{comment.authorName.charAt(0).toUpperCase()}</span>
                                                 )}
@@ -362,7 +363,7 @@ function PhotoGrid({ photos, onPhotoClick }: { photos: { id: string; url: string
                 tabIndex={0}
                 role="button"
             >
-                <img src={photos[0].url} alt="Post" className="w-full object-cover max-h-[500px] transition-transform duration-500 group-hover:scale-105" />
+                <Image src={photos[0].url} alt="Post" fill className="object-cover transition-transform duration-500 group-hover:scale-105" style={{ maxHeight: '500px' }} />
             </div>
         )
     }
@@ -378,7 +379,7 @@ function PhotoGrid({ photos, onPhotoClick }: { photos: { id: string; url: string
                     tabIndex={0}
                     role="button"
                 >
-                    <img src={photo.url} alt={`Photo ${i}`} className="h-full w-full object-cover transition-transform hover:scale-110 duration-500" />
+                    <Image src={photo.url} alt={`Photo ${i}`} fill className="object-cover transition-transform hover:scale-110 duration-500" />
                     {photos.length > 4 && i === 3 && (
                         <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm group-hover:bg-black/40 transition-colors">
                             <span className="text-xl font-semibold text-white">+{photos.length - 4}</span>

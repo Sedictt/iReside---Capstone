@@ -31,7 +31,7 @@ const properties = [
     { id: "2", name: "The Vertex", address: "456 High St, Metro City", type: "1BR", images: ["https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&h=600&fit=crop"], price: "12,000" },
     { id: "4", name: "Emerald Heights", address: "789 Park Ave, Metro City", type: "2BR", images: ["https://images.unsplash.com/photo-1484154218962-a197022b5858?w=800&h=600&fit=crop"], price: "25,000" },
 ];
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 
 // Mock applications data expanded for the new design
 const mockApplications = [

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { X, Receipt, CheckCircle2, DollarSign, Calendar, Type } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProperty } from "@/context/PropertyContext";

@@ -40,7 +40,7 @@ const properties = [
 
 type Property = typeof properties[0];
 
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 
 // import PropertyDetailModal from "@/components/PropertyDetailModal"; // Removed legacy component
 const PropertyDetailModal = ({ property, isLiked, onLike, open, onOpenChange }: any) => null; 

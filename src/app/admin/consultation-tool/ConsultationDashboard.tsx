@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 import { FileText, Plus, Copy, Check, Trash2, ExternalLink, Clock, CheckCircle2 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m as motion, AnimatePresence } from "framer-motion";
 import { cn } from '@/lib/utils';
 
 interface Document {
@@ -168,29 +168,29 @@ export default function ConsultationDashboard() {
 
                   <div>
                     <h3 className="text-xl font-semibold truncate text-zinc-100 mb-1">{doc.file_name}</h3>
-                    <p className="text-xs text-zinc-500 font-medium">Prepared {new Date(doc.created_at).toLocaleDateString()}</p>
+                    <p className="text-xs text-zinc-500 font-medium">Prepared <span suppressHydrationWarning>{new Date(doc.created_at).toLocaleDateString()}</span></p>
                   </div>
-                </div>
 
-                <div className="mt-8 space-y-3">
-                  {doc.status === 'pending' ? (
-                    <button
-                      onClick={() => copySigningLink(doc.id)}
-                      className="w-full py-4 rounded-2xl bg-zinc-800 hover:bg-zinc-700 border border-zinc-700/50 transition-all flex items-center justify-center gap-3 text-sm font-bold group/btn"
-                    >
-                      <Copy className="size-4 text-indigo-400 group-hover/btn:scale-110 transition-transform" />
-                      Copy Signing Link
-                    </button>
-                  ) : (
-                    <a
-                      href={doc.signed_file_url || '#'}
-                      target="_blank"
-                      className="w-full py-4 rounded-2xl bg-emerald-600/10 hover:bg-emerald-600/20 border border-emerald-500/20 text-emerald-400 transition-all flex items-center justify-center gap-3 text-sm font-bold"
-                    >
-                      <ExternalLink className="size-4" />
-                      Download Signed PDF
-                    </a>
-                  )}
+                  <div className="mt-8 space-y-3">
+                    {doc.status === 'pending' ? (
+                      <button
+                        onClick={() => copySigningLink(doc.id)}
+                        className="w-full py-4 rounded-2xl bg-zinc-800 hover:bg-zinc-700 border border-zinc-700/50 transition-all flex items-center justify-center gap-3 text-sm font-bold group/btn"
+                      >
+                        <Copy className="size-4 text-indigo-400 group-hover/btn:scale-110 transition-transform" />
+                        Copy Signing Link
+                      </button>
+                    ) : (
+                      <a
+                        href={doc.signed_file_url || '#'}
+                        target="_blank"
+                        className="w-full py-4 rounded-2xl bg-emerald-600/10 hover:bg-emerald-600/20 border border-emerald-500/20 text-emerald-400 transition-all flex items-center justify-center gap-3 text-sm font-bold"
+                      >
+                        <ExternalLink className="size-4" />
+                        Download Signed PDF
+                      </a>
+                    )}
+                  </div>
                 </div>
               </motion.div>
             ))}

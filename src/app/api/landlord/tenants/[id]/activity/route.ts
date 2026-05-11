@@ -35,7 +35,7 @@ export async function GET(
             .order("created_at", { ascending: false }),
         supabase
             .from("payments")
-            .select("id, amount, status, created_at, type")
+            .select("id, amount, status, created_at, description")
             .eq("tenant_id", tenantId)
             .eq("landlord_id", user.id)
             .order("created_at", { ascending: false }),
@@ -48,7 +48,7 @@ export async function GET(
         supabase
             .from("applications")
             .select("id, status, created_at")
-            .eq("tenant_id", tenantId)
+            .eq("applicant_id", tenantId)
             .eq("landlord_id", user.id)
             .order("created_at", { ascending: false })
     ]);
@@ -66,7 +66,7 @@ export async function GET(
         ...(payments.data || []).map(item => ({
             id: item.id,
             type: "payment",
-            title: `Payment: ${item.type || "Rent"}`,
+            title: `Payment: ${item.description || "Rent"}`,
             amount: item.amount,
             status: item.status,
             date: item.created_at,

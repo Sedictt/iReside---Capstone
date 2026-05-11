@@ -1,9 +1,10 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { Hammer, Zap, Wallet, Receipt } from "lucide-react";
 import { UiMessage } from "@/components/landlord/messages/types";
 import { cn } from "@/lib/utils";
+import { ClientOnlyDate } from "@/components/ui/client-only-date";
 
 interface NotificationCardProps {
     message: any; // Using any to support both Landlord and Tenant message types which are slightly different
@@ -157,7 +158,7 @@ export function NotificationCard({
                             isCompact ? "px-2.5 py-1" : "px-3 py-1.5"
                         )}>
                             <Hammer className="size-3" />
-                            <span>Deadline: {new Date(message.expiresAt).toLocaleDateString()}</span>
+                            Deadline: <ClientOnlyDate date={message.expiresAt} />
                         </div>
                     )}
                 </div>

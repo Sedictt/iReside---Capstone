@@ -5,7 +5,7 @@ import { DocsHeader } from "./DocsHeader";
 import { DocsSidebar, DOCS_NAV } from "./DocsSidebar";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import Link from "next/link";
 import { ChevronRight, Home, X } from "lucide-react";
 

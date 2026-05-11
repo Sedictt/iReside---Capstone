@@ -1,9 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import { Settings, User, LogOut, CreditCard, Pencil } from "lucide-react";
 import { signOut } from "@/lib/supabase/client-auth";
 import { useState, useRef } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { RoleBadge } from "@/components/profile/RoleBadge";
@@ -82,15 +83,16 @@ export function ProfileWidget() {
             onMouseLeave={handleMouseLeave}
         >
             {/* Profile Avatar Button */}
-            <button 
+            <button
                 className="group relative flex size-10 items-center justify-center overflow-hidden rounded-full border border-border transition-all hover:ring-2 hover:ring-primary/50 dark:border-white/10"
                 style={{ backgroundColor: profile?.avatar_bg_color || '#171717' }}
             >
                 {shouldShowAvatar ? (
-                    <img
+                    <Image
                         src={displayAvatar as string}
                         alt={displayName}
-                        className="h-full w-full object-cover"
+                        fill
+                        className="object-cover"
                         onError={() => setAvatarFailed(true)}
                     />
                 ) : (
@@ -122,15 +124,16 @@ export function ProfileWidget() {
                                     initialData={{ full_name: displayName, avatar_url: displayAvatar as string, role: profile?.role as any }}
                                     asChild
                                 >
-                                    <div 
+                                    <div
                                         className="relative flex size-16 items-center justify-center overflow-hidden rounded-full border-2 border-border dark:border-white/10 shadow-sm cursor-pointer hover:ring-2 hover:ring-primary transition-all shrink-0"
                                         style={{ backgroundColor: profile?.avatar_bg_color || '#10b981' }}
                                     >
                                         {shouldShowAvatar ? (
-                                            <img
+                                            <Image
                                                 src={displayAvatar as string}
                                                 alt={displayName}
-                                                className="h-full w-full object-cover"
+                                                fill
+                                                className="object-cover"
                                                 onError={() => setAvatarFailed(true)}
                                             />
                                         ) : (

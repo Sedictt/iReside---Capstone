@@ -115,7 +115,7 @@ const MODE_INFO: Record<EnvironmentMode, { label: string; description: string; i
 
 export default function PropertyEnvironmentPage() {
     const params = useParams();
-    const router = useRouter();
+    const { push } = useRouter();
     const supabase = createClient();
     const propertyId = params.id as string;
 
@@ -277,7 +277,7 @@ export default function PropertyEnvironmentPage() {
         <div className="flex h-full w-full flex-col gap-8 bg-background p-6 text-foreground md:p-8">
             <div className="flex items-center justify-between">
                 <button
-                    onClick={() => router.push(`/landlord/properties`)}
+                    onClick={() => push(`/landlord/properties`)}
                     className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
                 >
                     <ArrowLeft className="size-4" />
@@ -552,7 +552,7 @@ export default function PropertyEnvironmentPage() {
 
             <div className="flex justify-end gap-3 pb-8">
                 <button
-                    onClick={() => router.push(`/landlord/properties`)}
+                    onClick={() => push(`/landlord/properties`)}
                     className="rounded-xl border border-border px-4 py-2 text-sm font-bold text-muted-foreground hover:bg-muted hover:text-foreground"
                 >
                     Cancel

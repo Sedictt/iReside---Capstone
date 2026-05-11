@@ -30,7 +30,7 @@ export const filipinoProfanityLexicon = {
     allowlist: uniqueNormalized(parsedLexicon.allowlist),
 };
 
-export type FilipinoProfanityLexicon = typeof filipinoProfanityLexicon;
+type FilipinoProfanityLexicon = typeof filipinoProfanityLexicon;
 
 export const buildProfanityPromptHints = (tokenLimit = 30, phraseLimit = 20) => {
     const tokenHints = filipinoProfanityLexicon.tokens.slice(0, tokenLimit).join(", ");

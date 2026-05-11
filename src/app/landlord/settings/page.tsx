@@ -5,7 +5,7 @@ import { ChevronLeft } from "lucide-react";
 import { LandlordSettings } from "@/components/landlord/LandlordSettings";
 
 export default function LandlordSettingsPage() {
-    const router = useRouter();
+    const { back } = useRouter();
 
     return (
         <div className="min-h-screen bg-[#0a0a0a] text-neutral-400">
@@ -17,7 +17,7 @@ export default function LandlordSettingsPage() {
 
                 <div className="relative mx-auto max-w-6xl">
                     <button
-                        onClick={() => router.back()}
+                        onClick={() => back()}
                         className="flex items-center gap-2 text-neutral-500 hover:text-white transition-colors mb-10 group"
                     >
                         <div className="size-8 rounded-full bg-white/5 flex items-center justify-center border border-white/10 group-hover:bg-white/10 transition-all">

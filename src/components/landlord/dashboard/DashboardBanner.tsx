@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Search, Bell, Wrench, Map, QrCode, UserPlus, Sparkles, Home, Users, FileText, Settings, MessageSquare, CreditCard, AlertTriangle, X, Check, AlertCircle } from "lucide-react";
 import { ProfileWidget } from "@/components/landlord/ProfileWidget";
@@ -310,11 +311,12 @@ export function DashboardBanner({
             )}>
             {/* Background Layer */}
             <div className="absolute inset-0 overflow-hidden rounded-[2.5rem]">
-                <img
-                    src={image}
-                    alt="Dashboard Banner"
-                    className="w-full h-full object-cover transition-transform duration-[2000ms] group-hover:scale-110 opacity-60 dark:opacity-40"
-                />
+<Image
+                        src={image}
+                        alt="Dashboard Banner"
+                        fill
+                        className="object-cover transition-transform duration-[2000ms] group-hover:scale-110 opacity-60 dark:opacity-40"
+                    />
                 
                 {/* Noise Texture Overlay */}
                 <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />

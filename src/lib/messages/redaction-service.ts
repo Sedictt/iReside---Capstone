@@ -1,7 +1,7 @@
 import { redactSensitiveContent, type MessageCensorshipResult } from "@/lib/messages/censorship";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-export type RedactionSource = "local_dataset";
+type RedactionSource = "local_dataset";
 
 export type RedactionServiceResult = MessageCensorshipResult & {
     source: RedactionSource;

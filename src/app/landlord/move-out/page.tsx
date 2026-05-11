@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { MoveOutRequestsList } from "@/components/landlord/move-out/MoveOutRequestsList";
 import { MoveOutRequestDetails } from "@/components/landlord/move-out/MoveOutRequestDetails";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 
 export default function MoveOutRequestsPage() {
   const searchParams = useSearchParams();

@@ -843,12 +843,12 @@ export default function AnalyticsPage() {
                             const isExpired = diffDays >= 15;
 
                             return (
-                                <div 
-                                    key={item.id} 
+                                <div
+                                    key={item.id}
                                     className={cn(
                                         "flex flex-col gap-3 rounded-[1.75rem] border p-5 transition-all duration-300",
-                                        isExpired 
-                                            ? "border-border bg-muted/10 opacity-60" 
+                                        isExpired
+                                            ? "border-border bg-muted/10 opacity-60"
                                             : "border-border bg-muted/30 hover:bg-muted/50 hover:ring-1 hover:ring-primary/20 dark:bg-surface-2"
                                     )}
                                 >

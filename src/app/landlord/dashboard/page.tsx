@@ -1,8 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { useEffect, useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { DashboardBanner } from "@/components/landlord/dashboard/DashboardBanner";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useProperty } from "@/context/PropertyContext";
@@ -563,10 +564,11 @@ export default function LandlordDashboard() {
                                                     style={{ backgroundColor: (selectedActionPayment as any).avatarBgColor || '#10b981' }}
                                                 >
                                                     {selectedActionPayment.avatar ? (
-                                                        <img 
-                                                            src={selectedActionPayment.avatar} 
-                                                            alt={selectedActionPayment.tenant} 
-                                                            className="h-full w-full object-cover"
+                                                        <Image
+                                                            src={selectedActionPayment.avatar}
+                                                            alt={selectedActionPayment.tenant}
+                                                            fill
+                                                            className="object-cover"
                                                         />
                                                     ) : (
                                                         <span className="text-2xl font-semibold text-white/90">{selectedActionPayment.tenant.charAt(0)}</span>
@@ -701,11 +703,11 @@ function PaymentCard({ payment, fallbackAvatar, onClick }: { payment: PaymentLis
         >
             <div className="flex items-center gap-4 relative z-10">
                 <div className="relative">
-                    <div 
-                        className="size-12 rounded-full border-2 border-background overflow-hidden transition-all duration-500 group-hover:scale-110"
+                    <div
+                        className="relative size-12 rounded-full border-2 border-background overflow-hidden transition-all duration-500 group-hover:scale-110"
                         style={{ backgroundColor: (payment as any).avatarBgColor || '#171717' }}
                     >
-                        <img src={avatar || fallbackAvatar} alt={tenant} className="h-full w-full object-cover" />
+                        <Image src={avatar || fallbackAvatar} alt={tenant} fill className="object-cover" />
                     </div>
                     <div className={cn(
                         "absolute -bottom-0.5 -right-0.5 size-4 rounded-full border-2 border-background",

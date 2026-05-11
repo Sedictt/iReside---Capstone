@@ -2,7 +2,8 @@
 
 import { useProperty } from "@/context/PropertyContext";
 import { useEffect, useRef, useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
+import { m as motion, AnimatePresence } from "framer-motion";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { 
@@ -106,11 +107,12 @@ export function PropertySelectorHub({
             <div className="absolute inset-0 z-0">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent" />
                 {activeProperty?.image && (
-                    <img 
+                    <Image
                         key={activeProperty.id}
-                        src={activeProperty.image} 
-                        alt="" 
-                        className="property-background-image absolute inset-0 h-full w-full object-cover opacity-20 blur-md grayscale transition-all duration-1000"
+                        src={activeProperty.image}
+                        alt=""
+                        fill
+                        className="property-background-image object-cover opacity-20 blur-md grayscale transition-all duration-1000"
                     />
                 )}
                 <div className="absolute inset-0 bg-[#0a0a0a]/80" />
@@ -159,7 +161,7 @@ export function PropertySelectorHub({
                             >
                                 <div className="relative size-14 shrink-0 overflow-hidden rounded-xl bg-white/5">
                                     {property.image ? (
-                                        <img src={property.image} className="h-full w-full object-cover" alt="" />
+                                        <Image src={property.image} fill className="object-cover" alt="" />
                                     ) : (
                                         <div className="flex h-full w-full items-center justify-center text-muted-foreground/20">
                                             <Building2 className="size-6" />
@@ -217,10 +219,11 @@ export function PropertySelectorHub({
                                     {/* Preview Side */}
                                     <div className="relative hidden h-[500px] overflow-hidden rounded-[2.25rem] lg:block">
                                         {activeProperty.image ? (
-                                            <img 
-                                                src={activeProperty.image} 
-                                                className="h-full w-full object-cover" 
-                                                alt={activeProperty.name} 
+                                            <Image
+                                                src={activeProperty.image}
+                                                fill
+                                                className="object-cover"
+                                                alt={activeProperty.name}
                                             />
                                         ) : (
                                             <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-white/5 to-white/10">

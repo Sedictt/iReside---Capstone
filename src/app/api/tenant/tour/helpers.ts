@@ -1,7 +1,7 @@
 import { requireUser } from "@/lib/supabase/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-export type TenantTourContext = {
+type TenantTourContext = {
     supabase: any;
     adminClient: any;
     user: any;

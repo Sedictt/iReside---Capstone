@@ -1,7 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { ArrowRight, Building2, Home, MapPin, Megaphone, Sparkles } from "lucide-react";
 import { useProperty } from "@/context/PropertyContext";
 
@@ -87,11 +88,12 @@ export function CommunityPropertyGate() {
                                 <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/12 via-transparent to-sky-500/10 opacity-80 transition-opacity group-hover:opacity-100" />
                                 <div className="relative h-40 overflow-hidden">
                                     {property.image ? (
-                                        <img
-                                            src={property.image}
-                                            alt={property.name}
-                                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                        />
+                                        <Image
+                                                src={property.image}
+                                                alt={property.name}
+                                                fill
+                                                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                                            />
                                     ) : (
                                         <div className="flex h-full items-center justify-center bg-gradient-to-br from-emerald-500/20 via-sky-500/10 to-primary/20">
                                             <Building2 className="size-10 text-emerald-700/70 dark:text-emerald-200/80" />

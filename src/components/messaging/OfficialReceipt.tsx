@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { UiMessage } from "@/components/landlord/messages/types";
 import { cn } from "@/lib/utils";
 

@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { MessageSquare, X, Minus, Send, MoreHorizontal, Phone, Video } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 
 interface ChatUser {
     id: string;
@@ -109,10 +110,12 @@ export function HeaderChatWidget() {
                                         className="flex items-center gap-3 p-4 hover:bg-white/[0.03] transition-colors text-left border-b border-white/[0.02] last:border-0 group"
                                     >
                                         <div className="relative shrink-0">
-                                            <img
+                                            <Image
                                                 src={msg.avatar}
                                                 alt={msg.name}
-                                                className="size-10 rounded-full object-cover border border-white/10"
+                                                width={40}
+                                                height={40}
+                                                className="rounded-full object-cover border border-white/10"
                                             />
                                             {msg.unread && (
                                                 <div className="absolute -top-1 -right-1 size-3 rounded-full bg-primary border-2 border-neutral-900" />
@@ -157,7 +160,7 @@ export function HeaderChatWidget() {
                             <div className="flex items-center justify-between p-3 border-b border-white/10 bg-neutral-800/50 rounded-t-2xl cursor-pointer hover:bg-neutral-800 transition-colors">
                                 <div className="flex items-center gap-2 overflow-hidden">
                                     <div className="relative shrink-0">
-                                        <img src={chat.avatar} alt={chat.name} className="size-8 rounded-full object-cover border border-white/10" />
+                                        <Image src={chat.avatar} alt={chat.name} width={32} height={32} className="rounded-full object-cover border border-white/10" />
                                         <div className="absolute bottom-0 right-0 size-2.5 bg-emerald-500 border-2 border-neutral-900 rounded-full" />
                                     </div>
                                     <div className="flex flex-col min-w-0">
@@ -184,7 +187,7 @@ export function HeaderChatWidget() {
                                     <span className="text-[10px] text-neutral-500 font-medium bg-neutral-800 px-2 py-1 rounded-full">{chat.time}</span>
                                 </div>
                                 <div className="flex items-end gap-2">
-                                    <img src={chat.avatar} className="size-6 rounded-full shrink-0" alt="avatar" />
+                                    <Image src={chat.avatar} className="rounded-full shrink-0" alt="avatar" width={24} height={24} />
                                     <div className="bg-neutral-800 text-neutral-200 text-sm px-4 py-2 rounded-2xl rounded-bl-sm max-w-[80%]">
                                         {chat.lastMessage}
                                     </div>

@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useProperty } from '@/context/PropertyContext'
 import { cn } from '@/lib/utils'
 import { 
@@ -139,7 +140,7 @@ export function PropertySelector({ isCollapsed = false }: { isCollapsed?: boolea
                                 >
                                     <div className="relative size-10 shrink-0 overflow-hidden rounded-xl border border-white/10">
                                         {property.image ? (
-                                            <img src={property.image} alt={property.name} className="h-full w-full object-cover" />
+                                            <Image src={property.image} alt={property.name} fill className="object-cover" />
                                         ) : (
                                             <div className="flex h-full w-full items-center justify-center bg-white/5 text-muted-foreground/40">
                                                 <Building2 className="size-5" />

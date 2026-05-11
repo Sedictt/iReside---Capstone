@@ -23,7 +23,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { useMemo, useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import LeaseModal from "@/components/tenant/LeaseModal";
@@ -31,6 +31,7 @@ import { TenantContactsSidebar } from "@/components/tenant/TenantContactsSidebar
 import MoveOutRequest from "@/components/tenant/MoveOutRequest";
 import { DashboardTour } from "@/components/tenant/DashboardTour";
 import LeaseRenewalReminder from "@/components/tenant/LeaseRenewalReminder";
+import { ClientOnlyDate } from "@/components/ui/client-only-date";
 
 type DashboardData = {
     lease: {
@@ -633,7 +634,7 @@ export default function TenantDashboard() {
                                                             )}
                                                         </div>
                                                         <p className="text-[10px] text-muted-foreground mt-0.5 uppercase font-bold tracking-wider">
-                                                            {payment.paidAt ? `Settled ${new Date(payment.paidAt).toLocaleDateString()}` : `Due ${new Date(payment.dueDate).toLocaleDateString()}`}
+                                                            {payment.paidAt ? <>Settled <ClientOnlyDate date={payment.paidAt} /></> : <>Due <ClientOnlyDate date={payment.dueDate} /></>}
                                                         </p>
                                                     </div>
                                                 </div>

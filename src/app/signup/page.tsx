@@ -1,5 +1,6 @@
 "use client";
 
+import Image from 'next/image';
 import Link from "next/link";
 import { Building2, ArrowRight, CheckCircle2, Upload, FileCheck, Check, Eye, Trash2, FileText } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
@@ -454,7 +455,7 @@ export default function SignUpPage() {
                                     <div className="relative z-30 w-full h-full flex flex-col items-center justify-center p-2 pointer-events-none">
                                         {idPreview ? (
                                             <div className="relative w-full h-24 mb-2 rounded-lg overflow-hidden border border-white/10 group-hover/upload:scale-105 transition-transform duration-500">
-                                                <img src={idPreview} alt="ID Preview" className="w-full h-full object-cover" />
+                                                <Image src={idPreview} alt="ID Preview" fill className="object-cover" />
                                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/upload:opacity-100 transition-opacity flex items-center justify-center">
                                                     <span className="text-[8px] font-semibold uppercase tracking-widest text-white">Change Image</span>
                                                 </div>
@@ -537,7 +538,7 @@ export default function SignUpPage() {
                                     <div className="relative z-30 w-full h-full flex flex-col items-center justify-center p-2 pointer-events-none">
                                         {permitPreview ? (
                                             <div className="relative w-full h-24 mb-2 rounded-lg overflow-hidden border border-white/10 group-hover/upload:scale-105 transition-transform duration-500">
-                                                <img src={permitPreview} alt="Permit Preview" className="w-full h-full object-cover" />
+                                                <Image src={permitPreview} alt="Permit Preview" fill className="object-cover" />
                                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/upload:opacity-100 transition-opacity flex items-center justify-center">
                                                     <span className="text-[8px] font-semibold uppercase tracking-widest text-white">Change Image</span>
                                                 </div>
@@ -602,7 +603,7 @@ export default function SignUpPage() {
                                     <div className="relative z-30 w-full h-full flex flex-col items-center justify-center p-2 pointer-events-none">
                                         {permitCardPreview ? (
                                             <div className="relative w-full h-24 mb-2 rounded-lg overflow-hidden border border-white/10 group-hover/upload:scale-105 transition-transform duration-500">
-                                                <img src={permitCardPreview} alt="Card Preview" className="w-full h-full object-cover" />
+                                                <Image src={permitCardPreview} alt="Card Preview" fill className="object-cover" />
                                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/upload:opacity-100 transition-opacity flex items-center justify-center">
                                                     <span className="text-[8px] font-semibold uppercase tracking-widest text-white">Change Image</span>
                                                 </div>
@@ -681,7 +682,7 @@ export default function SignUpPage() {
                                         <div className="relative z-30 w-full h-full flex flex-col items-center justify-center p-2 pointer-events-none">
                                             {ownershipPreview ? (
                                                 <div className="relative w-full h-24 mb-2 rounded-lg overflow-hidden border border-white/10 group-hover/upload:scale-105 transition-transform duration-500">
-                                                    <img src={ownershipPreview} alt="Ownership Preview" className="w-full h-full object-cover" />
+                                                    <Image src={ownershipPreview} alt="Ownership Preview" fill className="object-cover" />
                                                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/upload:opacity-100 transition-opacity flex items-center justify-center">
                                                         <span className="text-[8px] font-semibold uppercase tracking-widest text-white">Change Image</span>
                                                     </div>

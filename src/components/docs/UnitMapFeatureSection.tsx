@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Map, CheckCircle, Maximize2, X } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import VisualBuilder from "@/components/landlord/visual-planner/VisualBuilder";
 
 import { createPortal } from "react-dom";

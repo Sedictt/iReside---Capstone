@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import Image from "next/image"
+import { m as motion, AnimatePresence } from "framer-motion"
 import { X, ChevronLeft, ChevronRight, Maximize2, Download } from "lucide-react"
 
 interface CommunityPhotoLightboxProps {
@@ -92,7 +93,7 @@ export function CommunityPhotoLightbox({ photos, initialIndex, onClose }: Commun
                                 : 'border-transparent opacity-40 hover:opacity-80'
                             }`}
                         >
-                            <img src={photo.url} alt={`Thumbnail ${index + 1}`} className="w-full h-full object-cover" />
+                            <Image src={photo.url} alt={`Thumbnail ${index + 1}`} fill className="object-cover" />
                         </button>
                     ))}
                 </div>

@@ -1,6 +1,7 @@
 "use client"
 
-import { motion } from "framer-motion"
+import Image from "next/image"
+import { m as motion } from "framer-motion"
 import { Search, Flag, Bell, Building2, ChevronDown, Check, Megaphone, MessageCircle, Bookmark } from "lucide-react"
 import { ComponentType } from "react"
 
@@ -142,12 +143,12 @@ export function CommunityHeader({
                                 <button className="flex size-12 items-center justify-center rounded-full border border-border bg-background/50 text-muted-foreground transition-all hover:bg-muted hover:text-foreground dark:border-white/10 dark:bg-white/5">
                                     <Bell className="size-5" />
                                 </button>
-                                <div 
-                                    className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border shadow-sm dark:border-white/20"
+                                <div
+                                    className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border shadow-sm dark:border-white/20 relative"
                                     style={{ backgroundColor: profile?.avatar_bg_color || undefined }}
                                 >
                                     {profile?.avatar_url ? (
-                                        <img src={profile.avatar_url} alt="Profile" className="h-full w-full object-cover" />
+                                        <Image src={profile.avatar_url} alt="Profile" fill className="object-cover" />
                                     ) : (
                                         <span className="font-bold text-foreground dark:text-white">{userInitial}</span>
                                     )}

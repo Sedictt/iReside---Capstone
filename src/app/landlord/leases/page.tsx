@@ -19,7 +19,7 @@ import {
     Download,
     History
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import LandlordRenewalReview from "@/components/landlord/leases/RenewalReview";
 import { LeaseStatusBadge } from "@/components/landlord/leases/LeaseStatusBadge";
@@ -27,10 +27,10 @@ import { LeaseAuditTrail } from "@/components/landlord/leases/LeaseAuditTrail";
 import { useProperty } from "@/context/PropertyContext";
 
 function LeasesContent() {
-    const searchParams = useSearchParams();
-    const router = useRouter();
-    const leaseId = searchParams.get("id");
-    const unitId = searchParams.get("unitId");
+    const { get } = useSearchParams();
+    const { back } = useRouter();
+    const leaseId = get("id");
+    const unitId = get("unitId");
     const { selectedPropertyId } = useProperty();
 
     const [activeTab, setActiveTab] = useState<"renewals" | "active" | "history">("renewals");
@@ -88,7 +88,7 @@ function LeasesContent() {
         return (
             <div className="mx-auto max-w-7xl px-4 py-8 md:px-8">
                 <button 
-                    onClick={() => router.back()}
+                    onClick={() => back()}
                     className="mb-6 flex items-center gap-2 text-sm font-bold text-muted-foreground transition-colors hover:text-foreground"
                 >
                     <ArrowLeft className="size-4" />

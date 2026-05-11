@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { RefreshCw, X, ArrowRight, Clock, Check } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import LeaseRenewalRequest from "./LeaseRenewalRequest";

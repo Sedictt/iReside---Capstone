@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Building, ChevronRight, ArrowRight, Home, Users, BarChart3, Clock, Lock, Zap, FileText, CheckCircle2, Sparkles, Activity, LayoutDashboard, MapPin, Receipt, Hammer, PieChart, MessageSquare, Twitter, Github, Linkedin, Mail } from "lucide-react";
 import { cn } from "@/lib/utils";

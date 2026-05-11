@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
+import NextImage from "next/image";
 import * as pdfjsLib from 'pdfjs-dist/build/pdf.mjs';
 import SignaturePad from 'signature_pad';
 import { 
@@ -21,7 +22,7 @@ import {
   AlertTriangle,
   Info 
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m as motion, AnimatePresence } from "framer-motion";
 import { PDFDocument } from 'pdf-lib';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -539,7 +540,7 @@ export function DigitalSigner({
                   currentPage === idx ? "border-primary shadow-2xl scale-[1.02]" : "border-zinc-800 grayscale hover:grayscale-0 hover:border-zinc-600"
                 )}
               >
-                <img src={page.dataUrl} className="w-full h-full object-cover" alt={`Document thumbnail page ${idx + 1}`} />
+                <NextImage src={page.dataUrl} fill className="object-cover" alt={`Document thumbnail page ${idx + 1}`} />
                 <div className="absolute bottom-2 right-2 size-6 rounded-lg bg-black/60 backdrop-blur-md flex items-center justify-center text-[10px] font-bold text-white">
                   {idx + 1}
                 </div>
@@ -594,7 +595,7 @@ export function DigitalSigner({
                   transformOrigin: 'top center'
                 }}
               >
-                <img src={page.dataUrl} className="absolute inset-0 w-full h-full object-contain pointer-events-none select-none" alt={`Document page ${idx + 1}`} />
+                <NextImage src={page.dataUrl} fill className="object-contain pointer-events-none select-none" alt={`Document page ${idx + 1}`} />
                 
                 {/* Direct Ink Canvas */}
                 <canvas 

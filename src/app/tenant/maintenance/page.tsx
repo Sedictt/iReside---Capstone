@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import {
     Wrench,
     Plus,
@@ -377,11 +378,12 @@ function TenantMaintenanceCard({ request, onClick }: { request: MaintenanceReque
             <div className="relative h-44 w-full bg-muted border-b border-border overflow-hidden shrink-0">
                 {request.images && request.images.length > 0 ? (
                     <>
-                        <img
-                            src={request.images[0]}
-                            alt={request.title}
-                            className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                        />
+<Image
+                                src={request.images[0]}
+                                alt={request.title}
+                                fill
+                                className="object-cover transition-transform duration-700 group-hover:scale-105"
+                            />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 dark:from-black/80 dark:via-transparent dark:to-black/40" />
 
                         {/* Multiple Images Indicator */}

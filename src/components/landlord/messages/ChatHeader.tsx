@@ -1,5 +1,6 @@
 "use client";
 
+import Image from 'next/image';
 import { 
     Search, 
     MoreVertical, 
@@ -35,13 +36,13 @@ export function ChatHeader({
             <div className="flex items-center gap-4">
                 <div 
                     className={cn(
-                        "size-12 rounded-full border border-border overflow-hidden flex items-center justify-center transition-all",
+                        "relative size-12 rounded-full border border-border overflow-hidden flex items-center justify-center transition-all",
                         isPlaceholder ? "bg-surface-2" : ""
                     )}
                     style={{ backgroundColor: contact.avatarBgColor || 'var(--surface-3)' }}
                 >
                     {contact.avatarUrl ? (
-                        <img src={contact.avatarUrl} alt={contact.name} className="h-full w-full object-cover" />
+                        <Image src={contact.avatarUrl} alt={contact.name} fill className="object-cover" />
                     ) : (
                         <span className="text-sm font-bold text-high">{contact.initials}</span>
                     )}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import {
     X,
@@ -15,6 +15,7 @@ import {
     Mail,
     ShieldCheck,
 } from "lucide-react";
+import { ClientOnlyDate } from "@/components/ui/client-only-date";
 
 type ContractTemplateLike = Record<string, unknown>;
 
@@ -329,7 +330,7 @@ export function ContractPreviewModal({
                                 </p>
                                 {result.payment_pending_expires_at && (
                                     <p className="mt-2 text-xs text-amber-300">
-                                        Portal deadline: {new Date(result.payment_pending_expires_at).toLocaleString("en-PH")}
+                                        Portal deadline: <ClientOnlyDate date={result.payment_pending_expires_at} locale="en-PH" format={{ dateStyle: 'full', timeStyle: 'short' }} />
                                     </p>
                                 )}
                                 {result.payment_portal_url && (

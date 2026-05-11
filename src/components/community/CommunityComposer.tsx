@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useRef, FormEvent } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { useState } from "react"
+import Image from "next/image"
+import { m as motion, AnimatePresence } from "framer-motion"
 import { ImageIcon, X, Send, Megaphone, BarChart3, MessageSquarePlus } from "lucide-react"
 
 interface CommunityComposerProps {
@@ -89,12 +90,12 @@ export function CommunityComposer({
                     )}
 
                     <div className="flex gap-4">
-                        <div 
-                            className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border shadow-inner dark:border-white/10"
+                        <div
+                            className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border shadow-inner dark:border-white/10 relative"
                             style={{ backgroundColor: profile?.avatar_bg_color || undefined }}
                         >
                             {profile?.avatar_url ? (
-                                <img src={profile.avatar_url} alt="Profile" className="h-full w-full object-cover" />
+                                <Image src={profile.avatar_url} alt="Profile" fill className="object-cover" />
                             ) : (
                                 <span className="font-bold text-foreground dark:text-white">{userInitial}</span>
                             )}
@@ -169,7 +170,7 @@ export function CommunityComposer({
                                     key={index} 
                                     className="group relative size-20 overflow-hidden rounded-xl border border-border dark:border-white/10"
                                 >
-                                    <img src={URL.createObjectURL(photo)} alt="Preview" className="h-full w-full object-cover" />
+                                    <Image src={URL.createObjectURL(photo)} alt="Preview" fill className="object-cover" />
                                     <button 
                                         type="button" 
                                         onClick={() => removePhoto(index)} 

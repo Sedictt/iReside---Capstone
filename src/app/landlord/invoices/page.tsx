@@ -10,6 +10,7 @@ import type { BillingWorkspace, InvoiceListItem } from "@/lib/billing/server";
 import { formatPhpCurrency } from "@/lib/billing/utils";
 import { cn } from "@/lib/utils";
 import { useProperty } from "@/context/PropertyContext";
+import { ClientOnlyDate } from "@/components/ui/client-only-date";
 
 type StudioStep = "rent" | "water" | "electricity";
 
@@ -23,7 +24,7 @@ interface ExpenseItem {
 
 export default function InvoicesPage() {
   const { selectedPropertyId } = useProperty();
-  const searchParams = useSearchParams();
+  const { get } = useSearchParams();
   const [invoices, setInvoices] = useState<InvoiceListItem[]>([]);
   const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
   const [metrics, setMetrics] = useState({ totalOutstanding: 0, overdueAmount: 0, collectedLast30Days: 0, totalInvoices: 0 });
@@ -90,12 +91,12 @@ export default function InvoicesPage() {
   }, [loadData]);
 
   useEffect(() => {
-    const id = searchParams?.get("id");
+    const id = get("id");
     if (id) {
       setSelectedInvoiceId(id);
       setActiveTab("invoices");
     }
-  }, [searchParams]);
+  }, [get]);
 
   const visibleActiveLeases = useMemo(() => {
     const leases = workspace?.activeLeases ?? [];
@@ -486,7 +487,7 @@ export default function InvoicesPage() {
                                 </div>
                                 <div>
                                     <p className="text-sm font-bold text-foreground capitalize">{item.label}</p>
-                                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{item.desc} • {item.date.toLocaleDateString()}</p>
+                                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground" suppressHydrationWarning>{item.desc} • <span suppressHydrationWarning>{item.date.toLocaleDateString()}</span></p>
                                 </div>
                             </div>
                             <p className={cn("text-base font-semibold", item.type === 'income' ? 'text-emerald-500' : 'text-rose-500')}>
@@ -534,10 +535,10 @@ export default function InvoicesPage() {
                             <div className="flex size-10 items-center justify-center rounded-full bg-rose-500/10 text-rose-500">
                                 <Filter className="size-5" />
                             </div>
-                            <div>
+                            <div suppressHydrationWarning>
                                 <p className="text-sm font-bold text-foreground capitalize">{expense.category}</p>
                                 <p className="text-xs text-muted-foreground">{expense.description}</p>
-                                <p className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1">Incurred: {new Date(expense.date_incurred).toLocaleDateString()}</p>
+                                <p className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1">Incurred: <ClientOnlyDate date={expense.date_incurred} /></p>
                             </div>
                         </div>
                         <div className="text-right">

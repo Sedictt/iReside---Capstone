@@ -80,7 +80,7 @@ export type PaymentHistoryEntry = {
     dateLabel: string;
 };
 
-export type PaymentHistoryPayload = {
+type PaymentHistoryPayload = {
     payments: PaymentHistoryEntry[];
     totalPaid: number;
 };
@@ -153,7 +153,7 @@ const optimizeImageForUpload = async (file: File): Promise<File> => {
     }
 };
 
-export type ListFetchResult<T> = {
+type ListFetchResult<T> = {
     data: T[];
     error: string | null;
 };

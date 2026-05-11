@@ -30,9 +30,9 @@ export async function GET(request: Request) {
         .select("*");
     
     if (tenantId) {
-        applicationsQuery = applicationsQuery.eq("tenant_id", tenantId).eq("landlord_id", user.id);
+        applicationsQuery = (applicationsQuery as any).eq("applicant_id", tenantId).eq("landlord_id", user.id);
     } else {
-        applicationsQuery = applicationsQuery.eq("profile_id", user.id);
+        applicationsQuery = (applicationsQuery as any).eq("profile_id", user.id);
     }
 
     // Fetch properties to get contract templates
@@ -204,11 +204,11 @@ export async function GET(request: Request) {
             full_name: profile.full_name,
             avatar_url: profile.avatar_url,
             avatar_bg_color: (profile as any).avatar_bg_color,
-            phone: latestApp?.phone || profile.phone
+            phone: (latestApp as any)?.phone || (latestApp as any)?.applicant_phone || profile.phone
         },
         verification: latestApp ? {
             status: latestApp.status,
-            verificationStatus: latestApp.verification_status,
+            verificationStatus: (latestApp as any).verification_status || latestApp.status,
             verifiedAt: latestApp.updated_at
         } : {
             status: "approved", // Fallback for legacy landlords

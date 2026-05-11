@@ -6,7 +6,7 @@ import dynamic from "next/dynamic";
 import { generateLeasePdf } from "@/lib/lease-pdf";
 import { CheckCircle2, AlertCircle, FileText, Shield, ArrowLeft, PenTool } from "lucide-react";
 import { useAppToast } from "@/hooks/useAppToast";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 // Dynamic import for DigitalSigner to avoid SSR errors with pdfjs-dist
@@ -44,11 +44,11 @@ interface LeaseDetails {
 }
 
 function LandlordSigningContent({ params }: { params: Promise<{ leaseId: string }> }) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const { push } = useRouter();
+  const { get } = useSearchParams();
   const resolvedParams = use(params);
   const leaseId = resolvedParams.leaseId;
-  const token = searchParams.get("token");
+  const token = get("token");
   
   const toast = useAppToast();
   const [lease, setLease] = useState<LeaseDetails | null>(null);
@@ -134,7 +134,7 @@ function LandlordSigningContent({ params }: { params: Promise<{ leaseId: string 
 
       // Redirect after delay
       setTimeout(() => {
-        router.push("/landlord/dashboard");
+        push("/landlord/dashboard");
       }, 3000);
 
     } catch (err) {
@@ -178,7 +178,7 @@ function LandlordSigningContent({ params }: { params: Promise<{ leaseId: string 
             <p className="text-zinc-500 font-medium leading-relaxed">{error}</p>
           </div>
           <button
-            onClick={() => router.push("/landlord/dashboard")}
+            onClick={() => push("/landlord/dashboard")}
             className="group w-full bg-white text-black hover:bg-primary hover:text-white px-8 py-5 rounded-2xl font-semibold uppercase tracking-widest transition-all flex items-center justify-center gap-3"
           >
             <ArrowLeft className="size-5 group-hover:-translate-x-1 transition-transform" />

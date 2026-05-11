@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useProperty } from "@/context/PropertyContext";
 import RenewalSettingsModal from "./RenewalSettingsModal";
 import { Settings2 } from "lucide-react";
+import { ClientOnlyDate } from "@/components/ui/client-only-date";
 
 interface RenewalRequest {
     id: string;
@@ -310,7 +311,7 @@ export default function LandlordRenewalReview() {
                             <div className="grid grid-cols-2 gap-6 mb-8">
                                 <div className="space-y-1">
                                     <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">Current End Date</p>
-                                    <p className="font-bold text-foreground">{new Date(request.current_lease.end_date).toLocaleDateString()}</p>
+                                    <p className="font-bold text-foreground"><ClientOnlyDate date={request.current_lease.end_date} /></p>
                                 </div>
                                 <div className="space-y-1">
                                     <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">Proposed Length</p>
@@ -324,7 +325,7 @@ export default function LandlordRenewalReview() {
                                 </div>
                                 <div className="space-y-1">
                                     <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">Submitted On</p>
-                                    <p className="font-bold text-foreground">{new Date(request.created_at).toLocaleDateString()}</p>
+                                    <p className="font-bold text-foreground"><ClientOnlyDate date={request.created_at} /></p>
                                 </div>
                             </div>
 
@@ -374,7 +375,7 @@ export default function LandlordRenewalReview() {
                                     <div className="space-y-3">
                                         <div className="flex justify-between items-center">
                                             <span className="text-xs text-muted-foreground">Expires</span>
-                                            <span className="text-sm font-bold">{new Date(selectedRequest.current_lease.end_date).toLocaleDateString()}</span>
+                                            <span className="text-sm font-bold"><ClientOnlyDate date={selectedRequest.current_lease.end_date} /></span>
                                         </div>
                                         <div className="flex justify-between items-center">
                                             <span className="text-xs text-muted-foreground">Monthly Rent</span>
@@ -387,7 +388,7 @@ export default function LandlordRenewalReview() {
                                     <div className="space-y-3">
                                         <div className="flex justify-between items-center">
                                             <span className="text-xs text-primary/70">Target Start</span>
-                                            <span className="text-sm font-semibold text-primary">{new Date(selectedRequest.proposed_start_date).toLocaleDateString()}</span>
+                                            <span className="text-sm font-semibold text-primary"><ClientOnlyDate date={selectedRequest.proposed_start_date} /></span>
                                         </div>
                                         <div className="flex justify-between items-center">
                                             <span className="text-xs text-primary/70">Target Rent</span>

@@ -28,7 +28,7 @@ import {
     ArrowRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { toast } from "sonner";
 import { AddAmenityModal } from "@/components/landlord/AddAmenityModal";

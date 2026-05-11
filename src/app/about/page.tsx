@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { motion } from "framer-motion";
+import { m as m as motion } from "framer-motion";
 import { TransitionLink } from "@/components/transitions/PageTransitionProvider";
 
 const VALUES = [

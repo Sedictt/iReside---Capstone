@@ -22,9 +22,9 @@ import {
   ArrowRightLeft
 } from "lucide-react";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 
-export interface NavItem {
+interface NavItem {
   title: string;
   href: string;
   icon?: React.ElementType;

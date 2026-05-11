@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect, useCallback, ReactNode } from "react";
 
-export interface ClickSparkProps {
+interface ClickSparkProps {
   sparkColor?: string;
   sparkSize?: number;
   sparkRadius?: number;

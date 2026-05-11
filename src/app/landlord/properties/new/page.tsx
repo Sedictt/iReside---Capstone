@@ -1,5 +1,6 @@
 "use client";
 
+import Image from 'next/image';
 import { useState, useEffect, Suspense, type ChangeEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -59,10 +60,10 @@ const MEDIA_UPLOAD_TIMEOUT_MS = 25_000;
 const PROPERTY_LOAD_TIMEOUT_MS = 12_000;
 
 function NewAssetContent() {
-    const router = useRouter();
-    const searchParams = useSearchParams();
-    const mode = searchParams.get("mode");
-    const id = searchParams.get("id");
+    const { push } = useRouter();
+    const { get } = useSearchParams();
+    const mode = get("mode");
+    const id = get("id");
     const isEditMode = mode === "edit";
 
     const { user, profile } = useAuth();
@@ -202,7 +203,7 @@ function NewAssetContent() {
 
     const handleBack = () => {
         if (step > 1) setStep(s => (s - 1) as Step);
-        else router.push("/landlord/properties");
+        else push("/landlord/properties");
     };
 
     const handleSubmit = async () => {
@@ -294,7 +295,7 @@ function NewAssetContent() {
             }
 
             playSound("success");
-            router.push("/landlord/properties");
+            push("/landlord/properties");
         } catch (e) {
             playSound("error");
             setLoadError("Critical save failure.");
@@ -379,7 +380,7 @@ function NewAssetContent() {
                                         <div className="relative group cursor-pointer overflow-hidden rounded-[2.5rem] border border-white/10 bg-white/5 aspect-[16/10]">
                                             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
                                                 {(mediaPreviewUrls.length > 0 || existingImageUrls.length > 0) ? (
-                                                    <img src={mediaPreviewUrls[0] || existingImageUrls[0]} alt="" className="w-full h-full object-cover" />
+                                                    <Image src={mediaPreviewUrls[0] || existingImageUrls[0]} alt="" fill className="object-cover" />
                                                 ) : (
                                                     <Upload className="size-8 text-white/20" />
                                                 )}
@@ -421,7 +422,7 @@ function NewAssetContent() {
                                         {isEditMode && (
                                             <button 
                                                 type="button"
-                                                onClick={() => router.push("/landlord/support?topic=property_info_change")}
+                                                onClick={() => push("/landlord/support?topic=property_info_change")}
                                                 className="w-full py-4 rounded-2xl border border-primary/20 bg-primary/5 text-[10px] font-semibold uppercase tracking-[0.2em] text-primary hover:bg-primary/10 transition-all flex items-center justify-center gap-2"
                                             >
                                                 <ShieldCheck className="size-3.5" />

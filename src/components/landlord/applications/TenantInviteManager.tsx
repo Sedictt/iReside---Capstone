@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useMemo, useState } from "react";
 import { Building2, Calendar, CircleHelp, Copy, DoorClosed, DoorOpen, History, Link2, MapPin, QrCode, RefreshCw, ShieldCheck, Users, Globe, Handshake, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -646,7 +647,7 @@ export function TenantInviteManager({
                                 <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">Generated Invite</span>
                             </div>
                             <div className="relative mb-6 rounded-3xl border-2 border-border bg-white p-3 shadow-xl">
-                                <img src={freshInvite.qrUrl} alt="Invite QR code" className="size-44 rounded-xl" />
+                                <Image src={freshInvite.qrUrl} alt="Invite QR code" width={176} height={176} className="rounded-xl" />
                             </div>
                             <div className="mb-6 w-full rounded-2xl border border-border bg-background p-4 text-left">
                                 <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Share URL</p>

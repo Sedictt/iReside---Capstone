@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import Image from 'next/image';
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -247,11 +248,25 @@ function ApplicationsSkeletonList() {
 
 export function RentApplications() {
     const { selectedPropertyId } = useProperty();
-    const [mounted, setMounted] = useState(false);
-    const searchParams = useSearchParams();
+    const mounted = useRef(false);
+    const { get } = useSearchParams();
+
+    const [activeTab, setActiveTab] = useState<"pending" | "approved" | "rejected" | "archived">("pending");
+    const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
+    const [isRefreshing, setIsRefreshing] = useState(false);
     const [activeFilter, setActiveFilterState] = useState<ApplicationStatus | "all">("all");
     const [filterLoading, setFilterLoading] = useState(false);
+
+    useEffect(() => {
+        const action = get("action");
+        if (action === "view-application") {
+            const deepLinkId = get("id");
+            if (deepLinkId) {
+                setSelectedApplicationId(deepLinkId);
+            }
+        }
+    }, [get]);
 
     const setActiveFilter = (filter: ApplicationStatus | "all") => {
         if (filter !== activeFilter) {
@@ -316,7 +331,7 @@ export function RentApplications() {
         shareUrl: string;
         qrUrl: string;
     }>>([]);
-    const [reloadKey, setReloadKey] = useState(0);
+    const reloadKey = useRef(0);
     const [signingLinkState, setSigningLinkState] = useState<{
         loading: boolean;
         message: string | null;
@@ -333,14 +348,14 @@ export function RentApplications() {
     const [showCountersignModal, setShowCountersignModal] = useState(false);
     const [pendingCountersignature, setPendingCountersignature] = useState<string | null>(null);
     const [countersignRedirectLoading, setCountersignRedirectLoading] = useState(false);
-    const [reviewingPaymentRequestId, setReviewingPaymentRequestId] = useState<string | null>(null);
-    const [bypassingPayments, setBypassingPayments] = useState(false);
-    const [bypassReason, setBypassReason] = useState("");
-    const [bypassPassword, setBypassPassword] = useState("");
+    const reviewingPaymentRequestId = useRef<string | null>(null);
+    const bypassingPayments = useRef(false);
+    const bypassReason = useRef("");
+    const bypassPassword = useRef("");
 
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-    const [documentLoading, setDocumentLoading] = useState(true);
-    const [showMoreFilters, setShowMoreFilters] = useState(false);
+    const documentLoading = useRef(true);
+    const showMoreFilters = useRef(false);
     const [showInviteTools, setShowInviteTools] = useState(false);
     const [leasePdfBlob, setLeasePdfBlob] = useState<Blob | null>(null);
     const [showDeclineConfirm, setShowDeclineConfirm] = useState(false);
@@ -387,22 +402,22 @@ export function RentApplications() {
         generate();
     }, [selectedApp]);
 
-    useEffect(() => { if (previewUrl) setDocumentLoading(true); }, [previewUrl]);
+    useEffect(() => { if (previewUrl) documentLoading.current = true; }, [previewUrl]);
 
     useEffect(() => {
-        setBypassReason("");
-        setBypassPassword("");
-        setReviewingPaymentRequestId(null);
+        bypassReason.current = "";
+        bypassPassword.current = "";
+        reviewingPaymentRequestId.current = null;
     }, [selectedApp?.id]);
 
     useEffect(() => {
-        setMounted(true);
+        mounted.current = true;
         setLoading(true);
-        const action = searchParams?.get("action");
+        const action = get("action");
         if (action === "tenant-application" || action === "walk-in") {
             setShowTenantApplicationModal(true);
         }
-    }, [searchParams]);
+    }, [get]);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -426,7 +441,7 @@ export function RentApplications() {
                     setDataFetched(true);
 
                     // Handle deep linking via ?id=
-                    const deepLinkId = searchParams?.get("id");
+                    const deepLinkId = get("id");
                     if (deepLinkId) {
                         const targetApp = fetchedApps.find(a => a.id === deepLinkId);
                         if (targetApp) {
@@ -455,7 +470,7 @@ export function RentApplications() {
                 clearTimeout(loadingTimeoutId);
             }
         };
-    }, [reloadKey, selectedPropertyId]);
+    }, [selectedPropertyId]);
 
     const toggleRequirement = async (applicationId: string, currentChecklist: Record<string, boolean>, key: string) => {
         const updatedChecklist = { ...currentChecklist, [key]: !currentChecklist[key] };
@@ -523,14 +538,14 @@ export function RentApplications() {
     } | null>(null);
     const [sendingCredentials, setSendingCredentials] = useState(false);
 
-    const [isEditing, setIsEditing] = useState(false);
+    const isEditing = useRef(false);
     const [editDraft, setEditDraft] = useState<{
         applicant_name: string; applicant_email: string; applicant_phone: string;
         emergency_contact_name: string; emergency_contact_phone: string;
         move_in_date: string; occupation: string; employer: string;
         monthly_income: string; message: string;
     } | null>(null);
-    const [savingEdit, setSavingEdit] = useState(false);
+    const savingEdit = useRef(false);
     const [editError, setEditError] = useState<string | null>(null);
 
     const openEdit = (app: RentApplication) => {
@@ -546,14 +561,14 @@ export function RentApplications() {
             monthly_income: app.applicant.monthlyIncome != null ? String(app.applicant.monthlyIncome) : "",
             message: app.notes ?? "",
         });
-        setIsEditing(true);
+        isEditing.current = true;
     };
 
-    const cancelEdit = () => { setIsEditing(false); setEditDraft(null); setEditError(null); };
+    const cancelEdit = () => { isEditing.current = false; setEditDraft(null); setEditError(null); };
 
     const saveEdit = async () => {
         if (!selectedApp || !editDraft) return;
-        setSavingEdit(true);
+        savingEdit.current = true;
         try {
             const res = await fetch("/api/landlord/applications/tenant-application", {
                 method: "PATCH",
@@ -575,9 +590,9 @@ export function RentApplications() {
                 }),
             });
             if (!res.ok) throw new Error("Failed save");
-            setReloadKey(k => k + 1);
-            setIsEditing(false);
-        } catch { setEditError("Failed to save changes."); } finally { setSavingEdit(false); }
+            reloadKey.current += 1;
+            isEditing.current = false;
+        } catch { setEditError("Failed to save changes."); } finally { savingEdit.current = false; }
     };
 
     const handleSendCredentials = async (appId: string) => {
@@ -600,7 +615,7 @@ export function RentApplications() {
                 body: JSON.stringify({ status }),
             });
             if (!response.ok) throw new Error("Failed update");
-            setReloadKey(k => k + 1);
+            reloadKey.current += 1;
         } catch { setActionError("Unable to update application status."); } finally { setUpdatingStatusId(null); }
     };
 
@@ -620,7 +635,7 @@ export function RentApplications() {
                 tempPassword: data.tenant_account?.tempPassword || null,
                 inviteUrl: data.tenant_account?.inviteUrl,
             });
-            setReloadKey(k => k + 1);
+            reloadKey.current += 1;
             
             setShowContractModal(false);
             setSelectedApp(null);
@@ -650,7 +665,7 @@ export function RentApplications() {
 
     const reviewPreApprovalPayment = async (requestId: string, action: PaymentReviewAction) => {
         if (!selectedApp) return;
-        setReviewingPaymentRequestId(requestId);
+        reviewingPaymentRequestId.current = requestId;
         try {
             const response = await fetch(`/api/landlord/applications/${selectedApp.id}/payment-requests/${requestId}/review`, {
                 method: "POST",
@@ -658,25 +673,25 @@ export function RentApplications() {
                 body: JSON.stringify({ action }),
             });
             if (!response.ok) throw new Error("Failed review");
-            setReloadKey(k => k + 1);
-        } catch { setActionError("Failed to review payment request."); } finally { setReviewingPaymentRequestId(null); }
+            reloadKey.current += 1;
+        } catch { setActionError("Failed to review payment request."); } finally { reviewingPaymentRequestId.current = null; }
     };
 
     const runPaymentBypass = async () => {
-        if (!selectedApp || !bypassPassword.trim() || !bypassReason.trim()) {
+        if (!selectedApp || !bypassPassword.current.trim() || !bypassReason.current.trim()) {
             setActionError("Password and reason required.");
             return;
         }
-        setBypassingPayments(true);
+        bypassingPayments.current = true;
         try {
             const response = await fetch(`/api/landlord/applications/${selectedApp.id}/payment-bypass`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ password: bypassPassword, reason: bypassReason }),
+                body: JSON.stringify({ password: bypassPassword.current, reason: bypassReason.current }),
             });
             if (!response.ok) throw new Error("Failed bypass");
-            setReloadKey(k => k + 1);
-        } catch { setActionError("Failed to run bypass."); } finally { setBypassingPayments(false); }
+            reloadKey.current += 1;
+        } catch { setActionError("Failed to run bypass."); } finally { bypassingPayments.current = false; }
     };
 
     const handleGenerateSigningLink = async (applicationId: string) => {
@@ -689,7 +704,7 @@ export function RentApplications() {
                 ? "Lease created & signing link generated."
                 : "Signing link generated.";
             setSigningLinkState({ loading: false, message: msg, error: null, signingUrl: data.signing_url, emailSent: data.email_sent ?? false, leaseCreated: data.lease_created ?? false });
-            setReloadKey(k => k + 1);
+            reloadKey.current += 1;
         } catch (err: any) { setSigningLinkState({ loading: false, message: null, error: err.message, signingUrl: null, emailSent: null, leaseCreated: null }); }
     };
 
@@ -704,7 +719,7 @@ export function RentApplications() {
             if (!response.ok) throw new Error("Failed countersign");
             setCountersignState({ loading: false, error: null, message: "Lease signed." });
             setShowCountersignModal(false);
-            setReloadKey(k => k + 1);
+            reloadKey.current += 1;
         } catch (err: any) { setCountersignState({ loading: false, error: err.message, message: null }); }
     };
 
@@ -869,15 +884,15 @@ export function RentApplications() {
                                             className="group relative flex cursor-pointer items-center overflow-hidden rounded-3xl border border-border bg-background/50 p-3 transition-all hover:border-primary/20 hover:bg-card hover:shadow-lg active:scale-[0.99]"
                                         >
                                             <div className="relative h-20 w-28 shrink-0 overflow-hidden rounded-2xl bg-muted">
-                                                <img src={resolveImage(app.propertyImage)} alt="" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                                <Image src={resolveImage(app.propertyImage)} alt="" fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
                                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                                                 <span className="absolute bottom-2 left-2 text-[10px] font-semibold text-white">{app.unitNumber}</span>
                                             </div>
 
                                             <div className="grid flex-1 grid-cols-1 items-center gap-6 px-6 lg:grid-cols-[1fr_120px_180px] xl:grid-cols-[1fr_120px_120px_180px]">
                                                 <div className="flex items-center gap-4 min-w-0">
-                                                    <div className="size-12 shrink-0 rounded-full border-2 border-border bg-muted flex items-center justify-center font-semibold text-muted-foreground" style={{ backgroundColor: app.applicant.avatarBgColor || "" }}>
-                                                        {app.applicant.avatar ? <img src={app.applicant.avatar} alt={`${app.applicant.name} avatar`} className="h-full w-full object-cover" /> : app.applicant.name[0]}
+                                                    <div className="relative size-12 shrink-0 rounded-full border-2 border-border bg-muted flex items-center justify-center font-semibold text-muted-foreground" style={{ backgroundColor: app.applicant.avatarBgColor || "" }}>
+                                                        {app.applicant.avatar ? <Image src={app.applicant.avatar} alt={`${app.applicant.name} avatar`} fill className="object-cover" /> : app.applicant.name[0]}
                                                     </div>
                                                     <div className="min-w-0 flex-1">
                                                         <h3 className="truncate text-lg font-semibold tracking-tight text-foreground">{app.applicant.name}</h3>
@@ -987,7 +1002,7 @@ export function RentApplications() {
                                 )}
                                 {/* Hero Card */}
                                 <div className="relative h-48 w-full overflow-hidden rounded-[2.5rem] border border-border bg-muted shadow-sm">
-                                    <img src={resolveImage(selectedApp.propertyImage)} alt="" className="h-full w-full object-cover opacity-60" />
+                                    <Image src={resolveImage(selectedApp.propertyImage)} alt="" fill className="object-cover opacity-60" />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                                     <div className="absolute bottom-6 left-8">
                                         <h3 className="text-2xl font-semibold text-white">{selectedApp.propertyName}</h3>
@@ -1048,8 +1063,8 @@ export function RentApplications() {
                                     <h4 className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground px-2">Tenant Profile</h4>
                                     <div className="rounded-[2.5rem] border border-border bg-background/50 p-8 space-y-8">
                                         <div className="flex items-center gap-6">
-                                            <div className="size-20 rounded-full border-4 border-border shadow-xl flex items-center justify-center text-3xl font-semibold text-white" style={{ backgroundColor: selectedApp.applicant.avatarBgColor || "#171717" }}>
-                                                {selectedApp.applicant.avatar ? <img src={selectedApp.applicant.avatar} alt={`${selectedApp.applicant.name} avatar`} className="h-full w-full object-cover" /> : selectedApp.applicant.name[0]}
+                                            <div className="relative size-20 rounded-full border-4 border-border shadow-xl flex items-center justify-center text-3xl font-semibold text-white" style={{ backgroundColor: selectedApp.applicant.avatarBgColor || "#171717" }}>
+                                                {selectedApp.applicant.avatar ? <Image src={selectedApp.applicant.avatar} alt={`${selectedApp.applicant.name} avatar`} fill className="object-cover" /> : selectedApp.applicant.name[0]}
                                             </div>
                                             <div>
                                                 <h3 className="text-2xl font-semibold text-foreground">{selectedApp.applicant.name}</h3>
@@ -1374,8 +1389,8 @@ export function RentApplications() {
             </AnimatePresence>
 
             {/* ─── Modals ─────────────────────────────────────────────────── */}
-            <WalkInApplicationModal isOpen={showTenantApplicationModal} onClose={() => setShowTenantApplicationModal(false)} units={scopedAvailableUnits} onSuccess={() => setReloadKey(k => k + 1)} />
-            <ContractPreviewModal isOpen={showContractModal} onClose={() => { setShowContractModal(false); setContractData(null); }} contractData={contractData} onSuccess={() => { setReloadKey(k => k + 1); setShowContractModal(false); }} />
+            <WalkInApplicationModal isOpen={showTenantApplicationModal} onClose={() => setShowTenantApplicationModal(false)} units={scopedAvailableUnits} onSuccess={() => { reloadKey.current += 1; }} />
+            <ContractPreviewModal isOpen={showContractModal} onClose={() => { setShowContractModal(false); setContractData(null); }} contractData={contractData} onSuccess={() => { reloadKey.current += 1; setShowContractModal(false); }} />
             
             <AnimatePresence>
                 {previewUrl && (
@@ -1399,7 +1414,7 @@ export function RentApplications() {
                                 {previewUrl.toLowerCase().endsWith(".pdf") ? (
                                     <iframe src={previewUrl} className="h-full w-full rounded-2xl border-0" title="Preview" />
                                 ) : (
-                                    <div className="flex h-full w-full items-center justify-center"><img src={previewUrl} alt="Document preview" className="max-h-full max-w-full rounded-2xl object-contain" /></div>
+                                    <div className="relative flex h-full w-full items-center justify-center overflow-hidden"><Image src={previewUrl} alt="Document preview" fill className="object-contain" /></div>
                                 )}
                             </div>
                         </motion.div>
@@ -1485,7 +1500,7 @@ export function RentApplications() {
                             <div className="space-y-6">
                                 <div className="rounded-2xl border border-border bg-muted/30 p-4">
                                     <p className="text-[10px] font-semibold uppercase text-muted-foreground mb-2">Tenant Signature</p>
-                                    <img src={selectedApp.lease.tenant_signature || ""} alt="" className="max-h-24 object-contain" />
+                                    <Image src={selectedApp.lease.tenant_signature || ""} alt="" width={300} height={96} className="object-contain" style={{maxHeight: '6rem'}} />
                                 </div>
                                 <div className="space-y-2">
                                     <p className="text-[10px] font-semibold uppercase text-muted-foreground">Your Signature</p>
@@ -1577,7 +1592,7 @@ export function RentApplications() {
                                                 
                                                 setSelectedApp(prev => prev ? { ...prev, status: "rejected" as const, notes: `Rejection reason: ${declineReason}` } : null);
                                                 setDeclineReason("");
-                                                setReloadKey(k => k + 1);
+                                                reloadKey.current += 1;
                                             } catch {
                                                 setActionError("Unable to decline application.");
                                             } finally {

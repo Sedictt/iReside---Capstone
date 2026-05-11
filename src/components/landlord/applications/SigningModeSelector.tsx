@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { UserCheck, Mail, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type SigningMode = "in_person" | "remote";
+type SigningMode = "in_person" | "remote";
 
 interface SigningModeSelectorProps {
   value: SigningMode | null;

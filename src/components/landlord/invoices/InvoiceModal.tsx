@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
+import Image from "next/image";
 import { 
     CheckCircle2, Clock3, Loader2, QrCode, Receipt, Send, X, XCircle, 
     FileText, User, Building2, Hash, ArrowUpRight, ShieldCheck, 
@@ -8,9 +9,10 @@ import {
     CheckCircle, AlertCircle, HelpCircle, Wallet
 } from "lucide-react";
 import { createPortal } from "react-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 
+import Image from 'next/image';
 import { formatDateLong, formatPhpCurrency } from "@/lib/billing/utils";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
@@ -487,10 +489,11 @@ export function InvoiceModal({
                                             className="group relative w-full overflow-hidden rounded-3xl border border-white/10 bg-surface-1 p-2 transition-all hover:border-primary/30 cursor-zoom-in"
                                         >
                                             <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-surface-2">
-                                                <img 
-                                                    src={invoice.paymentProofUrl} 
-                                                    alt="Proof of Payment" 
-                                                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                                <Image
+                                                    src={invoice.paymentProofUrl}
+                                                    alt="Proof of Payment"
+                                                    fill
+                                                    className="object-cover transition-transform duration-700 group-hover:scale-110"
                                                 />
                                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                                                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -531,10 +534,11 @@ export function InvoiceModal({
                                                 className="group relative w-full overflow-hidden rounded-3xl border border-amber-500/10 bg-amber-500/5 p-2 transition-all hover:border-amber-500/30 cursor-zoom-in text-left"
                                             >
                                                 <div className="relative aspect-video overflow-hidden rounded-2xl bg-surface-2">
-                                                    <img 
-                                                        src={(invoice.metadata as any).refund_proof_url} 
-                                                        alt="Proof of Refund" 
-                                                        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                                    <Image
+                                                        src={(invoice.metadata as any).refund_proof_url}
+                                                        alt="Proof of Refund"
+                                                        fill
+                                                        className="object-cover transition-transform duration-700 group-hover:scale-110"
                                                     />
                                                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                                                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -937,7 +941,7 @@ export function InvoiceModal({
                             exit={{ opacity: 0, scale: 0.9 }}
                             className="relative max-h-full max-w-full overflow-hidden rounded-3xl border border-white/10 shadow-[0_40px_120px_rgba(0,0,0,0.8)]"
                         >
-                            <img src={lightboxUrl} alt="Enlarged Proof" className="max-h-[85vh] w-auto object-contain" />
+                            <Image src={lightboxUrl} alt="Enlarged Proof" width={1200} height={900} className="object-contain" style={{maxHeight: '85vh', width: 'auto'}} />
                             <div className="absolute top-4 right-4">
                                 <button 
                                     onClick={() => setLightboxUrl(null)}
@@ -1497,10 +1501,11 @@ function RefundCenter({
                 <div className="space-y-3">
                     <p className="text-[10px] font-semibold uppercase tracking-widest text-text-disabled ml-1">Submitted Proof</p>
                     <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-white/10 bg-surface-2 shadow-lg">
-                        <img 
-                            src={refundProofUrl} 
-                            alt="Refund Proof" 
-                            className="h-full w-full object-cover"
+                        <Image
+                            src={refundProofUrl}
+                            alt="Refund Proof"
+                            fill
+                            className="object-cover"
                         />
                     </div>
                 </div>
@@ -1544,10 +1549,11 @@ function RefundCenter({
                         <div className="pt-2">
                             <p className="text-[10px] font-semibold uppercase tracking-widest text-text-disabled mb-2">Recipient QR Code</p>
                             <div className="relative group aspect-square w-full max-w-[200px] mx-auto overflow-hidden rounded-xl border border-white/10 bg-white p-2">
-                                <img 
-                                    src={refund.qr_url} 
-                                    alt="Tenant GCash QR" 
-                                    className="h-full w-full object-contain"
+                                <Image
+                                    src={refund.qr_url}
+                                    alt="Tenant GCash QR"
+                                    fill
+                                    className="object-contain"
                                 />
                                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                     <p className="text-[10px] font-bold text-white uppercase tracking-widest">View Full Size</p>
@@ -1579,10 +1585,11 @@ function RefundCenter({
                         </label>
                     ) : (
                         <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-white/10 bg-surface-2">
-                            <img 
-                                src={URL.createObjectURL(proofFile)} 
-                                alt="Refund Proof Preview" 
-                                className="h-full w-full object-cover"
+                            <Image
+                                src={URL.createObjectURL(proofFile)}
+                                alt="Refund Proof Preview"
+                                fill
+                                className="object-cover"
                             />
                             <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
                                 <button 

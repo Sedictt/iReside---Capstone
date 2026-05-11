@@ -1,5 +1,6 @@
 "use client";
 
+import Image from 'next/image';
 import { useEffect, useState, useRef } from "react";
 import { Search, Users, UserCheck, ShieldAlert, MoreHorizontal, Mail, Calendar, Key, Eye, Send, MoreVertical, X } from "lucide-react";
 import type { UserRole } from "@/types/database";
@@ -196,32 +197,32 @@ function SnapshotModal({ user, onClose }: { user: UserDetail; onClose: () => voi
                                 {app.identity_document_url && (
                                     <div className="space-y-2">
                                         <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Identity Document</p>
-                                        <a href={app.identity_document_url} target="_blank" rel="noopener noreferrer" className="block h-32 rounded-xl border border-white/10 overflow-hidden hover:border-primary/50 transition-colors">
-                                            <img src={app.identity_document_url} alt="Identity" className="w-full h-full object-cover" />
+<a href={app.identity_document_url} target="_blank" rel="noopener noreferrer" className="relative block h-32 rounded-xl border border-white/10 overflow-hidden hover:border-primary/50 transition-colors">
+                                                <Image src={app.identity_document_url} alt="Identity" fill className="object-cover" />
                                         </a>
                                     </div>
                                 )}
                                 {app.ownership_document_url && (
                                     <div className="space-y-2">
                                         <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Proof of Ownership</p>
-                                        <a href={app.ownership_document_url} target="_blank" rel="noopener noreferrer" className="block h-32 rounded-xl border border-white/10 overflow-hidden hover:border-primary/50 transition-colors">
-                                            <img src={app.ownership_document_url} alt="Ownership" className="w-full h-full object-cover" />
+<a href={app.ownership_document_url} target="_blank" rel="noopener noreferrer" className="relative block h-32 rounded-xl border border-white/10 overflow-hidden hover:border-primary/50 transition-colors">
+                                                <Image src={app.ownership_document_url} alt="Ownership" fill className="object-cover" />
                                         </a>
                                     </div>
                                 )}
                                 {app.business_permit_url && (
                                     <div className="space-y-2">
                                         <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Business Permit (Paper)</p>
-                                        <a href={app.business_permit_url} target="_blank" rel="noopener noreferrer" className="block h-32 rounded-xl border border-white/10 overflow-hidden hover:border-primary/50 transition-colors">
-                                            <img src={app.business_permit_url} alt="Permit Paper" className="w-full h-full object-cover" />
+<a href={app.business_permit_url} target="_blank" rel="noopener noreferrer" className="relative block h-32 rounded-xl border border-white/10 overflow-hidden hover:border-primary/50 transition-colors">
+                                                <Image src={app.business_permit_url} alt="Permit Paper" fill className="object-cover" />
                                         </a>
                                     </div>
                                 )}
                                 {app.business_permit_card_url && (
                                     <div className="space-y-2">
                                         <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Business Permit (Card)</p>
-                                        <a href={app.business_permit_card_url} target="_blank" rel="noopener noreferrer" className="block h-32 rounded-xl border border-white/10 overflow-hidden hover:border-primary/50 transition-colors">
-                                            <img src={app.business_permit_card_url} alt="Permit Card" className="w-full h-full object-cover" />
+<a href={app.business_permit_card_url} target="_blank" rel="noopener noreferrer" className="relative block h-32 rounded-xl border border-white/10 overflow-hidden hover:border-primary/50 transition-colors">
+                                                <Image src={app.business_permit_card_url} alt="Permit Card" fill className="object-cover" />
                                         </a>
                                     </div>
                                 )}
@@ -391,9 +392,9 @@ export default function AdminUsersPage() {
 
                                 return (
                                     <article key={user.id} className="rounded-2xl border border-border/70 bg-background p-4">
-                                        <div className="flex items-center gap-3">
-                                            {user.avatar_url ? (
-                                                <img src={user.avatar_url} alt="" className="size-10 shrink-0 rounded-full border border-white/10 object-cover" />
+<div className="relative flex items-center gap-3">
+                                                {user.avatar_url ? (
+                                                    <Image src={user.avatar_url} alt="" fill className="object-cover rounded-full border border-white/10" />
                                             ) : (
                                                 <div className="flex size-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-gradient-to-br from-white/10 to-white/5">
                                                     <span className="text-xs font-bold text-white/70">
@@ -410,7 +411,7 @@ export default function AdminUsersPage() {
                                             </div>
                                         </div>
 
-                                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                                        <div className="mt-3 flex flex-wrap items-center gap-2" suppressHydrationWarning>
                                             <div className={cn("inline-flex items-center gap-2 rounded-xl border px-3 py-1.5 shadow-inner", roleInfo.bgClass, roleInfo.borderClass)}>
                                                 <RoleIcon className={cn("size-4 shrink-0", roleInfo.colorClass)} />
                                                 <span className={cn("text-[11px] font-bold uppercase tracking-wider", roleInfo.colorClass)}>
@@ -419,7 +420,7 @@ export default function AdminUsersPage() {
                                             </div>
                                             <span className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-semibold text-white/60">
                                                 <Calendar className="size-3.5 text-white/30" />
-                                                {dateObj.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                                                <span suppressHydrationWarning>{dateObj.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
                                             </span>
                                             <span className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-mono text-white/60">
                                                 <Key className="size-3.5 text-white/30" />
@@ -494,10 +495,10 @@ export default function AdminUsersPage() {
                                     
                                     return (
                                         <tr key={user.id} className="group transition-colors hover:bg-white/[0.02]">
-                                            <td className="px-8 py-5">
-                                                <div className="flex items-center gap-4">
-                                                    {user.avatar_url ? (
-                                                        <img src={user.avatar_url} alt="" className="size-12 shrink-0 rounded-full border border-white/10 object-cover shadow-lg" />
+<td className="relative px-8 py-5">
+                                                    <div className="flex items-center gap-4">
+                                                        {user.avatar_url ? (
+                                                            <Image src={user.avatar_url} alt="" width={48} height={48} className="object-cover rounded-full border border-white/10 shadow-lg shrink-0" />
                                                     ) : (
                                                         <div className="flex size-12 shrink-0 items-center justify-center rounded-full border border-white/10 bg-gradient-to-br from-white/10 to-white/5 shadow-inner">
                                                             <span className="text-sm font-bold text-white/70">
@@ -532,7 +533,7 @@ export default function AdminUsersPage() {
                                                 </div>
                                             </td>
                                             <td className="px-8 py-5">
-                                                <div className="flex items-center gap-2 text-sm font-medium text-white/50">
+                                                <div className="flex items-center gap-2 text-sm font-medium text-white/50" suppressHydrationWarning>
                                                     <Calendar className="size-4 text-white/20" />
                                                     {dateObj.toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric' })}
                                                 </div>

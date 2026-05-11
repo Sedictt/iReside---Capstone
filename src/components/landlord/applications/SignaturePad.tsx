@@ -4,7 +4,7 @@ import { useRef, useState, useEffect, useCallback } from "react";
 import SignaturePadLibrary from "signature_pad";
 import { Eraser, Save, FileText, Maximize2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { DigitalSigner } from "@/components/shared/DigitalSigner/DigitalSigner";
 import { toast } from "sonner";
 

@@ -6,7 +6,7 @@ import {
     Receipt, X, ArrowUpRight,
     HelpCircle, TrendingUp, QrCode, Upload, Loader2
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { UiMessage } from "../landlord/messages/types";
 import { formatPhpCurrency } from "@/lib/billing/utils";
 import { cn } from "@/lib/utils";

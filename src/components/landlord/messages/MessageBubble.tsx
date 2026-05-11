@@ -1,5 +1,6 @@
 "use client";
 
+import Image from 'next/image';
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -29,7 +30,7 @@ import {
 } from "lucide-react";
 import { UiMessage, OutboundStatus } from "./types";
 import { Logo } from "@/components/ui/Logo";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { OfficialReceipt } from "@/components/messaging/OfficialReceipt";
 import { NotificationCard } from "@/components/messaging/NotificationCard";
 
@@ -144,7 +145,7 @@ export function MessageBubble({
                                 tabIndex={0}
                                 role="button"
                             >
-                                <img src={message.fileUrl} alt="Attachment" className="w-full h-auto object-cover max-h-[400px]" />
+                                <Image src={message.fileUrl} alt="Attachment" width={1200} height={800} className="object-cover" style={{maxHeight: '400px', width: 'auto', height: 'auto'}} />
                             </div>
                         ) : null}
                     </motion.div>
@@ -309,9 +310,10 @@ function AlbumGrid({ attachments, isMe, onImageClick }: { attachments: UiMessage
                             isLarge && "row-span-2 aspect-auto"
                         )}
                     >
-                        <img
+                        <Image
                             src={att.fileUrl}
-                            className={cn("w-full h-full object-cover", onImageClick && "cursor-pointer hover:opacity-90 transition-opacity")}
+                            fill
+                            className={cn("object-cover", onImageClick && "cursor-pointer hover:opacity-90 transition-opacity")}
                             alt=""
                             onClick={() => onImageClick?.(attachments.map(a => ({ url: a.fileUrl!, id: a.id })), idx)}
                             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onImageClick?.(attachments.map(a => ({ url: a.fileUrl!, id: a.id })), idx); }}}

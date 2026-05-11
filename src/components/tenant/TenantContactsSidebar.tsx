@@ -5,7 +5,7 @@ import { Users, Phone, MoreHorizontal, MessageSquare, Video, X, Send, Maximize2,
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import Image from "next/image";
 import { ChatWidget } from "./ChatWidget";
 import type { RealtimeChannel } from "@supabase/supabase-js";

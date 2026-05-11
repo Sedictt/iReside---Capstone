@@ -1,4 +1,4 @@
-export interface RenewalSettings {
+interface RenewalSettings {
   enabled?: boolean;
   min_notice_days?: number;
   auto_renew?: boolean;

@@ -1,7 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { MessageSquare, Clock, Home, ArrowRight, Mail, MoreVertical, Eye, Archive, Trash2, CheckCircle, X, Send } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { useState, useRef, useEffect, useReducer } from "react";
 import { createPortal } from "react-dom";
 
@@ -203,10 +204,11 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                                 {/* Header Section with Property Image Background */}
                                 <div className="relative h-32 overflow-hidden rounded-t-2xl">
                                     {/* Property Background Image */}
-                                    <img
+                                    <Image
                                         src={inquiry.propertyImage}
                                         alt={inquiry.propertyName}
-                                        className="absolute inset-0 w-full h-full object-cover"
+                                        fill
+                                        className="object-cover"
                                     />
 
                                     {/* Gradient Overlays */}
@@ -250,10 +252,12 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                                     <div className="absolute bottom-3 left-4 flex items-center gap-3 z-10">
                                         <div className="size-14 rounded-full bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm flex items-center justify-center ring-2 ring-white/30">
                                             {inquiry.prospectAvatar ? (
-                                                <img
+                                                <Image
                                                     src={inquiry.prospectAvatar}
                                                     alt={inquiry.prospectName}
-                                                    className="size-14 rounded-full object-cover"
+                                                    width={56}
+                                                    height={56}
+                                                    className="rounded-full object-cover"
                                                 />
                                             ) : (
                                                 <span className="text-lg font-bold text-white">
@@ -413,10 +417,12 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                             <div className="flex items-center gap-3">
                                 <div className="size-10 rounded-full bg-gradient-to-br from-lime-600 to-emerald-800 flex items-center justify-center text-white font-bold text-sm">
                                     {activeChat.prospectAvatar ? (
-                                        <img
+                                        <Image
                                             src={activeChat.prospectAvatar || FALLBACK_AVATAR}
                                             alt={activeChat.prospectName}
-                                            className="size-10 rounded-full object-cover"
+                                            width={40}
+                                            height={40}
+                                            className="rounded-full object-cover"
                                         />
                                     ) : (
                                         activeChat.prospectName.split(' ').map(n => n[0]).join('')
