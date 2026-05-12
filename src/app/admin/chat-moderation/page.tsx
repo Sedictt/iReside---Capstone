@@ -114,7 +114,7 @@ export default function AdminChatModerationPage() {
     }, [loadData]);
 
     const filteredReports = useMemo(() => {
-        return reports.filter((report) => {
+        return reports.filter((report: ReportRow) => {
             const matchesStatus = statusFilter === "all" || report.status === statusFilter;
             const matchesCategory = categoryFilter === "all" || report.category === categoryFilter;
             return matchesStatus && matchesCategory;
@@ -124,13 +124,13 @@ export default function AdminChatModerationPage() {
     const filteredTerms = useMemo(() => {
         if (!termSearchQuery.trim()) return terms;
         const q = termSearchQuery.toLowerCase();
-        return terms.filter(t => t.term.toLowerCase().includes(q));
+        return terms.filter((t: BannedTerm) => t.term.toLowerCase().includes(q));
     }, [terms, termSearchQuery]);
 
     const [expandedReports, setExpandedReports] = useState<Set<string>>(new Set());
 
     const toggleExpand = (id: string) => {
-        setExpandedReports(prev => {
+        setExpandedReports((prev: Set<string>) => {
             const next = new Set(prev);
             if (next.has(id)) next.delete(id);
             else next.add(id);
@@ -139,7 +139,7 @@ export default function AdminChatModerationPage() {
     };
 
     const categories = useMemo(() => {
-        return Array.from(new Set(reports.map((report) => report.category))).sort();
+        return Array.from(new Set(reports.map((report: ReportRow) => report.category))).sort();
     }, [reports]);
 
     const updateReportStatus = useCallback(async (reportId: string, status: ReportStatus) => {
@@ -156,7 +156,7 @@ export default function AdminChatModerationPage() {
                 throw new Error(payload?.error ?? "Failed to update report status.");
             }
 
-            setReports((previous) => previous.map((report) => (report.id === reportId ? { ...report, status } : report)));
+            setReports((previous: ReportRow[]) => previous.map((report: ReportRow) => (report.id === reportId ? { ...report, status } : report)));
         } catch (statusError) {
             const message = statusError instanceof Error ? statusError.message : "Failed to update report status.";
             setError(message);
@@ -195,12 +195,12 @@ export default function AdminChatModerationPage() {
                 }
 
                 if (payload?.term) {
-                    setTerms((previous) => [payload.term!, ...previous]);
+                    setTerms((previous: BannedTerm[]) => [payload.term!, ...previous]);
                 }
 
                 if (reportId) {
-                    setReports((previous) =>
-                        previous.map((report) => (report.id === reportId ? { ...report, status: "resolved" } : report))
+                    setReports((previous: ReportRow[]) =>
+                        previous.map((report: ReportRow) => (report.id === reportId ? { ...report, status: "resolved" } : report))
                     );
                 } else {
                     setManualTerm("");

@@ -22,7 +22,7 @@ import { QrCode, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
 
-const EMPTY_ARRAY: any[] = Object.freeze([]);
+const EMPTY_ARRAY: any[] = [];
 const EMPTY_OBJECT = Object.freeze({});
 
 import { 
@@ -186,7 +186,7 @@ const UnitHistoryModal = ({
 
                         <div className="p-8 border-t border-border bg-muted/20">
                             <button 
-                                onClick={() => setIsInviteModalOpen(false)}
+                                onClick={onClose}
                                 className="w-full py-4 rounded-2xl bg-primary text-primary-foreground text-xs font-black uppercase tracking-[0.2em] transition-all hover:opacity-90 active:scale-[0.98] shadow-lg shadow-primary/20"
                             >
                                 Close History View

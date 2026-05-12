@@ -287,7 +287,7 @@ export async function GET(request: Request) {
             .join("");
 
         return {
-            id: lease.id,
+            id: lease.tenant_id,
             name,
             property: property?.name ?? "Property",
             unit: unit?.name ?? "Unit",

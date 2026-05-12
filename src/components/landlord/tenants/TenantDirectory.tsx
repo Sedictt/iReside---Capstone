@@ -11,9 +11,10 @@ interface TenantDirectoryProps {
     loading: boolean
     error: string | null
     onViewProfile: (id: string) => void
+    onMessage: (id: string) => void
 }
 
-export function TenantDirectory({ tenants, loading, error, onViewProfile }: TenantDirectoryProps) {
+export function TenantDirectory({ tenants, loading, error, onViewProfile, onMessage }: TenantDirectoryProps) {
     const [searchQuery, setSearchQuery] = useState("")
     const [statusFilter, setStatusFilter] = useState<TenantStatus | "All">("All")
 
@@ -67,6 +68,7 @@ export function TenantDirectory({ tenants, loading, error, onViewProfile }: Tena
                                 tenant={tenant}
                                 idx={idx}
                                 onViewProfile={onViewProfile}
+                                onMessage={onMessage}
                             />
                         ))}
                     </AnimatePresence>

@@ -205,7 +205,7 @@ export async function POST(
 
     if (!appFetchError && application) {
       const updatedChecklist = {
-        ...(application.compliance_checklist as any),
+        ...(application.compliance_checklist as Record<string, unknown>),
         lease_signed: true,
         application_completed: true
       };

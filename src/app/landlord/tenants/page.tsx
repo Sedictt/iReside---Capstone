@@ -8,16 +8,29 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { LazyMotion, domAnimation, m } from "framer-motion";
 import { AddTenantModal } from "@/components/landlord/tenants/AddTenantModal";
 import LandlordRenewalReview from "@/components/landlord/leases/RenewalReview";
-import { useProfileCard } from "@/context/ProfileCardContext";
 import { TenantDirectory } from "@/components/landlord/tenants/TenantDirectory";
+import { TenantProfileView } from "@/components/landlord/tenants/TenantProfileView";
 import { Tenant } from "@/components/landlord/tenants/TenantCard";
+import { createOrGetDirectConversation } from "@/lib/messages/client";
 
 function TenantsContent() {
-    const { openDetailModal } = useProfileCard();
     const searchParams = useSearchParams();
     const router = useRouter();
     const { push } = router;
     const currentTab = searchParams.get("tab") || "directory";
+    const rawTenantId = searchParams.get("tenantId");
+    const isValidUuid = (id: string | null) => id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    const viewProfileTenantId = searchParams.get("view") === "profile" && isValidUuid(rawTenantId) ? rawTenantId : null;
+
+    useEffect(() => {
+        if (searchParams.get("view") === "profile" && !isValidUuid(rawTenantId) && rawTenantId) {
+            // Invalid UUID in URL - redirect to tenant list
+            const params = new URLSearchParams(searchParams.toString());
+            params.delete("view");
+            params.delete("tenantId");
+            push(`/landlord/tenants?${params.toString()}`);
+        }
+    }, [searchParams, rawTenantId, push]);
 
     const { selectedPropertyId } = useProperty();
     const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -28,6 +41,29 @@ function TenantsContent() {
     const setTab = (tab: string) => {
         const params = new URLSearchParams(searchParams.toString());
         params.set("tab", tab);
+        push(`/landlord/tenants?${params.toString()}`);
+    };
+
+    const handleMessageTenant = async (tenantId: string) => {
+        try {
+            const conversationId = await createOrGetDirectConversation(tenantId);
+            push(`/landlord/messages?conversation=${conversationId}`);
+        } catch (error) {
+            console.error("Failed to start conversation:", error);
+        }
+    };
+
+    const handleViewProfile = (tenantId: string) => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("view", "profile");
+        params.set("tenantId", tenantId);
+        push(`/landlord/tenants?${params.toString()}`);
+    };
+
+    const handleCloseProfile = () => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.delete("view");
+        params.delete("tenantId");
         push(`/landlord/tenants?${params.toString()}`);
     };
 
@@ -128,12 +164,20 @@ function TenantsContent() {
                 </div>
 
                 {currentTab === "directory" ? (
-                    <TenantDirectory 
-                        tenants={tenants}
-                        loading={loading}
-                        error={error}
-                        onViewProfile={openDetailModal}
-                    />
+                    viewProfileTenantId ? (
+                        <TenantProfileView
+                            tenantId={viewProfileTenantId}
+                            onClose={handleCloseProfile}
+                        />
+                    ) : (
+                        <TenantDirectory
+                            tenants={tenants}
+                            loading={loading}
+                            error={error}
+                            onViewProfile={handleViewProfile}
+                            onMessage={handleMessageTenant}
+                        />
+                    )
                 ) : (
                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <LandlordRenewalReview />

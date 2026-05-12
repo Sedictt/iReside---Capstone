@@ -89,7 +89,7 @@ export async function updateTenantPassword(newPassword: string): Promise<{ succe
         const { error: profileError } = await supabase
             .from('profiles')
             .update({ has_changed_password: true, updated_at: new Date().toISOString() })
-            .eq('id', (await supabase.auth.getUser()).data.user?.id)
+            .eq('id', (await supabase.auth.getUser()).data.user?.id as string)
 
         if (profileError) {
             console.error('[updateTenantPassword] Profile update failed:', profileError)

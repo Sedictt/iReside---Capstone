@@ -94,14 +94,13 @@ const extractSelfRepairDetails = (description: string, category: string | null |
 
 const resolveStatus = (status: MaintenanceStatus | null | undefined): MaintenanceStatusLabel => {
     switch (status) {
-        case "assigned":
-            return "Assigned";
         case "in_progress":
             return "In Progress";
         case "resolved":
-        case "closed":
             return "Resolved";
-        case "open":
+        case "cancelled":
+            return "Pending"; // Or maybe "Cancelled" if we add it to the labels
+        case "pending":
         default:
             return "Pending";
     }
@@ -517,7 +516,7 @@ export async function PATCH(request: Request) {
     const updates: any = {};
     if (body.status) {
         updates.status = body.status;
-        updates.resolved_at = body.status === "resolved" || body.status === "closed" ? new Date().toISOString() : null;
+        updates.resolved_at = body.status === "resolved" ? new Date().toISOString() : null;
     }
 
     if (body.selfRepairDecision !== undefined) {
@@ -653,16 +652,28 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Priority is required." }, { status: 400 });
     }
 
+    // Fetch the active tenant for the unit
+    const { data: activeLease } = await supabase
+        .from("leases")
+        .select("tenant_id")
+        .eq("unit_id", body.unitId)
+        .eq("status", "active")
+        .maybeSingle();
+
+    if (!activeLease) {
+        return NextResponse.json({ error: "No active tenant found for this unit. Maintenance requests must be linked to a tenant." }, { status: 400 });
+    }
+
     const { data: newRequest, error: createError } = await supabase
         .from("maintenance_requests")
         .insert({
             landlord_id: user.id,
             unit_id: body.unitId,
-            tenant_id: null,
+            tenant_id: activeLease.tenant_id,
             title: body.title.trim(),
             description: body.description.trim(),
             priority: toDbPriority(body.priority),
-            status: "open",
+            status: "pending",
             category: null,
             images: [],
             self_repair_requested: false,

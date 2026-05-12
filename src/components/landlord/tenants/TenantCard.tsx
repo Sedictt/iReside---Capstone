@@ -29,6 +29,7 @@ interface TenantCardProps {
     tenant: Tenant
     idx: number
     onViewProfile: (id: string) => void
+    onMessage: (id: string) => void
 }
 
 const getStatusStyles = (status: TenantStatus) => {
@@ -61,7 +62,7 @@ const getPaymentBadge = (status: TenantPaymentStatus) => {
     }
 }
 
-export function TenantCard({ tenant, idx, onViewProfile }: TenantCardProps) {
+export function TenantCard({ tenant, idx, onViewProfile, onMessage }: TenantCardProps) {
     const [mounted, setMounted] = useState(false)
 
     useEffect(() => {
@@ -166,7 +167,10 @@ export function TenantCard({ tenant, idx, onViewProfile }: TenantCardProps) {
                     <ChevronRight className="size-3.5" />
                 </button>
                 <div className="flex items-center gap-2">
-                    <button className="flex size-9 items-center justify-center rounded-xl border border-border bg-background text-muted-foreground transition-all hover:border-primary/30 hover:bg-primary/5 hover:text-primary">
+                    <button 
+                        onClick={() => onMessage(tenant.id)}
+                        className="flex size-9 items-center justify-center rounded-xl border border-border bg-background text-muted-foreground transition-all hover:border-primary/30 hover:bg-primary/5 hover:text-primary"
+                    >
                         <MessageSquare className="size-4" />
                     </button>
                 </div>

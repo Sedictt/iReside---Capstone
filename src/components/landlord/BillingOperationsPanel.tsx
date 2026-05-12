@@ -208,7 +208,7 @@ export function BillingOperationsPanel({
             utility_type: config.utility_type,
             billing_mode: config.billing_mode,
             rate_per_unit: Number(config.rate_per_unit),
-            unit_label: config.unit_label,
+            unit_label: config.unit_label as "kwh" | "cubic_meter",
             is_active: config.is_active,
             effective_from: config.effective_from,
             effective_to: config.effective_to,
@@ -238,10 +238,10 @@ export function BillingOperationsPanel({
         dispatch({ 
           type: "UPDATE_PAYMENT", 
           payload: {
-            accountName: payload.paymentDestination?.account_name ?? "",
-            accountNumber: payload.paymentDestination?.account_number ?? "",
-            isEnabled: payload.paymentDestination?.is_enabled ?? true,
-            qrPreview: payload.paymentDestination?.qr_image_url ?? null
+            accountName: (payload.paymentDestination as any)?.account_name ?? "",
+            accountNumber: (payload.paymentDestination as any)?.account_number ?? "",
+            isEnabled: (payload.paymentDestination as any)?.is_enabled ?? true,
+            qrPreview: (payload.paymentDestination as any)?.qr_image_url ?? null
           }
         });
       } catch (err) {
@@ -306,7 +306,7 @@ export function BillingOperationsPanel({
         payload: {
           qrFile: null,
           removeQr: false,
-          qrPreview: payload.paymentDestination?.qr_image_url ?? null
+          qrPreview: (payload.paymentDestination as any)?.qr_image_url ?? null
         }
       });
       dispatch({ type: "SET_MESSAGE", payload: { type: "success", value: "Settings saved successfully." } });

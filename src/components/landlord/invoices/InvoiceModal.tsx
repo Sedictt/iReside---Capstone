@@ -603,8 +603,8 @@ export function InvoiceModal({
                                                         Paid To
                                                     </div>
                                                     <div>
-                                                        <p className="text-sm font-black text-text-high">{invoice.paymentDestination.account_name}</p>
-                                                        <p className="text-xs font-black text-primary mt-0.5 tracking-wider">{invoice.paymentDestination.account_number}</p>
+                                                        <p className="text-sm font-black text-text-high">{(invoice.paymentDestination as any)?.account_name}</p>
+                                                        <p className="text-xs font-black text-primary mt-0.5 tracking-wider">{(invoice.paymentDestination as any)?.account_number}</p>
                                                     </div>
                                                 </div>
                                             )}
@@ -793,12 +793,12 @@ export function InvoiceModal({
                                                     <div className="flex items-center gap-4">
                                                         <div className="size-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
                                                         <div>
-                                                            <p className="text-[11px] font-black text-text-high tracking-tight">{receipt.receipt_number}</p>
-                                                            <p className="text-[9px] font-medium uppercase tracking-wider text-text-disabled mt-0.5">{formatDateLong(receipt.issued_at)}</p>
+                                                            <p className="text-[11px] font-black text-text-high tracking-tight">{(receipt as any).receipt_number}</p>
+                                                            <p className="text-[9px] font-medium uppercase tracking-wider text-text-disabled mt-0.5">{formatDateLong((receipt as any).issued_at)}</p>
                                                         </div>
                                                     </div>
                                                     <div className="text-right">
-                                                        <p className="text-xs font-black text-text-high">{formatPhpCurrency(receipt.amount)}</p>
+                                                        <p className="text-xs font-black text-text-high">{formatPhpCurrency((receipt as any).amount)}</p>
                                                         <p className="text-[8px] font-black uppercase text-emerald-400 mt-0.5">Verified</p>
                                                     </div>
                                                 </div>

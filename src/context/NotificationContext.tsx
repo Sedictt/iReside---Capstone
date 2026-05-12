@@ -193,7 +193,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
                     .from("maintenance_requests")
                     .select("*", { count: "exact", head: true })
                     .eq("landlord_id", user.id)
-                    .in("status", ["open", "assigned", "in_progress"]);
+                    .in("status", ["pending", "in_progress", "resolved"]);
 
                 if (propertyUnitIds) {
                     if (propertyUnitIds.length === 0) {
@@ -268,6 +268,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
                         message: 'Your lease agreement for Unit 402 is ready for countersignature.',
                         read: false,
                         created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString(),
                         data: { leaseId: 'mock-lease' }
                     },
                     {
@@ -278,6 +279,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
                         message: 'The security deposit payment for the new application has been rejected.',
                         read: false,
                         created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString(),
                         data: { paymentId: 'mock-payment' }
                     },
                     {
@@ -288,6 +290,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
                         message: 'Emergency plumbing request reported in Property Alpha, Unit 101.',
                         read: false,
                         created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString(),
                         data: { maintenanceId: 'mock-maint' }
                     }
                 ];

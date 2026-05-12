@@ -1,0 +1,195 @@
+<mxfile host="app.diagrams.net" modified="2025-05-12T15:30:00.000Z" agent="Sisyphus" version="21.0.0" type="device">
+  <diagram id="iReside-Schema" name="iReside Database Schema">
+    <mxGraphModel dx="1800" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- PROFILES - Central Hub -->
+        <mxCell id="p1" value="profiles&#xa;──────────&#xa;id (PK) uuid&#xa;email text&#xa;full_name text&#xa;role text&#xa;phone text&#xa;avatar_url text&#xa;created_at timestamptz" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;align=left;spacingLeft=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="400" y="300" width="170" height="110" as="geometry"/>
+        </mxCell>
+
+        <!-- PROPERTY DOMAIN -->
+        <mxCell id="p2" value="properties&#xa;──────────&#xa;id uuid PK&#xa;owner_id (FK→profiles)&#xa;name text&#xa;address text&#xa;type text&#xa;status text" style="rounded=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;spacingLeft=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="80" y="40" width="170" height="95" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="p3" value="units&#xa;──────────&#xa;id uuid PK&#xa;property_id (FK→properties)&#xa;unit_number text&#xa;floor integer&#xa;bedrooms integer&#xa;sqm numeric&#xa;status text&#xa;monthly_rent numeric" style="rounded=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;spacingLeft=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="80" y="155" width="170" height="125" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="p4" value="amenities&#xa;──────────&#xa;id uuid PK&#xa;property_id (FK→properties)&#xa;landlord_id (FK→profiles)&#xa;name text&#xa;type text&#xa;price_per_unit numeric" style="rounded=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;spacingLeft=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="80" y="300" width="170" height="100" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="p5" value="amenity_bookings&#xa;──────────&#xa;id uuid PK&#xa;amenity_id (FK→amenities)&#xa;tenant_id (FK→profiles)&#xa;booking_date date&#xa;start_time time&#xa;end_time time&#xa;total_price numeric&#xa;status text" style="rounded=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;spacingLeft=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="80" y="420" width="170" height="120" as="geometry"/>
+        </mxCell>
+
+        <!-- LEASE DOMAIN -->
+        <mxCell id="p6" value="applications&#xa;──────────&#xa;id uuid PK&#xa;unit_id (FK→units)&#xa;applicant_id (FK→profiles)&#xa;landlord_id (FK→profiles)&#xa;status text&#xa;move_in_date date" style="rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;spacingLeft=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="600" y="40" width="170" height="100" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="p7" value="leases&#xa;──────────&#xa;id uuid PK&#xa;unit_id (FK→units)&#xa;tenant_id (FK→profiles)&#xa;landlord_id (FK→profiles)&#xa;status text&#xa;start_date date&#xa;end_date date&#xa;monthly_rent numeric" style="rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;spacingLeft=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="600" y="160" width="170" height="120" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="p8" value="renewal_requests&#xa;──────────&#xa;id uuid PK&#xa;lease_id (FK→leases)&#xa;requested_by (FK→profiles)&#xa;new_end_date date&#xa;status text" style="rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;spacingLeft=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="600" y="300" width="170" height="95" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="p9" value="move_out_requests&#xa;──────────&#xa;id uuid PK&#xa;lease_id (FK→leases)&#xa;tenant_id (FK→profiles)&#xa;requested_date date&#xa;status text" style="rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;spacingLeft=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="600" y="415" width="170" height="95" as="geometry"/>
+        </mxCell>
+
+        <!-- PAYMENT DOMAIN -->
+        <mxCell id="p10" value="payments&#xa;──────────&#xa;id uuid PK&#xa;lease_id (FK→leases)&#xa;tenant_id (FK→profiles)&#xa;landlord_id (FK→profiles)&#xa;amount numeric&#xa;method text&#xa;status text" style="rounded=1;fillColor=#f8cecc;strokeColor=#b85450;align=left;spacingLeft=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="850" y="40" width="170" height="105" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="p11" value="payment_items&#xa;──────────&#xa;id uuid PK&#xa;payment_id (FK→payments)&#xa;description text&#xa;amount numeric&#xa;due_date date" style="rounded=1;fillColor=#f8cecc;strokeColor=#b85450;align=left;spacingLeft=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="850" y="165" width="170" height="95" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="p12" value="payment_receipts&#xa;──────────&#xa;id uuid PK&#xa;payment_id (FK→payments)&#xa;receipt_number text&#xa;issued_at timestamptz" style="rounded=1;fillColor=#f8cecc;strokeColor=#b85450;align=left;spacingLeft=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="850" y="280" width="170" height="85" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="p13" value="expenses&#xa;──────────&#xa;id uuid PK&#xa;property_id (FK→properties)&#xa;lease_id (FK→leases)&#xa;category text&#xa;amount numeric&#xa;date date" style="rounded=1;fillColor=#f8cecc;strokeColor=#b85450;align=left;spacingLeft=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="850" y="385" width="170" height="105" as="geometry"/>
+        </mxCell>
+
+        <!-- MAINTENANCE -->
+        <mxCell id="p14" value="maintenance_requests&#xa;──────────&#xa;id uuid PK&#xa;unit_id (FK→units)&#xa;tenant_id (FK→profiles)&#xa;landlord_id (FK→profiles)&#xa;category text&#xa;priority text&#xa;status text&#xa;description text" style="rounded=1;fillColor=#e1d5e7;strokeColor=#9673a6;align=left;spacingLeft=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="280" y="480" width="180" height="125" as="geometry"/>
+        </mxCell>
+
+        <!-- MESSAGING -->
+        <mxCell id="p15" value="conversations&#xa;──────────&#xa;id uuid PK&#xa;type text&#xa;subject text&#xa;status text&#xa;last_message_at timestamptz" style="rounded=1;fillColor=#f0a0ff;strokeColor=#8b3a8b;align=left;spacingLeft=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="40" width="170" height="95" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="p16" value="messages&#xa;──────────&#xa;id uuid PK&#xa;conversation_id (FK→conversations)&#xa;sender_id (FK→profiles)&#xa;content text&#xa;type text" style="rounded=1;fillColor=#f0a0ff;strokeColor=#8b3a8b;align=left;spacingLeft=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="155" width="170" height="95" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="p17" value="notifications&#xa;──────────&#xa;id uuid PK&#xa;user_id (FK→profiles)&#xa;type text&#xa;title text&#xa;body text&#xa;read_at timestamptz" style="rounded=1;fillColor=#f0a0ff;strokeColor=#8b3a8b;align=left;spacingLeft=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="270" width="170" height="95" as="geometry"/>
+        </mxCell>
+
+        <!-- COMMUNITY -->
+        <mxCell id="p18" value="community_posts&#xa;──────────&#xa;id uuid PK&#xa;author_id (FK→profiles)&#xa;property_id (FK→properties)&#xa;title text&#xa;content text&#xa;type text" style="rounded=1;fillColor=#ffc0cb;strokeColor=#cc6699;align=left;spacingLeft=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="395" width="170" height="110" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="p19" value="community_comments&#xa;──────────&#xa;id uuid PK&#xa;post_id (FK→community_posts)&#xa;author_id (FK→profiles)&#xa;content text" style="rounded=1;fillColor=#ffc0cb;strokeColor=#cc6699;align=left;spacingLeft=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="525" width="170" height="90" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="p20" value="community_reactions&#xa;──────────&#xa;id uuid PK&#xa;post_id (FK→community_posts)&#xa;user_id (FK→profiles)&#xa;type text" style="rounded=1;fillColor=#ffc0cb;strokeColor=#cc6699;align=left;spacingLeft=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="635" width="170" height="85" as="geometry"/>
+        </mxCell>
+
+        <!-- TOUR/INTAKE -->
+        <mxCell id="p21" value="tenant_intake_invites&#xa;──────────&#xa;id uuid PK&#xa;property_id (FK→properties)&#xa;sent_to email&#xa;status text" style="rounded=1;fillColor=#ffe6cc;strokeColor=#d79b00;align=left;spacingLeft=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="280" y="40" width="180" height="85" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="p22" value="landlord_product_tour_states&#xa;──────────&#xa;id uuid PK&#xa;landlord_id (FK→profiles)&#xa;current_step text" style="rounded=1;fillColor=#ffe6cc;strokeColor=#d79b00;align=left;spacingLeft=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="280" y="145" width="180" height="80" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="p23" value="tenant_product_tour_states&#xa;──────────&#xa;id uuid PK&#xa;tenant_id (FK→profiles)&#xa;current_step text" style="rounded=1;fillColor=#ffe6cc;strokeColor=#d79b00;align=left;spacingLeft=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="280" y="245" width="180" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- UTILITY -->
+        <mxCell id="p24" value="utility_configs&#xa;──────────&#xa;id uuid PK&#xa;property_id (FK→properties)&#xa;utility_type text&#xa;rate_per_unit numeric" style="rounded=1;fillColor=#ccf5cc;strokeColor=#009900;align=left;spacingLeft=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="80" y="560" width="170" height="85" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="p25" value="utility_readings&#xa;──────────&#xa;id uuid PK&#xa;unit_id (FK→units)&#xa;utility_type text&#xa;reading numeric&#xa;read_at date" style="rounded=1;fillColor=#ccf5cc;strokeColor=#009900;align=left;spacingLeft=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="80" y="665" width="170" height="95" as="geometry"/>
+        </mxCell>
+
+        <!-- LANDLORD -->
+        <mxCell id="p26" value="landlord_applications&#xa;──────────&#xa;id uuid PK&#xa;user_id (FK→profiles)&#xa;status text&#xa;business_name text" style="rounded=1;fillColor=#cce5ff;strokeColor=#0066cc;align=left;spacingLeft=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="600" y="530" width="180" height="90" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="p27" value="landlord_reviews&#xa;──────────&#xa;id uuid PK&#xa;landlord_id (FK→profiles)&#xa;tenant_id (FK→profiles)&#xa;rating integer" style="rounded=1;fillColor=#cce5ff;strokeColor=#0066cc;align=left;spacingLeft=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="600" y="640" width="180" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- AUDIT -->
+        <mxCell id="p28" value="lease_signing_audit&#xa;──────────&#xa;id uuid PK&#xa;lease_id (FK→leases)&#xa;actor_id (FK→profiles)&#xa;action text" style="rounded=1;fillColor=#e0e0e0;strokeColor=#666666;align=left;spacingLeft=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="600" y="750" width="180" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- EDGES -->
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;endArrow=classic;endFill=1;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="p1" target="p2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d6b656;endArrow=classic;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="p2" target="p3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d6b656;endArrow=classic;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="p2" target="p4">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#82b366;endArrow=classic;endFill=1;exitX=1;exitY=0.2;entryX=0;entryY=0.5;" edge="1" parent="1" source="p3" target="p6">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#82b366;endArrow=classic;endFill=1;exitX=1;exitY=0.4;entryX=0;entryY=0.5;" edge="1" parent="1" source="p3" target="p7">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#b85450;endArrow=classic;endFill=1;exitX=1;exitY=0.3;entryX=0;entryY=0.5;" edge="1" parent="1" source="p7" target="p10">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#b85450;endArrow=classic;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="p10" target="p11">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#82b366;endArrow=classic;endFill=1;exitX=1;exitY=0.7;entryX=0.5;entryY=0;" edge="1" parent="1" source="p7" target="p8">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#82b366;endArrow=classic;endFill=1;exitX=1;exitY=0.85;entryX=0.5;entryY=0;" edge="1" parent="1" source="p7" target="p9">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#9673a6;endArrow=classic;endFill=1;exitX=0;exitY=0.9;entryX=0;entryY=0.3;" edge="1" parent="1" source="p3" target="p14">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#8b3a8b;endArrow=classic;endFill=1;exitX=1;exitY=0.7;entryX=1;entryY=0.2;" edge="1" parent="1" source="p1" target="p15">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#8b3a8b;endArrow=classic;endFill=1;exitX=1;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="p15" target="p16">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#cc6699;endArrow=classic;endFill=1;exitX=1;exitY=0.9;entryX=1;entryY=0.3;" edge="1" parent="1" source="p1" target="p18">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#cc6699;endArrow=classic;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="p18" target="p19">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d6b656;endArrow=classic;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="p4" target="p5">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

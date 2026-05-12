@@ -336,7 +336,7 @@ export default function LandlordUtilitiesPage() {
                                                             <span className="text-2xl font-black text-foreground">
                                                                 {utility.price_per_unit === 0 ? "Free" : `₱${Number(utility.price_per_unit).toLocaleString()}`}
                                                             </span>
-                                                            {utility.price_per_unit > 0 && <span className="text-xs font-black text-muted-foreground">/{utility.unit_type}</span>}
+                                                            {utility.price_per_unit && utility.price_per_unit > 0 && <span className="text-xs font-black text-muted-foreground">/{utility.unit_type}</span>}
                                                         </div>
                                                     </div>
                                                     

@@ -68,8 +68,7 @@ function buildFaceToFacePreviewInvoice(invoiceId: string): InvoiceDetail {
             city: "Cebu City",
             description: "Preview property record",
             type: "apartment",
-            lat: null,
-            lng: null,
+
             amenities: ["WiFi", "CCTV", "Laundry"],
             house_rules: ["Quiet hours after 10PM"],
             contract_template: null,
@@ -272,8 +271,7 @@ function buildSelectivePreviewInvoice(invoiceId: string): InvoiceDetail {
             city: "Makati City",
             description: "Standard residential complex",
             type: "apartment",
-            lat: null,
-            lng: null,
+
             amenities: ["Pool", "Gym", "Concierge"],
             house_rules: ["Standard rules apply"],
             contract_template: null,
