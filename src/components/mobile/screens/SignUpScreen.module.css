@@ -173,22 +173,23 @@
 
 .roleCards {
     display: flex;
-    gap: 10px;
+    gap: 16px;
+    margin-top: 20px;
 }
 
 .roleCard {
     flex: 1;
-    padding: 16px 12px;
-    border-radius: 14px;
-    border: 1.5px solid #262626;
+    padding: 32px 16px;
+    border-radius: 20px;
+    border: 2px solid #262626;
     background: #141414;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
+    gap: 16px;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
-    transition: all 0.25s ease;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     text-align: center;
 }
 
@@ -229,8 +230,8 @@
 }
 
 .roleTitle {
-    font-size: 13px;
-    font-weight: 700;
+    font-size: 16px;
+    font-weight: 800;
     color: #fafafa;
     line-height: 1.3;
 }
@@ -245,18 +246,24 @@
     color: #737373;
 }
 
-.roleHint {
-    font-size: 11px;
-    color: #525252;
-    text-align: center;
-    margin-top: 2px;
-    font-style: italic;
+.roleSelectionContent {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-bottom: 80px;
 }
 
-.roleHint span {
-    color: #6d9838;
-    font-weight: 600;
-    font-style: normal;
+.errorMessage {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.4;
+    margin-bottom: 4px;
 }
 
 /* ─── Terms ────────────────────────────────────────────── */
