@@ -27,7 +27,7 @@ export function DocsHeader({ onMenuToggle, isMenuOpen }: DocsHeaderProps) {
           
           <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-90">
             <Logo className="h-8 w-auto" />
-            <span className="hidden text-xl font-bold tracking-tight text-text-high sm:inline-block">
+            <span className="hidden text-xl font-black tracking-tight text-text-high sm:inline-block">
               iReside <span className="text-primary font-medium">Docs</span>
             </span>
           </Link>
@@ -62,7 +62,7 @@ export function DocsHeader({ onMenuToggle, isMenuOpen }: DocsHeaderProps) {
               placeholder="Search documentation..."
               className="h-10 w-64 rounded-full border border-divider bg-surface-1 pl-10 pr-4 text-sm outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/10"
             />
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 rounded border border-divider bg-surface-2 px-1.5 py-0.5 text-[10px] font-bold text-text-disabled">
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 rounded border border-divider bg-surface-2 px-1.5 py-0.5 text-[10px] font-black text-text-disabled">
               ⌘K
             </div>
           </div>

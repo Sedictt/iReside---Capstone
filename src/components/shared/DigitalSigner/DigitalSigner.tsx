@@ -431,10 +431,10 @@ export function DigitalSigner({
                   <FileText className="size-5 text-primary-foreground" />
                 </div>
                 <div>
-                  <h1 className="text-[10px] md:text-sm font-bold tracking-tight uppercase truncate max-w-[120px] md:max-w-[200px]">
+                  <h1 className="text-[10px] md:text-sm font-black tracking-tight uppercase truncate max-w-[120px] md:max-w-[200px]">
                     {title}
                   </h1>
-                  <div className="flex items-center gap-2 text-[8px] md:text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
+                  <div className="flex items-center gap-2 text-[8px] md:text-[10px] text-zinc-500 font-black uppercase tracking-widest">
                     <span className={cn("size-1.5 rounded-full", isPenActive ? "bg-primary animate-pulse" : "bg-emerald-500")} />
                     <span className="hidden xs:inline">{isPenActive ? 'Drawing Mode' : 'View Mode'}</span>
                     <span className="xs:hidden">{isPenActive ? 'Draw' : 'View'}</span>
@@ -449,7 +449,7 @@ export function DigitalSigner({
                 <button onClick={() => setZoom(Math.max(0.1, zoom - 0.2))} className="p-1.5 md:p-2 hover:bg-zinc-700 rounded-lg transition-colors">
                   <ZoomOut className="size-4" />
                 </button>
-                <span className="text-[10px] font-bold w-11 md:w-12 text-center uppercase tracking-tighter">{Math.round(zoom * 100)}%</span>
+                <span className="text-[10px] font-black w-11 md:w-12 text-center uppercase tracking-tighter">{Math.round(zoom * 100)}%</span>
                 <button onClick={() => setZoom(Math.min(2, zoom + 0.2))} className="p-1.5 md:p-2 hover:bg-zinc-700 rounded-lg transition-colors">
                   <ZoomIn className="size-4" />
                 </button>
@@ -457,7 +457,7 @@ export function DigitalSigner({
 
               <button 
                 onClick={() => setIsToolbarHidden(true)}
-                className="hidden lg:flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-400 transition-all text-[10px] font-bold uppercase"
+                className="hidden lg:flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-400 transition-all text-[10px] font-black uppercase"
               >
                 <EyeOff className="size-3.5" />
                 <span>Focus Mode</span>
@@ -468,7 +468,7 @@ export function DigitalSigner({
             <div className="flex items-center gap-2 md:gap-4">
               <div className="hidden lg:flex items-center gap-3 px-4 py-2 rounded-xl bg-zinc-800/30 border border-white/5 mr-2">
                 <div className={cn("size-2 rounded-full", signatures.length > 0 ? "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" : "bg-zinc-600")} />
-                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+                <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">
                   {signatures.length === 0 ? "No Signatures" : `${signatures.length} Signature${signatures.length > 1 ? 's' : ''} Added`}
                 </span>
               </div>
@@ -476,7 +476,7 @@ export function DigitalSigner({
               <button
                 onClick={handleDownloadOnly}
                 disabled={isExporting}
-                className="hidden sm:flex p-2.5 md:px-5 md:py-2.5 rounded-xl bg-zinc-800/50 hover:bg-zinc-700 text-zinc-300 border border-white/5 transition-all text-xs font-bold items-center gap-2"
+                className="hidden sm:flex p-2.5 md:px-5 md:py-2.5 rounded-xl bg-zinc-800/50 hover:bg-zinc-700 text-zinc-300 border border-white/5 transition-all text-xs font-black items-center gap-2"
               >
                 <Save className="size-3.5" /> 
                 <span className="hidden md:inline">Save Draft</span>
@@ -488,7 +488,7 @@ export function DigitalSigner({
                 onClick={() => setShowConfirmation(true)}
                 disabled={isExporting || (signatures.length === 0 && !hasDrawnOnCanvas)}
                 className={cn(
-                    "px-6 py-2.5 md:px-10 md:py-3 rounded-2xl transition-all text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] flex items-center gap-2 md:gap-3 shadow-2xl relative overflow-hidden group",
+                    "px-6 py-2.5 md:px-10 md:py-3 rounded-2xl transition-all text-[10px] md:text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2 md:gap-3 shadow-2xl relative overflow-hidden group",
                     (signatures.length > 0 || hasDrawnOnCanvas)
                         ? "bg-primary text-primary-foreground hover:scale-105 active:scale-95" 
                         : "bg-zinc-800 text-zinc-500 cursor-not-allowed border border-white/5"
@@ -511,7 +511,7 @@ export function DigitalSigner({
       ) : (
           <button 
             onClick={() => setIsToolbarHidden(false)}
-            className="fixed top-6 left-1/2 -translate-x-1/2 z-[1000] px-6 py-3 rounded-2xl bg-zinc-900/90 border border-zinc-800 text-primary font-bold text-xs uppercase tracking-widest shadow-2xl flex items-center gap-3 backdrop-blur-xl"
+            className="fixed top-6 left-1/2 -translate-x-1/2 z-[1000] px-6 py-3 rounded-2xl bg-zinc-900/90 border border-zinc-800 text-primary font-black text-xs uppercase tracking-widest shadow-2xl flex items-center gap-3 backdrop-blur-xl"
           >
             <Eye className="size-4" />
             Restore Toolbar
@@ -525,7 +525,7 @@ export function DigitalSigner({
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}>
           <div className="p-4 border-b border-zinc-800 flex justify-between items-center">
-            <h3 className="text-[10px] font-bold text-zinc-600 uppercase tracking-[0.2em]">Thumbnails</h3>
+            <h3 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em]">Thumbnails</h3>
             <button onClick={() => setIsSidebarOpen(false)} className="md:hidden text-zinc-500">
               <X className="size-4" />
             </button>
@@ -541,7 +541,7 @@ export function DigitalSigner({
                 )}
               >
                 <NextImage src={page.dataUrl} fill className="object-cover" alt={`Document thumbnail page ${idx + 1}`} />
-                <div className="absolute bottom-2 right-2 size-6 rounded-lg bg-black/60 backdrop-blur-md flex items-center justify-center text-[10px] font-bold text-white">
+                <div className="absolute bottom-2 right-2 size-6 rounded-lg bg-black/60 backdrop-blur-md flex items-center justify-center text-[10px] font-black text-white">
                   {idx + 1}
                 </div>
               </button>
@@ -621,14 +621,16 @@ export function DigitalSigner({
                       className={cn("absolute pointer-events-auto cursor-move group/sig", isPenActive && "opacity-30")}
                     >
                       <div className="relative">
-                        <img 
-                          src={sig.dataUrl} alt="" 
+                        <NextImage 
+                          src={sig.dataUrl} alt="Signature overlay" 
+                          width={250} height={100}
+                          unoptimized
                           style={{ transform: `scale(${sig.scale * (window.innerWidth < 768 ? 0.7 : 1)})`, transformOrigin: 'top left' }}
-                          className="max-w-[150px] md:max-w-[250px] select-none"
+                          className="max-w-[150px] md:max-w-[250px] select-none h-auto w-auto"
                         />
                         <button 
                           onClick={() => setSignatures(prev => prev.filter(s => s.id !== sig.id))}
-                          className="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full bg-red-500 text-white text-[10px] font-bold opacity-0 group-hover/sig:opacity-100 transition-all shadow-xl"
+                          className="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full bg-red-500 text-white text-[10px] font-black opacity-0 group-hover/sig:opacity-100 transition-all shadow-xl"
                         >REMOVE</button>
                       </div>
                     </motion.div>
@@ -650,7 +652,7 @@ export function DigitalSigner({
                 className="bg-zinc-900/90 backdrop-blur-2xl border border-zinc-800 p-4 md:p-6 rounded-3xl shadow-2xl flex flex-col md:gap-6 w-fit max-w-[calc(100vw-2rem)]"
               >
                 <div className="flex items-center justify-between mb-2 md:hidden">
-                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Pen Settings</span>
+                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Pen Settings</span>
                     <button onClick={() => setIsSettingsCollapsed(!isSettingsCollapsed)} className="p-1">
                         {isSettingsCollapsed ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                     </button>
@@ -660,7 +662,7 @@ export function DigitalSigner({
                   <div className="flex flex-row md:flex-col gap-4 md:gap-6 items-center md:items-stretch">
                     {/* Custom Rect Thickness Component */}
                     <div className="space-y-2 md:space-y-3">
-                      <div className="hidden md:flex justify-between items-center text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+                      <div className="hidden md:flex justify-between items-center text-[10px] font-black text-zinc-500 uppercase tracking-widest">
                         <span>Pen Weight</span>
                         <button onClick={() => setIsSettingsCollapsed(true)} className="p-1 hover:text-white transition-colors">
                             <ChevronDown size={14} />
@@ -689,7 +691,7 @@ export function DigitalSigner({
                     <div className="md:hidden w-px h-8 bg-zinc-800" />
 
                     <div className="flex flex-row gap-2 md:gap-3">
-                      <label className="p-2 md:p-4 rounded-xl md:rounded-2xl bg-zinc-800 hover:bg-zinc-700 transition-all cursor-pointer flex items-center justify-center gap-2 md:gap-3 text-[10px] font-bold uppercase tracking-widest group">
+                      <label className="p-2 md:p-4 rounded-xl md:rounded-2xl bg-zinc-800 hover:bg-zinc-700 transition-all cursor-pointer flex items-center justify-center gap-2 md:gap-3 text-[10px] font-black uppercase tracking-widest group">
                         <ImageIcon className="size-4 text-zinc-400 group-hover:text-primary" />
                         <span className="hidden md:inline">Upload</span>
                         <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
@@ -700,7 +702,7 @@ export function DigitalSigner({
                           signaturePads.current[currentPage]?.clear();
                           checkCanvasStatus();
                         }}
-                        className="p-2 md:p-4 rounded-xl md:rounded-2xl bg-zinc-800 hover:bg-red-500/10 hover:text-red-400 text-zinc-400 transition-all flex items-center justify-center gap-2 md:gap-3 text-[10px] font-bold uppercase tracking-widest"
+                        className="p-2 md:p-4 rounded-xl md:rounded-2xl bg-zinc-800 hover:bg-red-500/10 hover:text-red-400 text-zinc-400 transition-all flex items-center justify-center gap-2 md:gap-3 text-[10px] font-black uppercase tracking-widest"
                       >
                         <Trash2 className="size-4" />
                         <span className="hidden md:inline">Clear</span>
@@ -712,7 +714,7 @@ export function DigitalSigner({
                 {isSettingsCollapsed && (
                     <button 
                         onClick={() => setIsSettingsCollapsed(false)}
-                        className="hidden md:flex items-center gap-2 text-[10px] font-bold text-primary uppercase tracking-widest"
+                        className="hidden md:flex items-center gap-2 text-[10px] font-black text-primary uppercase tracking-widest"
                     >
                         <ChevronUp size={14} />
                         Settings
@@ -749,8 +751,8 @@ export function DigitalSigner({
                 <FileText className="size-6 md:w-8 md:h-8 text-primary animate-pulse" />
               </div>
             </div>
-            <p className="text-xl md:text-2xl font-bold mt-8 md:mt-12 tracking-tighter text-white uppercase italic">Processing Document</p>
-            <p className="text-zinc-500 text-[10px] md:text-xs mt-3 font-bold uppercase tracking-[0.3em]">Building Signed Artifact</p>
+            <p className="text-xl md:text-2xl font-black mt-8 md:mt-12 tracking-tighter text-white uppercase italic">Processing Document</p>
+            <p className="text-zinc-500 text-[10px] md:text-xs mt-3 font-black uppercase tracking-[0.3em]">Building Signed Artifact</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -777,7 +779,7 @@ export function DigitalSigner({
                     <AlertTriangle className="size-10 text-primary" />
                   </div>
                   <div className="space-y-2">
-                    <h2 className="text-3xl font-bold tracking-tighter uppercase italic text-white">Ready to make it official?</h2>
+                    <h2 className="text-3xl font-black tracking-tighter uppercase italic text-white">Ready to make it official?</h2>
                     <p className="text-zinc-500 text-sm font-medium leading-relaxed">
                       Take a quick moment to review everything. Once you sign, this document will be completed and shared with all parties.
                     </p>
@@ -790,8 +792,8 @@ export function DigitalSigner({
                         <CheckCircle2 className="size-6 text-emerald-500" />
                       </div>
                       <div className="text-left min-w-0 flex-1">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-1">Agreement Name</p>
-                        <p className="text-sm text-white font-bold truncate leading-none">{title}</p>
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-1">Agreement Name</p>
+                        <p className="text-sm text-white font-black truncate leading-none">{title}</p>
                       </div>
                    </div>
                    <div className="p-5 rounded-2xl bg-zinc-800/50 border border-white/5 flex items-center gap-5 min-w-0">
@@ -799,8 +801,8 @@ export function DigitalSigner({
                         <Info className="size-6 text-blue-500" />
                       </div>
                       <div className="text-left min-w-0 flex-1">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-1">Current Status</p>
-                        <p className="text-sm text-white font-bold leading-none">Ready for your signature</p>
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-1">Current Status</p>
+                        <p className="text-sm text-white font-black leading-none">Ready for your signature</p>
                       </div>
                    </div>
                    <div className="p-5 rounded-2xl bg-primary/5 border border-primary/10 flex items-center gap-5 min-w-0">
@@ -813,8 +815,8 @@ export function DigitalSigner({
                         </motion.div>
                       </div>
                       <div className="text-left min-w-0 flex-1">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary/60 mb-1">What happens next?</p>
-                        <p className="text-sm text-white font-bold leading-none">The landlord will review & countersign</p>
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60 mb-1">What happens next?</p>
+                        <p className="text-sm text-white font-black leading-none">The landlord will review & countersign</p>
                       </div>
                    </div>
                 </div>
@@ -822,13 +824,13 @@ export function DigitalSigner({
                 <div className="flex flex-col sm:flex-row gap-4">
                   <button
                     onClick={() => setShowConfirmation(false)}
-                    className="flex-1 px-8 py-5 rounded-2xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold uppercase tracking-widest text-[10px] transition-all"
+                    className="flex-1 px-8 py-5 rounded-2xl bg-zinc-800 hover:bg-zinc-700 text-white font-black uppercase tracking-widest text-[10px] transition-all"
                   >
                     Go Back
                   </button>
                   <button
                     onClick={handleExport}
-                    className="flex-1 px-8 py-5 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold uppercase tracking-widest text-[10px] shadow-xl shadow-primary/20 transition-all"
+                    className="flex-1 px-8 py-5 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-xl shadow-primary/20 transition-all"
                   >
                     Yes, Sign Now
                   </button>

@@ -63,7 +63,7 @@ export function CommunityAnnouncement({
                     
                     <div className="flex-1 space-y-2">
                         <div className="flex items-center gap-3">
-                            <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${config.color} ${config.bg} border border-current opacity-80`}>
+                            <span className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider ${config.color} ${config.bg} border border-current opacity-80`}>
                                 {config.badge}
                             </span>
                             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -71,7 +71,7 @@ export function CommunityAnnouncement({
                                 <span>{formatRelative(announcement.created_at)}</span>
                             </div>
                         </div>
-                        <h2 className="text-xl font-bold tracking-tight text-foreground dark:text-white">
+                        <h2 className="text-xl font-black tracking-tight text-foreground dark:text-white">
                             {announcement.title || "Community Announcement"}
                         </h2>
                         <p className="text-base leading-relaxed text-muted-foreground dark:text-white/70">

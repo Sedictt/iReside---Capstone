@@ -64,9 +64,9 @@ function StatTile({
                     {loading ? (
                         <div className="h-12 w-24 animate-pulse rounded-xl bg-white/5" />
                     ) : (
-                        <p className="text-4xl font-bold tracking-tight text-white">{value}</p>
+                        <p className="text-4xl font-black tracking-tight text-white">{value}</p>
                     )}
-                    <p className="mt-2 text-[12px] font-bold uppercase tracking-widest text-white/40">{label}</p>
+                    <p className="mt-2 text-[12px] font-black uppercase tracking-widest text-white/40">{label}</p>
                 </div>
             </div>
         </div>
@@ -85,8 +85,8 @@ function MetricBar({
     return (
         <div className="space-y-3">
             <div className="flex items-center justify-between">
-                <span className="text-sm font-bold tracking-wide text-white/60">{label}</span>
-                <span className="text-sm font-bold text-white">{formatPercent(value)}</span>
+                <span className="text-sm font-black tracking-wide text-white/60">{label}</span>
+                <span className="text-sm font-black text-white">{formatPercent(value)}</span>
             </div>
             <div className="h-2.5 w-full overflow-hidden rounded-full bg-black/40 shadow-inner">
                 <div
@@ -165,7 +165,7 @@ export default function AdminDashboardPage() {
 
                 <div className="relative z-10 flex flex-col justify-between gap-12 lg:flex-row lg:items-center">
                     <div className="max-w-2xl space-y-6">
-                        <div className="inline-flex items-center gap-3 rounded-full border border-primary/25 bg-primary/10 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-primary">
+                        <div className="inline-flex items-center gap-3 rounded-full border border-primary/25 bg-primary/10 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-primary">
                             <span className="relative flex size-2">
                                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"></span>
                                 <span className="relative inline-flex size-2 rounded-full bg-primary"></span>
@@ -174,7 +174,7 @@ export default function AdminDashboardPage() {
                         </div>
 
                         <div className="space-y-4">
-                            <h1 className="text-4xl font-bold tracking-tight text-white md:text-5xl lg:leading-[1.1]">
+                            <h1 className="text-4xl font-black tracking-tight text-white md:text-5xl lg:leading-[1.1]">
                                 System Overview & Governance
                             </h1>
                             <p className="text-base font-medium leading-relaxed text-white/50">
@@ -185,7 +185,7 @@ export default function AdminDashboardPage() {
                         <div className="flex flex-wrap items-center gap-4 pt-2">
                             <Link
                                 href="/admin/registrations"
-                                className="group relative flex h-14 items-center justify-center overflow-hidden rounded-2xl bg-white px-8 font-bold text-black transition-all hover:bg-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0A]"
+                                className="group relative flex h-14 items-center justify-center overflow-hidden rounded-2xl bg-white px-8 font-black text-black transition-all hover:bg-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0A]"
                             >
                                 <span className="relative z-10 flex items-center gap-2">
                                     Assess Queue
@@ -193,7 +193,7 @@ export default function AdminDashboardPage() {
                                 </span>
                             </Link>
                             <div className="flex items-center gap-3 rounded-2xl border border-white/5 bg-white/[0.02] px-6 py-4 shadow-inner">
-                                <span className="text-sm font-bold text-white/40">{todayLabel}</span>
+                                <span className="text-sm font-black text-white/40">{todayLabel}</span>
                             </div>
                         </div>
                     </div>
@@ -202,8 +202,8 @@ export default function AdminDashboardPage() {
                         <div className="group relative overflow-hidden rounded-[2rem] border border-primary/20 bg-primary/10 p-6 transition-colors hover:bg-primary/15">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-[11px] font-bold uppercase tracking-widest text-primary/20">Registration Load</p>
-                                    <p className="mt-2 text-4xl font-bold tracking-tight text-white">{registrationQueue}</p>
+                                    <p className="text-[11px] font-black uppercase tracking-widest text-primary/20">Registration Load</p>
+                                    <p className="mt-2 text-4xl font-black tracking-tight text-white">{registrationQueue}</p>
                                 </div>
                                 <div className="rounded-2xl border border-primary/20 bg-primary/20 p-4 text-primary">
                                     <FileCheck className="size-6" strokeWidth={2} />
@@ -217,8 +217,8 @@ export default function AdminDashboardPage() {
                         <div className="group relative overflow-hidden rounded-[2rem] border border-primary/20 bg-primary/10 p-6 transition-colors hover:bg-primary/15">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-[11px] font-bold uppercase tracking-widest text-primary/20">System Adoption</p>
-                                    <p className="mt-2 text-4xl font-bold tracking-tight text-white">{formatPercent(completionRate)}</p>
+                                    <p className="text-[11px] font-black uppercase tracking-widest text-primary/20">System Adoption</p>
+                                    <p className="mt-2 text-4xl font-black tracking-tight text-white">{formatPercent(completionRate)}</p>
                                 </div>
                                 <div className="rounded-2xl border border-primary/20 bg-primary/20 p-4 text-primary">
                                     <Sparkles className="size-6" strokeWidth={2} />
@@ -271,8 +271,8 @@ export default function AdminDashboardPage() {
                 <div className="xl:col-span-2 flex flex-col overflow-hidden rounded-[2.5rem] border border-border/70 bg-card p-8">
                     <div className="flex items-center justify-between mb-8">
                         <div>
-                            <p className="text-[11px] font-bold uppercase tracking-widest text-white/30">Demographics</p>
-                            <h2 className="mt-2 text-2xl font-bold text-white">Platform Balance</h2>
+                            <p className="text-[11px] font-black uppercase tracking-widest text-white/30">Demographics</p>
+                            <h2 className="mt-2 text-2xl font-black text-white">Platform Balance</h2>
                         </div>
                         <div className="flex size-12 items-center justify-center rounded-2xl bg-white/[0.03] text-white/40">
                             <TrendingUp className="size-6" />
@@ -288,20 +288,20 @@ export default function AdminDashboardPage() {
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="rounded-[1.5rem] bg-muted/30 p-5 border border-border/70">
-                                    <p className="text-3xl font-bold text-primary">{totalTenants}</p>
-                                    <p className="mt-2 text-[10px] font-bold uppercase tracking-wider text-white/40">Tenants</p>
+                                    <p className="text-3xl font-black text-primary">{totalTenants}</p>
+                                    <p className="mt-2 text-[10px] font-black uppercase tracking-wider text-white/40">Tenants</p>
                                 </div>
                                 <div className="rounded-[1.5rem] bg-muted/30 p-5 border border-border/70">
-                                    <p className="text-3xl font-bold text-amber-400">{totalLandlords}</p>
-                                    <p className="mt-2 text-[10px] font-bold uppercase tracking-wider text-white/40">Landlords</p>
+                                    <p className="text-3xl font-black text-amber-400">{totalLandlords}</p>
+                                    <p className="mt-2 text-[10px] font-black uppercase tracking-wider text-white/40">Landlords</p>
                                 </div>
                                 <div className="rounded-[1.5rem] bg-muted/30 p-5 border border-border/70">
-                                    <p className="text-3xl font-bold text-purple-400">{totalProperties}</p>
-                                    <p className="mt-2 text-[10px] font-bold uppercase tracking-wider text-white/40">Properties</p>
+                                    <p className="text-3xl font-black text-purple-400">{totalProperties}</p>
+                                    <p className="mt-2 text-[10px] font-black uppercase tracking-wider text-white/40">Properties</p>
                                 </div>
                                 <div className="rounded-[1.5rem] bg-muted/30 p-5 border border-border/70">
-                                    <p className="text-3xl font-bold text-primary">{activeLeases}</p>
-                                    <p className="mt-2 text-[10px] font-bold uppercase tracking-wider text-white/40">Leases</p>
+                                    <p className="text-3xl font-black text-primary">{activeLeases}</p>
+                                    <p className="mt-2 text-[10px] font-black uppercase tracking-wider text-white/40">Leases</p>
                                 </div>
                             </div>
                         </div>
@@ -312,8 +312,8 @@ export default function AdminDashboardPage() {
                 <div className="flex flex-col overflow-hidden rounded-[2.5rem] border border-border/70 bg-card p-8">
                     <div className="flex items-center justify-between mb-8">
                         <div>
-                            <p className="text-[11px] font-bold uppercase tracking-widest text-white/30">Analytics</p>
-                            <h2 className="mt-2 text-2xl font-bold text-white">Tour Funnel</h2>
+                            <p className="text-[11px] font-black uppercase tracking-widest text-white/30">Analytics</p>
+                            <h2 className="mt-2 text-2xl font-black text-white">Tour Funnel</h2>
                         </div>
                         <div className="flex size-12 items-center justify-center rounded-2xl bg-muted/40 text-muted-foreground">
                             <BellRing className="size-6" />
@@ -323,24 +323,24 @@ export default function AdminDashboardPage() {
                     <div className="flex flex-1 flex-col gap-4">
                         <div className="flex flex-1 items-center justify-between rounded-[1.5rem] border border-border/70 bg-muted/30 p-6 transition-colors hover:bg-muted/40">
                             <div>
-                                <p className="text-sm font-bold text-white/50">Entered</p>
-                                <p className="text-xs font-bold text-white/30 mt-1">Total initiated</p>
+                                <p className="text-sm font-black text-white/50">Entered</p>
+                                <p className="text-xs font-black text-white/30 mt-1">Total initiated</p>
                             </div>
-                            <span className="text-3xl font-bold text-white">{enteredTours}</span>
+                            <span className="text-3xl font-black text-white">{enteredTours}</span>
                         </div>
                         <div className="flex flex-1 items-center justify-between rounded-[1.5rem] border border-primary/20 bg-primary/20 p-6 transition-colors hover:bg-primary/20">
                             <div>
-                                <p className="text-sm font-bold text-primary/20">Completed</p>
-                                <p className="text-xs font-bold text-primary/20 mt-1">Finished journey</p>
+                                <p className="text-sm font-black text-primary/20">Completed</p>
+                                <p className="text-xs font-black text-primary/20 mt-1">Finished journey</p>
                             </div>
-                            <span className="text-3xl font-bold text-primary">{completedTours}</span>
+                            <span className="text-3xl font-black text-primary">{completedTours}</span>
                         </div>
                         <div className="flex flex-1 items-center justify-between rounded-[1.5rem] border border-primary/20 bg-primary/20 p-6 transition-colors hover:bg-primary/20">
                             <div>
-                                <p className="text-sm font-bold text-primary/20">Abandoned</p>
-                                <p className="text-xs font-bold text-primary/20 mt-1">Skipped/Dropped</p>
+                                <p className="text-sm font-black text-primary/20">Abandoned</p>
+                                <p className="text-xs font-black text-primary/20 mt-1">Skipped/Dropped</p>
                             </div>
-                            <span className="text-3xl font-bold text-primary">{skippedTours}</span>
+                            <span className="text-3xl font-black text-primary">{skippedTours}</span>
                         </div>
                     </div>
                 </div>

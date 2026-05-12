@@ -28,12 +28,12 @@ export function DashboardMainContent({
                     <div className="size-2 rounded-full bg-primary animate-ping" />
                     <div className="absolute inset-0 size-2 rounded-full bg-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.8)]" />
                 </div>
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/80">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/80">
                     {time.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                 </span>
             </div>
 
-            <h1 className="mb-4 text-4xl font-bold tracking-tight text-foreground md:text-6xl leading-[1.1]">
+            <h1 className="mb-4 text-4xl font-black tracking-tight text-foreground md:text-6xl leading-[1.1]">
                 {title}
                 <span className="text-primary prose-invert">.</span>
             </h1>
@@ -50,14 +50,14 @@ export function DashboardMainContent({
                         className="group relative flex items-center gap-3 overflow-hidden rounded-2xl bg-primary px-8 py-4 text-primary-foreground shadow-[0_8px_18px_rgba(var(--primary-rgb),0.28)] transition-all hover:brightness-105 active:scale-95"
                     >
                         <div className="absolute inset-0 bg-white/15 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                        <UserPlus className="size-5 font-bold relative z-10" />
-                        <span className="text-sm font-bold uppercase tracking-tight relative z-10">New Application</span>
+                        <UserPlus className="size-5 font-black relative z-10" />
+                        <span className="text-sm font-black uppercase tracking-tight relative z-10">New Application</span>
                     </button>
                 ) : (
                     <Link href="/landlord/applications?action=tenant-application" className="group relative flex items-center gap-3 overflow-hidden rounded-2xl bg-primary px-8 py-4 text-primary-foreground shadow-[0_8px_18px_rgba(var(--primary-rgb),0.28)] transition-all hover:brightness-105 active:scale-95">
                         <div className="absolute inset-0 bg-white/15 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                        <UserPlus className="size-5 font-bold relative z-10" />
-                        <span className="text-sm font-bold uppercase tracking-tight relative z-10">New Application</span>
+                        <UserPlus className="size-5 font-black relative z-10" />
+                        <span className="text-sm font-black uppercase tracking-tight relative z-10">New Application</span>
                     </Link>
                 )}
                 

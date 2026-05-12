@@ -132,25 +132,25 @@ export default function RentApplicationPage() {
                     <CheckCircle2 className="size-12 text-white" />
                 </motion.div>
 
-                <h1 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight text-white leading-tight">
+                <h1 className="text-4xl md:text-5xl font-black mb-6 tracking-tight text-white leading-tight">
                     Application <br /><span className="text-primary italic">Successfully</span> Sent
                 </h1>
 
                 <p className="text-white/60 text-lg mb-12 leading-relaxed">
-                    Excellent Choice! Your application for <span className="text-white font-bold">{property.name}</span> is now being reviewed by the team. We usually respond within 24 hours.
+                    Excellent Choice! Your application for <span className="text-white font-black">{property.name}</span> is now being reviewed by the team. We usually respond within 24 hours.
                 </p>
 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
                     <Link
                         href="/tenant/applications"
-                        className="w-full sm:w-auto px-10 py-5 rounded-2xl bg-white text-black font-bold hover:bg-white/90 transition-all flex items-center justify-center gap-3 active:scale-95 shadow-xl shadow-white/5"
+                        className="w-full sm:w-auto px-10 py-5 rounded-2xl bg-white text-black font-black hover:bg-white/90 transition-all flex items-center justify-center gap-3 active:scale-95 shadow-xl shadow-white/5"
                     >
                         <Zap className="size-4" />
                         Track Progress
                     </Link>
                     <Link
                         href="/tenant/dashboard"
-                        className="w-full sm:w-auto px-10 py-5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold transition-all flex items-center justify-center gap-3 backdrop-blur-md active:scale-95"
+                        className="w-full sm:w-auto px-10 py-5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-black transition-all flex items-center justify-center gap-3 backdrop-blur-md active:scale-95"
                     >
                         Return to Dashboard
                         <ArrowRight className="size-4 opacity-50" />
@@ -190,12 +190,12 @@ export default function RentApplicationPage() {
                         <div className="space-y-4">
                             <button
                                 onClick={() => router.push('/tenant/applications')}
-                                className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-white/40 hover:text-primary transition-colors group"
+                                className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-white/40 hover:text-primary transition-colors group"
                             >
                                 <ChevronLeft className="size-4 transition-transform group-hover:-translate-x-1" />
                                 Return to Applications
                             </button>
-                            <h1 className="text-4xl font-bold text-white tracking-tighter leading-none">
+                            <h1 className="text-4xl font-black text-white tracking-tighter leading-none">
                                 Application <br />
                                 <span className="text-primary italic">Process</span>
                             </h1>
@@ -235,7 +235,7 @@ export default function RentApplicationPage() {
 
                                         <div className="min-w-0">
                                             <p className={cn(
-                                                "text-sm font-bold transition-colors leading-tight",
+                                                "text-sm font-black transition-colors leading-tight",
                                                 isActive ? "text-white" : "text-white/60"
                                             )}>
                                                 {step.title}
@@ -271,10 +271,10 @@ export default function RentApplicationPage() {
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
                                 <div className="absolute inset-0 p-6 flex flex-col justify-end">
-                                    <div className="bg-primary/80 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded-full w-fit mb-2 shadow-lg">
+                                    <div className="bg-primary/80 backdrop-blur-md text-white text-[10px] font-black px-3 py-1 rounded-full w-fit mb-2 shadow-lg">
                                         AVAILABLE NOW
                                     </div>
-                                    <h3 className="text-xl font-bold text-white truncate">{property.name}</h3>
+                                    <h3 className="text-xl font-black text-white truncate">{property.name}</h3>
                                     <p className="text-xs text-white/70 flex items-center gap-1.5 mt-1">
                                         <MapPin className="size-3" />
                                         {property.address}
@@ -283,12 +283,12 @@ export default function RentApplicationPage() {
                             </div>
                             <div className="p-5 grid grid-cols-2 gap-3">
                                 <div className="space-y-1">
-                                    <p className="text-[10px] text-white/30 uppercase font-bold tracking-widest leading-none">Monthly Rent</p>
-                                    <p className="text-lg font-bold text-white">{property.price}</p>
+                                    <p className="text-[10px] text-white/30 uppercase font-black tracking-widest leading-none">Monthly Rent</p>
+                                    <p className="text-lg font-black text-white">{property.price}</p>
                                 </div>
                                 <div className="space-y-1 text-right">
-                                    <p className="text-[10px] text-white/30 uppercase font-bold tracking-widest leading-none">Refundable</p>
-                                    <p className="text-lg font-bold text-primary">â‚±25K</p>
+                                    <p className="text-[10px] text-white/30 uppercase font-black tracking-widest leading-none">Refundable</p>
+                                    <p className="text-lg font-black text-primary">â‚±25K</p>
                                 </div>
                             </div>
                         </div>
@@ -319,9 +319,9 @@ export default function RentApplicationPage() {
                                                 return <Icon className="size-5" />;
                                             })()}
                                         </div>
-                                        <span className="text-[10px] font-bold text-white/40 uppercase tracking-[0.3em]">Step {currentStep} of 4</span>
+                                        <span className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em]">Step {currentStep} of 4</span>
                                     </div>
-                                    <h2 className="text-3xl font-bold text-white tracking-tight mb-3">
+                                    <h2 className="text-3xl font-black text-white tracking-tight mb-3">
                                         {currentStep === 1 && "Personal Identity"}
                                         {currentStep === 2 && "Career & Finance"}
                                         {currentStep === 3 && "Verification Vault"}
@@ -339,7 +339,7 @@ export default function RentApplicationPage() {
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                                                 <div className="md:col-span-2 p-4 rounded-2xl bg-primary/5 border border-primary/10 flex items-start gap-3">
                                                     <Info className="size-4 text-primary shrink-0 mt-0.5" />
-                                                    <p className="text-[10px] text-white/60 leading-relaxed uppercase tracking-wider font-bold">
+                                                    <p className="text-[10px] text-white/60 leading-relaxed uppercase tracking-wider font-black">
                                                         Note: Name must exactly match the name on the lease contract and government-issued ID.
                                                     </p>
                                                 </div>
@@ -350,7 +350,7 @@ export default function RentApplicationPage() {
                                                 <div className="md:col-span-2">
                                                     <div className="flex items-center gap-2 mb-4">
                                                         <div className="h-px flex-1 bg-white/10" />
-                                                        <span className="text-[10px] font-bold uppercase tracking-widest text-white/20 whitespace-nowrap">Emergency Contact</span>
+                                                        <span className="text-[10px] font-black uppercase tracking-widest text-white/20 whitespace-nowrap">Emergency Contact</span>
                                                         <div className="h-px flex-1 bg-white/10" />
                                                     </div>
                                                 </div>
@@ -387,10 +387,10 @@ export default function RentApplicationPage() {
                                             <div className="md:col-span-2">
                                                 <div className="flex items-center gap-2 mb-4">
                                                     <div className="h-px flex-1 bg-white/10" />
-                                                    <span className="text-[10px] font-bold uppercase tracking-widest text-white/20 whitespace-nowrap">Background Reference (Mandatory)</span>
+                                                    <span className="text-[10px] font-black uppercase tracking-widest text-white/20 whitespace-nowrap">Background Reference (Mandatory)</span>
                                                     <div className="h-px flex-1 bg-white/10" />
                                                 </div>
-                                                <p className="text-[10px] text-amber-400 font-bold uppercase tracking-wider mb-2 text-center opacity-60">
+                                                <p className="text-[10px] text-amber-400 font-black uppercase tracking-wider mb-2 text-center opacity-60">
                                                     To avoid future problems and unpaid rent â€” References will be contacted, this is mandatory.
                                                 </p>
                                             </div>
@@ -400,7 +400,7 @@ export default function RentApplicationPage() {
                                             <div className="md:col-span-2 p-6 rounded-3xl bg-blue-500/5 border border-blue-500/10 flex items-start gap-4 shadow-inner">
                                                 <Shield className="size-6 text-blue-400 shrink-0 mt-0.5" />
                                                 <div className="space-y-1">
-                                                    <p className="text-sm font-bold text-blue-400/90 tracking-tight">Source of Income Verification</p>
+                                                    <p className="text-sm font-black text-blue-400/90 tracking-tight">Source of Income Verification</p>
                                                     <p className="text-xs text-blue-300/60 leading-relaxed font-medium">
                                                         To ensure stable and continuous rent payments. All financial details are strictly confidential.
                                                     </p>
@@ -430,8 +430,8 @@ export default function RentApplicationPage() {
                                             {/* Requirements Roadmap - Tenant View */}
                                             <div className="space-y-4">
                                                 <div className="flex items-center justify-between">
-                                                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-white/40">Acceptance Roadmap</h4>
-                                                    <span className="text-[8px] font-bold bg-primary/20 text-primary border border-primary/20 px-2 py-0.5 rounded uppercase tracking-tighter">7 Mandatory Steps</span>
+                                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-white/40">Acceptance Roadmap</h4>
+                                                    <span className="text-[8px] font-black bg-primary/20 text-primary border border-primary/20 px-2 py-0.5 rounded uppercase tracking-tighter">7 Mandatory Steps</span>
                                                 </div>
 
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -446,10 +446,10 @@ export default function RentApplicationPage() {
                                                     ].map((item) => (
                                                         <div key={item.id} className="flex items-start gap-3 p-3 rounded-2xl bg-white/[0.02] border border-white/5 group hover:bg-white/[0.04] transition-all">
                                                             <div className="size-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-primary group-hover:text-black transition-all">
-                                                                <span className="text-[10px] font-bold">{item.id}</span>
+                                                                <span className="text-[10px] font-black">{item.id}</span>
                                                             </div>
                                                             <div>
-                                                                <p className="text-[11px] font-bold text-white tracking-tight">{item.label}</p>
+                                                                <p className="text-[11px] font-black text-white tracking-tight">{item.label}</p>
                                                                 <p className="text-[9px] text-white/30 font-medium leading-none mt-1">{item.desc}</p>
                                                             </div>
                                                         </div>
@@ -464,11 +464,11 @@ export default function RentApplicationPage() {
                                                         <Shield className="size-6 text-amber-500" />
                                                     </div>
                                                     <div className="space-y-2">
-                                                        <h4 className="text-white font-bold text-lg">Strict Acceptance Policy</h4>
+                                                        <h4 className="text-white font-black text-lg">Strict Acceptance Policy</h4>
                                                         <p className="text-white/40 text-sm leading-relaxed">
-                                                            I acknowledge that completion of this form does not guarantee residency. Moving in requires <span className="text-amber-500 font-bold italic underline decoration-amber-500/30">Upfront Payment (1 Month Advance & 2 Months Security Deposit)</span>. 
+                                                            I acknowledge that completion of this form does not guarantee residency. Moving in requires <span className="text-amber-500 font-black italic underline decoration-amber-500/30">Upfront Payment (1 Month Advance & 2 Months Security Deposit)</span>. 
                                                             <br />
-                                                            <span className="text-red-400 font-bold text-xs">âŒ No Installments. No "pay later" arrangements.</span>
+                                                            <span className="text-red-400 font-black text-xs">âŒ No Installments. No "pay later" arrangements.</span>
                                                         </p>
                                                     </div>
                                                 </div>
@@ -479,7 +479,7 @@ export default function RentApplicationPage() {
                                                     <CheckCircle2 className="size-6 text-emerald-500" />
                                                 </div>
                                                 <div>
-                                                    <h4 className="text-sm font-bold text-white uppercase tracking-tight">Data Ready for Vault</h4>
+                                                    <h4 className="text-sm font-black text-white uppercase tracking-tight">Data Ready for Vault</h4>
                                                     <p className="text-xs text-white/40 font-medium">By submitting, you agree to the background verification process.</p>
                                                 </div>
                                             </div>
@@ -493,7 +493,7 @@ export default function RentApplicationPage() {
                                         type="button"
                                         onClick={handleBack}
                                         className={cn(
-                                            "flex items-center gap-2 px-8 py-3 rounded-2xl font-bold text-sm transition-all active:scale-95 hover:bg-white/5",
+                                            "flex items-center gap-2 px-8 py-3 rounded-2xl font-black text-sm transition-all active:scale-95 hover:bg-white/5",
                                             currentStep === 1 ? "opacity-0 pointer-events-none" : "text-white/40 hover:text-white"
                                         )}
                                     >
@@ -505,7 +505,7 @@ export default function RentApplicationPage() {
                                         type="button"
                                         onClick={handleNext}
                                         disabled={isSubmitting}
-                                        className="h-14 px-12 rounded-2xl bg-primary hover:bg-primary-dark text-black font-bold text-base transition-all shadow-[0_10px_30px_rgba(109,152,56,0.3)] flex items-center gap-3 disabled:opacity-50 active:scale-[0.98] relative overflow-hidden group"
+                                        className="h-14 px-12 rounded-2xl bg-primary hover:bg-primary-dark text-black font-black text-base transition-all shadow-[0_10px_30px_rgba(109,152,56,0.3)] flex items-center gap-3 disabled:opacity-50 active:scale-[0.98] relative overflow-hidden group"
                                     >
                                         <div className="absolute inset-x-0 bottom-0 h-1 bg-black/10 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
                                         {isSubmitting ? (
@@ -610,18 +610,18 @@ function UnitSelector({ label, value, onChange, options, onSeeMore, propertyId }
                     </div>
 
                     <div className="space-y-0.5">
-                        <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Residence Configuration</p>
+                        <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Residence Configuration</p>
                         {isSelected ? (
                             <div className="flex items-baseline gap-2">
-                                <span className="text-lg font-bold text-white tracking-tighter">
+                                <span className="text-lg font-black text-white tracking-tighter">
                                     {selectedUnit.name}
                                 </span>
-                                <span className="text-xs font-bold text-primary italic">
+                                <span className="text-xs font-black text-primary italic">
                                     {selectedUnit.floor}
                                 </span>
                             </div>
                         ) : (
-                            <p className="text-sm font-bold text-white/20 italic">No residence selected yet...</p>
+                            <p className="text-sm font-black text-white/20 italic">No residence selected yet...</p>
                         )}
                     </div>
                 </div>
@@ -629,15 +629,15 @@ function UnitSelector({ label, value, onChange, options, onSeeMore, propertyId }
                 <div className="pr-1 gap-2 flex items-center">
                     {isSelected && (
                         <div className="hidden sm:flex flex-col items-end mr-4">
-                            <p className="text-[8px] font-bold text-white/20 uppercase tracking-widest">Pricing Adjust.</p>
-                            <p className="text-[10px] font-bold text-primary">{selectedUnit.price}</p>
+                            <p className="text-[8px] font-black text-white/20 uppercase tracking-widest">Pricing Adjust.</p>
+                            <p className="text-[10px] font-black text-primary">{selectedUnit.price}</p>
                         </div>
                     )}
                     <button
                         type="button"
                         onClick={onSeeMore}
                         className={cn(
-                            "h-14 px-10 rounded-[1.75rem] font-bold text-[11px] uppercase tracking-[0.15em] transition-all relative overflow-hidden group/btn flex items-center gap-3",
+                            "h-14 px-10 rounded-[1.75rem] font-black text-[11px] uppercase tracking-[0.15em] transition-all relative overflow-hidden group/btn flex items-center gap-3",
                             isSelected
                                 ? "bg-white/5 text-white/60 hover:bg-white/10 hover:text-white border border-white/10"
                                 : "bg-primary text-black shadow-2xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98]"
@@ -683,7 +683,7 @@ function UnitSelectionModal({ isOpen, onClose, value, onChange, options }: any) 
                     >
                         {/* Sidebar Selector */}
                         <div className="w-full md:w-[240px] bg-white/[0.02] border-b md:border-b-0 md:border-r border-white/5 p-8 flex flex-col shrink-0">
-                            <h4 className="text-[10px] font-bold text-white/30 uppercase tracking-[0.3em] mb-8 px-2">Level Gallery</h4>
+                            <h4 className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em] mb-8 px-2">Level Gallery</h4>
                             <div className="space-y-2 overflow-y-auto custom-scrollbar flex-1 -mx-2 px-2">
                                 {floors.map((floor: any) => (
                                     <button
@@ -692,7 +692,7 @@ function UnitSelectionModal({ isOpen, onClose, value, onChange, options }: any) 
                                         className={cn(
                                             "w-full flex items-center gap-4 p-4 rounded-2xl transition-all duration-300 group/floor",
                                             selectedFloor === floor
-                                                ? "bg-primary text-black font-bold shadow-[0_10px_20px_rgba(109,152,56,0.3)]"
+                                                ? "bg-primary text-black font-black shadow-[0_10px_20px_rgba(109,152,56,0.3)]"
                                                 : "text-white/40 hover:text-white hover:bg-white/5"
                                         )}
                                     >
@@ -710,10 +710,10 @@ function UnitSelectionModal({ isOpen, onClose, value, onChange, options }: any) 
                         <div className="flex-1 flex flex-col min-w-0">
                             <header className="p-8 pb-4 flex justify-between items-center">
                                 <div className="space-y-1">
-                                    <h3 className="text-2xl font-bold text-white tracking-tighter">
+                                    <h3 className="text-2xl font-black text-white tracking-tighter">
                                         Unit <span className="text-primary italic">Selection</span>
                                     </h3>
-                                    <p className="text-[10px] text-white/20 font-bold uppercase tracking-widest">
+                                    <p className="text-[10px] text-white/20 font-black uppercase tracking-widest">
                                         Showing Units on <span className="text-white">{selectedFloor}</span>
                                     </p>
                                 </div>
@@ -752,15 +752,15 @@ function UnitSelectionModal({ isOpen, onClose, value, onChange, options }: any) 
                                                     <div className="relative z-10 w-full">
                                                         <div className="flex justify-between items-start mb-4">
                                                             <div className="space-y-1">
-                                                                <p className={cn("text-xl font-bold tracking-tight", isSelected ? "text-primary" : "text-white")}>
+                                                                <p className={cn("text-xl font-black tracking-tight", isSelected ? "text-primary" : "text-white")}>
                                                                     {opt.name}
                                                                 </p>
-                                                                <p className="text-[10px] font-bold text-white/30 uppercase tracking-tighter italic">
+                                                                <p className="text-[10px] font-black text-white/30 uppercase tracking-tighter italic">
                                                                     Modern Architecture
                                                                 </p>
                                                             </div>
                                                             <span className={cn(
-                                                                "text-[8px] px-2.5 py-1 rounded-full font-bold uppercase tracking-tighter",
+                                                                "text-[8px] px-2.5 py-1 rounded-full font-black uppercase tracking-tighter",
                                                                 opt.status === "Available" ? "bg-primary text-black" : "bg-yellow-500/20 text-yellow-500 border border-yellow-500/30"
                                                             )}>
                                                                 {opt.status}
@@ -769,7 +769,7 @@ function UnitSelectionModal({ isOpen, onClose, value, onChange, options }: any) 
                                                         <div className="pt-4 border-t border-white/5 flex items-center justify-between">
                                                             <div className="flex items-center gap-2">
                                                                 <div className="size-1.5 rounded-full bg-primary/40" />
-                                                                <span className="text-[10px] font-bold text-white/60 tracking-widest">{opt.price}</span>
+                                                                <span className="text-[10px] font-black text-white/60 tracking-widest">{opt.price}</span>
                                                             </div>
                                                             <ArrowRight className={cn("size-4 transition-all duration-500 opacity-0 -translate-x-2 group-hover/unit:opacity-100 group-hover/unit:translate-x-0", isSelected ? "text-primary opacity-100 translate-x-0" : "text-white/20")} />
                                                         </div>
@@ -796,7 +796,7 @@ function UnitSelectionModal({ isOpen, onClose, value, onChange, options }: any) 
 function FormField({ label, value, onChange, placeholder, type = "text" }: any) {
     return (
         <div className="group space-y-3">
-            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/40 ml-1 group-focus-within:text-primary transition-colors">
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 ml-1 group-focus-within:text-primary transition-colors">
                 {label}
             </label>
             <div className="relative">
@@ -805,7 +805,7 @@ function FormField({ label, value, onChange, placeholder, type = "text" }: any) 
                     value={value}
                     onChange={(e) => onChange(e.target.value)}
                     placeholder={placeholder}
-                    className="w-full bg-white/[0.03] border border-white/5 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:bg-white/[0.06] transition-all font-bold text-white placeholder:text-white/10 text-sm"
+                    className="w-full bg-white/[0.03] border border-white/5 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:bg-white/[0.06] transition-all font-black text-white placeholder:text-white/10 text-sm"
                 />
                 {/* Accent Line */}
                 <div className="absolute bottom-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-primary/0 to-transparent group-focus-within:via-primary/50 transition-all duration-500" />
@@ -820,10 +820,10 @@ function UploadCard({ title, desc, required }: any) {
             <div className="size-12 rounded-2xl bg-white/5 flex items-center justify-center mb-3 group-hover:bg-primary group-hover:text-black transition-all duration-300 shadow-xl">
                 <Upload className="size-5" />
             </div>
-            <h4 className="text-sm font-bold text-white group-hover:text-primary transition-colors">{title}</h4>
+            <h4 className="text-sm font-black text-white group-hover:text-primary transition-colors">{title}</h4>
             <p className="text-[10px] text-white/40 mt-0.5 font-medium">{desc}</p>
             {required && (
-                <div className="mt-3 px-2 py-0.5 rounded-full bg-red-500/10 border border-red-500/20 text-[8px] font-bold text-red-400 uppercase tracking-tighter">
+                <div className="mt-3 px-2 py-0.5 rounded-full bg-red-500/10 border border-red-500/20 text-[8px] font-black text-red-400 uppercase tracking-tighter">
                     Required Action
                 </div>
             )}
@@ -837,7 +837,7 @@ function CheckItem({ label }: { label: string }) {
             <div className="size-4 rounded-full bg-primary/20 flex items-center justify-center">
                 <CheckCircle2 className="size-2.5 text-primary" />
             </div>
-            <span className="text-[10px] font-bold text-white/60 uppercase tracking-tight">{label}</span>
+            <span className="text-[10px] font-black text-white/60 uppercase tracking-tight">{label}</span>
         </div>
     );
 }
@@ -847,9 +847,9 @@ function SummaryItem({ label, value, icon: Icon }: any) {
         <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-5 space-y-1">
             <div className="flex items-center gap-2 opacity-50">
                 <Icon className="size-3" />
-                <span className="text-[9px] font-bold uppercase tracking-widest">{label}</span>
+                <span className="text-[9px] font-black uppercase tracking-widest">{label}</span>
             </div>
-            <p className="text-sm font-bold text-white truncate">{value}</p>
+            <p className="text-sm font-black text-white truncate">{value}</p>
         </div>
     );
 }
@@ -858,7 +858,7 @@ function Seal({ icon: Icon, label }: any) {
     return (
         <div className="flex items-center gap-2 grayscale hover:grayscale-0 transition-all cursor-default">
             <Icon className="size-4" />
-            <span className="text-[9px] font-bold uppercase tracking-widest">{label}</span>
+            <span className="text-[9px] font-black uppercase tracking-widest">{label}</span>
         </div>
     );
 }

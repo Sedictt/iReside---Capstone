@@ -43,17 +43,17 @@ const getStatusStyles = (status: TenantStatus) => {
 const getPaymentBadge = (status: TenantPaymentStatus) => {
     switch (status) {
         case "paid": return (
-            <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-600">
+            <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-emerald-600">
                 <CheckCircle2 className="size-3" /> Paid
             </div>
         )
         case "late": return (
-            <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-red-600">
+            <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-red-600">
                 <AlertCircle className="size-3" /> Overdue
             </div>
         )
         case "pending": return (
-            <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-amber-600">
+            <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-amber-600">
                 <Clock className="size-3" /> Pending
             </div>
         )
@@ -90,7 +90,7 @@ export function TenantCard({ tenant, idx, onViewProfile }: TenantCardProps) {
             <div className="flex items-start justify-between">
                 <div className="flex items-center gap-4">
                     <div 
-                        className="size-16 overflow-hidden rounded-2xl border-2 border-background shadow-inner flex items-center justify-center text-xl font-bold text-white"
+                        className="size-16 overflow-hidden rounded-2xl border-2 border-background shadow-inner flex items-center justify-center text-xl font-black text-white"
                         style={{ backgroundColor: tenant.avatarBgColor || '#6d9838' }}
                     >
                         {tenant.avatarUrl ? (
@@ -109,7 +109,7 @@ export function TenantCard({ tenant, idx, onViewProfile }: TenantCardProps) {
                         )}
                     </div>
                     <div>
-                        <h3 className="text-lg font-bold leading-tight text-foreground transition-colors group-hover:text-primary">
+                        <h3 className="text-lg font-black leading-tight text-foreground transition-colors group-hover:text-primary">
                             {tenant.name}
                         </h3>
                         <p className="text-xs font-medium text-muted-foreground">{tenant.email}</p>
@@ -123,7 +123,7 @@ export function TenantCard({ tenant, idx, onViewProfile }: TenantCardProps) {
             {/* Status & Payment Indicators */}
             <div className="mt-6 flex items-center justify-between gap-3">
                 <div className={cn(
-                    "flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-tight",
+                    "flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-black uppercase tracking-tight",
                     getStatusStyles(tenant.status)
                 )}>
                     <div className={cn("size-1.5 rounded-full bg-current")} />
@@ -140,19 +140,19 @@ export function TenantCard({ tenant, idx, onViewProfile }: TenantCardProps) {
                     <span className="flex items-center gap-2 text-muted-foreground">
                         <Building2 className="size-3.5" /> Property
                     </span>
-                    <span className="font-bold text-foreground truncate max-w-[140px]">{tenant.property}</span>
+                    <span className="font-black text-foreground truncate max-w-[140px]">{tenant.property}</span>
                 </div>
                 <div className="flex items-center justify-between text-xs">
                     <span className="flex items-center gap-2 text-muted-foreground">
                         <Wallet className="size-3.5" /> Unit
                     </span>
-                    <span className="font-bold text-foreground">{tenant.unit}</span>
+                    <span className="font-black text-foreground">{tenant.unit}</span>
                 </div>
                 <div className="flex items-center justify-between text-xs">
                     <span className="flex items-center gap-2 text-muted-foreground">
                         <Calendar className="size-3.5" /> Lease Ends
                     </span>
-                    <span className="font-bold text-foreground">{formatLeaseEnd(tenant.leaseEnd)}</span>
+                    <span className="font-black text-foreground">{formatLeaseEnd(tenant.leaseEnd)}</span>
                 </div>
             </div>
 
@@ -160,7 +160,7 @@ export function TenantCard({ tenant, idx, onViewProfile }: TenantCardProps) {
             <div className="mt-6 flex items-center gap-2">
                 <button 
                     onClick={() => onViewProfile(tenant.id)}
-                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-primary/10 py-2.5 text-xs font-bold text-primary transition-all hover:bg-primary/20"
+                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-primary/10 py-2.5 text-xs font-black text-primary transition-all hover:bg-primary/20"
                 >
                     View Profile
                     <ChevronRight className="size-3.5" />

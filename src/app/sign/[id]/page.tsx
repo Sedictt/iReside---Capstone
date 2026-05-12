@@ -16,7 +16,7 @@ const ConsultationTool = dynamic(() => import('../../admin/consultation-tool/Con
         <div className="size-20 border-2 border-primary/20 rounded-full" />
         <div className="absolute inset-0 size-20 border-t-2 border-primary rounded-full animate-spin" />
       </div>
-      <h2 className="text-2xl font-bold tracking-tighter uppercase text-primary">Loading Viewer</h2>
+      <h2 className="text-2xl font-black tracking-tighter uppercase text-primary">Loading Viewer</h2>
       <p className="text-text-medium text-sm mt-2 font-medium uppercase tracking-widest">Preparing high-fidelity environment</p>
     </div>
   )
@@ -89,7 +89,7 @@ export default function SignPage() {
       >
         <CheckCircle2 className="size-12" />
       </motion.div>
-      <h1 className="text-4xl font-bold tracking-tighter mb-4 uppercase">Document Signed</h1>
+      <h1 className="text-4xl font-black tracking-tighter mb-4 uppercase">Document Signed</h1>
       <p className="text-zinc-500 max-w-sm font-medium mb-10 leading-relaxed">
         Thank you for your technical consultation. Your signature has been embedded and saved to our secure storage.
       </p>
@@ -98,8 +98,8 @@ export default function SignPage() {
            <FileText className="size-6" />
          </div>
          <div className="text-left">
-           <div className="text-sm font-bold truncate max-w-[150px]">{docData?.file_name}</div>
-           <div className="text-[10px] text-zinc-500 font-bold uppercase">Signed & Sealed</div>
+           <div className="text-sm font-black truncate max-w-[150px]">{docData?.file_name}</div>
+           <div className="text-[10px] text-zinc-500 font-black uppercase">Signed & Sealed</div>
          </div>
       </div>
     </div>

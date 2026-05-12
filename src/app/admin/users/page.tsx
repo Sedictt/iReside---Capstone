@@ -121,31 +121,31 @@ function SnapshotModal({ user, onClose }: { user: UserDetail; onClose: () => voi
                 </button>
 
                 <div className="mb-8">
-                    <h2 className="text-2xl font-bold text-white">Registration Snapshot</h2>
+                    <h2 className="text-2xl font-black text-white">Registration Snapshot</h2>
                     <p className="text-sm text-white/50 mt-1">{profile.full_name} - {profile.email}</p>
                 </div>
 
                 <div className="space-y-8">
                     {/* Personal Information */}
                     <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
-                        <h3 className="text-sm font-bold uppercase tracking-wider text-white/60 mb-4">Personal Information</h3>
+                        <h3 className="text-sm font-black uppercase tracking-wider text-white/60 mb-4">Personal Information</h3>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Full Name</p>
+                                <p className="text-[10px] font-black uppercase tracking-wider text-white/40">Full Name</p>
                                 <p className="text-white font-medium mt-1">{profile.full_name}</p>
                             </div>
                             <div>
-                                <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Email</p>
+                                <p className="text-[10px] font-black uppercase tracking-wider text-white/40">Email</p>
                                 <p className="text-white font-medium mt-1">{profile.email}</p>
                             </div>
                             {app?.phone && (
                                 <div>
-                                    <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Phone</p>
+                                    <p className="text-[10px] font-black uppercase tracking-wider text-white/40">Phone</p>
                                     <p className="text-white font-medium mt-1">{app.phone}</p>
                                 </div>
                             )}
                             <div>
-                                <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Role</p>
+                                <p className="text-[10px] font-black uppercase tracking-wider text-white/40">Role</p>
                                 <RoleBadge role={profile.role} />
                             </div>
                         </div>
@@ -154,20 +154,20 @@ function SnapshotModal({ user, onClose }: { user: UserDetail; onClose: () => voi
                     {/* Business/Property Information */}
                     {app && (
                         <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
-                            <h3 className="text-sm font-bold uppercase tracking-wider text-white/60 mb-4">Property Information</h3>
+                            <h3 className="text-sm font-black uppercase tracking-wider text-white/60 mb-4">Property Information</h3>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="col-span-2">
-                                    <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Business Name</p>
+                                    <p className="text-[10px] font-black uppercase tracking-wider text-white/40">Business Name</p>
                                     <p className="text-white font-medium mt-1">{app.business_name || "N/A"}</p>
                                 </div>
                                 <div className="col-span-2">
-                                    <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Business Address</p>
+                                    <p className="text-[10px] font-black uppercase tracking-wider text-white/40">Business Address</p>
                                     <p className="text-white font-medium mt-1">{app.business_address || "N/A"}</p>
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Application Status</p>
+                                    <p className="text-[10px] font-black uppercase tracking-wider text-white/40">Application Status</p>
                                     <span className={cn(
-                                        "inline-block mt-1 px-3 py-1 rounded-full text-xs font-bold uppercase",
+                                        "inline-block mt-1 px-3 py-1 rounded-full text-xs font-black uppercase",
                                         app.status === "approved" && "bg-green-500/20 text-green-400 border border-green-500/30",
                                         app.status === "pending" && "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30",
                                         app.status === "rejected" && "bg-red-500/20 text-red-400 border border-red-500/30"
@@ -176,9 +176,9 @@ function SnapshotModal({ user, onClose }: { user: UserDetail; onClose: () => voi
                                     </span>
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Verification Status</p>
+                                    <p className="text-[10px] font-black uppercase tracking-wider text-white/40">Verification Status</p>
                                     <span className={cn(
-                                        "inline-block mt-1 px-3 py-1 rounded-full text-xs font-bold uppercase",
+                                        "inline-block mt-1 px-3 py-1 rounded-full text-xs font-black uppercase",
                                         app.verification_status === "verified" && "bg-green-500/20 text-green-400 border border-green-500/30",
                                         app.verification_status === "not_verified" && "bg-zinc-500/20 text-zinc-400 border border-zinc-500/30"
                                     )}>
@@ -192,11 +192,11 @@ function SnapshotModal({ user, onClose }: { user: UserDetail; onClose: () => voi
                     {/* Documents */}
                     {app && (
                         <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
-                            <h3 className="text-sm font-bold uppercase tracking-wider text-white/60 mb-4">Uploaded Documents</h3>
+                            <h3 className="text-sm font-black uppercase tracking-wider text-white/60 mb-4">Uploaded Documents</h3>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 {app.identity_document_url && (
                                     <div className="space-y-2">
-                                        <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Identity Document</p>
+                                        <p className="text-[10px] font-black uppercase tracking-wider text-white/40">Identity Document</p>
 <a href={app.identity_document_url} target="_blank" rel="noopener noreferrer" className="relative block h-32 rounded-xl border border-white/10 overflow-hidden hover:border-primary/50 transition-colors">
                                                 <Image src={app.identity_document_url} alt="Identity" fill sizes="(max-width: 768px) 100vw, 256px" className="object-cover" />
                                         </a>
@@ -204,7 +204,7 @@ function SnapshotModal({ user, onClose }: { user: UserDetail; onClose: () => voi
                                 )}
                                 {app.ownership_document_url && (
                                     <div className="space-y-2">
-                                        <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Proof of Ownership</p>
+                                        <p className="text-[10px] font-black uppercase tracking-wider text-white/40">Proof of Ownership</p>
 <a href={app.ownership_document_url} target="_blank" rel="noopener noreferrer" className="relative block h-32 rounded-xl border border-white/10 overflow-hidden hover:border-primary/50 transition-colors">
                                                 <Image src={app.ownership_document_url} alt="Ownership" fill sizes="(max-width: 768px) 100vw, 256px" className="object-cover" />
                                         </a>
@@ -212,7 +212,7 @@ function SnapshotModal({ user, onClose }: { user: UserDetail; onClose: () => voi
                                 )}
                                 {app.business_permit_url && (
                                     <div className="space-y-2">
-                                        <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Business Permit (Paper)</p>
+                                        <p className="text-[10px] font-black uppercase tracking-wider text-white/40">Business Permit (Paper)</p>
 <a href={app.business_permit_url} target="_blank" rel="noopener noreferrer" className="relative block h-32 rounded-xl border border-white/10 overflow-hidden hover:border-primary/50 transition-colors">
                                                 <Image src={app.business_permit_url} alt="Permit Paper" fill sizes="(max-width: 768px) 100vw, 256px" className="object-cover" />
                                         </a>
@@ -220,7 +220,7 @@ function SnapshotModal({ user, onClose }: { user: UserDetail; onClose: () => voi
                                 )}
                                 {app.business_permit_card_url && (
                                     <div className="space-y-2">
-                                        <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Business Permit (Card)</p>
+                                        <p className="text-[10px] font-black uppercase tracking-wider text-white/40">Business Permit (Card)</p>
 <a href={app.business_permit_card_url} target="_blank" rel="noopener noreferrer" className="relative block h-32 rounded-xl border border-white/10 overflow-hidden hover:border-primary/50 transition-colors">
                                                 <Image src={app.business_permit_card_url} alt="Permit Card" fill sizes="(max-width: 768px) 100vw, 256px" className="object-cover" />
                                         </a>
@@ -310,11 +310,11 @@ export default function AdminUsersPage() {
                 
                 <div className="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
                     <div className="max-w-2xl space-y-4">
-                        <div className="inline-flex items-center gap-3 rounded-full border border-primary/25 bg-primary/10 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-primary">
+                        <div className="inline-flex items-center gap-3 rounded-full border border-primary/25 bg-primary/10 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-primary">
                             <Users className="size-3.5" />
                             Directory Access
                         </div>
-                        <h1 className="text-4xl font-bold tracking-tight text-white md:text-5xl">
+                        <h1 className="text-4xl font-black tracking-tight text-white md:text-5xl">
                             User Records
                         </h1>
                         <p className="text-base font-medium leading-relaxed text-white/50">
@@ -331,7 +331,7 @@ export default function AdminUsersPage() {
                                     key={role}
                                     onClick={() => setRoleFilter(role)}
                                     className={cn(
-                                        "relative flex h-12 items-center justify-center rounded-2xl border px-6 font-bold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                                        "relative flex h-12 items-center justify-center rounded-2xl border px-6 font-black transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                                         isActive
                                             ? "border-primary/25 bg-primary/10 text-primary"
                                             : "border-white/10 bg-white/[0.02] text-white/50 hover:bg-white/[0.06] hover:text-white"
@@ -380,7 +380,7 @@ export default function AdminUsersPage() {
                             <div className="mx-auto mb-4 inline-flex size-14 items-center justify-center rounded-full bg-white/5">
                                 <Search className="size-7 text-white/20" />
                             </div>
-                            <p className="text-base font-bold text-white">No records found</p>
+                            <p className="text-base font-black text-white">No records found</p>
                             <p className="mt-1 text-sm text-white/40">Adjust your filters or search query.</p>
                         </div>
                     ) : (
@@ -397,7 +397,7 @@ export default function AdminUsersPage() {
                                                     <Image src={user.avatar_url} alt="" fill sizes="40px" className="object-cover" />
                                                 ) : (
                                                     <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-white/10 to-white/5">
-                                                        <span className="text-xs font-bold text-white/70">
+                                                        <span className="text-xs font-black text-white/70">
                                                             {user.full_name.substring(0, 2).toUpperCase()}
                                                         </span>
                                                     </div>
@@ -405,7 +405,7 @@ export default function AdminUsersPage() {
                                             </div>
                                             <div className="min-w-0">
                                                 <div className="flex min-w-0 items-center gap-2">
-                                                    <p className="truncate text-sm font-bold text-white">{user.full_name}</p>
+                                                    <p className="truncate text-sm font-black text-white">{user.full_name}</p>
                                                     <RoleBadge role={user.role} />
                                                 </div>
                                                 <p className="truncate text-xs text-white/50">{user.email}</p>
@@ -414,11 +414,11 @@ export default function AdminUsersPage() {
                                         <div className="mt-3 flex flex-wrap items-center gap-2" suppressHydrationWarning>
                                             <div className={cn("inline-flex items-center gap-2 rounded-xl border px-3 py-1.5 shadow-inner", roleInfo.bgClass, roleInfo.borderClass)}>
                                                 <RoleIcon className={cn("size-4 shrink-0", roleInfo.colorClass)} />
-                                                <span className={cn("text-[11px] font-bold uppercase tracking-wider", roleInfo.colorClass)}>
+                                                <span className={cn("text-[11px] font-black uppercase tracking-wider", roleInfo.colorClass)}>
                                                     {roleInfo.label}
                                                 </span>
                                             </div>
-                                            <span className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-bold text-white/60">
+                                            <span className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-black text-white/60">
                                                 <Calendar className="size-3.5 text-white/30" />
                                                 <span suppressHydrationWarning>{dateObj.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
                                             </span>
@@ -433,7 +433,7 @@ export default function AdminUsersPage() {
                                             {user.role === "landlord" && (
                                                 <button
                                                     onClick={() => handleViewSnapshot(user)}
-                                                    className="flex-1 rounded-xl border border-white/10 bg-white/5 py-2 text-xs font-bold text-white/70 hover:bg-white/10"
+                                                    className="flex-1 rounded-xl border border-white/10 bg-white/5 py-2 text-xs font-black text-white/70 hover:bg-white/10"
                                                 >
                                                     View Registration
                                                 </button>
@@ -450,12 +450,12 @@ export default function AdminUsersPage() {
                 <div className="hidden overflow-x-auto md:block">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="border-b border-border/70 text-[11px] font-bold uppercase tracking-widest text-muted-foreground bg-muted/30">
-                                <th className="px-8 py-5 font-bold">Identity</th>
-                                <th className="px-8 py-5 font-bold">Contact</th>
-                                <th className="px-8 py-5 font-bold">Clearance Role</th>
-                                <th className="px-8 py-5 font-bold">Provisioned</th>
-                                <th className="px-8 py-5 text-right font-bold">Actions</th>
+                            <tr className="border-b border-border/70 text-[11px] font-black uppercase tracking-widest text-muted-foreground bg-muted/30">
+                                <th className="px-8 py-5 font-black">Identity</th>
+                                <th className="px-8 py-5 font-black">Contact</th>
+                                <th className="px-8 py-5 font-black">Clearance Role</th>
+                                <th className="px-8 py-5 font-black">Provisioned</th>
+                                <th className="px-8 py-5 text-right font-black">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
@@ -483,7 +483,7 @@ export default function AdminUsersPage() {
                                         <div className="inline-flex size-16 items-center justify-center rounded-full bg-white/5 mb-4">
                                             <Search className="size-8 text-white/20" />
                                         </div>
-                                        <p className="text-lg font-bold text-white">No records found</p>
+                                        <p className="text-lg font-black text-white">No records found</p>
                                         <p className="text-sm text-white/40 mt-1">Adjust your filters or search query.</p>
                                     </td>
                                 </tr>
@@ -501,14 +501,14 @@ export default function AdminUsersPage() {
                                                             <Image src={user.avatar_url} alt="" width={48} height={48} className="object-cover rounded-full border border-white/10 shadow-lg shrink-0" />
                                                     ) : (
                                                         <div className="flex size-12 shrink-0 items-center justify-center rounded-full border border-white/10 bg-gradient-to-br from-white/10 to-white/5 shadow-inner">
-                                                            <span className="text-sm font-bold text-white/70">
+                                                            <span className="text-sm font-black text-white/70">
                                                                 {user.full_name.substring(0, 2).toUpperCase()}
                                                             </span>
                                                         </div>
                                                     )}
                                                     <div>
                                                         <div className="flex min-w-0 items-center gap-2">
-                                                            <p className="text-sm font-bold text-white group-hover:text-primary transition-colors">{user.full_name}</p>
+                                                            <p className="text-sm font-black text-white group-hover:text-primary transition-colors">{user.full_name}</p>
                                                             <RoleBadge role={user.role} />
                                                         </div>
                                                         <div className="flex items-center gap-1.5 mt-1 text-[11px] font-medium text-white/40">
@@ -527,7 +527,7 @@ export default function AdminUsersPage() {
                                             <td className="px-8 py-5">
                                                 <div className={cn("inline-flex items-center gap-2 rounded-xl border px-3 py-1.5 shadow-inner", roleInfo.bgClass, roleInfo.borderClass)}>
                                                     <RoleIcon className={cn("size-4 shrink-0", roleInfo.colorClass)} />
-                                                    <span className={cn("text-[11px] font-bold uppercase tracking-wider", roleInfo.colorClass)}>
+                                                    <span className={cn("text-[11px] font-black uppercase tracking-wider", roleInfo.colorClass)}>
                                                         {roleInfo.label}
                                                     </span>
                                                 </div>

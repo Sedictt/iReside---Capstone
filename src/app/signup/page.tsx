@@ -247,16 +247,16 @@ export default function SignUpPage() {
                     <CheckCircle2 className="size-12 text-primary" />
                 </div>
                 <div className="space-y-2">
-                    <h2 className="text-3xl font-bold tracking-tight">Application Submitted</h2>
+                    <h2 className="text-3xl font-black tracking-tight">Application Submitted</h2>
                     <p className="text-white/60 font-medium leading-relaxed">
                         Your landlord registration has been submitted successfully. Our system administrator will review your documents and verify your application shortly.
                     </p>
                     <div className="mt-4 p-4 rounded-2xl bg-white/5 border border-white/10 text-sm font-medium text-white/80">
-                        Registration updates will be sent to <strong className="text-white font-bold">{email || "your email"}</strong>
+                        Registration updates will be sent to <strong className="text-white font-black">{email || "your email"}</strong>
                     </div>
                 </div>
                 <div className="pt-4">
-                    <Link href="/login" className="inline-block w-full py-4 bg-primary text-white/87 rounded-xl font-bold hover:bg-primary-dark transition-all shadow-lg hover:shadow-primary/25">
+                    <Link href="/login" className="inline-block w-full py-4 bg-primary text-white/87 rounded-xl font-black hover:bg-primary-dark transition-all shadow-lg hover:shadow-primary/25">
                         Return to Login
                     </Link>
                 </div>
@@ -271,7 +271,7 @@ export default function SignUpPage() {
             {/* Header */}
             <header className="relative z-20 flex items-center justify-between px-8 py-4 border-b border-white/12 bg-[#121212]/80 backdrop-blur-xl shrink-0">
                 <Logo theme="dark" className="h-10 w-36 md:h-12 md:w-44 lg:w-48" />
-                <Link href="/login" className="text-sm font-bold text-white/60 hover:text-white/87 transition-colors">
+                <Link href="/login" className="text-sm font-black text-white/60 hover:text-white/87 transition-colors">
                     Back to Login
                 </Link>
             </header>
@@ -280,7 +280,7 @@ export default function SignUpPage() {
                 <div className="my-auto w-full flex flex-col pb-8">
                 {/* Hero Title Area */}
                 <div className="text-center mb-6 sm:mb-8 space-y-2 sm:space-y-3 animate-in fade-in slide-in-from-bottom-8 duration-700 fill-mode-both shrink-0">
-                    <div className="inline-flex items-center gap-2 px-4 py-1.5 sm:px-5 sm:py-2 rounded-full bg-primary/10 border border-primary/20 text-primary font-bold text-xs sm:text-sm tracking-wide uppercase shadow-[0_0_20px_rgba(109,152,56,0.15)] mb-1">
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 sm:px-5 sm:py-2 rounded-full bg-primary/10 border border-primary/20 text-primary font-black text-xs sm:text-sm tracking-wide uppercase shadow-[0_0_20px_rgba(109,152,56,0.15)] mb-1">
                         <span className="relative flex size-2">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                           <span className="relative inline-flex rounded-full size-2 bg-primary"></span>
@@ -288,7 +288,7 @@ export default function SignUpPage() {
                         Partner Portal
                     </div>
                     
-                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-white drop-shadow-sm pb-1">
+                    <h1 className="text-3xl md:text-4xl font-black tracking-tight text-white drop-shadow-sm pb-1">
                         Landlord Registration
                     </h1>
                 </div>
@@ -309,7 +309,7 @@ export default function SignUpPage() {
                             { step: 3, label: "Documents" }
                         ].map((s) => (
                             <div key={s.step} className="relative flex flex-col items-center gap-2 z-10 w-24">
-                                <div className={`size-10 rounded-full flex items-center justify-center font-bold transition-all duration-500 border-2 relative z-10 ${
+                                <div className={`size-10 rounded-full flex items-center justify-center font-black transition-all duration-500 border-2 relative z-10 ${
                                     currentStep > s.step 
                                         ? "bg-primary border-primary text-[#121212] shadow-[0_0_20px_rgba(109,152,56,0.4)] scale-110" 
                                         : currentStep === s.step 
@@ -318,7 +318,7 @@ export default function SignUpPage() {
                                 }`}>
                                     {currentStep > s.step ? <Check className="size-5" /> : s.step}
                                 </div>
-                                <span className={`text-[10px] font-bold uppercase tracking-widest transition-colors duration-300 relative z-10 text-center ${
+                                <span className={`text-[10px] font-black uppercase tracking-widest transition-colors duration-300 relative z-10 text-center ${
                                     currentStep >= s.step ? "text-white/87" : "text-white/40"
                                 }`}>
                                     {s.label}
@@ -334,23 +334,23 @@ export default function SignUpPage() {
                     {currentStep === 1 && (
                     <section className="bg-[#1E1E1E]/60 backdrop-blur-md rounded-3xl p-6 sm:p-8 shadow-[0_8px_30px_rgba(0,0,0,0.12),inset_0_1px_0_0_rgba(255,255,255,0.05)] relative group transition-all duration-500 animate-in fade-in slide-in-from-right-8 duration-500 flex-1 flex flex-col justify-center">
                         <div className="mb-6">
-                            <h2 className="text-2xl font-bold text-white/87 tracking-tight">Personal Details</h2>
+                            <h2 className="text-2xl font-black text-white/87 tracking-tight">Personal Details</h2>
                             <p className="text-sm text-white/60 mt-1 font-medium">We need this to create your administrative profile.</p>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-1.5 group/input">
-                                <label htmlFor="full-name" className="text-[10px] font-bold uppercase tracking-widest text-white/60 group-focus-within/input:text-primary transition-colors ml-1">Full Legal Name</label>
+                                <label htmlFor="full-name" className="text-[10px] font-black uppercase tracking-widest text-white/60 group-focus-within/input:text-primary transition-colors ml-1">Full Legal Name</label>
                                 <input id="full-name" value={fullName} onChange={e => setFullName(e.target.value)} required type="text" placeholder="e.g. Jane Doe" className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-5 py-3 text-white/87 placeholder-white/20 focus:border-primary focus:bg-primary/5 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-base font-medium shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]" />
                             </div>
                             <div className="space-y-1.5 group/input">
-                                <label htmlFor="phone" className="text-[10px] font-bold uppercase tracking-widest text-white/60 group-focus-within/input:text-primary transition-colors ml-1">Phone Number</label>
+                                <label htmlFor="phone" className="text-[10px] font-black uppercase tracking-widest text-white/60 group-focus-within/input:text-primary transition-colors ml-1">Phone Number</label>
                                 <input id="phone" value={phone} onChange={e => setPhone(e.target.value)} required type="tel" placeholder="+1 (555) 000-0000" className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-5 py-3 text-white/87 placeholder-white/20 focus:border-primary focus:bg-primary/5 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-base font-medium shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]" />
                             </div>
                             
                             {/* Email Verification Row spans 2 cols on md */}
                             <div className="md:col-span-2 space-y-1.5 group/input">
-                                <label htmlFor="email" className="text-[10px] font-bold uppercase tracking-widest text-white/60 group-focus-within/input:text-primary transition-colors ml-1">Email Address</label>
+                                <label htmlFor="email" className="text-[10px] font-black uppercase tracking-widest text-white/60 group-focus-within/input:text-primary transition-colors ml-1">Email Address</label>
                                 <div className="flex flex-col sm:flex-row gap-3">
                                     <input 
                                         id="email"
@@ -367,7 +367,7 @@ export default function SignUpPage() {
                                             type="button" 
                                             onClick={handleSendOTP}
                                             disabled={loading}
-                                            className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm font-bold transition-all whitespace-nowrap text-white/87 active:scale-95 shadow-sm disabled:opacity-50"
+                                            className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm font-black transition-all whitespace-nowrap text-white/87 active:scale-95 shadow-sm disabled:opacity-50"
                                         >
                                             {otpSent ? "Resend Code" : "Verify Email"}
                                         </button>
@@ -389,7 +389,7 @@ export default function SignUpPage() {
                                         <button 
                                             type="button" 
                                             onClick={handleVerifyOTP}
-                                            className="px-6 py-3 bg-primary text-white rounded-xl text-sm font-bold transition-all hover:bg-primary/90 active:scale-95 whitespace-nowrap shadow-[0_0_15px_rgba(109,152,56,0.3)]"
+                                            className="px-6 py-3 bg-primary text-white rounded-xl text-sm font-black transition-all hover:bg-primary/90 active:scale-95 whitespace-nowrap shadow-[0_0_15px_rgba(109,152,56,0.3)]"
                                         >
                                             Verify Code
                                         </button>
@@ -397,7 +397,7 @@ export default function SignUpPage() {
                                 )}
                                 
                                 {otpVerified && (
-                                    <div className="flex items-center gap-2 text-sm text-primary font-bold animate-in fade-in pt-2 ml-1">
+                                    <div className="flex items-center gap-2 text-sm text-primary font-black animate-in fade-in pt-2 ml-1">
                                         <div className="p-1 bg-primary/20 rounded-full">
                                             <Check className="size-3" />
                                         </div>
@@ -413,17 +413,17 @@ export default function SignUpPage() {
                     {currentStep === 2 && (
                     <section className="bg-[#1E1E1E]/60 backdrop-blur-md rounded-3xl p-6 sm:p-8 shadow-[0_8px_30px_rgba(0,0,0,0.12),inset_0_1px_0_0_rgba(255,255,255,0.05)] relative group transition-all duration-500 animate-in fade-in slide-in-from-right-8 duration-500 flex-1 flex flex-col justify-center">
                         <div className="mb-6">
-                            <h2 className="text-2xl font-bold text-white/87 tracking-tight">Primary Property</h2>
+                            <h2 className="text-2xl font-black text-white/87 tracking-tight">Primary Property</h2>
                             <p className="text-sm text-white/60 mt-1 font-medium">Details of the first property you wish to manage.</p>
                         </div>
 
                         <div className="space-y-4">
                             <div className="space-y-1.5 group/input">
-                                <label htmlFor="property-name" className="text-[10px] font-bold uppercase tracking-widest text-white/60 group-focus-within/input:text-primary transition-colors ml-1">Property Name</label>
+                                <label htmlFor="property-name" className="text-[10px] font-black uppercase tracking-widest text-white/60 group-focus-within/input:text-primary transition-colors ml-1">Property Name</label>
                                 <input id="property-name" value={propertyName} onChange={e => setPropertyName(e.target.value)} required type="text" placeholder="e.g. The Grand Residences" className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-5 py-3 text-white/87 placeholder-white/20 focus:border-primary focus:bg-primary/5 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-base font-medium shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]" />
                             </div>
                             <div className="space-y-1.5 group/input">
-                                <label htmlFor="property-address" className="text-[10px] font-bold uppercase tracking-widest text-white/60 group-focus-within/input:text-primary transition-colors ml-1">Complete Address</label>
+                                <label htmlFor="property-address" className="text-[10px] font-black uppercase tracking-widest text-white/60 group-focus-within/input:text-primary transition-colors ml-1">Complete Address</label>
                                 <textarea id="property-address" value={propertyAddress} onChange={e => setPropertyAddress(e.target.value)} required rows={2} placeholder="123 Main St, Suite 400…" className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-5 py-3 text-white/87 placeholder-white/20 focus:border-primary focus:bg-primary/5 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none text-base font-medium leading-relaxed shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]"></textarea>
                             </div>
                         </div>
@@ -434,7 +434,7 @@ export default function SignUpPage() {
                     {currentStep === 3 && (
                     <section className="bg-[#1E1E1E]/60 backdrop-blur-md rounded-3xl p-6 sm:p-8 shadow-[0_8px_30px_rgba(0,0,0,0.12),inset_0_1px_0_0_rgba(255,255,255,0.05)] relative group transition-all duration-500 animate-in fade-in slide-in-from-right-8 duration-500 flex-1 flex flex-col justify-center">
                         <div className="mb-4 sm:mb-6">
-                            <h2 className="text-2xl font-bold text-white/87 tracking-tight">Identity & Credentials</h2>
+                            <h2 className="text-2xl font-black text-white/87 tracking-tight">Identity & Credentials</h2>
                             <p className="text-sm text-white/60 mt-1 font-medium">Upload clear, legible copies to ensure swift approval.</p>
                         </div>
                         <div className="grid grid-cols-2 gap-3 sm:gap-4">
@@ -453,7 +453,7 @@ export default function SignUpPage() {
                                             <div className="relative w-full h-24 mb-2 rounded-lg overflow-hidden border border-white/10 group-hover/upload:scale-105 transition-transform duration-500">
                                                 <Image src={idPreview} alt="ID Preview" fill sizes="(max-width: 768px) 50vw, 200px" className="object-cover" />
                                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/upload:opacity-100 transition-opacity flex items-center justify-center">
-                                                    <span className="text-[8px] font-bold uppercase tracking-widest text-white">Change Image</span>
+                                                    <span className="text-[8px] font-black uppercase tracking-widest text-white">Change Image</span>
                                                 </div>
                                             </div>
                                         ) : (
@@ -461,7 +461,7 @@ export default function SignUpPage() {
                                                 <FileCheck className="size-8 text-amber-500" />
                                             </div>
                                         )}
-                                        <span className="text-xs font-bold text-white/87 block truncate w-full px-2 text-center">{idFile.name}</span>
+                                        <span className="text-xs font-black text-white/87 block truncate w-full px-2 text-center">{idFile.name}</span>
                                         <button 
                                             type="button"
                                             onClick={(e) => {
@@ -479,7 +479,7 @@ export default function SignUpPage() {
                                         {/* CSS ID Illustration */}
                                         <div className="relative w-28 h-16 bg-[#f8f9fa] rounded-lg shadow-lg overflow-hidden mx-auto mb-4 group-hover/upload:scale-110 transition-transform duration-500 border border-zinc-200">
                                             <div className="absolute top-0 left-0 w-full h-3 bg-emerald-600"></div>
-                                            <div className="absolute top-[2px] left-1/2 -translate-x-1/2 text-[3px] text-white/87 font-bold tracking-widest uppercase">Republic ID</div>
+                                            <div className="absolute top-[2px] left-1/2 -translate-x-1/2 text-[3px] text-white/87 font-black tracking-widest uppercase">Republic ID</div>
                                             
                                             <div className="absolute top-5 left-2 w-5 h-7 bg-zinc-200 border border-zinc-300 rounded-sm overflow-hidden flex flex-col items-center justify-end">
                                                 <div className="size-2.5 bg-zinc-400 rounded-full absolute top-1"></div>
@@ -501,13 +501,13 @@ export default function SignUpPage() {
                                                 <div className="size-5 border-[1px] border-emerald-500/20 rounded-full"></div>
                                             </div>
                                         </div>
-                                        <span className="text-base font-bold text-white/87 block">Valid ID</span>
+                                        <span className="text-base font-black text-white/87 block">Valid ID</span>
                                         <span className="text-xs text-white/60 mt-2">PDF, JPG up to 5MB</span>
                                         
                                         {/* Tooltip for accepted IDs */}
                                         <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 p-4 bg-[#1e2330] text-left text-xs text-white/60 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] border border-white/12 opacity-0 invisible group-hover/upload:opacity-100 group-hover/upload:visible transition-all duration-300 z-[60] w-64 pointer-events-none translate-y-2 group-hover/upload:translate-y-0">
                                             <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 size-3 bg-[#1e2330] border-b border-r border-white/12 rotate-45"></div>
-                                            <span className="font-bold text-white/87 block mb-2 text-sm">Accepted Valid IDs:</span>
+                                            <span className="font-black text-white/87 block mb-2 text-sm">Accepted Valid IDs:</span>
                                             <ul className="list-disc pl-4 space-y-1">
                                                 <li>Passport</li>
                                                 <li>Driver&apos;s License</li>
@@ -536,7 +536,7 @@ export default function SignUpPage() {
                                             <div className="relative w-full h-24 mb-2 rounded-lg overflow-hidden border border-white/10 group-hover/upload:scale-105 transition-transform duration-500">
                                                 <Image src={permitPreview} alt="Permit Preview" fill sizes="(max-width: 768px) 50vw, 200px" className="object-cover" />
                                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/upload:opacity-100 transition-opacity flex items-center justify-center">
-                                                    <span className="text-[8px] font-bold uppercase tracking-widest text-white">Change Image</span>
+                                                    <span className="text-[8px] font-black uppercase tracking-widest text-white">Change Image</span>
                                                 </div>
                                             </div>
                                         ) : (
@@ -544,7 +544,7 @@ export default function SignUpPage() {
                                                 <FileCheck className="size-8 text-amber-500" />
                                             </div>
                                         )}
-                                        <span className="text-xs font-bold text-white/87 block truncate w-full px-2 text-center">{permitFile.name}</span>
+                                        <span className="text-xs font-black text-white/87 block truncate w-full px-2 text-center">{permitFile.name}</span>
                                         <button 
                                             type="button"
                                             onClick={(e) => {
@@ -564,7 +564,7 @@ export default function SignUpPage() {
                                             <div className="size-6 rounded-full border border-blue-800/30 flex items-center justify-center mb-1">
                                                 <div className="size-3 bg-blue-800/20 rounded-full"></div>
                                             </div>
-                                            <div className="text-[4px] font-bold text-blue-900 text-center uppercase tracking-widest leading-tight">City<br/>Permit</div>
+                                            <div className="text-[4px] font-black text-blue-900 text-center uppercase tracking-widest leading-tight">City<br/>Permit</div>
                                             <div className="w-10 h-[1px] bg-blue-900/30 mt-1 mb-1.5"></div>
                                             
                                             <div className="w-full space-y-1 mt-1">
@@ -580,7 +580,7 @@ export default function SignUpPage() {
                                                 <div className="w-8 h-[2px] bg-blue-900/50 rounded-full"></div>
                                             </div>
                                         </div>
-                                        <span className="text-base font-bold text-white/87 block">Business Permit (Paper)</span>
+                                        <span className="text-base font-black text-white/87 block">Business Permit (Paper)</span>
                                         <span className="text-xs text-white/60 mt-2">PDF, JPG up to 5MB</span>
                                     </>
                                 )}
@@ -601,7 +601,7 @@ export default function SignUpPage() {
                                             <div className="relative w-full h-24 mb-2 rounded-lg overflow-hidden border border-white/10 group-hover/upload:scale-105 transition-transform duration-500">
                                                 <Image src={permitCardPreview} alt="Card Preview" fill sizes="(max-width: 768px) 50vw, 200px" className="object-cover" />
                                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/upload:opacity-100 transition-opacity flex items-center justify-center">
-                                                    <span className="text-[8px] font-bold uppercase tracking-widest text-white">Change Image</span>
+                                                    <span className="text-[8px] font-black uppercase tracking-widest text-white">Change Image</span>
                                                 </div>
                                             </div>
                                         ) : (
@@ -609,7 +609,7 @@ export default function SignUpPage() {
                                                 <FileCheck className="size-8 text-amber-500" />
                                             </div>
                                         )}
-                                        <span className="text-xs font-bold text-white/87 block truncate w-full px-2 text-center">{permitCardFile.name}</span>
+                                        <span className="text-xs font-black text-white/87 block truncate w-full px-2 text-center">{permitCardFile.name}</span>
                                         <button 
                                             type="button"
                                             onClick={(e) => {
@@ -630,12 +630,12 @@ export default function SignUpPage() {
                                             <div className="absolute bottom-0 right-0 w-24 h-8 bg-gradient-to-tl from-cyan-500 to-blue-500" style={{ clipPath: 'polygon(100% 100%, 0 100%, 100% 0)' }}></div>
                                             
                                             <div className="absolute top-1.5 left-2 flex flex-col z-10 text-left">
-                                                <span className="text-[3px] font-bold text-white/60 leading-none">City Government</span>
-                                                <span className="text-[5px] font-bold text-blue-800 leading-none mt-[1px]">BUSINESS PERMIT</span>
-                                                <span className="text-[4px] font-bold text-blue-600 leading-none mt-[1px]">2026</span>
+                                                <span className="text-[3px] font-black text-white/60 leading-none">City Government</span>
+                                                <span className="text-[5px] font-black text-blue-800 leading-none mt-[1px]">BUSINESS PERMIT</span>
+                                                <span className="text-[4px] font-black text-blue-600 leading-none mt-[1px]">2026</span>
                                             </div>
                                             
-                                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 text-[18px] font-bold text-blue-900 tracking-tighter w-full text-center drop-shadow-sm">
+                                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 text-[18px] font-black text-blue-900 tracking-tighter w-full text-center drop-shadow-sm">
                                                 C-09241
                                             </div>
                                             
@@ -658,9 +658,9 @@ export default function SignUpPage() {
                                                 </div>
                                             </div>
                                         </div>
-                                        <span className="text-base font-bold text-white/87 block">Business Permit (Card)</span>
+                                        <span className="text-base font-black text-white/87 block">Business Permit (Card)</span>
                                         <span className="text-xs text-white/60 mt-2">PDF, JPG up to 5MB</span>
-                                        <span className="text-[10px] text-amber-500 mt-2 font-bold flex items-center justify-center gap-1 bg-amber-500/10 px-2 py-0.5 rounded-full"><Eye className="size-3"/> Publicly Visible</span>
+                                        <span className="text-[10px] text-amber-500 mt-2 font-black flex items-center justify-center gap-1 bg-amber-500/10 px-2 py-0.5 rounded-full"><Eye className="size-3"/> Publicly Visible</span>
                                     </>
                                 )}
                             </div>
@@ -680,7 +680,7 @@ export default function SignUpPage() {
                                                 <div className="relative w-full h-24 mb-2 rounded-lg overflow-hidden border border-white/10 group-hover/upload:scale-105 transition-transform duration-500">
                                                     <Image src={ownershipPreview} alt="Ownership Preview" fill sizes="(max-width: 768px) 50vw, 200px" className="object-cover" />
                                                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/upload:opacity-100 transition-opacity flex items-center justify-center">
-                                                        <span className="text-[8px] font-bold uppercase tracking-widest text-white">Change Image</span>
+                                                        <span className="text-[8px] font-black uppercase tracking-widest text-white">Change Image</span>
                                                     </div>
                                                 </div>
                                             ) : (
@@ -688,7 +688,7 @@ export default function SignUpPage() {
                                                     <FileCheck className="size-8 text-amber-500" />
                                                 </div>
                                             )}
-                                            <span className="text-xs font-bold text-white/87 block truncate w-full px-2 text-center">{ownershipFile.name}</span>
+                                            <span className="text-xs font-black text-white/87 block truncate w-full px-2 text-center">{ownershipFile.name}</span>
                                             <button 
                                                 type="button"
                                                 onClick={(e) => {
@@ -706,7 +706,7 @@ export default function SignUpPage() {
                                         {/* CSS Proof of Ownership Illustration */}
                                         <div className="relative w-20 h-24 bg-[#fdfbf7] rounded-sm shadow-lg overflow-hidden mx-auto mb-4 group-hover/upload:scale-110 transition-transform duration-500 border border-zinc-300 p-2.5 flex flex-col">
                                             <div className="absolute top-1 left-1 right-1 h-[2px] border-t border-b border-amber-700/30"></div>
-                                            <div className="text-[4px] font-bold text-amber-900 text-center uppercase tracking-widest mt-1">Title of Deed</div>
+                                            <div className="text-[4px] font-black text-amber-900 text-center uppercase tracking-widest mt-1">Title of Deed</div>
                                             <div className="w-4 h-[1px] bg-amber-700/50 mx-auto mt-[1px] mb-1.5"></div>
                                             
                                             <div className="space-y-1 flex-1">
@@ -727,7 +727,7 @@ export default function SignUpPage() {
                                                 </div>
                                             </div>
                                         </div>
-                                        <span className="text-base font-bold text-white/87 block">Proof of Ownership</span>
+                                        <span className="text-base font-black text-white/87 block">Proof of Ownership</span>
                                         <span className="text-xs text-white/60 mt-2">PDF, JPG up to 5MB</span>
                                     </>
                                 )}
@@ -744,7 +744,7 @@ export default function SignUpPage() {
                                 onClick={() => {
                                     setCurrentStep(s => s - 1);
                                 }}
-                                className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-white/5 border border-white/10 text-white/87 font-bold text-sm hover:bg-white/10 transition-all active:scale-95"
+                                className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-white/5 border border-white/10 text-white/87 font-black text-sm hover:bg-white/10 transition-all active:scale-95"
                             >
                                 Back
                             </button>
@@ -757,7 +757,7 @@ export default function SignUpPage() {
                                 (currentStep === 1 && !otpVerified) ||
                                 (currentStep === 3 && [idFile, permitFile, permitCardFile, ownershipFile].filter(Boolean).length < 3)
                             }
-                            className={`group relative flex w-full items-center justify-center gap-2 rounded-2xl bg-white text-black py-3.5 px-6 font-bold text-sm transition-all duration-300 hover:bg-zinc-100 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden ${currentStep === 1 ? "sm:w-full" : "sm:flex-1"}`}
+                            className={`group relative flex w-full items-center justify-center gap-2 rounded-2xl bg-white text-black py-3.5 px-6 font-black text-sm transition-all duration-300 hover:bg-zinc-100 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden ${currentStep === 1 ? "sm:w-full" : "sm:flex-1"}`}
                         >
                             <span className="relative z-10 flex items-center gap-2 tracking-tight">
                                 {loading ? "Processing…" : currentStep === 3 ? "Submit Application" : "Continue"}
@@ -777,7 +777,7 @@ export default function SignUpPage() {
                                 className="mt-0.5 size-4 shrink-0 rounded border-white/20 bg-white/5 text-primary focus:ring-primary focus:ring-offset-0 focus:ring-offset-[#121212] cursor-pointer"
                             />
                             <label htmlFor="terms" className="text-[11px] font-medium text-white/60 cursor-pointer select-none leading-relaxed">
-                                I verify that the information provided is accurate. I agree to the <button className="text-white/87 font-bold hover:text-primary transition-colors cursor-pointer bg-transparent border-0 p-0">Terms of Service</button> and <button className="text-white/87 font-bold hover:text-primary transition-colors cursor-pointer bg-transparent border-0 p-0">Privacy Policy</button>.
+                                I verify that the information provided is accurate. I agree to the <button className="text-white/87 font-black hover:text-primary transition-colors cursor-pointer bg-transparent border-0 p-0">Terms of Service</button> and <button className="text-white/87 font-black hover:text-primary transition-colors cursor-pointer bg-transparent border-0 p-0">Privacy Policy</button>.
                             </label>
                         </div>
                     )}

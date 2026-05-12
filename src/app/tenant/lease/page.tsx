@@ -202,7 +202,7 @@ const [renewalRequest, setRenewalRequest] = useState<{
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-muted-foreground">
                 <Loader2 className="size-8 animate-spin text-primary" />
-                <p className="text-xs font-bold uppercase tracking-widest">Validating Lease Registry...</p>
+                <p className="text-xs font-black uppercase tracking-widest">Validating Lease Registry...</p>
             </div>
         );
     }
@@ -214,12 +214,12 @@ const [renewalRequest, setRenewalRequest] = useState<{
                     <FileSearch className="size-10" />
                 </div>
                 <div>
-                    <h2 className="text-2xl font-bold text-foreground tracking-tight">Registry Empty</h2>
+                    <h2 className="text-2xl font-black text-foreground tracking-tight">Registry Empty</h2>
                     <p className="text-muted-foreground mt-2 text-sm max-w-md mx-auto">
                         We couldn&apos;t find an active lease associated with your profile. This usually happens if your move-in is still pending approval.
                     </p>
                 </div>
-                <Link href="/search" className="px-8 py-4 bg-primary hover:bg-primary-dark text-white font-bold uppercase tracking-widest text-[10px] rounded-2xl shadow-lg shadow-primary/20 transition-all">
+                <Link href="/search" className="px-8 py-4 bg-primary hover:bg-primary-dark text-white font-black uppercase tracking-widest text-[10px] rounded-2xl shadow-lg shadow-primary/20 transition-all">
                     Discover Properties
                 </Link>
             </div>
@@ -250,11 +250,11 @@ const [renewalRequest, setRenewalRequest] = useState<{
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                        <h1 className="text-4xl font-bold text-foreground tracking-tighter">
+                        <h1 className="text-4xl font-black text-foreground tracking-tighter">
                             Lease Hub
                         </h1>
                         {(previewDays || moveOutPreviewStatus) && (
-                            <div className="px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-[9px] font-bold text-amber-600 uppercase tracking-widest animate-pulse">
+                            <div className="px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-[9px] font-black text-amber-600 uppercase tracking-widest animate-pulse">
                                 Preview Mode: {previewDays ? `${previewDays} Days` : `Move-Out ${moveOutPreviewStatus}`}
                             </div>
                         )}
@@ -266,14 +266,14 @@ const [renewalRequest, setRenewalRequest] = useState<{
 
                 <div className="bg-card border border-border rounded-[1.5rem] p-3 shadow-sm flex items-center gap-6 ring-1 ring-primary/5">
                     <div className="px-1 border-r border-border/50">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-0.5">Contract Status</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Contract Status</p>
                         <div className="flex items-center gap-2">
                             <div className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                            <p className="text-sm font-bold text-foreground uppercase tracking-wider">Active</p>
+                            <p className="text-sm font-black text-foreground uppercase tracking-wider">Active</p>
                         </div>
                     </div>
                     <div className="px-1">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-0.5">Lease Hash</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Lease Hash</p>
                         <p className="text-sm font-mono text-muted-foreground">0x{shortHash}</p>
                     </div>
                 </div>
@@ -286,7 +286,7 @@ const [renewalRequest, setRenewalRequest] = useState<{
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
                         className={cn(
-                            "flex items-center gap-2 px-7 py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all shrink-0",
+                            "flex items-center gap-2 px-7 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all shrink-0",
                             activeTab === tab.id 
                                 ? "bg-card text-primary shadow-sm border border-border" 
                                 : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -322,17 +322,17 @@ const [renewalRequest, setRenewalRequest] = useState<{
                                     <div className="relative z-10">
                                         <div className="flex justify-between items-start mb-8">
                                             <div>
-                                                <p className="text-[10px] text-primary font-bold uppercase tracking-[0.2em] mb-1">Source of Truth</p>
-                                                <h2 className="text-4xl font-bold text-foreground tracking-tighter">Master Lease Agreement</h2>
+                                                <p className="text-[10px] text-primary font-black uppercase tracking-[0.2em] mb-1">Source of Truth</p>
+                                                <h2 className="text-4xl font-black text-foreground tracking-tighter">Master Lease Agreement</h2>
                                                 <p className="text-muted-foreground font-medium text-sm mt-1">{lease.unit.property.name} • Unit {lease.unit.name}</p>
                                             </div>
                                             <div className="flex gap-2">
-                                                <button className="h-10 px-4 rounded-xl border border-border bg-background text-[10px] font-bold uppercase tracking-widest hover:bg-muted transition-all flex items-center gap-2 shadow-sm">
+                                                <button className="h-10 px-4 rounded-xl border border-border bg-background text-[10px] font-black uppercase tracking-widest hover:bg-muted transition-all flex items-center gap-2 shadow-sm">
                                                     <Download className="size-3" /> Download PDF
                                                 </button>
                                                 <button 
                                                     onClick={() => setIsModalOpen(true)}
-                                                    className="h-10 px-4 rounded-xl bg-primary text-white text-[10px] font-bold uppercase tracking-widest hover:bg-primary-dark transition-all flex items-center gap-2 shadow-lg shadow-primary/10"
+                                                    className="h-10 px-4 rounded-xl bg-primary text-white text-[10px] font-black uppercase tracking-widest hover:bg-primary-dark transition-all flex items-center gap-2 shadow-lg shadow-primary/10"
                                                 >
                                                     <FileText className="size-3" /> View Lease
                                                 </button>
@@ -341,20 +341,20 @@ const [renewalRequest, setRenewalRequest] = useState<{
 
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
                                             <div>
-                                                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Start Date</p>
-                                                <p className="text-base font-bold text-foreground">{formatDate(lease.start_date)}</p>
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Start Date</p>
+                                                <p className="text-base font-black text-foreground">{formatDate(lease.start_date)}</p>
                                             </div>
                                             <div>
-                                                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">End Date</p>
-                                                <p className="text-base font-bold text-foreground">{formatDate(lease.end_date)}</p>
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">End Date</p>
+                                                <p className="text-base font-black text-foreground">{formatDate(lease.end_date)}</p>
                                             </div>
                                             <div>
-                                                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Monthly Rent</p>
-                                                <p className="text-base font-bold text-primary">{formatCurrency(lease.monthly_rent)}</p>
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Monthly Rent</p>
+                                                <p className="text-base font-black text-primary">{formatCurrency(lease.monthly_rent)}</p>
                                             </div>
                                             <div>
-                                                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Security Deposit</p>
-                                                <p className="text-base font-bold text-foreground">{formatCurrency(lease.security_deposit)}</p>
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Security Deposit</p>
+                                                <p className="text-base font-black text-foreground">{formatCurrency(lease.security_deposit)}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -365,12 +365,12 @@ const [renewalRequest, setRenewalRequest] = useState<{
                                                 <CheckCircle2 className="size-5" />
                                             </div>
                                             <div>
-                                                <p className="text-xs font-bold text-foreground">Legally Signed</p>
-                                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Signed on {formatDate(lease.signed_at || lease.start_date)}</p>
+                                                <p className="text-xs font-black text-foreground">Legally Signed</p>
+                                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Signed on {formatDate(lease.signed_at || lease.start_date)}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-4">
-                                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest text-right">Encrypted & Stored in Vault</p>
+                                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest text-right">Encrypted & Stored in Vault</p>
                                             <div className="size-2 rounded-full bg-emerald-500" />
                                         </div>
                                     </div>
@@ -395,12 +395,12 @@ const [renewalRequest, setRenewalRequest] = useState<{
                                             {renewalRequest.status === "rejected" && <X className="size-5" />}
                                         </div>
                                         <div>
-                                            <p className="text-sm font-bold text-foreground">
+                                            <p className="text-sm font-black text-foreground">
                                                 {renewalRequest.status === "pending" && "Renewal Request Pending"}
                                                 {renewalRequest.status === "approved" && "Renewal Approved!"}
                                                 {renewalRequest.status === "rejected" && "Renewal Request Rejected"}
                                             </p>
-                                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                                                 {renewalRequest.status === "pending" && "Awaiting landlord response"}
                                                 {renewalRequest.status === "approved" && "New lease ready for signing"}
                                                 {renewalRequest.status === "rejected" && (renewalRequest.landlord_notes || "Contact your landlord")}
@@ -415,7 +415,7 @@ const [renewalRequest, setRenewalRequest] = useState<{
                                         <div className="absolute top-0 right-0 p-6 opacity-[0.02] select-none pointer-events-none">
                                             <Clock className="size-24" />
                                         </div>
-                                        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.2em] mb-6">Residency Lifecycle</p>
+                                        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mb-6">Residency Lifecycle</p>
                                         
                                         <div className="space-y-8">
                                             <div className="relative">
@@ -426,10 +426,10 @@ const [renewalRequest, setRenewalRequest] = useState<{
                                                     />
                                                 </div>
                                                 <div className="flex justify-between items-center mt-3">
-                                                    <p className="text-[10px] font-bold text-foreground uppercase tracking-widest">Day {progressData.dayCount}</p>
+                                                    <p className="text-[10px] font-black text-foreground uppercase tracking-widest">Day {progressData.dayCount}</p>
                                                     <div className="flex items-center gap-2">
                                                         <Clock className="size-3 text-primary" />
-                                                        <p className="text-[10px] font-bold text-primary uppercase tracking-widest">{progressData.daysRemaining} Days Remaining</p>
+                                                        <p className="text-[10px] font-black text-primary uppercase tracking-widest">{progressData.daysRemaining} Days Remaining</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -440,8 +440,8 @@ const [renewalRequest, setRenewalRequest] = useState<{
                                                         <CheckCircle className="size-5" />
                                                     </div>
                                                     <div>
-                                                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">Move-in Verified</p>
-                                                        <p className="text-sm font-bold text-foreground">{formatDate(lease.start_date)}</p>
+                                                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-0.5">Move-in Verified</p>
+                                                        <p className="text-sm font-black text-foreground">{formatDate(lease.start_date)}</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-4">
@@ -449,8 +449,8 @@ const [renewalRequest, setRenewalRequest] = useState<{
                                                         <History className="size-5" />
                                                     </div>
                                                     <div>
-                                                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">Move-out Target</p>
-                                                        <p className="text-sm font-bold text-foreground">{formatDate(lease.end_date)}</p>
+                                                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-0.5">Move-out Target</p>
+                                                        <p className="text-sm font-black text-foreground">{formatDate(lease.end_date)}</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -476,15 +476,15 @@ const [renewalRequest, setRenewalRequest] = useState<{
                                         <div className="absolute top-0 right-0 p-8 opacity-[0.03] select-none pointer-events-none">
                                             <Building2 className="size-32" />
                                         </div>
-                                        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.2em] mb-4">Unit Specifications</p>
+                                        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mb-4">Unit Specifications</p>
                                         <div className="grid grid-cols-2 gap-y-8">
                                             <div className="flex items-center gap-4">
                                                 <div className="size-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground">
                                                     <Maximize className="size-5" />
                                                 </div>
                                                 <div>
-                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-0.5">Floor Area</p>
-                                                    <p className="text-base font-bold text-foreground">{lease.unit.sqft ? `${lease.unit.sqft} SQFT` : 'Contact for size'}</p>
+                                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Floor Area</p>
+                                                    <p className="text-base font-black text-foreground">{lease.unit.sqft ? `${lease.unit.sqft} SQFT` : 'Contact for size'}</p>
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-4">
@@ -492,8 +492,8 @@ const [renewalRequest, setRenewalRequest] = useState<{
                                                     <Layers className="size-5" />
                                                 </div>
                                                 <div>
-                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-0.5">Level</p>
-                                                    <p className="text-base font-bold text-foreground">Floor {lease.unit.floor}</p>
+                                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Level</p>
+                                                    <p className="text-base font-black text-foreground">Floor {lease.unit.floor}</p>
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-4">
@@ -501,8 +501,8 @@ const [renewalRequest, setRenewalRequest] = useState<{
                                                     <Bed className="size-5" />
                                                 </div>
                                                 <div>
-                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-0.5">Bedrooms</p>
-                                                    <p className="text-base font-bold text-foreground">{lease.unit.beds} Bedroom</p>
+                                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Bedrooms</p>
+                                                    <p className="text-base font-black text-foreground">{lease.unit.beds} Bedroom</p>
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-4">
@@ -510,8 +510,8 @@ const [renewalRequest, setRenewalRequest] = useState<{
                                                     <Bath className="size-5" />
                                                 </div>
                                                 <div>
-                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-0.5">Bathrooms</p>
-                                                    <p className="text-base font-bold text-foreground">{lease.unit.baths} Private</p>
+                                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Bathrooms</p>
+                                                    <p className="text-base font-black text-foreground">{lease.unit.baths} Private</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -525,8 +525,8 @@ const [renewalRequest, setRenewalRequest] = useState<{
                                                     <Building2 className="size-6" />
                                                 </div>
                                                 <div>
-                                                    <h4 className="text-lg font-bold text-foreground tracking-tight">Building Amenities</h4>
-                                                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mt-0.5">Exclusive Residency Benefits</p>
+                                                    <h4 className="text-lg font-black text-foreground tracking-tight">Building Amenities</h4>
+                                                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-0.5">Exclusive Residency Benefits</p>
                                                 </div>
                                             </div>
                                             <PropertyAmenities amenities={lease.unit.property.amenities || []} />
@@ -536,15 +536,15 @@ const [renewalRequest, setRenewalRequest] = useState<{
 
                                 {/* House Rules Section */}
                                 <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm ring-1 ring-border">
-                                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.2em] mb-6">Building Regulations</p>
+                                    <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mb-6">Building Regulations</p>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
                                         {lease.unit.property.house_rules.length > 0 ? (
                                             lease.unit.property.house_rules.map((rule, i) => (
                                                 <div key={rule} className="flex items-start gap-4 group">
                                                     <div className="size-6 rounded-lg bg-primary/5 border border-primary/10 flex items-center justify-center text-primary shrink-0 mt-0.5 group-hover:bg-primary group-hover:text-white transition-all">
-                                                        <p className="text-[10px] font-bold">{i + 1}</p>
+                                                        <p className="text-[10px] font-black">{i + 1}</p>
                                                     </div>
-                                                    <p className="text-xs font-bold text-foreground leading-relaxed">{rule}</p>
+                                                    <p className="text-xs font-black text-foreground leading-relaxed">{rule}</p>
                                                 </div>
                                             ))
                                         ) : (
@@ -560,9 +560,9 @@ const [renewalRequest, setRenewalRequest] = useState<{
                                 {/* Service Requests Grid */}
                                 <div className="space-y-6">
                                     <div className="flex items-center justify-between px-1">
-                                        <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground">Operational Requests</h3>
+                                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">Operational Requests</h3>
                                         <div className="h-px flex-1 bg-border/50 mx-6 hidden md:block" />
-                                        <div className="flex items-center gap-2 text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
+                                        <div className="flex items-center gap-2 text-[9px] font-black text-muted-foreground uppercase tracking-widest">
                                             <Shield className="size-3" /> Managed by Protocol
                                         </div>
                                     </div>
@@ -601,8 +601,8 @@ const [renewalRequest, setRenewalRequest] = useState<{
                                         
                                         <div className="space-y-4 mb-10">
                                             <div>
-                                                <h3 className="text-3xl font-bold text-foreground tracking-tighter">{lease.landlord?.full_name || "Your Property Manager"}</h3>
-                                                <p className="text-[10px] font-bold text-primary uppercase tracking-[0.4em] mt-2 flex items-center justify-center gap-2">
+                                                <h3 className="text-3xl font-black text-foreground tracking-tighter">{lease.landlord?.full_name || "Your Property Manager"}</h3>
+                                                <p className="text-[10px] font-black text-primary uppercase tracking-[0.4em] mt-2 flex items-center justify-center gap-2">
                                                     <ShieldCheck className="size-4" /> Landlord
                                                 </p>
                                             </div>
@@ -612,7 +612,7 @@ const [renewalRequest, setRenewalRequest] = useState<{
                                         </div>
 
                                         <div className="w-full max-w-sm mx-auto">
-                                            <Link href="/tenant/messages" className="w-full py-5 rounded-2xl bg-primary text-white text-[11px] font-bold uppercase tracking-widest shadow-xl shadow-primary/20 hover:bg-primary-dark hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3">
+                                            <Link href="/tenant/messages" className="w-full py-5 rounded-2xl bg-primary text-white text-[11px] font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:bg-primary-dark hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3">
                                                 <MessageSquare className="size-5" /> Send a Message
                                             </Link>
                                         </div>
@@ -629,11 +629,11 @@ const [renewalRequest, setRenewalRequest] = useState<{
                             <div className="size-12 rounded-2xl bg-background border border-border flex items-center justify-center text-muted-foreground mb-4">
                                 <Building2 className="size-6" />
                             </div>
-                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-1">Assigned Unit</p>
-                            <p className="text-lg font-bold text-foreground tracking-tight">{lease.unit.name}</p>
-                            <p className="text-[10px] text-muted-foreground font-bold mt-1 uppercase tracking-widest">{lease.unit.property.name}</p>
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-1">Assigned Unit</p>
+                            <p className="text-lg font-black text-foreground tracking-tight">{lease.unit.name}</p>
+                            <p className="text-[10px] text-muted-foreground font-black mt-1 uppercase tracking-widest">{lease.unit.property.name}</p>
                             <div className="mt-6 pt-6 border-t border-border/50 w-full">
-                                <Link href="/tenant/dashboard" className="text-[9px] font-bold uppercase tracking-widest text-primary hover:underline flex items-center justify-center gap-2">
+                                <Link href="/tenant/dashboard" className="text-[9px] font-black uppercase tracking-widest text-primary hover:underline flex items-center justify-center gap-2">
                                     Return to Dashboard <ArrowUpRight className="size-3" />
                                 </Link>
                             </div>
@@ -659,7 +659,7 @@ export default function LeasesPage() {
         <Suspense fallback={
             <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-muted-foreground">
                 <Loader2 className="size-8 animate-spin text-primary" />
-                <p className="text-xs font-bold uppercase tracking-widest">Initializing Vault...</p>
+                <p className="text-xs font-black uppercase tracking-widest">Initializing Vault...</p>
             </div>
         }>
             <LeaseHubContent />

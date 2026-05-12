@@ -114,8 +114,8 @@ export function LandlordQuestBoard({ isOpen, onClose }: LandlordQuestBoardProps)
                                         <Rocket className="size-6" />
                                     </div>
                                     <div>
-                                        <h2 className="text-xl font-bold tracking-tight text-foreground">Mission Control</h2>
-                                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">Operational Roadmap</p>
+                                        <h2 className="text-xl font-black tracking-tight text-foreground">Mission Control</h2>
+                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Operational Roadmap</p>
                                     </div>
                                 </div>
                                 <button
@@ -159,14 +159,14 @@ export function LandlordQuestBoard({ isOpen, onClose }: LandlordQuestBoardProps)
                                                     {isDone ? (
                                                         <CheckCircle2 className="size-5 text-emerald-500" />
                                                     ) : (
-                                                        <span className="text-[10px] font-bold tracking-widest text-primary bg-primary/10 px-2 py-1 rounded-lg">
+                                                        <span className="text-[10px] font-black tracking-widest text-primary bg-primary/10 px-2 py-1 rounded-lg">
                                                             {progress}%
                                                         </span>
                                                     )}
                                                 </div>
 
                                                 <div className="space-y-2 mb-6">
-                                                    <h3 className="text-sm font-bold tracking-tight text-foreground">{quest.title}</h3>
+                                                    <h3 className="text-sm font-black tracking-tight text-foreground">{quest.title}</h3>
                                                     <p className="text-[10px] leading-relaxed text-muted-foreground/70">
                                                         {quest.description}
                                                     </p>
@@ -187,7 +187,7 @@ export function LandlordQuestBoard({ isOpen, onClose }: LandlordQuestBoardProps)
                                                     <button
                                                         onClick={() => handleStartQuest(quest.id)}
                                                         className={cn(
-                                                            "flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-[10px] font-bold uppercase tracking-widest transition-all",
+                                                            "flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-[10px] font-black uppercase tracking-widest transition-all",
                                                             isDone
                                                                 ? "bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20"
                                                                 : "bg-white/5 text-foreground hover:bg-primary hover:text-primary-foreground"

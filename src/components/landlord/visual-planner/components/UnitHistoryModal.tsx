@@ -63,7 +63,7 @@ export const UnitHistoryModal = ({
                                     <span className="material-icons-round text-2xl">history</span>
                                 </div>
                                 <div>
-                                    <h2 className="text-2xl font-bold tracking-tight text-foreground">
+                                    <h2 className="text-2xl font-black tracking-tight text-foreground">
                                         Unit {unit.name} History
                                     </h2>
                                     <p className="text-sm font-medium text-muted-foreground">Full audit trail and historical logs</p>
@@ -75,13 +75,13 @@ export const UnitHistoryModal = ({
                             <div className="flex gap-2 p-1.5 rounded-2xl bg-muted w-fit">
                                 <button 
                                     onClick={() => setActiveTab("tenants")}
-                                    className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === "tenants" ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                    className={`px-6 py-2 rounded-xl text-sm font-black transition-all ${activeTab === "tenants" ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                                 >
                                     Tenant History
                                 </button>
                                 <button 
                                     onClick={() => setActiveTab("maintenance")}
-                                    className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === "maintenance" ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                    className={`px-6 py-2 rounded-xl text-sm font-black transition-all ${activeTab === "maintenance" ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                                 >
                                     Maintenance
                                 </button>
@@ -95,21 +95,21 @@ export const UnitHistoryModal = ({
                                         <div key={item.id} className="p-4 rounded-2xl border border-border bg-muted/30 hover:bg-muted/50 transition-colors">
                                             <div className="flex items-center justify-between mb-3">
                                                 <div className="flex items-center gap-3">
-                                                    <div className={`size-10 rounded-full ${item.avatarBg} flex items-center justify-center text-white font-bold`}>
+                                                    <div className={`size-10 rounded-full ${item.avatarBg} flex items-center justify-center text-white font-black`}>
                                                         {item.name.charAt(0)}
                                                     </div>
                                                     <div>
-                                                        <p className="font-bold">{item.name}</p>
+                                                        <p className="font-black">{item.name}</p>
                                                         <p className="text-xs text-muted-foreground">{item.leaseStart} to {item.leaseEnd}</p>
                                                     </div>
                                                 </div>
-                                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${item.status === 'Completed' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'}`}>
+                                                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${item.status === 'Completed' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'}`}>
                                                     {item.status}
                                                 </span>
                                             </div>
                                             <div className="flex items-center justify-between pt-3 border-t border-border/50">
                                                 <span className="text-xs text-muted-foreground">Monthly Rent</span>
-                                                <span className="font-mono font-bold text-primary">Ã¢â€šÂ±{item.rent.toLocaleString()}</span>
+                                                <span className="font-mono font-black text-primary">Ã¢â€šÂ±{item.rent.toLocaleString()}</span>
                                             </div>
                                         </div>
                                     ))}
@@ -121,16 +121,16 @@ export const UnitHistoryModal = ({
                                             <div className="flex items-center justify-between mb-2">
                                                 <div className="flex items-center gap-2">
                                                     <Wrench className="size-4 text-primary" />
-                                                    <p className="font-bold">{item.title}</p>
+                                                    <p className="font-black">{item.title}</p>
                                                 </div>
                                                 <span className="text-xs font-mono text-muted-foreground">{item.date}</span>
                                             </div>
                                             <p className="text-sm text-muted-foreground mb-3">{item.description}</p>
                                             <div className="flex items-center justify-between pt-3 border-t border-border/50">
-                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-500`}>
+                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-500`}>
                                                     {item.status}
                                                 </span>
-                                                <span className="font-mono font-bold">Ã¢â€šÂ±{item.cost.toLocaleString()}</span>
+                                                <span className="font-mono font-black">Ã¢â€šÂ±{item.cost.toLocaleString()}</span>
                                             </div>
                                         </div>
                                     ))}

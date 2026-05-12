@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useReducer } from "react";
 import Link from "next/link";
 import {
     AlertTriangle,
@@ -94,7 +94,7 @@ function ActionSummaryBar({ summaries }: { summaries: ActionSummary[] }) {
             {summaries.map((summary) => (
                 <div 
                     key={summary.label} 
-                    className="group flex shrink-0 items-center gap-2 rounded-2xl border border-white/10 bg-card/70 px-4 py-2 text-xs font-bold transition-all hover:bg-card"
+                    className="group flex shrink-0 items-center gap-2 rounded-2xl border border-white/10 bg-card/70 px-4 py-2 text-xs font-black transition-all hover:bg-card"
                 >
                     <summary.icon className="size-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
                     <span className="text-muted-foreground">{summary.label}:</span>
@@ -126,11 +126,11 @@ function ActionItemCard({ action }: { action: ActionItem }) {
                     </div>
                     <div className="min-w-0">
                         <div className="mb-1.5 flex flex-wrap items-center gap-3">
-                            <h3 className="text-base font-bold tracking-tight text-foreground transition-colors group-hover:text-primary">
+                            <h3 className="text-base font-black tracking-tight text-foreground transition-colors group-hover:text-primary">
                                 {action.title}
                             </h3>
                             <span className={cn(
-                                "rounded-full border px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-widest", 
+                                "rounded-full border px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest", 
                                 toneClasses[action.tone]
                             )}>
                                 {action.tone}
@@ -139,7 +139,7 @@ function ActionItemCard({ action }: { action: ActionItem }) {
                         <p className="text-sm font-medium text-muted-foreground leading-relaxed">
                             {action.detail}
                         </p>
-                        <div className="mt-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                        <div className="mt-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
                             <Clock className="size-3" />
                             {action.meta}
                         </div>
@@ -148,7 +148,7 @@ function ActionItemCard({ action }: { action: ActionItem }) {
 
                 <Link
                     href={action.href}
-                    className="group/btn inline-flex items-center gap-3 self-start rounded-xl bg-foreground px-6 py-3 text-sm font-bold tracking-tight text-background transition-all hover:brightness-110 active:scale-95 sm:self-center"
+                    className="group/btn inline-flex items-center gap-3 self-start rounded-xl bg-foreground px-6 py-3 text-sm font-black tracking-tight text-background transition-all hover:brightness-110 active:scale-95 sm:self-center"
                 >
                     {action.cta}
                     <ArrowRight className="size-4 transition-transform group-hover/btn:translate-x-1" />
@@ -173,7 +173,7 @@ function ActionEmptyState() {
             <div className="mb-6 inline-flex size-20 items-center justify-center rounded-[1.5rem] border border-primary/20 bg-primary/12 text-primary">
                 <ShieldCheck className="size-10" />
             </div>
-            <h3 className="text-xl font-bold text-foreground">All Caught Up</h3>
+            <h3 className="text-xl font-black text-foreground">All Caught Up</h3>
             <p className="mt-2 text-sm font-medium text-muted-foreground max-w-sm mx-auto">
                 No urgent tasks right now. Everything that needs action is already handled.
             </p>
@@ -181,27 +181,66 @@ function ActionEmptyState() {
     );
 }
 
+interface ActionRequiredState {
+    maintenance: MaintenanceRequestItem[];
+    tenants: TenantItem[];
+    conversations: ConversationSummary[];
+    loading: boolean;
+    error: string | null;
+    mounted: boolean;
+}
+
+type ActionRequiredAction = 
+    | { type: "SET_MAINTENANCE"; payload: MaintenanceRequestItem[] }
+    | { type: "SET_TENANTS"; payload: TenantItem[] }
+    | { type: "SET_CONVERSATIONS"; payload: ConversationSummary[] }
+    | { type: "SET_LOADING"; payload: boolean }
+    | { type: "SET_ERROR"; payload: string | null }
+    | { type: "SET_MOUNTED"; payload: boolean };
+
+function actionRequiredReducer(state: ActionRequiredState, action: ActionRequiredAction): ActionRequiredState {
+    switch (action.type) {
+        case "SET_MAINTENANCE":
+            return { ...state, maintenance: action.payload };
+        case "SET_TENANTS":
+            return { ...state, tenants: action.payload };
+        case "SET_CONVERSATIONS":
+            return { ...state, conversations: action.payload };
+        case "SET_LOADING":
+            return { ...state, loading: action.payload };
+        case "SET_ERROR":
+            return { ...state, error: action.payload };
+        case "SET_MOUNTED":
+            return { ...state, mounted: action.payload };
+        default:
+            return state;
+    }
+}
+
 // --- Main Component ---
 
 export function ActionRequired() {
     const { selectedPropertyId } = useProperty();
-    const [maintenance, setMaintenance] = useState<MaintenanceRequestItem[]>([]);
-    const [tenants, setTenants] = useState<TenantItem[]>([]);
-    const [conversations, setConversations] = useState<ConversationSummary[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [mounted, setMounted] = useState(false);
+    
+    const [state, dispatch] = useReducer(actionRequiredReducer, {
+        maintenance: [],
+        tenants: [],
+        conversations: [],
+        loading: true,
+        error: null,
+        mounted: false
+    });
 
     useEffect(() => {
-        setMounted(true);
+        dispatch({ type: "SET_MOUNTED", payload: true });
     }, []);
 
     useEffect(() => {
         const controller = new AbortController();
 
         const loadDashboardActions = async () => {
-            setLoading(true);
-            setError(null);
+            dispatch({ type: "SET_LOADING", payload: true });
+            dispatch({ type: "SET_ERROR", payload: null });
 
             try {
                 const params = new URLSearchParams({ propertyId: selectedPropertyId });
@@ -221,28 +260,31 @@ export function ActionRequired() {
                     throw new Error("Failed to load action items");
                 }
 
-                setMaintenance(
-                    Array.isArray((maintenancePayload as { requests?: MaintenanceRequestItem[] }).requests)
+                dispatch({ 
+                    type: "SET_MAINTENANCE", 
+                    payload: Array.isArray((maintenancePayload as { requests?: MaintenanceRequestItem[] }).requests)
                         ? (maintenancePayload as { requests: MaintenanceRequestItem[] }).requests
                         : []
-                );
-                setTenants(
-                    Array.isArray((tenantsPayload as { tenants?: TenantItem[] }).tenants)
+                });
+                dispatch({ 
+                    type: "SET_TENANTS", 
+                    payload: Array.isArray((tenantsPayload as { tenants?: TenantItem[] }).tenants)
                         ? (tenantsPayload as { tenants: TenantItem[] }).tenants
                         : []
-                );
-                setConversations(
-                    Array.isArray((conversationsPayload as { conversations?: ConversationSummary[] }).conversations)
+                });
+                dispatch({ 
+                    type: "SET_CONVERSATIONS", 
+                    payload: Array.isArray((conversationsPayload as { conversations?: ConversationSummary[] }).conversations)
                         ? (conversationsPayload as { conversations: ConversationSummary[] }).conversations
                         : []
-                );
+                });
             } catch (loadError) {
                 if ((loadError as Error).name === "AbortError") {
                     return;
                 }
-                setError("Unable to load action items right now.");
+                dispatch({ type: "SET_ERROR", payload: "Unable to load action items right now." });
             } finally {
-                setLoading(false);
+                dispatch({ type: "SET_LOADING", payload: false });
             }
         };
 
@@ -254,13 +296,13 @@ export function ActionRequired() {
     }, [selectedPropertyId]);
 
     const { actions, summaries } = useMemo(() => {
-        if (!mounted) return { actions: [], summaries: [] };
+        if (!state.mounted) return { actions: [], summaries: [] };
 
         const nextActions: ActionItem[] = [];
         const now = new Date();
         now.setHours(0, 0, 0, 0);
 
-        maintenance
+        state.maintenance
             .filter((request) => request.status !== "Resolved")
             .slice(0, 3)
             .forEach((request) => {
@@ -276,7 +318,7 @@ export function ActionRequired() {
                 });
             });
 
-        tenants
+        state.tenants
             .filter((tenant) => tenant.leaseEnd)
             .map((tenant) => {
                 const target = new Date(tenant.leaseEnd as string);
@@ -300,7 +342,7 @@ export function ActionRequired() {
                 });
             });
 
-        tenants
+        state.tenants
             .filter((tenant) => tenant.onboardingStatus !== "completed")
             .slice(0, 2)
             .forEach((tenant) => {
@@ -316,7 +358,7 @@ export function ActionRequired() {
                 });
             });
 
-        conversations
+        state.conversations
             .filter((conversation) => conversation.unreadCount > 0)
             .slice(0, 2)
             .forEach((conversation) => {
@@ -343,23 +385,23 @@ export function ActionRequired() {
         const summaryItems: ActionSummary[] = [
             {
                 label: "Maintenance",
-                value: maintenance.filter((request) => request.status !== "Resolved").length,
+                value: state.maintenance.filter((request) => request.status !== "Resolved").length,
                 icon: Activity
             },
             {
                 label: "Unread Messages",
-                value: conversations.filter((conversation) => conversation.unreadCount > 0).length,
+                value: state.conversations.filter((conversation) => conversation.unreadCount > 0).length,
                 icon: MessageSquareMore
             },
             {
                 label: "Move-In Tasks",
-                value: tenants.filter((tenant) => tenant.onboardingStatus !== "completed").length,
+                value: state.tenants.filter((tenant) => tenant.onboardingStatus !== "completed").length,
                 icon: Clock
             },
         ];
 
         return { actions: sorted, summaries: summaryItems };
-    }, [conversations, maintenance, tenants, mounted]);
+    }, [state.conversations, state.maintenance, state.tenants, state.mounted]);
 
     return (
         <LazyMotion features={domAnimation}>
@@ -370,7 +412,7 @@ export function ActionRequired() {
                             <Activity className="size-7" />
                         </div>
                         <div>
-                            <h2 className="text-2xl font-bold tracking-tight text-foreground">Needs Your Attention</h2>
+                            <h2 className="text-2xl font-black tracking-tight text-foreground">Needs Your Attention</h2>
                             <p className="text-sm font-medium text-muted-foreground/80">
                                 Things to follow up now: maintenance, lease renewals, and tenant messages.
                             </p>
@@ -381,7 +423,7 @@ export function ActionRequired() {
                 </div>
 
                 <AnimatePresence mode="popLayout">
-                    {loading ? (
+                    {state.loading ? (
                         <div className="grid gap-4">
                             {[1, 2, 3].map((item) => (
                                 <div key={item} className="animate-pulse rounded-[1.5rem] border border-white/10 bg-card/70 p-6">
@@ -395,13 +437,13 @@ export function ActionRequired() {
                                 </div>
                             ))}
                         </div>
-                    ) : error ? (
+                    ) : state.error ? (
                         <m.div 
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             className="rounded-3xl border border-red-500/20 bg-red-500/5 p-6 text-center"
                         >
-                            <p className="text-sm font-bold text-red-500">{error}</p>
+                            <p className="text-sm font-black text-red-500">{state.error}</p>
                         </m.div>
                     ) : actions.length === 0 ? (
                         <ActionEmptyState />

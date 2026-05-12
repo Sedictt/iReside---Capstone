@@ -630,11 +630,11 @@ export default function AnalyticsPage() {
                 {/* Page Header */}
             <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                    <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/80 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.25em] text-primary shadow-sm backdrop-blur-md">
+                    <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/80 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.25em] text-primary shadow-sm backdrop-blur-md">
                         <BarChart className="size-3.5" />
                         Portfolio Analytics
                     </div>
-                    <h1 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">Analytics</h1>
+                    <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">Analytics</h1>
                     <p className="mt-2 text-sm text-muted-foreground">Detailed insights into your property performance and portfolio health.</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
@@ -643,7 +643,7 @@ export default function AnalyticsPage() {
                             type="button"
                             onClick={() => setIsIrisVisible((prev) => !prev)}
                             className={cn(
-                                "inline-flex items-center gap-2.5 rounded-full border px-5 py-3 text-[11px] font-bold uppercase tracking-[0.14em] shadow-sm transition-all hover:scale-105 active:scale-95",
+                                "inline-flex items-center gap-2.5 rounded-full border px-5 py-3 text-[11px] font-black uppercase tracking-[0.14em] shadow-sm transition-all hover:scale-105 active:scale-95",
                                 isIrisVisible
                                     ? "border-primary/35 bg-card/90 text-primary hover:border-primary/45"
                                     : "border-white/10 bg-card/80 text-muted-foreground hover:bg-card hover:text-foreground"
@@ -658,7 +658,7 @@ export default function AnalyticsPage() {
                         <div
                             id="iris-toggle-tooltip"
                             role="tooltip"
-                            className="pointer-events-none absolute left-1/2 top-[-0.85rem] z-20 w-max max-w-[17rem] -translate-x-1/2 -translate-y-full rounded-xl border border-white/10 bg-card/95 px-3 py-2 text-[10px] font-bold tracking-wide text-foreground opacity-0 shadow-xl backdrop-blur-xl transition-all duration-200 group-hover/iris-toggle:opacity-100 group-hover/iris-toggle:translate-y-[-2.75rem] group-focus-within/iris-toggle:opacity-100 group-focus-within/iris-toggle:translate-y-[-2.75rem]"
+                            className="pointer-events-none absolute left-1/2 top-[-0.85rem] z-20 w-max max-w-[17rem] -translate-x-1/2 -translate-y-full rounded-xl border border-white/10 bg-card/95 px-3 py-2 text-[10px] font-black tracking-wide text-foreground opacity-0 shadow-xl backdrop-blur-xl transition-all duration-200 group-hover/iris-toggle:opacity-100 group-hover/iris-toggle:translate-y-[-2.75rem] group-focus-within/iris-toggle:opacity-100 group-focus-within/iris-toggle:translate-y-[-2.75rem]"
                         >
                             Toggle iRis mascot visibility on this page.
                             <div className="absolute left-1/2 top-full size-2.5 -translate-x-1/2 -translate-y-1/2 rotate-45 border-r border-b border-border bg-card/95" />
@@ -666,7 +666,7 @@ export default function AnalyticsPage() {
                     </div>
                     <button
                         onClick={() => setIsExportModalOpen(true)}
-                        className="group inline-flex items-center gap-2.5 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-sm transition-all hover:scale-105 hover:bg-primary/90 active:scale-95"
+                        className="group inline-flex items-center gap-2.5 rounded-full bg-primary px-6 py-3 text-sm font-black text-primary-foreground shadow-sm transition-all hover:scale-105 hover:bg-primary/90 active:scale-95"
                     >
                         <Download className="size-4 transition-transform group-hover:-translate-y-0.5" />
                         Export Report
@@ -682,7 +682,7 @@ export default function AnalyticsPage() {
                             <BarChart className="size-6" />
                         </div>
                         <div>
-                            <h2 className="text-2xl font-bold tracking-tight text-foreground">
+                            <h2 className="text-2xl font-black tracking-tight text-foreground">
                                 How Your Portfolio Is Performing
                             </h2>
                             <p className="text-sm font-medium text-muted-foreground/80">
@@ -693,20 +693,20 @@ export default function AnalyticsPage() {
 
                     <div className="flex flex-wrap items-center gap-3">
                         {statsLoading && (
-                            <div className="relative overflow-hidden rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.15em] text-blue-400 shadow-sm">
+                            <div className="relative overflow-hidden rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.15em] text-blue-400 shadow-sm">
                                 <span className="absolute inset-0 -translate-x-[100%] animate-shimmer bg-gradient-to-r from-transparent via-white/10 to-transparent" />
                                 Syncing...
                             </div>
                         )}
                         {statsError && (
-                            <div className="rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.15em] text-red-400">
+                            <div className="rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.15em] text-red-400">
                                 {statsError}
                             </div>
                         )}
                         <button
                             onClick={() => setShowMoreKpis(!showMoreKpis)}
                             className={cn(
-                                "flex items-center gap-2.5 rounded-full border px-5 py-2.5 text-[10px] font-bold uppercase tracking-[0.15em] transition-all hover:scale-105 active:scale-95 shadow-sm",
+                                "flex items-center gap-2.5 rounded-full border px-5 py-2.5 text-[10px] font-black uppercase tracking-[0.15em] transition-all hover:scale-105 active:scale-95 shadow-sm",
                                 showMoreKpis
                                     ? "border-primary/40 bg-primary/10 text-primary"
                                     : "border-border bg-background text-muted-foreground hover:border-primary/40 hover:bg-card hover:text-foreground"
@@ -787,7 +787,7 @@ export default function AnalyticsPage() {
                             <TrendingUp className="size-6" />
                         </div>
                         <div>
-                            <h2 className="text-2xl font-bold tracking-tight text-foreground">Financial Performance</h2>
+                            <h2 className="text-2xl font-black tracking-tight text-foreground">Financial Performance</h2>
                             <p className="text-sm font-medium text-muted-foreground/80">Revenue streams, expenses, and operational health overview.</p>
                         </div>
                     </div>
@@ -826,14 +826,14 @@ export default function AnalyticsPage() {
                         <History className="size-6" />
                     </div>
                     <div>
-                        <h2 className="text-2xl font-bold tracking-tight text-foreground">Export History</h2>
+                        <h2 className="text-2xl font-black tracking-tight text-foreground">Export History</h2>
                         <p className="text-sm font-medium text-muted-foreground/80">Recently generated reports and downloads.</p>
                     </div>
                 </div>
                 {exportHistory.length === 0 ? (
                     <div className="flex flex-col items-center justify-center rounded-[1.75rem] border border-border bg-muted/20 py-12 text-muted-foreground">
                         <FileText className="size-8 mb-3 opacity-20" />
-                        <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">No reports exported yet</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest opacity-40">No reports exported yet</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
@@ -854,18 +854,18 @@ export default function AnalyticsPage() {
                                 >
                                     <div className="flex items-center justify-between">
                                         <span className={cn(
-                                            "font-bold text-[9px] tracking-[0.2em] uppercase px-2.5 py-1 rounded-full border",
+                                            "font-black text-[9px] tracking-[0.2em] uppercase px-2.5 py-1 rounded-full border",
                                             item.format.toLowerCase() === 'pdf'
                                                 ? "border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400"
                                                 : "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                                         )}>
                                             {item.format}
                                         </span>
-                                        <span className="text-[10px] font-bold text-muted-foreground">{genDate.toLocaleDateString()}</span>
+                                        <span className="text-[10px] font-black text-muted-foreground">{genDate.toLocaleDateString()}</span>
                                     </div>
                                     <div className="space-y-1">
-                                        <span className="block truncate text-xs font-bold text-foreground">{item.range}</span>
-                                        <span className="block text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50">
+                                        <span className="block truncate text-xs font-black text-foreground">{item.range}</span>
+                                        <span className="block text-[9px] font-black uppercase tracking-widest text-muted-foreground/50">
                                             {isExpired ? "EXPIRED (15D+)" : `${15 - diffDays} days left`}
                                         </span>
                                     </div>
@@ -873,7 +873,7 @@ export default function AnalyticsPage() {
                                     {!isExpired && (
                                         <button
                                             onClick={() => handleRedownload(item)}
-                                            className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-card py-2 text-[10px] font-bold uppercase tracking-widest text-primary border border-primary/20 transition-all hover:bg-primary hover:text-primary-foreground"
+                                            className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-card py-2 text-[10px] font-black uppercase tracking-widest text-primary border border-primary/20 transition-all hover:bg-primary hover:text-primary-foreground"
                                         >
                                             <Download className="size-3" />
                                             Redownload
@@ -889,7 +889,7 @@ export default function AnalyticsPage() {
                     <div className="mt-8 flex justify-center">
                         <button
                             onClick={() => fetchExportHistory(true)}
-                            className="group flex items-center gap-2 rounded-full border border-border bg-card px-8 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground transition-all hover:border-primary/30 hover:bg-primary/5 hover:text-primary active:scale-95"
+                            className="group flex items-center gap-2 rounded-full border border-border bg-card px-8 py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground transition-all hover:border-primary/30 hover:bg-primary/5 hover:text-primary active:scale-95"
                         >
                             Load Older Reports
                             <ChevronDown className="size-3 transition-transform group-hover:translate-y-0.5" />
@@ -913,7 +913,7 @@ export default function AnalyticsPage() {
                                     <Download className="size-6" />
                                 </div>
                                 <div>
-                                    <h2 className="text-xl font-bold text-foreground">Export Report</h2>
+                                    <h2 className="text-xl font-black text-foreground">Export Report</h2>
                                     <p className="text-sm font-medium text-muted-foreground/80">Generate a downloadable analytics report.</p>
                                 </div>
                             </div>
@@ -929,8 +929,8 @@ export default function AnalyticsPage() {
                         <div className="p-8 flex flex-col gap-8">
                             {/* Report Period Section */}
                             <div className="flex flex-col gap-4">
-                                <label className="flex items-center gap-3 text-sm font-bold text-foreground">
-                                    <div className="flex size-7 items-center justify-center rounded-full border border-primary/20 bg-primary/10 text-[10px] font-bold text-primary">1</div>
+                                <label className="flex items-center gap-3 text-sm font-black text-foreground">
+                                    <div className="flex size-7 items-center justify-center rounded-full border border-primary/20 bg-primary/10 text-[10px] font-black text-primary">1</div>
                                     Select Report Period
                                 </label>
                                 <div className="pl-10 flex flex-col gap-4">
@@ -940,7 +940,7 @@ export default function AnalyticsPage() {
                                                 key={option.id}
                                                 onClick={() => applyPresetRange(option)}
                                                 className={cn(
-                                                    "px-4 py-2.5 rounded-2xl text-xs font-bold uppercase tracking-[0.1em] transition-all duration-200 border",
+                                                    "px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-[0.1em] transition-all duration-200 border",
                                                     selectedRange === option.id
                                                         ? "border-primary/30 bg-primary/10 text-primary shadow-[0_0_15px_rgba(var(--primary-rgb),0.15)]"
                                                         : "border-white/10 bg-card/70 text-muted-foreground hover:bg-card hover:text-foreground"
@@ -952,7 +952,7 @@ export default function AnalyticsPage() {
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <div className="flex-1 flex flex-col gap-2">
-                                            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">Start</span>
+                                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Start</span>
                                             <input
                                                 type="date"
                                                 value={startDate}
@@ -961,9 +961,9 @@ export default function AnalyticsPage() {
                                                 aria-label="Report start date"
                                             />
                                         </div>
-                                        <div className="pt-7 text-muted-foreground/40 font-bold">–</div>
+                                        <div className="pt-7 text-muted-foreground/40 font-black">–</div>
                                         <div className="flex-1 flex flex-col gap-2">
-                                            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">End</span>
+                                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">End</span>
                                             <input
                                                 type="date"
                                                 value={endDate}
@@ -978,8 +978,8 @@ export default function AnalyticsPage() {
 
                             {/* Export Format Section */}
                             <div className="flex flex-col gap-4">
-                                <label className="flex items-center gap-3 text-sm font-bold text-foreground">
-                                    <div className="flex size-7 items-center justify-center rounded-full border border-primary/20 bg-primary/10 text-[10px] font-bold text-primary">2</div>
+                                <label className="flex items-center gap-3 text-sm font-black text-foreground">
+                                    <div className="flex size-7 items-center justify-center rounded-full border border-primary/20 bg-primary/10 text-[10px] font-black text-primary">2</div>
                                     Select Format
                                 </label>
                                 <div className="pl-10 grid grid-cols-2 gap-4">
@@ -993,7 +993,7 @@ export default function AnalyticsPage() {
                                         )}
                                     >
                                         <FileText className="size-8" />
-                                        <span className="text-xs font-bold uppercase tracking-[0.15em]">PDF</span>
+                                        <span className="text-xs font-black uppercase tracking-[0.15em]">PDF</span>
                                     </button>
                                     <button
                                         onClick={() => setExportFormat("csv")}
@@ -1005,7 +1005,7 @@ export default function AnalyticsPage() {
                                         )}
                                     >
                                         <Download className="size-8" />
-                                        <span className="text-xs font-bold uppercase tracking-[0.15em]">CSV</span>
+                                        <span className="text-xs font-black uppercase tracking-[0.15em]">CSV</span>
                                     </button>
                                 </div>
                             </div>
@@ -1014,7 +1014,7 @@ export default function AnalyticsPage() {
                         <div className="flex justify-end gap-3 border-t border-white/10 bg-card/95 px-8 py-6 backdrop-blur-xl">
                             <button
                                 onClick={() => setIsExportModalOpen(false)}
-                                className="rounded-2xl border border-white/10 bg-card/70 px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 transition-all hover:bg-card hover:text-foreground"
+                                className="rounded-2xl border border-white/10 bg-card/70 px-5 py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 transition-all hover:bg-card hover:text-foreground"
                             >
                                 Cancel
                             </button>
@@ -1024,7 +1024,7 @@ export default function AnalyticsPage() {
                                     else handleExportCsv();
                                     setIsExportModalOpen(false);
                                 }}
-                                className="group rounded-2xl bg-primary px-6 py-3 text-sm font-bold uppercase tracking-tight text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] hover:bg-primary/90 active:scale-95"
+                                className="group rounded-2xl bg-primary px-6 py-3 text-sm font-black uppercase tracking-tight text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] hover:bg-primary/90 active:scale-95"
                             >
                                 Generate & Download
                             </button>
@@ -1034,7 +1034,7 @@ export default function AnalyticsPage() {
             )}
 
             {toastMessage && (
-                <div className="fixed bottom-6 right-6 z-50 rounded-2xl border border-emerald-500/25 bg-emerald-500/12 px-5 py-3.5 text-sm font-bold text-emerald-300 shadow-[0_20px_40px_rgba(0,0,0,0.4)] backdrop-blur-xl animate-in slide-in-from-bottom-4 duration-300">
+                <div className="fixed bottom-6 right-6 z-50 rounded-2xl border border-emerald-500/25 bg-emerald-500/12 px-5 py-3.5 text-sm font-black text-emerald-300 shadow-[0_20px_40px_rgba(0,0,0,0.4)] backdrop-blur-xl animate-in slide-in-from-bottom-4 duration-300">
                     {toastMessage}
                 </div>
             )}

@@ -102,7 +102,7 @@ export function SignatureModal({
                     {/* Header */}
                     <div className="flex items-center justify-between border-b border-white/10 bg-[#0f172a] px-6 py-4">
                         <div>
-                            <h2 className="text-lg font-bold text-white">Finalize Lease</h2>
+                            <h2 className="text-lg font-black text-white">Finalize Lease</h2>
                             <p className="text-xs text-zinc-400">Review the document and provide your digital signature below.</p>
                         </div>
                         <button onClick={onClose} className="text-zinc-400 hover:text-white transition-colors">
@@ -118,7 +118,7 @@ export function SignatureModal({
 
                         <div className="mb-6">
                             <div className="mb-2 flex items-center justify-between">
-                                <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">Signature</span>
+                                <span className="text-xs font-black uppercase tracking-wider text-zinc-400">Signature</span>
                                 <div className="flex bg-zinc-800 rounded-lg p-0.5">
                                     <button className="rounded px-3 py-0.5 text-xs font-medium bg-zinc-600 text-white shadow-sm">Draw</button>
                                     <button className="rounded px-3 py-0.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 transition-colors">Type</button>
@@ -158,7 +158,7 @@ export function SignatureModal({
                             onClick={handleComplete}
                             disabled={!hasSignature}
                             className={cn(
-                                "group relative mb-3 flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-3 font-bold text-white shadow-lg transition-all hover:bg-blue-500 hover:shadow-blue-500/25 active:scale-[0.98]",
+                                "group relative mb-3 flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-3 font-black text-white shadow-lg transition-all hover:bg-blue-500 hover:shadow-blue-500/25 active:scale-[0.98]",
                                 !hasSignature && "cursor-not-allowed opacity-50 grayscale hover:bg-blue-600 hover:shadow-none"
                             )}
                         >

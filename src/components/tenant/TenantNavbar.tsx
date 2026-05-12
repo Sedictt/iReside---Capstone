@@ -169,7 +169,7 @@ export function TenantSidebar() {
         <nav className={cn("space-y-8", compact && "pt-2")}>
             {NAV_SECTIONS.map((section) => (
                 <div key={section.category}>
-                    <h3 className="mb-4 px-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    <h3 className="mb-4 px-2 text-xs font-black uppercase tracking-wider text-muted-foreground">
                         {section.category}
                     </h3>
                     <div className="space-y-1">
@@ -225,7 +225,7 @@ export function TenantSidebar() {
                                 <Bell className="size-4" />
                                 {unreadCount > 0 && (
                                     <span className={cn(
-                                        "absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full text-[8px] font-bold",
+                                        "absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full text-[8px] font-black",
                                         isNotificationsOpen ? "bg-background text-primary" : "bg-primary text-primary-foreground"
                                     )}>
                                         {unreadCount > 9 ? "9+" : unreadCount}
@@ -295,7 +295,7 @@ export function TenantSidebar() {
                                     userId={user?.id || ""} 
                                     initialData={{ full_name: displayName, avatar_url: avatarUrl, role: profile?.role as Profile["role"] }}
                                 >
-                                    <p className="truncate text-sm font-bold text-foreground hover:text-primary transition-colors cursor-pointer">{displayName}</p>
+                                    <p className="truncate text-sm font-black text-foreground hover:text-primary transition-colors cursor-pointer">{displayName}</p>
                                 </ProfileCardTrigger>
                                 <RoleBadge role={profile?.role ?? null} />
                             </div>
@@ -314,7 +314,7 @@ export function TenantSidebar() {
                                 <Bell className="size-4" />
                                 {unreadCount > 0 && (
                                     <span className={cn(
-                                        "absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full text-[8px] font-bold",
+                                        "absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full text-[8px] font-black",
                                         isNotificationsOpen ? "bg-background text-primary" : "bg-primary text-primary-foreground"
                                     )}>
                                         {unreadCount > 9 ? "9+" : unreadCount}
@@ -444,8 +444,8 @@ function NotificationPanelContent({
     return (
         <>
             <div className="flex items-center justify-between border-b border-border/50 px-6 py-4">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-foreground">Notifications</p>
-                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">{unreadCount} New</span>
+                <p className="text-[10px] font-black uppercase tracking-widest text-foreground">Notifications</p>
+                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-black text-primary">{unreadCount} New</span>
             </div>
 
             <div className="max-h-[400px] overflow-y-auto custom-scrollbar-premium">
@@ -465,7 +465,7 @@ function NotificationPanelContent({
                 ) : notifications.length === 0 ? (
                     <div className="px-6 py-12 text-center text-muted-foreground">
                         <Sparkles className="size-8 mx-auto mb-3 opacity-20" />
-                        <p className="text-sm font-bold">All caught up!</p>
+                        <p className="text-sm font-black">All caught up!</p>
                         <p className="text-[10px] mt-1 opacity-60">You have no notifications yet</p>
                     </div>
                 ) : (
@@ -477,9 +477,9 @@ function NotificationPanelContent({
                         >
                             <div className="flex items-start justify-between gap-4">
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-bold text-foreground group-hover/item:text-primary transition-colors truncate">{notification.title}</p>
+                                    <p className="text-sm font-black text-foreground group-hover/item:text-primary transition-colors truncate">{notification.title}</p>
                                     <p className="mt-1 text-xs leading-relaxed text-muted-foreground line-clamp-2">{notification.message}</p>
-                                    <p className="mt-2 text-[10px] font-bold text-muted-foreground/40 uppercase tracking-wider">{formatTimeAgo(notification.created_at)}</p>
+                                    <p className="mt-2 text-[10px] font-black text-muted-foreground/40 uppercase tracking-wider">{formatTimeAgo(notification.created_at)}</p>
                                 </div>
                                 {!notification.read && (
                                     <div className="mt-1.5 size-2 shrink-0 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),0.6)]" />
@@ -495,7 +495,7 @@ function NotificationPanelContent({
                         e.stopPropagation();
                         onMarkAllAsRead();
                     }}
-                    className="w-full rounded-xl py-2 text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground transition-all hover:bg-card hover:text-primary hover:shadow-sm"
+                    className="w-full rounded-xl py-2 text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground transition-all hover:bg-card hover:text-primary hover:shadow-sm"
                 >
                     Mark all as read
                 </button>

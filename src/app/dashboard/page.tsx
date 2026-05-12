@@ -5,9 +5,9 @@ export default function DashboardPage() {
     return (
         <div className="space-y-8">
             <div className="flex items-center justify-between">
-                <h1 className="text-3xl font-bold tracking-tight text-white">Dashboard</h1>
+                <h1 className="text-3xl font-black tracking-tight text-white">Dashboard</h1>
                 <div className="flex items-center gap-2">
-                    <button className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-bold text-white shadow-sm transition-colors hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">
+                    <button className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-black text-white shadow-sm transition-colors hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">
                         Add Property
                     </button>
                 </div>
@@ -20,7 +20,7 @@ export default function DashboardPage() {
                         <PhilippinePeso className="size-4 text-zinc-400" />
                     </div>
                     <div className="mt-2 flex items-baseline gap-2">
-                        <span className="text-2xl font-bold text-white">₱45,231.89</span>
+                        <span className="text-2xl font-black text-white">₱45,231.89</span>
                         <span className="flex items-center text-xs font-medium text-emerald-500">
                             +20.1%
                             <ArrowUpRight className="size-3" />
@@ -34,7 +34,7 @@ export default function DashboardPage() {
                         <Users className="size-5" />
                     </div>
                     <div className="mt-2 flex items-baseline gap-2">
-                        <span className="text-2xl font-bold text-white">+2350</span>
+                        <span className="text-2xl font-black text-white">+2350</span>
                         <span className="flex items-center text-xs font-medium text-emerald-500">
                             +180.1%
                             <ArrowUpRight className="size-3" />
@@ -48,7 +48,7 @@ export default function DashboardPage() {
                         <HomeIcon className="size-4 text-zinc-400" />
                     </div>
                     <div className="mt-2 flex items-baseline gap-2">
-                        <span className="text-2xl font-bold text-white">12</span>
+                        <span className="text-2xl font-black text-white">12</span>
                         <span className="flex items-center text-xs font-medium text-emerald-500">
                             +19%
                             <ArrowUpRight className="size-3" />
@@ -59,14 +59,14 @@ export default function DashboardPage() {
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
                 <div className="col-span-4 rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 backdrop-blur-xl">
-                    <h3 className="mb-4 text-lg font-bold text-white">Overview</h3>
+                    <h3 className="mb-4 text-lg font-black text-white">Overview</h3>
                     <div className="h-[300px] w-full rounded-lg bg-zinc-800/50 p-2">
                         <RevenueChart />
                     </div>
                 </div>
 
                 <div className="col-span-3 rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 backdrop-blur-xl">
-                    <h3 className="mb-4 text-lg font-bold text-white">Recent Activity</h3>
+                    <h3 className="mb-4 text-lg font-black text-white">Recent Activity</h3>
                     <div className="space-y-4">
                         {[1, 2, 3, 4, 5].map((i) => (
                             <div key={`feature-${i}`} className="flex items-center gap-4">

@@ -392,7 +392,7 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete }: Ma
             <div className="flex-1 flex items-center justify-center bg-[#080808]">
                 <div className="flex flex-col items-center gap-4">
                     <Loader2 className="size-10 text-primary animate-spin" />
-                    <p className="text-neutral-500 text-sm font-bold uppercase tracking-widest">Building Layout…</p>
+                    <p className="text-neutral-500 text-sm font-black uppercase tracking-widest">Building Layout…</p>
                 </div>
             </div>
         );
@@ -407,16 +407,16 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete }: Ma
                             <Layout className="size-5" />
                         </div>
                         <div>
-                            <h1 className="text-lg font-bold tracking-tight">{propertyName}</h1>
-                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-500">Floor Plan Organizer</p>
+                            <h1 className="text-lg font-black tracking-tight">{propertyName}</h1>
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-500">Floor Plan Organizer</p>
                         </div>
                     </div>
 
                 <div className="flex items-center gap-6">
                     <div className="hidden md:flex flex-col items-end gap-1">
                         <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">Progress</span>
-                            <span className="text-xs font-bold text-primary">{placedCount === totalUnits ? "Ready to Launch" : `${progress}% Assigned`}</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Progress</span>
+                            <span className="text-xs font-black text-primary">{placedCount === totalUnits ? "Ready to Launch" : `${progress}% Assigned`}</span>
                         </div>
                         <div className="h-1 w-32 rounded-full bg-white/10 overflow-hidden">
                             <motion.div 
@@ -447,7 +447,7 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete }: Ma
                             data-tour-id="tour-wizard-generate"
                             onClick={handleAutoPlace}
                             disabled={isSaving}
-                            className="group relative flex items-center gap-2 overflow-hidden rounded-2xl bg-primary px-6 py-3 text-sm font-bold uppercase tracking-widest text-black transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+                            className="group relative flex items-center gap-2 overflow-hidden rounded-2xl bg-primary px-6 py-3 text-sm font-black uppercase tracking-widest text-black transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
                         >
                             {isSaving ? <Loader2 className="size-4 animate-spin" /> : <ArrowRight className="size-4" />}
                             Generate Map
@@ -484,7 +484,7 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete }: Ma
                         <div className="flex-1 overflow-y-auto no-scrollbar rounded-[2.5rem] bg-white/[0.01] border border-white/5 p-8">
                             <div className="mb-10 flex items-start justify-between gap-6">
                                 <div className="max-w-lg">
-                                    <h2 className="text-3xl font-bold tracking-tight text-white">Organize Units by Floor</h2>
+                                    <h2 className="text-3xl font-black tracking-tight text-white">Organize Units by Floor</h2>
                                     <p className="mt-2 text-sm leading-relaxed text-neutral-400 font-medium">
                                         Drag and drop units into their respective floors. This will determine how they appear on your property&apos;s visual map.
                                     </p>
@@ -498,7 +498,7 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete }: Ma
                                     <div className="flex size-6 items-center justify-center rounded-lg bg-primary/20 text-primary group-hover:bg-primary group-hover:text-black transition-all">
                                         <Plus className="size-4" />
                                     </div>
-                                    <span className="text-xs font-bold uppercase tracking-widest">Add New Floor</span>
+                                    <span className="text-xs font-black uppercase tracking-widest">Add New Floor</span>
                                 </button>
                             </div>
 
@@ -528,24 +528,24 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete }: Ma
                         {/* Sidebar / Instructions */}
                         <div className="hidden xl:flex w-80 shrink-0 flex-col gap-6">
                             <div className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-6">
-                                <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Instructions</h4>
+                                <h4 className="text-xs font-black uppercase tracking-[0.2em] text-primary">Instructions</h4>
                                 <ul className="mt-6 space-y-6">
                                     <li className="flex gap-4">
-                                        <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-white/10 text-[10px] font-bold text-white">1</div>
+                                        <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-white/10 text-[10px] font-black text-white">1</div>
                                         <p className="text-xs font-medium leading-relaxed text-neutral-400">
                                             Verify that each unit is assigned to its correct floor.
                                         </p>
                                     </li>
                                     <li className="flex gap-4">
-                                        <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-white/10 text-[10px] font-bold text-white">2</div>
+                                        <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-white/10 text-[10px] font-black text-white">2</div>
                                         <p className="text-xs font-medium leading-relaxed text-neutral-400">
                                             Drag units between floor boards to reassign them instantly.
                                         </p>
                                     </li>
                                     <li className="flex gap-4">
-                                        <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-white/10 text-[10px] font-bold text-white">3</div>
+                                        <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-white/10 text-[10px] font-black text-white">3</div>
                                         <p className="text-xs font-medium leading-relaxed text-neutral-400">
-                                            Click <span className="font-bold text-white">&quot;Generate Map&quot;</span> to auto-layout your unit map.
+                                            Click <span className="font-black text-white">&quot;Generate Map&quot;</span> to auto-layout your unit map.
                                         </p>
                                     </li>
                                 </ul>
@@ -554,7 +554,7 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete }: Ma
                             <div className="mt-auto rounded-[2rem] border border-white/10 bg-white/[0.03] p-6">
                                 <div className="flex items-center gap-3">
                                     <div className="size-2 rounded-full bg-primary animate-pulse" />
-                                    <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">System Ready</p>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400">System Ready</p>
                                 </div>
                                 <p className="mt-3 text-xs font-medium text-neutral-500">
                                     All assignments are saved in real-time. You can always refine layouts on the canvas later.
@@ -564,7 +564,7 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete }: Ma
                             {error && (
                                 <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-4 flex items-start gap-3">
                                     <AlertCircle className="size-4 text-red-400 shrink-0 mt-0.5" />
-                                    <p className="text-[10px] font-bold text-red-200 uppercase leading-normal">{error}</p>
+                                    <p className="text-[10px] font-black text-red-200 uppercase leading-normal">{error}</p>
                                 </div>
                             )}
                         </div>

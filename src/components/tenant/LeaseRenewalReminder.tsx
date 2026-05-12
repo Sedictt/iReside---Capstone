@@ -88,12 +88,12 @@ export default function LeaseRenewalReminder({ daysRemaining, leaseId, teamMembe
 
                                 <div className="space-y-4 mb-10">
                                     <div className="flex items-center gap-2">
-                                        <div className="px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-[10px] font-bold text-amber-600 uppercase tracking-widest flex items-center gap-1.5">
+                                        <div className="px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-[10px] font-black text-amber-600 uppercase tracking-widest flex items-center gap-1.5">
                                             <Clock className="size-3" /> {daysRemaining} Days Left
                                         </div>
                                     </div>
                                     
-                                    <h2 className="text-3xl font-bold text-foreground tracking-tighter leading-none">
+                                    <h2 className="text-3xl font-black text-foreground tracking-tighter leading-none">
                                         Lease Renewal Available
                                     </h2>
                                     
@@ -105,7 +105,7 @@ export default function LeaseRenewalReminder({ daysRemaining, leaseId, teamMembe
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <button
                                         onClick={() => setIsVisible(false)}
-                                        className="w-full py-4 rounded-2xl border border-border bg-muted/50 text-muted-foreground text-[11px] font-bold uppercase tracking-widest hover:bg-muted hover:text-foreground transition-all"
+                                        className="w-full py-4 rounded-2xl border border-border bg-muted/50 text-muted-foreground text-[11px] font-black uppercase tracking-widest hover:bg-muted hover:text-foreground transition-all"
                                     >
                                         Maybe Later
                                     </button>
@@ -114,7 +114,7 @@ export default function LeaseRenewalReminder({ daysRemaining, leaseId, teamMembe
                                             setIsVisible(false);
                                             setShowRenewalRequest(true);
                                         }}
-                                        className="w-full py-4 rounded-2xl bg-primary text-white text-[11px] font-bold uppercase tracking-widest shadow-xl shadow-primary/20 hover:bg-primary-dark hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
+                                        className="w-full py-4 rounded-2xl bg-primary text-white text-[11px] font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:bg-primary-dark hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
                                     >
                                         Renew Now <ArrowRight className="size-4" />
                                     </button>
@@ -140,7 +140,7 @@ export default function LeaseRenewalReminder({ daysRemaining, leaseId, teamMembe
                                             />
                                             <Check className="absolute size-3 text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity stroke-[4]" />
                                         </div>
-                                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest group-hover:text-foreground transition-colors">Do not show again</span>
+                                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest group-hover:text-foreground transition-colors">Do not show again</span>
                                     </label>
                                     <div className="flex -space-x-2">
                                         {displayMembers ? (
@@ -159,7 +159,7 @@ export default function LeaseRenewalReminder({ daysRemaining, leaseId, teamMembe
                                                             className="w-full h-full object-cover"
                                                         />
                                                     ) : (
-                                                        <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-muted-foreground">
+                                                        <div className="w-full h-full flex items-center justify-center text-[10px] font-black text-muted-foreground">
                                                             {member.name?.charAt(0) || "?"}
                                                         </div>
                                                     )}

@@ -171,7 +171,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
             className="flex flex-col items-center gap-4 rounded-3xl border border-border bg-card/95 px-8 py-6 shadow-sm backdrop-blur-md"
           >
             <Loader2 className="size-8 animate-spin text-primary" />
-            <span className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Loading property data...</span>
+            <span className="text-sm font-black uppercase tracking-widest text-muted-foreground">Loading property data...</span>
           </motion.div>
         </div>
       );
@@ -189,7 +189,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
               <AlertCircle className="size-7 text-red-400" />
             </div>
             <div>
-              <p className="text-lg font-bold text-red-300 tracking-tight">Unable to Load Tools</p>
+              <p className="text-lg font-black text-red-300 tracking-tight">Unable to Load Tools</p>
               <p className="text-sm font-medium text-red-200/80 mt-2">{loadError}</p>
             </div>
           </motion.div>
@@ -222,7 +222,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
           {propertyData.amenities.length === 0 ? (
             <div className="rounded-[2.5rem] border border-dashed border-border bg-muted/20 p-20 text-center">
               <Sparkles className="mx-auto size-10 text-muted-foreground/20 mb-4" />
-              <p className="text-sm font-bold tracking-tight text-muted-foreground/50">No amenities configured for this property.</p>
+              <p className="text-sm font-black tracking-tight text-muted-foreground/50">No amenities configured for this property.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -243,10 +243,10 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
                       <AmenityIcon className={cn("size-6", color)} strokeWidth={1.5} />
                     </div>
                     <div className="flex flex-col gap-0.5">
-                        <span className="text-[15px] font-bold tracking-tight text-foreground/90 leading-tight">{item}</span>
+                        <span className="text-[15px] font-black tracking-tight text-foreground/90 leading-tight">{item}</span>
                         <div className="flex items-center gap-1.5">
                             <div className="size-1 rounded-full bg-primary/50" />
-                            <span className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground/50">Verified Facility</span>
+                            <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/50">Verified Facility</span>
                         </div>
                     </div>
                   </motion.div>
@@ -264,7 +264,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
           {propertyData.house_rules.length === 0 ? (
             <div className="rounded-[2.5rem] border border-dashed border-border bg-muted/20 p-20 text-center">
               <ShieldCheck className="mx-auto size-10 text-muted-foreground/20 mb-4" />
-              <p className="text-sm font-bold tracking-tight text-muted-foreground/50">No property policies configured yet.</p>
+              <p className="text-sm font-black tracking-tight text-muted-foreground/50">No property policies configured yet.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-3 max-w-5xl">
@@ -278,15 +278,15 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
                 >
                   <div className="flex items-center gap-6">
                         <div className="shrink-0 flex flex-col items-center gap-1 min-w-[50px]">
-                            <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40 leading-none">Clause</span>
-                            <span className="text-xl font-bold italic text-blue-500/60 leading-none">{String(index + 1).padStart(2, '0')}</span>
+                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 leading-none">Clause</span>
+                            <span className="text-xl font-black italic text-blue-500/60 leading-none">{String(index + 1).padStart(2, '0')}</span>
                         </div>
                         <div className="w-px h-8 bg-border/40" />
                         <div className="flex-1">
-                            <p className="text-[15px] font-bold leading-relaxed text-foreground/90 tracking-tight">{rule}</p>
+                            <p className="text-[15px] font-black leading-relaxed text-foreground/90 tracking-tight">{rule}</p>
                         </div>
                         <div className="shrink-0 px-2.5 py-1 rounded-lg bg-blue-500/5 border border-blue-500/10 opacity-0 group-hover:opacity-100 transition-all duration-500">
-                            <span className="text-[8px] font-bold uppercase tracking-widest text-blue-400">Binding</span>
+                            <span className="text-[8px] font-black uppercase tracking-widest text-blue-400">Binding</span>
                         </div>
                   </div>
                 </motion.div>
@@ -332,7 +332,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
     return (
       <div className="h-full overflow-y-auto p-6 sm:p-10 lg:p-14 relative z-10 custom-scrollbar">
         {!template ? (
-          <div className="rounded-3xl border border-dashed border-border bg-muted/20 p-12 text-center text-sm font-bold tracking-tight text-muted-foreground">
+          <div className="rounded-3xl border border-dashed border-border bg-muted/20 p-12 text-center text-sm font-black tracking-tight text-muted-foreground">
             No lease agreement configured yet.
           </div>
         ) : (
@@ -344,12 +344,12 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
             <div className="w-full bg-[#fdfdfd] text-black p-8 sm:p-14 font-serif min-h-[700px] relative cursor-text">
                 {/* Watermark */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03] overflow-hidden">
-                    <h1 className="text-[12rem] font-bold rotate-[-45deg] select-none text-black tracking-tighter uppercase">Agreement</h1>
+                    <h1 className="text-[12rem] font-black rotate-[-45deg] select-none text-black tracking-tighter uppercase">Agreement</h1>
                 </div>
 
                 <div className="relative z-10 max-w-2xl mx-auto space-y-8">
                     <div className="text-center space-y-2 border-b-2 border-neutral-300 pb-8 mb-8">
-                        <h1 className="text-[1.35rem] font-bold uppercase tracking-widest text-black">{contractTitle}</h1>
+                        <h1 className="text-[1.35rem] font-black uppercase tracking-widest text-black">{contractTitle}</h1>
                         <p className="text-neutral-500 italic text-sm">This is the configured lease agreement for {propertyData.name}.</p>
                     </div>
 
@@ -369,30 +369,30 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
                                 <>
                                     <div className="space-y-5">
                                         <p>
-                                            <strong className="text-black">1. LEASE TERM:</strong> The duration of this lease is <span className="bg-primary/20 text-black px-1.5 py-0.5 rounded font-bold uppercase">{answers["duration"] || "Not Specified"}</span>. The tenant agrees to rent the premises for this agreed upon period.
+                                            <strong className="text-black">1. LEASE TERM:</strong> The duration of this lease is <span className="bg-primary/20 text-black px-1.5 py-0.5 rounded font-black uppercase">{answers["duration"] || "Not Specified"}</span>. The tenant agrees to rent the premises for this agreed upon period.
                                         </p>
 
                                         <p>
-                                            <strong className="text-black">2. RENT &amp; DEPOSIT:</strong> The tenant agrees to pay a monthly base rent of <strong>₱<span className="bg-primary/20 text-black px-1.5 py-0.5 rounded font-bold uppercase">{answers["rent"] || "_____"}</span></strong>. A security deposit of <strong>₱<span className="bg-primary/20 text-black px-1.5 py-0.5 rounded font-bold uppercase">{answers["deposit"] || "_____"}</span></strong> is required prior to move-in.
+                                            <strong className="text-black">2. RENT &amp; DEPOSIT:</strong> The tenant agrees to pay a monthly base rent of <strong>₱<span className="bg-primary/20 text-black px-1.5 py-0.5 rounded font-black uppercase">{answers["rent"] || "_____"}</span></strong>. A security deposit of <strong>₱<span className="bg-primary/20 text-black px-1.5 py-0.5 rounded font-black uppercase">{answers["deposit"] || "_____"}</span></strong> is required prior to move-in.
                                         </p>
 
                                         <p>
-                                            <strong className="text-black">3. OCCUPANCY LIMIT:</strong> This property enforces a hard occupancy limit of <span className="bg-primary/20 text-black px-1.5 py-0.5 rounded font-bold">{answers["hard_occupancy_limit"] || "_____"}</span> person(s) per unit.
+                                            <strong className="text-black">3. OCCUPANCY LIMIT:</strong> This property enforces a hard occupancy limit of <span className="bg-primary/20 text-black px-1.5 py-0.5 rounded font-black">{answers["hard_occupancy_limit"] || "_____"}</span> person(s) per unit.
                                         </p>
 
                                         <p>
-                                            <strong className="text-black">4. UTILITIES:</strong> {utilityText} The landlord additionally covers: <span className="bg-primary/20 text-black px-1.5 py-0.5 rounded font-bold uppercase">{Array.isArray(answers["utilities"]) && answers["utilities"].length > 0 ? answers["utilities"].join(", ") : "None Included"}</span>.
+                                            <strong className="text-black">4. UTILITIES:</strong> {utilityText} The landlord additionally covers: <span className="bg-primary/20 text-black px-1.5 py-0.5 rounded font-black uppercase">{Array.isArray(answers["utilities"]) && answers["utilities"].length > 0 ? answers["utilities"].join(", ") : "None Included"}</span>.
                                         </p>
 
                                         <p>
-                                            <strong className="text-black">5. PROPERTY POLICIES:</strong> The premises adheres to the following pet policy: <span className="bg-primary/20 text-black px-1.5 py-0.5 rounded font-bold uppercase">{answers["pets"] || "Not Specified"}</span>. Furthermore, it is strictly understood that: <span className="bg-primary/20 text-black px-1.5 py-0.5 rounded font-bold uppercase">{answers["smoking"] || "Not Specified"}</span> within or strictly on the premises.
+                                            <strong className="text-black">5. PROPERTY POLICIES:</strong> The premises adheres to the following pet policy: <span className="bg-primary/20 text-black px-1.5 py-0.5 rounded font-black uppercase">{answers["pets"] || "Not Specified"}</span>. Furthermore, it is strictly understood that: <span className="bg-primary/20 text-black px-1.5 py-0.5 rounded font-black uppercase">{answers["smoking"] || "Not Specified"}</span> within or strictly on the premises.
                                         </p>
                                     </div>
 
                                     {/* Inject Custom Clauses here */}
                                     {customClauses.filter(c => c.title && c.description).length > 0 && (
                                         <div className="pt-6 mt-6 border-t border-neutral-200 space-y-4">
-                                            <h3 className="font-bold text-black uppercase tracking-wider text-sm mb-4">Additional Clauses</h3>
+                                            <h3 className="font-black text-black uppercase tracking-wider text-sm mb-4">Additional Clauses</h3>
                                             {customClauses.filter(c => c.title && c.description).map((clause, idx) => (
                                                 <p key={clause.title}>
                                                     <strong className="text-black uppercase">{(idx + 6)}. {clause.title}:</strong> {clause.description}
@@ -407,11 +407,11 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
                         <div className="pt-24 border-t border-neutral-200 grid grid-cols-2 gap-12 text-sm mt-24">
                             <div>
                                 <div className="border-b border-black pb-1 mb-2"></div>
-                                <p className="font-bold uppercase tracking-wider text-neutral-500">Landlord Signature</p>
+                                <p className="font-black uppercase tracking-wider text-neutral-500">Landlord Signature</p>
                             </div>
                             <div>
                                 <div className="border-b border-black pb-1 mb-2"></div>
-                                <p className="font-bold uppercase tracking-wider text-neutral-500">Tenant Signature</p>
+                                <p className="font-black uppercase tracking-wider text-neutral-500">Tenant Signature</p>
                             </div>
                         </div>
                     </div>
@@ -455,7 +455,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
                 
                 {/* Custom Tooltip - adjusted for vertical/horizontal visibility */}
                 <div className={cn(
-                  "pointer-events-none absolute select-none whitespace-nowrap rounded-md border border-border bg-popover px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-popover-foreground opacity-0 shadow-xl transition-all duration-200 group-hover:opacity-100 z-50",
+                  "pointer-events-none absolute select-none whitespace-nowrap rounded-md border border-border bg-popover px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-popover-foreground opacity-0 shadow-xl transition-all duration-200 group-hover:opacity-100 z-50",
                   direction === "vertical" 
                     ? "right-full mr-3 top-1/2 -translate-y-1/2 group-hover:-translate-x-1" 
                     : "-top-10 left-1/2 -translate-x-1/2 translate-y-2 group-hover:-translate-y-1"
@@ -507,15 +507,15 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
                     {activeTool.key === "amenities" && <Sparkles className="size-6 text-emerald-300" />}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[10px] font-bold text-primary uppercase tracking-[0.25em] opacity-80 mb-1">Property Configuration</p>
-                    <p className="truncate text-xl font-bold tracking-tight text-foreground sm:text-2xl">{activeTool.label}</p>
+                    <p className="text-[10px] font-black text-primary uppercase tracking-[0.25em] opacity-80 mb-1">Property Configuration</p>
+                    <p className="truncate text-xl font-black tracking-tight text-foreground sm:text-2xl">{activeTool.label}</p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-4">
                   <div className="hidden items-center gap-3 rounded-xl border border-border bg-background px-4 py-2.5 shadow-inner md:flex">
                     <Building2 className="size-4.5 text-muted-foreground" />
-                    <span className="max-w-[200px] truncate text-xs font-bold text-foreground">{propertyData?.name ?? "Loading..."}</span>
+                    <span className="max-w-[200px] truncate text-xs font-black text-foreground">{propertyData?.name ?? "Loading..."}</span>
                   </div>
 
                   <button
@@ -560,7 +560,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
                   setActiveTool(tool);
                 }}
                 className={cn(
-                  "group inline-flex flex-1 sm:flex-none justify-center items-center gap-3 rounded-[1.1rem] border px-6 py-3.5 text-[11px] font-bold uppercase tracking-[0.2em] transition-all duration-300 whitespace-nowrap",
+                  "group inline-flex flex-1 sm:flex-none justify-center items-center gap-3 rounded-[1.1rem] border px-6 py-3.5 text-[11px] font-black uppercase tracking-[0.2em] transition-all duration-300 whitespace-nowrap",
                   disabled
                     ? "cursor-not-allowed border-border bg-muted/30 text-muted-foreground"
                     : "cursor-pointer border-border bg-background text-foreground hover:-translate-y-0.5 hover:border-primary/20 hover:bg-muted active:translate-y-0"

@@ -323,7 +323,7 @@ export function BillingOperationsPanel({
     return (
       <div className="flex h-64 flex-col items-center justify-center space-y-4 rounded-3xl border border-border bg-card">
         <Loader2 className="size-8 animate-spin text-primary" />
-        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Loading settings...</p>
+        <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Loading settings...</p>
       </div>
     );
   }
@@ -352,7 +352,7 @@ export function BillingOperationsPanel({
                 >
                     <div className="p-8 border-b border-border flex items-center justify-between sticky top-0 bg-card z-10">
                         <div>
-                            <h3 className="text-xl font-bold text-foreground">Configuration Breakdown</h3>
+                            <h3 className="text-xl font-black text-foreground">Configuration Breakdown</h3>
                             <p className="text-xs text-muted-foreground mt-1">Reviewing {pendingChangesCount} strategies being applied</p>
                         </div>
                         <button 
@@ -379,14 +379,14 @@ export function BillingOperationsPanel({
                                             <Meta.icon className="size-5" />
                                         </div>
                                         <div className="space-y-1">
-                                            <p className="text-sm font-bold text-foreground">
+                                            <p className="text-sm font-black text-foreground">
                                                 {unit ? unit.name : property?.name || "Global"}
                                             </p>
                                             <div className="flex items-center gap-2">
-                                                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">{c.utility_type}</span>
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{c.utility_type}</span>
                                                 <div className="size-1 rounded-full bg-border" />
                                                 <span className={cn(
-                                                    "text-[10px] font-bold uppercase tracking-widest",
+                                                    "text-[10px] font-black uppercase tracking-widest",
                                                     strategyLabel === "Included" ? "text-emerald-600" : (strategyLabel === "Direct" ? "text-blue-600" : "text-amber-600")
                                                 )}>
                                                     {strategyLabel}
@@ -396,11 +396,11 @@ export function BillingOperationsPanel({
                                     </div>
                                     <div className="text-right">
                                         {c.billing_mode === "tenant_paid" && c.responsibility_mode !== "tenant_direct" ? (
-                                            <p className="text-sm font-bold text-foreground">
+                                            <p className="text-sm font-black text-foreground">
                                                 ₱{c.rate_per_unit}<span className="text-[10px] text-muted-foreground/40 ml-1">/{c.unit_label === "kwh" ? "kWh" : "m³"}</span>
                                             </p>
                                         ) : (
-                                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">No Rate</p>
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">No Rate</p>
                                         )}
                                     </div>
                                 </div>
@@ -411,7 +411,7 @@ export function BillingOperationsPanel({
                     <div className="p-6 border-t border-border bg-muted/5">
                         <button 
                             onClick={() => dispatch({ type: 'SET_SHOW_BREAKDOWN', payload: false })}
-                            className="w-full py-4 rounded-2xl bg-foreground text-background text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all"
+                            className="w-full py-4 rounded-2xl bg-foreground text-background text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all"
                         >
                             Back to Editor
                         </button>
@@ -441,7 +441,7 @@ export function BillingOperationsPanel({
 
               <div className="relative z-10 space-y-6">
                 <div className="flex items-center justify-between">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-[0.2em]">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-[0.2em]">
                     <Info className="size-3" />
                     Strategy Guide
                   </div>
@@ -454,7 +454,7 @@ export function BillingOperationsPanel({
                 </div>
 
                 <div className="space-y-2">
-                    <h4 className="text-2xl font-bold text-foreground">{helpContent.title}</h4>
+                    <h4 className="text-2xl font-black text-foreground">{helpContent.title}</h4>
                     <div className="size-12 bg-primary rounded-full" />
                 </div>
 
@@ -464,7 +464,7 @@ export function BillingOperationsPanel({
 
                 <button
                   onClick={() => dispatch({ type: 'SET_HELP', payload: null })}
-                  className="w-full py-4 rounded-2xl bg-primary text-white font-bold text-sm shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
+                  className="w-full py-4 rounded-2xl bg-primary text-white font-black text-sm shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
                 >
                   Got it, thanks!
                 </button>
@@ -501,16 +501,16 @@ export function BillingOperationsPanel({
                         onClick={() => dispatch({ type: 'SET_SHOW_BREAKDOWN', payload: true })}
                         className="hidden md:flex flex-col text-left hover:opacity-70 transition-opacity"
                     >
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Review & Save</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-primary">Review & Save</span>
                         <p className="text-[10px] text-muted-foreground whitespace-nowrap">
-                            Apply <span className="font-bold text-foreground underline decoration-primary/30 underline-offset-4">{pendingChangesCount}</span> configurations to property.
+                            Apply <span className="font-black text-foreground underline decoration-primary/30 underline-offset-4">{pendingChangesCount}</span> configurations to property.
                         </p>
                     </button>
                     <div className="h-8 w-px bg-border hidden md:block" />
                     <button
                         onClick={save}
                         disabled={saving}
-                        className="group relative inline-flex items-center gap-3 overflow-hidden rounded-2xl bg-primary px-8 py-3.5 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 hover:scale-[1.05] active:scale-95 disabled:opacity-50"
+                        className="group relative inline-flex items-center gap-3 overflow-hidden rounded-2xl bg-primary px-8 py-3.5 text-sm font-black text-white shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 hover:scale-[1.05] active:scale-95 disabled:opacity-50"
                     >
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                         {saving ? <Loader2 className="size-5 animate-spin" /> : <Save className="size-5" />}
@@ -552,7 +552,7 @@ export function BillingOperationsPanel({
           )}
         >
           {message.type === "success" ? <CheckCircle2 className="size-5" /> : <Info className="size-5" />}
-          <span className="text-sm font-bold">{message.value}</span>
+          <span className="text-sm font-black">{message.value}</span>
         </motion.div>
       )}
 
@@ -567,7 +567,7 @@ export function BillingOperationsPanel({
                     <Smartphone className="size-6" />
                   </div>
                   <div>
-                    <h4 className="text-lg font-bold text-foreground">GCash Integration</h4>
+                    <h4 className="text-lg font-black text-foreground">GCash Integration</h4>
                     <p className="text-xs text-muted-foreground">Receive payments directly from tenants</p>
                   </div>
                 </div>
@@ -578,7 +578,7 @@ export function BillingOperationsPanel({
                       value={accountName}
                       placeholder="e.g. Juan Dela Cruz"
                       onChange={(event) => dispatch({ type: 'UPDATE_PAYMENT', payload: { accountName: event.target.value } })}
-                      className="w-full rounded-xl border border-border bg-muted/20 dark:bg-white/[0.03] px-4 py-3 text-sm font-bold text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10"
+                      className="w-full rounded-xl border border-border bg-muted/20 dark:bg-white/[0.03] px-4 py-3 text-sm font-black text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10"
                     />
                   </Field>
                   <Field label="GCash Number">
@@ -586,7 +586,7 @@ export function BillingOperationsPanel({
                       value={accountNumber}
                       placeholder="0917 XXX XXXX"
                       onChange={(event) => dispatch({ type: 'UPDATE_PAYMENT', payload: { accountNumber: event.target.value } })}
-                      className="w-full rounded-xl border border-border bg-muted/20 dark:bg-white/[0.03] px-4 py-3 text-sm font-bold text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10"
+                      className="w-full rounded-xl border border-border bg-muted/20 dark:bg-white/[0.03] px-4 py-3 text-sm font-black text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10"
                     />
                   </Field>
                 </div>
@@ -597,7 +597,7 @@ export function BillingOperationsPanel({
                     isEnabled ? "border-primary/30 bg-primary/5 dark:bg-primary/[0.03]" : "border-border bg-muted/20 dark:bg-white/[0.02]"
                   )}>
                     <div className="space-y-0.5">
-                      <span className="text-xs font-bold text-foreground">Enable Payments</span>
+                      <span className="text-xs font-black text-foreground">Enable Payments</span>
                       <p className="text-[10px] text-muted-foreground leading-tight">Allow tenants to use this method</p>
                     </div>
                     <div className={cn("flex h-6 w-11 items-center rounded-full px-1 transition-all", isEnabled ? "bg-primary" : "bg-muted-foreground/30")}>
@@ -607,7 +607,7 @@ export function BillingOperationsPanel({
                     <input id="enable-payments" type="checkbox" checked={isEnabled} onChange={() => dispatch({ type: 'UPDATE_PAYMENT', payload: { isEnabled: !isEnabled } })} className="hidden" />
                   </div>
 
-                  <label htmlFor="qr-upload" className="flex flex-1 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border p-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground transition-all hover:bg-muted/50 hover:border-primary/40 hover:text-primary">
+                  <label htmlFor="qr-upload" className="flex flex-1 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border p-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground transition-all hover:bg-muted/50 hover:border-primary/40 hover:text-primary">
                     <input id="qr-upload" type="file" accept="image/*" className="hidden" onChange={(event) => { const file = event.target.files?.[0] ?? null; if (file) { dispatch({ type: 'UPDATE_PAYMENT', payload: { qrFile: file, qrPreview: URL.createObjectURL(file), removeQr: false } }); } else { dispatch({ type: 'UPDATE_PAYMENT', payload: { qrFile: null } }); } }} />
                     <QrCode className="size-5 mb-1" />
                     {qrPreview ? "Change QR Code" : "Upload QR Code"}
@@ -622,7 +622,7 @@ export function BillingOperationsPanel({
                       exit={{ opacity: 0, height: 0 }}
                       type="button"
                       onClick={() => { dispatch({ type: 'UPDATE_PAYMENT', payload: { removeQr: true, qrFile: null, qrPreview: null } }); }}
-                      className="mt-4 w-full flex items-center justify-center gap-2 rounded-xl border border-red-100 dark:border-red-500/20 bg-red-50 dark:bg-red-500/10 px-4 py-3 text-xs font-bold text-red-600 dark:text-red-400 transition-all hover:bg-red-100 dark:hover:bg-red-500/20"
+                      className="mt-4 w-full flex items-center justify-center gap-2 rounded-xl border border-red-100 dark:border-red-500/20 bg-red-50 dark:bg-red-500/10 px-4 py-3 text-xs font-black text-red-600 dark:text-red-400 transition-all hover:bg-red-100 dark:hover:bg-red-500/20"
                     >
                       <Trash2 className="size-4 w-4" />
                       Remove QR Code
@@ -635,7 +635,7 @@ export function BillingOperationsPanel({
             {/* Simple Preview Card */}
             <div className="lg:col-span-2">
               <div className="sticky top-24 rounded-3xl border border-border bg-card p-8 text-center shadow-sm">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-primary mb-6">Tenant View Preview</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-6">Tenant View Preview</p>
 
                 <div className="relative mx-auto mb-6 aspect-square w-48 overflow-hidden rounded-2xl bg-white/90 dark:bg-white/10 p-6 shadow-inner border border-border">
                   {qrPreview ? (
@@ -643,20 +643,20 @@ export function BillingOperationsPanel({
                   ) : (
                     <div className="flex h-full flex-col items-center justify-center gap-2 text-muted-foreground/30">
                       <QrCode className="size-10" />
-                      <span className="text-[10px] font-bold">No QR Uploaded</span>
+                      <span className="text-[10px] font-black">No QR Uploaded</span>
                     </div>
                   )}
                 </div>
 
                 <div className="space-y-1.5 py-4 border-t border-border">
-                  <h5 className="text-lg font-bold text-foreground truncate">{accountName || "Juan Dela Cruz"}</h5>
+                  <h5 className="text-lg font-black text-foreground truncate">{accountName || "Juan Dela Cruz"}</h5>
                   <div className="flex items-center justify-center gap-2">
                     <CreditCard className="size-3.5" />
-                    <p className="font-mono text-sm font-bold text-primary tracking-tight">{accountNumber || "0000 000 0000"}</p>
+                    <p className="font-mono text-sm font-black text-primary tracking-tight">{accountNumber || "0000 000 0000"}</p>
                   </div>
                 </div>
 
-                <div className="mt-6 flex justify-center items-center gap-2 text-[10px] font-bold text-muted-foreground/40">
+                <div className="mt-6 flex justify-center items-center gap-2 text-[10px] font-black text-muted-foreground/40">
                   <ShieldCheck className="size-3.5" />
                   <span>iReside Secure Payment</span>
                 </div>
@@ -685,13 +685,13 @@ export function BillingOperationsPanel({
                         <Building2 className="size-8" />
                       </div>
                       <div className="space-y-1">
-                        <h4 className="text-2xl font-bold text-foreground">{property.name}</h4>
+                        <h4 className="text-2xl font-black text-foreground">{property.name}</h4>
                         <div className="flex items-center gap-3">
-                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                             <Target className="size-3" />
                             {property.units.length} Units Active
                           </span>
-                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-500/10 text-[10px] font-bold text-emerald-600 uppercase tracking-widest">
+                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-500/10 text-[10px] font-black text-emerald-600 uppercase tracking-widest">
                             <ShieldCheck className="size-3" />
                             Verified
                           </span>
@@ -699,7 +699,7 @@ export function BillingOperationsPanel({
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <button className="px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:bg-muted transition-all">
+                      <button className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:bg-muted transition-all">
                         View Inventory
                       </button>
                       <button className="size-12 flex items-center justify-center rounded-xl hover:bg-muted transition-colors border border-border bg-card">
@@ -724,13 +724,13 @@ export function BillingOperationsPanel({
                     return (
                       <div key={type} className="flex flex-col gap-6">
                         <div className="flex items-center justify-between px-2">
-                          <div className={cn("flex items-center gap-3 px-4 py-2 rounded-2xl border text-sm font-bold uppercase tracking-wider shadow-sm", meta.tint, meta.bg, meta.border)}>
+                          <div className={cn("flex items-center gap-3 px-4 py-2 rounded-2xl border text-sm font-black uppercase tracking-wider shadow-sm", meta.tint, meta.bg, meta.border)}>
                             <meta.icon className="size-4" />
                             {meta.label} Management
                           </div>
                           <button
                             onClick={() => addOverride(property.id, type)}
-                            className="group inline-flex items-center gap-2 text-xs font-bold text-primary hover:text-primary/80 transition-all"
+                            className="group inline-flex items-center gap-2 text-xs font-black text-primary hover:text-primary/80 transition-all"
                           >
                             <div className="size-8 flex items-center justify-center rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-all">
                               <Plus className="size-4" />
@@ -743,7 +743,7 @@ export function BillingOperationsPanel({
                         <div className="space-y-4">
                           <div className="flex items-center gap-2 pl-4">
                             <div className="size-1.5 rounded-full bg-primary" />
-                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Property Default</span>
+                            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Property Default</span>
                           </div>
                           <UtilityConfigEditor
                             config={baseConfig}
@@ -759,15 +759,15 @@ export function BillingOperationsPanel({
                                   content: (
                                     <div className="space-y-4">
                                       <div className="p-4 rounded-2xl bg-muted/30 border border-border">
-                                        <p className="font-bold text-foreground mb-1">Included in Rent</p>
+                                        <p className="font-black text-foreground mb-1">Included in Rent</p>
                                         <p>The utility cost is part of the rent. Tenants don&apos;t pay anything extra.</p>
                                       </div>
                                       <div className="p-4 rounded-2xl bg-muted/30 border border-border">
-                                        <p className="font-bold text-foreground mb-1">Submetered (Landlord Managed)</p>
+                                        <p className="font-black text-foreground mb-1">Submetered (Landlord Managed)</p>
                                         <p>The property has one main bill that you pay. You use submeters to bill tenants for their specific usage through iReside.</p>
                                       </div>
                                       <div className="p-4 rounded-2xl bg-muted/30 border border-border">
-                                        <p className="font-bold text-foreground mb-1">Direct to Provider</p>
+                                        <p className="font-black text-foreground mb-1">Direct to Provider</p>
                                         <p>Tenants have their own separate accounts and meters. They receive and pay their own bills directly to the utility company.</p>
                                       </div>
                                     </div>
@@ -782,7 +782,7 @@ export function BillingOperationsPanel({
                         <div className="space-y-4 pt-6 border-t border-border mt-4 h-full flex flex-col">
                           <div className="flex items-center gap-2 pl-4">
                             <Target className={cn("size-4", overrides.length > 0 ? "text-amber-600" : "text-muted-foreground/30")} />
-                            <span className={cn("text-[10px] font-bold uppercase tracking-widest", overrides.length > 0 ? "text-amber-600" : "text-muted-foreground/30")}>
+                            <span className={cn("text-[10px] font-black uppercase tracking-widest", overrides.length > 0 ? "text-amber-600" : "text-muted-foreground/30")}>
                               Unit Customizations
                             </span>
                           </div>
@@ -805,15 +805,15 @@ export function BillingOperationsPanel({
                                         content: (
                                           <div className="space-y-4">
                                             <div className="p-4 rounded-2xl bg-muted/30 border border-border">
-                                              <p className="font-bold text-foreground mb-1">Included in Rent</p>
+                                              <p className="font-black text-foreground mb-1">Included in Rent</p>
                                               <p>Utilities are covered by the rent payment.</p>
                                             </div>
                                             <div className="p-4 rounded-2xl bg-muted/30 border border-border">
-                                              <p className="font-bold text-foreground mb-1">Submetered</p>
+                                              <p className="font-black text-foreground mb-1">Submetered</p>
                                               <p>You bill tenants based on their submeter readings.</p>
                                             </div>
                                             <div className="p-4 rounded-2xl bg-muted/30 border border-border">
-                                              <p className="font-bold text-foreground mb-1">Direct</p>
+                                              <p className="font-black text-foreground mb-1">Direct</p>
                                               <p>Tenants pay the utility company directly.</p>
                                             </div>
                                           </div>
@@ -826,7 +826,7 @@ export function BillingOperationsPanel({
                             </div>
                           ) : (
                             <div className="flex-1 min-h-[100px] flex flex-col items-center justify-center rounded-[2rem] border border-dashed border-border/50 bg-muted/5 opacity-40">
-                              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">No customizations active</p>
+                              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">No customizations active</p>
                             </div>
                           )}
                         </div>
@@ -854,7 +854,7 @@ function Field({
   return (
     <div className="block space-y-2">
       <div className="flex items-center gap-2 pl-1">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}</span>
+        <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{label}</span>
         {onHelp && (
           <button 
             type="button"
@@ -927,13 +927,13 @@ function UtilityConfigEditor({
             </div>
             <div className="space-y-0.5">
               <span className={cn(
-                "text-[10px] font-bold uppercase tracking-[0.2em]",
+                "text-[10px] font-black uppercase tracking-[0.2em]",
                 isOverride ? "text-amber-500" : "text-primary"
               )}>
                 {isOverride ? "Unit Customization" : "Property Default"}
               </span>
               {!isOverride && (
-                <p className="text-sm font-bold text-foreground">
+                <p className="text-sm font-black text-foreground">
                   Global settings for this building
                 </p>
               )}
@@ -945,7 +945,7 @@ function UtilityConfigEditor({
               <select
                 value={config.unit_id ?? ""}
                 onChange={(e) => onChange(config.localId, { unit_id: e.target.value || null })}
-                className="rounded-xl border border-amber-500/30 bg-card px-4 py-2 text-xs font-bold text-amber-600 outline-none focus:ring-4 focus:ring-amber-500/10 shadow-sm"
+                className="rounded-xl border border-amber-500/30 bg-card px-4 py-2 text-xs font-black text-amber-600 outline-none focus:ring-4 focus:ring-amber-500/10 shadow-sm"
               >
                 <option value="">Select Unit...</option>
                 {units.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
@@ -965,7 +965,7 @@ function UtilityConfigEditor({
           <div className="space-y-6">
             {!isOverride && (
               <div className="relative flex items-center gap-4">
-                <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground/30">1. Select Logic</span>
+                <span className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground/30">1. Select Logic</span>
                 <div className="h-px flex-1 bg-border/40" />
               </div>
             )}
@@ -979,7 +979,7 @@ function UtilityConfigEditor({
                   <button 
                     onClick={() => onChange(config.localId, { billing_mode: "included_in_rent", responsibility_mode: "landlord_bills" })}
                     className={cn(
-                      "flex items-center justify-center gap-2 rounded-xl py-3 text-[10px] font-bold uppercase tracking-widest transition-all",
+                      "flex items-center justify-center gap-2 rounded-xl py-3 text-[10px] font-black uppercase tracking-widest transition-all",
                       strategy === "included" 
                         ? "bg-primary text-white shadow-lg shadow-primary/20 scale-[1.02]" 
                         : "text-muted-foreground hover:bg-white/5"
@@ -991,7 +991,7 @@ function UtilityConfigEditor({
                   <button 
                     onClick={() => onChange(config.localId, { billing_mode: "tenant_paid", responsibility_mode: "landlord_bills" })}
                     className={cn(
-                      "flex items-center justify-center gap-2 rounded-xl py-3 text-[10px] font-bold uppercase tracking-widest transition-all",
+                      "flex items-center justify-center gap-2 rounded-xl py-3 text-[10px] font-black uppercase tracking-widest transition-all",
                       strategy === "submetered" 
                         ? "bg-primary text-white shadow-lg shadow-primary/20 scale-[1.02]" 
                         : "text-muted-foreground hover:bg-white/5"
@@ -1003,7 +1003,7 @@ function UtilityConfigEditor({
                   <button 
                     onClick={() => onChange(config.localId, { billing_mode: "tenant_paid", responsibility_mode: "tenant_direct" })}
                     className={cn(
-                      "flex items-center justify-center gap-2 rounded-xl py-3 text-[10px] font-bold uppercase tracking-widest transition-all",
+                      "flex items-center justify-center gap-2 rounded-xl py-3 text-[10px] font-black uppercase tracking-widest transition-all",
                       strategy === "direct" 
                         ? "bg-primary text-white shadow-lg shadow-primary/20 scale-[1.02]" 
                         : "text-muted-foreground hover:bg-white/5"
@@ -1029,7 +1029,7 @@ function UtilityConfigEditor({
               >
                 {!isOverride && (
                   <div className="relative flex items-center gap-4">
-                    <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground/30">2. Rates & Billing</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground/30">2. Rates & Billing</span>
                     <div className="h-px flex-1 bg-border/40" />
                   </div>
                 )}
@@ -1045,7 +1045,7 @@ function UtilityConfigEditor({
                   <Field label="Rate per Unit">
                     <div className="relative group">
                       <span className={cn(
-                        "absolute top-1/2 -translate-y-1/2 font-bold text-primary/40 transition-colors group-focus-within:text-primary",
+                        "absolute top-1/2 -translate-y-1/2 font-black text-primary/40 transition-colors group-focus-within:text-primary",
                         isOverride ? "left-4 text-base" : "left-5 text-lg"
                       )}>₱</span>
                       <input 
@@ -1054,12 +1054,12 @@ function UtilityConfigEditor({
                         value={config.rate_per_unit}
                         onChange={(e) => onChange(config.localId, { rate_per_unit: parseFloat(e.target.value) })}
                         className={cn(
-                          "w-full rounded-2xl border border-border bg-card font-bold tracking-tight text-foreground outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/5",
+                          "w-full rounded-2xl border border-border bg-card font-black tracking-tight text-foreground outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/5",
                           isOverride ? "h-12 pl-8 pr-4 text-lg" : "h-16 pl-10 pr-4 text-2xl"
                         )}
                       />
                       <div className={cn("absolute top-1/2 -translate-y-1/2 flex flex-col items-end", isOverride ? "right-4" : "right-5")}>
-                        <span className="text-[10px] font-bold text-primary uppercase tracking-widest">{config.utility_type === "water" ? "m³" : "kWh"}</span>
+                        <span className="text-[10px] font-black text-primary uppercase tracking-widest">{config.utility_type === "water" ? "m³" : "kWh"}</span>
                       </div>
                     </div>
                   </Field>
@@ -1068,7 +1068,7 @@ function UtilityConfigEditor({
                     <div className="relative group">
                       {/* Custom UI Trigger */}
                       <div className={cn(
-                        "flex items-center gap-4 w-full rounded-2xl border border-border bg-card font-bold text-foreground transition-all group-focus-within:border-primary group-focus-within:ring-4 group-focus-within:ring-primary/5",
+                        "flex items-center gap-4 w-full rounded-2xl border border-border bg-card font-black text-foreground transition-all group-focus-within:border-primary group-focus-within:ring-4 group-focus-within:ring-primary/5",
                         isOverride ? "h-12 px-4" : "h-16 px-5"
                       )}>
                         <Calendar className={cn(
@@ -1116,9 +1116,9 @@ function UtilityConfigEditor({
               </div>
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground">Operational Strategy</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground">Operational Strategy</p>
                     {isSubmetered && config.rate_per_unit === 0 && (
-                        <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-[8px] font-bold uppercase text-amber-600 tracking-tighter">Action Required</span>
+                        <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-[8px] font-black uppercase text-amber-600 tracking-tighter">Action Required</span>
                     )}
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed font-medium">

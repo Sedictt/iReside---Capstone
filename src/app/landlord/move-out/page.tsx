@@ -27,11 +27,11 @@ export default function MoveOutRequestsPage() {
             >
               <div className="mb-10 space-y-1">
                 <div className="flex items-center gap-4">
-                  <h1 className="text-4xl font-bold tracking-tight text-foreground">
+                  <h1 className="text-4xl font-black tracking-tight text-foreground">
                     Move-Out Requests
                   </h1>
                   {isPreview && (
-                    <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest border border-primary/20">
+                    <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest border border-primary/20">
                       Preview Mode
                     </span>
                   )}

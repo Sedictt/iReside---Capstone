@@ -85,10 +85,10 @@ export function ComplaintModal({
                                     <span className="material-icons-round text-3xl">report_problem</span>
                                 </div>
                                 <div>
-                                    <h2 className="text-2xl font-bold tracking-tight text-foreground">
+                                    <h2 className="text-2xl font-black tracking-tight text-foreground">
                                         Submit a Complaint
                                     </h2>
-                                    <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Unit {unit.name}</p>
+                                    <p className="text-sm font-black text-muted-foreground uppercase tracking-widest">Unit {unit.name}</p>
                                 </div>
                             </div>
 
@@ -101,20 +101,20 @@ export function ComplaintModal({
                                     <div className="size-20 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500 mb-6">
                                         <span className="material-icons-round text-5xl">check_circle</span>
                                     </div>
-                                    <h3 className="text-xl font-bold text-foreground mb-2">Complaint Received</h3>
+                                    <h3 className="text-xl font-black text-foreground mb-2">Complaint Received</h3>
                                     <p className="text-muted-foreground">Thank you for your report. Our team will investigate this matter immediately.</p>
                                 </motion.div>
                             ) : (
                                 <form onSubmit={handleSubmit} className="space-y-6">
                                     <div className="space-y-3">
-                                        <label className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground ml-1">Nature of Complaint</label>
+                                        <label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Nature of Complaint</label>
                                         <div className="grid grid-cols-2 gap-3">
                                             {predefinedComplaints.map((type) => (
                                                 <button
                                                     key={type}
                                                     type="button"
                                                     onClick={() => setComplaintType(type)}
-                                                    className={`px-4 py-3 rounded-2xl border text-left text-xs font-bold transition-all ${
+                                                    className={`px-4 py-3 rounded-2xl border text-left text-xs font-black transition-all ${
                                                         complaintType === type 
                                                             ? 'border-primary bg-primary/5 text-primary shadow-[0_0_15px_rgba(var(--primary-rgb),0.1)]' 
                                                             : 'border-border bg-muted/30 text-muted-foreground hover:border-neutral-400'
@@ -132,7 +132,7 @@ export function ComplaintModal({
                                             animate={{ opacity: 1, height: 'auto' }}
                                             className="space-y-3"
                                         >
-                                            <label className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground ml-1">Details</label>
+                                            <label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Details</label>
                                             <textarea
                                                 required
                                                 value={customComplaint}
@@ -144,7 +144,7 @@ export function ComplaintModal({
                                     )}
 
                                     <div className="space-y-3">
-                                        <label className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground ml-1">Evidence / Photos</label>
+                                        <label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Evidence / Photos</label>
                                         <div 
                                             className={`relative group cursor-pointer rounded-2xl border-2 border-dashed transition-all p-8 flex flex-col items-center justify-center gap-3 ${
                                                 attachment ? 'border-primary/50 bg-primary/5' : 'border-border hover:border-primary/30 hover:bg-muted/30'
@@ -168,8 +168,8 @@ export function ComplaintModal({
                                                         <span className="material-icons-round text-2xl">image</span>
                                                     </div>
                                                     <div className="text-center">
-                                                        <p className="text-sm font-bold text-foreground">{attachment.name}</p>
-                                                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">
+                                                        <p className="text-sm font-black text-foreground">{attachment.name}</p>
+                                                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1">
                                                             {(attachment.size / 1024 / 1024).toFixed(2)} MB &bull; Click to change
                                                         </p>
                                                     </div>
@@ -180,8 +180,8 @@ export function ComplaintModal({
                                                         <span className="material-icons-round text-2xl">add_a_photo</span>
                                                     </div>
                                                     <div className="text-center">
-                                                        <p className="text-sm font-bold text-foreground">Upload Evidence</p>
-                                                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">JPG, PNG up to 10MB</p>
+                                                        <p className="text-sm font-black text-foreground">Upload Evidence</p>
+                                                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1">JPG, PNG up to 10MB</p>
                                                     </div>
                                                 </>
                                             )}
@@ -191,7 +191,7 @@ export function ComplaintModal({
                                     <button
                                         type="submit"
                                         disabled={isSubmitting || !complaintType}
-                                        className="w-full py-5 rounded-2xl bg-primary text-primary-foreground text-sm font-bold uppercase tracking-[0.2em] transition-all hover:opacity-90 active:scale-[0.98] shadow-xl shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                                        className="w-full py-5 rounded-2xl bg-primary text-primary-foreground text-sm font-black uppercase tracking-[0.2em] transition-all hover:opacity-90 active:scale-[0.98] shadow-xl shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
                                     >
                                         {isSubmitting ? (
                                             <>

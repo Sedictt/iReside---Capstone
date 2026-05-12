@@ -260,7 +260,7 @@ export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActi
                     <div className="absolute inset-0 rounded-2xl bg-primary/20 animate-pulse blur-md pointer-events-none" />
                     <AlertCircle className="size-5 text-primary transition-transform group-hover:scale-110" />
                     
-                    <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 scale-0 px-2 py-1 rounded bg-surface-4 text-[10px] font-bold text-foreground opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all whitespace-nowrap border border-white/5 shadow-xl">
+                    <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 scale-0 px-2 py-1 rounded bg-surface-4 text-[10px] font-black text-foreground opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all whitespace-nowrap border border-white/5 shadow-xl">
                         View Missions
                     </span>
                 </button>
@@ -307,7 +307,7 @@ export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActi
                                                 <result.icon className="size-4 text-primary" />
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-bold text-foreground truncate">{result.title}</p>
+                                                <p className="text-sm font-black text-foreground truncate">{result.title}</p>
                                                 <p className="text-xs text-muted-foreground truncate">{result.subtitle}</p>
                                             </div>
                                         </button>
@@ -333,7 +333,7 @@ export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActi
                     >
                         <Bell className="size-5 text-muted-foreground transition-colors group-hover:text-foreground" />
                         {unreadCount > 0 && (
-                            <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)]">
+                            <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-black text-primary-foreground shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)]">
                                 {unreadCount > 9 ? "9+" : unreadCount}
                             </span>
                         )}
@@ -342,8 +342,8 @@ export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActi
                     {isNotificationsOpen && (
                         <div className="absolute right-0 z-50 mt-4 w-[340px] overflow-hidden rounded-[2rem] border border-white/10 bg-surface-4 shadow-[0_20px_50px_rgba(0,0,0,0.35)] backdrop-blur-3xl animate-in fade-in zoom-in-95 duration-200">
                             <div className="flex items-center justify-between border-b border-white/5 px-6 py-4">
-                                <p className="text-sm font-bold uppercase tracking-widest text-foreground">Notifications</p>
-                                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">{unreadCount} New</span>
+                                <p className="text-sm font-black uppercase tracking-widest text-foreground">Notifications</p>
+                                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-black text-primary">{unreadCount} New</span>
                             </div>
 
                             <div className="max-h-[360px] overflow-y-auto custom-scrollbar-premium">
@@ -375,7 +375,7 @@ export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActi
                                         >
                                             <div className="flex items-start justify-between gap-4">
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-bold text-foreground group-hover/item:text-primary transition-colors truncate">{notification.title}</p>
+                                                    <p className="text-sm font-black text-foreground group-hover/item:text-primary transition-colors truncate">{notification.title}</p>
                                                     <p className="mt-1 text-xs leading-relaxed text-muted-foreground line-clamp-2">{notification.message}</p>
                                                     <p className="mt-2 text-[10px] font-medium uppercase tracking-tight text-muted-foreground/60">{formatTimeAgo(notification.created_at)}</p>
                                                 </div>
@@ -403,7 +403,7 @@ export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActi
                             <div className="border-t border-white/5 p-3">
                                 <button 
                                     onClick={handleClearAll}
-                                    className="w-full rounded-xl py-2 text-[11px] font-bold uppercase tracking-widest text-muted-foreground transition-all hover:bg-card hover:text-foreground"
+                                    className="w-full rounded-xl py-2 text-[11px] font-black uppercase tracking-widest text-muted-foreground transition-all hover:bg-card hover:text-foreground"
                                 >
                                     Mark all as read
                                 </button>

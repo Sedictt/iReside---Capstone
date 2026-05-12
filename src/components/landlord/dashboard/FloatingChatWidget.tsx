@@ -97,7 +97,7 @@ export function HeaderChatWidget() {
                             className="absolute top-[calc(100%+12px)] right-0 w-80 bg-neutral-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col z-[70]"
                         >
                             <div className="p-4 border-b border-white/5 bg-neutral-900/50 backdrop-blur-md flex items-center justify-between">
-                                <h3 className="font-bold text-white">Recent Messages</h3>
+                                <h3 className="font-black text-white">Recent Messages</h3>
                                 <button onClick={toggleList} className="text-neutral-500 hover:text-white transition-colors">
                                     <X className="size-4" />
                                 </button>
@@ -123,7 +123,7 @@ export function HeaderChatWidget() {
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center justify-between mb-0.5">
-                                                <h4 className={cn("text-sm truncate pr-2 transition-colors group-hover:text-primary", msg.unread ? "font-bold text-white" : "font-medium text-neutral-200")}>
+                                                <h4 className={cn("text-sm truncate pr-2 transition-colors group-hover:text-primary", msg.unread ? "font-black text-white" : "font-medium text-neutral-200")}>
                                                     {msg.name}
                                                 </h4>
                                                 <span className="text-[10px] text-neutral-500 shrink-0">{msg.time}</span>
@@ -136,7 +136,7 @@ export function HeaderChatWidget() {
                                 ))}
                             </div>
                             <div className="p-3 bg-neutral-900 text-center border-t border-white/5">
-                                <button className="text-xs font-bold text-primary hover:text-primary/80 transition-colors">
+                                <button className="text-xs font-black text-primary hover:text-primary/80 transition-colors">
                                     View All Messages
                                 </button>
                             </div>
@@ -164,7 +164,7 @@ export function HeaderChatWidget() {
                                         <div className="absolute bottom-0 right-0 size-2.5 bg-emerald-500 border-2 border-neutral-900 rounded-full" />
                                     </div>
                                     <div className="flex flex-col min-w-0">
-                                        <h4 className="text-sm font-bold text-white truncate hover:underline">{chat.name}</h4>
+                                        <h4 className="text-sm font-black text-white truncate hover:underline">{chat.name}</h4>
                                         <p className="text-[10px] text-emerald-400">Active Now</p>
                                     </div>
                                 </div>

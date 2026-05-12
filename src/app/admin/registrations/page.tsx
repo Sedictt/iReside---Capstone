@@ -107,8 +107,8 @@ function KpiCard({ icon: Icon, label, value, accentText }: {
                     <Icon className="size-5" strokeWidth={1.5} />
                 </div>
                 <div>
-                    <p className="text-3xl font-bold tracking-tight text-white">{value}</p>
-                    <p className="mt-1 text-[11px] font-bold uppercase tracking-widest text-white/40">{label}</p>
+                    <p className="text-3xl font-black tracking-tight text-white">{value}</p>
+                    <p className="mt-1 text-[11px] font-black uppercase tracking-widest text-white/40">{label}</p>
                 </div>
             </div>
         </div>
@@ -236,13 +236,13 @@ export default function AdminRegistrationsPage() {
                     <section className="relative overflow-hidden rounded-[2.5rem] border border-border/70 bg-card p-8 md:p-12">
                         <div className="relative z-10 space-y-8">
                             <div className="space-y-4">
-                                <div className="inline-flex items-center gap-3 rounded-full border border-amber-500/20 bg-amber-500/10 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-amber-300/80">
+                                <div className="inline-flex items-center gap-3 rounded-full border border-amber-500/20 bg-amber-500/10 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-amber-300/80">
                                     <span className="relative flex size-2">
                                         <span className="relative inline-flex size-2 rounded-full bg-amber-400" />
                                     </span>
                                     Registration Queue
                                 </div>
-                                <h1 className="text-4xl font-bold tracking-tight text-white md:text-5xl lg:leading-[1.1]">
+                                <h1 className="text-4xl font-black tracking-tight text-white md:text-5xl lg:leading-[1.1]">
                                     Incoming Landlord Registrations
                                 </h1>
                                 <p className="max-w-2xl text-base font-medium leading-relaxed text-white/50">
@@ -262,7 +262,7 @@ export default function AdminRegistrationsPage() {
                     {error && (
                         <div className="flex items-center gap-3 rounded-2xl border border-red-500/20 bg-red-500/5 px-5 py-4">
                             <ShieldX className="size-5 shrink-0 text-red-400" />
-                            <p className="text-sm font-bold text-red-300">{error}</p>
+                            <p className="text-sm font-black text-red-300">{error}</p>
                         </div>
                     )}
 
@@ -271,8 +271,8 @@ export default function AdminRegistrationsPage() {
 
                         <div className="relative z-10">
                             <div className="mb-6 flex items-center justify-between">
-                                <h2 className="text-lg font-bold tracking-wide text-white/80">Applicant Queue</h2>
-                                <span className="text-xs font-bold uppercase tracking-widest text-white/30">{incoming.length} record{incoming.length !== 1 ? "s" : ""}</span>
+                                <h2 className="text-lg font-black tracking-wide text-white/80">Applicant Queue</h2>
+                                <span className="text-xs font-black uppercase tracking-widest text-white/30">{incoming.length} record{incoming.length !== 1 ? "s" : ""}</span>
                             </div>
 
                             {loading ? (
@@ -286,7 +286,7 @@ export default function AdminRegistrationsPage() {
                                     <div className="flex size-16 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
                                         <CheckCircle2 className="size-8 text-primary" />
                                     </div>
-                                    <p className="mt-5 text-lg font-bold text-white">All clear</p>
+                                    <p className="mt-5 text-lg font-black text-white">All clear</p>
                                     <p className="mt-1 text-sm text-white/40">No incoming registrations to review.</p>
                                 </div>
                             ) : (
@@ -314,7 +314,7 @@ export default function AdminRegistrationsPage() {
                                                         </div>
                                                         <div className="min-w-0">
                                                             <div className="flex min-w-0 items-center gap-2">
-                                                                <p className="truncate text-base font-bold text-white">{row.applicant?.full_name || "Unknown applicant"}</p>
+                                                                <p className="truncate text-base font-black text-white">{row.applicant?.full_name || "Unknown applicant"}</p>
                                                                 <RoleBadge role={row.applicant?.role ?? null} />
                                                             </div>
                                                             <p className="mt-0.5 flex items-center gap-1.5 truncate text-sm text-white/40">
@@ -334,7 +334,7 @@ export default function AdminRegistrationsPage() {
                                                 </div>
 
                                                 <span className={cn(
-                                                    "relative inline-flex items-center gap-1.5 self-center rounded-full border px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest",
+                                                    "relative inline-flex items-center gap-1.5 self-center rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-widest",
                                                     meta.dotClass, meta.bgClass, meta.textClass
                                                 )}>
                                                     <span className={cn("size-1.5 rounded-full", meta.dotClass)} />
@@ -379,14 +379,14 @@ export default function AdminRegistrationsPage() {
                                         )} />
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary/60">Prospective Landlord</p>
+                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Prospective Landlord</p>
                                         <div className="mt-1 flex items-center gap-3">
-                                            <h2 className="text-2xl font-bold tracking-tight text-white">{selected.applicant?.full_name || "Unknown applicant"}</h2>
+                                            <h2 className="text-2xl font-black tracking-tight text-white">{selected.applicant?.full_name || "Unknown applicant"}</h2>
                                             <RoleBadge role={selected.applicant?.role ?? null} className="text-[9px]" />
                                         </div>
                                         <div className="mt-2 flex items-center gap-3" suppressHydrationWarning>
                                             <span className={cn(
-                                                "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-widest",
+                                                "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-widest",
                                                 STATUS_META[selected.status].bgClass,
                                                 STATUS_META[selected.status].textClass
                                             )}>
@@ -421,8 +421,8 @@ export default function AdminRegistrationsPage() {
                                             <Mail className="size-4 text-white/35" />
                                         </div>
                                         <div className="min-w-0">
-                                            <p className="text-[10px] font-bold uppercase tracking-widest text-white/25">Email Address</p>
-                                            <p className="truncate text-sm font-bold text-white/80">{selected.applicant?.email || "No email"}</p>
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-white/25">Email Address</p>
+                                            <p className="truncate text-sm font-black text-white/80">{selected.applicant?.email || "No email"}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-4 rounded-2xl border border-white/[0.06] bg-white/[0.02] px-5 py-4">
@@ -430,8 +430,8 @@ export default function AdminRegistrationsPage() {
                                             <Phone className="size-4 text-white/35" />
                                         </div>
                                         <div className="min-w-0">
-                                            <p className="text-[10px] font-bold uppercase tracking-widest text-white/25">Phone Number</p>
-                                            <p className="text-sm font-bold text-white/80">{selected.phone}</p>
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-white/25">Phone Number</p>
+                                            <p className="text-sm font-black text-white/80">{selected.phone}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -445,7 +445,7 @@ export default function AdminRegistrationsPage() {
                                                 <Building2 className="size-4 text-primary" />
                                             </div>
                                             <div>
-                                                <p className="text-sm font-bold text-white/85">Business Legitimacy Check</p>
+                                                <p className="text-sm font-black text-white/85">Business Legitimacy Check</p>
                                                 <p className="text-[11px] text-white/30">Cross-reference with Valenzuela City Business Directory</p>
                                             </div>
                                         </div>
@@ -462,7 +462,7 @@ export default function AdminRegistrationsPage() {
                                                 type="button"
                                                 onClick={() => void verifyBusiness(selected)}
                                                 disabled={verifyingId === selected.id}
-                                                className="inline-flex items-center justify-center gap-2 rounded-xl border border-primary/25 bg-primary/15 px-5 py-3 text-xs font-bold text-primary transition-colors hover:bg-primary/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:opacity-50"
+                                                className="inline-flex items-center justify-center gap-2 rounded-xl border border-primary/25 bg-primary/15 px-5 py-3 text-xs font-black text-primary transition-colors hover:bg-primary/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:opacity-50"
                                             >
                                                 {verifyingId === selected.id ? (
                                                     <><LoaderCircle className="size-3.5 animate-spin" />Verifying</>
@@ -474,7 +474,7 @@ export default function AdminRegistrationsPage() {
                                                 href={`https://bd.valenzuela.gov.ph/?business_name=${encodeURIComponent(businessNames[selected.id] || selected.business_name || "")}`}
                                                 target="_blank"
                                                 rel="noreferrer"
-                                                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-5 py-3 text-xs font-bold text-white/50 transition-colors hover:border-white/20 hover:bg-white/[0.06] hover:text-white/75"
+                                                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-5 py-3 text-xs font-black text-white/50 transition-colors hover:border-white/20 hover:bg-white/[0.06] hover:text-white/75"
                                             >
                                                 <ExternalLink className="size-3.5" />Open Directory
                                             </a>
@@ -500,7 +500,7 @@ export default function AdminRegistrationsPage() {
                                                             <ShieldX className="size-3.5 text-red-400" />
                                                         </div>
                                                         <div>
-                                                            <p className="text-xs font-bold text-red-300/80">Business not found in directory</p>
+                                                            <p className="text-xs font-black text-red-300/80">Business not found in directory</p>
                                                             <p className="text-[11px] text-red-300/40">Verify manually or request additional ownership documents from the applicant.</p>
                                                         </div>
                                                     </div>
@@ -513,7 +513,7 @@ export default function AdminRegistrationsPage() {
                                                             <ShieldX className="size-3.5 text-red-400" />
                                                         </div>
                                                         <div>
-                                                            <p className="text-xs font-bold text-red-300/80">Verification service error</p>
+                                                            <p className="text-xs font-black text-red-300/80">Verification service error</p>
                                                             <p className="text-[11px] text-red-300/40">The directory may be unavailable. Try again or verify manually.</p>
                                                         </div>
                                                     </div>
@@ -526,22 +526,22 @@ export default function AdminRegistrationsPage() {
                                                         <div className="flex size-6 items-center justify-center rounded-md border border-emerald-500/20 bg-emerald-500/10">
                                                             <CheckCircle2 className="size-3 text-emerald-400" />
                                                         </div>
-                                                        <p className="text-xs font-bold text-emerald-300/70">Match found in directory</p>
+                                                        <p className="text-xs font-black text-emerald-300/70">Match found in directory</p>
                                                     </div>
                                                     <div className="overflow-hidden overflow-x-auto rounded-xl border border-white/[0.06]">
                                                         <table className="w-full min-w-[560px] text-xs">
                                                             <thead className="bg-white/[0.02]">
                                                                 <tr className="text-white/30">
-                                                                    <th className="px-4 py-3 text-left font-bold uppercase tracking-wider">Business Name</th>
-                                                                    <th className="px-4 py-3 text-left font-bold uppercase tracking-wider">District</th>
-                                                                    <th className="px-4 py-3 text-left font-bold uppercase tracking-wider">Barangay</th>
-                                                                    <th className="px-4 py-3 text-left font-bold uppercase tracking-wider">Industry</th>
+                                                                    <th className="px-4 py-3 text-left font-black uppercase tracking-wider">Business Name</th>
+                                                                    <th className="px-4 py-3 text-left font-black uppercase tracking-wider">District</th>
+                                                                    <th className="px-4 py-3 text-left font-black uppercase tracking-wider">Barangay</th>
+                                                                    <th className="px-4 py-3 text-left font-black uppercase tracking-wider">Industry</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
                                                                 {rows.map((r) => (
                                                                     <tr key={r.businessName} className="border-t border-white/[0.04] text-white/55">
-                                                                        <td className="px-4 py-3 font-bold text-white/90">{r.businessName}</td>
+                                                                        <td className="px-4 py-3 font-black text-white/90">{r.businessName}</td>
                                                                         <td className="px-4 py-3">{r.district}</td>
                                                                         <td className="px-4 py-3">{r.barangay}</td>
                                                                         <td className="px-4 py-3">{r.industry}</td>
@@ -563,7 +563,7 @@ export default function AdminRegistrationsPage() {
                                             <FileText className="size-4 text-white/35" />
                                         </div>
                                         <div>
-                                            <p className="text-sm font-bold text-white/85">Submitted Documents</p>
+                                            <p className="text-sm font-black text-white/85">Submitted Documents</p>
                                             <p className="text-[11px] text-white/30">Review identity, ownership, and liveness proofs</p>
                                         </div>
                                     </div>
@@ -605,7 +605,7 @@ export default function AdminRegistrationsPage() {
                                                     <doc.icon className={cn("size-5", doc.url ? "text-primary/70" : "text-red-400/60")} />
                                                 </div>
                                                 <div>
-                                                    <p className="text-xs font-bold text-white/75">{doc.label}</p>
+                                                    <p className="text-xs font-black text-white/75">{doc.label}</p>
                                                     <p className="mt-0.5 text-[10px] text-white/25">{doc.sublabel}</p>
                                                 </div>
                                                 {doc.url ? (
@@ -613,12 +613,12 @@ export default function AdminRegistrationsPage() {
                                                         href={doc.url}
                                                         target="_blank"
                                                         rel="noreferrer"
-                                                        className="mt-1 inline-flex items-center gap-1.5 rounded-lg border border-primary/15 bg-primary/5 px-3 py-1.5 text-[10px] font-bold text-primary/60"
+                                                        className="mt-1 inline-flex items-center gap-1.5 rounded-lg border border-primary/15 bg-primary/5 px-3 py-1.5 text-[10px] font-black text-primary/60"
                                                     >
                                                         View <ExternalLink className="size-2.5" />
                                                     </a>
                                                 ) : (
-                                                    <span className="mt-1 inline-flex items-center gap-1 rounded-lg border border-red-500/15 bg-red-500/5 px-3 py-1.5 text-[10px] font-bold text-red-400/50">Not uploaded</span>
+                                                    <span className="mt-1 inline-flex items-center gap-1 rounded-lg border border-red-500/15 bg-red-500/5 px-3 py-1.5 text-[10px] font-black text-red-400/50">Not uploaded</span>
                                                 )}
                                             </div>
                                         ))}
@@ -632,7 +632,7 @@ export default function AdminRegistrationsPage() {
                                             <StickyNote className="size-4 text-amber-400/50" />
                                         </div>
                                         <div>
-                                            <p className="text-sm font-bold text-white/85">Admin Notes</p>
+                                            <p className="text-sm font-black text-white/85">Admin Notes</p>
                                             <p className="text-[11px] text-white/30">Internal review notes — not visible to the applicant</p>
                                         </div>
                                     </div>
@@ -653,7 +653,7 @@ export default function AdminRegistrationsPage() {
                             <div className="flex flex-wrap items-center justify-between gap-3">
                                 <div className="flex items-center gap-3">
                                     {savingId === selected.id && (
-                                        <span className="inline-flex items-center gap-2 rounded-lg border border-primary/15 bg-primary/5 px-3 py-1.5 text-[11px] font-bold text-primary/70">
+                                        <span className="inline-flex items-center gap-2 rounded-lg border border-primary/15 bg-primary/5 px-3 py-1.5 text-[11px] font-black text-primary/70">
                                             <LoaderCircle className="size-3 animate-spin" />
                                             Saving changes
                                         </span>
@@ -663,14 +663,14 @@ export default function AdminRegistrationsPage() {
                                     <button
                                         type="button"
                                         onClick={() => void updateStatus(selected, selected.status)}
-                                        className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-xs font-bold text-white/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
+                                        className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-xs font-black text-white/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
                                     >
                                         Save Notes
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => void updateStatus(selected, "reviewing")}
-                                        className="rounded-xl border border-blue-500/20 bg-blue-500/10 px-4 py-2.5 text-xs font-bold text-blue-300/80 transition-colors hover:bg-blue-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
+                                        className="rounded-xl border border-blue-500/20 bg-blue-500/10 px-4 py-2.5 text-xs font-black text-blue-300/80 transition-colors hover:bg-blue-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
                                     >
                                         Mark Reviewing
                                     </button>
@@ -678,14 +678,14 @@ export default function AdminRegistrationsPage() {
                                     <button
                                         type="button"
                                         onClick={() => void updateStatus(selected, "approved")}
-                                        className="rounded-xl border border-primary/25 bg-primary/15 px-5 py-2.5 text-xs font-bold text-primary transition-colors hover:bg-primary/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+                                        className="rounded-xl border border-primary/25 bg-primary/15 px-5 py-2.5 text-xs font-black text-primary transition-colors hover:bg-primary/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
                                     >
                                         Approve
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => void updateStatus(selected, "rejected")}
-                                        className="rounded-xl border border-red-500/20 bg-red-500/10 px-5 py-2.5 text-xs font-bold text-red-300/80 transition-colors hover:bg-red-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40"
+                                        className="rounded-xl border border-red-500/20 bg-red-500/10 px-5 py-2.5 text-xs font-black text-red-300/80 transition-colors hover:bg-red-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40"
                                     >
                                         Reject
                                     </button>

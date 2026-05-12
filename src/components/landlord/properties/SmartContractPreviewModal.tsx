@@ -101,8 +101,8 @@ export function SmartContractPreviewModal({
                                 <Shield className="size-5 text-primary" />
                             </div>
                             <div>
-                                <h3 className="text-sm font-bold text-white uppercase tracking-widest">Digital Asset Agreement</h3>
-                                <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Universal iReside Format</p>
+                                <h3 className="text-sm font-black text-white uppercase tracking-widest">Digital Asset Agreement</h3>
+                                <p className="text-[10px] text-white/40 font-black uppercase tracking-widest">Universal iReside Format</p>
                             </div>
                         </div>
                         <button
@@ -125,11 +125,11 @@ export function SmartContractPreviewModal({
                 <div className="p-6 border-t border-white/5 bg-[#0a0a0a] flex items-center justify-between shrink-0">
                     <div className="flex items-center gap-3">
                          <div className="size-2 rounded-full bg-primary animate-pulse" />
-                         <p className="text-[10px] text-white/20 font-bold uppercase tracking-widest italic">Draft is synchronized with real-time property rules.</p>
+                         <p className="text-[10px] text-white/20 font-black uppercase tracking-widest italic">Draft is synchronized with real-time property rules.</p>
                     </div>
                     <button
                         onClick={onClose}
-                        className="px-8 py-3 bg-primary text-black rounded-xl font-bold uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20 hover:scale-105 transition-all"
+                        className="px-8 py-3 bg-primary text-black rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20 hover:scale-105 transition-all"
                     >
                         Acknowledged
                     </button>

@@ -233,16 +233,16 @@ export function CommunityPostCard({
                         {post.author_avatar ? (
                             <Image src={post.author_avatar} alt={post.author_name} fill className="object-cover" />
                         ) : (
-                            <span className="text-sm font-bold text-foreground/60">{post.author_name.charAt(0).toUpperCase()}</span>
+                            <span className="text-sm font-black text-foreground/60">{post.author_name.charAt(0).toUpperCase()}</span>
                         )}
                     </div>
                     <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-sm font-semibold text-foreground dark:text-white truncate">
+                            <span className="text-sm font-black text-foreground dark:text-white truncate">
                                 {post.author_name}
                             </span>
                             {post.author_role === 'landlord' && (
-                                <span className="shrink-0 rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary">
+                                <span className="shrink-0 rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-primary">
                                     Management
                                 </span>
                             )}
@@ -305,7 +305,7 @@ export function CommunityPostCard({
                         type="text"
                         value={editPostTitle}
                         onChange={(e) => setEditPostTitle(e.target.value)}
-                        className="w-full rounded-xl border border-border bg-background/50 px-4 py-2.5 text-sm font-semibold outline-none transition-all focus:border-primary/50 dark:border-white/10 dark:bg-white/5 dark:text-white"
+                        className="w-full rounded-xl border border-border bg-background/50 px-4 py-2.5 text-sm font-black outline-none transition-all focus:border-primary/50 dark:border-white/10 dark:bg-white/5 dark:text-white"
                         placeholder="Post title..."
                     />
                     <textarea
@@ -318,13 +318,13 @@ export function CommunityPostCard({
                         <button
                             onClick={handleEditPost}
                             disabled={isMutating}
-                            className="flex-1 rounded-xl bg-primary py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50 transition-opacity"
+                            className="flex-1 rounded-xl bg-primary py-2 text-sm font-black text-primary-foreground hover:opacity-90 disabled:opacity-50 transition-opacity"
                         >
                             Save Changes
                         </button>
                         <button
                             onClick={() => { setIsEditingPost(false); setEditPostTitle(post.title); setEditPostContent(post.content || "") }}
-                            className="flex-1 rounded-xl border border-border py-2 text-sm font-semibold hover:bg-muted/50 disabled:opacity-50 transition-colors"
+                            className="flex-1 rounded-xl border border-border py-2 text-sm font-black hover:bg-muted/50 disabled:opacity-50 transition-colors"
                         >
                             Cancel
                         </button>
@@ -334,7 +334,7 @@ export function CommunityPostCard({
                 <>
                     <div className="px-5 md:px-6 space-y-2">
                         {post.title && (
-                            <h3 className="text-base font-semibold text-foreground dark:text-white leading-snug">
+                            <h3 className="text-base font-black text-foreground dark:text-white leading-snug">
                                 {post.title}
                             </h3>
                         )}
@@ -347,7 +347,7 @@ export function CommunityPostCard({
                                 {post.content.length > 280 && (
                                     <button
                                         onClick={() => setIsExpanded(!isExpanded)}
-                                        className="mt-1 text-xs font-semibold text-primary hover:underline"
+                                        className="mt-1 text-xs font-black text-primary hover:underline"
                                     >
                                         {isExpanded ? 'Show less' : 'Read more'}
                                     </button>
@@ -403,7 +403,7 @@ export function CommunityPostCard({
                                                 </span>
                                             </div>
                                             {hasVoted && (
-                                                <span className={`text-xs font-semibold ${selected ? 'text-primary' : 'text-muted-foreground/60'}`}>
+                                                <span className={`text-xs font-black ${selected ? 'text-primary' : 'text-muted-foreground/60'}`}>
                                                     {pct}%
                                                 </span>
                                             )}
@@ -422,19 +422,19 @@ export function CommunityPostCard({
                         <div className="flex size-8 items-center justify-center rounded-full bg-amber-500/20">
                             <Pin className="size-4 text-amber-500" />
                         </div>
-                        <span className="text-xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">Awaiting Moderation</span>
+                        <span className="text-xs font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">Awaiting Moderation</span>
                     </div>
                     {isManagementUser && onModerationDecision && (
                         <div className="flex gap-2">
                             <button
                                 onClick={() => onModerationDecision(post.id, true)}
-                                className="flex h-8 items-center gap-1.5 rounded-lg bg-emerald-500 px-3 text-xs font-semibold text-white hover:brightness-110 transition-all"
+                                className="flex h-8 items-center gap-1.5 rounded-lg bg-emerald-500 px-3 text-xs font-black text-white hover:brightness-110 transition-all"
                             >
                                 <Check className="size-3.5" /> Approve
                             </button>
                             <button
                                 onClick={() => onModerationDecision(post.id, false)}
-                                className="flex h-8 items-center gap-1.5 rounded-lg bg-red-500 px-3 text-xs font-semibold text-white hover:brightness-110 transition-all"
+                                className="flex h-8 items-center gap-1.5 rounded-lg bg-red-500 px-3 text-xs font-black text-white hover:brightness-110 transition-all"
                             >
                                 <XCircle className="size-3.5" /> Reject
                             </button>
@@ -453,7 +453,7 @@ export function CommunityPostCard({
                         }`}
                     >
                         <ThumbsUp className={`size-4 ${hasReacted ? 'fill-current' : ''}`} />
-                        <span className="text-xs font-semibold">{thumbsUpCount > 0 ? thumbsUpCount : 'Like'}</span>
+                        <span className="text-xs font-black">{thumbsUpCount > 0 ? thumbsUpCount : 'Like'}</span>
                     </button>
 
                     <button
@@ -465,7 +465,7 @@ export function CommunityPostCard({
                         }`}
                     >
                         <MessageCircle className="size-4" />
-                        <span className="text-xs font-semibold">{post.commentCount || 0}</span>
+                        <span className="text-xs font-black">{post.commentCount || 0}</span>
                     </button>
 
                     <button
@@ -477,7 +477,7 @@ export function CommunityPostCard({
                         }`}
                     >
                         <Bookmark className={`size-4 ${isSaved ? 'fill-current' : ''}`} />
-                        <span className="text-xs font-semibold">{isSaved ? 'Saved' : 'Save'}</span>
+                        <span className="text-xs font-black">{isSaved ? 'Saved' : 'Save'}</span>
                     </button>
 
                     <div className="flex-1" />
@@ -529,7 +529,7 @@ export function CommunityPostCard({
                                                 {comment.authorAvatar ? (
                                                     <Image src={comment.authorAvatar} alt={comment.authorName} fill className="object-cover" />
                                                 ) : (
-                                                    <span className="text-[10px] font-bold text-foreground/50">{comment.authorName.charAt(0).toUpperCase()}</span>
+                                                    <span className="text-[10px] font-black text-foreground/50">{comment.authorName.charAt(0).toUpperCase()}</span>
                                                 )}
                                             </div>
                                             <div className="flex-1 min-w-0">
@@ -545,13 +545,13 @@ export function CommunityPostCard({
                                                             <button
                                                                 onClick={handleSaveCommentEdit}
                                                                 disabled={isMutating}
-                                                                className="rounded-lg bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50"
+                                                                className="rounded-lg bg-primary px-3 py-1 text-xs font-black text-primary-foreground hover:opacity-90 disabled:opacity-50"
                                                             >
                                                                 Save
                                                             </button>
                                                             <button
                                                                 onClick={handleCancelCommentEdit}
-                                                                className="rounded-lg border border-border px-3 py-1 text-xs font-semibold hover:bg-muted/50"
+                                                                className="rounded-lg border border-border px-3 py-1 text-xs font-black hover:bg-muted/50"
                                                             >
                                                                 Cancel
                                                             </button>
@@ -560,7 +560,7 @@ export function CommunityPostCard({
                                                 ) : (
                                                     <div className="rounded-2xl rounded-tl-sm bg-background/80 px-3.5 py-2.5 dark:bg-white/5">
                                                         <div className="flex items-center justify-between gap-2 mb-1">
-                                                            <span className="text-xs font-semibold text-foreground dark:text-white">{comment.authorName}</span>
+                                                            <span className="text-xs font-black text-foreground dark:text-white">{comment.authorName}</span>
                                                             <div className="flex items-center gap-1.5">
                                                                 <span className="text-[10px] text-muted-foreground/60">{formatRelative(comment.createdAt)}</span>
                                                                 {currentUserId === comment.authorId && onEditComment && onDeleteComment && (
@@ -677,7 +677,7 @@ function PhotoGrid({ photos, onPhotoClick }: { photos: { id: string; url: string
                     <Image src={photo.url} alt={`Photo ${i}`} fill className="object-cover transition-transform hover:scale-[1.03] duration-500" />
                     {photos.length > 4 && i === 3 && (
                         <div className="absolute inset-0 flex items-center justify-center bg-black/50 group-hover:bg-black/40 transition-colors">
-                            <span className="text-lg font-bold text-white">+{photos.length - 4}</span>
+                            <span className="text-lg font-black text-white">+{photos.length - 4}</span>
                         </div>
                     )}
                 </div>

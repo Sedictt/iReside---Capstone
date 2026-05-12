@@ -23,7 +23,7 @@ export default function TenantSettingsPage() {
                         <div className="size-8 rounded-full bg-white/5 flex items-center justify-center border border-white/10 group-hover:bg-white/10 transition-all">
                             <ChevronLeft className="size-4" />
                         </div>
-                        <span className="text-sm font-bold tracking-wide">Back to Dashboard</span>
+                        <span className="text-sm font-black tracking-wide">Back to Dashboard</span>
                     </button>
                     <TenantSettings />
                 </div>

@@ -22,7 +22,7 @@ export function CommunityRules({ onClose }: CommunityRulesProps) {
                             <Shield className="size-5" />
                         </div>
                         <div>
-                            <h3 className="text-lg font-bold tracking-tight text-foreground dark:text-white">Community Rules</h3>
+                            <h3 className="text-lg font-black tracking-tight text-foreground dark:text-white">Community Rules</h3>
                             <p className="text-xs text-muted-foreground">Guidelines for a healthy community</p>
                         </div>
                     </div>
@@ -35,23 +35,23 @@ export function CommunityRules({ onClose }: CommunityRulesProps) {
                 </div>
                 <div className="grid grid-cols-1 gap-6 p-8 md:grid-cols-3">
                     <div className="space-y-3">
-                        <div className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">1</div>
+                        <div className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-xs font-black text-primary">1</div>
                         <div>
-                            <p className="text-sm font-bold text-foreground dark:text-white/80">Post Approval</p>
+                            <p className="text-sm font-black text-foreground dark:text-white/80">Post Approval</p>
                             <p className="mt-1 text-xs leading-relaxed text-muted-foreground dark:text-white/40">All discussion posts require management approval before appearing in the public feed.</p>
                         </div>
                     </div>
                     <div className="space-y-3">
-                        <div className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">2</div>
+                        <div className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-xs font-black text-primary">2</div>
                         <div>
-                            <p className="text-sm font-bold text-foreground dark:text-white/80">Respect Others</p>
+                            <p className="text-sm font-black text-foreground dark:text-white/80">Respect Others</p>
                             <p className="mt-1 text-xs leading-relaxed text-muted-foreground dark:text-white/40">Be respectful, polite, and neighborly. Harassment or toxic behavior will result in a ban.</p>
                         </div>
                     </div>
                     <div className="space-y-3">
-                        <div className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">3</div>
+                        <div className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-xs font-black text-primary">3</div>
                         <div>
-                            <p className="text-sm font-bold text-foreground dark:text-white/80">No Spam</p>
+                            <p className="text-sm font-black text-foreground dark:text-white/80">No Spam</p>
                             <p className="mt-1 text-xs leading-relaxed text-muted-foreground dark:text-white/40">Do not post repetitive content, advertisements, or unrelated commercial promotions.</p>
                         </div>
                     </div>
@@ -59,7 +59,7 @@ export function CommunityRules({ onClose }: CommunityRulesProps) {
                 <div className="flex justify-center border-t border-border bg-muted/20 p-4 dark:border-white/5 dark:bg-white/5">
                     <button 
                         onClick={onClose} 
-                        className="text-xs font-bold uppercase tracking-widest text-primary transition-colors hover:text-primary/80"
+                        className="text-xs font-black uppercase tracking-widest text-primary transition-colors hover:text-primary/80"
                     >
                         I understand
                     </button>

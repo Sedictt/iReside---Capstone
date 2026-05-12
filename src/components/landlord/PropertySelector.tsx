@@ -60,8 +60,8 @@ export function PropertySelector({ isCollapsed = false }: { isCollapsed?: boolea
                 
                 {!isCollapsed && (
                     <div className="flex min-w-0 flex-1 items-center gap-2">
-                        <span className="truncate text-sm font-bold text-foreground">
-                            {selectedPropertyId === 'all' ? 'All Properties' : (selectedProperty?.name || 'Loading...')}
+                        <span className="truncate text-sm font-black text-foreground">
+                            {selectedPropertyId === 'all' ? 'All Properties' : (selectedProperty?.name || 'Loading…')}
                         </span>
                         <ChevronDown className={cn(
                             "size-4 text-muted-foreground transition-transform duration-300",
@@ -77,7 +77,7 @@ export function PropertySelector({ isCollapsed = false }: { isCollapsed?: boolea
                         <Search className="absolute left-5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40" />
                         <input
                             type="text"
-                            placeholder="Search properties..."
+                            placeholder="Search properties…"
                             className="h-10 w-full rounded-xl border border-white/5 bg-white/5 pl-10 pr-4 text-xs font-medium focus:border-primary/20 focus:outline-none focus:ring-1 focus:ring-primary/20"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
@@ -105,7 +105,7 @@ export function PropertySelector({ isCollapsed = false }: { isCollapsed?: boolea
                                         <LayoutGrid className="size-5" />
                                     </div>
                                     <div className="flex flex-1 flex-col items-start overflow-hidden">
-                                        <span className="text-sm font-bold text-foreground">All Properties</span>
+                                        <span className="text-sm font-black text-foreground">All Properties</span>
                                         <span className="text-[10px] font-medium text-muted-foreground/60">See every property together</span>
                                     </div>
                                     {selectedPropertyId === 'all' && (
@@ -118,7 +118,7 @@ export function PropertySelector({ isCollapsed = false }: { isCollapsed?: boolea
                         )}
 
                         <div className="px-2 py-1">
-                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40">Your Properties</p>
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">Your Properties</p>
                         </div>
 
                         {filteredProperties.length === 0 ? (
@@ -148,7 +148,7 @@ export function PropertySelector({ isCollapsed = false }: { isCollapsed?: boolea
                                         )}
                                     </div>
                                     <div className="flex min-w-0 flex-1 flex-col items-start overflow-hidden">
-                                        <span className="truncate text-sm font-bold text-foreground group-hover:text-primary transition-colors">
+                                        <span className="truncate text-sm font-black text-foreground group-hover:text-primary transition-colors">
                                             {property.name}
                                         </span>
                                         <span className="truncate text-[10px] font-medium text-muted-foreground/60">

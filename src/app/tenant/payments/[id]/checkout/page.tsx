@@ -586,7 +586,7 @@ export default function CheckoutPage() {
             <div className="mx-auto max-w-3xl rounded-[2rem] border border-emerald-500/20 bg-card p-10 text-center shadow-sm relative overflow-hidden">
                 <div className="absolute -top-24 -right-24 size-48 bg-emerald-500/10 blur-3xl rounded-full" />
                 <CheckCircle2 className={cn("mx-auto mb-5 size-12", isSettled ? "text-emerald-400" : "text-amber-400")} />
-                <h1 className="text-3xl font-bold text-foreground">
+                <h1 className="text-3xl font-black text-foreground">
                     {isSettled ? "Invoice already paid" : "Payment submitted for review"}
                 </h1>
                 <p className="mt-3 text-sm leading-6 text-muted-foreground">
@@ -597,8 +597,8 @@ export default function CheckoutPage() {
                             : "Your landlord has the proof, reference details, and invoice context. We kept the billing record open until they confirm the payment."}
                 </p>
                 <div className="mt-6 flex justify-center gap-3">
-                    <Link href="/tenant/payments" className="rounded-2xl border border-border px-5 py-3 text-sm font-bold text-foreground transition hover:bg-muted">Back to payments</Link>
-                    <Link href="/tenant/dashboard" className="rounded-2xl bg-primary px-5 py-3 text-sm font-bold text-primary-foreground transition hover:bg-primary/90">Go to dashboard</Link>
+                    <Link href="/tenant/payments" className="rounded-2xl border border-border px-5 py-3 text-sm font-black text-foreground transition hover:bg-muted">Back to payments</Link>
+                    <Link href="/tenant/dashboard" className="rounded-2xl bg-primary px-5 py-3 text-sm font-black text-primary-foreground transition hover:bg-primary/90">Go to dashboard</Link>
                 </div>
             </div>
         );
@@ -625,11 +625,11 @@ export default function CheckoutPage() {
                             </button>
                             <div>
                                 <div className="flex items-center gap-2">
-                                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Checkout Hub</p>
+                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Checkout Hub</p>
                                     <span className="size-1 rounded-full bg-border" />
-                                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">{invoice.property?.name}</p>
+                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">{invoice.property?.name}</p>
                                 </div>
-                                <h1 className="text-2xl font-bold tracking-tight text-foreground">{invoice.invoiceNumber}</h1>
+                                <h1 className="text-2xl font-black tracking-tight text-foreground">{invoice.invoiceNumber}</h1>
                             </div>
                         </div>
                     </header>
@@ -653,8 +653,8 @@ export default function CheckoutPage() {
                                     <QrCode className="size-5" />
                                 </div>
                                 <div className="text-left">
-                                    <p className="text-sm font-bold tracking-tight">GCash Wallet</p>
-                                    <p className="text-[9px] font-bold uppercase tracking-widest opacity-60">Digital Settlement</p>
+                                    <p className="text-sm font-black tracking-tight">GCash Wallet</p>
+                                    <p className="text-[9px] font-black uppercase tracking-widest opacity-60">Digital Settlement</p>
                                 </div>
                                 {method === "gcash" && <motion.div layoutId="active-pill" className="absolute inset-0 rounded-[1.7rem] border-2 border-primary/20 pointer-events-none" />}
                             </button>
@@ -673,8 +673,8 @@ export default function CheckoutPage() {
                                     <Wallet className="size-5" />
                                 </div>
                                 <div className="text-left">
-                                    <p className="text-sm font-bold tracking-tight">Cash / In-Person</p>
-                                    <p className="text-[9px] font-bold uppercase tracking-widest opacity-60">Face-to-Face</p>
+                                    <p className="text-sm font-black tracking-tight">Cash / In-Person</p>
+                                    <p className="text-[9px] font-black uppercase tracking-widest opacity-60">Face-to-Face</p>
                                 </div>
                                 {method === "cash" && <motion.div layoutId="active-pill" className="absolute inset-0 rounded-[1.7rem] border-2 border-primary/20 pointer-events-none" />}
                             </button>
@@ -699,7 +699,7 @@ export default function CheckoutPage() {
                                                     <input 
                                                         value={referenceNumber} 
                                                         onChange={(event) => setReferenceNumber(event.target.value)} 
-                                                        className="w-full rounded-2xl border border-border/50 bg-background/50 px-5 py-4 text-sm font-bold text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10" 
+                                                        className="w-full rounded-2xl border border-border/50 bg-background/50 px-5 py-4 text-sm font-black text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10" 
                                                         placeholder="13-digit GCash Ref #" 
                                                     />
                                                 </Field>
@@ -713,10 +713,10 @@ export default function CheckoutPage() {
                                                             {receipt ? <CheckCircle2 className="size-6" /> : <Upload className="size-6" />}
                                                         </div>
                                                         <div className="space-y-1">
-                                                            <p className="text-sm font-bold text-foreground truncate max-w-[240px]">
+                                                            <p className="text-sm font-black text-foreground truncate max-w-[240px]">
                                                                 {receipt ? receipt.name : "Upload Screenshot"}
                                                             </p>
-                                                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                                                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                                                                 JPG, PNG or PDF up to 5MB
                                                             </p>
                                                         </div>
@@ -727,7 +727,7 @@ export default function CheckoutPage() {
                                         </div>
 
                                         <div className="rounded-[2rem] border border-border/40 bg-card/60 p-6 shadow-xl backdrop-blur-3xl text-center flex flex-col justify-center">
-                                            <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Destination QR</p>
+                                            <p className="mb-4 text-[10px] font-black uppercase tracking-[0.2em] text-primary">Destination QR</p>
                                             <div className="group relative mx-auto mb-6 aspect-square w-full max-w-[200px] overflow-hidden rounded-3xl border border-border/50 bg-white p-3 shadow-md transition-all hover:scale-[1.02]">
                                                 {invoice.paymentDestination?.qr_image_url ? (
                                                     <Image 
@@ -744,8 +744,8 @@ export default function CheckoutPage() {
                                                 )}
                                             </div>
                                             <div className="space-y-1">
-                                                <p className="text-sm font-bold text-foreground truncate">{invoice.paymentDestination?.account_name || "Landlord Wallet"}</p>
-                                                <p className="text-[11px] font-bold tracking-[0.1em] text-primary">{invoice.paymentDestination?.account_number || "---"}</p>
+                                                <p className="text-sm font-black text-foreground truncate">{invoice.paymentDestination?.account_name || "Landlord Wallet"}</p>
+                                                <p className="text-[11px] font-black tracking-[0.1em] text-primary">{invoice.paymentDestination?.account_number || "---"}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -757,7 +757,7 @@ export default function CheckoutPage() {
                                                 rows={2} 
                                                 value={note} 
                                                 onChange={(event) => setNote(event.target.value)} 
-                                                className="w-full rounded-2xl border border-border/50 bg-background/50 px-5 py-4 text-sm font-bold text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10" 
+                                                className="w-full rounded-2xl border border-border/50 bg-background/50 px-5 py-4 text-sm font-black text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10" 
                                                 placeholder="Add a comment for the landlord..." 
                                             />
                                         </Field>
@@ -773,7 +773,7 @@ export default function CheckoutPage() {
                                 >
                                     <div className="grid gap-6 md:grid-cols-[1fr_280px] h-full">
                                         <div className="md:col-span-2 rounded-[2rem] border border-amber-500/20 bg-amber-500/5 p-8 shadow-xl backdrop-blur-3xl h-full flex flex-col justify-center">
-                                            <div className="flex items-center gap-3 text-lg font-bold text-foreground">
+                                            <div className="flex items-center gap-3 text-lg font-black text-foreground">
                                                 <HandCoins className="size-6 text-amber-500" />
                                                 In-Person Settlement
                                             </div>
@@ -785,7 +785,7 @@ export default function CheckoutPage() {
                                                 <div className="mt-8 flex items-center gap-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 p-5 text-emerald-600 dark:text-emerald-400 self-start">
                                                     <CheckCircle2 className="size-5 shrink-0" />
                                                     <div className="text-sm">
-                                                        <p className="font-bold">Intent Successfully Triggered</p>
+                                                        <p className="font-black">Intent Successfully Triggered</p>
                                                         <p className="opacity-80">Waiting for landlord to confirm your cash payment.</p>
                                                     </div>
                                                 </div>
@@ -794,7 +794,7 @@ export default function CheckoutPage() {
                                                     <button
                                                         onClick={triggerInPersonIntent}
                                                         disabled={submitting}
-                                                        className="inline-flex items-center justify-center gap-3 rounded-full bg-amber-500 px-8 py-4 text-sm font-bold text-white transition-all hover:bg-amber-600 hover:scale-[1.02] active:scale-95 shadow-lg shadow-amber-500/20 disabled:opacity-60"
+                                                        className="inline-flex items-center justify-center gap-3 rounded-full bg-amber-500 px-8 py-4 text-sm font-black text-white transition-all hover:bg-amber-600 hover:scale-[1.02] active:scale-95 shadow-lg shadow-amber-500/20 disabled:opacity-60"
                                                     >
                                                         {submitting ? <Loader2 className="size-5 animate-spin" /> : <Wallet className="size-5" />}
                                                         Notify Landlord of Payment
@@ -811,7 +811,7 @@ export default function CheckoutPage() {
                                                 rows={2} 
                                                 value={note} 
                                                 onChange={(event) => setNote(event.target.value)} 
-                                                className="w-full rounded-2xl border border-border/50 bg-background/50 px-5 py-4 text-sm font-bold text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10" 
+                                                className="w-full rounded-2xl border border-border/50 bg-background/50 px-5 py-4 text-sm font-black text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10" 
                                                 placeholder="Add a comment for the landlord..." 
                                             />
                                         </Field>
@@ -828,7 +828,7 @@ export default function CheckoutPage() {
                     <section className="rounded-[2.5rem] border border-border/50 bg-card/80 p-8 shadow-2xl backdrop-blur-2xl ring-1 ring-border/50">
                         <div className="flex items-center gap-3 mb-6">
                             <Receipt className="size-5 text-primary" />
-                            <h2 className="text-lg font-bold text-foreground tracking-tight">Invoice Summary</h2>
+                            <h2 className="text-lg font-black text-foreground tracking-tight">Invoice Summary</h2>
                         </div>
 
                         <div className="space-y-3 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
@@ -853,15 +853,15 @@ export default function CheckoutPage() {
                                                 )}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-xs font-bold text-foreground truncate">{item.label}</p>
+                                                <p className="text-xs font-black text-foreground truncate">{item.label}</p>
                                                 <p className={cn(
-                                                    "text-[9px] font-bold uppercase tracking-widest",
+                                                    "text-[9px] font-black uppercase tracking-widest",
                                                     isAlreadyPaid ? "text-emerald-500" : "text-amber-500"
                                                 )}>
                                                     {isAlreadyPaid ? "Already Paid" : "Under Review"}
                                                 </p>
                                             </div>
-                                            <span className="text-xs font-bold text-foreground line-through opacity-50">{formatPhpCurrency(item.amount)}</span>
+                                            <span className="text-xs font-black text-foreground line-through opacity-50">{formatPhpCurrency(item.amount)}</span>
                                         </div>
                                     );
                                 }
@@ -892,10 +892,10 @@ export default function CheckoutPage() {
                                             </div>
                                         )}
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-xs font-bold text-foreground truncate">{item.label}</p>
-                                            <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">{item.category}</p>
+                                            <p className="text-xs font-black text-foreground truncate">{item.label}</p>
+                                            <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">{item.category}</p>
                                         </div>
-                                        <span className="text-xs font-bold text-foreground whitespace-nowrap">{formatPhpCurrency(item.amount)}</span>
+                                        <span className="text-xs font-black text-foreground whitespace-nowrap">{formatPhpCurrency(item.amount)}</span>
                                     </div>
                                 );
                             })}
@@ -921,15 +921,15 @@ export default function CheckoutPage() {
                                                 )}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-xs font-bold capitalize text-foreground truncate">{reading.utility_type} Consumption</p>
+                                                <p className="text-xs font-black capitalize text-foreground truncate">{reading.utility_type} Consumption</p>
                                                 <p className={cn(
-                                                    "text-[9px] font-bold uppercase tracking-widest",
+                                                    "text-[9px] font-black uppercase tracking-widest",
                                                     isAlreadyPaid ? "text-emerald-500" : "text-amber-500"
                                                 )}>
                                                     {isAlreadyPaid ? "Already Paid" : "Under Review"}
                                                 </p>
                                             </div>
-                                            <span className="text-xs font-bold text-foreground line-through opacity-50">
+                                            <span className="text-xs font-black text-foreground line-through opacity-50">
                                                 {reading.billing_mode === "included_in_rent" ? "Bundled" : formatPhpCurrency(reading.computed_charge)}
                                             </span>
                                         </div>
@@ -962,11 +962,11 @@ export default function CheckoutPage() {
                                             </div>
                                         )}
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-xs font-bold capitalize text-foreground truncate">{reading.utility_type} Consumption</p>
-                                            <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Usage: {reading.usage} Units</p>
+                                            <p className="text-xs font-black capitalize text-foreground truncate">{reading.utility_type} Consumption</p>
+                                            <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Usage: {reading.usage} Units</p>
                                         </div>
                                         <span className={cn(
-                                            "text-xs font-bold whitespace-nowrap",
+                                            "text-xs font-black whitespace-nowrap",
                                             reading.billing_mode === "included_in_rent" ? "text-primary/60" : "text-foreground"
                                         )}>
                                             {reading.billing_mode === "included_in_rent" ? "Bundled" : formatPhpCurrency(reading.computed_charge)}
@@ -982,36 +982,36 @@ export default function CheckoutPage() {
                                     {invoice.paidAmount > 0 && (
                                         <div className="flex flex-col mb-2">
                                             <div className="flex items-center gap-2">
-                                                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest line-through decoration-muted-foreground/50">
+                                                <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest line-through decoration-muted-foreground/50">
                                                     Original Total: {formatPhpCurrency(invoice.totalAmount)}
                                                 </span>
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <div className="size-1 rounded-full bg-emerald-500" />
-                                                <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest">
+                                                <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">
                                                     Paid to Date: {formatPhpCurrency(invoice.paidAmount)}
                                                 </span>
                                             </div>
                                         </div>
                                     )}
-                                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
+                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
                                         {amountDue < (invoice.paidAmount > 0 ? invoice.balanceRemaining : invoice.totalAmount) ? "Selection Total" : (invoice.paidAmount > 0 ? "Remaining Balance" : "Total Amount Due")}
                                     </p>
                                     <p className={cn(
-                                        "text-3xl font-bold tracking-tighter",
+                                        "text-3xl font-black tracking-tighter",
                                         amountDue < invoice.totalAmount ? "text-amber-500" : "text-foreground"
                                     )}>
                                         {formatPhpCurrency(amountDue)}
                                     </p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Due Date</p>
-                                    <p className="text-xs font-bold text-foreground">{formatDateLong(invoice.dueDate)}</p>
+                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Due Date</p>
+                                    <p className="text-xs font-black text-foreground">{formatDateLong(invoice.dueDate)}</p>
                                 </div>
                             </div>
                             
                             {amountDue === 0 && (
-                                <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] font-bold uppercase tracking-wider">
+                                <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] font-black uppercase tracking-wider">
                                     <Info className="size-3.5" /> Select at least one item to pay
                                 </div>
                             )}
@@ -1021,7 +1021,7 @@ export default function CheckoutPage() {
                                     onClick={submitPayment} 
                                     disabled={submitting || !receipt || !referenceNumber.trim() || amountDue === 0} 
                                     className={cn(
-                                        "group flex w-full items-center justify-center gap-3 rounded-full py-5 text-sm font-bold transition-all shadow-xl",
+                                        "group flex w-full items-center justify-center gap-3 rounded-full py-5 text-sm font-black transition-all shadow-xl",
                                         submitting || !receipt || !referenceNumber.trim() || amountDue === 0
                                             ? "cursor-not-allowed border border-border/50 bg-background/50 text-muted-foreground shadow-none" 
                                             : "bg-gradient-to-r from-primary to-blue-600 text-white hover:scale-[1.02] hover:shadow-primary/25 active:scale-95"
@@ -1040,8 +1040,8 @@ export default function CheckoutPage() {
 
                     {/* Support Link */}
                     <div className="rounded-[2rem] border border-border/40 bg-card/40 p-6 text-center">
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">Having Trouble?</p>
-                        <Link href="/tenant/messages" className="text-xs font-bold text-primary hover:underline flex items-center justify-center gap-1.5">
+                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3">Having Trouble?</p>
+                        <Link href="/tenant/messages" className="text-xs font-black text-primary hover:underline flex items-center justify-center gap-1.5">
                             <HelpCircle className="size-3.5" />
                             Contact Property Manager
                         </Link>
@@ -1053,5 +1053,5 @@ export default function CheckoutPage() {
 }
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
-    return <label className="block space-y-2.5"><span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">{label}</span>{children}</label>;
+    return <label className="block space-y-2.5"><span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">{label}</span>{children}</label>;
 }

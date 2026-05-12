@@ -32,7 +32,7 @@ export function CommunityPhotoLightbox({ photos, initialIndex, onClose }: Commun
         <div className="fixed inset-0 z-[1000] flex flex-col items-center justify-center bg-black/95 backdrop-blur-md">
             {/* Header / Actions */}
             <div className="absolute top-0 inset-x-0 p-6 flex items-center justify-between z-10">
-                <div className="text-white/70 text-sm font-bold bg-white/5 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10">
+                <div className="text-white/70 text-sm font-black bg-white/5 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10">
                     {currentIndex + 1} / {photos.length}
                 </div>
                 <div className="flex items-center gap-3">
@@ -56,10 +56,13 @@ export function CommunityPhotoLightbox({ photos, initialIndex, onClose }: Commun
             {/* Main Carousel */}
             <div className="relative w-full flex-1 flex items-center justify-center overflow-hidden px-4 md:px-20">
                 <div className="relative max-h-full w-full flex items-center justify-center">
-                    <img 
+                    <Image 
                         src={photos[currentIndex].url} 
                         alt={`Photo ${currentIndex + 1}`}
-                        className="max-h-[80vh] w-auto max-w-full rounded-2xl shadow-2xl object-contain ring-1 ring-white/10"
+                        fill
+                        className="rounded-2xl shadow-2xl object-contain ring-1 ring-white/10"
+                        sizes="(max-width: 768px) 100vw, 80vw"
+                        priority
                     />
                 </div>
                 {photos.length > 1 && (

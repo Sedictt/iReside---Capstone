@@ -53,7 +53,7 @@ export function ContactList({
                         >
                             <ArrowLeft className="size-4 text-high" />
                         </Link>
-                        <h2 className="text-xl font-bold tracking-tight text-high">Messages</h2>
+                        <h2 className="text-xl font-black tracking-tight text-high">Messages</h2>
                     </div>
                     <ThemeToggle variant="sidebar" className="size-9" />
                 </div>
@@ -74,7 +74,7 @@ export function ContactList({
                     {searchQuery.trim().length >= 2 && (
                         <div className="absolute left-0 right-0 top-[calc(100%+0.75rem)] z-50 max-h-80 overflow-y-auto rounded-3xl border border-border bg-card p-2 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
                             {isSearchingUsers && (
-                                <div className="px-4 py-3 text-xs font-bold text-disabled uppercase tracking-widest animate-pulse">Searching...</div>
+                                <div className="px-4 py-3 text-xs font-black text-disabled uppercase tracking-widest animate-pulse">Searching...</div>
                             )}
                             {!isSearchingUsers && userSearchError && (
                                 <div className="px-4 py-3 text-xs text-red-500 font-medium">{userSearchError}</div>
@@ -94,14 +94,14 @@ export function ContactList({
                                         {result.avatarUrl ? (
                                             <Image src={result.avatarUrl} alt={result.fullName} fill sizes="40px" className="object-cover" />
                                         ) : (
-                                            <span className="text-xs font-bold text-high">
+                                            <span className="text-xs font-black text-high">
                                                 {(result.fullName || "C").charAt(0)}
                                             </span>
                                         )}
                                     </div>
                                     <div className="min-w-0 flex-1">
                                         <div className="flex items-center gap-2">
-                                            <div className="truncate text-sm font-bold text-high group-hover:text-primary transition-colors">{result.fullName}</div>
+                                            <div className="truncate text-sm font-black text-high group-hover:text-primary transition-colors">{result.fullName}</div>
                                             <RoleBadge role={result.role} />
                                         </div>
                                         <div className="truncate text-[10px] font-medium text-disabled">{result.email}</div>

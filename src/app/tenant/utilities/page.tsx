@@ -290,7 +290,7 @@ export default function TenantUtilitiesPage() {
                                     Facilities
                                 </motion.span>
                                 <span className="h-px w-12 bg-border" />
-                                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Community Access</span>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Community Access</span>
                             </div>
                             <motion.h1 
                                 initial={{ opacity: 0, y: 20 }}
@@ -338,7 +338,7 @@ export default function TenantUtilitiesPage() {
                                         key={cat}
                                         onClick={() => setSelectedCategory(cat)}
                                         className={cn(
-                                            "rounded-full px-4 py-1.5 text-xs font-bold transition-all",
+                                            "rounded-full px-4 py-1.5 text-xs font-black transition-all",
                                             selectedCategory === cat 
                                                 ? "bg-primary text-primary-foreground shadow-md" 
                                                 : "bg-muted text-muted-foreground hover:bg-muted-foreground/10 hover:text-foreground"
@@ -396,11 +396,11 @@ export default function TenantUtilitiesPage() {
                                             <p className="mt-2 text-sm text-muted-foreground/80 line-clamp-2">{amenity.description || "No description available."}</p>
                                             
                                             <div className="mt-4 flex items-center gap-4 border-t border-border/50 pt-4">
-                                                <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground">
+                                                <div className="flex items-center gap-1.5 text-xs font-black text-muted-foreground">
                                                     <Users className="size-3.5" />
                                                     {amenity.capacity ? `${amenity.capacity} people` : "N/A"}
                                                 </div>
-                                                <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground">
+                                                <div className="flex items-center gap-1.5 text-xs font-black text-muted-foreground">
                                                     <MapPin className="size-3.5" />
                                                     {amenity.location_details || "N/A"}
                                                 </div>
@@ -413,12 +413,12 @@ export default function TenantUtilitiesPage() {
                                                         <span className="text-xl font-black text-foreground">
                                                             {amenity.price_per_unit === 0 ? "Free" : `₱${amenity.price_per_unit}`}
                                                         </span>
-                                                        {amenity.price_per_unit > 0 && <span className="text-xs font-bold text-muted-foreground">/{amenity.unit_type}</span>}
+                                                        {amenity.price_per_unit > 0 && <span className="text-xs font-black text-muted-foreground">/{amenity.unit_type}</span>}
                                                     </div>
                                                 </div>
                                                 <button 
                                                     onClick={() => openBookingModal(amenity)}
-                                                    className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95"
+                                                    className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-black text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95"
                                                 >
                                                     {amenity.price_per_unit === 0 ? "Borrow" : "Rent Now"}
                                                     <ArrowRight className="size-4" />
@@ -462,7 +462,7 @@ export default function TenantUtilitiesPage() {
                                                     <div className="flex items-start justify-between">
                                                         <div className="flex flex-col">
                                                             <span className="text-sm font-black text-foreground">{booking.amenity.name}</span>
-                                                            <span className="mt-1 text-xs font-bold text-muted-foreground">{formatBookingDate(booking.booking_date)}</span>
+                                                            <span className="mt-1 text-xs font-black text-muted-foreground">{formatBookingDate(booking.booking_date)}</span>
                                                             <span className="text-xs text-muted-foreground/70">{formatBookingTime(booking.start_time, booking.end_time)}</span>
                                                         </div>
                                                         <div className={cn("rounded-full p-1.5", statusConfig.color)}>
@@ -499,7 +499,7 @@ export default function TenantUtilitiesPage() {
                                 <LucideIcons.History className="size-5" />
                             </div>
                             <div className="flex-1">
-                                <p className="text-sm font-bold">Past Bookings</p>
+                                <p className="text-sm font-black">Past Bookings</p>
                                 <p className="text-xs">Review your facility usage history</p>
                             </div>
                             <LucideIcons.ChevronRight className="size-4" />

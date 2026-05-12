@@ -138,7 +138,7 @@ export function UnitShowcaseModal({
 
                     {/* Property badge on image */}
                     <div className="absolute top-6 left-6 z-10">
-                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-xs font-bold text-white">
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-xs font-black text-white">
                             <Home className="size-3.5 text-primary" />
                             {unit.property.name}
                         </div>
@@ -150,7 +150,7 @@ export function UnitShowcaseModal({
                     {/* Unit title & rent */}
                     <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                         <div>
-                            <h2 className="text-3xl font-bold text-white tracking-tight">
+                            <h2 className="text-3xl font-black text-white tracking-tight">
                                 {unit.name}
                             </h2>
                             <p className="text-neutral-400 text-sm mt-1">
@@ -158,7 +158,7 @@ export function UnitShowcaseModal({
                             </p>
                         </div>
                         <div className="text-right">
-                            <p className="text-3xl font-bold text-primary">
+                            <p className="text-3xl font-black text-primary">
                                 ₱{(unit.rent_amount || 0).toLocaleString()}
                             </p>
                             <p className="text-neutral-500 text-sm font-medium">per month</p>
@@ -173,7 +173,7 @@ export function UnitShowcaseModal({
                                 className="bg-white/5 border border-white/5 rounded-xl p-4 flex flex-col items-center gap-2"
                             >
                                 <d.icon className="size-5 text-primary" />
-                                <p className="text-white font-bold text-lg">{d.value}</p>
+                                <p className="text-white font-black text-lg">{d.value}</p>
                                 <p className="text-neutral-500 text-xs font-medium uppercase tracking-wider">
                                     {d.label}
                                 </p>
@@ -184,7 +184,7 @@ export function UnitShowcaseModal({
                     {/* Description */}
                     {unit.description && (
                         <div className="bg-white/5 border border-white/5 rounded-xl p-5">
-                            <h3 className="text-xs font-bold uppercase tracking-wide text-neutral-400 mb-2">
+                            <h3 className="text-xs font-black uppercase tracking-wide text-neutral-400 mb-2">
                                 Description
                             </h3>
                             <p className="text-neutral-300 text-sm leading-relaxed">
@@ -196,7 +196,7 @@ export function UnitShowcaseModal({
                     {/* Amenities */}
                     {unit.property.amenities?.length > 0 && (
                         <div>
-                            <h3 className="text-xs font-bold uppercase tracking-wide text-neutral-400 mb-3 flex items-center gap-2">
+                            <h3 className="text-xs font-black uppercase tracking-wide text-neutral-400 mb-3 flex items-center gap-2">
                                 <Sparkles className="size-3.5" />
                                 Amenities
                             </h3>
@@ -220,7 +220,7 @@ export function UnitShowcaseModal({
                                 onStartApplication(unit.id);
                                 onClose();
                             }}
-                            className="w-full h-14 rounded-xl bg-primary hover:bg-primary/90 text-black font-bold text-lg transition-all flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(var(--primary),0.3)]"
+                            className="w-full h-14 rounded-xl bg-primary hover:bg-primary/90 text-black font-black text-lg transition-all flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(var(--primary),0.3)]"
                         >
                             <ClipboardList className="size-5" />
                             Start Tenant Application

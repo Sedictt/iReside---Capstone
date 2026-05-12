@@ -219,14 +219,14 @@ export function TenantProductTourOverlay() {
     if (!isOnStepRoute) {
         return (
             <div className="fixed bottom-5 right-5 z-[95] w-[22rem] rounded-2xl border border-primary/30 bg-neutral-950/95 p-4 shadow-2xl">
-                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">Guided Tour</p>
-                <h3 className="mt-1 text-base font-bold text-white">{panelTitle}</h3>
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-primary">Guided Tour</p>
+                <h3 className="mt-1 text-base font-black text-white">{panelTitle}</h3>
                 <p className="mt-2 text-sm text-neutral-300">{activeStep.description}</p>
                 <div className="mt-4 flex gap-2">
                     <button
                         type="button"
                         onClick={() => router.push(activeStep.route)}
-                        className="inline-flex items-center gap-2 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-black"
+                        className="inline-flex items-center gap-2 rounded-xl bg-primary px-3 py-2 text-xs font-black text-black"
                     >
                         <MapPinned className="size-4" />
                         Go to step
@@ -235,7 +235,7 @@ export function TenantProductTourOverlay() {
                         type="button"
                         onClick={() => void skipTour()}
                         disabled={submitting}
-                        className="inline-flex items-center gap-2 rounded-xl border border-white/20 px-3 py-2 text-xs font-bold text-white disabled:opacity-50"
+                        className="inline-flex items-center gap-2 rounded-xl border border-white/20 px-3 py-2 text-xs font-black text-white disabled:opacity-50"
                     >
                         <SkipForward className="size-4" />
                         Skip
@@ -261,13 +261,13 @@ export function TenantProductTourOverlay() {
             )}
 
             <div className="fixed bottom-5 right-5 z-[95] w-[24rem] rounded-2xl border border-white/20 bg-neutral-950/95 p-4 shadow-2xl">
-                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">Guided Tour</p>
-                <h3 className="mt-1 text-base font-bold text-white">{panelTitle}</h3>
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-primary">Guided Tour</p>
+                <h3 className="mt-1 text-base font-black text-white">{panelTitle}</h3>
                 <p className="mt-2 text-sm text-neutral-300">{activeStep.description}</p>
 
                 {!isAnchorVisible && (
                     <div className="mt-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-100">
-                        <div className="flex items-center gap-2 font-bold text-amber-300">
+                        <div className="flex items-center gap-2 font-black text-amber-300">
                             <AlertTriangle className="size-3.5" />
                             Fallback guidance enabled
                         </div>
@@ -280,7 +280,7 @@ export function TenantProductTourOverlay() {
                         type="button"
                         onClick={() => previousStep && router.push(previousStep.route)}
                         disabled={!previousStep || submitting}
-                        className="inline-flex items-center gap-1 rounded-xl border border-white/20 px-3 py-2 text-xs font-bold text-white disabled:opacity-40"
+                        className="inline-flex items-center gap-1 rounded-xl border border-white/20 px-3 py-2 text-xs font-black text-white disabled:opacity-40"
                     >
                         <ArrowLeft className="size-3.5" />
                         Previous
@@ -289,7 +289,7 @@ export function TenantProductTourOverlay() {
                         type="button"
                         onClick={() => void completeCurrentStep()}
                         disabled={submitting}
-                        className="inline-flex items-center gap-1 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-black disabled:opacity-60"
+                        className="inline-flex items-center gap-1 rounded-xl bg-primary px-3 py-2 text-xs font-black text-black disabled:opacity-60"
                     >
                         {isLastStep ? <CheckCircle2 className="size-3.5" /> : <ArrowRight className="size-3.5" />}
                         {isLastStep ? "Finish Tour" : "Next Step"}
@@ -298,15 +298,15 @@ export function TenantProductTourOverlay() {
                         type="button"
                         onClick={() => void skipTour()}
                         disabled={submitting}
-                        className="inline-flex items-center gap-1 rounded-xl border border-white/20 px-3 py-2 text-xs font-bold text-white disabled:opacity-50"
+                        className="inline-flex items-center gap-1 rounded-xl border border-white/20 px-3 py-2 text-xs font-black text-white disabled:opacity-50"
                     >
                         <SkipForward className="size-3.5" />
                         Skip
                     </button>
                 </div>
                 <p className="mt-3 text-[11px] text-neutral-400">
-                    Keyboard shortcuts: <span className="font-bold text-neutral-200">Enter / →</span> next,{" "}
-                    <span className="font-bold text-neutral-200">←</span> previous.
+                    Keyboard shortcuts: <span className="font-black text-neutral-200">Enter / →</span> next,{" "}
+                    <span className="font-black text-neutral-200">←</span> previous.
                 </p>
                 {error && <p className="mt-2 text-xs text-red-300">{error}</p>}
             </div>

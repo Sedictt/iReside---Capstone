@@ -23,11 +23,11 @@ export default async function LeaseDetailsPage({ params }: { params: Promise<{ i
 
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-white mb-2">Lease #LSE-2024-8832</h1>
+                    <h1 className="text-3xl font-black tracking-tight text-white mb-2">Lease #LSE-2024-8832</h1>
                     <p className="text-zinc-400">Fixed Term Residential Lease â€¢ Active</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button className="flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-primary/20 text-sm">
+                    <button className="flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white px-5 py-2.5 rounded-xl font-black transition-all shadow-lg shadow-primary/20 text-sm">
                         <Download className="size-4" />
                         Download PDF
                     </button>
@@ -39,7 +39,7 @@ export default async function LeaseDetailsPage({ params }: { params: Promise<{ i
                 <div className="lg:col-span-2 space-y-8">
                     {/* Lease Terms Summary */}
                     <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6 backdrop-blur-sm">
-                        <h3 className="text-lg font-bold text-white mb-6">Lease Summary</h3>
+                        <h3 className="text-lg font-black text-white mb-6">Lease Summary</h3>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div className="p-4 rounded-xl bg-zinc-800/30 border border-zinc-800">
@@ -47,7 +47,7 @@ export default async function LeaseDetailsPage({ params }: { params: Promise<{ i
                                 <div className="flex items-start gap-3">
                                     <MapPin className="size-5 text-primary mt-0.5" />
                                     <div>
-                                        <p className="font-bold text-white">The Grand</p>
+                                        <p className="font-black text-white">The Grand</p>
                                         <p className="text-sm text-zinc-400">Unit 304<br />123 Main St, Springfield, IL</p>
                                     </div>
                                 </div>
@@ -58,7 +58,7 @@ export default async function LeaseDetailsPage({ params }: { params: Promise<{ i
                                 <div className="flex items-start gap-3">
                                     <Users className="size-5 text-primary mt-0.5" />
                                     <div>
-                                        <p className="font-bold text-white">Sarah Chen</p>
+                                        <p className="font-black text-white">Sarah Chen</p>
                                         <p className="text-sm text-zinc-400">Primary Tenant</p>
                                     </div>
                                 </div>
@@ -69,7 +69,7 @@ export default async function LeaseDetailsPage({ params }: { params: Promise<{ i
                                 <div className="flex items-start gap-3">
                                     <Calendar className="size-5 text-primary mt-0.5" />
                                     <div>
-                                        <p className="font-bold text-white">12 Months</p>
+                                        <p className="font-black text-white">12 Months</p>
                                         <p className="text-sm text-zinc-400">Jan 1, 2024 - Dec 31, 2024</p>
                                     </div>
                                 </div>
@@ -78,9 +78,9 @@ export default async function LeaseDetailsPage({ params }: { params: Promise<{ i
                             <div className="p-4 rounded-xl bg-zinc-800/30 border border-zinc-800">
                                 <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2">Rent</p>
                                 <div className="flex items-start gap-3">
-                                    <div className="size-5 flex items-center justify-center rounded-full bg-primary/20 text-primary font-bold text-xs">$</div>
+                                    <div className="size-5 flex items-center justify-center rounded-full bg-primary/20 text-primary font-black text-xs">$</div>
                                     <div>
-                                        <p className="font-bold text-white">â‚±18,500.00 / month</p>
+                                        <p className="font-black text-white">â‚±18,500.00 / month</p>
                                         <p className="text-sm text-zinc-400">Due on the 1st</p>
                                     </div>
                                 </div>
@@ -90,7 +90,7 @@ export default async function LeaseDetailsPage({ params }: { params: Promise<{ i
 
                     {/* Clauses / Key Terms */}
                     <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6 backdrop-blur-sm">
-                        <h3 className="text-lg font-bold text-white mb-6">Key Clauses</h3>
+                        <h3 className="text-lg font-black text-white mb-6">Key Clauses</h3>
                         <ul className="space-y-4">
                             {[
                                 "Pets Allowed with Deposit (Clause 4.2)",
@@ -113,11 +113,11 @@ export default async function LeaseDetailsPage({ params }: { params: Promise<{ i
                 {/* Sidebar - Timeline/Status */}
                 <div className="space-y-6">
                     <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6 backdrop-blur-sm">
-                        <h3 className="text-lg font-bold text-white mb-6">Timeline</h3>
+                        <h3 className="text-lg font-black text-white mb-6">Timeline</h3>
                         <div className="relative border-l-2 border-zinc-800 ml-3 space-y-8 pl-6 pb-2">
                             <div className="relative">
                                 <span className="absolute -left-[30px] top-1 size-3 rounded-full bg-primary ring-4 ring-zinc-900" />
-                                <p className="text-sm font-bold text-white">Lease Active</p>
+                                <p className="text-sm font-black text-white">Lease Active</p>
                                 <p className="text-xs text-zinc-400 mt-1">Jan 01, 2024</p>
                             </div>
                             <div className="relative">

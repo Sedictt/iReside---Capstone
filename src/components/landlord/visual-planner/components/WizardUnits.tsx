@@ -60,9 +60,9 @@ function SortableUnit({ unit, isOverlay = false }: { unit: DbUnit; isOverlay?: b
         >
             <GripVertical className="size-3.5 text-neutral-600 transition-colors group-hover:text-neutral-400" />
             <div className="flex-1 min-w-0">
-                <p className="truncate text-xs font-bold text-white">{unit.name}</p>
+                <p className="truncate text-xs font-black text-white">{unit.name}</p>
             </div>
-            <div className="flex size-5 items-center justify-center rounded-md bg-white/5 text-[10px] font-bold text-neutral-500">
+            <div className="flex size-5 items-center justify-center rounded-md bg-white/5 text-[10px] font-black text-neutral-500">
                 {unit.beds}B
             </div>
         </div>
@@ -82,7 +82,7 @@ function FloorLane({ floor, units, onRemove }: { floor: FloorConfig; units: DbUn
                     <div className="flex size-6 items-center justify-center rounded-lg bg-primary/10 text-primary">
                         <Layers className="size-3.5" />
                     </div>
-                    <h3 className="text-sm font-bold uppercase tracking-widest text-white">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-white">
                         {floorDisplayName(floor)}
                     </h3>
                     <button
@@ -93,7 +93,7 @@ function FloorLane({ floor, units, onRemove }: { floor: FloorConfig; units: DbUn
                         <Trash2 className="size-3.5" />
                     </button>
                 </div>
-                <span className="text-[10px] font-bold text-neutral-500 bg-white/5 px-2 py-0.5 rounded-full border border-white/5">
+                <span className="text-[10px] font-black text-neutral-500 bg-white/5 px-2 py-0.5 rounded-full border border-white/5">
                     {units.length} Units
                 </span>
             </div>
@@ -115,7 +115,7 @@ function FloorLane({ floor, units, onRemove }: { floor: FloorConfig; units: DbUn
 
                 {units.length === 0 && (
                     <div className="flex h-16 items-center justify-center text-center">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-600">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-neutral-600">
                             Drop units here
                         </p>
                     </div>

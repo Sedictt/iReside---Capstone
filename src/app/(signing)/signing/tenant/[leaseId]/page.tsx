@@ -149,8 +149,8 @@ function LeaseSigningContent({ params }: { params: Promise<{ leaseId: string }> 
           </div>
         </div>
         <div className="space-y-2">
-          <h2 className="text-2xl font-bold tracking-tighter uppercase text-white italic">Preparing Agreement</h2>
-          <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.3em]">Building Secure Document</p>
+          <h2 className="text-2xl font-black tracking-tighter uppercase text-white italic">Preparing Agreement</h2>
+          <p className="text-zinc-500 text-xs font-black uppercase tracking-[0.3em]">Building Secure Document</p>
         </div>
       </div>
     </div>
@@ -165,12 +165,12 @@ function LeaseSigningContent({ params }: { params: Promise<{ leaseId: string }> 
           <AlertCircle className="size-12 text-red-500" />
         </div>
         <div className="space-y-2">
-          <h1 className="text-4xl font-bold tracking-tighter text-white uppercase italic">Access Denied</h1>
+          <h1 className="text-4xl font-black tracking-tighter text-white uppercase italic">Access Denied</h1>
           <p className="text-zinc-500 font-medium leading-relaxed">{error}</p>
         </div>
         <button
           onClick={() => push("/tenant/dashboard")}
-          className="group w-full bg-white text-black hover:bg-primary hover:text-white px-8 py-5 rounded-2xl font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-3"
+          className="group w-full bg-white text-black hover:bg-primary hover:text-white px-8 py-5 rounded-2xl font-black uppercase tracking-widest transition-all flex items-center justify-center gap-3"
         >
           <ArrowLeft className="size-5 group-hover:-translate-x-1 transition-transform" />
           Return to Dashboard
@@ -188,7 +188,7 @@ function LeaseSigningContent({ params }: { params: Promise<{ leaseId: string }> 
           <CheckCircle2 className="size-16 text-emerald-500 mx-auto" />
         </div>
         <div className="space-y-2">
-          <h1 className="text-4xl font-bold tracking-tighter text-white uppercase italic">Contract Sealed</h1>
+          <h1 className="text-4xl font-black tracking-tighter text-white uppercase italic">Contract Sealed</h1>
           <p className="text-zinc-500 font-medium leading-relaxed">
             Your signature has been recorded. The landlord will be notified for countersigning.
           </p>
@@ -196,11 +196,11 @@ function LeaseSigningContent({ params }: { params: Promise<{ leaseId: string }> 
         <div className="p-4 bg-zinc-800/50 rounded-2xl border border-white/5 flex items-center gap-4">
            <Shield className="size-8 text-primary shrink-0" />
            <div className="text-left">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Secure Audit Log</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Secure Audit Log</p>
               <p className="text-xs text-white font-medium">Digital signature timestamped and verified.</p>
            </div>
         </div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-600 animate-pulse">Redirecting to Dashboard...</p>
+        <p className="text-[10px] font-black uppercase tracking-widest text-zinc-600 animate-pulse">Redirecting to Dashboard...</p>
       </motion.div>
     </div>
   ) : (!lease || !leasePdf) ? null : (
@@ -225,7 +225,7 @@ export default function TenantLeaseSigningPage({
             <div className="absolute inset-0 border-4 border-primary/10 rounded-full" />
             <div className="absolute inset-0 border-4 border-t-primary rounded-full animate-spin" />
           </div>
-          <h2 className="text-xl font-bold tracking-tighter uppercase text-white italic">Loading Environment</h2>
+          <h2 className="text-xl font-black tracking-tighter uppercase text-white italic">Loading Environment</h2>
         </div>
       </div>
     }>

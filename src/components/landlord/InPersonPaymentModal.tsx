@@ -64,7 +64,7 @@ export function InPersonPaymentModal() {
                     <Wallet className="size-6 text-emerald-500" />
                 </div>
 
-                <h3 className="text-xl font-bold text-white mb-2">In-Person Payment Confirmation</h3>
+                <h3 className="text-xl font-black text-white mb-2">In-Person Payment Confirmation</h3>
                 <p className="text-neutral-400 text-sm mb-6">
                     A tenant has reported handing you cash for their rent. Please confirm you have received the exact amount.
                 </p>
@@ -80,7 +80,7 @@ export function InPersonPaymentModal() {
                     </div>
                     <div className="flex justify-between items-center text-sm">
                         <span className="text-neutral-500">Amount Received</span>
-                        <span className="font-bold text-emerald-400">₱18,500.00</span>
+                        <span className="font-black text-emerald-400">₱18,500.00</span>
                     </div>
                 </div>
 
@@ -97,7 +97,7 @@ export function InPersonPaymentModal() {
                     <button
                         onClick={handleConfirm}
                         disabled={isConfirming}
-                        className="flex-[2] py-3 bg-emerald-500 hover:bg-emerald-600 text-black rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
+                        className="flex-[2] py-3 bg-emerald-500 hover:bg-emerald-600 text-black rounded-xl font-black transition-colors flex items-center justify-center gap-2"
                     >
                         {isConfirming ? (
                             <>

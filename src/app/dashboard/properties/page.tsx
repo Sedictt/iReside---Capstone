@@ -80,7 +80,7 @@ export default function PropertiesPage() {
         <div className="space-y-8">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-white">Properties</h1>
+                    <h1 className="text-3xl font-black tracking-tight text-white">Properties</h1>
                     <p className="text-zinc-400">Manage your real estate portfolio</p>
                 </div>
 
@@ -112,7 +112,7 @@ export default function PropertiesPage() {
                         </button>
                     </div>
 
-                    <button className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-bold text-white shadow-sm transition-colors hover:bg-blue-500">
+                    <button className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-black text-white shadow-sm transition-colors hover:bg-blue-500">
                         <Plus className="size-4" />
                         Add Property
                     </button>
@@ -133,7 +133,7 @@ export default function PropertiesPage() {
                                 </div>
                             </div>
                             <div className="p-6">
-                                <h3 className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors">
+                                <h3 className="text-lg font-black text-white group-hover:text-blue-400 transition-colors">
                                     {property.name}
                                 </h3>
                                 <p className="text-sm text-zinc-400">{property.address}</p>

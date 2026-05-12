@@ -875,7 +875,7 @@ export function TenantContactsSidebar() {
                             <button
                                 onClick={() => setActiveTab("messages")}
                                 className={cn(
-                                    "flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-bold transition-all relative z-10",
+                                    "flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-black transition-all relative z-10",
                                     activeTab === "messages" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
                                 )}
                             >
@@ -885,7 +885,7 @@ export function TenantContactsSidebar() {
                             <button
                                 onClick={() => setActiveTab("contacts")}
                                 className={cn(
-                                    "flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-bold transition-all relative z-10",
+                                    "flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-black transition-all relative z-10",
                                     activeTab === "contacts" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
                                 )}
                             >
@@ -931,10 +931,10 @@ export function TenantContactsSidebar() {
                                     {isHovered && (
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center justify-between mb-0.5">
-                                                <h4 className="text-sm font-bold text-primary truncate pr-2 transition-colors">
+                                                <h4 className="text-sm font-black text-primary truncate pr-2 transition-colors">
                                                     iRis Assistant
                                                 </h4>
-                                                <span className="text-[10px] text-primary shrink-0 opacity-80 uppercase tracking-widest font-bold">AI</span>
+                                                <span className="text-[10px] text-primary shrink-0 opacity-80 uppercase tracking-widest font-black">AI</span>
                                             </div>
                                             <p className="text-xs text-zinc-600 dark:text-neutral-300 font-medium truncate">
                                                 How can I help you today?
@@ -983,7 +983,7 @@ export function TenantContactsSidebar() {
                                                             userId={msg.participantUserId || ""} 
                                                             initialData={{ full_name: msg.name, avatar_url: msg.avatar, role: msg.role as any }}
                                                         >
-                                                            <h4 className={cn("text-sm truncate transition-colors group-hover:text-primary", msg.unread ? "font-bold text-foreground dark:text-white" : "font-medium text-zinc-700 dark:text-neutral-200")}>
+                                                            <h4 className={cn("text-sm truncate transition-colors group-hover:text-primary", msg.unread ? "font-black text-foreground dark:text-white" : "font-medium text-zinc-700 dark:text-neutral-200")}>
                                                                 {msg.name}
                                                             </h4>
                                                         </ProfileCardTrigger>
@@ -1042,7 +1042,7 @@ export function TenantContactsSidebar() {
                 {/* Footer View All */}
                 {isHovered && (
                     <div className="p-4 border-t border-border shrink-0 bg-card/95 animate-in fade-in duration-500">
-                        <Link href="/tenant/messages" className="w-full py-3 rounded-xl bg-primary hover:bg-primary/90 text-sm font-bold text-primary-foreground transition-colors border border-primary/30 flex items-center justify-center shadow-sm">
+                        <Link href="/tenant/messages" className="w-full py-3 rounded-xl bg-primary hover:bg-primary/90 text-sm font-black text-primary-foreground transition-colors border border-primary/30 flex items-center justify-center shadow-sm">
                             Open Full Messaging
                         </Link>
                     </div>
@@ -1099,7 +1099,7 @@ export function TenantContactsSidebar() {
                                     </div>
                                     <div className="flex flex-col min-w-0">
                                         <div className="flex min-w-0 items-center gap-2">
-                                            <h4 className="text-sm font-bold text-foreground truncate hover:underline">{chat.name}</h4>
+                                            <h4 className="text-sm font-black text-foreground truncate hover:underline">{chat.name}</h4>
                                             <RoleBadge role={chat.role} />
                                         </div>
                                         {chat.isActive && (
@@ -1249,7 +1249,7 @@ export function TenantContactsSidebar() {
                                                         <File className="size-4 text-foreground" />
                                                     </div>
                                                     <div className="min-w-0">
-                                                        <p className="text-xs font-bold truncate text-foreground">{message.content || "Attachment"}</p>
+                                                        <p className="text-xs font-black truncate text-foreground">{message.content || "Attachment"}</p>
                                                     </div>
                                                 </a>
                                             )}
@@ -1362,7 +1362,7 @@ export function TenantContactsSidebar() {
                         >
                             <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card/95">
                                 <div className="min-w-0">
-                                    <p className="text-sm font-bold text-foreground truncate">Shared Files</p>
+                                    <p className="text-sm font-black text-foreground truncate">Shared Files</p>
                                     <p className="text-[11px] text-muted-foreground truncate">
                                         {openChats.find((chat) => chat.id === sharedFilesChatId)?.name ?? "Conversation"}
                                     </p>
@@ -1538,7 +1538,7 @@ function ContactCard({ name, role, unit, avatar, avatarBgColor, status, isExpand
                 <div className="flex-1 min-w-0 animate-in fade-in duration-300">
                     <div className="flex items-center justify-between mb-0.5">
                         <div className="flex min-w-0 items-center gap-2">
-                            <h4 className="font-bold text-foreground text-sm group-hover:text-primary transition-colors truncate">{name}</h4>
+                            <h4 className="font-black text-foreground text-sm group-hover:text-primary transition-colors truncate">{name}</h4>
                             <RoleBadge role={role} />
                         </div>
                     </div>

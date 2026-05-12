@@ -142,7 +142,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                                 <MessageSquare className="size-5 text-primary" />
                             </div>
                             <div>
-                                <h2 className="text-xl font-bold text-foreground dark:text-white">
+                                <h2 className="text-xl font-black text-foreground dark:text-white">
                                     {simplifiedMode ? "Messages from People" : "Recent Inquiries"}
                                 </h2>
                                 <p className="text-sm text-muted-foreground">
@@ -237,7 +237,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
 
                                     {/* Unread Badge */}
                                     {inquiry.isUnread && (
-                                        <div className="absolute top-3 right-14 flex items-center gap-1.5 bg-lime-500 text-white px-2.5 py-1 rounded-full text-xs font-bold shadow-lg animate-pulse z-10">
+                                        <div className="absolute top-3 right-14 flex items-center gap-1.5 bg-lime-500 text-white px-2.5 py-1 rounded-full text-xs font-black shadow-lg animate-pulse z-10">
                                             <Mail className="size-3" />
                                             New
                                         </div>
@@ -255,7 +255,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                                                     className="rounded-full object-cover"
                                                 />
                                             ) : (
-                                                <span className="text-lg font-bold text-white">
+                                                <span className="text-lg font-black text-white">
                                                     {inquiry.prospectName.split(' ').map(n => n[0]).join('')}
                                                 </span>
                                             )}
@@ -267,7 +267,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                                 <div className="p-4 space-y-3">
                                     {/* Name and Property */}
                                     <div>
-                                        <h3 className="mb-1 truncate text-base font-bold text-foreground dark:text-white">
+                                        <h3 className="mb-1 truncate text-base font-black text-foreground dark:text-white">
                                             {inquiry.prospectName}
                                         </h3>
                                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground dark:text-neutral-400">
@@ -292,7 +292,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                                     {/* Action Button */}
                                     <button 
                                         onClick={() => setActiveChat(inquiry)}
-                                        className="w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-primary-foreground shadow-lg transition-all hover:brightness-110 hover:shadow-xl"
+                                        className="w-full rounded-xl bg-primary py-2.5 text-sm font-black text-primary-foreground shadow-lg transition-all hover:brightness-110 hover:shadow-xl"
                                     >
                                         {simplifiedMode ? "Answer Now" : "Reply now"}
                                     </button>
@@ -305,7 +305,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                             <div className="mb-4 inline-flex size-16 items-center justify-center rounded-full bg-muted dark:bg-neutral-800/50">
                                 <MessageSquare className="size-8 text-muted-foreground dark:text-neutral-600" />
                             </div>
-                            <h3 className="mb-2 text-lg font-bold text-foreground dark:text-white">No Recent Inquiries</h3>
+                            <h3 className="mb-2 text-lg font-black text-foreground dark:text-white">No Recent Inquiries</h3>
                             <p className="mx-auto max-w-sm text-sm text-muted-foreground dark:text-neutral-400">
                                 When potential tenants message you through applications, they will appear here.
                             </p>
@@ -410,7 +410,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                         {/* Chat Header */}
                         <div className="flex items-center justify-between border-b border-border bg-muted/70 p-4 backdrop-blur-md dark:border-white/10 dark:bg-neutral-800/80">
                             <div className="flex items-center gap-3">
-                                <div className="size-10 rounded-full bg-gradient-to-br from-lime-600 to-emerald-800 flex items-center justify-center text-white font-bold text-sm">
+                                <div className="size-10 rounded-full bg-gradient-to-br from-lime-600 to-emerald-800 flex items-center justify-center text-white font-black text-sm">
                                     {activeChat.prospectAvatar ? (
                                         <Image
                                             src={activeChat.prospectAvatar || FALLBACK_AVATAR}
@@ -424,7 +424,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                                     )}
                                 </div>
                                 <div className="flex flex-col">
-                                    <span className="text-sm font-bold text-foreground dark:text-white">{activeChat.prospectName}</span>
+                                    <span className="text-sm font-black text-foreground dark:text-white">{activeChat.prospectName}</span>
                                     <span className="max-w-[150px] truncate text-xs text-muted-foreground dark:text-neutral-400">{activeChat.propertyName}</span>
                                 </div>
                             </div>

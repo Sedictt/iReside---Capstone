@@ -77,10 +77,10 @@ export function NotificationBanner() {
                                 {getIcon(current.type)}
                             </div>
                             <div className="flex flex-col">
-                                <span className="font-bold uppercase tracking-widest text-[9px] opacity-60">
+                                <span className="font-black uppercase tracking-widest text-[9px] opacity-60">
                                     {current.title}
                                 </span>
-                                <span className="line-clamp-1 text-sm font-bold tracking-tight">{current.message}</span>
+                                <span className="line-clamp-1 text-sm font-black tracking-tight">{current.message}</span>
                             </div>
                         </div>
 
@@ -148,7 +148,7 @@ export function NotificationBanner() {
                                             }
                                         }
                                     }}
-                                    className="flex items-center gap-2 rounded-xl bg-white/15 px-3 py-1.5 hover:bg-white/25 transition-all font-bold text-[10px] uppercase tracking-widest border border-white/10 shadow-sm"
+                                    className="flex items-center gap-2 rounded-xl bg-white/15 px-3 py-1.5 hover:bg-white/25 transition-all font-black text-[10px] uppercase tracking-widest border border-white/10 shadow-sm"
                                 >
                                     {activeNotifications.length > 1 ? (
                                         <>Next <ChevronRight className="size-3" /></>

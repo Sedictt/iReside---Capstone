@@ -612,3 +612,118 @@ export async function PATCH(request: Request) {
     });
 }
 
+const toDbPriority = (priority: MaintenancePriorityLabel): MaintenancePriority => {
+    switch (priority) {
+        case "Critical":
+            return "urgent";
+        case "High":
+            return "high";
+        case "Medium":
+            return "medium";
+        case "Low":
+        default:
+            return "low";
+    }
+};
+
+type LandlordMaintenancePostBody = {
+    propertyId: string;
+    unitId: string;
+    title: string;
+    description: string;
+    priority: MaintenancePriorityLabel;
+};
+
+export async function POST(request: Request) {
+    const { user } = await requireUser();
+    const supabase = await createClient();
+
+    const body = (await request.json()) as LandlordMaintenancePostBody;
+
+    if (!isNonEmptyString(body.unitId)) {
+        return NextResponse.json({ error: "Unit ID is required." }, { status: 400 });
+    }
+    if (!isNonEmptyString(body.title)) {
+        return NextResponse.json({ error: "Title is required." }, { status: 400 });
+    }
+    if (!isNonEmptyString(body.description)) {
+        return NextResponse.json({ error: "Description is required." }, { status: 400 });
+    }
+    if (!body.priority) {
+        return NextResponse.json({ error: "Priority is required." }, { status: 400 });
+    }
+
+    const { data: newRequest, error: createError } = await supabase
+        .from("maintenance_requests")
+        .insert({
+            landlord_id: user.id,
+            unit_id: body.unitId,
+            tenant_id: null,
+            title: body.title.trim(),
+            description: body.description.trim(),
+            priority: toDbPriority(body.priority),
+            status: "open",
+            category: null,
+            images: [],
+            self_repair_requested: false,
+            self_repair_decision: null,
+            photo_requested: false,
+            tenant_repair_status: null,
+            tenant_provided_photos: [],
+            repair_method: null,
+            third_party_name: null,
+        })
+        .select(
+            "id, unit_id, tenant_id, title, description, status, priority, category, images, self_repair_requested, self_repair_decision, photo_requested, tenant_repair_status, tenant_provided_photos, repair_method, third_party_name, created_at, ai_triage_priority, ai_triage_sentiment, ai_triage_reason, ai_triage_confidence, ai_triage_hash, ai_triage_version, ai_triaged_at"
+        )
+        .single();
+
+    if (createError) {
+        return NextResponse.json({ error: "Failed to create maintenance request." }, { status: 500 });
+    }
+
+    // Fetch associated unit and property data
+    const { data: unit } = newRequest.unit_id
+        ? await supabase.from("units").select("name, property_id").eq("id", newRequest.unit_id).maybeSingle()
+        : { data: null };
+
+    const { data: property } = unit?.property_id
+        ? await supabase.from("properties").select("name").eq("id", unit.property_id).maybeSingle()
+        : { data: null };
+
+    const { cleanedDescription } = extractSelfRepairDetails(newRequest.description, newRequest.category);
+
+    return NextResponse.json(
+        {
+            request: {
+                id: newRequest.id,
+                title: newRequest.title,
+                description: cleanedDescription,
+                selfRepairRequested: newRequest.self_repair_requested || false,
+                selfRepairDecision: newRequest.self_repair_decision,
+                photoRequested: newRequest.photo_requested,
+                tenantRepairStatus: newRequest.tenant_repair_status,
+                tenantProvidedPhotos: Array.isArray(newRequest.tenant_provided_photos)
+                    ? newRequest.tenant_provided_photos.filter(isNonEmptyString)
+                    : [],
+                repairMethod: newRequest.repair_method,
+                thirdPartyName: newRequest.third_party_name,
+                property: property?.name ?? "Property",
+                unit: unit?.name ?? "Unit",
+                tenant: "",
+                tenantAvatar: null,
+                tenantAvatarBgColor: null,
+                priority: resolvePriority(newRequest.priority),
+                status: resolveStatus(newRequest.status),
+                reportedAt: formatRelativeDate(newRequest.created_at),
+                images: Array.isArray(newRequest.images) ? newRequest.images.filter(isNonEmptyString) : [],
+                sentiment: resolveSentiment(newRequest.ai_triage_sentiment),
+                triageReason: newRequest.ai_triage_reason,
+                triageConfidence: newRequest.ai_triage_confidence,
+                triageSource: "database",
+            },
+        },
+        { status: 201 }
+    );
+}
+

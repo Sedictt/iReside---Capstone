@@ -41,7 +41,7 @@ export function TenantDashboardHeader({ lease }: TenantDashboardHeaderProps) {
                             <Home className="size-6" />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-bold text-foreground">
+                            <h1 className="text-2xl font-black text-foreground">
                                 {lease.unitName || "Your Unit"}
                             </h1>
                             <p className="text-sm text-muted-foreground">
@@ -53,7 +53,7 @@ export function TenantDashboardHeader({ lease }: TenantDashboardHeaderProps) {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="bg-card/50 rounded-2xl p-4 border border-border">
                             <p className="text-xs font-medium text-muted-foreground mb-1">Monthly Rent</p>
-                            <p className="text-xl font-bold text-foreground">
+                            <p className="text-xl font-black text-foreground">
                                 ₱{lease.monthlyRent.toLocaleString()}
                             </p>
                         </div>

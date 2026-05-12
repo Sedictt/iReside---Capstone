@@ -36,7 +36,7 @@ export function PaymentSummary({ nextPayment, overduePayments }: PaymentSummaryP
                     <div className="flex items-start gap-3">
                         <AlertCircle className="size-5 text-rose-500 mt-0.5" />
                         <div className="flex-1">
-                            <h3 className="font-semibold text-foreground mb-1">Overdue Payments</h3>
+                            <h3 className="font-black text-foreground mb-1">Overdue Payments</h3>
                             <p className="text-sm text-muted-foreground mb-3">
                                 You have {overduePayments.length} overdue payment{overduePayments.length > 1 ? 's' : ''}. Please pay as soon as possible.
                             </p>
@@ -47,7 +47,7 @@ export function PaymentSummary({ nextPayment, overduePayments }: PaymentSummaryP
                                             <p className="font-medium text-foreground">{payment.description || "Rent Payment"}</p>
                                             <p className="text-muted-foreground">Due: <ClientOnlyDate date={payment.dueDate} /></p>
                                         </div>
-                                        <p className="font-semibold text-rose-500">₱{payment.amount.toLocaleString()}</p>
+                                        <p className="font-black text-rose-500">₱{payment.amount.toLocaleString()}</p>
                                     </div>
                                 ))}
                             </div>
@@ -65,14 +65,14 @@ export function PaymentSummary({ nextPayment, overduePayments }: PaymentSummaryP
                                 <CreditCard className="size-6" />
                             </div>
                             <div>
-                                <h3 className="font-semibold text-foreground">Next Payment</h3>
+                                <h3 className="font-black text-foreground">Next Payment</h3>
                                 <p className="text-sm text-muted-foreground">
                                     Due: <ClientOnlyDate date={nextPayment.dueDate} />
                                 </p>
                             </div>
                         </div>
                         <div className="text-right">
-                            <p className="text-2xl font-bold text-foreground">
+                            <p className="text-2xl font-black text-foreground">
                                 ₱{nextPayment.amount.toLocaleString()}
                             </p>
                             <p className="text-xs text-muted-foreground">

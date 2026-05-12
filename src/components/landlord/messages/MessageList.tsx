@@ -70,7 +70,7 @@ export function MessageList({
         >
             <div className="w-full max-w-4xl p-6 pb-12">
                 <div className="text-center py-8">
-                    <span className="rounded-full border border-divider bg-surface-1 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-disabled shadow-sm">
+                    <span className="rounded-full border border-divider bg-surface-1 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-disabled shadow-sm">
                         Conversation History
                     </span>
                 </div>

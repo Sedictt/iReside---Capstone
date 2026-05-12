@@ -485,7 +485,7 @@ export default function TenantCommunityHubPage() {
                         <motion.div 
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: "auto" }}
-                            className="rounded-2xl border border-red-500/20 bg-red-500/5 p-4 text-sm font-bold text-red-600"
+                            className="rounded-2xl border border-red-500/20 bg-red-500/5 p-4 text-sm font-black text-red-600"
                         >
                             {error}
                         </motion.div>
@@ -493,7 +493,7 @@ export default function TenantCommunityHubPage() {
 
                     {(activeTab === "approvals" || (activeTab === "mine" && !isManagementUser)) && (
                         <div className="space-y-6">
-                            <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">
+                            <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground">
                                 {activeTab === "approvals" ? "Moderation Queue" : "Your Pending Posts"}
                             </h3>
                             <div className="grid gap-6 md:grid-cols-2">
@@ -558,7 +558,7 @@ export default function TenantCommunityHubPage() {
                                     <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-muted">
                                         <MessageCircle className="size-5" />
                                     </div>
-                                    <h3 className="mt-4 text-lg font-bold text-foreground">No posts found</h3>
+                                    <h3 className="mt-4 text-lg font-black text-foreground">No posts found</h3>
                                     <p className="mt-2 text-muted-foreground">Try adjusting your search or tab to see more content.</p>
                                 </div>
                             )}
@@ -568,7 +568,7 @@ export default function TenantCommunityHubPage() {
                                     <button 
                                         onClick={() => loadPosts("append")}
                                         disabled={loadingFeed}
-                                        className="rounded-full border border-border px-10 py-3 text-sm font-bold transition-all hover:bg-muted"
+                                        className="rounded-full border border-border px-10 py-3 text-sm font-black transition-all hover:bg-muted"
                                     >
                                         {loadingFeed ? "Loading..." : "Load More"}
                                     </button>
@@ -588,7 +588,7 @@ export default function TenantCommunityHubPage() {
                             exit={{ opacity: 0, scale: 0.95 }}
                             className="w-full max-w-md rounded-3xl border border-border bg-card p-8 shadow-2xl"
                         >
-                            <h3 className="text-xl font-bold text-foreground">Report Content</h3>
+                            <h3 className="text-xl font-black text-foreground">Report Content</h3>
                             <p className="mt-2 text-sm text-muted-foreground">Help us understand what's wrong with this post. Your report is confidential.</p>
                             
                             <textarea
@@ -601,14 +601,14 @@ export default function TenantCommunityHubPage() {
                             <div className="mt-8 flex gap-3">
                                 <button 
                                     onClick={() => setReportModalPostId(null)}
-                                    className="flex-1 rounded-xl border border-border py-2.5 text-sm font-bold text-muted-foreground hover:bg-muted"
+                                    className="flex-1 rounded-xl border border-border py-2.5 text-sm font-black text-muted-foreground hover:bg-muted"
                                 >
                                     Cancel
                                 </button>
                                 <button 
                                     onClick={handleReportSubmit}
                                     disabled={!reportReason.trim()}
-                                    className="flex-1 rounded-xl bg-red-500 py-2.5 text-sm font-bold text-white hover:brightness-110 disabled:opacity-50"
+                                    className="flex-1 rounded-xl bg-red-500 py-2.5 text-sm font-black text-white hover:brightness-110 disabled:opacity-50"
                                 >
                                     Submit Report
                                 </button>

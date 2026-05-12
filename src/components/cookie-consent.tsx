@@ -73,7 +73,7 @@ export function CookieConsent() {
               {/* Content */}
               <div className="flex-1 space-y-3">
                 <div>
-                  <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                  <h3 className="text-sm font-black text-foreground flex items-center gap-2">
                     <Shield className="size-4" />
                     Cookie Consent
                   </h3>

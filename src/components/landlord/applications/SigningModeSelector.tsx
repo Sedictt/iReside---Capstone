@@ -45,7 +45,7 @@ export function SigningModeSelector({
     <div className={cn("space-y-4", className)}>
       <div className="flex items-center gap-3 text-purple-400">
         <UserCheck size={18} strokeWidth={2.5} />
-        <h3 className="text-[11px] font-bold uppercase tracking-[0.3em]">
+        <h3 className="text-[11px] font-black uppercase tracking-[0.3em]">
           Signing Mode
         </h3>
       </div>
@@ -120,7 +120,7 @@ export function SigningModeSelector({
                 <div className="flex-1 space-y-1.5">
                   <h4
                     className={cn(
-                      "font-bold text-sm",
+                      "font-black text-sm",
                       isSelected ? "text-white" : "text-neutral-200"
                     )}
                   >
@@ -135,7 +135,7 @@ export function SigningModeSelector({
               {/* Lock indicator */}
               {disabled && (
                 <div className="absolute inset-0 rounded-2xl bg-black/30 backdrop-blur-[1px] flex items-center justify-center">
-                  <div className="text-xs font-bold text-white/60 uppercase tracking-wider">
+                  <div className="text-xs font-black text-white/60 uppercase tracking-wider">
                     Locked
                   </div>
                 </div>

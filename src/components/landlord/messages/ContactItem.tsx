@@ -30,12 +30,12 @@ export function ContactItem({ contact, isActive, onClick }: ContactItemProps) {
                     {contact.avatarUrl ? (
                         <Image src={contact.avatarUrl} alt={contact.name} fill sizes="48px" className="object-cover" />
                     ) : (
-                        <span className="text-sm font-bold text-high">{contact.initials}</span>
+                        <span className="text-sm font-black text-high">{contact.initials}</span>
                     )}
                 </div>
                 {contact.unread > 0 && (
                     <div className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full border-2 border-surface-1 bg-red-500 shadow-sm animate-in zoom-in duration-300">
-                        <span className="text-[10px] font-bold text-white">{contact.unread}</span>
+                        <span className="text-[10px] font-black text-white">{contact.unread}</span>
                     </div>
                 )}
             </div>
@@ -43,7 +43,7 @@ export function ContactItem({ contact, isActive, onClick }: ContactItemProps) {
                 <div className="flex items-center justify-between mb-0.5">
                     <div className="flex min-w-0 items-center gap-2 pr-2">
                         <h4 className={cn(
-                            "truncate text-sm font-bold transition-colors",
+                            "truncate text-sm font-black transition-colors",
                             isActive ? "text-primary" : "text-high"
                         )}>
                             {contact.name}

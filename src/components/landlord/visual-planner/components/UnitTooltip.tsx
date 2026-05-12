@@ -31,8 +31,8 @@ export const UnitTooltip = ({
         >
             <div className="flex flex-col gap-1">
                 <div className="px-3 py-2 mb-1 border-b border-white/5">
-                    <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Unit {unit.name}</p>
-                    <p className="text-xs font-bold text-white mt-0.5">Quick Actions</p>
+                    <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Unit {unit.name}</p>
+                    <p className="text-xs font-black text-white mt-0.5">Quick Actions</p>
                 </div>
                 
                 {unit.status === 'vacant' && (
@@ -48,8 +48,8 @@ export const UnitTooltip = ({
                             <span className="material-icons-round text-lg">move_down</span>
                         </div>
                         <div>
-                            <p className="text-xs font-bold tracking-tight">Transfer Request</p>
-                            <p className="text-[9px] font-bold text-white/30 uppercase tracking-widest mt-0.5">Move into this unit</p>
+                            <p className="text-xs font-black tracking-tight">Transfer Request</p>
+                            <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mt-0.5">Move into this unit</p>
                         </div>
                     </button>
                 )}
@@ -66,8 +66,8 @@ export const UnitTooltip = ({
                         <span className="material-icons-round text-lg">report_problem</span>
                     </div>
                     <div>
-                        <p className="text-xs font-bold tracking-tight">Report / Complain</p>
-                        <p className="text-[9px] font-bold text-white/30 uppercase tracking-widest mt-0.5">Report an issue</p>
+                        <p className="text-xs font-black tracking-tight">Report / Complain</p>
+                        <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mt-0.5">Report an issue</p>
                     </div>
                 </button>
             </div>

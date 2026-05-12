@@ -71,7 +71,7 @@ export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorP
                 </div>
                 <button 
                     onClick={() => setIsEditing(true)}
-                    className="text-[10px] font-bold tracking-widest uppercase px-4 py-1.5 rounded-full border border-white/10 hover:bg-white/5 transition-all opacity-40 hover:opacity-100"
+                    className="text-[10px] font-black tracking-widest uppercase px-4 py-1.5 rounded-full border border-white/10 hover:bg-white/5 transition-all opacity-40 hover:opacity-100"
                 >
                     Edit Socials
                 </button>
@@ -82,7 +82,7 @@ export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorP
     return (
         <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-3xl p-6 w-full max-w-sm animate-in fade-in zoom-in duration-300">
             <div className="flex items-center justify-between mb-6">
-                <h4 className="text-xs font-bold tracking-widest uppercase text-white">Edit Social Links</h4>
+                <h4 className="text-xs font-black tracking-widest uppercase text-white">Edit Social Links</h4>
                 <button onClick={() => setIsEditing(false)} className="text-neutral-500 hover:text-white transition-colors">
                     <X size={18} />
                 </button>
@@ -90,7 +90,7 @@ export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorP
 
             <div className="space-y-4 mb-6">
                 <div className="space-y-1.5">
-                    <label htmlFor="facebook-url" className="text-[9px] font-bold tracking-widest text-neutral-500 uppercase flex items-center gap-2">
+                    <label htmlFor="facebook-url" className="text-[9px] font-black tracking-widest text-neutral-500 uppercase flex items-center gap-2">
                         <Facebook size={12} className="text-[#1877F2]" /> Facebook URL
                     </label>
                     <input 
@@ -103,7 +103,7 @@ export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorP
                     />
                 </div>
                 <div className="space-y-1.5">
-                    <label htmlFor="twitter-url" className="text-[9px] font-bold tracking-widest text-neutral-500 uppercase flex items-center gap-2">
+                    <label htmlFor="twitter-url" className="text-[9px] font-black tracking-widest text-neutral-500 uppercase flex items-center gap-2">
                         <Twitter size={12} className="text-[#1DA1F2]" /> Twitter URL
                     </label>
                     <input 
@@ -116,7 +116,7 @@ export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorP
                     />
                 </div>
                 <div className="space-y-1.5">
-                    <label htmlFor="linkedin-url" className="text-[9px] font-bold tracking-widest text-neutral-500 uppercase flex items-center gap-2">
+                    <label htmlFor="linkedin-url" className="text-[9px] font-black tracking-widest text-neutral-500 uppercase flex items-center gap-2">
                         <Linkedin size={12} className="text-[#0A66C2]" /> LinkedIn URL
                     </label>
                     <input 
@@ -129,7 +129,7 @@ export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorP
                     />
                 </div>
                 <div className="space-y-1.5">
-                    <label htmlFor="instagram-url" className="text-[9px] font-bold tracking-widest text-neutral-500 uppercase flex items-center gap-2">
+                    <label htmlFor="instagram-url" className="text-[9px] font-black tracking-widest text-neutral-500 uppercase flex items-center gap-2">
                         <Instagram size={12} className="text-[#E4405F]" /> Instagram URL
                     </label>
                     <input 
@@ -146,7 +146,7 @@ export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorP
             <button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="w-full flex items-center justify-center gap-2 bg-[#6d9838] hover:bg-[#5a7d2e] text-white py-3 rounded-xl text-[10px] font-bold tracking-widest uppercase transition-all shadow-lg shadow-[#6d9838]/20 disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-2 bg-[#6d9838] hover:bg-[#5a7d2e] text-white py-3 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all shadow-lg shadow-[#6d9838]/20 disabled:opacity-50"
             >
                 {isSaving ? "Saving..." : <><Save size={14} /> Save Social Links</>}
             </button>

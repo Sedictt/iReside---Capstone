@@ -97,7 +97,7 @@ export function ProfileWidget() {
                         onError={() => setAvatarFailed(true)}
                     />
                 ) : (
-                    <span className="relative z-10 text-sm font-bold text-text-high dark:text-white">{initials}</span>
+                    <span className="relative z-10 text-sm font-black text-text-high dark:text-white">{initials}</span>
                 )}
             </button>
 
@@ -139,7 +139,7 @@ export function ProfileWidget() {
                                                 onError={() => setAvatarFailed(true)}
                                             />
                                         ) : (
-                                            <span className="text-xl font-bold text-white">{initials}</span>
+                                            <span className="text-xl font-black text-white">{initials}</span>
                                         )}
                                     </div>
                                 </ProfileCardTrigger>
@@ -150,7 +150,7 @@ export function ProfileWidget() {
                                                 userId={user?.id || ""} 
                                                 initialData={{ full_name: displayName, avatar_url: displayAvatar as string, role: profile?.role as any }}
                                             >
-                                                <p className="truncate text-lg font-bold text-foreground dark:text-white hover:text-primary transition-colors cursor-pointer leading-tight">{displayName}</p>
+                                                <p className="truncate text-lg font-black text-foreground dark:text-white hover:text-primary transition-colors cursor-pointer leading-tight">{displayName}</p>
                                             </ProfileCardTrigger>
                                             <p className="truncate text-xs text-muted-foreground">{profile?.email || user?.email || "Account"}</p>
                                         </div>

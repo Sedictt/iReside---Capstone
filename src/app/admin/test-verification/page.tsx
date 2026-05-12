@@ -94,7 +94,7 @@ export default function TestVerificationPage() {
                         >
                             <Search className="size-5 text-blue-400" />
                         </div>
-                        <h1 className="text-3xl font-bold text-white tracking-tight">Business Verification Test</h1>
+                        <h1 className="text-3xl font-black text-white tracking-tight">Business Verification Test</h1>
                     </div>
                     <p className="text-sm text-neutral-500 ml-10">
                         Test the Valenzuela City Business Directory verification feature without going through the full registration workflow.
@@ -105,7 +105,7 @@ export default function TestVerificationPage() {
                     className="rounded-2xl p-6 mb-6"
                     style={{ background: "#111111", border: "1px solid rgba(255,255,255,0.07)" }}
                 >
-                    <h2 className="text-lg font-bold text-white mb-4">Test Configuration</h2>
+                    <h2 className="text-lg font-black text-white mb-4">Test Configuration</h2>
                     
                     <div className="space-y-4">
                         <div>
@@ -141,7 +141,7 @@ export default function TestVerificationPage() {
                                 type="button"
                                 disabled={verifying}
                                 onClick={handleVerify}
-                                className="px-6 py-3 rounded-xl text-sm font-bold transition-opacity disabled:opacity-60 flex items-center gap-2"
+                                className="px-6 py-3 rounded-xl text-sm font-black transition-opacity disabled:opacity-60 flex items-center gap-2"
                                 style={{ background: "rgba(59,130,246,0.12)", border: "1px solid rgba(59,130,246,0.22)", color: "#60a5fa" }}
                             >
                                 {verifying ? (
@@ -161,7 +161,7 @@ export default function TestVerificationPage() {
                                 <button
                                     type="button"
                                     onClick={handleManualSearch}
-                                    className="px-6 py-3 rounded-xl text-sm font-bold transition-opacity flex items-center gap-2"
+                                    className="px-6 py-3 rounded-xl text-sm font-black transition-opacity flex items-center gap-2"
                                     style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", color: "#8a8a8a" }}
                                 >
                                     <ExternalLink className="size-4" />
@@ -179,7 +179,7 @@ export default function TestVerificationPage() {
                     >
                         <div className="flex items-center gap-2">
                             <ShieldX className="size-5" />
-                            <span className="font-bold">Error</span>
+                            <span className="font-black">Error</span>
                         </div>
                         <p className="text-sm mt-1">{error}</p>
                     </div>
@@ -190,7 +190,7 @@ export default function TestVerificationPage() {
                         className="rounded-2xl p-6"
                         style={{ background: "#111111", border: "1px solid rgba(255,255,255,0.07)" }}
                     >
-                        <h2 className="text-lg font-bold text-white mb-4">Verification Results</h2>
+                        <h2 className="text-lg font-black text-white mb-4">Verification Results</h2>
                         
                         <div className="mb-4">
                             <div className="flex items-center gap-2 mb-2">
@@ -200,7 +200,7 @@ export default function TestVerificationPage() {
                                     return <StatusIcon className="size-5" style={{ color: meta.color }} />;
                                 })()}
                                 <span
-                                    className="text-lg font-bold"
+                                    className="text-lg font-black"
                                     style={{ color: VERIFICATION_STATUS_META[result.status]?.color || "#6b7280" }}
                                 >
                                     {VERIFICATION_STATUS_META[result.status]?.label || "Unknown"}
@@ -216,7 +216,7 @@ export default function TestVerificationPage() {
 
                         {result.data && (
                             <div className="mb-4 p-4 rounded-xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}>
-                                <p className="text-sm font-bold text-white mb-2">Business Details</p>
+                                <p className="text-sm font-black text-white mb-2">Business Details</p>
                                 <div className="space-y-1">
                                     <p className="text-sm text-neutral-200">
                                         <span className="text-neutral-500">Name:</span> {result.data.businessName || "N/A"}
@@ -240,13 +240,13 @@ export default function TestVerificationPage() {
 
                         {result.error && (
                             <div className="p-4 rounded-xl" style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.22)" }}>
-                                <p className="text-sm font-bold text-red-400 mb-1">Error Details</p>
+                                <p className="text-sm font-black text-red-400 mb-1">Error Details</p>
                                 <p className="text-sm text-neutral-300">{result.error}</p>
                             </div>
                         )}
 
                         <div className="mt-4 p-4 rounded-xl" style={{ background: "rgba(59,130,246,0.05)", border: "1px solid rgba(59,130,246,0.15)" }}>
-                            <p className="text-xs font-bold text-blue-400 mb-1">Raw Response Data</p>
+                            <p className="text-xs font-black text-blue-400 mb-1">Raw Response Data</p>
                             <pre className="text-xs text-neutral-300 overflow-x-auto">
                                 {JSON.stringify(result, null, 2)}
                             </pre>
@@ -258,7 +258,7 @@ export default function TestVerificationPage() {
                     className="rounded-2xl p-6 mt-6"
                     style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}
                 >
-                    <h3 className="text-sm font-bold text-white mb-3">Testing Tips</h3>
+                    <h3 className="text-sm font-black text-white mb-3">Testing Tips</h3>
                     <ul className="space-y-2 text-sm text-neutral-400">
                         <li className="flex items-start gap-2">
                             <span className="text-blue-400">1.</span>

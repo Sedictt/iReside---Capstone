@@ -161,7 +161,7 @@ export function LeaseTour() {
                 })() : {}}
             >
                 <div className="flex items-start justify-between mb-3">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-primary">
+                    <p className="text-[10px] font-black uppercase tracking-[0.15em] text-primary">
                         Guided Tour ({stepIndex + 1}/{TOUR_STEPS.length})
                     </p>
                     <button 
@@ -173,7 +173,7 @@ export function LeaseTour() {
                     </button>
                 </div>
                 
-                <h3 className="text-lg font-bold text-foreground mb-2">
+                <h3 className="text-lg font-black text-foreground mb-2">
                     {activeStep.title}
                 </h3>
                 
@@ -184,7 +184,7 @@ export function LeaseTour() {
                 <div className="flex items-center justify-between mt-auto">
                     <button
                         onClick={completeTour}
-                        className="text-xs font-bold text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                        className="text-xs font-black text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
                     >
                         <SkipForward className="size-3.5" />
                         Skip
@@ -201,7 +201,7 @@ export function LeaseTour() {
                         )}
                         <button
                             onClick={nextStep}
-                            className="h-8 px-4 flex items-center justify-center gap-2 rounded-lg bg-primary text-black font-bold text-xs hover:bg-primary/90 transition-colors"
+                            className="h-8 px-4 flex items-center justify-center gap-2 rounded-lg bg-primary text-black font-black text-xs hover:bg-primary/90 transition-colors"
                         >
                             {isLastStep ? "Finish" : "Next"}
                             {isLastStep ? <CheckCircle2 className="size-3.5" /> : <ArrowRight className="size-3.5" />}

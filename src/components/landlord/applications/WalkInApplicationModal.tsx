@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, type ChangeEvent, type ElementType, type InputHTMLAttributes, type ReactNode } from "react";
+import Image from "next/image";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -32,7 +33,7 @@ import {
 
 const SignaturePad = dynamic(() => import("./SignaturePad").then(mod => mod.SignaturePad), {
     ssr: false,
-    loading: () => <div className="h-[300px] w-full bg-muted/50 rounded-2xl animate-pulse flex items-center justify-center text-xs font-bold uppercase tracking-widest text-muted-foreground">Loading Signer...</div>
+    loading: () => <div className="h-[300px] w-full bg-muted/50 rounded-2xl animate-pulse flex items-center justify-center text-xs font-black uppercase tracking-widest text-muted-foreground">Loading Signer...</div>
 });
 
 import { generateLeasePdf } from "@/lib/lease-pdf";
@@ -162,19 +163,19 @@ function ConfirmationModal({
                         <div className="size-16 rounded-2xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
                             <AlertCircle size={32} />
                         </div>
-                        <h2 className="text-3xl font-bold italic tracking-tight">Final Approval</h2>
+                        <h2 className="text-3xl font-black italic tracking-tight">Final Approval</h2>
                     </div>
 
                     {missingFields.length > 0 ? (
                         <div className="space-y-6">
-                            <p className="text-sm font-bold text-muted-foreground leading-relaxed">
+                            <p className="text-sm font-black text-muted-foreground leading-relaxed">
                                 System detected that the application is not yet 100% complete. Do you want to override and approve anyway?
                             </p>
                             <div className="space-y-3">
-                                <p className="text-[10px] font-bold uppercase tracking-widest text-amber-500/80">Missing Requirements:</p>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-amber-500/80">Missing Requirements:</p>
                                 <div className="flex flex-wrap gap-2 max-h-[120px] overflow-y-auto pr-2 custom-scrollbar">
                                     {missingFields.map(field => (
-                                        <span key={field} className="px-3 py-1.5 rounded-lg bg-amber-500/5 border border-amber-500/10 text-[10px] font-bold text-amber-500/80 uppercase tracking-wider">
+                                        <span key={field} className="px-3 py-1.5 rounded-lg bg-amber-500/5 border border-amber-500/10 text-[10px] font-black text-amber-500/80 uppercase tracking-wider">
                                             {field}
                                         </span>
                                     ))}
@@ -182,7 +183,7 @@ function ConfirmationModal({
                             </div>
                         </div>
                     ) : (
-                        <p className="text-sm font-bold text-muted-foreground leading-relaxed">
+                        <p className="text-sm font-black text-muted-foreground leading-relaxed">
                             Verification threshold met. Finalizing this will immediately allocate the asset and prepare the lease contract.
                         </p>
                     )}
@@ -190,7 +191,7 @@ function ConfirmationModal({
                     <div className="flex gap-4 pt-4">
                         <button 
                             onClick={onClose}
-                            className="flex-1 h-16 rounded-2xl border border-border bg-background font-bold text-xs uppercase tracking-widest hover:bg-muted transition-all"
+                            className="flex-1 h-16 rounded-2xl border border-border bg-background font-black text-xs uppercase tracking-widest hover:bg-muted transition-all"
                         >
                             Back
                         </button>
@@ -198,7 +199,7 @@ function ConfirmationModal({
                             onClick={onConfirm}
                             disabled={isSubmitting}
                             className={cn(
-                                "flex-[1.5] h-16 rounded-2xl font-bold text-xl uppercase tracking-tighter italic transition-all flex items-center justify-center gap-3",
+                                "flex-[1.5] h-16 rounded-2xl font-black text-xl uppercase tracking-tighter italic transition-all flex items-center justify-center gap-3",
                                 missingFields.length > 0 ? "bg-amber-500 text-black hover:bg-amber-400" : "bg-emerald-500 text-black hover:bg-emerald-400"
                             )}
                         >
@@ -243,7 +244,7 @@ const GlassInput = ({ icon: Icon, label, error, id, nextFieldId, onKeyDown, ...p
             {label && (
                 <label 
                     htmlFor={id} 
-                    className="ml-1 cursor-pointer text-[11px] font-bold uppercase tracking-[0.25em] text-muted-foreground transition-all duration-300 group-focus-within:text-primary"
+                    className="ml-1 cursor-pointer text-[11px] font-black uppercase tracking-[0.25em] text-muted-foreground transition-all duration-300 group-focus-within:text-primary"
                 >
                     {label}
                 </label>
@@ -263,7 +264,7 @@ const GlassInput = ({ icon: Icon, label, error, id, nextFieldId, onKeyDown, ...p
                     )}
                 />
             </div>
-            {error && <p className="text-[10px] text-red-400 font-bold uppercase tracking-wider ml-1 mt-1">{error}</p>}
+            {error && <p className="text-[10px] text-red-400 font-black uppercase tracking-wider ml-1 mt-1">{error}</p>}
         </div>
     );
 };
@@ -731,7 +732,7 @@ export function WalkInApplicationModal({
                 {/* Left Rails / Navigation */}
                 <aside className="relative z-20 hidden w-full shrink-0 flex-col overflow-hidden border-b border-border bg-background/80 p-8 sm:flex sm:w-80 sm:border-b-0 sm:border-r">
                     <div className="mb-8 flex flex-col items-start gap-1">
-                        <p className="text-primary font-bold text-[10px] uppercase tracking-[0.4em] opacity-80">MASTER PANEL</p>
+                        <p className="text-primary font-black text-[10px] uppercase tracking-[0.4em] opacity-80">MASTER PANEL</p>
                     </div>
 
                     <nav className="space-y-4">
@@ -759,10 +760,10 @@ export function WalkInApplicationModal({
                                         {isCompleted ? <Check size={20} strokeWidth={3} /> : <s.icon size={19} strokeWidth={isActive ? 2.5 : 1.5} />}
                                     </div>
                                     <div className="relative z-10 flex-1">
-                                        <p className={cn("font-bold text-sm tracking-tight transition-all", isActive ? "text-foreground" : "text-muted-foreground")}>
+                                        <p className={cn("font-black text-sm tracking-tight transition-all", isActive ? "text-foreground" : "text-muted-foreground")}>
                                             {s.label}
                                         </p>
-                                        <p className={cn("text-[9px] uppercase tracking-widest font-bold", isActive ? "text-primary opacity-80" : "text-zinc-500 dark:text-neutral-600")}>
+                                        <p className={cn("text-[9px] uppercase tracking-widest font-black", isActive ? "text-primary opacity-80" : "text-zinc-500 dark:text-neutral-600")}>
                                             {s.sub}
                                         </p>
                                     </div>
@@ -780,8 +781,8 @@ export function WalkInApplicationModal({
                      <div className="relative border-b border-border bg-card/95 backdrop-blur-md sm:hidden">
                         <div className="p-6 flex items-center justify-between">
                             <div>
-                                <h2 className="text-xl font-bold uppercase tracking-tighter text-foreground">{STEPS[step].label}</h2>
-                                <p className="text-[9px] text-primary font-bold uppercase tracking-widest">Step {step + 1} of 6</p>
+                                <h2 className="text-xl font-black uppercase tracking-tighter text-foreground">{STEPS[step].label}</h2>
+                                <p className="text-[9px] text-primary font-black uppercase tracking-widest">Step {step + 1} of 6</p>
                             </div>
                             <button onClick={onClose} className="flex size-10 items-center justify-center rounded-xl bg-background text-foreground"><X size={20}/></button>
                         </div>
@@ -800,16 +801,16 @@ export function WalkInApplicationModal({
                     <div className="hidden sm:flex px-12 py-8 items-center justify-between pointer-events-none relative z-20">
                          <div className="flex items-center gap-8">
                              <div>
-                                 <h1 className="text-3xl font-bold tracking-tighter italic text-foreground">
+                                 <h1 className="text-3xl font-black tracking-tighter italic text-foreground">
                                      {STEPS[step].label.toUpperCase()} <span className="text-primary">STEP</span>
                                  </h1>
-                                 <p className="ml-1 mt-1 text-[10px] font-bold uppercase tracking-[0.4em] text-muted-foreground">Tenant Application Wizard</p>
+                                 <p className="ml-1 mt-1 text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground">Tenant Application Wizard</p>
                              </div>
 
                              {/* Relocated Payment Progress Indicator */}
                              {step === 4 && (
                                 <div className="pointer-events-auto flex items-center gap-3 px-5 py-3 rounded-2xl bg-card/40 border border-border/50 shadow-sm backdrop-blur-sm animate-in fade-in slide-in-from-left-4 duration-700">
-                                    <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mr-1">Ledger Page</p>
+                                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mr-1">Ledger Page</p>
                                     {[0, 1].map((idx) => (
                                         <button 
                                             key={`payment-step-${idx}`}
@@ -820,7 +821,7 @@ export function WalkInApplicationModal({
                                             )}
                                         />
                                     ))}
-                                    <span className="ml-2 text-[10px] font-bold text-foreground italic">{paymentSubStep + 1} / 2</span>
+                                    <span className="ml-2 text-[10px] font-black text-foreground italic">{paymentSubStep + 1} / 2</span>
                                 </div>
                              )}
                          </div>
@@ -844,7 +845,7 @@ export function WalkInApplicationModal({
                                 className="h-full"
                             >
                                 {error && (
-                                    <div className="mb-10 flex items-center gap-4 rounded-2xl border border-red-500/20 bg-red-500/5 p-5 text-sm font-bold text-red-700 backdrop-blur-sm animate-shake dark:text-red-400">
+                                    <div className="mb-10 flex items-center gap-4 rounded-2xl border border-red-500/20 bg-red-500/5 p-5 text-sm font-black text-red-700 backdrop-blur-sm animate-shake dark:text-red-400">
                                         <AlertCircle size={20} /> {error}
                                     </div>
                                 )}
@@ -855,7 +856,7 @@ export function WalkInApplicationModal({
                                             <section className="space-y-6">
                                                   <div className="flex items-center gap-4 text-primary">
                                                      <MapPin size={18} strokeWidth={2.5} />
-                                                  <label htmlFor="unit-select" className="cursor-pointer text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground">Select Unit</label>
+                                                  <label htmlFor="unit-select" className="cursor-pointer text-[11px] font-black uppercase tracking-[0.3em] text-muted-foreground">Select Unit</label>
                                                  </div>
                                                 
                                                 <CardFrame className="!p-0" glow={false}>
@@ -873,7 +874,7 @@ export function WalkInApplicationModal({
                                                              }}
                                                              disabled={!!existingApplication}
                                                              className={cn(
-                                                                 "w-full h-20 appearance-none cursor-pointer bg-transparent pl-16 pr-12 text-lg font-bold tracking-tighter text-foreground outline-none transition-all disabled:opacity-50",
+                                                                 "w-full h-20 appearance-none cursor-pointer bg-transparent pl-16 pr-12 text-lg font-black tracking-tighter text-foreground outline-none transition-all disabled:opacity-50",
                                                                  "focus-visible:ring-4 focus-visible:ring-primary/10",
                                                                  formErrors.unit && "text-red-400"
                                                              )}
@@ -888,11 +889,11 @@ export function WalkInApplicationModal({
                                                         <ArrowRight size={20} className="pointer-events-none absolute right-6 top-1/2 -translate-y-1/2 rotate-90 text-muted-foreground" />
                                                     </div>
                                                 </CardFrame>
-                                                {formErrors.unit && <p className="text-[10px] text-red-400 font-bold uppercase tracking-wider ml-1 mt-1">{formErrors.unit}</p>}
+                                                {formErrors.unit && <p className="text-[10px] text-red-400 font-black uppercase tracking-wider ml-1 mt-1">{formErrors.unit}</p>}
                                                 {currentUnit && (
                                                     <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="flex justify-between items-center px-4 py-3 bg-primary/5 border border-primary/20 rounded-2xl">
-                                                         <span className="text-[10px] font-bold uppercase text-primary tracking-widest">Monthly Rent</span>
-                                                        <span className="text-lg font-bold italic text-foreground">₱{currentUnit.rent_amount.toLocaleString()}</span>
+                                                         <span className="text-[10px] font-black uppercase text-primary tracking-widest">Monthly Rent</span>
+                                                        <span className="text-lg font-black italic text-foreground">₱{currentUnit.rent_amount.toLocaleString()}</span>
                                                     </motion.div>
                                                 )}
                                             </section>
@@ -900,7 +901,7 @@ export function WalkInApplicationModal({
                                             <section className="space-y-6">
                                                  <div className="flex items-center gap-4 text-blue-400">
                                                      <User size={18} strokeWidth={2.5} />
-                                                     <h3 className="text-[11px] font-bold uppercase tracking-[0.3em]">Applicant Information</h3>
+                                                     <h3 className="text-[11px] font-black uppercase tracking-[0.3em]">Applicant Information</h3>
                                                  </div>
                                                  <GlassInput 
                                                      id="applicant-name"
@@ -938,7 +939,7 @@ export function WalkInApplicationModal({
 
                                                  {/* Move-in Date */}
                                                  <div className="space-y-2.5 group">
-                                                     <label htmlFor="move-in-date" className="ml-1 cursor-pointer text-[11px] font-bold uppercase tracking-[0.25em] text-muted-foreground transition-all duration-300 group-focus-within:text-primary">
+                                                     <label htmlFor="move-in-date" className="ml-1 cursor-pointer text-[11px] font-black uppercase tracking-[0.25em] text-muted-foreground transition-all duration-300 group-focus-within:text-primary">
                                                          Move-in Date
                                                      </label>
                                                      <div className="relative isolate">
@@ -954,7 +955,7 @@ export function WalkInApplicationModal({
                                                              className="h-15 w-full rounded-2xl bg-transparent py-4 pl-12 pr-4 text-sm font-medium tracking-tight text-foreground outline-none transition-all placeholder:text-muted-foreground focus-visible:ring-0 [color-scheme:light] dark:[color-scheme:dark]"
                                                          />
                                                      </div>
-                                                     {formErrors.move_in_date && <p className="text-[10px] text-red-400 font-bold uppercase tracking-wider ml-1 mt-1">{formErrors.move_in_date}</p>}
+                                                     {formErrors.move_in_date && <p className="text-[10px] text-red-400 font-black uppercase tracking-wider ml-1 mt-1">{formErrors.move_in_date}</p>}
                                                  </div>
                                             </section>
 
@@ -962,7 +963,7 @@ export function WalkInApplicationModal({
                                             <section className="space-y-6">
                                                  <div className="flex items-center gap-4 text-red-400">
                                                      <Phone size={18} strokeWidth={2.5} />
-                                                     <h3 className="text-[11px] font-bold uppercase tracking-[0.3em]">Emergency Contact</h3>
+                                                     <h3 className="text-[11px] font-black uppercase tracking-[0.3em]">Emergency Contact</h3>
                                                  </div>
                                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                                      <GlassInput
@@ -995,7 +996,7 @@ export function WalkInApplicationModal({
                                         <section className="space-y-8">
                                              <div className="flex items-center gap-4 text-primary">
                                                  <Wallet size={18} strokeWidth={2.5} />
-                                                 <h3 className="text-[11px] font-bold uppercase tracking-[0.3em]">Financial Details</h3>
+                                                 <h3 className="text-[11px] font-black uppercase tracking-[0.3em]">Financial Details</h3>
                                              </div>
                                             
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
@@ -1025,7 +1026,7 @@ export function WalkInApplicationModal({
                                                  <div className="absolute inset-x-0 -inset-y-4 bg-primary/5 rounded-[2.5rem] -z-10 border border-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 <GlassInput
                                                       id="income"
-                                                      icon={() => <span className="font-bold text-primary/80">₱</span>}
+                                                      icon={() => <span className="font-black text-primary/80">₱</span>}
                                                       label="Monthly Net Income"
                                                       type="text"
                                                       inputMode="numeric"
@@ -1055,7 +1056,7 @@ export function WalkInApplicationModal({
                                         <section className="space-y-6">
                                               <div className="flex items-center gap-4 text-muted-foreground">
                                                   <FileCheck size={18} strokeWidth={2.5} />
-                                                 <label htmlFor="additional-notes" className="cursor-pointer text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground">Additional Notes</label>
+                                                 <label htmlFor="additional-notes" className="cursor-pointer text-[11px] font-black uppercase tracking-[0.3em] text-muted-foreground">Additional Notes</label>
                                               </div>
                                             <div className="relative isolate">
                                                 <div className="absolute inset-0 -z-10 rounded-[2rem] border border-border bg-card/90 transition-all duration-300 hover:bg-card" />
@@ -1070,7 +1071,7 @@ export function WalkInApplicationModal({
                                                      onChange={(e) => updateField("message", e.target.value, ["message"])}
                                                  />
                                             </div>
-                                            {formErrors.message && <p className="text-[10px] text-red-400 font-bold uppercase tracking-wider ml-1 mt-1">{formErrors.message}</p>}
+                                            {formErrors.message && <p className="text-[10px] text-red-400 font-black uppercase tracking-wider ml-1 mt-1">{formErrors.message}</p>}
                                         </section>
                                     </div>
                                 )}
@@ -1085,7 +1086,7 @@ export function WalkInApplicationModal({
                                                     <ShieldCheck className="text-amber-500" size={30} strokeWidth={1.5} />
                                                 </div>
                                                 <div className="space-y-1.5 text-center md:text-left">
-                                                     <h3 className="text-base font-bold uppercase tracking-[0.3em] text-amber-500/90">Verification Protocol</h3>
+                                                     <h3 className="text-base font-black uppercase tracking-[0.3em] text-amber-500/90">Verification Protocol</h3>
                                                      <p className="text-xs font-medium text-muted-foreground leading-relaxed max-w-xl">
                                                          Every applicant must pass through our compliance audit. Select the documents you have physically inspected and verified from the tenant.
                                                      </p>
@@ -1123,12 +1124,12 @@ export function WalkInApplicationModal({
                                                             </div>
                                                             
                                                             <div className="flex-1 text-left">
-                                                                <p className={cn("text-lg font-bold tracking-tighter transition-colors leading-tight", value ? "text-foreground" : "text-muted-foreground")}>
+                                                                <p className={cn("text-lg font-black tracking-tighter transition-colors leading-tight", value ? "text-foreground" : "text-muted-foreground")}>
                                                                     {REQUIREMENT_LABELS[key]}
                                                                 </p>
                                                                 <div className="flex items-center gap-2 mt-1">
                                                                     <div className={cn("size-1.5 rounded-full", value ? "bg-emerald-500 animate-pulse" : "bg-amber-400")} />
-                                                                    <p className={cn("text-[9px] font-bold uppercase tracking-[0.2em] leading-none", value ? "text-emerald-500" : "text-amber-500/70")}>
+                                                                    <p className={cn("text-[9px] font-black uppercase tracking-[0.2em] leading-none", value ? "text-emerald-500" : "text-amber-500/70")}>
                                                                         {value ? "Audit Passed" : "Pending Verification"}
                                                                     </p>
                                                                 </div>
@@ -1160,7 +1161,7 @@ export function WalkInApplicationModal({
                                                 animate={{ opacity: 1 }}
                                                 className="p-5 rounded-[1.5rem] bg-amber-500/5 border border-dashed border-amber-500/20 text-center"
                                             >
-                                                <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-amber-500/50">
+                                                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-amber-500/50">
                                                     Unchecked items will be flagged as &quot;Pending Review&quot; in the application dossier
                                                 </p>
                                             </motion.div>
@@ -1170,12 +1171,12 @@ export function WalkInApplicationModal({
 
                                 {step === 3 && (
                                     <div className="space-y-10 max-w-4xl">
-                                        <div className="p-8 rounded-[2.5rem] bg-purple-500/5 border border-purple-500/10 text-purple-200 text-xs font-bold leading-relaxed flex gap-6 items-center shadow-[0_15px_30px_rgba(168,85,247,0.05)] backdrop-blur-sm">
+                                        <div className="p-8 rounded-[2.5rem] bg-purple-500/5 border border-purple-500/10 text-purple-200 text-xs font-black leading-relaxed flex gap-6 items-center shadow-[0_15px_30px_rgba(168,85,247,0.05)] backdrop-blur-sm">
                                             <div className="shrink-0 size-14 bg-purple-500/10 rounded-2xl flex items-center justify-center border border-purple-500/20">
                                                 <PenTool className="text-purple-500" size={28} />
                                             </div>
                                             <div className="space-y-1">
-                                                <p className="text-[11px] uppercase tracking-widest font-bold text-purple-500/80">Lease Agreement & Signing</p>
+                                                <p className="text-[11px] uppercase tracking-widest font-black text-purple-500/80">Lease Agreement & Signing</p>
                                                 <p className="opacity-80">
                                                     {leaseData.signing_mode === "remote" 
                                                         ? "Review lease terms and tenant will receive a signing link via email."
@@ -1201,12 +1202,12 @@ export function WalkInApplicationModal({
                                                 <section className="space-y-6">
                                                     <div className="flex items-center gap-4 text-purple-400">
                                                         <FileCheck size={18} strokeWidth={2.5} />
-                                                        <h3 className="text-[11px] font-bold uppercase tracking-[0.3em]">Lease Terms</h3>
+                                                        <h3 className="text-[11px] font-black uppercase tracking-[0.3em]">Lease Terms</h3>
                                                     </div>
 
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                                         <div className="space-y-2.5 group">
-                                                            <label className="ml-1 text-[11px] font-bold uppercase tracking-[0.25em] text-muted-foreground">
+                                                            <label className="ml-1 text-[11px] font-black uppercase tracking-[0.25em] text-muted-foreground">
                                                                 Start Date
                                                             </label>
                                                             <div className="relative isolate">
@@ -1221,7 +1222,7 @@ export function WalkInApplicationModal({
                                                         </div>
 
                                                         <div className="space-y-2.5 group">
-                                                            <label className="ml-1 text-[11px] font-bold uppercase tracking-[0.25em] text-muted-foreground">
+                                                            <label className="ml-1 text-[11px] font-black uppercase tracking-[0.25em] text-muted-foreground">
                                                                 End Date
                                                             </label>
                                                             <div className="relative isolate">
@@ -1236,7 +1237,7 @@ export function WalkInApplicationModal({
                                                         </div>
 
                                                         <div className="space-y-2.5 group">
-                                                            <label className="ml-1 text-[11px] font-bold uppercase tracking-[0.25em] text-muted-foreground">
+                                                            <label className="ml-1 text-[11px] font-black uppercase tracking-[0.25em] text-muted-foreground">
                                                                 Monthly Rent
                                                             </label>
                                                             <div className="relative isolate">
@@ -1256,7 +1257,7 @@ export function WalkInApplicationModal({
                                                         </div>
 
                                                         <div className="space-y-2.5 group">
-                                                            <label className="ml-1 text-[11px] font-bold uppercase tracking-[0.25em] text-muted-foreground">
+                                                            <label className="ml-1 text-[11px] font-black uppercase tracking-[0.25em] text-muted-foreground">
                                                                 Security Deposit
                                                             </label>
                                                             <div className="relative isolate">
@@ -1285,12 +1286,12 @@ export function WalkInApplicationModal({
                                                             <div className="flex items-center gap-4">
                                                                 <div className="flex items-center gap-3 text-blue-400">
                                                                     <User size={18} strokeWidth={2.5} />
-                                                                    <h3 className="text-[11px] font-bold uppercase tracking-[0.3em]">Tenant Signature</h3>
+                                                                    <h3 className="text-[11px] font-black uppercase tracking-[0.3em]">Tenant Signature</h3>
                                                                 </div>
                                                                 {leaseData.tenant_signature && (
                                                                     <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30">
                                                                         <CheckCircle2 size={14} className="text-emerald-500" />
-                                                                        <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Signed</span>
+                                                                        <span className="text-[10px] font-black text-emerald-400 uppercase tracking-wider">Signed</span>
                                                                     </div>
                                                                 )}
                                                             </div>
@@ -1309,12 +1310,19 @@ export function WalkInApplicationModal({
                                                             ) : (
                                                                 <div className="space-y-4">
                                                                     <div className="p-6 rounded-2xl border border-emerald-500/30 bg-emerald-500/5">
-                                                                        <img src={leaseData.tenant_signature} alt="Tenant Signature" className="max-h-40 mx-auto" />
+                                                                        <Image 
+                                                                            src={leaseData.tenant_signature} 
+                                                                            alt="Tenant Signature" 
+                                                                            width={300}
+                                                                            height={160}
+                                                                            unoptimized
+                                                                            className="max-h-40 mx-auto w-auto h-auto" 
+                                                                        />
                                                                     </div>
                                                                     <button
                                                                         type="button"
                                                                         onClick={() => setLeaseData(prev => ({ ...prev, tenant_signature: null, landlord_signature: null  }))}
-                                                                        className="h-12 w-full rounded-xl border border-border bg-background text-sm font-bold uppercase tracking-wider text-foreground transition-all hover:bg-muted"
+                                                                        className="h-12 w-full rounded-xl border border-border bg-background text-sm font-black uppercase tracking-wider text-foreground transition-all hover:bg-muted"
                                                                     >
                                                                         Clear & Re-sign
                                                                     </button>
@@ -1327,12 +1335,12 @@ export function WalkInApplicationModal({
                                                             <div className="flex items-center gap-4">
                                                                 <div className="flex items-center gap-3 text-purple-400">
                                                                     <PenTool size={18} strokeWidth={2.5} />
-                                                                    <h3 className="text-[11px] font-bold uppercase tracking-[0.3em]">Landlord Signature</h3>
+                                                                    <h3 className="text-[11px] font-black uppercase tracking-[0.3em]">Landlord Signature</h3>
                                                                 </div>
                                                                 {leaseData.landlord_signature && (
                                                                     <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30">
                                                                         <CheckCircle2 size={14} className="text-emerald-500" />
-                                                                        <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Signed</span>
+                                                                        <span className="text-[10px] font-black text-emerald-400 uppercase tracking-wider">Signed</span>
                                                                     </div>
                                                                 )}
                                                             </div>
@@ -1382,12 +1390,19 @@ export function WalkInApplicationModal({
                                                             ) : (
                                                                 <div className="space-y-4">
                                                                     <div className="p-6 rounded-2xl border border-emerald-500/30 bg-emerald-500/5">
-                                                                        <img src={leaseData.landlord_signature} alt="Landlord Signature" className="max-h-40 mx-auto" />
+                                                                        <Image 
+                                                                            src={leaseData.landlord_signature} 
+                                                                            alt="Landlord Signature" 
+                                                                            width={300}
+                                                                            height={160}
+                                                                            unoptimized
+                                                                            className="max-h-40 mx-auto w-auto h-auto" 
+                                                                        />
                                                                     </div>
                                                                     <button
                                                                         type="button"
                                                                         onClick={() => setLeaseData(prev => ({ ...prev, landlord_signature: null  }))}
-                                                                        className="h-12 w-full rounded-xl border border-border bg-background text-sm font-bold uppercase tracking-wider text-foreground transition-all hover:bg-muted"
+                                                                        className="h-12 w-full rounded-xl border border-border bg-background text-sm font-black uppercase tracking-wider text-foreground transition-all hover:bg-muted"
                                                                     >
                                                                         Clear & Re-sign
                                                                     </button>
@@ -1514,14 +1529,14 @@ export function WalkInApplicationModal({
                                                  </div>
                                                  <div className="text-center sm:text-left space-y-2">
                                                      <div className="flex items-center gap-3 justify-center sm:justify-start">
-                                                         <span className={cn("px-4 py-1 rounded-full text-[9px] font-bold uppercase tracking-[0.25em] border", allRequirementsMet ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-amber-500/10 border-amber-500/30 text-amber-400")}>
+                                                         <span className={cn("px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.25em] border", allRequirementsMet ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-amber-500/10 border-amber-500/30 text-amber-400")}>
                                                               {allRequirementsMet ? "Verification Threshold Met" : "Awaiting Information"}
                                                          </span>
                                                      </div>
-                                                      <h3 className="text-4xl font-bold tracking-tight italic text-foreground leading-none">
+                                                      <h3 className="text-4xl font-black tracking-tight italic text-foreground leading-none">
                                                           {allRequirementsMet ? "Ready for Approval" : "Work in Progress"}
                                                       </h3>
-                                                     <p className="max-w-lg text-xs font-bold leading-relaxed text-muted-foreground">
+                                                     <p className="max-w-lg text-xs font-black leading-relaxed text-muted-foreground">
                                                          {allRequirementsMet 
                                                              ? "All critical verification checks have passed. Finalizing this will prepare the lease contract." 
                                                              : "The application is currently being built. You can save it as a draft or proceed with manual verification."}
@@ -1532,64 +1547,64 @@ export function WalkInApplicationModal({
 
                                              <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
                                                  <div className="space-y-4 rounded-[2rem] border border-border bg-card/90 p-7">
-                                                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Unit Name</p>
-                                                 <p className="text-2xl font-bold tracking-tighter text-foreground">{currentUnit?.name || "N/A"}</p>
+                                                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Unit Name</p>
+                                                 <p className="text-2xl font-black tracking-tighter text-foreground">{currentUnit?.name || "N/A"}</p>
                                                  <div className="pt-2">
-                                                     <p className="text-[9px] font-bold text-primary uppercase tracking-[0.3em]">{currentUnit?.property_name}</p>
+                                                     <p className="text-[9px] font-black text-primary uppercase tracking-[0.3em]">{currentUnit?.property_name}</p>
                                                  </div>
                                              </div>
                                              <div className="space-y-4 rounded-[2rem] border border-border bg-card/90 p-7">
-                                                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Applicant Name</p>
-                                                 <p className="text-2xl font-bold tracking-tighter text-foreground">{formData.applicant_name || "Guest"}</p>
+                                                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Applicant Name</p>
+                                                 <p className="text-2xl font-black tracking-tighter text-foreground">{formData.applicant_name || "Guest"}</p>
                                                  <div className="pt-2">
-                                                     <p className="text-[9px] font-bold text-blue-400 uppercase tracking-[0.3em] break-all">{formData.applicant_email}</p>
+                                                     <p className="text-[9px] font-black text-blue-400 uppercase tracking-[0.3em] break-all">{formData.applicant_email}</p>
                                                  </div>
                                              </div>
                                              <div className="space-y-4 rounded-[2rem] border border-border bg-card/90 p-7">
-                                                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Monthly Income</p>
-                                                 <p className="text-2xl font-bold uppercase italic tracking-tighter text-foreground">₱{parseIncome(formData.employment_info.monthly_income).toLocaleString()}</p>
+                                                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Monthly Income</p>
+                                                 <p className="text-2xl font-black uppercase italic tracking-tighter text-foreground">₱{parseIncome(formData.employment_info.monthly_income).toLocaleString()}</p>
                                                  <div className="pt-2 flex items-center gap-2">
                                                      <div className="size-1.5 rounded-full bg-primary" />
-                                                     <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-muted-foreground">Verified Monthly</p>
+                                                     <p className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground">Verified Monthly</p>
                                                  </div>
                                              </div>
                                              <div className="p-7 rounded-[2rem] bg-primary/10 border border-primary/20 space-y-4 shadow-lg shadow-primary/5">
-                                                  <p className="text-[10px] font-bold uppercase tracking-widest text-primary">Monthly Rent</p>
-                                                 <p className="text-2xl font-bold tracking-tighter italic text-foreground">₱{leaseData.monthly_rent.toLocaleString()}</p>
+                                                  <p className="text-[10px] font-black uppercase tracking-widest text-primary">Monthly Rent</p>
+                                                 <p className="text-2xl font-black tracking-tighter italic text-foreground">₱{leaseData.monthly_rent.toLocaleString()}</p>
                                                  <div className="pt-2 flex items-center gap-2">
                                                      <div className="size-1.5 rounded-full bg-primary animate-pulse" />
-                                                     <p className="text-[9px] font-bold text-primary uppercase tracking-[0.3em]">Locked Rate</p>
+                                                     <p className="text-[9px] font-black text-primary uppercase tracking-[0.3em]">Locked Rate</p>
                                                  </div>
                                              </div>
                                              <div className="space-y-4 rounded-[2rem] border border-border bg-card/90 p-7">
-                                                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Lease Period</p>
-                                                 <p className="text-lg font-bold tracking-tighter text-foreground">{leaseData.start_date} to {leaseData.end_date}</p>
+                                                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Lease Period</p>
+                                                 <p className="text-lg font-black tracking-tighter text-foreground">{leaseData.start_date} to {leaseData.end_date}</p>
                                                  <div className="pt-2 flex items-center gap-2">
                                                      <div className="size-1.5 rounded-full bg-purple-400" />
-                                                     <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-muted-foreground">12 Months</p>
+                                                     <p className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground">12 Months</p>
                                                  </div>
                                              </div>
                                              <div className="space-y-4 rounded-[2rem] border border-border bg-card/90 p-7">
-                                                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Security Deposit</p>
-                                                 <p className="text-2xl font-bold tracking-tighter text-foreground">₱{leaseData.security_deposit.toLocaleString()}</p>
+                                                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Security Deposit</p>
+                                                 <p className="text-2xl font-black tracking-tighter text-foreground">₱{leaseData.security_deposit.toLocaleString()}</p>
                                                  <div className="pt-2 flex items-center gap-2">
                                                      <div className="size-1.5 rounded-full bg-green-400" />
-                                                     <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-muted-foreground">{paymentData.security_deposit_payment.status === "completed" ? "Paid" : "Pending"}</p>
+                                                     <p className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground">{paymentData.security_deposit_payment.status === "completed" ? "Paid" : "Pending"}</p>
                                                  </div>
                                              </div>
                                              <div className="space-y-4 rounded-[2rem] border border-border bg-card/90 p-7">
-                                                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Advance Payment</p>
-                                                 <p className="text-2xl font-bold tracking-tighter text-foreground">₱{paymentData.advance_payment.amount.toLocaleString()}</p>
+                                                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Advance Payment</p>
+                                                 <p className="text-2xl font-black tracking-tighter text-foreground">₱{paymentData.advance_payment.amount.toLocaleString()}</p>
                                                  <div className="pt-2 flex items-center gap-2">
                                                      <div className="size-1.5 rounded-full bg-green-400" />
-                                                     <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-muted-foreground">{paymentData.advance_payment.status === "completed" ? "Paid" : "Pending"}</p>
+                                                     <p className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground">{paymentData.advance_payment.status === "completed" ? "Paid" : "Pending"}</p>
                                                  </div>
                                              </div>
                                              <div className="space-y-4 rounded-[2rem] border border-border bg-card/90 p-7">
-                                                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Emergency Contact</p>
-                                                 <p className="text-xl font-bold tracking-tighter text-foreground">{formData.emergency_contact_name || "—"}</p>
+                                                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Emergency Contact</p>
+                                                 <p className="text-xl font-black tracking-tighter text-foreground">{formData.emergency_contact_name || "—"}</p>
                                                  <div className="pt-2">
-                                                     <p className="text-[9px] font-bold text-red-400 uppercase tracking-[0.3em]">{formData.emergency_contact_phone || "—"}</p>
+                                                     <p className="text-[9px] font-black text-red-400 uppercase tracking-[0.3em]">{formData.emergency_contact_phone || "—"}</p>
                                                  </div>
                                              </div>
                                         </div>
@@ -1599,7 +1614,7 @@ export function WalkInApplicationModal({
                                             <div className="p-6 rounded-2xl bg-purple-500/5 border border-purple-500/20 flex items-center gap-4">
                                                 <Check className="text-purple-500" size={24} />
                                                 <div>
-                                                    <p className="text-sm font-bold text-foreground">Landlord Signature Captured</p>
+                                                    <p className="text-sm font-black text-foreground">Landlord Signature Captured</p>
                                                     <p className="text-xs text-muted-foreground">Tenant will receive signing link via email</p>
                                                 </div>
                                             </div>
@@ -1625,7 +1640,7 @@ export function WalkInApplicationModal({
                                             if (prevStep === 4) setPaymentSubStep(1);
                                         }
                                     }}
-                                    className="group relative flex h-16 items-center justify-center gap-3 overflow-hidden rounded-[1.25rem] border border-border bg-background px-10 font-bold text-foreground transition-all hover:bg-muted active:scale-95"
+                                    className="group relative flex h-16 items-center justify-center gap-3 overflow-hidden rounded-[1.25rem] border border-border bg-background px-10 font-black text-foreground transition-all hover:bg-muted active:scale-95"
                                 >
                                     <div className="absolute inset-0 -translate-x-[100%] bg-gradient-to-r from-transparent via-white/40 to-transparent transition-transform duration-1000 group-hover:translate-x-[100%] dark:via-white/5" />
                                     <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" /> 
@@ -1638,7 +1653,7 @@ export function WalkInApplicationModal({
                             {step < 5 ? (
                                 <button
                                     onClick={handleContinue}
-                                    className="group relative flex h-16 flex-1 items-center justify-center gap-4 overflow-hidden rounded-[1.25rem] bg-primary font-bold text-primary-foreground shadow-[0_15px_45px_rgba(var(--primary-rgb),0.25)] transition-all hover:bg-primary/90 hover:shadow-primary/40 active:scale-[0.98]"
+                                    className="group relative flex h-16 flex-1 items-center justify-center gap-4 overflow-hidden rounded-[1.25rem] bg-primary font-black text-primary-foreground shadow-[0_15px_45px_rgba(var(--primary-rgb),0.25)] transition-all hover:bg-primary/90 hover:shadow-primary/40 active:scale-[0.98]"
                                 >
                                     <div className="absolute inset-x-0 bottom-0 h-1.5 bg-black/10 transition-all duration-300 group-hover:h-2" />
                                      <span className="text-lg uppercase tracking-tight italic">Continue</span>
@@ -1650,7 +1665,7 @@ export function WalkInApplicationModal({
                                         <button
                                             onClick={() => handleSubmit(true)}
                                             disabled={submitting}
-                                            className="group flex h-16 items-center justify-center gap-3 rounded-[1.25rem] border border-amber-500/20 bg-amber-500/10 px-8 font-bold text-amber-700 transition-all hover:bg-amber-500/20 active:scale-95 dark:text-amber-500"
+                                            className="group flex h-16 items-center justify-center gap-3 rounded-[1.25rem] border border-amber-500/20 bg-amber-500/10 px-8 font-black text-amber-700 transition-all hover:bg-amber-500/20 active:scale-95 dark:text-amber-500"
                                         >
                                             <Save size={20} className="group-hover:scale-110 transition-transform" />                                             <span className="uppercase tracking-tight text-xs">Save as Draft</span>
                                         </button>
@@ -1659,7 +1674,7 @@ export function WalkInApplicationModal({
                                         onClick={() => handleSubmit(false)}
                                         disabled={submitting}
                                         className={cn(
-                                            "flex-1 h-16 rounded-[1.25rem] font-bold transition-all flex items-center justify-center gap-4 active:scale-[0.98] shadow-2xl group overflow-hidden relative",
+                                            "flex-1 h-16 rounded-[1.25rem] font-black transition-all flex items-center justify-center gap-4 active:scale-[0.98] shadow-2xl group overflow-hidden relative",
                                             allRequirementsMet 
                                                 ? "bg-emerald-500 text-black shadow-emerald-500/20" 
                                                 : "bg-primary text-primary-foreground shadow-primary/20"

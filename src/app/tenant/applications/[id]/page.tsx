@@ -106,13 +106,13 @@ export default function ApplicationDashboardPage() {
                         <Link href="/tenant/applications" className="text-primary hover:text-white transition-colors">
                             <ArrowLeft className="size-5" />
                         </Link>
-                        <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest bg-primary/20 text-primary border border-primary/10">
+                        <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest bg-primary/20 text-primary border border-primary/10">
                             Application Pending
                         </span>
                         <span className="text-white/30 text-[10px] font-medium">ID: #{applicationId}</span>
                     </div>
                     <div className="flex items-center gap-3">
-                        <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tighter">
+                        <h1 className="text-2xl md:text-3xl font-black text-white tracking-tighter">
                             Unit {property.id}02, {property.name}
                         </h1>
                         <p className="text-white/40 text-xs flex items-center gap-1.5 font-medium bg-white/5 px-2 py-1 rounded-lg">
@@ -122,11 +122,11 @@ export default function ApplicationDashboardPage() {
                     </div>
                 </div>
                 <div className="flex gap-2">
-                    <button className="px-4 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-white/5 text-white text-xs font-bold transition-all flex items-center gap-2 shadow-xl group">
+                    <button className="px-4 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-white/5 text-white text-xs font-black transition-all flex items-center gap-2 shadow-xl group">
                         <Download className="size-4 text-primary group-hover:scale-110" />
                         Support Docs
                     </button>
-                    <button className="px-4 py-2 rounded-xl bg-white/5 hover:bg-red-500/10 border border-white/5 text-white/50 hover:text-red-400 text-xs font-bold transition-all">
+                    <button className="px-4 py-2 rounded-xl bg-white/5 hover:bg-red-500/10 border border-white/5 text-white/50 hover:text-red-400 text-xs font-black transition-all">
                         Withdraw
                     </button>
                 </div>
@@ -148,8 +148,8 @@ export default function ApplicationDashboardPage() {
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
                             <div className="absolute bottom-5 left-5">
-                                <h3 className="text-xl font-bold text-white tracking-tight">{property.name}</h3>
-                                <p className="text-primary text-[10px] font-bold uppercase tracking-widest">Luxury Collection</p>
+                                <h3 className="text-xl font-black text-white tracking-tight">{property.name}</h3>
+                                <p className="text-primary text-[10px] font-black uppercase tracking-widest">Luxury Collection</p>
                             </div>
                         </div>
 
@@ -162,8 +162,8 @@ export default function ApplicationDashboardPage() {
                                     { label: "Deposit", val: `${property.price}` },
                                 ].map((item) => (
                                     <div key={item.label} className="bg-neutral-900/50 rounded-2xl p-3 border border-white/5">
-                                        <p className="text-white/40 text-[9px] font-bold uppercase tracking-widest mb-0.5">{item.label}</p>
-                                        <p className="text-white font-bold text-lg tracking-tight">
+                                        <p className="text-white/40 text-[9px] font-black uppercase tracking-widest mb-0.5">{item.label}</p>
+                                        <p className="text-white font-black text-lg tracking-tight">
                                             {item.val}
                                             {item.sub && <span className="text-[10px] font-medium text-white/50 ml-0.5">{item.sub}</span>}
                                         </p>
@@ -172,10 +172,10 @@ export default function ApplicationDashboardPage() {
                             </div>
 
                             <div className="pt-4 border-t border-white/5">
-                                <h4 className="text-white font-bold text-[10px] uppercase tracking-widest mb-3 opacity-40">Amenities included</h4>
+                                <h4 className="text-white font-black text-[10px] uppercase tracking-widest mb-3 opacity-40">Amenities included</h4>
                                 <div className="flex flex-wrap gap-2">
                                     {property.amenities.slice(0, 5).map((amenity) => (
-                                        <span key={amenity} className="text-[10px] font-bold px-2 py-1 rounded-lg bg-white/5 text-white/70 border border-white/5">
+                                        <span key={amenity} className="text-[10px] font-black px-2 py-1 rounded-lg bg-white/5 text-white/70 border border-white/5">
                                             {amenity}
                                         </span>
                                     ))}
@@ -184,7 +184,7 @@ export default function ApplicationDashboardPage() {
 
                             <button 
                                 onClick={() => router.push('/tenant/applications')}
-                                className="mt-4 p-4 bg-primary/5 hover:bg-primary/10 border border-primary/10 rounded-2xl text-[10px] text-primary transition-all flex items-center justify-center gap-2 font-bold uppercase tracking-widest group"
+                                className="mt-4 p-4 bg-primary/5 hover:bg-primary/10 border border-primary/10 rounded-2xl text-[10px] text-primary transition-all flex items-center justify-center gap-2 font-black uppercase tracking-widest group"
                             >
                                 Back to Applications
                                 <ArrowRight className="size-3.5 group-hover:translate-x-1" />
@@ -218,16 +218,16 @@ export default function ApplicationDashboardPage() {
                                     <motion.span
                                         initial={{ opacity: 0, scale: 0.5 }}
                                         animate={{ opacity: 1, scale: 1 }}
-                                        className="text-5xl md:text-6xl font-bold text-white tracking-tighter"
+                                        className="text-5xl md:text-6xl font-black text-white tracking-tighter"
                                     >
                                         {progress}%
                                     </motion.span>
-                                    <span className="text-[10px] font-bold text-primary uppercase tracking-widest">Complete</span>
+                                    <span className="text-[10px] font-black text-primary uppercase tracking-widest">Complete</span>
                                 </div>
                             </div>
-                            <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 tracking-tighter">Landlord Review in Progress</h2>
+                            <h2 className="text-2xl md:text-3xl font-black text-white mb-2 tracking-tighter">Landlord Review in Progress</h2>
                             <p className="text-white/40 max-w-md mx-auto text-sm leading-relaxed font-medium">
-                                Your application is being reviewed. Expected update within <span className="text-primary font-bold">24 hours</span>.
+                                Your application is being reviewed. Expected update within <span className="text-primary font-black">24 hours</span>.
                             </p>
                         </div>
                     </div>
@@ -255,13 +255,13 @@ export default function ApplicationDashboardPage() {
 
                                         <div className="lg:mt-3">
                                             <p className={cn(
-                                                "font-bold text-xs tracking-tight",
+                                                "font-black text-xs tracking-tight",
                                                 step.status === 'active' ? "text-primary" :
                                                     step.status === 'completed' ? "text-white" : "text-white/20"
                                             )}>
                                                 {step.label}
                                             </p>
-                                            <p className="text-[9px] uppercase font-bold tracking-tighter mt-0.5 text-white/30 truncate max-w-[80px]">
+                                            <p className="text-[9px] uppercase font-black tracking-tighter mt-0.5 text-white/30 truncate max-w-[80px]">
                                                 {step.date}
                                             </p>
                                         </div>

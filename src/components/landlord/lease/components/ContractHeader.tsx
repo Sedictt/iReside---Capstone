@@ -9,7 +9,7 @@ export function ContractHeader({ isFinalApproval, onClose }: ContractHeaderProps
     return (
         <div className="sticky top-0 z-20 bg-[#111] border-b border-white/5 p-6 flex items-center justify-between">
             <div>
-                <h2 className="text-xl font-bold text-white">
+                <h2 className="text-xl font-black text-white">
                     {isFinalApproval ? "Finalize Approval" : "Request Payments"}
                 </h2>
                 <p className="text-xs text-neutral-400">

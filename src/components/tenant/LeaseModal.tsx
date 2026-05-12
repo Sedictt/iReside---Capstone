@@ -27,17 +27,17 @@ export default function LeaseModal({ open, onOpenChange, leaseData }: LeaseModal
                                 <FileText className="size-5" />
                             </div>
                             <div>
-                                <Dialog.Title className="text-xl font-bold text-foreground">Lease Agreement</Dialog.Title>
-                                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.2em]">#{leaseData.id} • Active</p>
+                                <Dialog.Title className="text-xl font-black text-foreground">Lease Agreement</Dialog.Title>
+                                <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em]">#{leaseData.id} • Active</p>
                             </div>
                         </div>
 
                         <div className="flex items-center gap-2">
-                            <button className="hidden sm:flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground px-4 py-2 rounded-xl transition-colors">
+                            <button className="hidden sm:flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-foreground px-4 py-2 rounded-xl transition-colors">
                                 <Printer className="size-4" />
                                 <span>Print</span>
                             </button>
-                            <button className="flex items-center gap-2 bg-primary hover:bg-primary-dark text-white px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all shadow-lg shadow-primary/20">
+                            <button className="flex items-center gap-2 bg-primary hover:bg-primary-dark text-white px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/20">
                                 <Download className="size-4" />
                                 <span className="hidden sm:inline">Download PDF</span>
                             </button>
@@ -57,7 +57,7 @@ export default function LeaseModal({ open, onOpenChange, leaseData }: LeaseModal
 
                     {/* Footer */}
                     <div className="p-4 border-t border-border bg-card/50 flex justify-center">
-                        <p className="text-[9px] text-muted-foreground uppercase tracking-[0.3em] font-bold">
+                        <p className="text-[9px] text-muted-foreground uppercase tracking-[0.3em] font-black">
                             End of Document • Securely stored and encrypted by iReside
                         </p>
                     </div>

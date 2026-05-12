@@ -319,10 +319,10 @@ export function InvoiceModal({
                                 <div className="flex size-10 items-center justify-center rounded-xl bg-surface-2 border border-white/10 shadow-inner">
                                     <FileText className="size-5 text-text-medium" />
                                 </div>
-                                <span className="text-xs font-bold uppercase tracking-[0.25em] text-text-medium">Invoice Specification</span>
+                                <span className="text-xs font-black uppercase tracking-[0.25em] text-text-medium">Invoice Specification</span>
                             </div>
                             
-                            <h2 className="text-4xl font-bold tracking-tight text-text-high">
+                            <h2 className="text-4xl font-black tracking-tight text-text-high">
                                 {invoice?.invoiceNumber ?? "Loading..."}
                             </h2>
                             
@@ -356,7 +356,7 @@ export function InvoiceModal({
                         
                         <div className="flex items-center gap-4">
                             {invoice && (
-                                <div className={cn("flex items-center gap-2 rounded-full border px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] shadow-lg", statusStyle.classes)}>
+                                <div className={cn("flex items-center gap-2 rounded-full border px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.1em] shadow-lg", statusStyle.classes)}>
                                     <span className={cn("size-1.5 rounded-full animate-pulse", statusStyle.dot)} />
                                     {statusStyle.label}
                                 </div>
@@ -385,13 +385,13 @@ export function InvoiceModal({
                         ) : (
                             <>
                                 <div className="space-y-1">
-                                    <h3 className="text-xl font-bold text-text-high tracking-tight">Financial Overview</h3>
-                                    <p className="text-[10px] font-bold uppercase tracking-widest text-text-disabled">Ledger Reconciliation</p>
+                                    <h3 className="text-xl font-black text-text-high tracking-tight">Financial Overview</h3>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">Ledger Reconciliation</p>
                                 </div>
 
                                 <section className="space-y-4">
                                     <div className="flex items-center justify-between">
-                                        <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-text-high">
+                                        <h3 className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-text-high">
                                             <Hash className="size-4 text-primary" />
                                             Itemized Breakdown
                                         </h3>
@@ -400,31 +400,31 @@ export function InvoiceModal({
                                         {invoice.lineItems.map((item) => (
                                             <div key={item.id} className="group flex items-center justify-between rounded-2xl border border-white/5 bg-surface-1 p-5 transition-all hover:bg-surface-2 hover:border-white/10 shadow-sm">
                                                 <div className="space-y-1">
-                                                    <p className="text-sm font-bold text-text-high">{item.label}</p>
-                                                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-disabled">{item.category}</p>
+                                                    <p className="text-sm font-black text-text-high">{item.label}</p>
+                                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-disabled">{item.category}</p>
                                                 </div>
                                                 <div className="text-right">
-                                                    <p className="text-base font-bold text-text-high">{formatPhpCurrency(item.amount)}</p>
+                                                    <p className="text-base font-black text-text-high">{formatPhpCurrency(item.amount)}</p>
                                                 </div>
                                             </div>
                                         ))}
 
                                         {invoice.paidAmount === 0 && (
                                             <div className="flex items-center justify-between rounded-2xl border border-primary/20 bg-primary/5 px-5 py-4 shadow-inner">
-                                                <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Total Payable</p>
-                                                <p className="text-lg font-bold text-primary">{formatPhpCurrency(invoice.totalAmount)}</p>
+                                                <p className="text-xs font-black uppercase tracking-[0.2em] text-primary">Total Payable</p>
+                                                <p className="text-lg font-black text-primary">{formatPhpCurrency(invoice.totalAmount)}</p>
                                             </div>
                                         )}
 
                                         {invoice.paidAmount > 0 && (
                                             <>
                                                 <div className="flex items-center justify-between rounded-2xl border border-white/5 bg-surface-2/30 px-5 py-3 mt-4">
-                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-text-disabled">Paid to Date</p>
-                                                    <p className="text-sm font-bold text-emerald-400">-{formatPhpCurrency(invoice.paidAmount)}</p>
+                                                    <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">Paid to Date</p>
+                                                    <p className="text-sm font-black text-emerald-400">-{formatPhpCurrency(invoice.paidAmount)}</p>
                                                 </div>
                                                 <div className="flex items-center justify-between rounded-2xl border border-primary/20 bg-primary/5 px-5 py-4 shadow-inner">
-                                                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Remaining Balance</p>
-                                                    <p className="text-lg font-bold text-primary">{formatPhpCurrency(invoice.balanceRemaining)}</p>
+                                                    <p className="text-xs font-black uppercase tracking-[0.2em] text-primary">Remaining Balance</p>
+                                                    <p className="text-lg font-black text-primary">{formatPhpCurrency(invoice.balanceRemaining)}</p>
                                                 </div>
                                             </>
                                         )}
@@ -432,7 +432,7 @@ export function InvoiceModal({
                                 </section>
 
                                 <section className="space-y-4">
-                                    <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-text-high">
+                                    <h3 className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-text-high">
                                         <Clock3 className="size-4 text-primary" />
                                         Utility Consumption
                                     </h3>
@@ -447,9 +447,9 @@ export function InvoiceModal({
                                                 <div className="flex items-center justify-between bg-surface-2/50 px-6 py-4">
                                                     <div className="flex items-center gap-3">
                                                         <div className="size-2 rounded-full bg-primary" />
-                                                        <p className="text-sm font-bold capitalize text-text-high">{reading.utility_type} Service</p>
+                                                        <p className="text-sm font-black capitalize text-text-high">{reading.utility_type} Service</p>
                                                     </div>
-                                                    <span className={cn("rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider", reading.billing_mode === "included_in_rent" ? "bg-white/5 text-text-medium" : "bg-primary/10 text-primary")}>
+                                                    <span className={cn("rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider", reading.billing_mode === "included_in_rent" ? "bg-white/5 text-text-medium" : "bg-primary/10 text-primary")}>
                                                         {reading.billing_mode === "included_in_rent" ? "Bundled" : "Unit Standard"}
                                                     </span>
                                                 </div>
@@ -473,7 +473,7 @@ export function InvoiceModal({
 
                                 <section className="space-y-4 pt-4 border-t border-white/5">
                                     <div className="flex items-center justify-between">
-                                        <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-text-high">
+                                        <h3 className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-text-high">
                                             <Receipt className="size-4 text-primary" />
                                             Proof of Payment
                                         </h3>
@@ -498,7 +498,7 @@ export function InvoiceModal({
                                                     </div>
                                                 </div>
                                                 <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all">
-                                                    <p className="text-[10px] font-bold text-white uppercase tracking-widest">Click to Expand Receipt</p>
+                                                    <p className="text-[10px] font-black text-white uppercase tracking-widest">Click to Expand Receipt</p>
                                                 </div>
                                             </div>
                                         </button>
@@ -510,7 +510,7 @@ export function InvoiceModal({
                                                     <Receipt className="size-8 opacity-20" />
                                                 </div>
                                                 <div className="space-y-1">
-                                                    <p className="text-sm font-bold text-text-medium">No Proof Attached</p>
+                                                    <p className="text-sm font-black text-text-medium">No Proof Attached</p>
                                                     <p className="text-[10px] font-medium text-text-disabled max-w-[200px] mx-auto leading-relaxed">
                                                         The tenant has not uploaded a digital receipt for this transaction yet.
                                                     </p>
@@ -521,7 +521,7 @@ export function InvoiceModal({
 
                                     {(invoice.metadata as any)?.refund_proof_url && (
                                         <div className="space-y-4 pt-8 border-t border-white/5 text-left">
-                                            <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-text-high">
+                                            <h3 className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-text-high">
                                                 <Wallet className="size-4 text-amber-400" />
                                                 Proof of Refund
                                             </h3>
@@ -560,9 +560,9 @@ export function InvoiceModal({
                                     {/* Verification Section */}
                                     <section className="space-y-4">
                                         <div className="flex items-center justify-between">
-                                            <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-medium">Payment Verification</h3>
+                                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-text-medium">Payment Verification</h3>
                                             {invoice.paymentProofUrl && (
-                                                <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                                                <span className="flex items-center gap-1.5 text-[10px] font-black text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
                                                     <ShieldCheck className="size-3" />
                                                     Attachment Provided
                                                 </span>
@@ -588,7 +588,7 @@ export function InvoiceModal({
                                                             <Receipt className="size-5" />
                                                         </div>
                                                         <div>
-                                                            <p className="text-sm font-bold text-text-high">Review Payment Proof</p>
+                                                            <p className="text-sm font-black text-text-high">Review Payment Proof</p>
                                                             <p className="text-[10px] text-text-medium font-medium">Click to view uploaded receipt image</p>
                                                         </div>
                                                     </div>
@@ -598,13 +598,13 @@ export function InvoiceModal({
 
                                             {invoice.paymentDestination && (
                                                 <div className="rounded-2xl border border-white/10 bg-surface-2 p-5 space-y-3 shadow-sm">
-                                                    <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-text-disabled">
+                                                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-text-disabled">
                                                         <QrCode className="size-3.5" />
                                                         Paid To
                                                     </div>
                                                     <div>
-                                                        <p className="text-sm font-bold text-text-high">{invoice.paymentDestination.account_name}</p>
-                                                        <p className="text-xs font-bold text-primary mt-0.5 tracking-wider">{invoice.paymentDestination.account_number}</p>
+                                                        <p className="text-sm font-black text-text-high">{invoice.paymentDestination.account_name}</p>
+                                                        <p className="text-xs font-black text-primary mt-0.5 tracking-wider">{invoice.paymentDestination.account_number}</p>
                                                     </div>
                                                 </div>
                                             )}
@@ -614,12 +614,12 @@ export function InvoiceModal({
                                     {/* Decisions Hub */}
                                     <section className="space-y-4 pt-4 border-t border-white/5">
                                         <div className="flex items-center justify-between">
-                                            <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-medium">Action Center</h3>
+                                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-text-medium">Action Center</h3>
                                             <div className="flex bg-surface-2 p-1 rounded-xl border border-white/5 shadow-inner">
                                                 <button 
                                                     onClick={() => setActiveTab("approve")}
                                                     className={cn(
-                                                        "px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all",
+                                                        "px-3 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all",
                                                         activeTab === "approve" ? "bg-primary text-primary-foreground shadow-sm" : "text-text-disabled hover:text-text-medium"
                                                     )}
                                                 >
@@ -628,7 +628,7 @@ export function InvoiceModal({
                                                 <button 
                                                     onClick={() => setActiveTab("issue")}
                                                     className={cn(
-                                                        "px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all",
+                                                        "px-3 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all",
                                                         activeTab === "issue" ? "bg-amber-500 text-white shadow-sm" : "text-text-disabled hover:text-text-medium"
                                                     )}
                                                 >
@@ -676,7 +676,7 @@ export function InvoiceModal({
                                                                         <CheckCircle className="size-3" />
                                                                     </div>
                                                                     <div className="space-y-1">
-                                                                        <p className="text-xs font-bold text-text-high leading-tight">Proceed with Confirmation</p>
+                                                                        <p className="text-xs font-black text-text-high leading-tight">Proceed with Confirmation</p>
                                                                         <p className="text-[10px] text-text-medium font-medium leading-relaxed">Everything looks correct. Confirming will finalize the payment and issue a formal receipt to the tenant.</p>
                                                                     </div>
                                                                 </div>
@@ -720,7 +720,7 @@ export function InvoiceModal({
                                                     className="space-y-6"
                                                 >
                                                     <div className="space-y-1">
-                                                        <h4 className="text-sm font-bold text-text-high">Resolution Wizard</h4>
+                                                        <h4 className="text-sm font-black text-text-high">Resolution Wizard</h4>
                                                         <p className="text-[10px] font-medium text-text-disabled uppercase tracking-widest">Step-by-step issue management</p>
                                                     </div>
 
@@ -747,7 +747,7 @@ export function InvoiceModal({
                                                             <button 
                                                                 onClick={() => runAction("remind")}
                                                                 disabled={!!actionLoading}
-                                                                className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-surface-2/30 py-3 text-[10px] font-bold uppercase tracking-widest text-text-medium transition-all hover:bg-surface-3 hover:text-text-high hover:border-white/20 group"
+                                                                className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-surface-2/30 py-3 text-[10px] font-black uppercase tracking-widest text-text-medium transition-all hover:bg-surface-3 hover:text-text-high hover:border-white/20 group"
                                                             >
                                                                 {actionLoading === "remind" ? <Loader2 className="size-3 animate-spin" /> : <Send className="size-3 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />}
                                                                 Send a Gentle Nudge
@@ -762,7 +762,7 @@ export function InvoiceModal({
                                                                             <Info className="size-3" />
                                                                         </div>
                                                                         <p className="text-[10px] font-medium leading-relaxed text-text-medium">
-                                                                            This sends a message to the tenant <span className="text-amber-400 font-bold">without changing anything</span>. Use this if you just want to tell them you're still reviewing their payment.
+                                                                            This sends a message to the tenant <span className="text-amber-400 font-black">without changing anything</span>. Use this if you just want to tell them you're still reviewing their payment.
                                                                         </p>
                                                                     </div>
                                                                     {/* Tooltip Arrow */}
@@ -780,7 +780,7 @@ export function InvoiceModal({
                                     <section className="space-y-4 pt-4 border-t border-white/5">
                                         <div className="flex items-center gap-2">
                                             <History className="size-3.5 text-text-disabled" />
-                                            <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-medium">Audit History</h3>
+                                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-text-medium">Audit History</h3>
                                         </div>
                                         <div className="space-y-3">
                                             {invoice.receipts.length === 0 && (
@@ -793,13 +793,13 @@ export function InvoiceModal({
                                                     <div className="flex items-center gap-4">
                                                         <div className="size-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
                                                         <div>
-                                                            <p className="text-[11px] font-bold text-text-high tracking-tight">{receipt.receipt_number}</p>
+                                                            <p className="text-[11px] font-black text-text-high tracking-tight">{receipt.receipt_number}</p>
                                                             <p className="text-[9px] font-medium uppercase tracking-wider text-text-disabled mt-0.5">{formatDateLong(receipt.issued_at)}</p>
                                                         </div>
                                                     </div>
                                                     <div className="text-right">
-                                                        <p className="text-xs font-bold text-text-high">{formatPhpCurrency(receipt.amount)}</p>
-                                                        <p className="text-[8px] font-bold uppercase text-emerald-400 mt-0.5">Verified</p>
+                                                        <p className="text-xs font-black text-text-high">{formatPhpCurrency(receipt.amount)}</p>
+                                                        <p className="text-[8px] font-black uppercase text-emerald-400 mt-0.5">Verified</p>
                                                     </div>
                                                 </div>
                                             ))}
@@ -820,7 +820,7 @@ export function InvoiceModal({
                                     </div>
                                 </div>
                                 <div className="space-y-3">
-                                    <h3 className="text-2xl font-bold text-text-high tracking-tight">Verified Statement</h3>
+                                    <h3 className="text-2xl font-black text-text-high tracking-tight">Verified Statement</h3>
                                     <p className="text-sm text-text-medium leading-relaxed max-w-[280px]">
                                         This invoice has been officially logged in the iReside ledger. You can download a digital copy or pay through the checkout.
                                     </p>
@@ -828,7 +828,7 @@ export function InvoiceModal({
                                 {invoice?.status !== 'paid' && (
                                     <Link 
                                         href={`/tenant/payments/${invoiceId}/checkout`}
-                                        className="w-full bg-primary hover:bg-primary-dark text-white py-5 px-8 rounded-3xl font-bold text-xs uppercase tracking-[0.2em] shadow-2xl shadow-primary/20 transition-all hover:-translate-y-1 flex items-center justify-center gap-3"
+                                        className="w-full bg-primary hover:bg-primary-dark text-white py-5 px-8 rounded-3xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-primary/20 transition-all hover:-translate-y-1 flex items-center justify-center gap-3"
                                     >
                                         Proceed to Payment <ArrowUpRight className="size-5" />
                                     </Link>
@@ -864,9 +864,9 @@ export function InvoiceModal({
                                 </div>
 
                                 <div className="space-y-3 text-center">
-                                    <h3 className="text-2xl font-bold text-text-high tracking-tight">Confirm Action</h3>
+                                    <h3 className="text-2xl font-black text-text-high tracking-tight">Confirm Action</h3>
                                     <p className="text-sm font-medium leading-relaxed text-text-medium">
-                                        You are about to <span className="text-amber-400 font-bold underline decoration-amber-500/30 underline-offset-4">{pendingAction.label}</span>. 
+                                        You are about to <span className="text-amber-400 font-black underline decoration-amber-500/30 underline-offset-4">{pendingAction.label}</span>. 
                                         {pendingAction.desc}
                                     </p>
                                 </div>
@@ -876,7 +876,7 @@ export function InvoiceModal({
                                         disabled={confirmCountdown > 0}
                                         onClick={() => runAction(pendingAction.type)}
                                         className={cn(
-                                            "relative h-14 overflow-hidden rounded-2xl text-sm font-bold uppercase tracking-widest transition-all active:scale-[0.98]",
+                                            "relative h-14 overflow-hidden rounded-2xl text-sm font-black uppercase tracking-widest transition-all active:scale-[0.98]",
                                             confirmCountdown > 0 
                                                 ? "bg-white/5 text-text-disabled cursor-not-allowed" 
                                                 : "bg-primary text-primary-foreground hover:brightness-110 shadow-lg"
@@ -908,7 +908,7 @@ export function InvoiceModal({
                                     </button>
                                     <button 
                                         onClick={() => setPendingAction(null)}
-                                        className="h-14 rounded-2xl border border-white/10 bg-transparent text-sm font-bold text-text-medium transition-all hover:bg-white/5"
+                                        className="h-14 rounded-2xl border border-white/10 bg-transparent text-sm font-black text-text-medium transition-all hover:bg-white/5"
                                     >
                                         Cancel
                                     </button>
@@ -947,7 +947,7 @@ export function InvoiceModal({
                                 </button>
                             </div>
                             <div className="absolute bottom-6 left-1/2 -translate-x-1/2">
-                                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/60 bg-black/40 backdrop-blur-md px-6 py-2 rounded-full border border-white/5">
+                                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60 bg-black/40 backdrop-blur-md px-6 py-2 rounded-full border border-white/5">
                                     Full Evidence Inspection
                                 </p>
                             </div>
@@ -983,7 +983,7 @@ function F2FActionCenter({
                     </div>
                 </div>
                 <div className="space-y-1">
-                    <p className="text-sm font-bold text-white">Physical Cash Collection</p>
+                    <p className="text-sm font-black text-white">Physical Cash Collection</p>
                     <p className="text-[10px] font-medium text-cyan-100/60 leading-relaxed uppercase tracking-wider">Face-to-Face Transaction</p>
                 </div>
             </div>
@@ -991,18 +991,18 @@ function F2FActionCenter({
             <div className="space-y-5">
                 <div className="rounded-2xl border border-white/5 bg-surface-2 p-5 space-y-4">
                     <div className="flex items-center justify-between">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-text-disabled">Amount to Receive</p>
-                        <p className="text-sm font-bold text-primary">{formatPhpCurrency(invoice?.balanceRemaining ?? 0)}</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">Amount to Receive</p>
+                        <p className="text-sm font-black text-primary">{formatPhpCurrency(invoice?.balanceRemaining ?? 0)}</p>
                     </div>
                     <div className="h-[1px] bg-white/5" />
                     <div className="space-y-2">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-text-disabled">Handover Status</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">Handover Status</p>
                         <div className="grid grid-cols-2 gap-2">
                             <div className="rounded-xl border border-primary/20 bg-primary/10 p-3 text-center">
-                                <p className="text-[10px] font-bold text-primary">In Person</p>
+                                <p className="text-[10px] font-black text-primary">In Person</p>
                             </div>
                             <div className="rounded-xl border border-white/5 bg-surface-3 p-3 text-center opacity-40">
-                                <p className="text-[10px] font-bold text-text-disabled">Other</p>
+                                <p className="text-[10px] font-black text-text-disabled">Other</p>
                             </div>
                         </div>
                     </div>
@@ -1093,7 +1093,7 @@ function WizardFlow({
                         exit={{ opacity: 0, y: -10 }}
                         className="space-y-4"
                     >
-                        <p className="text-[11px] font-bold text-text-medium">What seems to be the problem?</p>
+                        <p className="text-[11px] font-black text-text-medium">What seems to be the problem?</p>
                         <div className="grid gap-3">
                             <DiagnosisCard 
                                 icon={<AlertTriangle className="size-5" />}
@@ -1129,24 +1129,24 @@ function WizardFlow({
                             <button onClick={() => setStep("diagnose")} className="text-text-disabled hover:text-text-medium transition-colors">
                                 <ChevronRight className="size-4 rotate-180" />
                             </button>
-                            <p className="text-[11px] font-bold text-text-medium">Enter actual payment details</p>
+                            <p className="text-[11px] font-black text-text-medium">Enter actual payment details</p>
                         </div>
 
                         <div className="rounded-2xl border border-white/10 bg-surface-2 p-5 space-y-4 shadow-inner">
                             <div className="flex items-center justify-between">
-                                <p className="text-[10px] font-bold uppercase tracking-widest text-text-disabled">Expected Amount</p>
-                                <p className="text-sm font-bold text-text-high">{formatPhpCurrency(invoice.balanceRemaining)}</p>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">Expected Amount</p>
+                                <p className="text-sm font-black text-text-high">{formatPhpCurrency(invoice.balanceRemaining)}</p>
                             </div>
                             <div className="h-[1px] bg-white/5" />
                             <div className="space-y-2">
-                                <p className="text-[10px] font-bold uppercase tracking-widest text-text-disabled">Actual Amount Received</p>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">Actual Amount Received</p>
                                 <div className="relative group">
-                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-text-disabled group-focus-within:text-primary transition-colors font-bold text-sm">â‚±</div>
+                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-text-disabled group-focus-within:text-primary transition-colors font-black text-sm">â‚±</div>
                                     <input 
                                         type="number"
                                         value={receivedAmount}
                                         onChange={(e) => setReceivedAmount(e.target.value ? Number(e.target.value) : "")}
-                                        className="w-full rounded-xl border border-white/10 bg-surface-3 pl-8 pr-4 py-3 text-sm font-bold text-text-high outline-none focus:border-primary/50 transition-all"
+                                        className="w-full rounded-xl border border-white/10 bg-surface-3 pl-8 pr-4 py-3 text-sm font-black text-text-high outline-none focus:border-primary/50 transition-all"
                                         placeholder="0.00"
                                     />
                                 </div>
@@ -1182,15 +1182,15 @@ function WizardFlow({
                             <button onClick={() => setStep(diagnosis === "amount" ? "adjust" : "diagnose")} className="text-text-disabled hover:text-text-medium transition-colors">
                                 <ChevronRight className="size-4 rotate-180" />
                             </button>
-                            <p className="text-[11px] font-bold text-text-medium">How would you like to handle this?</p>
+                            <p className="text-[11px] font-black text-text-medium">How would you like to handle this?</p>
                         </div>
                         <div className="grid gap-3">
                             {diagnosis === "amount" && (
                                 <>
                                     <div className="rounded-xl bg-surface-2 p-3 flex items-center justify-between border border-white/5">
-                                        <p className="text-[9px] font-bold uppercase tracking-widest text-text-disabled">Adjustment</p>
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-text-disabled">Adjustment</p>
                                         <p className={cn(
-                                            "text-[10px] font-bold",
+                                            "text-[10px] font-black",
                                             (shortfallAmount as number) > 0 ? "text-amber-400" : "text-emerald-400"
                                         )}>
                                             {(shortfallAmount as number) > 0 
@@ -1268,11 +1268,11 @@ function WizardFlow({
                             <button onClick={() => setStep(diagnosis === "amount" ? "resolve" : "diagnose")} className="text-text-disabled hover:text-text-medium transition-colors">
                                 <ChevronRight className="size-4 rotate-180" />
                             </button>
-                            <p className="text-[11px] font-bold text-text-medium">Finalize and Notify Tenant</p>
+                            <p className="text-[11px] font-black text-text-medium">Finalize and Notify Tenant</p>
                         </div>
 
                         <div className="rounded-2xl bg-amber-500/5 border border-amber-500/20 p-4 space-y-2">
-                            <p className="text-[10px] font-bold uppercase text-amber-500/80 tracking-widest flex items-center gap-2">
+                            <p className="text-[10px] font-black uppercase text-amber-500/80 tracking-widest flex items-center gap-2">
                                 <Info className="size-3" />
                                 Effect of this action
                             </p>
@@ -1339,7 +1339,7 @@ function DiagnosisCard({ icon, title, desc, onClick }: { icon: ReactNode, title:
                 {icon}
             </div>
             <div className="space-y-0.5">
-                <p className="text-xs font-bold text-text-high">{title}</p>
+                <p className="text-xs font-black text-text-high">{title}</p>
                 <p className="text-[10px] text-text-disabled font-medium">{desc}</p>
             </div>
             <ChevronRight className="size-4 text-text-disabled ml-auto group-hover:translate-x-1 transition-transform" />
@@ -1359,7 +1359,7 @@ function ResolutionCard({ title, desc, onClick, active, disabled }: { title: str
             )}
         >
             <div className="flex items-center justify-between w-full">
-                <p className={cn("text-xs font-bold", active ? "text-amber-400" : "text-text-high")}>{title}</p>
+                <p className={cn("text-xs font-black", active ? "text-amber-400" : "text-text-high")}>{title}</p>
                 <div className={cn("size-2 rounded-full", active ? "bg-amber-500" : "bg-white/10")} />
             </div>
             <p className="text-[10px] text-text-disabled font-medium mt-1">{desc}</p>
@@ -1375,9 +1375,9 @@ function Metric({ label, value, accent, warning }: { label: string; value: strin
             warning && !accent && "border-amber-500/20 bg-amber-500/5 shadow-[0_20px_40px_-20px_rgba(245,158,11,0.1)]"
         )}>
             {accent && <div className="absolute -top-6 -right-6 size-24 bg-primary/10 blur-3xl rounded-full animate-pulse" />}
-            <p className="text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.3em] text-text-medium group-hover:text-primary transition-colors">{label}</p>
+            <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-[0.3em] text-text-medium group-hover:text-primary transition-colors">{label}</p>
             <p className={cn(
-                "mt-2 sm:mt-3 text-lg sm:text-xl lg:text-2xl font-bold tracking-tight transition-transform group-hover:scale-[1.02] origin-left break-words leading-tight",
+                "mt-2 sm:mt-3 text-lg sm:text-xl lg:text-2xl font-black tracking-tight transition-transform group-hover:scale-[1.02] origin-left break-words leading-tight",
                 accent ? "text-primary" : "text-text-high",
                 warning && !accent && "text-amber-400"
             )}>
@@ -1393,8 +1393,8 @@ function ReadingField({ label, value, highlight }: { label: string; value: strin
             "space-y-1.5 rounded-2xl p-4 border transition-all", 
             highlight ? "bg-surface-2 border-white/10 shadow-sm" : "bg-transparent border-white/5"
         )}>
-            <p className="text-[9px] font-bold uppercase tracking-widest text-text-disabled">{label}</p>
-            <p className={cn("text-sm font-bold leading-none", highlight ? "text-primary" : "text-text-high")}>{value}</p>
+            <p className="text-[9px] font-black uppercase tracking-widest text-text-disabled">{label}</p>
+            <p className={cn("text-sm font-black leading-none", highlight ? "text-primary" : "text-text-high")}>{value}</p>
         </div>
     );
 }
@@ -1404,9 +1404,9 @@ function StatusLine({ label, value, icon }: { label: string; value: string; icon
         <div className="flex flex-col gap-2 rounded-2xl border border-white/10 bg-surface-1 p-4 shadow-sm hover:border-white/20 transition-all group">
             <div className="flex items-center gap-2">
                 <span className="text-text-disabled group-hover:text-primary transition-colors">{icon}</span>
-                <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-text-disabled">{label}</span>
+                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-text-disabled">{label}</span>
             </div>
-            <span className="text-xs font-bold text-text-high truncate">{value}</span>
+            <span className="text-xs font-black text-text-high truncate">{value}</span>
         </div>
     );
 }
@@ -1439,7 +1439,7 @@ function ActionButton({
             onClick={onClick} 
             disabled={loading || disabled} 
             className={cn(
-                "group relative flex items-center justify-center gap-3 rounded-2xl px-6 py-4 text-xs font-bold uppercase tracking-widest transition-all active:scale-[0.98] disabled:opacity-40 overflow-hidden", 
+                "group relative flex items-center justify-center gap-3 rounded-2xl px-6 py-4 text-xs font-black uppercase tracking-widest transition-all active:scale-[0.98] disabled:opacity-40 overflow-hidden", 
                 fullWidth ? "w-full" : "",
                 variants[variant]
             )}
@@ -1489,13 +1489,13 @@ function RefundCenter({
                         </div>
                     </div>
                     <div className="space-y-1">
-                        <p className="text-lg font-bold text-white">Refund Processed</p>
+                        <p className="text-lg font-black text-white">Refund Processed</p>
                         <p className="text-xs font-medium text-emerald-100/60 leading-relaxed uppercase tracking-widest">Transaction Reconciled</p>
                     </div>
                 </div>
 
                 <div className="space-y-3">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-text-disabled ml-1">Submitted Proof</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled ml-1">Submitted Proof</p>
                     <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-white/10 bg-surface-2 shadow-lg">
                         <Image
                             src={refundProofUrl}
@@ -1523,7 +1523,7 @@ function RefundCenter({
                         <Wallet className="size-3" />
                     </div>
                     <div className="space-y-1">
-                        <p className="text-xs font-bold text-text-high leading-tight">Tenant Refund Request</p>
+                        <p className="text-xs font-black text-text-high leading-tight">Tenant Refund Request</p>
                         <p className="text-[10px] text-text-medium font-medium leading-relaxed">
                             The tenant has requested a refund for the excess payment. Please process this via GCash.
                         </p>
@@ -1532,18 +1532,18 @@ function RefundCenter({
 
                 <div className="grid gap-3 p-3 rounded-xl bg-surface-2 border border-white/5 shadow-inner">
                     <div className="flex items-center justify-between">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-text-disabled">Method</p>
-                        <p className="text-[10px] font-bold text-text-high uppercase tracking-widest">GCash</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">Method</p>
+                        <p className="text-[10px] font-black text-text-high uppercase tracking-widest">GCash</p>
                     </div>
                     <div className="flex items-center justify-between">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-text-disabled">Account Number</p>
-                        <p className="text-sm font-bold text-primary tracking-wider font-mono">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">Account Number</p>
+                        <p className="text-sm font-black text-primary tracking-wider font-mono">
                             {refund.gcash_number || "Provided via QR"}
                         </p>
                     </div>
                     {refund.qr_url && (
                         <div className="pt-2">
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-text-disabled mb-2">Recipient QR Code</p>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled mb-2">Recipient QR Code</p>
                             <div className="relative group aspect-square w-full max-w-[200px] mx-auto overflow-hidden rounded-xl border border-white/10 bg-white p-2">
                                 <Image
                                     src={refund.qr_url}
@@ -1552,7 +1552,7 @@ function RefundCenter({
                                     className="object-contain"
                                 />
                                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                    <p className="text-[10px] font-bold text-white uppercase tracking-widest">View Full Size</p>
+                                    <p className="text-[10px] font-black text-white uppercase tracking-widest">View Full Size</p>
                                 </div>
                             </div>
                         </div>
@@ -1561,7 +1561,7 @@ function RefundCenter({
             </div>
 
             <div className="space-y-3">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-text-disabled ml-1">Upload Proof of Refund</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled ml-1">Upload Proof of Refund</p>
                 <div className="relative">
                     {!proofFile ? (
                         <label className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-white/10 bg-surface-1 py-8 text-text-disabled transition-all hover:border-primary/30 hover:bg-surface-2 cursor-pointer group">
@@ -1569,7 +1569,7 @@ function RefundCenter({
                                 <Upload className="size-5" />
                             </div>
                             <div className="text-center">
-                                <p className="text-xs font-bold text-text-high group-hover:text-primary transition-colors">Select Proof Image</p>
+                                <p className="text-xs font-black text-text-high group-hover:text-primary transition-colors">Select Proof Image</p>
                                 <p className="text-[10px] font-medium">PNG, JPG or WebP (Max 5MB)</p>
                             </div>
                             <input 
@@ -1663,7 +1663,7 @@ function RefundSubmitButton({
                     <p className="text-[10px] font-medium text-rose-400 leading-relaxed">{error}</p>
                 </div>
             )}
-            <p className="text-[10px] font-bold uppercase tracking-widest text-text-disabled text-center mb-1">Finalize Resolution</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled text-center mb-1">Finalize Resolution</p>
             <ActionButton
                 onClick={handleSubmit}
                 loading={isSubmitting}

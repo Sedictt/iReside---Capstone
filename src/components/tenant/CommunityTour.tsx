@@ -135,7 +135,7 @@ export function CommunityTour() {
                 } : {}}
             >
                 <div className="flex items-start justify-between mb-4">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
                         Community Tour ({stepIndex + 1}/{TOUR_STEPS.length})
                     </p>
                     <button 
@@ -146,7 +146,7 @@ export function CommunityTour() {
                     </button>
                 </div>
                 
-                <h3 className="mb-2 text-xl font-bold text-foreground dark:text-white">
+                <h3 className="mb-2 text-xl font-black text-foreground dark:text-white">
                     {activeStep.title}
                 </h3>
                 
@@ -157,7 +157,7 @@ export function CommunityTour() {
                 <div className="flex items-center justify-between mt-auto">
                     <button
                         onClick={completeTour}
-                        className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground transition-colors hover:text-foreground dark:text-white/40 dark:hover:text-white"
+                        className="flex items-center gap-1.5 text-xs font-black text-muted-foreground transition-colors hover:text-foreground dark:text-white/40 dark:hover:text-white"
                     >
                         <SkipForward className="size-3.5" />
                         Skip tour
@@ -174,7 +174,7 @@ export function CommunityTour() {
                         )}
                         <button
                             onClick={nextStep}
-                            className="flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:brightness-110"
+                            className="flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-black text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:brightness-110"
                         >
                             {isLastStep ? "Finish" : "Next"}
                             {isLastStep ? <CheckCircle2 className="size-4" /> : <ArrowRight className="size-4" />}

@@ -228,9 +228,9 @@ export function TenantIrisChat() {
                         </div>
                     </div>
                     <div>
-                        <h3 className="font-bold text-foreground text-base">iRis Assistant</h3>
+                        <h3 className="font-black text-foreground text-base">iRis Assistant</h3>
                         <div className="flex items-center gap-2">
-                            <span className="text-[10px] uppercase font-bold text-primary tracking-widest bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded">AI Concierge</span>
+                            <span className="text-[10px] uppercase font-black text-primary tracking-widest bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded">AI Concierge</span>
                             <span className="text-[10px] text-muted-foreground font-medium">Always Available</span>
                         </div>
                     </div>
@@ -257,7 +257,7 @@ export function TenantIrisChat() {
                         <div className="relative size-20 rounded-full bg-white flex items-center justify-center overflow-hidden border-4 border-white/60 shadow-[0_18px_35px_-24px_rgba(15,23,42,0.45)]">
                             <Image src="/logos/favicon.png" alt="iRis" fill sizes="80px" className="object-cover" />
                         </div>
-                        <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest bg-card px-4 py-1.5 rounded-full border border-border shadow-sm">
+                        <span className="text-xs font-black text-muted-foreground uppercase tracking-widest bg-card px-4 py-1.5 rounded-full border border-border shadow-sm">
                             Conversation with iRis • Private & Secured
                         </span>
                     </div>
@@ -310,7 +310,7 @@ export function TenantIrisChat() {
                                                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                                                 <div className="p-4 border-b border-border flex justify-between items-center relative z-10">
                                                     <div className="flex-1">
-                                                        <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider mb-1">Network Name</p>
+                                                        <p className="text-[10px] uppercase font-black text-muted-foreground tracking-wider mb-1">Network Name</p>
                                                         <p className="text-primary font-mono font-medium text-sm md:text-base select-all">TheLofts_Guest</p>
                                                     </div>
                                                     <button className="p-2 text-muted-foreground hover:text-primary transition rounded-lg hover:bg-primary/10">
@@ -319,7 +319,7 @@ export function TenantIrisChat() {
                                                 </div>
                                                 <div className="p-4 flex justify-between items-center relative z-10 cursor-pointer hover:bg-muted/40 transition-colors">
                                                     <div className="flex-1">
-                                                        <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider mb-1">Password</p>
+                                                        <p className="text-[10px] uppercase font-black text-muted-foreground tracking-wider mb-1">Password</p>
                                                         <p className="text-primary font-mono font-medium text-sm md:text-base select-all">WelcomeHome2024</p>
                                                     </div>
                                                     <button className="p-2 text-muted-foreground hover:text-primary transition rounded-lg hover:bg-primary/10">
@@ -336,7 +336,7 @@ export function TenantIrisChat() {
 
                                     {msg.role === "user" && (
                                         <div className="shrink-0 mt-auto">
-                                            <div className="size-8 rounded-full bg-card flex items-center justify-center font-bold text-xs text-muted-foreground border border-border">
+                                            <div className="size-8 rounded-full bg-card flex items-center justify-center font-black text-xs text-muted-foreground border border-border">
                                                 {userInitials}
                                             </div>
                                         </div>
@@ -349,9 +349,9 @@ export function TenantIrisChat() {
                     {isTyping && !isChatInitializing && (
                         <div className="flex w-full gap-4 justify-start">
                             <div className="shrink-0 mt-auto">
-                                <div className="size-8 rounded-full bg-white overflow-hidden flex items-center justify-center border border-border">
-                                    <img src="/logos/favicon.png" alt="iRis" className="size-7 object-cover" />
-                                </div>
+                        <div className="size-8 rounded-full bg-white overflow-hidden flex items-center justify-center border border-border">
+                            <Image src="/logos/favicon.png" alt="iRis" width={28} height={28} className="object-cover" />
+                        </div>
                             </div>
                             <div className="px-5 py-4 rounded-2xl rounded-bl-sm bg-card border border-border flex items-center gap-1.5">
                                 <span className="size-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]"></span>
@@ -372,7 +372,7 @@ export function TenantIrisChat() {
                         {["WiFi Password", "Maintenance", "Rent Status", "Amenity Hours"].map((feature) => (
                             <button
                                 key={feature}
-                                className="whitespace-nowrap px-4 py-1.5 rounded-full text-[11px] font-bold bg-background text-muted-foreground border border-border hover:border-primary hover:text-primary hover:bg-primary/5 transition-all active:scale-95"
+                                className="whitespace-nowrap px-4 py-1.5 rounded-full text-[11px] font-black bg-background text-muted-foreground border border-border hover:border-primary hover:text-primary hover:bg-primary/5 transition-all active:scale-95"
                                 onClick={() => {
                                     setInput(feature);
                                 }}

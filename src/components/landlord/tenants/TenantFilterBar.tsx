@@ -35,7 +35,7 @@ export function TenantFilterBar({
                         key={status}
                         onClick={() => onStatusFilterChange(status as TenantStatus | "All")}
                         className={cn(
-                            "h-10 rounded-xl px-4 text-sm font-bold transition-all",
+                            "h-10 rounded-xl px-4 text-sm font-black transition-all",
                             statusFilter === status
                                 ? "bg-foreground text-background"
                                 : "text-muted-foreground hover:bg-muted"
@@ -45,7 +45,7 @@ export function TenantFilterBar({
                     </button>
                 ))}
                 <div className="mx-2 h-6 w-px bg-border hidden lg:block" />
-                <button className="flex h-10 items-center gap-2 rounded-xl border border-border px-4 text-sm font-bold text-muted-foreground hover:bg-muted hover:text-foreground transition-all">
+                <button className="flex h-10 items-center gap-2 rounded-xl border border-border px-4 text-sm font-black text-muted-foreground hover:bg-muted hover:text-foreground transition-all">
                     <Filter className="size-4" />
                     <span>More Filters</span>
                 </button>

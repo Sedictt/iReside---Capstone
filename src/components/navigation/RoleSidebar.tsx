@@ -155,7 +155,7 @@ export function RoleSidebar({
                         <span
                             className={cn(
                                 "whitespace-nowrap text-sm tracking-tight",
-                                isActive ? "font-bold" : "font-bold"
+                                isActive ? "font-black" : "font-black"
                             )}
                         >
                             {item.label}
@@ -165,7 +165,7 @@ export function RoleSidebar({
 
                 {!isCollapsed && item.badge ? (
                     <span className={cn(
-                        "flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white shadow-sm ring-1 ring-white/20",
+                        "flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-black text-white shadow-sm ring-1 ring-white/20",
                         item.urgent && "animate-pulse ring-red-500/50 shadow-lg shadow-red-500/40"
                     )}>
                         {item.badge}
@@ -230,7 +230,7 @@ export function RoleSidebar({
             {/* Navigation */}
             <nav className="flex-1 custom-scrollbar-premium space-y-6 overflow-y-auto px-4 py-6">
                 {portalLabel && (
-                    <div className="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">
+                    <div className="px-3 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
                         {portalLabel}
                     </div>
                 )}
@@ -265,7 +265,7 @@ export function RoleSidebar({
                                                 {SectionIcon && (
                                                     <SectionIcon className={cn("size-4", hasActiveItem ? "text-primary" : "text-muted-foreground")} />
                                                 )}
-                                                <span className="text-[11px] font-bold uppercase tracking-wider">{section.category}</span>
+                                                <span className="text-[11px] font-black uppercase tracking-wider">{section.category}</span>
                                             </div>
                                             {isCollapsible && (
                                                 <ChevronDown className={cn("size-3 transition-transform duration-200", isExpanded ? "rotate-180" : "")} />
@@ -309,7 +309,7 @@ export function RoleSidebar({
                     )}
                 >
                     <LogOut className="size-5 shrink-0" />
-                    {!isCollapsed && <span className="text-sm font-bold">{logoutLabel}</span>}
+                    {!isCollapsed && <span className="text-sm font-black">{logoutLabel}</span>}
                 </button>
             </div>
         </aside>

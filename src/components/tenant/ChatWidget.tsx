@@ -21,6 +21,8 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { fetchIrisHistory, getCachedIrisHistory, setCachedIrisHistory, type IrisHistoryMessage } from "@/lib/iris/client";
 
+const EMPTY_ARRAY = Object.freeze([]) as any[];
+
 interface Message {
     id: string;
     role: "user" | "iris";
@@ -54,7 +56,7 @@ export function ChatWidget({
 
     const firstName = getFirstName(profile?.full_name ?? user?.user_metadata?.full_name ?? user?.email ?? null);
 
-    const [messages, setMessages] = useState<Message[]>([]);
+    const [messages, setMessages] = useState<Message[]>(EMPTY_ARRAY);
     const [input, setInput] = useState("");
     const [isTyping, setIsTyping] = useState(false);
     const [isChatInitializing, setIsChatInitializing] = useState(true);
@@ -259,10 +261,10 @@ export function ChatWidget({
                                 </div>
                             </div>
                             <div>
-                                <h3 className="font-bold text-base tracking-tight">iRis Assistant</h3>
+                                <h3 className="font-black text-base tracking-tight">iRis Assistant</h3>
                                 <div className="flex items-center gap-1.5">
                                     <span className="size-1.5 rounded-full bg-white/60 animate-pulse"></span>
-                                    <p className="text-[10px] text-white/80 uppercase tracking-widest font-bold">Ask iRis</p>
+                                    <p className="text-[10px] text-white/80 uppercase tracking-widest font-black">Ask iRis</p>
                                 </div>
                             </div>
                         </div>
@@ -376,7 +378,7 @@ export function ChatWidget({
                         {["WiFi Password", "Maintenance", "Rent Status", "Amenity Hours"].map((feature) => (
                             <button
                                 key={feature}
-                                className="whitespace-nowrap px-4 py-1.5 rounded-full text-[11px] font-bold bg-background text-muted-foreground border border-border hover:border-primary hover:text-primary transition-all active:scale-95"
+                                className="whitespace-nowrap px-4 py-1.5 rounded-full text-[11px] font-black bg-background text-muted-foreground border border-border hover:border-primary hover:text-primary transition-all active:scale-95"
                                 onClick={() => {
                                     setInput(feature);
                                     // Optionally auto-send
@@ -397,7 +399,7 @@ export function ChatWidget({
                                     value={input}
                                     onChange={(e) => setInput(e.target.value)}
                                     onKeyPress={(e) => e.key === "Enter" && handleSend()}
-                                    placeholder="Type a message..."
+                                    placeholder="Type a message…"
                                     disabled={isChatInitializing}
                                     className="relative w-full bg-background/80 border border-transparent focus:border-primary/20 rounded-full px-5 py-3 text-sm text-foreground focus:ring-0 outline-none placeholder:text-muted-foreground transition-all backdrop-blur-sm"
                                 />

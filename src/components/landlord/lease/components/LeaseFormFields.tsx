@@ -31,7 +31,7 @@ export function LeaseFormFields({
                 <div className="space-y-2">
                     <label
                         htmlFor="lease-start"
-                        className="text-xs font-bold uppercase tracking-wide text-neutral-300 flex items-center gap-2"
+                        className="text-xs font-black uppercase tracking-wide text-neutral-300 flex items-center gap-2"
                     >
                         <Calendar className="size-3.5" />
                         Lease Start Date
@@ -47,7 +47,7 @@ export function LeaseFormFields({
                 <div className="space-y-2">
                     <label
                         htmlFor="lease-end"
-                        className="text-xs font-bold uppercase tracking-wide text-neutral-300 flex items-center gap-2"
+                        className="text-xs font-black uppercase tracking-wide text-neutral-300 flex items-center gap-2"
                     >
                         <Calendar className="size-3.5" />
                         Lease End Date
@@ -66,7 +66,7 @@ export function LeaseFormFields({
                 <div className="space-y-2">
                     <label
                         htmlFor="monthly-rent"
-                        className="text-xs font-bold uppercase tracking-wide text-neutral-300 flex items-center gap-2"
+                        className="text-xs font-black uppercase tracking-wide text-neutral-300 flex items-center gap-2"
                     >
                         <Banknote className="size-3.5" />
                         Monthly Rent
@@ -83,7 +83,7 @@ export function LeaseFormFields({
                 <div className="space-y-2">
                     <label
                         htmlFor="advance-invoice"
-                        className="text-xs font-bold uppercase tracking-wide text-neutral-300 flex items-center gap-2"
+                        className="text-xs font-black uppercase tracking-wide text-neutral-300 flex items-center gap-2"
                     >
                         <Banknote className="size-3.5" />
                         Advance Invoice
@@ -100,7 +100,7 @@ export function LeaseFormFields({
                 <div className="space-y-2">
                     <label
                         htmlFor="security-deposit"
-                        className="text-xs font-bold uppercase tracking-wide text-neutral-300 flex items-center gap-2"
+                        className="text-xs font-black uppercase tracking-wide text-neutral-300 flex items-center gap-2"
                     >
                         <Banknote className="size-3.5" />
                         Security Deposit

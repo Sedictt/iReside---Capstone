@@ -878,7 +878,7 @@ export function ContactsSidebar() {
                             <button
                                 onClick={() => setActiveTab("messages")}
                                 className={cn(
-                                    "flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-bold transition-all relative z-10",
+                                    "flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-black transition-all relative z-10",
                                     activeTab === "messages" ? "text-foreground dark:text-white" : "text-muted-foreground hover:text-foreground dark:hover:text-neutral-300"
                                 )}
                             >
@@ -888,7 +888,7 @@ export function ContactsSidebar() {
                             <button
                                 onClick={() => setActiveTab("contacts")}
                                 className={cn(
-                                    "flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-bold transition-all relative z-10",
+                                    "flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-black transition-all relative z-10",
                                     activeTab === "contacts" ? "text-foreground dark:text-white" : "text-muted-foreground hover:text-foreground dark:hover:text-neutral-300"
                                 )}
                             >
@@ -957,7 +957,7 @@ export function ContactsSidebar() {
                                                             userId={msg.participantUserId || ""} 
                                                             initialData={{ full_name: msg.name, avatar_url: msg.avatar, role: msg.role as any }}
                                                         >
-                                                            <h4 className={cn("text-sm truncate transition-colors group-hover:text-primary", msg.unread ? "font-bold text-foreground dark:text-white" : "font-medium text-foreground/80 dark:text-neutral-200")}>
+                                                            <h4 className={cn("text-sm truncate transition-colors group-hover:text-primary", msg.unread ? "font-black text-foreground dark:text-white" : "font-medium text-foreground/80 dark:text-neutral-200")}>
                                                                 {msg.name}
                                                             </h4>
                                                         </ProfileCardTrigger>
@@ -1016,7 +1016,7 @@ export function ContactsSidebar() {
                 {/* Footer View All */}
                 {isHovered && (
                     <div className="shrink-0 border-t border-border bg-card p-4 animate-in fade-in duration-500 dark:border-white/5 dark:bg-neutral-900">
-                        <Link href="/landlord/tenants" className="flex w-full items-center justify-center rounded-xl border border-border bg-muted py-3 text-sm font-bold text-foreground transition-colors hover:bg-muted/80 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10">
+                        <Link href="/landlord/tenants" className="flex w-full items-center justify-center rounded-xl border border-border bg-muted py-3 text-sm font-black text-foreground transition-colors hover:bg-muted/80 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10">
                             {activeTab === "messages" ? "View All Messages" : "View All Tenants"}
                         </Link>
                     </div>
@@ -1073,7 +1073,7 @@ export function ContactsSidebar() {
                                     </div>
                                     <div className="flex flex-col min-w-0">
                                         <div className="flex min-w-0 items-center gap-2">
-                                            <h4 className="truncate text-sm font-bold text-foreground hover:underline dark:text-white">{chat.name}</h4>
+                                            <h4 className="truncate text-sm font-black text-foreground hover:underline dark:text-white">{chat.name}</h4>
                                             <RoleBadge role={chat.role} />
                                         </div>
                                         {chat.isActive && (
@@ -1224,7 +1224,7 @@ export function ContactsSidebar() {
                                                         <File className="size-4 text-foreground dark:text-neutral-100" />
                                                     </div>
                                                     <div className="min-w-0">
-                                                        <p className="truncate text-xs font-bold text-foreground dark:text-neutral-100">{message.content || "Attachment"}</p>
+                                                        <p className="truncate text-xs font-black text-foreground dark:text-neutral-100">{message.content || "Attachment"}</p>
                                                     </div>
                                                 </a>
                                             )}
@@ -1330,7 +1330,7 @@ export function ContactsSidebar() {
                         >
                             <div className="flex items-center justify-between border-b border-border bg-card/90 px-4 py-3 dark:border-white/10 dark:bg-neutral-900/90">
                                 <div className="min-w-0">
-                                    <p className="truncate text-sm font-bold text-foreground dark:text-white">Shared Files</p>
+                                    <p className="truncate text-sm font-black text-foreground dark:text-white">Shared Files</p>
                                     <p className="truncate text-[11px] text-muted-foreground">
                                         {openChats.find((chat) => chat.id === sharedFilesChatId)?.name ?? "Conversation"}
                                     </p>
@@ -1506,7 +1506,7 @@ function ContactCard({ name, role, unit, avatar, avatarBgColor, status, isExpand
                 <div className="flex-1 min-w-0 animate-in fade-in duration-300">
                     <div className="flex items-center justify-between mb-0.5">
                         <div className="flex min-w-0 items-center gap-2">
-                            <h4 className="truncate text-sm font-bold text-foreground transition-colors group-hover:text-primary dark:text-white">{name}</h4>
+                            <h4 className="truncate text-sm font-black text-foreground transition-colors group-hover:text-primary dark:text-white">{name}</h4>
                             <RoleBadge role={role} />
                         </div>
                     </div>

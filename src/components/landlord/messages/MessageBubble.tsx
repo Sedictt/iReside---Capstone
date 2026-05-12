@@ -176,7 +176,7 @@ export function MessageBubble({
                                     <Paperclip className={cn("size-4", isMe ? "text-white" : "text-primary")} />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-xs font-bold truncate">{message.fileName || "File Attachment"}</p>
+                                    <p className="text-xs font-black truncate">{message.fileName || "File Attachment"}</p>
                                     <p className={cn("text-[10px]", isMe ? "text-white/70" : "text-medium")}>
                                         {message.fileSize ? `${(message.fileSize / 1024).toFixed(1)} KB` : ""}
                                     </p>
@@ -241,7 +241,7 @@ export function MessageBubble({
                                         <button
                                             type="button"
                                             onClick={handleCopy}
-                                            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-medium hover:bg-surface-2 hover:text-high transition-colors"
+                                            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest text-medium hover:bg-surface-2 hover:text-high transition-colors"
                                         >
                                             {didCopy ? <Check className="size-3 text-primary" /> : <Copy className="size-3" />}
                                             {didCopy ? "Copied" : "Copy text"}
@@ -250,7 +250,7 @@ export function MessageBubble({
                                     <button
                                         type="button"
                                         onClick={handleCopyId}
-                                        className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-medium hover:bg-surface-2 hover:text-high transition-colors"
+                                        className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest text-medium hover:bg-surface-2 hover:text-high transition-colors"
                                     >
                                         {didCopyId ? <Check className="size-3 text-primary" /> : <ShieldCheck className="size-3" />}
                                         {didCopyId ? "ID Copied" : "Copy ID"}
@@ -259,7 +259,7 @@ export function MessageBubble({
                                         <button
                                             type="button"
                                             onClick={() => onReportMessage(message.id)}
-                                            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-red-500 hover:bg-red-500/10 transition-colors"
+                                            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest text-red-500 hover:bg-red-500/10 transition-colors"
                                         >
                                             <AlertTriangle className="size-3" />
                                             Report
@@ -329,7 +329,7 @@ function AlbumGrid({ attachments, isMe, onImageClick }: { attachments: UiMessage
                                 tabIndex={0}
                                 role="button"
                             >
-                                <span className="text-white text-xl font-bold">+{extraCount}</span>
+                                <span className="text-white text-xl font-black">+{extraCount}</span>
                             </div>
                         )}
                     </div>

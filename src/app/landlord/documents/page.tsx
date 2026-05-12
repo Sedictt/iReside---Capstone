@@ -109,7 +109,7 @@ export default function DocumentsPage() {
             <div className="flex h-screen items-center justify-center bg-background">
                 <div className="flex flex-col items-center gap-4">
                     <Loader2 className="size-10 animate-spin text-primary" />
-                    <p className="text-sm font-bold uppercase tracking-widest text-neutral-500">Accessing Vault...</p>
+                    <p className="text-sm font-black uppercase tracking-widest text-neutral-500">Accessing Vault...</p>
                 </div>
             </div>
         );
@@ -166,7 +166,7 @@ export default function DocumentsPage() {
                     </div>
                     
                     <div className="relative z-10 space-y-6">
-                        <div className="inline-flex items-center gap-3 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
+                        <div className="inline-flex items-center gap-3 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-primary">
                             <span className="relative flex size-2">
                                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"></span>
                                 <span className="relative inline-flex size-2 rounded-full bg-primary"></span>
@@ -175,7 +175,7 @@ export default function DocumentsPage() {
                         </div>
                         
                         <div className="space-y-2">
-                            <h1 className="text-5xl font-bold tracking-tighter text-white md:text-6xl">
+                            <h1 className="text-5xl font-black tracking-tighter text-white md:text-6xl">
                                 Professional Archive <br />
                                 & <span className="text-primary">Lease Vault.</span>
                             </h1>
@@ -194,7 +194,7 @@ export default function DocumentsPage() {
                             <button 
                                 onClick={() => setActiveTab("compliance")}
                                 className={cn(
-                                    "relative flex items-center gap-2 px-8 py-5 text-[11px] font-bold uppercase tracking-[0.2em] transition-all",
+                                    "relative flex items-center gap-2 px-8 py-5 text-[11px] font-black uppercase tracking-[0.2em] transition-all",
                                     activeTab === "compliance" ? "text-primary" : "text-neutral-500 hover:text-neutral-300"
                                 )}
                             >
@@ -207,7 +207,7 @@ export default function DocumentsPage() {
                             <button 
                                 onClick={() => setActiveTab("leases")}
                                 className={cn(
-                                    "relative flex items-center gap-2 px-8 py-5 text-[11px] font-bold uppercase tracking-[0.2em] transition-all",
+                                    "relative flex items-center gap-2 px-8 py-5 text-[11px] font-black uppercase tracking-[0.2em] transition-all",
                                     activeTab === "leases" ? "text-primary" : "text-neutral-500 hover:text-neutral-300"
                                 )}
                             >
@@ -232,11 +232,11 @@ export default function DocumentsPage() {
                                     {/* Registration Credentials */}
                                     <div className="space-y-6">
                                         <div className="flex items-center justify-between px-2">
-                                            <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-3">
+                                            <h2 className="text-xl font-black text-white tracking-tight flex items-center gap-3">
                                                 <Fingerprint className="size-5 text-primary" />
                                                 Identity & Compliance
                                             </h2>
-                                            <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">{registrationDocs.length} Records</span>
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500">{registrationDocs.length} Records</span>
                                         </div>
 
                                         <div className="grid gap-4">
@@ -253,14 +253,14 @@ export default function DocumentsPage() {
                                                         
                                                         <div className="flex-1 min-w-0 space-y-1">
                                                             <div className="flex items-center gap-2">
-                                                                <h3 className="text-base font-bold text-white truncate">{doc.name}</h3>
-                                                                <span className="rounded-full bg-neutral-800 px-2 py-0.5 text-[9px] font-bold uppercase tracking-tighter text-neutral-400">
+                                                                <h3 className="text-base font-black text-white truncate">{doc.name}</h3>
+                                                                <span className="rounded-full bg-neutral-800 px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter text-neutral-400">
                                                                     {doc.category}
                                                                 </span>
                                                             </div>
                                                             <p className="text-sm text-neutral-500 truncate">{doc.description}</p>
                                                             <div className="flex items-center gap-4 pt-1">
-                                                                <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-neutral-600" suppressHydrationWarning>
+                                                                <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-neutral-600" suppressHydrationWarning>
                                                                     <Clock className="size-3" />
                                                                     Uploaded {new Date(doc.updatedAt).toLocaleDateString()}
                                                                 </div>
@@ -295,11 +295,11 @@ export default function DocumentsPage() {
                                     <div className="space-y-6">
                                         <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between px-2">
                                             <div className="space-y-1">
-                                                <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-3">
+                                                <h2 className="text-xl font-black text-white tracking-tight flex items-center gap-3">
                                                     <FileText className="size-5 text-primary" />
                                                     Lease Contracts
                                                 </h2>
-                                                <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500">
                                                     {filteredLeaseDocs.length} Total Documents Found
                                                 </p>
                                             </div>
@@ -325,7 +325,7 @@ export default function DocumentsPage() {
                                                     <select 
                                                         value={statusFilter}
                                                         onChange={(e) => setStatusFilter(e.target.value)}
-                                                        className="h-12 bg-neutral-900/40 border border-white/5 rounded-2xl px-4 text-xs font-bold text-neutral-400 focus:outline-none focus:border-primary/20 transition-all appearance-none pr-10 cursor-pointer hover:bg-neutral-900/60"
+                                                        className="h-12 bg-neutral-900/40 border border-white/5 rounded-2xl px-4 text-xs font-black text-neutral-400 focus:outline-none focus:border-primary/20 transition-all appearance-none pr-10 cursor-pointer hover:bg-neutral-900/60"
                                                     >
                                                         <option value="all">ALL STATUS</option>
                                                         <option value="active">ACTIVE ONLY</option>
@@ -340,7 +340,7 @@ export default function DocumentsPage() {
                                                     <select 
                                                         value={typeFilter}
                                                         onChange={(e) => setTypeFilter(e.target.value)}
-                                                        className="h-12 bg-neutral-900/40 border border-white/5 rounded-2xl px-4 text-xs font-bold text-neutral-400 focus:outline-none focus:border-primary/20 transition-all appearance-none pr-10 cursor-pointer hover:bg-neutral-900/60"
+                                                        className="h-12 bg-neutral-900/40 border border-white/5 rounded-2xl px-4 text-xs font-black text-neutral-400 focus:outline-none focus:border-primary/20 transition-all appearance-none pr-10 cursor-pointer hover:bg-neutral-900/60"
                                                     >
                                                         <option value="all">ALL TYPES</option>
                                                         <option value="lease">EXECUTED</option>
@@ -371,9 +371,9 @@ export default function DocumentsPage() {
                                                                 
                                                                 <div className="flex-1 min-w-0 space-y-1">
                                                                     <div className="flex items-center gap-2">
-                                                                        <h3 className="text-base font-bold text-white truncate">{doc.name}</h3>
+                                                                        <h3 className="text-base font-black text-white truncate">{doc.name}</h3>
                                                                         <span className={cn(
-                                                                            "rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-tighter",
+                                                                            "rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter",
                                                                             doc.isTemplate ? "bg-amber-500/10 text-amber-400" : "bg-primary/10 text-primary"
                                                                         )}>
                                                                             {doc.isTemplate ? "TEMPLATE" : "EXECUTED"}
@@ -381,7 +381,7 @@ export default function DocumentsPage() {
                                                                     </div>
                                                                     <p className="text-sm text-neutral-500 truncate">{doc.description}</p>
                                                                     <div className="flex items-center gap-4 pt-1">
-                                                                        <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-neutral-600">
+                                                                        <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-neutral-600">
                                                                             <Clock className="size-3" />
                                                                             <span suppressHydrationWarning>Ref: {doc.id.slice(0, 8)} • <span suppressHydrationWarning>{new Date(doc.updatedAt).toLocaleDateString()}</span></span>
                                                                         </div>
@@ -426,7 +426,7 @@ export default function DocumentsPage() {
                                             ) : (
                                                 <div className="rounded-[2rem] border border-dashed border-white/10 bg-neutral-900/20 p-12 text-center h-[400px] flex flex-col items-center justify-center">
                                                     <FileText className="size-10 text-neutral-700 mx-auto mb-4" />
-                                                    <p className="text-sm font-bold text-neutral-500 uppercase tracking-widest">No Documents Found</p>
+                                                    <p className="text-sm font-black text-neutral-500 uppercase tracking-widest">No Documents Found</p>
                                                     <p className="text-xs text-neutral-600 mt-1">Select a different property or try a different search term.</p>
                                                 </div>
                                             )}
@@ -449,7 +449,7 @@ export default function DocumentsPage() {
                                                             key={`doc-page-${i}`}
                                                             onClick={() => setCurrentPage(i + 1)}
                                                             className={cn(
-                                                                "size-12 rounded-2xl text-[11px] font-bold transition-all",
+                                                                "size-12 rounded-2xl text-[11px] font-black transition-all",
                                                                 currentPage === i + 1 
                                                                     ? "bg-primary text-black shadow-lg shadow-primary/20" 
                                                                     : "border border-white/5 bg-neutral-900/40 text-neutral-500 hover:border-primary/20 hover:text-white"
@@ -489,8 +489,8 @@ export default function DocumentsPage() {
                                     <ShieldCheck className="size-6 text-primary" />
                                 </div>
                                 <div>
-                                    <h4 className="text-lg font-bold text-white uppercase tracking-widest">Digital Agreement Preview</h4>
-                                    <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">Smart Template • Secure Protocol v2.1</p>
+                                    <h4 className="text-lg font-black text-white uppercase tracking-widest">Digital Agreement Preview</h4>
+                                    <p className="text-[10px] text-neutral-500 font-black uppercase tracking-widest">Smart Template • Secure Protocol v2.1</p>
                                 </div>
                             </div>
 

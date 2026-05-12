@@ -75,7 +75,7 @@ export function LeaseHeader({ currentStep, steps, leaseId }: LeaseHeaderProps) {
                     </div>
                     <div className="size-10 overflow-hidden rounded-full ring-2 ring-border">
                         {/* Placeholder Avatar */}
-                        <div className="flex h-full w-full items-center justify-center bg-zinc-600 font-bold text-white">
+                        <div className="flex h-full w-full items-center justify-center bg-zinc-600 font-black text-white">
                             AR
                         </div>
                         {/* Ideally utilize Image component here if user image is available */}

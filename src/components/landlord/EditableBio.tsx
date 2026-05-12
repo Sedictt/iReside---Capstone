@@ -58,7 +58,7 @@ export default function EditableBio({
                     <button
                         onClick={handleSave}
                         disabled={saving}
-                        className="flex items-center gap-2 bg-[#6d9838] hover:bg-[#5a7d2e] text-white px-5 py-2 rounded-xl text-[10px] font-bold tracking-widest uppercase transition shadow-lg shadow-[#6d9838]/20 disabled:opacity-50"
+                        className="flex items-center gap-2 bg-[#6d9838] hover:bg-[#5a7d2e] text-white px-5 py-2 rounded-xl text-[10px] font-black tracking-widest uppercase transition shadow-lg shadow-[#6d9838]/20 disabled:opacity-50"
                     >
                         {saving ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
                         Save Bio
@@ -69,7 +69,7 @@ export default function EditableBio({
                             setIsEditing(false);
                         }}
                         disabled={saving}
-                        className="flex items-center gap-2 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white px-5 py-2 rounded-xl text-[10px] font-bold tracking-widest uppercase transition"
+                        className="flex items-center gap-2 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white px-5 py-2 rounded-xl text-[10px] font-black tracking-widest uppercase transition"
                     >
                         <X size={14} />
                         Cancel
@@ -85,7 +85,7 @@ export default function EditableBio({
         return (
             <button
                 onClick={() => setIsEditing(true)}
-                className="mt-2 flex items-center gap-3 text-[10px] font-bold text-white/40 hover:text-white transition-all uppercase tracking-widest border border-dashed border-white/10 rounded-2xl px-6 py-4 hover:bg-white/5 w-full justify-center"
+                className="mt-2 flex items-center gap-3 text-[10px] font-black text-white/40 hover:text-white transition-all uppercase tracking-widest border border-dashed border-white/10 rounded-2xl px-6 py-4 hover:bg-white/5 w-full justify-center"
             >
                 <Plus size={16} />
                 Introduce yourself (Add Bio)

@@ -126,7 +126,7 @@ export default function TenantInformationPage() {
                         <ThemeToggle />
                         <Link
                             href="/login"
-                            className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-colors"
+                            className="flex items-center gap-2 text-sm font-black text-muted-foreground hover:text-foreground transition-colors"
                         >
                             <ArrowLeft className="size-4" />
                             Back to Login
@@ -148,13 +148,13 @@ export default function TenantInformationPage() {
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ delay: 0.2 }}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-bold uppercase tracking-widest mb-8"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-black uppercase tracking-widest mb-8"
                     >
                         <Lock className="size-3.5" />
                         Private Residency — Invite Only
                     </motion.div>
 
-                    <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] mb-6">
+                    <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.1] mb-6">
                         Your all-in-one<br />
                         <span className="text-primary">resident hub</span>
                     </h1>
@@ -165,14 +165,14 @@ export default function TenantInformationPage() {
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                         <Link
                             href="/apply"
-                            className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-base shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all hover:-translate-y-0.5"
+                            className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-primary text-primary-foreground font-black text-base shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all hover:-translate-y-0.5"
                         >
                             I have an invite
                             <ArrowRight className="size-5" />
                         </Link>
                         <a
                             href="#features"
-                            className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl border border-border bg-card text-foreground font-bold text-base hover:bg-muted transition-all"
+                            className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl border border-border bg-card text-foreground font-black text-base hover:bg-muted transition-all"
                         >
                             See what's included
                             <ChevronRight className="size-5" />
@@ -188,7 +188,7 @@ export default function TenantInformationPage() {
                     className="mb-20"
                 >
                     <div className="text-center mb-12">
-                        <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
+                        <h2 className="text-3xl sm:text-4xl font-black tracking-tight mb-4">
                             Getting started is simple
                         </h2>
                         <p className="text-muted-foreground text-lg max-w-xl mx-auto">
@@ -205,14 +205,14 @@ export default function TenantInformationPage() {
                                 transition={{ delay: 0.3 + idx * 0.1 }}
                                 className="relative rounded-3xl border border-border bg-card p-8 shadow-sm"
                             >
-                                <div className="absolute -top-4 left-8 px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-bold uppercase tracking-widest">
+                                <div className="absolute -top-4 left-8 px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-black uppercase tracking-widest">
                                     Step {step.number}
                                 </div>
                                 <div className="mt-4">
                                     <div className="size-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-6">
                                         <step.icon className="size-6" />
                                     </div>
-                                    <h3 className="text-xl font-bold tracking-tight mb-3">{step.title}</h3>
+                                    <h3 className="text-xl font-black tracking-tight mb-3">{step.title}</h3>
                                     <p className="text-muted-foreground">{step.description}</p>
                                 </div>
                             </motion.div>
@@ -229,7 +229,7 @@ export default function TenantInformationPage() {
                     className="mb-20"
                 >
                     <div className="text-center mb-12">
-                        <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
+                        <h2 className="text-3xl sm:text-4xl font-black tracking-tight mb-4">
                             Everything you need, one platform
                         </h2>
                         <p className="text-muted-foreground text-lg max-w-xl mx-auto">
@@ -244,7 +244,7 @@ export default function TenantInformationPage() {
                                 key={category.title}
                                 onClick={() => setActiveCategory(idx)}
                                 className={cn(
-                                    "inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all",
+                                    "inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black transition-all",
                                     activeCategory === idx
                                         ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
                                         : "bg-card border border-border text-muted-foreground hover:text-foreground hover:bg-muted"
@@ -281,7 +281,7 @@ export default function TenantInformationPage() {
                                     >
                                         <feature.icon className="size-5" />
                                     </div>
-                                    <h4 className="font-bold mb-1">{feature.label}</h4>
+                                    <h4 className="font-black mb-1">{feature.label}</h4>
                                     <p className="text-sm text-muted-foreground">{feature.desc}</p>
                                 </div>
                             ))}
@@ -296,11 +296,11 @@ export default function TenantInformationPage() {
                     transition={{ duration: 0.6, delay: 0.4 }}
                     className="rounded-[2rem] border border-border bg-card p-10 sm:p-14 text-center shadow-sm"
                 >
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold uppercase tracking-widest mb-6">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-black uppercase tracking-widest mb-6">
                         <CheckCircle2 className="size-3.5" />
                         Invite Only Community
                     </div>
-                    <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
+                    <h2 className="text-3xl sm:text-4xl font-black tracking-tight mb-4">
                         Ready to get started?
                     </h2>
                     <p className="text-muted-foreground text-lg max-w-xl mx-auto mb-8">
@@ -308,7 +308,7 @@ export default function TenantInformationPage() {
                     </p>
                     <Link
                         href="/login"
-                        className="inline-flex items-center gap-2 px-10 py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-lg shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all hover:-translate-y-0.5"
+                        className="inline-flex items-center gap-2 px-10 py-4 rounded-2xl bg-primary text-primary-foreground font-black text-lg shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all hover:-translate-y-0.5"
                     >
                         Access Resident Portal
                         <ArrowRight className="size-5" />

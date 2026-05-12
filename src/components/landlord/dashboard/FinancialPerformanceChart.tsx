@@ -221,7 +221,7 @@ export function FinancialPerformanceChart({ dataByWindow }: FinancialPerformance
                     <button
                         onClick={() => setActiveTab("earnings")}
                         className={cn(
-                            "text-[10px] font-bold uppercase tracking-[0.25em] transition-all flex items-center gap-3 pb-3 relative",
+                            "text-[10px] font-black uppercase tracking-[0.25em] transition-all flex items-center gap-3 pb-3 relative",
                             activeTab === "earnings" ? "text-foreground" : "text-muted-foreground/60 hover:text-foreground"
                         )}
                     >
@@ -237,7 +237,7 @@ export function FinancialPerformanceChart({ dataByWindow }: FinancialPerformance
                     <button
                         onClick={() => setActiveTab("expenses")}
                         className={cn(
-                            "text-[10px] font-bold uppercase tracking-[0.25em] transition-all flex items-center gap-3 pb-3 relative",
+                            "text-[10px] font-black uppercase tracking-[0.25em] transition-all flex items-center gap-3 pb-3 relative",
                             activeTab === "expenses" ? "text-foreground" : "text-muted-foreground/60 hover:text-foreground"
                         )}
                     >
@@ -253,7 +253,7 @@ export function FinancialPerformanceChart({ dataByWindow }: FinancialPerformance
                     <button
                         onClick={() => setActiveTab("netIncome")}
                         className={cn(
-                            "text-[10px] font-bold uppercase tracking-[0.25em] transition-all flex items-center gap-3 pb-3 relative",
+                            "text-[10px] font-black uppercase tracking-[0.25em] transition-all flex items-center gap-3 pb-3 relative",
                             activeTab === "netIncome" ? "text-foreground" : "text-muted-foreground/60 hover:text-foreground"
                         )}
                     >
@@ -273,7 +273,7 @@ export function FinancialPerformanceChart({ dataByWindow }: FinancialPerformance
                     <select
                         value={timeWindow}
                         onChange={(e) => setTimeWindow(e.target.value as "week" | "month" | "year")}
-                        className="cursor-pointer appearance-none rounded-2xl border border-white/10 bg-card/80 py-2.5 pl-6 pr-8 text-[10px] font-bold uppercase tracking-[0.15em] text-foreground transition-all hover:bg-card hover:ring-1 hover:ring-primary/20 focus:outline-none min-w-[150px]"
+                        className="cursor-pointer appearance-none rounded-2xl border border-white/10 bg-card/80 py-2.5 pl-6 pr-8 text-[10px] font-black uppercase tracking-[0.15em] text-foreground transition-all hover:bg-card hover:ring-1 hover:ring-primary/20 focus:outline-none min-w-[150px]"
                     >
                         <option value="week">Weekly</option>
                         <option value="month">Monthly</option>

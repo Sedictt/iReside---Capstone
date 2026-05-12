@@ -116,10 +116,10 @@ export function OfficialReceipt({
                     isCompact ? "mb-4" : "mb-8"
                 )}>
                     <h1 className={cn(
-                        "font-bold tracking-tighter mb-1",
+                        "font-black tracking-tighter mb-1",
                         isCompact ? "text-lg" : "text-xl"
                     )}>iReside</h1>
-                    <p className="text-[10px] font-bold uppercase tracking-widest opacity-60">Payment Confirmation</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Payment Confirmation</p>
                     {loading && (
                         <div className="absolute -top-1 right-0">
                             <div className="size-2 rounded-full bg-primary animate-ping" />
@@ -134,39 +134,39 @@ export function OfficialReceipt({
                 )}>
                     <div className="flex justify-between gap-4">
                         <span className="shrink-0 opacity-60">Invoice #:</span>
-                        <span className="text-right truncate max-w-[150px] font-bold">{displayData.invoiceId}</span>
+                        <span className="text-right truncate max-w-[150px] font-black">{displayData.invoiceId}</span>
                     </div>
                     <div className="flex justify-between gap-4">
                         <span className="shrink-0 opacity-60">Date:</span>
-                        <span className="text-right font-bold">{displayData.date}</span>
+                        <span className="text-right font-black">{displayData.date}</span>
                     </div>
                     
                     <div className="flex justify-between gap-4">
                         <span className="shrink-0 opacity-60">Landlord:</span>
-                        <span className="text-right font-bold uppercase">{displayData.landlordName}</span>
+                        <span className="text-right font-black uppercase">{displayData.landlordName}</span>
                     </div>
                     <div className="flex justify-between gap-4">
                         <span className="shrink-0 opacity-60">Property:</span>
-                        <span className="text-right font-bold uppercase">{displayData.propertyName}</span>
+                        <span className="text-right font-black uppercase">{displayData.propertyName}</span>
                     </div>
 
                     <div className="my-4 border-t border-zinc-100" />
 
                     <div className="flex justify-between gap-4">
                         <span className="shrink-0 opacity-60">Tenant:</span>
-                        <span className="text-right font-bold uppercase">{displayData.tenantName}</span>
+                        <span className="text-right font-black uppercase">{displayData.tenantName}</span>
                     </div>
                     <div className="flex justify-between gap-4">
                         <span className="shrink-0 opacity-60">Unit:</span>
-                        <span className="text-right font-bold">{displayData.unit}</span>
+                        <span className="text-right font-black">{displayData.unit}</span>
                     </div>
                     <div className="flex justify-between gap-4">
                         <span className="shrink-0 opacity-60">Description:</span>
-                        <span className="text-right font-bold">{displayData.description}</span>
+                        <span className="text-right font-black">{displayData.description}</span>
                     </div>
                     <div className="flex justify-between gap-4">
                         <span className="shrink-0 opacity-60">Status:</span>
-                        <span className="px-1.5 py-0.5 bg-zinc-900 text-white text-[9px] font-bold uppercase tracking-wider">
+                        <span className="px-1.5 py-0.5 bg-zinc-900 text-white text-[9px] font-black uppercase tracking-wider">
                             {displayData.status}
                         </span>
                     </div>
@@ -184,7 +184,7 @@ export function OfficialReceipt({
                     isCompact ? "mb-4" : "mb-8"
                 )}>
                     <div className={cn(
-                        "flex justify-between font-bold",
+                        "flex justify-between font-black",
                         isCompact ? "text-xs" : "text-sm"
                     )}>
                         <span>TOTAL AMOUNT:</span>
@@ -198,7 +198,7 @@ export function OfficialReceipt({
                         <button
                             disabled={isDownloading}
                             onClick={() => onDownload?.(`receipt-${message.id}`, `Receipt-${displayData.invoiceId}`)}
-                            className="text-[10px] font-bold underline hover:no-underline uppercase tracking-tighter disabled:opacity-50"
+                            className="text-[10px] font-black underline hover:no-underline uppercase tracking-tighter disabled:opacity-50"
                         >
                             {isDownloading ? "Saving..." : "Save as Photo"}
                         </button>

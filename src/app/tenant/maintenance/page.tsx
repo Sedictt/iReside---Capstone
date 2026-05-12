@@ -242,30 +242,30 @@ export default function TenantMaintenancePage() {
         <div className="flex-1 w-full max-w-6xl mx-auto">
             {previewMode && (
                 <div className="mb-6 p-4 bg-primary/10 border border-primary/20 rounded-2xl flex flex-wrap items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
-                    <span className="text-sm font-bold text-primary uppercase tracking-widest flex items-center gap-2">
+                    <span className="text-sm font-black text-primary uppercase tracking-widest flex items-center gap-2">
                         <Zap className="size-4" />
                         Preview Mode Active
                     </span>
                     <div className="flex flex-wrap gap-2">
-                        <Link href="/tenant/maintenance?preview=accepted_self_repair" className={cn("text-[10px] sm:text-xs font-bold border px-3 py-1.5 rounded-lg transition-colors", previewMode === "accepted_self_repair" ? "bg-primary text-primary-foreground border-primary" : "bg-background text-foreground border-border hover:bg-muted")}>
+                        <Link href="/tenant/maintenance?preview=accepted_self_repair" className={cn("text-[10px] sm:text-xs font-black border px-3 py-1.5 rounded-lg transition-colors", previewMode === "accepted_self_repair" ? "bg-primary text-primary-foreground border-primary" : "bg-background text-foreground border-border hover:bg-muted")}>
                             Self-Repair (Approved)
                         </Link>
-                        <Link href="/tenant/maintenance?preview=asking_for_photo" className={cn("text-[10px] sm:text-xs font-bold border px-3 py-1.5 rounded-lg transition-colors", previewMode === "asking_for_photo" ? "bg-primary text-primary-foreground border-primary" : "bg-background text-foreground border-border hover:bg-muted")}>
+                        <Link href="/tenant/maintenance?preview=asking_for_photo" className={cn("text-[10px] sm:text-xs font-black border px-3 py-1.5 rounded-lg transition-colors", previewMode === "asking_for_photo" ? "bg-primary text-primary-foreground border-primary" : "bg-background text-foreground border-border hover:bg-muted")}>
                             Self-Repair (Photo)
                         </Link>
-                        <Link href="/tenant/maintenance?preview=rejected_self_repair" className={cn("text-[10px] sm:text-xs font-bold border px-3 py-1.5 rounded-lg transition-colors", previewMode === "rejected_self_repair" ? "bg-primary text-primary-foreground border-primary" : "bg-background text-foreground border-border hover:bg-muted")}>
+                        <Link href="/tenant/maintenance?preview=rejected_self_repair" className={cn("text-[10px] sm:text-xs font-black border px-3 py-1.5 rounded-lg transition-colors", previewMode === "rejected_self_repair" ? "bg-primary text-primary-foreground border-primary" : "bg-background text-foreground border-border hover:bg-muted")}>
                             Self-Repair (Denied)
                         </Link>
-                        <Link href="/tenant/maintenance?preview=landlord_repair" className={cn("text-[10px] sm:text-xs font-bold border px-3 py-1.5 rounded-lg transition-colors", previewMode === "landlord_repair" ? "bg-primary text-primary-foreground border-primary" : "bg-background text-foreground border-border hover:bg-muted")}>
+                        <Link href="/tenant/maintenance?preview=landlord_repair" className={cn("text-[10px] sm:text-xs font-black border px-3 py-1.5 rounded-lg transition-colors", previewMode === "landlord_repair" ? "bg-primary text-primary-foreground border-primary" : "bg-background text-foreground border-border hover:bg-muted")}>
                             Landlord Repair
                         </Link>
-                        <Link href="/tenant/maintenance?preview=third_party_repair" className={cn("text-[10px] sm:text-xs font-bold border px-3 py-1.5 rounded-lg transition-colors", previewMode === "third_party_repair" ? "bg-primary text-primary-foreground border-primary" : "bg-background text-foreground border-border hover:bg-muted")}>
+                        <Link href="/tenant/maintenance?preview=third_party_repair" className={cn("text-[10px] sm:text-xs font-black border px-3 py-1.5 rounded-lg transition-colors", previewMode === "third_party_repair" ? "bg-primary text-primary-foreground border-primary" : "bg-background text-foreground border-border hover:bg-muted")}>
                             Third-Party Repair
                         </Link>
-                        <Link href="/tenant/maintenance?preview=resolved" className={cn("text-[10px] sm:text-xs font-bold border px-3 py-1.5 rounded-lg transition-colors", previewMode === "resolved" ? "bg-primary text-primary-foreground border-primary" : "bg-background text-foreground border-border hover:bg-muted")}>
+                        <Link href="/tenant/maintenance?preview=resolved" className={cn("text-[10px] sm:text-xs font-black border px-3 py-1.5 rounded-lg transition-colors", previewMode === "resolved" ? "bg-primary text-primary-foreground border-primary" : "bg-background text-foreground border-border hover:bg-muted")}>
                             Resolved
                         </Link>
-                        <Link href="/tenant/maintenance" className="text-[10px] sm:text-xs font-bold bg-background border border-border px-3 py-1.5 rounded-lg hover:bg-muted transition-colors text-red-500 hover:text-red-600">
+                        <Link href="/tenant/maintenance" className="text-[10px] sm:text-xs font-black bg-background border border-border px-3 py-1.5 rounded-lg hover:bg-muted transition-colors text-red-500 hover:text-red-600">
                             Clear Preview
                         </Link>
                     </div>
@@ -274,7 +274,7 @@ export default function TenantMaintenancePage() {
 
             <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
+                    <h1 className="text-3xl font-black tracking-tight flex items-center gap-3">
                         <Wrench className="size-8 text-primary" />
                         Maintenance Requests
                     </h1>
@@ -284,7 +284,7 @@ export default function TenantMaintenancePage() {
                 </div>
                 <Link
                     href="/tenant/maintenance/new"
-                    className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-2xl font-bold hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all active:scale-95 w-fit"
+                    className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-2xl font-black hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all active:scale-95 w-fit"
                 >
                     <Plus className="size-5" />
                     New Request
@@ -299,7 +299,7 @@ export default function TenantMaintenancePage() {
                         key={t}
                         onClick={() => setFilter(t)}
                         className={cn(
-                            "px-4 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap border",
+                            "px-4 py-2 rounded-xl text-sm font-black transition-all whitespace-nowrap border",
                             filter === t
                                 ? "bg-primary text-primary-foreground border-primary shadow-md"
                                 : "bg-card border-border text-muted-foreground hover:border-primary/30"
@@ -319,14 +319,14 @@ export default function TenantMaintenancePage() {
             ) : error ? (
                 <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-8 text-center">
                     <AlertTriangle className="size-10 text-red-500 mx-auto mb-4" />
-                    <p className="text-red-500 font-bold">{error}</p>
+                    <p className="text-red-500 font-black">{error}</p>
                 </div>
             ) : filteredRequests.length === 0 ? (
                 <div className="bg-card border border-border border-dashed rounded-3xl p-12 text-center">
                     <div className="size-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
                         <CheckCircle2 className="size-10 text-muted-foreground" />
                     </div>
-                    <h3 className="text-xl font-bold mb-2">No requests found</h3>
+                    <h3 className="text-xl font-black mb-2">No requests found</h3>
                     <p className="text-muted-foreground max-w-xs mx-auto mb-8">
                         {filter === 'All' 
                             ? "You haven't submitted any maintenance requests yet."
@@ -336,7 +336,7 @@ export default function TenantMaintenancePage() {
                     {filter === 'All' && (
                         <Link
                             href="/tenant/maintenance/new"
-                            className="inline-flex items-center gap-2 text-primary font-bold hover:underline"
+                            className="inline-flex items-center gap-2 text-primary font-black hover:underline"
                         >
                             Submit your first request
                             <ArrowRight className="size-4" />
@@ -389,7 +389,7 @@ function TenantMaintenanceCard({ request, onClick }: { request: MaintenanceReque
 
                         {/* Multiple Images Indicator */}
                         {request.images.length > 1 && (
-                            <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded-md flex items-center gap-1 text-[10px] font-bold text-white border border-white/10 shadow-sm">
+                            <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded-md flex items-center gap-1 text-[10px] font-black text-white border border-white/10 shadow-sm">
                                 <ImageIcon className="size-3" />
                                 +{request.images.length - 1}
                             </div>
@@ -420,13 +420,13 @@ function TenantMaintenanceCard({ request, onClick }: { request: MaintenanceReque
             {/* Content Area */}
             <div className="p-4 flex flex-col flex-1 bg-gradient-to-b from-card via-card to-muted/5 pb-2">
                 {/* Header & Meta */}
-                <div className="flex items-center justify-between mb-2 text-[10px] font-bold text-muted-foreground/60 tracking-wider uppercase shrink-0">
+                <div className="flex items-center justify-between mb-2 text-[10px] font-black text-muted-foreground/60 tracking-wider uppercase shrink-0">
                     <span className="truncate max-w-[120px]">ID: {request.id.split('-')[0]}...</span>
                 </div>
 
                 {/* Title */}
                 <div className="mb-4 shrink-0">
-                    <h3 className="text-base font-bold text-foreground group-hover:text-primary transition-colors line-clamp-1 leading-tight tracking-tight">
+                    <h3 className="text-base font-black text-foreground group-hover:text-primary transition-colors line-clamp-1 leading-tight tracking-tight">
                         {request.title}
                     </h3>
                 </div>
@@ -435,13 +435,13 @@ function TenantMaintenanceCard({ request, onClick }: { request: MaintenanceReque
                 <div className="flex flex-col gap-2 mb-4 shrink-0">
                     <div className="flex items-center gap-1.5 text-muted-foreground">
                         <Home className="size-3 shrink-0" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest truncate">
+                        <span className="text-[10px] font-black uppercase tracking-widest truncate">
                             {request.property}
                         </span>
                     </div>
                     <div className="flex items-center gap-1.5 text-primary/80">
                         <Zap className="size-3 shrink-0" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest">
+                        <span className="text-[10px] font-black uppercase tracking-widest">
                             {request.unit}
                         </span>
                     </div>
@@ -451,13 +451,13 @@ function TenantMaintenanceCard({ request, onClick }: { request: MaintenanceReque
                 {request.photoRequested && request.status === "In Progress" && (!request.tenantProvidedPhotos || request.tenantProvidedPhotos.length === 0) && (
                     <div className="mb-4 shrink-0 flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-lg w-fit">
                         <div className="size-1.5 rounded-full bg-amber-500 animate-pulse" />
-                        <span className="text-xs font-bold text-amber-700 dark:text-amber-400">Action Required: Upload Photo</span>
+                        <span className="text-xs font-black text-amber-700 dark:text-amber-400">Action Required: Upload Photo</span>
                     </div>
                 )}
                 {request.repairMethod === "third_party" && request.status === "In Progress" && request.tenantRepairStatus === "done" && (!request.tenantProvidedPhotos || request.tenantProvidedPhotos.length === 0) && (
                     <div className="mb-4 shrink-0 flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-lg w-fit">
                         <div className="size-1.5 rounded-full bg-amber-500 animate-pulse" />
-                        <span className="text-xs font-bold text-amber-700 dark:text-amber-400">Action Required: Upload Photo</span>
+                        <span className="text-xs font-black text-amber-700 dark:text-amber-400">Action Required: Upload Photo</span>
                     </div>
                 )}
 
@@ -466,7 +466,7 @@ function TenantMaintenanceCard({ request, onClick }: { request: MaintenanceReque
 
                 {/* Footer Info */}
                 <div className="flex items-center justify-between gap-4 shrink-0 pt-4 border-t border-border/50 mt-auto">
-                    <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 min-w-0">
+                    <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 min-w-0">
                         <Clock className="size-3.5 shrink-0" />
                         <span className="truncate">{request.reportedAt}</span>
                     </div>
@@ -475,7 +475,7 @@ function TenantMaintenanceCard({ request, onClick }: { request: MaintenanceReque
                             e.stopPropagation();
                             onClick?.();
                         }}
-                        className="text-[10px] font-bold uppercase tracking-widest text-primary hover:text-white hover:bg-primary bg-primary/10 border border-primary/20 px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 whitespace-nowrap shadow-sm group/btn active:scale-95"
+                        className="text-[10px] font-black uppercase tracking-widest text-primary hover:text-white hover:bg-primary bg-primary/10 border border-primary/20 px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 whitespace-nowrap shadow-sm group/btn active:scale-95"
                     >
                         Details
                         <ArrowRight className="size-3.5 transition-transform group-hover/btn:translate-x-0.5" />
@@ -501,7 +501,7 @@ function PriorityBadge({ priority }: { priority: Priority }) {
 
     return (
         <span className={cn(
-            "px-2.5 py-1 rounded-lg border text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5",
+            "px-2.5 py-1 rounded-lg border text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5",
             config[priority]
         )}>
             {priority === "Critical" && <AlertTriangle className="size-3" />}
@@ -536,7 +536,7 @@ function StatusBadge({ status, tenantRepairStatus, isSelfRepair }: { status: Mai
 
     return (
         <span className={cn(
-            "px-2.5 py-1 rounded-lg border text-[10px] font-bold uppercase tracking-wider",
+            "px-2.5 py-1 rounded-lg border text-[10px] font-black uppercase tracking-wider",
             customClass
         )}>
             {displayStatus}

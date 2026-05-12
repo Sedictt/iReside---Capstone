@@ -29,7 +29,7 @@ export function MessageFab() {
                         <Sparkles className="size-2.5 text-yellow-300 animate-pulse" />
                     </div>
                 </div>
-                <span className="font-bold text-sm pr-1">Chat with iRis</span>
+                <span className="font-black text-sm pr-1">Chat with iRis</span>
             </button>
 
             <ChatWidget

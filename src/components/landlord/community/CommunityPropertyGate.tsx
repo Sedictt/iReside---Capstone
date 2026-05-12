@@ -23,7 +23,7 @@ export function CommunityPropertyGate() {
         return (
             <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-surface-0 via-background to-emerald-100/40 px-6 text-foreground dark:from-[#06070b] dark:via-[#0d1118] dark:to-[#08221a]">
                 <div className="w-full max-w-xl rounded-3xl border border-border/60 bg-card/85 p-8 shadow-2xl backdrop-blur">
-                    <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/70 px-3 py-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/70 px-3 py-1 text-xs font-black uppercase tracking-wider text-muted-foreground">
                         <Building2 className="size-3.5" />
                         Community Hub
                     </div>
@@ -33,7 +33,7 @@ export function CommunityPropertyGate() {
                     </p>
                     <Link
                         href="/landlord/properties"
-                        className="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground transition hover:brightness-110"
+                        className="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-black text-primary-foreground transition hover:brightness-110"
                     >
                         Go to Properties
                         <ArrowRight className="size-4" />
@@ -58,7 +58,7 @@ export function CommunityPropertyGate() {
                     transition={{ duration: 0.35 }}
                     className="mb-10 max-w-3xl"
                 >
-                    <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/70 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground backdrop-blur">
+                    <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/70 px-4 py-1.5 text-xs font-black uppercase tracking-[0.16em] text-muted-foreground backdrop-blur">
                         <Sparkles className="size-3.5 text-emerald-500" />
                         Choose a Property
                     </div>
@@ -100,7 +100,7 @@ export function CommunityPropertyGate() {
                                         </div>
                                     )}
                                     <div className="absolute inset-0 bg-gradient-to-t from-card/90 via-card/20 to-transparent dark:from-[#0b1117]/95" />
-                                    <div className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full border border-white/30 bg-black/25 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-white backdrop-blur">
+                                    <div className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full border border-white/30 bg-black/25 px-3 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-white backdrop-blur">
                                         <Megaphone className="size-3.5" />
                                         Community
                                     </div>
@@ -117,19 +117,19 @@ export function CommunityPropertyGate() {
 
                                     <div className="grid grid-cols-2 gap-2">
                                         <div className="rounded-xl border border-border/60 bg-background/60 px-3 py-2">
-                                            <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Units</p>
-                                            <p className="mt-1 flex items-center gap-1 text-sm font-bold text-foreground">
+                                            <p className="text-[10px] font-black uppercase tracking-wide text-muted-foreground">Units</p>
+                                            <p className="mt-1 flex items-center gap-1 text-sm font-black text-foreground">
                                                 <Home className="size-3.5 text-emerald-500" />
                                                 {unitCount}
                                             </p>
                                         </div>
                                         <div className="rounded-xl border border-border/60 bg-background/60 px-3 py-2">
-                                            <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Occupied</p>
-                                            <p className="mt-1 text-sm font-bold text-foreground">{occupiedUnits}</p>
+                                            <p className="text-[10px] font-black uppercase tracking-wide text-muted-foreground">Occupied</p>
+                                            <p className="mt-1 text-sm font-black text-foreground">{occupiedUnits}</p>
                                         </div>
                                     </div>
 
-                                    <div className="inline-flex items-center gap-2 text-sm font-bold text-primary transition-transform duration-300 group-hover:translate-x-1">
+                                    <div className="inline-flex items-center gap-2 text-sm font-black text-primary transition-transform duration-300 group-hover:translate-x-1">
                                         Open this property
                                         <ArrowRight className="size-4" />
                                     </div>

@@ -96,8 +96,8 @@ export function MessageComposer({
                             <span className="size-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]" />
                             <span className="size-1.5 rounded-full bg-primary animate-bounce" />
                         </div>
-                        <span className="text-[10px] font-bold text-primary uppercase tracking-wider">
-                            {otherUserName || "Someone"} is typing...
+                        <span className="text-[10px] font-black text-primary uppercase tracking-wider">
+                            {otherUserName || "Someone"} is typing…
                         </span>
                     </motion.div>
                 )}
@@ -126,7 +126,7 @@ export function MessageComposer({
                                         {att.status === 'uploading' && (
                                             <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[1px]">
                                                 <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                                <span className="absolute bottom-1 text-[8px] font-bold text-white">{att.progress}%</span>
+                                                <span className="absolute bottom-1 text-[8px] font-black text-white">{att.progress}%</span>
                                             </div>
                                         )}
 
@@ -148,7 +148,7 @@ export function MessageComposer({
                                     )}
                                     
                                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center pointer-events-none">
-                                        <span className="text-[8px] text-white font-bold uppercase truncate px-1 max-w-full">
+                                        <span className="text-[8px] text-white font-black uppercase truncate px-1 max-w-full">
                                             {att.file.name.split('.').pop()}
                                         </span>
                                     </div>
@@ -183,7 +183,7 @@ export function MessageComposer({
                         value={messageInput}
                         onChange={(e) => setMessageInput(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        placeholder={pendingAttachments.length > 0 ? "Add a caption..." : "Type a message..."}
+                        placeholder={pendingAttachments.length > 0 ? "Add a caption…" : "Type a message…"}
                         className="flex-1 bg-transparent border-none focus:ring-0 text-sm py-2.5 max-h-[120px] resize-none text-high placeholder:text-disabled appearance-none shadow-none"
                         style={{ outline: 'none', border: 'none', boxShadow: 'none' }}
                         rows={1}
@@ -236,14 +236,14 @@ export function MessageComposer({
                 </div>
                 
                 <div className="flex items-center justify-between px-2">
-                    <div className="flex items-center gap-4 text-[10px] font-bold text-disabled uppercase tracking-widest">
+                    <div className="flex items-center gap-4 text-[10px] font-black text-disabled uppercase tracking-widest">
                         {isUploadingFile ? (
                             <span className="text-primary animate-pulse flex items-center gap-2">
                                 <Zap className="size-3" />
-                                Processing uploads...
+                                Processing uploads…
                             </span>
                         ) : pendingAttachments.length > 0 ? (
-                            <span className="text-primary font-bold">
+                            <span className="text-primary font-black">
                                 {pendingAttachments.length} {pendingAttachments.length === 1 ? 'file' : 'files'} selected
                             </span>
                         ) : (

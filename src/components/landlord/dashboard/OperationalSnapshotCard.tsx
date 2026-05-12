@@ -56,7 +56,7 @@ export function OperationalSnapshotCard({
                     <div className="flex items-start justify-between gap-6">
                         <div className="space-y-4">
                             <div className={cn(
-                                "inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] shadow-sm", 
+                                "inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] shadow-sm", 
                                 statusStyles[status]
                             )}>
                                 <div className={cn(
@@ -67,10 +67,10 @@ export function OperationalSnapshotCard({
                                 {status}
                             </div>
                             <div>
-                                <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                                <p className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">
                                     {simplifiedMode ? "OPERATIONS SUMMARY" : "OPERATIONAL SNAPSHOT"}
                                 </p>
-                                <h3 className="mt-3 text-3xl font-bold tracking-tight text-foreground leading-tight">{headline}</h3>
+                                <h3 className="mt-3 text-3xl font-black tracking-tight text-foreground leading-tight">{headline}</h3>
                             </div>
                         </div>
 
@@ -95,14 +95,14 @@ export function OperationalSnapshotCard({
                                 >
                                     <div className="relative z-10 flex items-start justify-between gap-3">
                                         <div>
-                                            <p className="text-[10px] font-bold uppercase tracking-[0.15em] opacity-70">{metric.label}</p>
-                                            <p className="mt-2 text-3xl font-bold tracking-tight">{metric.value}</p>
+                                            <p className="text-[10px] font-black uppercase tracking-[0.15em] opacity-70">{metric.label}</p>
+                                            <p className="mt-2 text-3xl font-black tracking-tight">{metric.value}</p>
                                         </div>
                                         <div className="rounded-xl bg-card/50 p-2.5 text-current shadow-sm border border-border">
                                             <Icon className="size-4" />
                                         </div>
                                     </div>
-                                    <p className="relative z-10 mt-5 text-[11px] font-bold uppercase tracking-wider opacity-70">{metric.detail}</p>
+                                    <p className="relative z-10 mt-5 text-[11px] font-black uppercase tracking-wider opacity-70">{metric.detail}</p>
                                 </div>
                             );
                         })}

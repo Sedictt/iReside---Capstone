@@ -66,10 +66,10 @@ export const TransferRequestModal = ({
                                     <span className="material-icons-round text-3xl">move_down</span>
                                 </div>
                                 <div>
-                                    <h2 className="text-2xl font-bold tracking-tight text-foreground">
+                                    <h2 className="text-2xl font-black tracking-tight text-foreground">
                                         Transfer Request
                                     </h2>
-                                    <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Target Unit {unit.name}</p>
+                                    <p className="text-sm font-black text-muted-foreground uppercase tracking-widest">Target Unit {unit.name}</p>
                                 </div>
                             </div>
 
@@ -82,19 +82,19 @@ export const TransferRequestModal = ({
                                     <div className="size-20 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500 mb-6">
                                         <span className="material-icons-round text-5xl">check_circle</span>
                                     </div>
-                                    <h3 className="text-xl font-bold text-foreground mb-2">Request Submitted</h3>
+                                    <h3 className="text-xl font-black text-foreground mb-2">Request Submitted</h3>
                                     <p className="text-muted-foreground">Your transfer request for Unit {unit.name} has been sent to the administration for review.</p>
                                 </motion.div>
                             ) : (
                                 <form onSubmit={onSubmit} className="space-y-8">
                                     <div className="p-5 rounded-2xl bg-muted/30 border border-border">
                                         <p className="text-sm text-muted-foreground leading-relaxed">
-                                            You are requesting to transfer your current lease to <span className="font-bold text-foreground">Unit {unit.name}</span>. This request is subject to eligibility checks and landlord approval.
+                                            You are requesting to transfer your current lease to <span className="font-black text-foreground">Unit {unit.name}</span>. This request is subject to eligibility checks and landlord approval.
                                         </p>
                                     </div>
 
                                     <div className="space-y-3">
-                                        <label className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground ml-1">Transfer Justification</label>
+                                        <label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Transfer Justification</label>
                                         <textarea
                                             required
                                             value={reason}
@@ -107,14 +107,14 @@ export const TransferRequestModal = ({
                                     {error && (
                                         <div className="flex items-center gap-3 p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500">
                                             <span className="material-icons-round text-lg">error_outline</span>
-                                            <p className="text-xs font-bold">{error}</p>
+                                            <p className="text-xs font-black">{error}</p>
                                         </div>
                                     )}
 
                                     <button
                                         type="submit"
                                         disabled={isSubmitting}
-                                        className="w-full py-5 rounded-2xl bg-primary text-primary-foreground text-sm font-bold uppercase tracking-[0.2em] transition-all hover:opacity-90 active:scale-[0.98] shadow-xl shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                                        className="w-full py-5 rounded-2xl bg-primary text-primary-foreground text-sm font-black uppercase tracking-[0.2em] transition-all hover:opacity-90 active:scale-[0.98] shadow-xl shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
                                     >
                                         {isSubmitting ? (
                                             <>

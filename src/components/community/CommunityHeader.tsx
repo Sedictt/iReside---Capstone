@@ -63,7 +63,7 @@ export function CommunityHeader({
                 
                 <div className="relative z-10 flex flex-col gap-8 xl:flex-row xl:items-start xl:justify-between">
                     <div className="space-y-4">
-                        <h1 className="text-4xl font-bold tracking-tight text-foreground md:text-5xl dark:text-white">
+                        <h1 className="text-4xl font-black tracking-tight text-foreground md:text-5xl dark:text-white">
                             {title}
                         </h1>
                         <p className="max-w-2xl text-lg font-light text-muted-foreground dark:text-white/60">
@@ -160,7 +160,7 @@ export function CommunityHeader({
                                     {profile?.avatar_url ? (
                                         <Image src={profile.avatar_url} alt="Profile" fill className="object-cover" />
                                     ) : (
-                                        <span className="font-bold text-foreground dark:text-white">{userInitial}</span>
+                                        <span className="font-black text-foreground dark:text-white">{userInitial}</span>
                                     )}
                                 </div>
                             </div>
@@ -216,7 +216,7 @@ function TabButton({ active, onClick, icon: Icon, label, badge }: TabButtonProps
             <span className="relative">
                 {label}
                 {badge !== undefined && badge > 0 && (
-                    <span className="absolute -top-1 -right-5 flex size-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white animate-in fade-in zoom-in-75">
+                    <span className="absolute -top-1 -right-5 flex size-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 text-[10px] font-black text-white animate-in fade-in zoom-in-75">
                         {badge > 99 ? '99+' : badge}
                     </span>
                 )}

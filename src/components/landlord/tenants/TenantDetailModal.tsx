@@ -143,8 +143,8 @@ export function TenantDetailModal({ isOpen, onClose, tenantId, initialTab = 'pro
                                     )}
                                 </div>
                                 <div className="space-y-0.5">
-                                    <h2 className="text-xl font-bold tracking-tight text-foreground">{tenantInfo?.full_name || 'Resident Details'}</h2>
-                                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                                    <h2 className="text-xl font-black tracking-tight text-foreground">{tenantInfo?.full_name || 'Resident Details'}</h2>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
                                         {tenantInfo?.phone || 'Loading...'}
                                     </p>
                                 </div>
@@ -168,7 +168,7 @@ export function TenantDetailModal({ isOpen, onClose, tenantId, initialTab = 'pro
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id as 'profile' | 'documents' | 'activity')}
                                     className={cn(
-                                        "flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-widest transition-all",
+                                        "flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-black uppercase tracking-widest transition-all",
                                         activeTab === tab.id 
                                             ? "bg-foreground text-background shadow-md"
                                             : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -184,7 +184,7 @@ export function TenantDetailModal({ isOpen, onClose, tenantId, initialTab = 'pro
                             {loading ? (
                                 <div className="flex h-[300px] flex-col items-center justify-center gap-4">
                                     <Loader2 className="size-8 animate-spin text-primary" />
-                                    <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Gathering records...</p>
+                                    <p className="text-sm font-black text-muted-foreground uppercase tracking-widest">Gathering records...</p>
                                 </div>
                             ) : (
                                 <>
@@ -192,26 +192,26 @@ export function TenantDetailModal({ isOpen, onClose, tenantId, initialTab = 'pro
                                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                             <div className="grid gap-6 sm:grid-cols-2">
                                                 <div className="space-y-4 rounded-3xl border border-border bg-muted/20 p-6">
-                                                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-primary">Contact Information</h3>
+                                                    <h3 className="text-[10px] font-black uppercase tracking-widest text-primary">Contact Information</h3>
                                                     <div className="space-y-3">
                                                         <div className="flex items-center gap-3 text-sm">
                                                             <Mail className="size-4 text-muted-foreground" />
-                                                            <span className="font-bold">{tenantInfo?.email || 'N/A'}</span>
+                                                            <span className="font-black">{tenantInfo?.email || 'N/A'}</span>
                                                         </div>
                                                         <div className="flex items-center gap-3 text-sm">
                                                             <Phone className="size-4 text-muted-foreground" />
-                                                            <span className="font-bold">{tenantInfo?.phone || 'N/A'}</span>
+                                                            <span className="font-black">{tenantInfo?.phone || 'N/A'}</span>
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div className="space-y-4 rounded-3xl border border-border bg-muted/20 p-6">
-                                                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-primary">Trust Level</h3>
+                                                    <h3 className="text-[10px] font-black uppercase tracking-widest text-primary">Trust Level</h3>
                                                     <div className="flex items-center gap-4">
-                                                        <div className="size-12 rounded-full border-4 border-emerald-500/20 flex items-center justify-center text-emerald-500 font-bold text-xs">
+                                                        <div className="size-12 rounded-full border-4 border-emerald-500/20 flex items-center justify-center text-emerald-500 font-black text-xs">
                                                             98
                                                         </div>
                                                         <div>
-                                                            <p className="text-xs font-bold text-foreground">Verified Resident</p>
+                                                            <p className="text-xs font-black text-foreground">Verified Resident</p>
                                                             <p className="text-[10px] text-muted-foreground">Active on iReside since 2024</p>
                                                         </div>
                                                     </div>
@@ -219,7 +219,7 @@ export function TenantDetailModal({ isOpen, onClose, tenantId, initialTab = 'pro
                                             </div>
 
                                             <div className="space-y-4">
-                                                <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Recent History</h3>
+                                                <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Recent History</h3>
                                                 <div className="space-y-3">
                                                     {activities.slice(0, 3).map(activity => (
                                                         <div key={activity.id} className="flex items-center justify-between rounded-2xl border border-border bg-muted/10 p-4">
@@ -228,13 +228,13 @@ export function TenantDetailModal({ isOpen, onClose, tenantId, initialTab = 'pro
                                                                     {getIcon(activity.icon)}
                                                                 </div>
                                                                 <div>
-                                                                    <p className="text-sm font-bold text-foreground">{activity.title}</p>
+                                                                    <p className="text-sm font-black text-foreground">{activity.title}</p>
                                                                     <p className="text-[10px] text-muted-foreground">
                                                                         <ClientOnlyDate date={activity.date} />
                                                                     </p>
                                                                 </div>
                                                             </div>
-                                                            <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">{activity.status}</div>
+                                                            <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">{activity.status}</div>
                                                         </div>
                                                     ))}
                                                 </div>
@@ -247,7 +247,7 @@ export function TenantDetailModal({ isOpen, onClose, tenantId, initialTab = 'pro
                                             {documents.length === 0 ? (
                                                 <div className="flex flex-col items-center justify-center py-12 text-center">
                                                     <FileText className="size-12 text-muted-foreground/20 mb-4" />
-                                                    <p className="text-sm font-bold text-muted-foreground">No documents shared yet.</p>
+                                                    <p className="text-sm font-black text-muted-foreground">No documents shared yet.</p>
                                                 </div>
                                             ) : (
                                                 <div className="grid gap-4">
@@ -258,7 +258,7 @@ export function TenantDetailModal({ isOpen, onClose, tenantId, initialTab = 'pro
                                                                     <FileText className="size-6" />
                                                                 </div>
                                                                 <div>
-                                                                    <h4 className="text-sm font-bold text-foreground">{doc.name}</h4>
+                                                                    <h4 className="text-sm font-black text-foreground">{doc.name}</h4>
                                                                     <p className="text-xs text-muted-foreground">{doc.description}</p>
                                                                 </div>
                                                             </div>
@@ -272,7 +272,7 @@ export function TenantDetailModal({ isOpen, onClose, tenantId, initialTab = 'pro
                                                                     <ExternalLink className="size-4" />
                                                                 </a>
                                                             ) : (
-                                                                <span className="text-[10px] font-bold uppercase tracking-widest text-amber-500">Pending</span>
+                                                                <span className="text-[10px] font-black uppercase tracking-widest text-amber-500">Pending</span>
                                                             )}
                                                         </div>
                                                     ))}
@@ -294,14 +294,14 @@ export function TenantDetailModal({ isOpen, onClose, tenantId, initialTab = 'pro
                                                         </div>
                                                         <div className="space-y-1">
                                                             <div className="flex items-center justify-between">
-                                                                <p className="text-sm font-bold text-foreground">{activity.title}</p>
-                                                                <p className="text-[10px] font-bold text-muted-foreground">
+                                                                <p className="text-sm font-black text-foreground">{activity.title}</p>
+                                                                <p className="text-[10px] font-black text-muted-foreground">
                                                                     <ClientOnlyDate date={activity.date} format={{ month: 'short', day: 'numeric', year: 'numeric' }} />
                                                                 </p>
                                                             </div>
                                                             <p className="text-xs text-muted-foreground">{activity.status}</p>
                                                             {activity.amount && (
-                                                                <p className="text-xs font-bold text-emerald-600">₱{activity.amount.toLocaleString()}</p>
+                                                                <p className="text-xs font-black text-emerald-600">₱{activity.amount.toLocaleString()}</p>
                                                             )}
                                                         </div>
                                                     </div>
@@ -317,7 +317,7 @@ export function TenantDetailModal({ isOpen, onClose, tenantId, initialTab = 'pro
                         <div className="border-t border-border bg-muted/30 p-8 flex justify-end">
                             <button
                                 onClick={onClose}
-                                className="rounded-2xl bg-foreground px-8 py-3 text-sm font-bold text-background transition-all hover:bg-foreground/90 active:scale-95"
+                                className="rounded-2xl bg-foreground px-8 py-3 text-sm font-black text-background transition-all hover:bg-foreground/90 active:scale-95"
                             >
                                 Close View
                             </button>

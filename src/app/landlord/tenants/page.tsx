@@ -88,13 +88,13 @@ function TenantsContent() {
                 {/* Header Block */}
                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">Tenants Hub</h1>
+                        <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">Tenants Hub</h1>
                         <p className="mt-1 text-muted-foreground">Manage resident records and lease timelines across your portfolio.</p>
                     </div>
                     <div className="flex items-center gap-3">
                         <button 
                             onClick={() => setIsModalOpen(true)}
-                            className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 hover:shadow-md active:scale-95"
+                            className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-black text-primary-foreground shadow-sm transition-all hover:bg-primary/90 hover:shadow-md active:scale-95"
                         >
                             <UserPlus className="size-4" />
                             <span>Add New Tenant</span>
@@ -112,7 +112,7 @@ function TenantsContent() {
                             key={tab.id}
                             onClick={() => setTab(tab.id)}
                             className={cn(
-                                "flex items-center gap-2 px-6 py-4 text-sm font-bold uppercase tracking-widest transition-all relative",
+                                "flex items-center gap-2 px-6 py-4 text-sm font-black uppercase tracking-widest transition-all relative",
                                 currentTab === tab.id ? "text-primary" : "text-muted-foreground hover:text-foreground"
                             )}
                         >

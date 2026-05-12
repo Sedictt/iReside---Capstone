@@ -113,7 +113,7 @@ export function VisualCanvas({
                     onMouseDown={() => onUnitDragStart?.(unit.id)}
                 >
                     <div className="flex flex-col items-center justify-center h-full p-2">
-                        <span className="text-sm font-bold text-foreground">{unit.name}</span>
+                        <span className="text-sm font-black text-foreground">{unit.name}</span>
                         <span className="text-xs text-muted-foreground">{unit.bedrooms || 0}BR</span>
                         {unit.tenant && (
                             <span className="text-xs text-muted-foreground mt-1 truncate">

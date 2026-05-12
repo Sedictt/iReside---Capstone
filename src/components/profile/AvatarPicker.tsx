@@ -2,7 +2,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useMemo, useEffect } from "react";
+import { useReducer, useMemo, useEffect } from "react";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { X, Check, Upload, Loader2, RefreshCcw, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -29,25 +29,77 @@ const PRESET_COLORS = [
     "#dc2626", "#ea580c", "#d97706", "#059669", "#2563eb", "#4f46e5", "#7c3aed", "#c026d3", "#db2777", "#0891b2", "#52525b", "#262626"
 ];
 
+interface AvatarPickerState {
+    selectedAvatar: string | null;
+    selectedColor: string;
+    isUploading: boolean;
+    isUpdating: boolean;
+    error: string | null;
+    currentPage: number;
+}
+
+type AvatarPickerAction = 
+    | { type: "SET_AVATAR"; payload: string | null }
+    | { type: "SET_COLOR"; payload: string }
+    | { type: "SET_UPLOADING"; payload: boolean }
+    | { type: "SET_UPDATING"; payload: boolean }
+    | { type: "SET_ERROR"; payload: string | null }
+    | { type: "SET_PAGE"; payload: number }
+    | { type: "RESET_FROM_PROPS"; payload: { avatar: string | null; color: string | null } }
+    | { type: "RESET_ON_CLOSE" };
+
+function avatarPickerReducer(state: AvatarPickerState, action: AvatarPickerAction): AvatarPickerState {
+    switch (action.type) {
+        case "SET_AVATAR":
+            return { ...state, selectedAvatar: action.payload };
+        case "SET_COLOR":
+            return { ...state, selectedColor: action.payload };
+        case "SET_UPLOADING":
+            return { ...state, isUploading: action.payload };
+        case "SET_UPDATING":
+            return { ...state, isUpdating: action.payload };
+        case "SET_ERROR":
+            return { ...state, error: action.payload };
+        case "SET_PAGE":
+            return { ...state, currentPage: action.payload };
+        case "RESET_FROM_PROPS":
+            return {
+                ...state,
+                selectedAvatar: action.payload.avatar,
+                selectedColor: action.payload.color || "#171717"
+            };
+        case "RESET_ON_CLOSE":
+            return {
+                ...state,
+                isUpdating: false,
+                error: null
+            };
+        default:
+            return state;
+    }
+}
+
 export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor, onSelect, onProfileUpdate }: AvatarPickerProps) {
     const { profile, loading, refreshProfile } = useAuth();
-    const [selectedAvatar, setSelectedAvatar] = useState<string | null>(currentAvatarUrl);
-    const [selectedColor, setSelectedColor] = useState<string>(currentBgColor || "#171717");
-    const [isUploading, setIsUploading] = useState(false);
-    const [isUpdating, setIsUpdating] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [currentPage, setCurrentPage] = useState(0);
+    
+    const [state, dispatch] = useReducer(avatarPickerReducer, {
+        selectedAvatar: currentAvatarUrl,
+        selectedColor: currentBgColor || "#171717",
+        isUploading: false,
+        isUpdating: false,
+        error: null,
+        currentPage: 0
+    });
+    
     const supabase = createClient();
 
     // Sync local state when modal opens or props change
     useEffect(() => {
         if (isOpen) {
-            setSelectedAvatar(currentAvatarUrl);
-            setSelectedColor(currentBgColor || "#171717");
+            dispatch({ type: "RESET_FROM_PROPS", payload: { avatar: currentAvatarUrl, color: currentBgColor } });
         } else {
             // Reset state when closed to avoid "stuck" state if opened again
-            setIsUpdating(false);
-            setError(null);
+            dispatch({ type: "RESET_ON_CLOSE" });
         }
     }, [isOpen, currentAvatarUrl, currentBgColor]);
 
@@ -61,21 +113,21 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
     }, [defaultAvatars]);
     
     const paginatedAvatars = useMemo(() => {
-        if (currentPage === 0) {
+        if (state.currentPage === 0) {
             return defaultAvatars.slice(0, 3);
         }
-        const start = 3 + (currentPage - 1) * 4;
+        const start = 3 + (state.currentPage - 1) * 4;
         return defaultAvatars.slice(start, start + 4);
-    }, [currentPage, defaultAvatars]);
+    }, [state.currentPage, defaultAvatars]);
 
     const handleSave = async () => {
-        if (!selectedAvatar) {
+        if (!state.selectedAvatar) {
             toast.error("Please select an avatar first");
             return;
         }
         
         if (onSelect) {
-            onSelect(selectedAvatar, selectedColor);
+            onSelect(state.selectedAvatar, state.selectedColor);
             onClose();
             return;
         }
@@ -86,21 +138,21 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
             return;
         }
 
-        setIsUpdating(true);
-        setError(null);
+        dispatch({ type: "SET_UPDATING", payload: true });
+        dispatch({ type: "SET_ERROR", payload: null });
 
         try {
             console.log("[AvatarPicker] Updating profile...", { 
                 id: profile.id, 
-                avatar_url: selectedAvatar, 
-                avatar_bg_color: selectedColor 
+                avatar_url: state.selectedAvatar, 
+                avatar_bg_color: state.selectedColor 
             });
 
             const { error: updateError } = await supabase
                 .from("profiles")
                 .update({ 
-                    avatar_url: selectedAvatar,
-                    avatar_bg_color: selectedColor 
+                    avatar_url: state.selectedAvatar,
+                    avatar_bg_color: state.selectedColor 
                 })
                 .eq("id", profile.id);
 
@@ -128,10 +180,10 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
         } catch (err: any) {
             console.error("[AvatarPicker] Failed to update avatar:", err);
             const msg = err.message || "Failed to update appearance. Please try again.";
-            setError(msg);
+            dispatch({ type: "SET_ERROR", payload: msg });
             toast.error(msg);
         } finally {
-            setIsUpdating(false);
+            dispatch({ type: "SET_UPDATING", payload: false });
         }
     };
 
@@ -147,8 +199,8 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
             return;
         }
 
-        setIsUploading(true);
-        setError(null);
+        dispatch({ type: "SET_UPLOADING", payload: true });
+        dispatch({ type: "SET_ERROR", payload: null });
 
         const formData = new FormData();
         formData.append("file", file);
@@ -165,13 +217,13 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
             }
 
             const data = await response.json();
-            setSelectedAvatar(data.avatarUrl);
+            dispatch({ type: "SET_AVATAR", payload: data.avatarUrl });
             await refreshProfile();
         } catch (err: any) {
             console.error("Upload error:", err);
-            setError(err.message || "Failed to upload avatar");
+            dispatch({ type: "SET_ERROR", payload: err.message || "Failed to upload avatar" });
         } finally {
-            setIsUploading(false);
+            dispatch({ type: "SET_UPLOADING", payload: false });
         }
     };
 
@@ -197,20 +249,20 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
                     {/* Visual Preview Pane */}
                     <div className="w-full md:w-[300px] shrink-0 bg-gradient-to-b from-white/[0.03] to-transparent p-10 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-white/5 relative group">
                         <div className="absolute inset-0 opacity-20 pointer-events-none overflow-hidden">
-                             <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,var(--primary)_0%,transparent_70%)] transition-colors duration-700" style={{ "--primary": selectedColor } as any} />
+                             <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,var(--primary)_0%,transparent_70%)] transition-colors duration-700" style={{ "--primary": state.selectedColor } as any} />
                         </div>
                         
                         <div className="relative z-10 mb-8">
                             <div 
                                 className="size-40 rounded-[2.5rem] p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] ring-1 ring-white/10 overflow-hidden relative transition-all duration-700 ease-out group-hover:scale-105"
-                                style={{ backgroundColor: selectedColor }}
+                                style={{ backgroundColor: state.selectedColor }}
                             >
-                                {selectedAvatar ? (
+                                {state.selectedAvatar ? (
                                     <motion.img 
-                                        key={selectedAvatar}
+                                        key={state.selectedAvatar}
                                         initial={{ opacity: 0, scale: 0.8 }}
                                         animate={{ opacity: 1, scale: 1 }}
-                                        src={selectedAvatar} 
+                                        src={state.selectedAvatar} 
                                         alt="Preview" 
                                         className="h-full w-full object-cover relative z-10" 
                                     />
@@ -225,23 +277,23 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
                                 animate={{ opacity: 1, y: 0 }}
                                 className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-white/10 backdrop-blur-xl border border-white/20 px-3.5 py-1 rounded-full shadow-xl flex items-center gap-2"
                             >
-                                <div className="size-2 rounded-full shadow-[0_0_10px_rgba(255,255,255,0.3)]" style={{ backgroundColor: selectedColor }} />
-                                <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/90 font-mono">{selectedColor.toUpperCase()}</span>
+                                <div className="size-2 rounded-full shadow-[0_0_10px_rgba(255,255,255,0.3)]" style={{ backgroundColor: state.selectedColor }} />
+                                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/90 font-mono">{state.selectedColor.toUpperCase()}</span>
                             </motion.div>
                         </div>
 
                         <div className="w-full space-y-4 relative z-10">
                             <button
                                 onClick={handleSave}
-                                disabled={isUpdating || !selectedAvatar || loading}
-                                className="group relative w-full flex items-center justify-center gap-3 rounded-2xl bg-primary px-6 py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-primary-foreground shadow-[0_15px_30px_-5px_rgba(var(--primary-rgb),0.3)] transition-all hover:scale-[1.02] hover:shadow-[0_20px_40px_-5px_rgba(var(--primary-rgb),0.4)] active:scale-95 disabled:opacity-50 overflow-hidden"
+                                disabled={state.isUpdating || !state.selectedAvatar || loading}
+                                className="group relative w-full flex items-center justify-center gap-3 rounded-2xl bg-primary px-6 py-4 text-[11px] font-black uppercase tracking-[0.2em] text-primary-foreground shadow-[0_15px_30px_-5px_rgba(var(--primary-rgb),0.3)] transition-all hover:scale-[1.02] hover:shadow-[0_20px_40px_-5px_rgba(var(--primary-rgb),0.4)] active:scale-95 disabled:opacity-50 overflow-hidden"
                             >
-                                {isUpdating || (loading && !profile) ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
-                                <span>{isUpdating ? "Saving..." : (loading && !profile ? "Loading..." : "Save Profile")}</span>
+                                {state.isUpdating || (loading && !profile) ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                                <span>{state.isUpdating ? "Saving..." : (loading && !profile ? "Loading..." : "Save Profile")}</span>
                             </button>
                             <button
                                 onClick={onClose}
-                                className="w-full py-1 text-[10px] font-bold uppercase tracking-[0.4em] text-zinc-500 hover:text-white transition-colors"
+                                className="w-full py-1 text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 hover:text-white transition-colors"
                             >
                                 Cancel
                             </button>
@@ -250,24 +302,24 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
 
                     {/* Controls Pane */}
                     <div className="flex-1 flex flex-col bg-black/40 min-h-0 p-8 space-y-12">
-                        {error && (
-                            <div className="mb-4 rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-[10px] font-bold text-red-400">
-                                {error}
+                        {state.error && (
+                            <div className="mb-4 rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-[10px] font-black text-red-400">
+                                {state.error}
                             </div>
                         )}
 
                         {/* Avatar Section */}
                         <section className="space-y-4">
                             <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                                <h3 className="text-[10px] font-bold uppercase tracking-[0.4em] text-zinc-500">Profile Photo</h3>
+                                <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500">Profile Photo</h3>
                                 <div className="flex gap-1">
                                     {Array.from({ length: totalPages }).map((_, i) => (
                                         <button
                                             key={`avatar-page-${i}`}
-                                            onClick={() => setCurrentPage(i)}
+                                            onClick={() => dispatch({ type: "SET_PAGE", payload: i })}
                                             className={cn(
                                                 "h-1 w-2.5 rounded-full transition-all",
-                                                currentPage === i ? "bg-primary w-5" : "bg-white/10 hover:bg-white/20"
+                                                state.currentPage === i ? "bg-primary w-5" : "bg-white/10 hover:bg-white/20"
                                             )}
                                         />
                                     ))}
@@ -278,25 +330,25 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
                                 <div className="min-h-[100px]">
                                     <AnimatePresence mode="wait">
                                         <motion.div 
-                                            key={currentPage}
+                                            key={state.currentPage}
                                             initial={{ opacity: 0, x: 20 }}
                                             animate={{ opacity: 1, x: 0 }}
                                             exit={{ opacity: 0, x: -20 }}
                                             className="grid grid-cols-4 gap-4"
                                         >
-                                            {currentPage === 0 && (
+                                            {state.currentPage === 0 && (
                                                 <label className="group relative aspect-square flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-white/20 bg-white/[0.02] transition-all hover:border-primary/40 hover:bg-primary/5 active:scale-95">
-                                                    <input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} disabled={isUploading} />
-                                                    {isUploading ? <Loader2 className="size-5 animate-spin text-primary" /> : <Upload className="size-4 text-zinc-500 group-hover:text-primary transition-colors" />}
+                                                    <input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} disabled={state.isUploading} />
+                                                    {state.isUploading ? <Loader2 className="size-5 animate-spin text-primary" /> : <Upload className="size-4 text-zinc-500 group-hover:text-primary transition-colors" />}
                                                 </label>
                                             )}
 
                                             {paginatedAvatars.map((url, idx) => {
-                                                const isSelected = selectedAvatar === url;
+                                                const isSelected = state.selectedAvatar === url;
                                                 return (
                                                     <button
                                                         key={url}
-                                                        onClick={() => setSelectedAvatar(url)}
+                                                        onClick={() => dispatch({ type: "SET_AVATAR", payload: url })}
                                                         className={cn(
                                                             "group relative aspect-square overflow-hidden rounded-2xl bg-white/[0.03] transition-all hover:scale-[1.05] active:scale-95",
                                                             isSelected ? "ring-2 ring-primary bg-primary/10 shadow-xl" : "hover:bg-white/5"
@@ -319,8 +371,8 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
                                 
                                 <div className="absolute inset-y-0 -left-2 flex items-center">
                                     <button 
-                                        onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
-                                        disabled={currentPage === 0}
+                                        onClick={() => dispatch({ type: "SET_PAGE", payload: Math.max(0, state.currentPage - 1) })}
+                                        disabled={state.currentPage === 0}
                                         className="p-1.5 rounded-full bg-[#171717] border border-white/10 hover:bg-white/5 disabled:opacity-0 transition-all shadow-xl"
                                     >
                                         <ChevronLeft className="size-4" />
@@ -328,8 +380,8 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
                                 </div>
                                 <div className="absolute inset-y-0 -right-2 flex items-center">
                                     <button 
-                                        onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
-                                        disabled={currentPage === totalPages - 1}
+                                        onClick={() => dispatch({ type: "SET_PAGE", payload: Math.min(totalPages - 1, state.currentPage + 1) })}
+                                        disabled={state.currentPage === totalPages - 1}
                                         className="p-1.5 rounded-full bg-[#171717] border border-white/10 hover:bg-white/5 disabled:opacity-0 transition-all shadow-xl"
                                     >
                                         <ChevronRight className="size-4" />
@@ -341,10 +393,10 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
                         {/* Color Section */}
                         <section className="space-y-4">
                             <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                                <h3 className="text-[10px] font-bold uppercase tracking-[0.4em] text-zinc-500">Background Color</h3>
+                                <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500">Background Color</h3>
                                 <button 
-                                    onClick={() => setSelectedColor("#171717")}
-                                    className="text-[9px] font-bold uppercase tracking-widest text-primary hover:opacity-80 transition-opacity flex items-center gap-1.5"
+                                    onClick={() => dispatch({ type: "SET_COLOR", payload: "#171717" })}
+                                    className="text-[9px] font-black uppercase tracking-widest text-primary hover:opacity-80 transition-opacity flex items-center gap-1.5"
                                 >
                                     <RefreshCcw className="size-2.5" />
                                     Reset
@@ -355,23 +407,23 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
                                 <div className="lg:col-span-2 space-y-4">
                                     <div className="custom-color-picker-container rounded-2xl overflow-hidden border border-white/10 p-3 bg-white/[0.02] shadow-xl">
                                         <HexColorPicker 
-                                            color={selectedColor} 
-                                            onChange={setSelectedColor} 
+                                            color={state.selectedColor} 
+                                            onChange={(color) => dispatch({ type: "SET_COLOR", payload: color })} 
                                             className="!w-full !h-36"
                                         />
                                     </div>
                                     <div className="h-10 w-full rounded-xl bg-white/5 border border-white/10 flex items-center px-3 gap-2 focus-within:border-primary/40 transition-colors">
-                                        <span className="text-[9px] font-bold text-zinc-500 uppercase font-mono">HEX</span>
+                                        <span className="text-[9px] font-black text-zinc-500 uppercase font-mono">HEX</span>
                                         <input 
                                             type="text" 
-                                            value={selectedColor.toUpperCase()}
+                                            value={state.selectedColor.toUpperCase()}
                                             onChange={(e) => {
                                                 const val = e.target.value;
                                                 if (/^#[0-9A-F]{0,6}$/i.test(val)) {
-                                                    setSelectedColor(val);
+                                                    dispatch({ type: "SET_COLOR", payload: val });
                                                 }
                                             }}
-                                            className="bg-transparent border-none outline-none text-[10px] font-mono font-bold text-white w-full uppercase"
+                                            className="bg-transparent border-none outline-none text-[10px] font-mono font-black text-white w-full uppercase"
                                         />
                                     </div>
                                 </div>
@@ -381,14 +433,14 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
                                         {PRESET_COLORS.map((color) => (
                                             <button
                                                 key={color}
-                                                onClick={() => setSelectedColor(color)}
+                                                onClick={() => dispatch({ type: "SET_COLOR", payload: color })}
                                                 className={cn(
                                                     "aspect-square rounded-xl border transition-all hover:scale-110 relative",
-                                                    selectedColor === color ? "border-primary scale-110 shadow-lg" : "border-white/5 hover:border-white/20"
+                                                    state.selectedColor === color ? "border-primary scale-110 shadow-lg" : "border-white/5 hover:border-white/20"
                                                 )}
                                                 style={{ backgroundColor: color }}
                                             >
-                                                {selectedColor === color && (
+                                                {state.selectedColor === color && (
                                                     <div className="absolute inset-0 flex items-center justify-center">
                                                         <Check className="size-3 text-white drop-shadow-md" />
                                                     </div>

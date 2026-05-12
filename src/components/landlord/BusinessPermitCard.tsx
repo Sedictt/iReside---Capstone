@@ -74,12 +74,12 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
                 <div className="size-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/10">
                     <Building2 className="text-[#6d9838]" size={32} />
                 </div>
-                <h4 className="text-2xl font-display font-bold text-white mb-2 tracking-tight">Business Verification</h4>
+                <h4 className="text-2xl font-display font-black text-white mb-2 tracking-tight">Business Verification</h4>
                 <p className="text-sm text-neutral-500 mb-8 max-w-sm mx-auto">Complete your professional profile by uploading your business permit to build trust with potential tenants.</p>
                 <button 
                     onClick={handleUploadClick}
                     disabled={uploading}
-                    className="text-[11px] font-bold tracking-widest uppercase px-10 py-3.5 rounded-xl bg-[#6d9838] text-white hover:bg-[#5a7d2e] transition-all shadow-xl shadow-[#6d9838]/20 disabled:opacity-50"
+                    className="text-[11px] font-black tracking-widest uppercase px-10 py-3.5 rounded-xl bg-[#6d9838] text-white hover:bg-[#5a7d2e] transition-all shadow-xl shadow-[#6d9838]/20 disabled:opacity-50"
                 >
                     {uploading ? <Loader2 size={18} className="animate-spin mx-auto" /> : "Start Verification"}
                 </button>
@@ -100,8 +100,8 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
                             <Building2 size={32} className="text-[#6d9838]" />
                         </div>
                         <div>
-                            <h3 className="text-3xl font-display font-bold text-white mb-1 tracking-tight">{businessName || "Registered Business"}</h3>
-                            <p className="text-[11px] font-bold tracking-[0.2em] uppercase text-neutral-500">Official Business Identification</p>
+                            <h3 className="text-3xl font-display font-black text-white mb-1 tracking-tight">{businessName || "Registered Business"}</h3>
+                            <p className="text-[11px] font-black tracking-[0.2em] uppercase text-neutral-500">Official Business Identification</p>
                         </div>
                     </div>
                     
@@ -116,7 +116,7 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
                         <button 
                             onClick={handleUploadClick}
                             disabled={uploading}
-                            className="w-full md:w-auto flex items-center justify-center gap-3 px-10 py-4 rounded-2xl bg-[#6d9838] hover:bg-[#5a7d2e] text-white text-[11px] font-bold tracking-widest uppercase transition-all shadow-xl shadow-[#6d9838]/20 disabled:opacity-50 disabled:cursor-not-allowed group/btn"
+                            className="w-full md:w-auto flex items-center justify-center gap-3 px-10 py-4 rounded-2xl bg-[#6d9838] hover:bg-[#5a7d2e] text-white text-[11px] font-black tracking-widest uppercase transition-all shadow-xl shadow-[#6d9838]/20 disabled:opacity-50 disabled:cursor-not-allowed group/btn"
                         >
                             {uploading ? <Loader2 size={18} className="animate-spin" /> : (
                                 <>
@@ -145,7 +145,7 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
                                     <Maximize2 size={32} className="text-white" />
                                 </div>
                                 <div className="absolute bottom-8 left-8">
-                                    <p className="text-xs font-bold text-white tracking-widest uppercase bg-[#6d9838] px-4 py-1.5 rounded-full shadow-lg shadow-[#6d9838]/20">Authentic Document</p>
+                                    <p className="text-xs font-black text-white tracking-widest uppercase bg-[#6d9838] px-4 py-1.5 rounded-full shadow-lg shadow-[#6d9838]/20">Authentic Document</p>
                                 </div>
                             </div>
                         </div>
@@ -155,7 +155,7 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
                                 <Award size={40} className="text-neutral-700" />
                             </div>
                             <div>
-                                <p className="text-lg font-bold text-neutral-400">No Permit Photo Uploaded</p>
+                                <p className="text-lg font-black text-neutral-400">No Permit Photo Uploaded</p>
                                 <p className="text-[11px] text-neutral-600 uppercase tracking-[0.2em] mt-2">Upload a high-resolution copy for verification</p>
                             </div>
                         </div>
@@ -193,7 +193,7 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
                             className="max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl border border-white/10"
                         />
                         <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent flex flex-col items-center">
-                            <p className="text-white font-bold text-lg">{businessName || "Business Permit"}</p>
+                            <p className="text-white font-black text-lg">{businessName || "Business Permit"}</p>
                             <p className="text-neutral-400 text-[10px] uppercase tracking-widest mt-1">Official Document Preview</p>
                         </div>
                     </div>

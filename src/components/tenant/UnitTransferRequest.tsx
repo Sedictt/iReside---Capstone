@@ -120,7 +120,7 @@ export default function UnitTransferRequest({ currentUnitId }: UnitTransferReque
                         <ArrowRightLeft className="size-6" />
                     </div>
                     <div>
-                        <h4 className="text-lg font-bold text-foreground tracking-tight">Unit Transfer</h4>
+                        <h4 className="text-lg font-black text-foreground tracking-tight">Unit Transfer</h4>
                         <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
                             Looking for a different floor, size, or view? Request a move within the same property.
                         </p>
@@ -128,7 +128,7 @@ export default function UnitTransferRequest({ currentUnitId }: UnitTransferReque
                 </div>
                 <button 
                     onClick={handleOpen}
-                    className="w-full mt-8 py-4 rounded-xl bg-muted text-[10px] font-bold uppercase tracking-widest border border-border hover:bg-secondary transition-all flex items-center justify-center gap-2"
+                    className="w-full mt-8 py-4 rounded-xl bg-muted text-[10px] font-black uppercase tracking-widest border border-border hover:bg-secondary transition-all flex items-center justify-center gap-2"
                 >
                     Check Availability <ArrowUpRight className="size-4" />
                 </button>
@@ -145,8 +145,8 @@ export default function UnitTransferRequest({ currentUnitId }: UnitTransferReque
                                     <ArrowRightLeft className="size-6" />
                                 </div>
                                 <div>
-                                    <h3 className="text-2xl font-bold text-foreground tracking-tight">Unit Transfer Portal</h3>
-                                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Internal Relocation Protocol</p>
+                                    <h3 className="text-2xl font-black text-foreground tracking-tight">Unit Transfer Portal</h3>
+                                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Internal Relocation Protocol</p>
                                 </div>
                             </div>
                             <button
@@ -168,10 +168,10 @@ export default function UnitTransferRequest({ currentUnitId }: UnitTransferReque
                                             placeholder="Search by unit number or floor..."
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
-                                            className="w-full bg-muted/50 border border-border rounded-xl pl-11 pr-4 py-3 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                                            className="w-full bg-muted/50 border border-border rounded-xl pl-11 pr-4 py-3 text-sm font-black focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                                         />
                                     </div>
-                                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-2">
+                                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-2">
                                         {filteredUnits.length} Vacant Units Available
                                     </p>
                                 </div>
@@ -181,7 +181,7 @@ export default function UnitTransferRequest({ currentUnitId }: UnitTransferReque
                                 {loading ? (
                                     <div className="flex flex-col items-center justify-center py-20 gap-4 text-muted-foreground">
                                         <Loader2 className="size-8 animate-spin text-primary" />
-                                        <p className="text-xs font-bold uppercase tracking-widest">Syncing Property Inventory...</p>
+                                        <p className="text-xs font-black uppercase tracking-widest">Syncing Property Inventory...</p>
                                     </div>
                                 ) : filteredUnits.length === 0 ? (
                                     <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
@@ -189,7 +189,7 @@ export default function UnitTransferRequest({ currentUnitId }: UnitTransferReque
                                             <Building2 className="size-8" />
                                         </div>
                                         <div>
-                                            <p className="text-sm font-bold text-foreground">No units available</p>
+                                            <p className="text-sm font-black text-foreground">No units available</p>
                                             <p className="text-xs text-muted-foreground mt-1">Check back later or contact management for waitlist options.</p>
                                         </div>
                                     </div>
@@ -213,26 +213,26 @@ export default function UnitTransferRequest({ currentUnitId }: UnitTransferReque
                                                 )}
                                                 <div className="space-y-4">
                                                     <div>
-                                                        <p className="text-[10px] font-bold text-primary uppercase tracking-[0.2em] mb-1">Unit {unit.name}</p>
-                                                        <h4 className="text-xl font-bold text-foreground tracking-tight">{formatCurrency(unit.rent_amount)}<span className="text-xs font-bold text-muted-foreground lowercase tracking-normal">/mo</span></h4>
+                                                        <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-1">Unit {unit.name}</p>
+                                                        <h4 className="text-xl font-black text-foreground tracking-tight">{formatCurrency(unit.rent_amount)}<span className="text-xs font-black text-muted-foreground lowercase tracking-normal">/mo</span></h4>
                                                     </div>
                                                     
                                                     <div className="grid grid-cols-2 gap-4">
                                                         <div className="flex items-center gap-2 text-muted-foreground group-hover:text-foreground transition-colors">
                                                             <Layers className="size-3.5" />
-                                                            <span className="text-[10px] font-bold uppercase tracking-widest">Floor {unit.floor}</span>
+                                                            <span className="text-[10px] font-black uppercase tracking-widest">Floor {unit.floor}</span>
                                                         </div>
                                                         <div className="flex items-center gap-2 text-muted-foreground group-hover:text-foreground transition-colors">
                                                             <Maximize className="size-3.5" />
-                                                            <span className="text-[10px] font-bold uppercase tracking-widest">{unit.sqft ? `${unit.sqft} SQFT` : 'Size Varies'}</span>
+                                                            <span className="text-[10px] font-black uppercase tracking-widest">{unit.sqft ? `${unit.sqft} SQFT` : 'Size Varies'}</span>
                                                         </div>
                                                         <div className="flex items-center gap-2 text-muted-foreground group-hover:text-foreground transition-colors">
                                                             <Bed className="size-3.5" />
-                                                            <span className="text-[10px] font-bold uppercase tracking-widest">{unit.beds} Bed</span>
+                                                            <span className="text-[10px] font-black uppercase tracking-widest">{unit.beds} Bed</span>
                                                         </div>
                                                         <div className="flex items-center gap-2 text-muted-foreground group-hover:text-foreground transition-colors">
                                                             <Bath className="size-3.5" />
-                                                            <span className="text-[10px] font-bold uppercase tracking-widest">{unit.baths} Bath</span>
+                                                            <span className="text-[10px] font-black uppercase tracking-widest">{unit.baths} Bath</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -243,7 +243,7 @@ export default function UnitTransferRequest({ currentUnitId }: UnitTransferReque
 
                                 <div className="space-y-4 pt-4 border-t border-border">
                                     <div className="space-y-2">
-                                        <label htmlFor="transferReason" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1">Reason for Transfer (Optional)</label>
+                                        <label htmlFor="transferReason" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-1">Reason for Transfer (Optional)</label>
                                         <textarea 
                                             id="transferReason"
                                             rows={3}
@@ -268,14 +268,14 @@ export default function UnitTransferRequest({ currentUnitId }: UnitTransferReque
                             <button
                                 type="button"
                                 onClick={() => setIsOpen(false)}
-                                className="px-8 py-4 rounded-xl text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:bg-muted transition-all"
+                                className="px-8 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:bg-muted transition-all"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleSubmit}
                                 disabled={isSubmitting || !selectedUnitId}
-                                className="flex-1 py-4 rounded-xl bg-primary text-white text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-primary/20 hover:bg-primary-dark transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                                className="flex-1 py-4 rounded-xl bg-primary text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:bg-primary-dark transition-all flex items-center justify-center gap-3 disabled:opacity-50"
                             >
                                 {isSubmitting ? (
                                     <Loader2 className="size-4 animate-spin" />

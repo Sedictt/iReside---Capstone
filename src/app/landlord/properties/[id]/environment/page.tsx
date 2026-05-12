@@ -293,14 +293,14 @@ export default function PropertyEnvironmentPage() {
             />
 
             <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-                <h1 className="text-2xl font-bold tracking-tight text-foreground">Environment Configuration</h1>
+                <h1 className="text-2xl font-black tracking-tight text-foreground">Environment Configuration</h1>
                 <p className="mt-2 text-sm text-muted-foreground">
                     Configure the operating environment for {propertyName}. This affects occupancy rules, policies, and billing defaults.
                 </p>
             </section>
 
             <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-                <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+                <h2 className="text-lg font-black text-foreground mb-4 flex items-center gap-2">
                     <Building2 className="size-5 text-primary" />
                     Property Type
                 </h2>
@@ -328,7 +328,7 @@ export default function PropertyEnvironmentPage() {
                                     <Icon className="size-5" />
                                 </div>
                                 <div>
-                                    <p className="font-bold text-foreground">{info.label}</p>
+                                    <p className="font-black text-foreground">{info.label}</p>
                                     <p className="mt-1 text-xs text-muted-foreground">{info.description}</p>
                                 </div>
                                 {isSelected && (
@@ -342,7 +342,7 @@ export default function PropertyEnvironmentPage() {
 
             <div className="grid gap-6 lg:grid-cols-2">
                 <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-                    <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+                    <h2 className="text-lg font-black text-foreground mb-4 flex items-center gap-2">
                         <Users className="size-5 text-primary" />
                         Occupancy Settings
                     </h2>
@@ -386,7 +386,7 @@ export default function PropertyEnvironmentPage() {
                 </section>
 
                 <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-                    <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+                    <h2 className="text-lg font-black text-foreground mb-4 flex items-center gap-2">
                         <Zap className="size-5 text-primary" />
                         Utility Policy
                     </h2>
@@ -435,7 +435,7 @@ export default function PropertyEnvironmentPage() {
             </div>
 
             <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-                <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+                <h2 className="text-lg font-black text-foreground mb-4 flex items-center gap-2">
                     <Clock className="size-5 text-primary" />
                     Rules & Curfew Settings
                 </h2>
@@ -553,14 +553,14 @@ export default function PropertyEnvironmentPage() {
             <div className="flex justify-end gap-3 pb-8">
                 <button
                     onClick={() => push(`/landlord/properties`)}
-                    className="rounded-xl border border-border px-4 py-2 text-sm font-bold text-muted-foreground hover:bg-muted hover:text-foreground"
+                    className="rounded-xl border border-border px-4 py-2 text-sm font-black text-muted-foreground hover:bg-muted hover:text-foreground"
                 >
                     Cancel
                 </button>
                 <button
                     onClick={handleSave}
                     disabled={saving}
-                    className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                    className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-black text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                 >
                     {saving ? (
                         <Loader2 className="size-4 animate-spin" />

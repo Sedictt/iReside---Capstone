@@ -25,16 +25,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { m as motion, AnimatePresence } from "framer-motion";
-
-const CATEGORIES = [
-    { id: "plumbing", label: "Plumbing", icon: Droplets, color: "text-blue-500", bg: "bg-blue-500/10" },
-    { id: "electrical", label: "Electrical", icon: Zap, color: "text-yellow-500", bg: "bg-yellow-500/10" },
-    { id: "hvac", label: "HVAC / Cooling", icon: Thermometer, color: "text-orange-500", bg: "bg-orange-500/10" },
-    { id: "appliances", label: "Appliances", icon: LayoutGrid, color: "text-purple-500", bg: "bg-purple-500/10" },
-    { id: "structural", label: "Structural", icon: Hammer, color: "text-neutral-500", bg: "bg-neutral-500/10" },
-    { id: "pest", label: "Pest Control", icon: Bug, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-    { id: "other", label: "Other / General", icon: Wrench, color: "text-cyan-500", bg: "bg-cyan-500/10" },
-];
+import { MAINTENANCE_CATEGORIES } from "@/lib/constants/maintenance-categories";
 export default function NewMaintenanceRequest() {
     const router = useRouter();
     const [title, setTitle] = useState("");
@@ -143,7 +134,7 @@ export default function NewMaintenanceRequest() {
                         <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-1" />
                         Back to Dashboard
                     </button>
-                    <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
+                    <h1 className="text-3xl font-black tracking-tight flex items-center gap-3">
                         <Wrench className="size-8 text-primary" />
                         New Maintenance Request
                     </h1>
@@ -159,14 +150,14 @@ export default function NewMaintenanceRequest() {
                     <form onSubmit={handleSubmit} className="space-y-8">
                         {/* Issue Details */}
                         <div className="bg-card border border-border rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
-                            <h2 className="text-xl font-bold flex items-center gap-2">
+                            <h2 className="text-xl font-black flex items-center gap-2">
                                 <Info className="size-5 text-primary" />
                                 Issue Details
                             </h2>
 
                             <div className="space-y-4">
                                 <div className="space-y-2">
-                                    <label htmlFor="maintenance-title" className="text-sm font-bold uppercase tracking-wider text-muted-foreground ml-1">
+                                    <label htmlFor="maintenance-title" className="text-sm font-black uppercase tracking-wider text-muted-foreground ml-1">
                                         Title
                                     </label>
                                     <input
@@ -181,7 +172,7 @@ export default function NewMaintenanceRequest() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label htmlFor="maintenance-description" className="text-sm font-bold uppercase tracking-wider text-muted-foreground ml-1">
+                                    <label htmlFor="maintenance-description" className="text-sm font-black uppercase tracking-wider text-muted-foreground ml-1">
                                         Description
                                     </label>
                                     <textarea
@@ -198,11 +189,11 @@ export default function NewMaintenanceRequest() {
 
                             {/* Category Selector */}
                             <div className="space-y-4">
-                                <label className="text-sm font-bold uppercase tracking-wider text-muted-foreground ml-1">
+                                <label className="text-sm font-black uppercase tracking-wider text-muted-foreground ml-1">
                                     Category
                                 </label>
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                    {CATEGORIES.map((cat) => (
+                                    {MAINTENANCE_CATEGORIES.map((cat) => (
                                         <button
                                             key={cat.id}
                                             type="button"
@@ -217,7 +208,7 @@ export default function NewMaintenanceRequest() {
                                             <div className={cn("p-2 rounded-xl transition-colors", cat.bg, cat.color)}>
                                                 <cat.icon className="size-5" />
                                             </div>
-                                            <span className="text-xs font-bold">{cat.label}</span>
+                                            <span className="text-xs font-black">{cat.label}</span>
                                         </button>
                                     ))}
                                 </div>
@@ -226,7 +217,7 @@ export default function NewMaintenanceRequest() {
 
                         {/* Media Upload */}
                         <div className="bg-card border border-border rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
-                            <h2 className="text-xl font-bold flex items-center gap-2">
+                            <h2 className="text-xl font-black flex items-center gap-2">
                                 <Camera className="size-5 text-primary" />
                                 Photos (Optional)
                             </h2>
@@ -263,7 +254,7 @@ export default function NewMaintenanceRequest() {
                                         className="aspect-square rounded-2xl border-2 border-dashed border-border hover:border-primary/50 hover:bg-primary/5 transition-all flex flex-col items-center justify-center gap-2 group"
                                     >
                                         <Upload className="size-6 text-muted-foreground group-hover:text-primary transition-colors" />
-                                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground group-hover:text-primary">
+                                        <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground group-hover:text-primary">
                                             Upload
                                         </span>
                                     </button>
@@ -293,7 +284,7 @@ export default function NewMaintenanceRequest() {
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="w-full bg-primary hover:bg-primary/90 disabled:opacity-50 text-primary-foreground py-4 rounded-2xl font-bold uppercase tracking-widest transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-3 active:scale-[0.98]"
+                            className="w-full bg-primary hover:bg-primary/90 disabled:opacity-50 text-primary-foreground py-4 rounded-2xl font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-3 active:scale-[0.98]"
                         >
                             {isSubmitting ? (
                                 <>
@@ -316,12 +307,12 @@ export default function NewMaintenanceRequest() {
                     <div className="bg-primary/10 border border-primary/20 rounded-3xl p-6 space-y-4">
                         <div className="flex items-center gap-3 text-primary">
                             <Clock className="size-5" />
-                            <h3 className="font-bold">What to expect?</h3>
+                            <h3 className="font-black">What to expect?</h3>
                         </div>
                         <ul className="space-y-4">
                             <li className="flex gap-3">
                                 <div className="size-5 rounded-full bg-primary/20 flex items-center justify-center shrink-0 mt-0.5">
-                                    <span className="text-[10px] font-bold text-primary">1</span>
+                                    <span className="text-[10px] font-black text-primary">1</span>
                                 </div>
                                 <p className="text-xs text-muted-foreground leading-relaxed">
                                     Your landlord will be notified immediately of your request.
@@ -329,7 +320,7 @@ export default function NewMaintenanceRequest() {
                             </li>
                             <li className="flex gap-3">
                                 <div className="size-5 rounded-full bg-primary/20 flex items-center justify-center shrink-0 mt-0.5">
-                                    <span className="text-[10px] font-bold text-primary">2</span>
+                                    <span className="text-[10px] font-black text-primary">2</span>
                                 </div>
                                 <p className="text-xs text-muted-foreground leading-relaxed">
                                     Your landlord or a contractor will visit your unit if necessary, depending on the severity of the repair.
@@ -337,7 +328,7 @@ export default function NewMaintenanceRequest() {
                             </li>
                             <li className="flex gap-3">
                                 <div className="size-5 rounded-full bg-primary/20 flex items-center justify-center shrink-0 mt-0.5">
-                                    <span className="text-[10px] font-bold text-primary">3</span>
+                                    <span className="text-[10px] font-black text-primary">3</span>
                                 </div>
                                 <p className="text-xs text-muted-foreground leading-relaxed">
                                     You'll receive updates via messages and notifications on the progress.
@@ -350,7 +341,7 @@ export default function NewMaintenanceRequest() {
                     <div className="bg-card border border-border rounded-3xl p-6 shadow-sm space-y-4">
                         <div className="flex items-center justify-between gap-4">
                             <div className="space-y-1">
-                                <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">
+                                <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground">
                                     Self-Repair
                                 </h3>
                                 <p className="text-[10px] text-muted-foreground font-medium leading-relaxed">
@@ -379,9 +370,9 @@ export default function NewMaintenanceRequest() {
                     <div className="bg-red-500/5 border border-red-500/10 rounded-3xl p-6">
                         <div className="flex items-center gap-3 text-red-500 mb-3">
                             <AlertTriangle className="size-5" />
-                            <h3 className="font-bold uppercase tracking-tight">Emergency Hotlines</h3>
+                            <h3 className="font-black uppercase tracking-tight">Emergency Hotlines</h3>
                         </div>
-                        <p className="text-[10px] text-muted-foreground leading-relaxed mb-4 uppercase font-bold tracking-wider">
+                        <p className="text-[10px] text-muted-foreground leading-relaxed mb-4 uppercase font-black tracking-wider">
                             For life-threatening emergencies, please contact the authorities immediately.
                         </p>
                         
@@ -415,13 +406,13 @@ export default function NewMaintenanceRequest() {
                             ].map((hotline) => (
                                 <div key={hotline.label} className="group relative">
                                     <div className="flex flex-col">
-                                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5">{hotline.label}</span>
+                                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5">{hotline.label}</span>
                                         <div className="space-y-1.5">
                                             {hotline.numbers.map((num) => (
                                                 <a 
                                                     key={num}
                                                     href={`tel:${num.replace(/[^0-9]/g, '')}`}
-                                                    className="text-sm font-bold text-foreground hover:text-red-500 transition-colors flex items-center justify-between group/num"
+                                                    className="text-sm font-black text-foreground hover:text-red-500 transition-colors flex items-center justify-between group/num"
                                                 >
                                                     {num}
                                                     <Phone className="size-3 opacity-0 group-hover/num:opacity-100 transition-opacity" />

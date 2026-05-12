@@ -19,7 +19,7 @@ export function ContractActions({
             onClick={onClick}
             disabled={!canSubmit}
             className={cn(
-                "w-full h-14 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-3 disabled:opacity-40 disabled:cursor-not-allowed",
+                "w-full h-14 rounded-xl font-black text-lg transition-all flex items-center justify-center gap-3 disabled:opacity-40 disabled:cursor-not-allowed",
                 canSubmit
                     ? "bg-emerald-500 hover:bg-emerald-400 text-black shadow-[0_0_30px_rgba(16,185,129,0.3)]"
                     : "bg-white/10 text-neutral-500"

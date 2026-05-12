@@ -242,7 +242,7 @@ export default function LandlordRenewalReview() {
                 <div className="p-4 rounded-3xl bg-primary/5">
                     <RefreshCw className="size-8 animate-spin text-primary" />
                 </div>
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground animate-pulse">
+                <p className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground animate-pulse">
                     Loading Requests...
                 </p>
             </div>
@@ -253,9 +253,9 @@ export default function LandlordRenewalReview() {
         <div className="space-y-8">
             <div className="flex items-center justify-between px-2">
                 <div className="flex items-center gap-4">
-                    <h3 className="text-xl font-bold text-foreground tracking-tight">Pending Renewals</h3>
+                    <h3 className="text-xl font-black text-foreground tracking-tight">Pending Renewals</h3>
                     {isPreview && (
-                        <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest border border-primary/20">
+                        <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest border border-primary/20">
                             Preview Mode
                         </span>
                     )}
@@ -264,7 +264,7 @@ export default function LandlordRenewalReview() {
                     <button
                         onClick={() => setIsSettingsOpen(true)}
                         disabled={!selectedPropertyId || selectedPropertyId === "all"}
-                        className="flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card text-[10px] font-bold text-muted-foreground uppercase tracking-widest hover:bg-muted hover:text-foreground transition-all disabled:opacity-30"
+                        className="flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card text-[10px] font-black text-muted-foreground uppercase tracking-widest hover:bg-muted hover:text-foreground transition-all disabled:opacity-30"
                         title={(!selectedPropertyId || selectedPropertyId === "all") ? "Select a property to configure its renewal policy" : "Configure Renewal Policy"}
                     >
                         <Settings2 className="size-3.5" />
@@ -272,7 +272,7 @@ export default function LandlordRenewalReview() {
                     </button>
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50 border border-border">
                         <div className="size-1.5 rounded-full bg-amber-500 animate-pulse" />
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                             {requests.length} Pending
                         </span>
                     </div>
@@ -284,7 +284,7 @@ export default function LandlordRenewalReview() {
                     <div className="p-4 rounded-full bg-muted/50 mb-4">
                         <CheckCircle2 className="size-8 text-muted-foreground/30" />
                     </div>
-                    <p className="font-bold text-foreground">All Caught Up</p>
+                    <p className="font-black text-foreground">All Caught Up</p>
                     <p className="text-sm text-muted-foreground">No new renewal requests to process at this time.</p>
                 </div>
             ) : (
@@ -293,45 +293,45 @@ export default function LandlordRenewalReview() {
                         <div key={request.id} className="group relative bg-card border border-border rounded-[2.5rem] p-8 shadow-sm transition-all hover:border-primary/20 hover:shadow-xl hover:shadow-black/5">
                             <div className="flex justify-between items-start mb-8">
                                 <div className="flex items-center gap-4">
-                                    <div className="size-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-bold text-xl">
+                                    <div className="size-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black text-xl">
                                         {request.tenant.full_name.charAt(0)}
                                     </div>
                                     <div>
-                                        <h4 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">{request.tenant.full_name}</h4>
-                                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                                        <h4 className="text-lg font-black text-foreground group-hover:text-primary transition-colors">{request.tenant.full_name}</h4>
+                                        <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">
                                             {request.current_lease.unit.property.name} • Unit {request.current_lease.unit.name}
                                         </p>
                                     </div>
                                 </div>
-                                <span className="px-3 py-1 rounded-full bg-amber-500/10 text-amber-600 text-[10px] font-bold uppercase tracking-widest border border-amber-500/20">
+                                <span className="px-3 py-1 rounded-full bg-amber-500/10 text-amber-600 text-[10px] font-black uppercase tracking-widest border border-amber-500/20">
                                     Pending Review
                                 </span>
                             </div>
                             
                             <div className="grid grid-cols-2 gap-6 mb-8">
                                 <div className="space-y-1">
-                                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Current End Date</p>
-                                    <p className="font-bold text-foreground"><ClientOnlyDate date={request.current_lease.end_date} /></p>
+                                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">Current End Date</p>
+                                    <p className="font-black text-foreground"><ClientOnlyDate date={request.current_lease.end_date} /></p>
                                 </div>
                                 <div className="space-y-1">
-                                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Proposed Length</p>
-                                    <p className="font-bold text-foreground">
+                                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">Proposed Length</p>
+                                    <p className="font-black text-foreground">
                                         {Math.round((new Date(request.proposed_end_date).getTime() - new Date(request.proposed_start_date).getTime()) / (86400000 * 30.44))} Months
                                     </p>
                                 </div>
                                 <div className="space-y-1">
-                                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Proposed Rent</p>
-                                    <p className="font-bold text-foreground">PHP {request.proposed_monthly_rent?.toLocaleString()}</p>
+                                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">Proposed Rent</p>
+                                    <p className="font-black text-foreground">PHP {request.proposed_monthly_rent?.toLocaleString()}</p>
                                 </div>
                                 <div className="space-y-1">
-                                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Submitted On</p>
-                                    <p className="font-bold text-foreground"><ClientOnlyDate date={request.created_at} /></p>
+                                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">Submitted On</p>
+                                    <p className="font-black text-foreground"><ClientOnlyDate date={request.created_at} /></p>
                                 </div>
                             </div>
 
                             <button
                                 onClick={() => openReview(request)}
-                                className="w-full py-4 rounded-2xl bg-primary/5 border border-primary/10 text-primary hover:bg-primary hover:text-white font-bold uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-2"
+                                className="w-full py-4 rounded-2xl bg-primary/5 border border-primary/10 text-primary hover:bg-primary hover:text-white font-black uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-2"
                             >
                                 <FileText className="size-4" />
                                 Review Request
@@ -352,8 +352,8 @@ export default function LandlordRenewalReview() {
                                     <RefreshCw className="size-6" />
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-bold text-foreground tracking-tight">Review Renewal Terms</h3>
-                                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
+                                    <h3 className="text-xl font-black text-foreground tracking-tight">Review Renewal Terms</h3>
+                                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">
                                         Reviewing request for {selectedRequest.tenant.full_name}
                                     </p>
                                 </div>
@@ -371,28 +371,28 @@ export default function LandlordRenewalReview() {
                             {/* Summary Cards */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="bg-muted/30 rounded-3xl p-6 border border-border/50">
-                                    <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-bold mb-4">Current Lease</p>
+                                    <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-black mb-4">Current Lease</p>
                                     <div className="space-y-3">
                                         <div className="flex justify-between items-center">
                                             <span className="text-xs text-muted-foreground">Expires</span>
-                                            <span className="text-sm font-bold"><ClientOnlyDate date={selectedRequest.current_lease.end_date} /></span>
+                                            <span className="text-sm font-black"><ClientOnlyDate date={selectedRequest.current_lease.end_date} /></span>
                                         </div>
                                         <div className="flex justify-between items-center">
                                             <span className="text-xs text-muted-foreground">Monthly Rent</span>
-                                            <span className="text-sm font-bold">PHP {selectedRequest.current_lease.monthly_rent?.toLocaleString()}</span>
+                                            <span className="text-sm font-black">PHP {selectedRequest.current_lease.monthly_rent?.toLocaleString()}</span>
                                         </div>
                                     </div>
                                 </div>
                                 <div className="bg-primary/5 rounded-3xl p-6 border border-primary/20">
-                                    <p className="text-[10px] text-primary uppercase tracking-[0.2em] font-bold mb-4">Tenant Proposal</p>
+                                    <p className="text-[10px] text-primary uppercase tracking-[0.2em] font-black mb-4">Tenant Proposal</p>
                                     <div className="space-y-3">
                                         <div className="flex justify-between items-center">
                                             <span className="text-xs text-primary/70">Target Start</span>
-                                            <span className="text-sm font-bold text-primary"><ClientOnlyDate date={selectedRequest.proposed_start_date} /></span>
+                                            <span className="text-sm font-black text-primary"><ClientOnlyDate date={selectedRequest.proposed_start_date} /></span>
                                         </div>
                                         <div className="flex justify-between items-center">
                                             <span className="text-xs text-primary/70">Target Rent</span>
-                                            <span className="text-sm font-bold text-primary">PHP {selectedRequest.proposed_monthly_rent?.toLocaleString()}</span>
+                                            <span className="text-sm font-black text-primary">PHP {selectedRequest.proposed_monthly_rent?.toLocaleString()}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -400,11 +400,11 @@ export default function LandlordRenewalReview() {
 
                             {/* Editing Form */}
                             <div className="space-y-6">
-                                <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground border-b border-border pb-2">Finalize New Terms</h4>
+                                <h4 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground border-b border-border pb-2">Finalize New Terms</h4>
                                 
                                 <div className="grid grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <label htmlFor="new-start-date" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">New Start Date</label>
+                                        <label htmlFor="new-start-date" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">New Start Date</label>
                                         <input
                                             id="new-start-date"
                                             type="date"
@@ -414,7 +414,7 @@ export default function LandlordRenewalReview() {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label htmlFor="new-end-date" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">New End Date</label>
+                                        <label htmlFor="new-end-date" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">New End Date</label>
                                         <input
                                             id="new-end-date"
                                             type="date"
@@ -424,40 +424,40 @@ export default function LandlordRenewalReview() {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label htmlFor="monthly-rent" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Monthly Rent (PHP)</label>
+                                        <label htmlFor="monthly-rent" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Monthly Rent (PHP)</label>
                                         <div className="relative">
-                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">₱</span>
+                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-black">₱</span>
                                             <input
                                                 id="monthly-rent"
                                                 type="text"
                                                 value={proposedRent}
                                                 onChange={(e) => handleMoneyInput(e.target.value, setProposedRent)}
-                                                className="w-full p-4 pl-8 rounded-2xl border border-border bg-background text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                                className="w-full p-4 pl-8 rounded-2xl border border-border bg-background text-sm font-black focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                             />
                                         </div>
                                     </div>
                                     <div className="space-y-2">
                                         <div className="flex justify-between items-center">
-                                            <label htmlFor="security-deposit" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Security Deposit (PHP)</label>
+                                            <label htmlFor="security-deposit" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Security Deposit (PHP)</label>
                                             <button 
                                                 onClick={() => setProposedDeposit(formatWithCommas(selectedRequest.current_lease.security_deposit?.toString() || "0"))}
-                                                className="text-[10px] font-bold text-primary hover:underline uppercase tracking-tighter"
+                                                className="text-[10px] font-black text-primary hover:underline uppercase tracking-tighter"
                                             >
                                                 Use Current Balance
                                             </button>
                                         </div>
                                         <div className="relative">
-                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">₱</span>
+                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-black">₱</span>
                                             <input
                                                 type="text"
                                                 value={proposedDeposit}
                                                 onChange={(e) => handleMoneyInput(e.target.value, setProposedDeposit)}
-                                                className="w-full p-4 pl-8 rounded-2xl border border-border bg-background text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                                className="w-full p-4 pl-8 rounded-2xl border border-border bg-background text-sm font-black focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                             />
                                         </div>
                                         <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted/30 border border-border/50">
-                                            <span className="text-[9px] font-bold text-muted-foreground uppercase">Current Held:</span>
-                                            <span className="text-[9px] font-bold text-foreground">PHP {selectedRequest.current_lease.security_deposit?.toLocaleString()}</span>
+                                            <span className="text-[9px] font-black text-muted-foreground uppercase">Current Held:</span>
+                                            <span className="text-[9px] font-black text-foreground">PHP {selectedRequest.current_lease.security_deposit?.toLocaleString()}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -465,7 +465,7 @@ export default function LandlordRenewalReview() {
 
                             {/* Internal Notes */}
                             <div className="space-y-2">
-                                <label htmlFor="landlord-notes" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block">Landlord Notes (Optional)</label>
+                                <label htmlFor="landlord-notes" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block">Landlord Notes (Optional)</label>
                                 <textarea
                                     id="landlord-notes"
                                     value={rejectNotes}
@@ -481,7 +481,7 @@ export default function LandlordRenewalReview() {
                             <button
                                 onClick={handleReject}
                                 disabled={submitting}
-                                className="px-6 py-4 rounded-2xl border border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white font-bold uppercase tracking-widest text-xs transition-all flex-1 disabled:opacity-50 flex items-center justify-center gap-2"
+                                className="px-6 py-4 rounded-2xl border border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white font-black uppercase tracking-widest text-xs transition-all flex-1 disabled:opacity-50 flex items-center justify-center gap-2"
                             >
                                 <AlertTriangle className="size-4" />
                                 Reject Request
@@ -489,7 +489,7 @@ export default function LandlordRenewalReview() {
                             <button
                                 onClick={handleApprove}
                                 disabled={submitting}
-                                className="px-6 py-4 rounded-2xl bg-primary text-white font-bold uppercase tracking-widest text-xs hover:bg-primary-dark transition-all flex flex-[1.5] items-center justify-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-50"
+                                className="px-6 py-4 rounded-2xl bg-primary text-white font-black uppercase tracking-widest text-xs hover:bg-primary-dark transition-all flex flex-[1.5] items-center justify-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-50"
                             >
                                 {submitting ? "Creating Lease..." : "Approve & Generate Lease"}
                                 <CheckCircle2 className="size-4" />

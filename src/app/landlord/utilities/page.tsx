@@ -122,13 +122,13 @@ export default function LandlordUtilitiesPage() {
                     <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
                         <section className="space-y-4">
                             <div className="flex items-center gap-3">
-                                <span className="flex h-6 items-center rounded-full bg-primary/10 px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
+                                <span className="flex h-6 items-center rounded-full bg-primary/10 px-3 text-[10px] font-black uppercase tracking-[0.2em] text-primary">
                                     Facilities
                                 </span>
                                 <span className="h-px w-12 bg-border" />
-                                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Property Assets</span>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Property Assets</span>
                             </div>
-                            <h1 className="text-5xl font-bold tracking-tight text-foreground md:text-6xl lg:text-7xl">
+                            <h1 className="text-5xl font-black tracking-tight text-foreground md:text-6xl lg:text-7xl">
                                 Property <span className="text-primary">Facilities</span>
                             </h1>
                             <p className="max-w-xl text-lg font-medium text-muted-foreground/80 leading-relaxed">
@@ -139,7 +139,7 @@ export default function LandlordUtilitiesPage() {
                         <div className="flex flex-wrap gap-4">
                             <button 
                                 onClick={() => setIsAddModalOpen(true)}
-                                className="flex items-center gap-3 rounded-2xl bg-primary px-8 py-4 text-sm font-bold text-primary-foreground shadow-2xl shadow-primary/20 transition-all hover:bg-primary/90 hover:scale-[1.05] active:scale-95"
+                                className="flex items-center gap-3 rounded-2xl bg-primary px-8 py-4 text-sm font-black text-primary-foreground shadow-2xl shadow-primary/20 transition-all hover:bg-primary/90 hover:scale-[1.05] active:scale-95"
                             >
                                 <Plus className="size-5" />
                                 Add Facility
@@ -162,7 +162,7 @@ export default function LandlordUtilitiesPage() {
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id as "list" | "requests" | "history")}
                                 className={cn(
-                                    "relative flex items-center gap-3 rounded-2xl px-6 py-3.5 text-sm font-bold transition-all",
+                                    "relative flex items-center gap-3 rounded-2xl px-6 py-3.5 text-sm font-black transition-all",
                                     activeTab === tab.id 
                                         ? "bg-card text-foreground shadow-xl ring-1 ring-border/50" 
                                         : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
@@ -171,7 +171,7 @@ export default function LandlordUtilitiesPage() {
                                 <tab.icon className={cn("size-4 transition-colors", activeTab === tab.id ? "text-primary" : "text-muted-foreground")} />
                                 {tab.label}
                                 {tab.badge && (
-                                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">
+                                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-black text-primary-foreground">
                                         {tab.badge}
                                     </span>
                                 )}
@@ -221,12 +221,12 @@ export default function LandlordUtilitiesPage() {
                                     <Plus className="size-8" />
                                 </div>
                                 <div className="text-center space-y-2">
-                                    <p className="text-lg font-bold text-foreground">Add New Facility</p>
+                                    <p className="text-lg font-black text-foreground">Add New Facility</p>
                                     <p className="text-xs text-muted-foreground/70 leading-relaxed">
                                         Register a new room, amenity, or service.
                                     </p>
                                 </div>
-                                <div className="flex items-center gap-1.5 text-primary font-bold text-xs opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">
+                                <div className="flex items-center gap-1.5 text-primary font-black text-xs opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">
                                     Get started <ArrowRight className="size-3.5" />
                                 </div>
                             </button>
@@ -241,7 +241,7 @@ export default function LandlordUtilitiesPage() {
                                     <div className="mb-4 rounded-full bg-muted p-4">
                                         <Search className="size-8 text-muted-foreground" />
                                     </div>
-                                    <h3 className="text-xl font-bold">No facilities found</h3>
+                                    <h3 className="text-xl font-black">No facilities found</h3>
                                     <p className="text-muted-foreground">Try adjusting your search or add a new facility.</p>
                                 </div>
                             ) : (
@@ -273,7 +273,7 @@ export default function LandlordUtilitiesPage() {
                                                 {/* Status Badge */}
                                                 <div className="absolute right-4 top-4 z-20">
                                                     <div className={cn(
-                                                        "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.1em] border shadow-lg",
+                                                        "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.1em] border shadow-lg",
                                                         utility.status === "Active" 
                                                             ? "bg-white text-emerald-600 border-emerald-100 dark:bg-emerald-950 dark:text-emerald-400 dark:border-emerald-800" 
                                                             : "bg-white text-amber-600 border-amber-100 dark:bg-amber-950 dark:text-amber-400 dark:border-amber-800"
@@ -296,17 +296,17 @@ export default function LandlordUtilitiesPage() {
                                                 {/* Header: Type + Name */}
                                                 <div className="space-y-2">
                                                     <div className="flex items-center gap-2">
-                                                        <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
+                                                        <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-primary">
                                                             <Zap className="size-3" />
                                                             {utility.type}
                                                         </span>
                                                         {utility.tags?.slice(0, 2).map((tag: string) => (
-                                                            <span key={tag} className="rounded-full bg-muted/60 px-2.5 py-0.5 text-[10px] font-bold text-muted-foreground">
+                                                            <span key={tag} className="rounded-full bg-muted/60 px-2.5 py-0.5 text-[10px] font-black text-muted-foreground">
                                                                 {tag}
                                                             </span>
                                                         ))}
                                                     </div>
-                                                    <h4 className="text-xl font-bold text-foreground leading-tight group-hover:text-primary transition-colors">
+                                                    <h4 className="text-xl font-black text-foreground leading-tight group-hover:text-primary transition-colors">
                                                         {utility.name}
                                                     </h4>
                                                 </div>
@@ -333,10 +333,10 @@ export default function LandlordUtilitiesPage() {
                                                 <div className="mt-auto pt-5 flex items-center justify-between border-t border-border/40">
                                                     <div>
                                                         <div className="flex items-baseline gap-1">
-                                                            <span className="text-2xl font-bold text-foreground">
+                                                            <span className="text-2xl font-black text-foreground">
                                                                 {utility.price_per_unit === 0 ? "Free" : `₱${Number(utility.price_per_unit).toLocaleString()}`}
                                                             </span>
-                                                            {utility.price_per_unit > 0 && <span className="text-xs font-bold text-muted-foreground">/{utility.unit_type}</span>}
+                                                            {utility.price_per_unit > 0 && <span className="text-xs font-black text-muted-foreground">/{utility.unit_type}</span>}
                                                         </div>
                                                     </div>
                                                     
@@ -348,7 +348,7 @@ export default function LandlordUtilitiesPage() {
                                                         >
                                                             <X className="size-4" />
                                                         </button>
-                                                        <button className="flex items-center gap-1.5 rounded-xl bg-foreground px-4 py-2 text-xs font-bold text-background transition-all hover:bg-primary hover:text-primary-foreground hover:shadow-md hover:shadow-primary/20">
+                                                        <button className="flex items-center gap-1.5 rounded-xl bg-foreground px-4 py-2 text-xs font-black text-background transition-all hover:bg-primary hover:text-primary-foreground hover:shadow-md hover:shadow-primary/20">
                                                             Manage
                                                         </button>
                                                     </div>
@@ -373,11 +373,11 @@ export default function LandlordUtilitiesPage() {
                                 <table className="w-full text-left border-collapse">
                                     <thead>
                                         <tr className="bg-muted/40 border-b border-border">
-                                            <th className="p-8 text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Applicant</th>
-                                            <th className="p-8 text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Reservation Details</th>
-                                            <th className="p-8 text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Billing</th>
-                                            <th className="p-8 text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Status</th>
-                                            <th className="p-8 text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground text-right">Actions</th>
+                                            <th className="p-8 text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Applicant</th>
+                                            <th className="p-8 text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Reservation Details</th>
+                                            <th className="p-8 text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Billing</th>
+                                            <th className="p-8 text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Status</th>
+                                            <th className="p-8 text-xs font-black uppercase tracking-[0.2em] text-muted-foreground text-right">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-border/40">
@@ -386,7 +386,7 @@ export default function LandlordUtilitiesPage() {
                                                 <td colSpan={5} className="p-20 text-center">
                                                     <div className="flex flex-col items-center gap-3">
                                                         <ClipboardList className="size-12 text-muted-foreground/20" />
-                                                        <p className="text-lg font-bold text-muted-foreground">No bookings found</p>
+                                                        <p className="text-lg font-black text-muted-foreground">No bookings found</p>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -398,13 +398,13 @@ export default function LandlordUtilitiesPage() {
                                                             {req.tenant?.avatar_url ? (
                                                                 <Image src={req.tenant.avatar_url} alt="" width={56} height={56} className="rounded-[1.25rem] object-cover" />
                                                             ) : (
-                                                                <div className="flex size-14 items-center justify-center rounded-[1.25rem] bg-primary/10 text-primary font-bold text-lg">
+                                                                <div className="flex size-14 items-center justify-center rounded-[1.25rem] bg-primary/10 text-primary font-black text-lg">
                                                                     {req.tenant?.full_name?.charAt(0) || "T"}
                                                                 </div>
                                                             )}
                                                             <div className="flex flex-col gap-1">
-                                                                <span className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">{req.tenant?.full_name || "Unknown Tenant"}</span>
-                                                                <span className="text-xs font-bold text-muted-foreground flex items-center gap-2">
+                                                                <span className="text-lg font-black text-foreground group-hover:text-primary transition-colors">{req.tenant?.full_name || "Unknown Tenant"}</span>
+                                                                <span className="text-xs font-black text-muted-foreground flex items-center gap-2">
                                                                     <Zap className="size-3.5 text-primary" />
                                                                     {req.amenity?.name}
                                                                 </span>
@@ -413,25 +413,25 @@ export default function LandlordUtilitiesPage() {
                                                     </td>
                                                     <td className="p-8">
                                                         <div className="flex flex-col gap-3">
-                                                            <div className="flex items-center gap-3 text-sm font-bold text-foreground">
+                                                            <div className="flex items-center gap-3 text-sm font-black text-foreground">
                                                                 <Calendar className="size-4 text-primary" />
                                                                 {req.booking_date}
                                                             </div>
-                                                            <div className="flex items-center gap-3 text-xs text-muted-foreground font-bold">
+                                                            <div className="flex items-center gap-3 text-xs text-muted-foreground font-black">
                                                                 <Clock className="size-4" />
                                                                 {req.start_time.slice(0, 5)} - {req.end_time.slice(0, 5)}
                                                             </div>
                                                         </div>
                                                     </td>
                                                     <td className="p-8">
-                                                        <div className="flex items-center gap-2 font-bold text-2xl text-foreground tracking-tighter">
+                                                        <div className="flex items-center gap-2 font-black text-2xl text-foreground tracking-tighter">
                                                             <span className="text-emerald-500 text-sm">₱</span>
                                                             {Number(req.total_price).toLocaleString()}
                                                         </div>
                                                     </td>
                                                     <td className="p-8">
                                                         <span className={cn(
-                                                            "inline-flex items-center rounded-2xl px-5 py-2 text-[10px] font-bold uppercase tracking-widest border",
+                                                            "inline-flex items-center rounded-2xl px-5 py-2 text-[10px] font-black uppercase tracking-widest border",
                                                             req.status === "Pending" 
                                                                 ? "bg-amber-500/10 text-amber-600 border-amber-500/20" 
                                                                 : req.status === "Approved"
@@ -484,11 +484,11 @@ export default function LandlordUtilitiesPage() {
                             <div className="flex size-24 items-center justify-center rounded-[2.5rem] bg-muted mb-8 shadow-inner">
                                 <HistoryIcon className="size-12 text-muted-foreground/30" />
                             </div>
-                            <h3 className="text-3xl font-bold text-foreground tracking-tight">Archive Management</h3>
+                            <h3 className="text-3xl font-black text-foreground tracking-tight">Archive Management</h3>
                             <p className="text-base font-medium text-muted-foreground/60 text-center max-w-md mt-4 leading-relaxed">
                                 Review deep historical insights, occupancy trends, and long-term revenue analysis across all facilities.
                             </p>
-                            <button className="mt-10 rounded-2xl border border-border px-10 py-4 text-sm font-bold text-foreground hover:bg-muted transition-all active:scale-95 shadow-sm">
+                            <button className="mt-10 rounded-2xl border border-border px-10 py-4 text-sm font-black text-foreground hover:bg-muted transition-all active:scale-95 shadow-sm">
                                 View Full History
                             </button>
                         </motion.div>

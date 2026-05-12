@@ -126,11 +126,11 @@ export default function InvoicesPage() {
     <div className="mx-auto max-w-[1600px] space-y-10 px-4 py-8 md:px-8 lg:py-10">
       <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/80 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.25em] text-primary shadow-sm backdrop-blur-md">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/80 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.25em] text-primary shadow-sm backdrop-blur-md">
             <FileText className="size-3.5" />
             Financial Center
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">Finance Hub</h1>
+          <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">Finance Hub</h1>
           <p className="mt-2 text-sm text-muted-foreground">Manage your unified ledger, track expenses, and oversee rent invoices.</p>
         </div>
       </div>
@@ -158,7 +158,7 @@ export default function InvoicesPage() {
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={cn(
-              "px-6 py-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2",
+              "px-6 py-3 text-sm font-black uppercase tracking-wider transition-all border-b-2",
               activeTab === tab
                 ? "border-primary text-primary"
                 : "border-transparent text-muted-foreground hover:border-border hover:text-foreground"
@@ -176,8 +176,8 @@ export default function InvoicesPage() {
         <div className="mb-6 flex shrink-0 flex-col gap-4 border-b border-border/50 pb-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-primary">Ledger</p>
-              <h2 className="mt-2 text-2xl font-bold text-foreground lg:text-3xl">Issued invoices</h2>
+              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-primary">Ledger</p>
+              <h2 className="mt-2 text-2xl font-black text-foreground lg:text-3xl">Issued invoices</h2>
             </div>
             <div className="relative w-full md:max-w-xs">
               <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -186,7 +186,7 @@ export default function InvoicesPage() {
           </div>
           
           <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-background/40 p-3">
-            <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground border-r border-border/50 pr-4">
+            <div className="flex items-center gap-2 text-sm font-black text-muted-foreground border-r border-border/50 pr-4">
               <Filter className="size-4" /> Filters
             </div>
             
@@ -228,31 +228,31 @@ export default function InvoicesPage() {
         </div>
 
         <div className="custom-scrollbar space-y-5 overflow-y-auto pr-2">
-          {loading && <div className="flex flex-col items-center justify-center rounded-[2rem] border border-border/50 bg-background/50 py-16 text-muted-foreground"><Loader2 className="mb-4 size-8 animate-spin text-primary" /><p className="text-sm font-bold uppercase tracking-widest text-foreground">Loading invoices...</p></div>}
+          {loading && <div className="flex flex-col items-center justify-center rounded-[2rem] border border-border/50 bg-background/50 py-16 text-muted-foreground"><Loader2 className="mb-4 size-8 animate-spin text-primary" /><p className="text-sm font-black uppercase tracking-widest text-foreground">Loading invoices...</p></div>}
           {!loading && processedInvoices.map((invoice) => (
             <button key={invoice.id} onClick={() => setSelectedInvoiceId(invoice.id)} className="group w-full rounded-[2rem] border border-border/50 bg-background/80 p-6 shadow-sm backdrop-blur-md transition-all hover:scale-[1.01] hover:border-primary/30 hover:bg-card hover:shadow-md md:p-8">
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
                   <div className="space-y-3">
                     <div className="flex flex-wrap items-center gap-3">
-                      <p className="text-lg font-bold tracking-tight text-foreground">{invoice.invoiceNumber}</p>
+                      <p className="text-lg font-black tracking-tight text-foreground">{invoice.invoiceNumber}</p>
                       <div className="flex items-center gap-2">
                         {(() => {
                           const config = getStatusConfig(invoice.workflowStatus ?? invoice.status);
                           return (
-                            <span className={cn("inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-[0.15em] shadow-sm", config.classes)}>
+                            <span className={cn("inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.15em] shadow-sm", config.classes)}>
                               <div className="mr-1.5 size-1 rounded-full bg-current animate-pulse" />
                               {config.label}
                             </span>
                           );
                         })()}
                         {invoice.proofStatus === "submitted" && (
-                          <span className="relative overflow-hidden rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-blue-500 shadow-sm">
+                          <span className="relative overflow-hidden rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.15em] text-blue-500 shadow-sm">
                             <span className="absolute inset-0 -translate-x-[100%] animate-shimmer bg-gradient-to-r from-transparent via-white/20 to-transparent" />
                             Proof Attached
                           </span>
                         )}
                         {invoice.hasRefundRequest && (
-                          <span className="relative overflow-hidden rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-amber-500 shadow-sm">
+                          <span className="relative overflow-hidden rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.15em] text-amber-500 shadow-sm">
                             <span className="absolute inset-0 -translate-x-[100%] animate-shimmer bg-gradient-to-r from-transparent via-white/20 to-transparent" />
                             Refund Details Sent
                           </span>
@@ -260,7 +260,7 @@ export default function InvoicesPage() {
                       </div>
                     </div>
                     
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-bold text-muted-foreground">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-black text-muted-foreground">
                       <span className="flex items-center gap-2 hover:text-foreground transition-colors">
                         <div className="size-1.5 rounded-full bg-primary/40" />
                         {invoice.tenant}
@@ -296,10 +296,10 @@ export default function InvoicesPage() {
           <div className="mb-6 flex shrink-0 flex-col gap-4 border-b border-border/50 pb-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-primary">Overview</p>
-                <h2 className="mt-2 text-2xl font-bold text-foreground lg:text-3xl">Financial Ledger</h2>
+                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-primary">Overview</p>
+                <h2 className="mt-2 text-2xl font-black text-foreground lg:text-3xl">Financial Ledger</h2>
               </div>
-              <button className="group inline-flex items-center gap-2.5 rounded-full border border-border/50 bg-background/80 px-6 py-3 text-sm font-bold shadow-sm transition-all hover:bg-muted active:scale-95">
+              <button className="group inline-flex items-center gap-2.5 rounded-full border border-border/50 bg-background/80 px-6 py-3 text-sm font-black shadow-sm transition-all hover:bg-muted active:scale-95">
                 Download Statement
               </button>
             </div>
@@ -310,7 +310,7 @@ export default function InvoicesPage() {
                   <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-4">
                     <FileText className="size-8" />
                   </div>
-                  <p className="text-lg font-bold text-foreground">No entries yet.</p>
+                  <p className="text-lg font-black text-foreground">No entries yet.</p>
                   <p className="mt-2 max-w-md mx-auto">Your timeline of paid invoices and recorded expenses will appear here.</p>
                 </div>
             ) : (
@@ -325,11 +325,11 @@ export default function InvoicesPage() {
                                     {item.type === 'income' ? <Plus className="size-5" /> : <Filter className="size-5" />}
                                 </div>
                                 <div>
-                                    <p className="text-sm font-bold text-foreground capitalize">{item.label}</p>
+                                    <p className="text-sm font-black text-foreground capitalize">{item.label}</p>
                                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground" suppressHydrationWarning>{item.desc} • <span suppressHydrationWarning>{item.date.toLocaleDateString()}</span></p>
                                 </div>
                             </div>
-                            <p className={cn("text-base font-bold", item.type === 'income' ? 'text-emerald-500' : 'text-rose-500')}>
+                            <p className={cn("text-base font-black", item.type === 'income' ? 'text-emerald-500' : 'text-rose-500')}>
                                 {item.type === 'income' ? '+' : '-'}{formatPhpCurrency(item.amount)}
                             </p>
                         </div>
@@ -346,12 +346,12 @@ export default function InvoicesPage() {
           <div className="mb-6 flex shrink-0 flex-col gap-4 border-b border-border/50 pb-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-primary">Outflow</p>
-                <h2 className="mt-2 text-2xl font-bold text-foreground lg:text-3xl">Expense Log</h2>
+                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-primary">Outflow</p>
+                <h2 className="mt-2 text-2xl font-black text-foreground lg:text-3xl">Expense Log</h2>
               </div>
               <button 
                 onClick={() => setIsExpenseModalOpen(true)}
-                className="group inline-flex items-center gap-2.5 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-sm transition-all hover:scale-105 hover:bg-primary/90 active:scale-95"
+                className="group inline-flex items-center gap-2.5 rounded-full bg-primary px-6 py-3 text-sm font-black text-primary-foreground shadow-sm transition-all hover:scale-105 hover:bg-primary/90 active:scale-95"
               >
                 <Plus className="size-4" />
                 Record Expense
@@ -364,7 +364,7 @@ export default function InvoicesPage() {
                   <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-500 mb-4">
                     <Filter className="size-8" />
                   </div>
-                  <p className="text-lg font-bold text-foreground">No expenses recorded yet.</p>
+                  <p className="text-lg font-black text-foreground">No expenses recorded yet.</p>
                   <p className="mt-2 max-w-md mx-auto">Click &quot;Record Expense&quot; to log maintenance costs, utility bills you cover, and property taxes to keep your accounting accurate.</p>
                 </div>
             ) : (
@@ -375,13 +375,13 @@ export default function InvoicesPage() {
                                 <Filter className="size-5" />
                             </div>
                             <div suppressHydrationWarning>
-                                <p className="text-sm font-bold text-foreground capitalize">{expense.category}</p>
+                                <p className="text-sm font-black text-foreground capitalize">{expense.category}</p>
                                 <p className="text-xs text-muted-foreground">{expense.description}</p>
                                 <p className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1">Incurred: <ClientOnlyDate date={expense.date_incurred} /></p>
                             </div>
                         </div>
                         <div className="text-right">
-                            <p className="text-base font-bold text-foreground">{formatPhpCurrency(expense.amount)}</p>
+                            <p className="text-base font-black text-foreground">{formatPhpCurrency(expense.amount)}</p>
                         </div>
                     </div>
                 ))
@@ -399,8 +399,8 @@ export default function InvoicesPage() {
 function HeroStat({ label, value, highlight }: { label: string; value: string; highlight?: string }) {
   return (
     <div className="group rounded-[2rem] border border-border/50 bg-background/60 p-5 shadow-sm backdrop-blur-md transition-all hover:bg-background/80 hover:border-border/80">
-      <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">{label}</p>
-      <p className={cn("mt-3 text-3xl font-bold md:text-2xl lg:text-3xl", highlight ?? "text-foreground")}>{value}</p>
+      <p className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground">{label}</p>
+      <p className={cn("mt-3 text-3xl font-black md:text-2xl lg:text-3xl", highlight ?? "text-foreground")}>{value}</p>
     </div>
   );
 }
@@ -408,8 +408,8 @@ function HeroStat({ label, value, highlight }: { label: string; value: string; h
 function LedgerMetric({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">{label}</p>
-      <p className={cn("whitespace-nowrap text-base font-bold lg:text-lg tracking-tight", highlight ? "text-primary" : "text-foreground")}>{value}</p>
+      <p className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{label}</p>
+      <p className={cn("whitespace-nowrap text-base font-black lg:text-lg tracking-tight", highlight ? "text-primary" : "text-foreground")}>{value}</p>
     </div>
   );
 }

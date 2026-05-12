@@ -151,6 +151,7 @@ export default function LandlordDashboard() {
         const controller = new AbortController();
 
         const loadPayments = async () => {
+            // Batch initial state updates
             setPaymentsLoading(true);
             setPaymentsError(null);
 
@@ -168,6 +169,7 @@ export default function LandlordDashboard() {
                     payments?: Record<PaymentCategory, PaymentListItem[]>;
                 };
 
+                // Batch payment data update
                 setPaymentsByCategory({
                     Overdue: payload.payments?.Overdue ?? [],
                     "Near Due": payload.payments?.["Near Due"] ?? [],
@@ -339,11 +341,11 @@ export default function LandlordDashboard() {
                                     <AlertTriangle className="size-7" />
                                 </div>
                                 <div>
-                                    <h3 className="text-lg font-bold text-amber-300">{systemAdvisory.title}</h3>
+                                    <h3 className="text-lg font-black text-amber-300">{systemAdvisory.title}</h3>
                                     <p className="text-sm font-medium text-muted-foreground/80">{systemAdvisory.message}</p>
                                 </div>
                             </div>
-                            <div className="rounded-xl border border-amber-500/25 bg-amber-500/12 px-4 py-2 text-xs font-bold uppercase tracking-widest text-amber-300">
+                            <div className="rounded-xl border border-amber-500/25 bg-amber-500/12 px-4 py-2 text-xs font-black uppercase tracking-widest text-amber-300">
                                 Global Alert
                             </div>
                         </div>
@@ -372,11 +374,11 @@ export default function LandlordDashboard() {
                                 <CreditCard className="size-6" />
                             </div>
                             <div>
-                                <h2 className="text-2xl font-bold tracking-tight text-foreground">Cash Flow Ledger</h2>
+                                <h2 className="text-2xl font-black tracking-tight text-foreground">Cash Flow Ledger</h2>
                                 <p className="text-sm font-medium text-muted-foreground/80">Track what is overdue, due this week, and already paid.</p>
                             </div>
                         </div>
-                        <Link href="/landlord/invoices" className="group shrink-0 flex items-center gap-2 rounded-xl border border-white/10 bg-card/70 px-4 py-2 text-xs font-bold uppercase tracking-widest transition-all hover:bg-card">
+                        <Link href="/landlord/invoices" className="group shrink-0 flex items-center gap-2 rounded-xl border border-white/10 bg-card/70 px-4 py-2 text-xs font-black uppercase tracking-widest transition-all hover:bg-card">
                             View Invoices
                             <ArrowUpRight className="size-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
                         </Link>
@@ -390,11 +392,11 @@ export default function LandlordDashboard() {
                                     <RefreshCw className="size-6" />
                                 </div>
                                 <div>
-                                    <h2 className="text-2xl font-bold tracking-tight text-foreground">Lease Renewals</h2>
+                                    <h2 className="text-2xl font-black tracking-tight text-foreground">Lease Renewals</h2>
                                     <p className="text-sm font-medium text-muted-foreground/80">Review and manage tenant renewal requests.</p>
                                 </div>
                             </div>
-                            <Link href="/landlord/tenants?tab=renewals" className="group shrink-0 flex items-center gap-2 rounded-xl border border-white/10 bg-card/70 px-4 py-2 text-xs font-bold uppercase tracking-widest transition-all hover:bg-card">
+                            <Link href="/landlord/tenants?tab=renewals" className="group shrink-0 flex items-center gap-2 rounded-xl border border-white/10 bg-card/70 px-4 py-2 text-xs font-black uppercase tracking-widest transition-all hover:bg-card">
                                 View All
                                 <ArrowUpRight className="size-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
                             </Link>
@@ -412,13 +414,13 @@ export default function LandlordDashboard() {
                                         <div className="flex items-start gap-3">
                                             <div className={cn("size-1.5 rounded-full", dot)} />
                                             <div className="space-y-1">
-                                                <h3 className={cn("text-[10px] font-bold uppercase tracking-[0.2em]", tone)}>{label}</h3>
-                                                <p className="text-[10px] font-bold text-muted-foreground/60">{hint}</p>
+                                                <h3 className={cn("text-[10px] font-black uppercase tracking-[0.2em]", tone)}>{label}</h3>
+                                                <p className="text-[10px] font-black text-muted-foreground/60">{hint}</p>
                                             </div>
                                         </div>
                                         <button 
                                             onClick={() => setOpenPaymentModal(key)} 
-                                            className="text-[10px] font-bold text-muted-foreground/60 transition-colors hover:text-primary uppercase tracking-tighter"
+                                            className="text-[10px] font-black text-muted-foreground/60 transition-colors hover:text-primary uppercase tracking-tighter"
                                         >
                                             See more
                                         </button>
@@ -437,7 +439,7 @@ export default function LandlordDashboard() {
                                             </div>
                                         ) : paymentsError ? (
                                             <div className="p-4 text-center">
-                                                <p className="text-xs text-red-500/80 font-bold">{paymentsError}</p>
+                                                <p className="text-xs text-red-500/80 font-black">{paymentsError}</p>
                                             </div>
                                         ) : topItem ? (
                                             <PaymentCard
@@ -451,7 +453,7 @@ export default function LandlordDashboard() {
                                         ) : (
                                             <div className="flex flex-col items-center justify-center py-6 text-muted-foreground/40">
                                                 <CheckCircle2 className="size-6 mb-2" />
-                                                <p className="text-[9px] font-bold uppercase tracking-widest">{emptyState}</p>
+                                                <p className="text-[9px] font-black uppercase tracking-widest">{emptyState}</p>
                                             </div>
                                         )}
                                     </div>
@@ -500,7 +502,7 @@ export default function LandlordDashboard() {
                                     <QrCode className="size-6" />
                                 </div>
                                 <div>
-                                    <h2 className="text-xl font-bold text-foreground">Private Referral Link</h2>
+                                    <h2 className="text-xl font-black text-foreground">Private Referral Link</h2>
                                     <p className="text-sm font-medium text-muted-foreground/80">Generate exclusive invitation tokens for new residents.</p>
                                 </div>
                             </div>
@@ -572,7 +574,7 @@ export default function LandlordDashboard() {
                                                             className="object-cover"
                                                         />
                                                     ) : (
-                                                        <span className="text-2xl font-bold text-white/90">{selectedActionPayment.tenant.charAt(0)}</span>
+                                                        <span className="text-2xl font-black text-white/90">{selectedActionPayment.tenant.charAt(0)}</span>
                                                     )}
                                                     <div className="absolute -bottom-0.5 -right-0.5 size-5 rounded-full border-4 border-card bg-emerald-500 shadow-lg" />
                                                 </div>
@@ -581,7 +583,7 @@ export default function LandlordDashboard() {
                                                     <h2 className="text-2xl font-normal tracking-tight text-foreground truncate mb-0.5">
                                                         {selectedActionPayment.tenant}
                                                     </h2>
-                                                    <p className="text-base text-muted-foreground truncate uppercase tracking-widest font-bold">
+                                                    <p className="text-base text-muted-foreground truncate uppercase tracking-widest font-black">
                                                         {selectedActionPayment.unit}
                                                     </p>
                                                 </div>
@@ -600,20 +602,20 @@ export default function LandlordDashboard() {
                                     <div className="px-8 pb-4 space-y-3">
                                         <div className="rounded-2xl bg-muted/30 p-4 border border-border/50">
                                             <div className="flex items-center justify-between mb-1">
-                                                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Settlement Due</p>
-                                                <span className="text-[10px] font-bold text-red-500 bg-red-500/10 px-2 py-0.5 rounded-full">Overdue</span>
+                                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Settlement Due</p>
+                                                <span className="text-[10px] font-black text-red-500 bg-red-500/10 px-2 py-0.5 rounded-full">Overdue</span>
                                             </div>
-                                            <h4 className="text-3xl font-bold text-foreground">PHP {selectedActionPayment.amount.toLocaleString()}</h4>
+                                            <h4 className="text-3xl font-black text-foreground">PHP {selectedActionPayment.amount.toLocaleString()}</h4>
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-3">
                                             <div className="rounded-2xl bg-muted/20 p-4 border border-border/30">
-                                                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-1">Lease Ends</p>
-                                                <p className="text-xs font-bold text-foreground">Oct 2026</p>
+                                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-1">Lease Ends</p>
+                                                <p className="text-xs font-black text-foreground">Oct 2026</p>
                                             </div>
                                             <div className="rounded-2xl bg-muted/20 p-4 border border-border/30">
-                                                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-1">Tenant Status</p>
-                                                <p className="text-xs font-bold text-emerald-500">Good Standing</p>
+                                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-1">Tenant Status</p>
+                                                <p className="text-xs font-black text-emerald-500">Good Standing</p>
                                             </div>
                                         </div>
                                     </div>
@@ -658,9 +660,9 @@ export default function LandlordDashboard() {
                                     <div className="mx-auto mb-6 flex size-20 items-center justify-center rounded-3xl bg-primary/10 text-primary">
                                         <AlertTriangle className="size-10" />
                                     </div>
-                                    <h3 className="text-xl font-bold text-foreground">Confirm Settlement</h3>
+                                    <h3 className="text-xl font-black text-foreground">Confirm Settlement</h3>
                                     <div className="mt-4 rounded-2xl border border-primary/20 bg-primary/5 p-5">
-                                        <p className="text-xs font-bold leading-relaxed text-primary/80">
+                                        <p className="text-xs font-black leading-relaxed text-primary/80">
                                             Make sure that the tenant has already paid their rent. Seek proof of payment for GCash payments.
                                         </p>
                                     </div>
@@ -671,13 +673,13 @@ export default function LandlordDashboard() {
                                                 setSelectedActionPayment(null);
                                                 setIsConfirmingAction(false);
                                             }}
-                                            className="w-full rounded-2xl bg-primary py-4 text-sm font-bold uppercase tracking-widest text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95"
+                                            className="w-full rounded-2xl bg-primary py-4 text-sm font-black uppercase tracking-widest text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95"
                                         >
                                             Complete Settlement
                                         </button>
                                         <button 
                                             onClick={() => setIsConfirmingAction(false)}
-                                            className="w-full rounded-2xl border border-white/10 bg-card/70 py-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 transition-all hover:bg-card hover:text-foreground"
+                                            className="w-full rounded-2xl border border-white/10 bg-card/70 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 transition-all hover:bg-card hover:text-foreground"
                                         >
                                             Go Back
                                         </button>
@@ -716,15 +718,15 @@ function PaymentCard({ payment, fallbackAvatar, onClick }: { payment: PaymentLis
                     )} />
                 </div>
                 <div className="min-w-0 max-w-[120px] sm:max-w-[160px]">
-                    <h4 className="truncate text-sm font-bold text-foreground group-hover:text-primary transition-colors">{tenant}</h4>
-                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-tight">{unit}</p>
+                    <h4 className="truncate text-sm font-black text-foreground group-hover:text-primary transition-colors">{tenant}</h4>
+                    <p className="text-[11px] font-black text-muted-foreground uppercase tracking-tight">{unit}</p>
                 </div>
             </div>
 
             <div className="text-right relative z-10 flex flex-col items-end">
-                <h4 className="mb-0.5 text-sm font-bold text-foreground">PHP {amount.toLocaleString()}</h4>
+                <h4 className="mb-0.5 text-sm font-black text-foreground">PHP {amount.toLocaleString()}</h4>
                 <div className="flex items-center justify-end gap-1.5 mt-1">
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60">{date}</span>
+                    <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60">{date}</span>
                 </div>
             </div>
 

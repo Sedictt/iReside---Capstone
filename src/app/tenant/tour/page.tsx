@@ -149,14 +149,14 @@ export default function TenantTourPage() {
     ) : (
         <div className="mx-auto max-w-3xl py-10 space-y-6">
             <section className="rounded-2xl border border-border bg-card p-6 space-y-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-primary font-bold">Tenant Product Tour</p>
-                <h1 className="text-3xl font-bold tracking-tight">Explore your tenant portal in five guided steps</h1>
+                <p className="text-xs uppercase tracking-[0.18em] text-primary font-black">Tenant Product Tour</p>
+                <h1 className="text-3xl font-black tracking-tight">Explore your tenant portal in five guided steps</h1>
                 <p className="text-sm text-muted-foreground">
                     This walkthrough highlights your dashboard, lease hub, payments, maintenance, and messaging workflows.
                 </p>
 
                 <div className="rounded-xl border border-border bg-background/50 px-4 py-3 text-sm">
-                    Progress: <span className="font-bold">{progressLabel}</span>
+                    Progress: <span className="font-black">{progressLabel}</span>
                 </div>
 
                 <div className="grid gap-2">
@@ -168,7 +168,7 @@ export default function TenantTourPage() {
                                 key={step.id}
                                 className={`rounded-lg border p-3 ${active ? "border-primary/40 bg-primary/5" : "border-border bg-background/40"}`}
                             >
-                                <p className="text-sm font-bold flex items-center gap-2">
+                                <p className="text-sm font-black flex items-center gap-2">
                                     {completed ? <CheckCircle2 className="size-4 text-green-500" /> : <span>{index + 1}.</span>}
                                     {step.title}
                                 </p>
@@ -189,7 +189,7 @@ export default function TenantTourPage() {
                         type="button"
                         onClick={() => void replayTour()}
                         disabled={submitting}
-                        className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-black disabled:opacity-60"
+                        className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-black text-black disabled:opacity-60"
                     >
                         <RotateCcw className="size-4" />
                         Replay Tour
@@ -200,7 +200,7 @@ export default function TenantTourPage() {
                             type="button"
                             onClick={openRequiredStep}
                             disabled={!eligible || submitting}
-                            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-black disabled:opacity-60"
+                            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-black text-black disabled:opacity-60"
                         >
                             <PlayCircle className="size-4" />
                             {state?.status === "in_progress" ? "Resume Tour" : "Start Tour"}
@@ -209,7 +209,7 @@ export default function TenantTourPage() {
                             type="button"
                             onClick={() => void skipTour()}
                             disabled={submitting}
-                            className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-bold text-foreground disabled:opacity-60"
+                            className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-black text-foreground disabled:opacity-60"
                         >
                             <SkipForward className="size-4" />
                             Skip for Now
@@ -218,14 +218,14 @@ export default function TenantTourPage() {
                             type="button"
                             onClick={() => void replayTour()}
                             disabled={submitting}
-                            className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-bold text-foreground disabled:opacity-60"
+                            className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-black text-foreground disabled:opacity-60"
                         >
                             <RotateCcw className="size-4" />
                             Replay from Start
                         </button>
                     </>
                 )}
-                <Link href="/tenant/dashboard" className="inline-flex items-center rounded-lg border border-border px-4 py-2 text-sm font-bold">
+                <Link href="/tenant/dashboard" className="inline-flex items-center rounded-lg border border-border px-4 py-2 text-sm font-black">
                     Back to Dashboard
                 </Link>
             </section>

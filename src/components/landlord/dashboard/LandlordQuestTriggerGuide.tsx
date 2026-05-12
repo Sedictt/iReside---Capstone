@@ -118,18 +118,18 @@ export function LandlordQuestTriggerGuide() {
                     <div className="flex size-8 items-center justify-center rounded-xl bg-primary/20 text-primary">
                         <Sparkles className="size-4" />
                     </div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Action Required</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Action Required</p>
                 </div>
                 
-                <h3 className="text-sm font-bold text-foreground mb-2 leading-tight">
+                <h3 className="text-sm font-black text-foreground mb-2 leading-tight">
                     Start Your First Mission
                 </h3>
                 
                 <p className="text-xs text-muted-foreground/90 leading-relaxed mb-4">
-                    Click this glowing icon to open your <span className="font-bold text-foreground text-primary">Mission Control</span> and begin your property management journey.
+                    Click this glowing icon to open your <span className="font-black text-foreground text-primary">Mission Control</span> and begin your property management journey.
                 </p>
 
-                <div className="flex items-center gap-2 text-[10px] font-bold text-primary animate-bounce">
+                <div className="flex items-center gap-2 text-[10px] font-black text-primary animate-bounce">
                     <ArrowUpRight className="size-3" />
                     Click the icon above
                 </div>

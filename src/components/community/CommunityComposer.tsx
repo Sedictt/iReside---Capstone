@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, FormEvent } from "react"
+import { useReducer, useRef, FormEvent } from "react"
 import Image from "next/image"
 import { m as motion, AnimatePresence } from "framer-motion"
 import { ImageIcon, X, Send, Megaphone, BarChart3, MessageSquarePlus } from "lucide-react"
@@ -14,6 +14,38 @@ interface CommunityComposerProps {
     uploadingPhotos: boolean
 }
 
+interface ComposerState {
+    composerType: "discussion" | "poll" | "announcement";
+    title: string;
+    body: string;
+    pollOptions: string[];
+    selectedPhotos: File[];
+}
+
+type ComposerAction = 
+    | { type: "SET_COMPOSER_TYPE"; payload: "discussion" | "poll" | "announcement" }
+    | { type: "SET_TITLE"; payload: string }
+    | { type: "SET_BODY"; payload: string }
+    | { type: "SET_POLL_OPTIONS"; payload: string[] }
+    | { type: "SET_SELECTED_PHOTOS"; payload: File[] };
+
+function composerReducer(state: ComposerState, action: ComposerAction): ComposerState {
+    switch (action.type) {
+        case "SET_COMPOSER_TYPE":
+            return { ...state, composerType: action.payload };
+        case "SET_TITLE":
+            return { ...state, title: action.payload };
+        case "SET_BODY":
+            return { ...state, body: action.payload };
+        case "SET_POLL_OPTIONS":
+            return { ...state, pollOptions: action.payload };
+        case "SET_SELECTED_PHOTOS":
+            return { ...state, selectedPhotos: action.payload };
+        default:
+            return state;
+    }
+}
+
 export function CommunityComposer({
     isManagementUser,
     profile,
@@ -22,44 +54,46 @@ export function CommunityComposer({
     isSubmitting,
     uploadingPhotos
 }: CommunityComposerProps) {
-    const [composerType, setComposerType] = useState<"discussion" | "poll" | "announcement">("discussion")
-    const [title, setTitle] = useState("")
-    const [body, setBody] = useState("")
-    const [pollOptions, setPollOptions] = useState<string[]>(["", ""])
-    const [selectedPhotos, setSelectedPhotos] = useState<File[]>([])
+    const [state, dispatch] = useReducer(composerReducer, {
+        composerType: "discussion",
+        title: "",
+        body: "",
+        pollOptions: ["", ""],
+        selectedPhotos: []
+    });
     const fileInputRef = useRef<HTMLInputElement>(null)
 
     const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
             const newFiles = Array.from(e.target.files)
-            setSelectedPhotos(prev => [...prev, ...newFiles].slice(0, 4))
+            dispatch({ type: "SET_SELECTED_PHOTOS", payload: [...state.selectedPhotos, ...newFiles].slice(0, 4) })
         }
     }
 
     const removePhoto = (index: number) => {
-        setSelectedPhotos(prev => prev.filter((_, i) => i !== index))
+        dispatch({ type: "SET_SELECTED_PHOTOS", payload: state.selectedPhotos.filter((_, i) => i !== index) })
     }
 
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault()
-        if (!body.trim() && selectedPhotos.length === 0) return
+        if (!state.body.trim() && state.selectedPhotos.length === 0) return
         
-        // For polls and announcements, the main text area is treated as the title/question
-        const finalTitle = composerType === "discussion" ? "" : body.trim()
-        const finalBody = composerType === "discussion" ? body.trim() : ""
+        // For polls and announcements, main text area is treated as title/question
+        const finalTitle = state.composerType === "discussion" ? "" : state.body.trim()
+        const finalBody = state.composerType === "discussion" ? state.body.trim() : ""
 
         onSubmit({
             title: finalTitle,
             body: finalBody,
-            type: composerType,
-            pollOptions,
-            photos: selectedPhotos
+            type: state.composerType,
+            pollOptions: state.pollOptions,
+            photos: state.selectedPhotos
         })
 
         // Reset local state after submit
-        setBody("")
-        setPollOptions(["", ""])
-        setSelectedPhotos([])
+        dispatch({ type: "SET_BODY", payload: "" })
+        dispatch({ type: "SET_POLL_OPTIONS", payload: ["", ""] })
+        dispatch({ type: "SET_SELECTED_PHOTOS", payload: [] })
     }
 
     return (
@@ -69,20 +103,20 @@ export function CommunityComposer({
                     {isManagementUser && (
                         <div className="mb-6 flex gap-2">
                             <TypeButton 
-                                active={composerType === "discussion"} 
-                                onClick={() => setComposerType("discussion")} 
+                                active={state.composerType === "discussion"} 
+                                onClick={() => dispatch({ type: "SET_COMPOSER_TYPE", payload: "discussion" })} 
                                 icon={MessageSquarePlus} 
                                 label="Discussion" 
                             />
                             <TypeButton 
-                                active={composerType === "poll"} 
-                                onClick={() => setComposerType("poll")} 
+                                active={state.composerType === "poll"} 
+                                onClick={() => dispatch({ type: "SET_COMPOSER_TYPE", payload: "poll" })} 
                                 icon={BarChart3} 
                                 label="Poll" 
                             />
                             <TypeButton 
-                                active={composerType === "announcement"} 
-                                onClick={() => setComposerType("announcement")} 
+                                active={state.composerType === "announcement"} 
+                                onClick={() => dispatch({ type: "SET_COMPOSER_TYPE", payload: "announcement" })} 
                                 icon={Megaphone} 
                                 label="Announcement" 
                             />
@@ -97,37 +131,37 @@ export function CommunityComposer({
                             {profile?.avatar_url ? (
                                 <Image src={profile.avatar_url} alt="Profile" fill className="object-cover" />
                             ) : (
-                                <span className="font-bold text-foreground dark:text-white">{userInitial}</span>
+                                <span className="font-black text-foreground dark:text-white">{userInitial}</span>
                             )}
                         </div>
                         <div className="flex-1 space-y-3">
                             <textarea
-                                value={body}
+                                value={state.body}
                                 onChange={(e) => {
-                                    setBody(e.target.value)
+                                    dispatch({ type: "SET_BODY", payload: e.target.value })
                                     e.target.style.height = 'auto'
                                     e.target.style.height = `${e.target.scrollHeight}px`
                                 }}
                                 placeholder={
-                                    composerType === "announcement" ? "What's the announcement about?..." :
-                                    composerType === "poll" ? "Ask your neighbors a question..." :
+                                    state.composerType === "announcement" ? "What's the announcement about?..." :
+                                    state.composerType === "poll" ? "Ask your neighbors a question..." :
                                     "What's on your mind, neighbor?..."
                                 }
                                 className="block min-h-[40px] w-full resize-none overflow-hidden border-none bg-transparent p-0 text-xl font-medium leading-relaxed text-foreground outline-none focus:ring-0 dark:text-white dark:placeholder:text-white/20"
                                 rows={1}
                             />
 
-                            {composerType === "poll" && (
+                            {state.composerType === "poll" && (
                                 <div className="space-y-2 pt-2">
-                                    {pollOptions.map((option, index) => (
+                                    {state.pollOptions.map((option: string, index: number) => (
                                         <div key={`poll-option-${index}`} className="group relative">
                                             <input
                                                 type="text"
                                                 value={option}
                                                 onChange={(e) => {
-                                                    const next = [...pollOptions]
+                                                    const next = [...state.pollOptions]
                                                     next[index] = e.target.value
-                                                    setPollOptions(next)
+                                                    dispatch({ type: "SET_POLL_OPTIONS", payload: next })
                                                 }}
                                                 placeholder={`Option ${index + 1}`}
                                                 className="w-full rounded-xl border border-border bg-background/50 px-4 py-2.5 text-sm outline-none transition-all focus:border-primary/50 focus:ring-4 focus:ring-primary/5 dark:border-white/10 dark:bg-white/5"
@@ -137,17 +171,17 @@ export function CommunityComposer({
                                     <div className="flex gap-2">
                                         <button
                                             type="button"
-                                            onClick={() => pollOptions.length < 5 && setPollOptions([...pollOptions, ""])}
-                                            className="text-xs font-bold text-primary hover:underline disabled:opacity-50"
-                                            disabled={pollOptions.length >= 5}
+                                            onClick={() => state.pollOptions.length < 5 && dispatch({ type: "SET_POLL_OPTIONS", payload: [...state.pollOptions, ""] })}
+                                            className="text-xs font-black text-primary hover:underline disabled:opacity-50"
+                                            disabled={state.pollOptions.length >= 5}
                                         >
                                             + Add Option
                                         </button>
-                                        {pollOptions.length > 2 && (
+                                        {state.pollOptions.length > 2 && (
                                             <button
                                                 type="button"
-                                                onClick={() => setPollOptions(pollOptions.slice(0, -1))}
-                                                className="text-xs font-bold text-muted-foreground hover:text-foreground"
+                                                onClick={() => dispatch({ type: "SET_POLL_OPTIONS", payload: state.pollOptions.slice(0, -1) })}
+                                                className="text-xs font-black text-muted-foreground hover:text-foreground"
                                             >
                                                 - Remove Option
                                             </button>
@@ -162,7 +196,7 @@ export function CommunityComposer({
                 <div className="border-t border-border bg-muted/20 p-4 dark:border-white/5 dark:bg-white/[0.02]">
                     <div className="mb-4 flex flex-wrap gap-2 px-2">
                         <AnimatePresence>
-                            {selectedPhotos.map((photo, index) => (
+                            {state.selectedPhotos.map((photo: File, index: number) => (
                                 <motion.div 
                                     initial={{ opacity: 0, scale: 0.8 }}
                                     animate={{ opacity: 1, scale: 1 }}
@@ -196,17 +230,17 @@ export function CommunityComposer({
                             <button 
                                 type="button" 
                                 onClick={() => fileInputRef.current?.click()}
-                                disabled={selectedPhotos.length >= 4}
+                                disabled={state.selectedPhotos.length >= 4}
                                 className="flex items-center gap-2 rounded-xl px-3 py-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-30 dark:hover:bg-white/5 dark:hover:text-white"
                             >
                                 <ImageIcon className="size-5" />
-                                <span className="text-sm font-bold">Photo</span>
+                                <span className="text-sm font-black">Photo</span>
                             </button>
                         </div>
                         <button 
                             type="submit" 
-                            disabled={isSubmitting || uploadingPhotos || (!body.trim() && selectedPhotos.length === 0)} 
-                            className="flex items-center gap-2 rounded-2xl bg-primary px-8 py-2.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+                            disabled={isSubmitting || uploadingPhotos || (!state.body.trim() && state.selectedPhotos.length === 0)} 
+                            className="flex items-center gap-2 rounded-2xl bg-primary px-8 py-2.5 text-sm font-black text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
                         >
                             {uploadingPhotos ? "Uploading..." : isSubmitting ? "Publishing..." : "Publish"}
                             <Send className="size-5" />
@@ -223,7 +257,7 @@ function TypeButton({ active, onClick, icon: Icon, label }: { active: boolean, o
         <button
             type="button"
             onClick={onClick}
-            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all ${
+            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-black transition-all ${
                 active 
                 ? 'bg-primary/10 text-primary' 
                 : 'text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-white/5'

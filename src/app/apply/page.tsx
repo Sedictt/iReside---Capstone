@@ -76,7 +76,7 @@ export default function ApplyPage() {
                         <ThemeToggle />
                         <Link
                             href="/signup/tenant"
-                            className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-colors"
+                            className="flex items-center gap-2 text-sm font-black text-muted-foreground hover:text-foreground transition-colors"
                         >
                             <ArrowLeft className="size-4" />
                             Back
@@ -99,13 +99,13 @@ export default function ApplyPage() {
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             transition={{ delay: 0.2 }}
-                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-bold uppercase tracking-widest mb-8"
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-black uppercase tracking-widest mb-8"
                         >
                             <KeyRound className="size-3.5" />
                             Invite Code Required
                         </motion.div>
 
-                        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight leading-[1.1] mb-6">
+                        <h1 className="text-4xl sm:text-5xl font-black tracking-tight leading-[1.1] mb-6">
                             Enter your<br />
                             <span className="text-primary">invite code</span>
                         </h1>
@@ -166,7 +166,7 @@ export default function ApplyPage() {
                                 type="submit"
                                 disabled={loading}
                                 className={cn(
-                                    "w-full inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-base shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30",
+                                    "w-full inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-primary text-primary-foreground font-black text-base shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30",
                                     loading ? "opacity-50 cursor-not-allowed" : "hover:-translate-y-0.5"
                                 )}
                             >

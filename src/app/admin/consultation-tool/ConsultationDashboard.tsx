@@ -106,10 +106,10 @@ export default function ConsultationDashboard() {
       <div className="max-w-6xl mx-auto">
         <header className="mb-12 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
           <div className="space-y-2 w-full md:w-auto">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold tracking-widest uppercase">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-black tracking-widest uppercase">
               Consultation Manager
             </div>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tighter text-white">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter text-white">
               Document Dashboard
             </h1>
             <p className="text-zinc-500 font-medium max-w-md text-sm md:text-base">
@@ -118,7 +118,7 @@ export default function ConsultationDashboard() {
           </div>
 
           <label className="group relative w-full md:w-auto">
-            <div className="w-full md:px-8 py-4 rounded-2xl bg-primary hover:bg-primary/90 transition-all flex items-center justify-center md:justify-start gap-3 text-sm font-bold shadow-[0_0_30px_-10px_rgba(109,152,56,0.5)] cursor-pointer">
+            <div className="w-full md:px-8 py-4 rounded-2xl bg-primary hover:bg-primary/90 transition-all flex items-center justify-center md:justify-start gap-3 text-sm font-black shadow-[0_0_30px_-10px_rgba(109,152,56,0.5)] cursor-pointer">
               {isUploading ? <div className="size-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <Plus className="size-5" />}
               {isUploading ? 'Uploading...' : 'Prepare New Document'}
             </div>
@@ -137,7 +137,7 @@ export default function ConsultationDashboard() {
             <div className="size-20 rounded-3xl bg-zinc-900 flex items-center justify-center mb-6 text-zinc-700">
               <FileText className="size-10" />
             </div>
-            <h3 className="text-xl font-bold mb-2">No documents prepared</h3>
+            <h3 className="text-xl font-black mb-2">No documents prepared</h3>
             <p className="text-zinc-500">Upload your first PDF to get started.</p>
           </div>
         ) : (
@@ -154,7 +154,7 @@ export default function ConsultationDashboard() {
                 <div className="space-y-6">
                   <div className="flex justify-between items-start">
                     <div className={cn(
-                      "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border",
+                      "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border",
                       doc.status === 'signed' 
                         ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" 
                         : "bg-amber-500/10 border-amber-500/20 text-amber-400"
@@ -167,7 +167,7 @@ export default function ConsultationDashboard() {
                   </div>
 
                   <div>
-                    <h3 className="text-xl font-bold truncate text-zinc-100 mb-1">{doc.file_name}</h3>
+                    <h3 className="text-xl font-black truncate text-zinc-100 mb-1">{doc.file_name}</h3>
                     <p className="text-xs text-zinc-500 font-medium">Prepared <span suppressHydrationWarning>{new Date(doc.created_at).toLocaleDateString()}</span></p>
                   </div>
 
@@ -175,7 +175,7 @@ export default function ConsultationDashboard() {
                     {doc.status === 'pending' ? (
                       <button
                         onClick={() => copySigningLink(doc.id)}
-                        className="w-full py-4 rounded-2xl bg-zinc-800 hover:bg-zinc-700 border border-zinc-700/50 transition-all flex items-center justify-center gap-3 text-sm font-bold group/btn"
+                        className="w-full py-4 rounded-2xl bg-zinc-800 hover:bg-zinc-700 border border-zinc-700/50 transition-all flex items-center justify-center gap-3 text-sm font-black group/btn"
                       >
                         <Copy className="size-4 text-primary group-hover/btn:scale-110 transition-transform" />
                         Copy Signing Link
@@ -184,7 +184,7 @@ export default function ConsultationDashboard() {
                       <a
                         href={doc.signed_file_url || '#'}
                         target="_blank"
-                        className="w-full py-4 rounded-2xl bg-emerald-600/10 hover:bg-emerald-600/20 border border-emerald-500/20 text-emerald-400 transition-all flex items-center justify-center gap-3 text-sm font-bold"
+                        className="w-full py-4 rounded-2xl bg-emerald-600/10 hover:bg-emerald-600/20 border border-emerald-500/20 text-emerald-400 transition-all flex items-center justify-center gap-3 text-sm font-black"
                       >
                         <ExternalLink className="size-4" />
                         Download Signed PDF

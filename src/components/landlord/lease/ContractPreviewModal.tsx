@@ -303,7 +303,7 @@ export function ContractPreviewModal({
                                 <div className="size-16 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-4">
                                     <CheckCircle2 className="size-8 text-emerald-400" />
                                 </div>
-                                <h3 className="text-2xl font-bold text-white mb-2">
+                                <h3 className="text-2xl font-black text-white mb-2">
                                     {result.status === "approved" ? "Approval Complete" : "Payment Request Sent"}
                                 </h3>
                                 <p className="text-neutral-400 text-sm max-w-md mx-auto">

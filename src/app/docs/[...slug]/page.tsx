@@ -14,7 +14,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <p>The account creation process on iReside depends on your role. Landlords create accounts upfront to manage their properties and list units. Tenants, however, have a different workflow. Their accounts are created automatically once their application is approved and they reach an agreement with a landlord.</p>
 
         <div className="bg-blue-50 dark:bg-blue-900/10 border-l-4 border-blue-500 p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-blue-700 dark:text-blue-300 m-0">Are You a Tenant?</p>
+          <p className="font-black text-blue-700 dark:text-blue-300 m-0">Are You a Tenant?</p>
           <p className="m-0 text-blue-600 dark:text-blue-200 text-sm">If you&apos;re applying for a place to rent, you don&apos;t need to complete this account setup. Your landlord will provide you with an application form or invitation link to fill out. Once your application is accepted and you&apos;ve agreed to the lease, your account will be created for you automatically. You can skip directly to the Quick Start guide to learn about the tenant application process.</p>
         </div>
 
@@ -26,7 +26,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <p>Make sure you use an email address that you check regularly because we&apos;ll send important confirmations and updates there.</p>
         
         <div className="bg-primary/5 border-l-4 border-primary p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-primary m-0">Pro Tip</p>
+          <p className="font-black text-primary m-0">Pro Tip</p>
           <p className="m-0 text-text-medium italic text-sm">Choose an email address you use often. This is where we&apos;ll send payment confirmations, lease updates, and any important notifications about your account.</p>
         </div>
 
@@ -38,7 +38,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <p>Next, you&apos;ll create a password that protects your account. Make sure it&apos;s something unique that you don&apos;t use on other websites. A good password includes a mix of uppercase and lowercase letters, numbers, and special characters like exclamation points or dashes.</p>
         
         <div className="bg-yellow-50 dark:bg-yellow-900/10 border-l-4 border-yellow-500 p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-yellow-700 dark:text-yellow-300 m-0">Security Reminder</p>
+          <p className="font-black text-yellow-700 dark:text-yellow-300 m-0">Security Reminder</p>
           <p className="m-0 text-yellow-600 dark:text-yellow-200 text-sm">Keep your password private. We&apos;ll never ask you for it in an email or message. If anyone requests your password, it&apos;s a scam.</p>
         </div>
 
@@ -80,7 +80,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <p><strong>If you&apos;re a landlord:</strong> You&apos;ll go through business verification (this protects everyone on the platform). After that, you can start adding your properties to the system and creating tenant application forms to send to prospective renters.</p>
         
         <div className="bg-primary/5 border-l-4 border-primary p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-primary m-0">Important Note for Tenants</p>
+          <p className="font-black text-primary m-0">Important Note for Tenants</p>
           <p className="m-0 text-text-medium italic text-sm">If you&apos;re a tenant, you may not need to manually sign up here. Wait for your landlord to send you an application form or invitation link. Your account will be created for you once your application is approved and you&apos;ve agreed to the lease terms.</p>
         </div>
       </div>
@@ -96,7 +96,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <p>Welcome to iReside. Whether you&apos;re renting an apartment or managing properties, this guide will walk you through the basics so you can start using the platform right away. The steps are different depending on whether you&apos;re a tenant or a landlord, so pick the one that applies to you.</p>
         
         <div className="bg-blue-50 dark:bg-blue-900/10 border-l-4 border-blue-500 p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-blue-700 dark:text-blue-300 m-0">What&apos;s the Difference?</p>
+          <p className="font-black text-blue-700 dark:text-blue-300 m-0">What&apos;s the Difference?</p>
           <p className="m-0 text-blue-600 dark:text-blue-200 text-sm">A tenant is someone renting a space. A landlord is someone who owns the property and is renting it out. You&apos;ll see different options in the app based on which one you are.</p>
         </div>
 
@@ -136,12 +136,12 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <p>You can now log in and access all the tools you need to manage your rental. This is where you&apos;ll pay rent, request repairs if something breaks, message your landlord, view your lease agreement, and access any other important documents.</p>
         
         <div className="bg-yellow-50 dark:bg-yellow-900/10 border-l-4 border-yellow-500 p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-yellow-700 dark:text-yellow-300 m-0">Important: Change Your Password Right Away</p>
+          <p className="font-black text-yellow-700 dark:text-yellow-300 m-0">Important: Change Your Password Right Away</p>
           <p className="m-0 text-yellow-600 dark:text-yellow-200 text-sm">The password we send you is temporary and only meant for your first login. As soon as you log in, go to your account settings and create a new password that only you know. This keeps your account secure and protects your personal information. Choose a password that&apos;s different from ones you use elsewhere and includes a mix of letters, numbers, and special characters.</p>
         </div>
 
         <div className="bg-primary/5 border-l-4 border-primary p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-primary m-0">Quick Tip for Tenants</p>
+          <p className="font-black text-primary m-0">Quick Tip for Tenants</p>
           <p className="m-0 text-text-medium text-sm">Don&apos;t create an account on your own before your landlord invites you. Wait for them to send the invitation link. This makes sure everything is set up correctly and your information is stored safely.</p>
         </div>
 
@@ -170,7 +170,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <p>After the lease is signed, you and your tenant can both use iReside to handle everything going forward. You&apos;ll collect rent payments, your tenant can request repairs or maintenance, you can both communicate through messaging, and all documents stay organized in one place.</p>
 
         <div className="bg-green-50 dark:bg-green-900/10 border-l-4 border-green-500 p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-green-700 dark:text-green-300 m-0">You&apos;re in Control</p>
+          <p className="font-black text-green-700 dark:text-green-300 m-0">You&apos;re in Control</p>
           <p className="m-0 text-green-600 dark:text-green-200 text-sm">As a landlord, you set the rules. You decide what questions are on your application, who you rent to, and how you want to communicate with your tenants. iReside just gives you the tools to manage it all in one place.</p>
         </div>
 
@@ -210,12 +210,12 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <p>Here are the main differences between the two application methods:</p>
         
         <div className="bg-blue-50 dark:bg-blue-900/10 border-l-4 border-blue-500 p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-blue-700 dark:text-blue-300 m-0">Method 1: Online Application (No Meeting)</p>
+          <p className="font-black text-blue-700 dark:text-blue-300 m-0">Method 1: Online Application (No Meeting)</p>
           <p className="m-0 text-blue-600 dark:text-blue-200 text-sm">The landlord sends you an invitation link. You fill out all your information online, upload your documents, and submit everything remotely. Everything is done from home at your own pace, and you never need to meet the landlord in person.</p>
         </div>
         
         <div className="bg-blue-50 dark:bg-blue-900/10 border-l-4 border-blue-500 p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-blue-700 dark:text-blue-300 m-0">Method 2: Face-to-Face Application (In Person)</p>
+          <p className="font-black text-blue-700 dark:text-blue-300 m-0">Method 2: Face-to-Face Application (In Person)</p>
           <p className="m-0 text-blue-600 dark:text-blue-200 text-sm">Either the landlord fills out the application form with you in person, or you fill it out online and then meet them to show your physical documents. Documents are verified in person by the landlord before the application can move forward.</p>
         </div>
 
@@ -231,7 +231,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         </ul>
         
         <div className="bg-yellow-50 dark:bg-yellow-900/10 border-l-4 border-yellow-500 p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-yellow-700 dark:text-yellow-300 m-0">Document Checklist</p>
+          <p className="font-black text-yellow-700 dark:text-yellow-300 m-0">Document Checklist</p>
           <p className="m-0 text-yellow-600 dark:text-yellow-200 text-sm">Most landlords ask for proof of income (like a pay stub), a valid ID, and references from previous landlords. Check with your landlord to see what they need. If you&apos;re meeting in person, bring original documents or clear copies. If you&apos;re applying online, you&apos;ll scan or photograph them before uploading.</p>
         </div>
 
@@ -241,7 +241,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <p>The landlord will send you an email with a special link to their application form. This link is unique to you and the property you&apos;re interested in. Check your email inbox and look for a message from the landlord. If you don&apos;t see it right away, check your spam or junk folder. The email should have clear instructions on how to proceed. If you can&apos;t find it, ask the landlord to send it again.</p>
         
         <div className="bg-blue-50 dark:bg-blue-900/10 border-l-4 border-blue-500 p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-blue-700 dark:text-blue-300 m-0">What is an Invitation Link?</p>
+          <p className="font-black text-blue-700 dark:text-blue-300 m-0">What is an Invitation Link?</p>
           <p className="m-0 text-blue-600 dark:text-blue-200 text-sm">This is a special link that the landlord creates just for you. It takes you directly to the application form for that specific property. Don&apos;t share this link with anyone else because it&apos;s meant just for you.</p>
         </div>
 
@@ -249,7 +249,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <p>Click the link to start your application. You don&apos;t need to create a new account or password yet. Just start answering the questions. Take your time and answer everything honestly and completely. Being thorough now helps the landlord make a decision faster.</p>
         
         <div className="bg-primary/5 border-l-4 border-primary p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-primary m-0">Tip: Be Accurate</p>
+          <p className="font-black text-primary m-0">Tip: Be Accurate</p>
           <p className="m-0 text-text-medium text-sm">Make sure all the information you enter is correct, especially your name, contact details, and income. Mistakes here can cause delays or problems later on.</p>
         </div>
 
@@ -268,7 +268,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <p>The landlord sends you an invitation link just like the online method. You fill out your information and submit the form online. Then you schedule a time to meet the landlord in person to show your documents. During the meeting, the landlord will look at your actual documents (not just scanned copies), verify them, and mark them off in the checklist. This approach combines the convenience of online form-filling with the security of in-person document verification.</p>
         
         <div className="bg-yellow-50 dark:bg-yellow-900/10 border-l-4 border-yellow-500 p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-yellow-700 dark:text-yellow-300 m-0">What to Bring to Your In-Person Meeting</p>
+          <p className="font-black text-yellow-700 dark:text-yellow-300 m-0">What to Bring to Your In-Person Meeting</p>
           <p className="m-0 text-yellow-600 dark:text-yellow-200 text-sm">Bring original documents or clear, readable copies. For income proof, bring recent pay stubs or bank statements. For ID, bring your actual driver&apos;s license, passport, or national ID. If you have letters from previous landlords, bring those too. The landlord will look at the originals to make sure they&apos;re real, then record that they&apos;ve been verified in the system.</p>
         </div>
 
@@ -361,7 +361,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <p>iReside simplifies rent collection by providing a direct channel between you and your landlord. All payments are handled manually through the platform to ensure security and transparency. Currently, iReside supports two primary payment methods: GCash and Cash/In-Person settlement.</p>
 
         <div className="bg-blue-50 dark:bg-blue-900/10 border-l-4 border-blue-500 p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-blue-700 dark:text-blue-300 m-0">No Automatic Deductions</p>
+          <p className="font-black text-blue-700 dark:text-blue-300 m-0">No Automatic Deductions</p>
           <p className="m-0 text-blue-600 dark:text-blue-200 text-sm">iReside does not automatically deduct money from your bank account or wallet. You must manually initiate each payment and provide proof of the transaction for your landlord to verify.</p>
         </div>
 
@@ -378,7 +378,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         </ol>
 
         <div className="bg-yellow-50 dark:bg-yellow-900/10 border-l-4 border-yellow-500 p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-yellow-700 dark:text-yellow-300 m-0">Why the Reference Number Matters</p>
+          <p className="font-black text-yellow-700 dark:text-yellow-300 m-0">Why the Reference Number Matters</p>
           <p className="m-0 text-yellow-600 dark:text-yellow-200 text-sm">The 13-digit reference number allows your landlord to quickly reconcile the payment in their own GCash transaction history. Always double-check this number before submitting.</p>
         </div>
 
@@ -405,7 +405,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <p>If your landlord allows it, you can make partial payments toward an invoice. This is helpful for splitting rent into multiple installments. You will follow the same proof-of-payment workflow for each installment until the balance reaches zero.</p>
 
         <div className="bg-green-50 dark:bg-green-900/10 border-l-4 border-green-500 p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-green-700 dark:text-green-300 m-0">Payment History & Receipts</p>
+          <p className="font-black text-green-700 dark:text-green-300 m-0">Payment History & Receipts</p>
           <p className="m-0 text-green-600 dark:text-green-200 text-sm">Every confirmed payment generates a professional digital receipt that you can view or download at any time from your Payment History. These serve as your official proof of payment for the duration of your lease.</p>
         </div>
 
@@ -413,7 +413,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <p>Every interaction related to your payment is logged and stored securely within iReside. This creates a centralized, platform-verified history that helps eliminate the record-keeping gaps or misunderstandings that can occur with off-platform transfers.</p>
         
         <div className="bg-blue-50 dark:bg-blue-900/10 border-l-4 border-blue-500 p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-blue-700 dark:text-blue-300 m-0">Verified Record Keeping</p>
+          <p className="font-black text-blue-700 dark:text-blue-300 m-0">Verified Record Keeping</p>
           <p className="m-0 text-blue-600 dark:text-blue-200 text-sm">By using iReside to record your GCash or Cash payments, both you and your landlord benefit from a synchronized ledger. Every status change is timestamped and linked to the specific account that performed the action, ensuring your payment history is always clear and accessible.</p>
         </div>
 
@@ -447,7 +447,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <p>A maintenance request is your way of telling your landlord that something in your home needs attention. Instead of calling, texting, or trying to catch your landlord in person, you can submit a request through iReside. Your landlord will see it right away, and both of you can track what's being done about it. This creates a clear record that both of you can access anytime.</p>
 
         <div className="bg-primary/5 border-l-4 border-primary p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-primary m-0">Why Use Maintenance Requests?</p>
+          <p className="font-black text-primary m-0">Why Use Maintenance Requests?</p>
           <p className="m-0 text-text-medium text-sm">Using iReside to report maintenance keeps everything organized. Your landlord gets your request immediately, you both have a record of what was reported and when, and you can see the status of repairs in real time. This helps prevent misunderstandings and makes sure problems get addressed promptly.</p>
         </div>
 
@@ -464,7 +464,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         </ul>
 
         <div className="bg-yellow-50 dark:bg-yellow-900/10 border-l-4 border-yellow-500 p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-yellow-700 dark:text-yellow-300 m-0">Important: Emergency Issues</p>
+          <p className="font-black text-yellow-700 dark:text-yellow-300 m-0">Important: Emergency Issues</p>
           <p className="m-0 text-yellow-600 dark:text-yellow-200 text-sm">If you have an emergency - like a gas leak, fire, electrical hazard, burst pipe, or break-in - don't wait to use iReside. Call emergency services immediately (911 in most places). Report the issue in the app after you've ensured your safety. Include emergency details in your description so your landlord knows what happened.</p>
         </div>
 
@@ -492,7 +492,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <p>Then write a more detailed description explaining what's wrong. Be specific. Instead of just saying "Something is broken," explain: Where is the problem? When did you first notice it? What exactly is happening? Is it getting worse? For example: "The kitchen sink faucet has been dripping constantly for three days. It drips about once per second even when turned off completely."</p>
 
         <div className="bg-primary/5 border-l-4 border-primary p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-primary m-0">Pro Tip: Be Detailed</p>
+          <p className="font-black text-primary m-0">Pro Tip: Be Detailed</p>
           <p className="m-0 text-text-medium text-sm">The more details you provide, the faster your landlord can respond. Include information like when the problem started, whether it's getting worse, and how it's affecting you. If you've already tried any fixes, mention that too.</p>
         </div>
 
@@ -516,7 +516,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <p>Once you've filled in all the details, click <strong>Submit Request</strong>. The system will confirm that your request has been sent to your landlord. You'll see a confirmation message, and you can now track the status of your request.</p>
 
         <div className="bg-green-50 dark:bg-green-900/10 border-l-4 border-green-500 p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-green-700 dark:text-green-300 m-0">Confirmation & Notifications</p>
+          <p className="font-black text-green-700 dark:text-green-300 m-0">Confirmation & Notifications</p>
           <p className="m-0 text-green-600 dark:text-green-200 text-sm">After you submit, you'll receive a confirmation in the app. Your landlord will be notified right away. You can check your notification settings to decide whether you want email or app alerts about your request's progress.</p>
         </div>
 
@@ -542,7 +542,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <p>Once approved, you can proceed with the repair. As you're working, the status will show your progress (repairing, done). When you've finished, you'll update the status to "Done" and potentially upload photos showing the completed repair so your landlord can verify everything is fixed.</p>
 
         <div className="bg-yellow-50 dark:bg-yellow-900/10 border-l-4 border-yellow-500 p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-yellow-700 dark:text-yellow-300 m-0">Self-Repair Responsibility</p>
+          <p className="font-black text-yellow-700 dark:text-yellow-300 m-0">Self-Repair Responsibility</p>
           <p className="m-0 text-yellow-600 dark:text-yellow-200 text-sm">If you attempt a repair and make it worse, you may be responsible for the damage. Only try repairs you're confident you can do safely. If something goes wrong during a landlord-approved self-repair, let your landlord know immediately and submit a new request to have a professional fix it.</p>
         </div>
 
@@ -585,7 +585,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <p>All your maintenance requests - past and present - are stored in your Maintenance section. You can view details of any request anytime: what was reported, when, what the issue was, and how it was resolved. This is helpful if you need to remember when something was fixed (useful for your own records) or if a similar problem comes up again.</p>
 
         <div className="bg-primary/5 border-l-4 border-primary p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-primary m-0">Complete Record</p>
+          <p className="font-black text-primary m-0">Complete Record</p>
           <p className="m-0 text-text-medium text-sm">Your maintenance history in iReside serves as a documented record of what repairs have been done to the property. This is useful if there are ever disputes about the condition of your home when you move out.</p>
         </div>
 
@@ -647,7 +647,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         </ul>
 
         <div className="bg-blue-50 dark:bg-blue-900/10 border-l-4 border-blue-500 p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-blue-700 dark:text-blue-300 m-0">Legally Binding Agreement</p>
+          <p className="font-black text-blue-700 dark:text-blue-300 m-0">Legally Binding Agreement</p>
           <p className="m-0 text-blue-600 dark:text-blue-200 text-sm">Your lease is a legally binding contract. Both you and your landlord are expected to follow all terms. If either party violates the lease, there can be legal consequences. Make sure you understand and agree with all terms before signing.</p>
         </div>
 
@@ -692,7 +692,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <p>If you notice any errors or disagree with something in the lease, do not sign it yet. Contact your landlord through the iReside messaging system and discuss the issue before proceeding.</p>
 
         <div className="bg-yellow-50 dark:bg-yellow-900/10 border-l-4 border-yellow-500 p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-yellow-700 dark:text-yellow-300 m-0">Read Before You Sign</p>
+          <p className="font-black text-yellow-700 dark:text-yellow-300 m-0">Read Before You Sign</p>
           <p className="m-0 text-yellow-600 dark:text-yellow-200 text-sm">Never sign a lease without reading it carefully. If you do not understand something, ask your landlord or consider consulting with a lawyer. Once you sign, you are legally bound to follow all the terms.</p>
         </div>
 
@@ -730,7 +730,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <p>Your landlord may also share other important documents such as utility information, parking permits, security system instructions, keys and access information, or community guidelines if you are renting in a multi-unit building.</p>
 
         <div className="bg-primary/5 border-l-4 border-primary p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-primary m-0">Keep Everything Organized</p>
+          <p className="font-black text-primary m-0">Keep Everything Organized</p>
           <p className="m-0 text-text-medium text-sm">Your Lease & Documents section automatically keeps all your rental documents organized and searchable. But it is still a good idea to download and save important documents like your lease and move-in inspection to your own computer or cloud storage, just in case.</p>
         </div>
 
@@ -810,7 +810,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         </ul>
 
         <div className="bg-blue-50 dark:bg-blue-900/10 border-l-4 border-blue-500 p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-blue-700 dark:text-blue-300 m-0">Legal Disclaimer</p>
+          <p className="font-black text-blue-700 dark:text-blue-300 m-0">Legal Disclaimer</p>
           <p className="m-0 text-blue-600 dark:text-blue-200 text-sm">The information provided here is for general educational purposes and should not be considered legal advice. Rental laws vary by location, and your specific situation may have unique considerations. If you have legal questions about your lease or rental rights, please consult with a qualified attorney in your jurisdiction.</p>
         </div>
       </div>
@@ -832,7 +832,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <p>During the application process, you provided your intended move-in date. This date becomes part of your lease agreement and marks when your tenancy officially begins. Your landlord will prepare the property for you by this date, ensuring everything is clean and ready for your arrival.</p>
 
         <div className="bg-blue-50 dark:bg-blue-900/10 border-l-4 border-blue-500 p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-blue-700 dark:text-blue-300 m-0">Coordinate with Your Landlord</p>
+          <p className="font-black text-blue-700 dark:text-blue-300 m-0">Coordinate with Your Landlord</p>
           <p className="m-0 text-blue-600 dark:text-blue-200 text-sm">Contact your landlord a day or two before your move-in date to confirm the exact time you can pick up the keys. This helps you plan your moving schedule and ensures someone will be available to hand over the keys.</p>
         </div>
 
@@ -841,7 +841,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <p>During this inspection, you will go room by room and note any existing issues. This might include scratches on walls, stains on carpet, fixtures that do not work, or any damage that is already present. Both you and your landlord will sign off on this inspection report, which becomes part of your tenancy records.</p>
 
         <div className="bg-primary/5 border-l-4 border-primary p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-primary m-0">Why This Matters</p>
+          <p className="font-black text-primary m-0">Why This Matters</p>
           <p className="m-0 text-text-medium text-sm">The move-in inspection protects you from being charged for damage that existed before you moved in. When you eventually move out, the landlord will compare the property condition to this baseline. Any new damage beyond normal wear and tear may come from your security deposit.</p>
         </div>
 
@@ -865,7 +865,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <p>When you are ready to move out, submit a move-out request through iReside. This formal notice tells your landlord that you plan to leave and provides them with your intended move-out date.</p>
 
         <div className="bg-yellow-50 dark:bg-yellow-900/10 border-l-4 border-yellow-500 p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-yellow-700 dark:text-yellow-300 m-0">Give Notice in Writing</p>
+          <p className="font-black text-yellow-700 dark:text-yellow-300 m-0">Give Notice in Writing</p>
           <p className="m-0 text-yellow-600 dark:text-yellow-200 text-sm">Always give written notice of your intention to move out. Even if you speak with your landlord in person, follow up with a written notice through iReside. This protects you if there is any dispute about when you gave notice or when your move-out date is.</p>
         </div>
 
@@ -883,7 +883,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <p>Before you fully move out, make sure all your rent and utility bills are paid. The system automatically checks for outstanding rent balance and pending utility payments. Review your payment history in the app and ensure everything is current before your move-out date.</p>
 
         <div className="bg-blue-50 dark:bg-blue-900/10 border-l-4 border-blue-500 p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-blue-700 dark:text-blue-300 m-0">Final Bill Review</p>
+          <p className="font-black text-blue-700 dark:text-blue-300 m-0">Final Bill Review</p>
           <p className="m-0 text-blue-600 dark:text-blue-200 text-sm">Check your payment history a week before your move-out date. This gives you time to address any issues or disputed charges before the final inspection.</p>
         </div>
 
@@ -900,7 +900,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <p>If there is damage beyond normal wear and tear, your landlord may deduct the cost of repairs or cleaning from your security deposit. The deposit refund amount is calculated based on the cost to repair or replace damaged items, professional cleaning fees if the property requires more than normal cleaning, any unpaid rent or utility bills, and other charges outlined in your lease.</p>
 
         <div className="bg-yellow-50 dark:bg-yellow-900/10 border-l-4 border-yellow-500 p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-yellow-700 dark:text-yellow-300 m-0">Timeline for Deposit Return</p>
+          <p className="font-black text-yellow-700 dark:text-yellow-300 m-0">Timeline for Deposit Return</p>
           <p className="m-0 text-yellow-600 dark:text-yellow-200 text-sm">Your landlord typically has 30 days after you move out to return your security deposit or provide an itemized list of any deductions.</p>
         </div>
 
@@ -937,7 +937,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         </ul>
 
         <div className="bg-blue-50 dark:bg-blue-900/10 border-l-4 border-blue-500 p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-blue-700 dark:text-blue-300 m-0">Leaving on Good Terms</p>
+          <p className="font-black text-blue-700 dark:text-blue-300 m-0">Leaving on Good Terms</p>
           <p className="m-0 text-blue-600 dark:text-blue-200 text-sm">How you leave a property can affect your rental history and future references.</p>
         </div>
       </div>
@@ -967,7 +967,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <p>Write a clear description of your property that highlights its best features. Mention what makes it unique, the neighborhood, nearby amenities, and what types of tenants you are looking for. A good description helps attract the right tenants and sets clear expectations from the start.</p>
         
         <div className="bg-blue-50 dark:bg-blue-900/10 border-l-4 border-blue-500 p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-blue-700 dark:text-blue-300 m-0">Tip for Landlords</p>
+          <p className="font-black text-blue-700 dark:text-blue-300 m-0">Tip for Landlords</p>
           <p className="m-0 text-blue-600 dark:text-blue-200 text-sm">Be honest and detailed in your description. Tenants appreciate knowing exactly what to expect, and this helps reduce questions and misunderstandings later.</p>
         </div>
 
@@ -991,7 +991,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         </ul>
 
         <div className="bg-yellow-50 dark:bg-yellow-900/10 border-l-4 border-yellow-500 p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-yellow-700 dark:text-yellow-300 m-0">Keep Status Updated</p>
+          <p className="font-black text-yellow-700 dark:text-yellow-300 m-0">Keep Status Updated</p>
           <p className="m-0 text-yellow-600 dark:text-yellow-200 text-sm">Make sure to update the status of your units as they change. An accurate status helps you track availability and ensures tenants see correct information when browsing listings.</p>
         </div>
 
@@ -1064,7 +1064,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <p>If you meet prospective tenants in person, you can create a walk-in application directly in the system. This lets you enter their information on the spot or send them a link to apply later. Walk-in applications are useful when you meet someone at a property viewing or through a referral.</p>
 
         <div className="bg-blue-50 dark:bg-blue-900/10 border-l-4 border-blue-500 p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-blue-700 dark:text-blue-300 m-0">Application Invitation</p>
+          <p className="font-black text-blue-700 dark:text-blue-300 m-0">Application Invitation</p>
           <p className="m-0 text-blue-600 dark:text-blue-200 text-sm">You can also proactively send application invitations to people you know are interested. Just create an invitation link and send it to them via email or messaging apps.</p>
         </div>
 
@@ -1092,7 +1092,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <p>All documents uploaded through iReside are stored securely. You can view them anytime from your dashboard, and they are linked to the specific application. This creates a clear record of what you verified and when. Proper document storage also protects you if there are ever disputes about what was agreed to or verified.</p>
 
         <div className="bg-yellow-50 dark:bg-yellow-900/10 border-l-4 border-yellow-500 p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-yellow-700 dark:text-yellow-300 m-0">Document Handling Reminder</p>
+          <p className="font-black text-yellow-700 dark:text-yellow-300 m-0">Document Handling Reminder</p>
           <p className="m-0 text-yellow-600 dark:text-yellow-200 text-sm">Handle all applicant documents with care. Do not share them with unauthorized people. Only use them for the purpose of evaluating the application. This protects both you and the applicant.</p>
         </div>
 
@@ -1116,7 +1116,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <p>If you decide not to proceed with an applicant, you can decline their application through the platform. It is good practice to notify them of your decision, though you are not always required to explain why. Being polite and professional in your decline message reflects well on you as a landlord.</p>
 
         <div className="bg-primary/5 border-l-4 border-primary p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-primary m-0">Fair Housing Reminder</p>
+          <p className="font-black text-primary m-0">Fair Housing Reminder</p>
           <p className="m-0 text-text-medium text-sm">When screening tenants, apply consistent criteria to all applicants. Do not discriminate based on race, religion, gender, age, disability, family status, or other protected characteristics. Treat every applicant fairly and equally.</p>
         </div>
 
@@ -1170,7 +1170,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         </ul>
 
         <div className="bg-blue-50 dark:bg-blue-900/10 border-l-4 border-blue-500 p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-blue-700 dark:text-blue-300 m-0">Invoice Tracking</p>
+          <p className="font-black text-blue-700 dark:text-blue-300 m-0">Invoice Tracking</p>
           <p className="m-0 text-blue-600 dark:text-blue-200 text-sm">Keep an eye on the status of your invoices. If you see many overdue invoices, consider reaching out to tenants proactively to avoid payment delays.</p>
         </div>
 
@@ -1186,7 +1186,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <p>After you receive the cash, you confirm the payment in iReside. The invoice status will immediately update to Paid, and the tenant receives a digital receipt. This creates a clear record that the payment was received.</p>
 
         <div className="bg-yellow-50 dark:bg-yellow-900/10 border-l-4 border-yellow-500 p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-yellow-700 dark:text-yellow-300 m-0">Cash Handling Reminder</p>
+          <p className="font-black text-yellow-700 dark:text-yellow-300 m-0">Cash Handling Reminder</p>
           <p className="m-0 text-yellow-600 dark:text-yellow-200 text-sm">When receiving cash payments, always provide a receipt and count the money in front of the tenant. Document the transaction in iReside right away to maintain accurate records.</p>
         </div>
 
@@ -1221,7 +1221,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <p>By comparing your income against your expenses, you can see the net profit or loss for each property. This is essential for understanding whether your rental business is sustainable and where you might be able to cut costs or improve efficiency.</p>
 
         <div className="bg-green-50 dark:bg-green-900/10 border-l-4 border-green-500 p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-green-700 dark:text-green-300 m-0">Record Keeping</p>
+          <p className="font-black text-green-700 dark:text-green-300 m-0">Record Keeping</p>
           <p className="m-0 text-green-600 dark:text-green-200 text-sm">Maintaining accurate financial records protects you and makes your life easier at tax time. iReside keeps a digital record of all transactions that you can access anytime, so you never have to worry about losing receipts or forgetting about a payment.</p>
         </div>
 
@@ -1263,7 +1263,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <p>When you open a maintenance request, take time to read the description carefully. Look at the photos provided. Check the priority level the tenant has selected. This gives you a good initial understanding of the issue before deciding on next steps.</p>
 
         <div className="bg-blue-50 dark:bg-blue-900/10 border-l-4 border-blue-500 p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-blue-700 dark:text-blue-300 m-0">Quick Response Matters</p>
+          <p className="font-black text-blue-700 dark:text-blue-300 m-0">Quick Response Matters</p>
           <p className="m-0 text-blue-600 dark:text-blue-200 text-sm">Tenants appreciate when landlords respond quickly to maintenance requests. Even if you cannot fix the issue immediately, acknowledging the request promptly lets the tenant know you are aware and working on it.</p>
         </div>
 
@@ -1295,7 +1295,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <p>Critical issues that require immediate attention. Examples include no water supply, gas smell or leak, major water leak or flooding, electrical hazards, or security concerns like a broken main door. These require immediate action, and you should contact a professional right away.</p>
 
         <div className="bg-yellow-50 dark:bg-yellow-900/10 border-l-4 border-yellow-500 p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-yellow-700 dark:text-yellow-300 m-0">Emergency Protocol</p>
+          <p className="font-black text-yellow-700 dark:text-yellow-300 m-0">Emergency Protocol</p>
           <p className="m-0 text-yellow-600 dark:text-yellow-200 text-sm">For truly emergency situations like gas leaks, electrical hazards, or major flooding, tell the tenant to contact emergency services immediately. Then focus on getting a professional to address the issue as quickly as possible.</p>
         </div>
 
@@ -1383,7 +1383,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         </ul>
 
         <div className="bg-blue-50 dark:bg-blue-900/10 border-l-4 border-blue-500 p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-blue-700 dark:text-blue-300 m-0">Legal Disclaimer</p>
+          <p className="font-black text-blue-700 dark:text-blue-300 m-0">Legal Disclaimer</p>
           <p className="m-0 text-blue-600 dark:text-blue-200 text-sm">While iReside provides tools to help you create and manage leases, it is not a substitute for professional legal advice. Consider consulting with a lawyer to ensure your lease agreements comply with local laws and adequately protect your interests.</p>
         </div>
 
@@ -1412,7 +1412,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <p>When the tenant is ready, they sign the lease digitally using their device. The signature is captured securely and linked to their account. After the tenant signs, the lease goes to you for your signature as well. Once both parties have signed, the lease is considered complete and legally binding.</p>
 
         <div className="bg-yellow-50 dark:bg-yellow-900/10 border-l-4 border-yellow-500 p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-yellow-700 dark:text-yellow-300 m-0">Signature Reminder</p>
+          <p className="font-black text-yellow-700 dark:text-yellow-300 m-0">Signature Reminder</p>
           <p className="m-0 text-yellow-600 dark:text-yellow-200 text-sm">Both signatures are required before the lease is finalized. If either party has not signed, the lease is not yet complete and the tenant should not move in until it is.</p>
         </div>
 
@@ -1654,7 +1654,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <p>If you are seeing old data, try refreshing your browser or app. In most cases, a refresh will load the latest information. If the problem continues, clear your browser cache and try again. For data that involves others like your landlord, such as invoice status, there may be a delay while they update their side.</p>
 
         <div className="bg-blue-50 dark:bg-blue-900/10 border-l-4 border-blue-500 p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-blue-700 dark:text-blue-300 m-0">Before Contacting Support</p>
+          <p className="font-black text-blue-700 dark:text-blue-300 m-0">Before Contacting Support</p>
           <p className="m-0 text-blue-600 dark:text-blue-200 text-sm">Try these troubleshooting steps first. Many issues can be resolved on your own without needing to contact support. This saves you time and lets our team focus on the cases that really need attention.</p>
         </div>
 
@@ -1688,7 +1688,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         </ul>
 
         <div className="bg-blue-50 dark:bg-blue-900/10 border-l-4 border-blue-500 p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-blue-700 dark:text-blue-300 m-0">Good Communication Gets Faster Results</p>
+          <p className="font-black text-blue-700 dark:text-blue-300 m-0">Good Communication Gets Faster Results</p>
           <p className="m-0 text-blue-600 dark:text-blue-200 text-sm">Well-structured requests with clear details help our team understand and address your issue much faster than vague messages like Help or It is not working.</p>
         </div>
 
@@ -1723,7 +1723,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <p>For general inquiries, you can also reach us through our social media channels. However, for specific account issues, the in-app or website contact form is the fastest route since it routes your request directly to the appropriate team member.</p>
 
         <div className="bg-primary/5 border-l-4 border-primary p-4 my-6 rounded-r-lg">
-          <p className="font-bold text-primary m-0">We Value Your Patience</p>
+          <p className="font-black text-primary m-0">We Value Your Patience</p>
           <p className="m-0 text-text-medium text-sm">During busy periods, response times may be slightly longer than usual. We appreciate your patience and assure you that every request is important to us and will be addressed.</p>
         </div>
 
@@ -1756,7 +1756,7 @@ export default async function DocDetailPage({ params }: { params: Promise<{ slug
   return (
     <div className="space-y-10">
       <header className="space-y-4">
-        <h1 className="text-4xl font-bold tracking-tight text-text-high">
+        <h1 className="text-4xl font-black tracking-tight text-text-high">
           {doc.title}
         </h1>
         {doc.subtitle && (
@@ -1796,7 +1796,7 @@ export default async function DocDetailPage({ params }: { params: Promise<{ slug
               <span className="flex items-center gap-1 text-text-disabled group-hover:text-primary">
                 <ArrowLeft className="size-4 mr-2" /> Previous
               </span>
-              <span className="text-lg font-bold text-text-high group-hover:text-primary">
+              <span className="text-lg font-black text-text-high group-hover:text-primary">
                 {getDocTitle(doc.prev)}
               </span>
             </Link>
@@ -1811,7 +1811,7 @@ export default async function DocDetailPage({ params }: { params: Promise<{ slug
               <span className="flex items-center gap-1 text-text-disabled group-hover:text-primary">
                 Next <ArrowRight className="size-4 ml-2" />
               </span>
-              <span className="text-lg font-bold text-text-high group-hover:text-primary">
+              <span className="text-lg font-black text-text-high group-hover:text-primary">
                 {getDocTitle(doc.next)}
               </span>
             </Link>

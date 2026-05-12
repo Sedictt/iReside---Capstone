@@ -92,7 +92,7 @@ function GlassCard({ children, className, title, description }: { children: Reac
         <div className={cn("relative overflow-hidden rounded-[2rem] border border-white/5 bg-white/[0.03] backdrop-blur-xl transition-all duration-500 hover:bg-white/[0.05]", className)}>
             {(title || description) && (
                 <div className="border-b border-white/5 px-8 py-6">
-                    {title && <h3 className="text-lg font-bold text-white">{title}</h3>}
+                    {title && <h3 className="text-lg font-black text-white">{title}</h3>}
                     {description && <p className="text-sm text-neutral-400">{description}</p>}
                 </div>
             )}
@@ -106,7 +106,7 @@ function SettingField({ label, children, description, icon: Icon }: { label: str
         <div className="space-y-2">
             <div className="flex items-center gap-2 px-1">
                 {Icon && <Icon className="size-3.5 text-neutral-500" />}
-                <label className="text-xs font-bold uppercase tracking-wider text-neutral-400">{label}</label>
+                <label className="text-xs font-black uppercase tracking-wider text-neutral-400">{label}</label>
             </div>
             {children}
             {description && <p className="px-1 text-xs text-neutral-500">{description}</p>}
@@ -146,7 +146,7 @@ function SubNav({ tabs, activeTab, onTabChange }: { tabs: string[]; activeTab: s
                     key={tab}
                     onClick={() => onTabChange(tab)}
                     className={cn(
-                        "whitespace-nowrap rounded-xl px-5 py-2.5 text-xs font-bold transition-all",
+                        "whitespace-nowrap rounded-xl px-5 py-2.5 text-xs font-black transition-all",
                         activeTab === tab
                             ? "bg-white/10 text-white shadow-xl shadow-white/5 border border-white/10"
                             : "text-neutral-500 hover:text-neutral-300 hover:bg-white/5"
@@ -489,13 +489,13 @@ export function TenantSettings() {
             >
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div>
-                        <h2 className="text-3xl font-bold text-white">Profile</h2>
+                        <h2 className="text-3xl font-black text-white">Profile</h2>
                         <p className="text-neutral-400">Control your personal information.</p>
                     </div>
                     <button
                         onClick={handleSaveProfile}
                         disabled={isSaving}
-                        className="flex items-center gap-2 rounded-2xl bg-primary px-8 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+                        className="flex items-center gap-2 rounded-2xl bg-primary px-8 py-4 text-sm font-black text-white shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
                     >
                         {isSaving ? "Saving..." : <><Save className="size-5" /> Save Changes</>}
                     </button>
@@ -600,7 +600,7 @@ export function TenantSettings() {
                                 <button 
                                     onClick={handlePasswordUpdate}
                                     disabled={passwordUpdating}
-                                    className="w-full rounded-2xl bg-primary py-3 text-sm font-bold text-white transition-all hover:bg-primary/90 disabled:opacity-50"
+                                    className="w-full rounded-2xl bg-primary py-3 text-sm font-black text-white transition-all hover:bg-primary/90 disabled:opacity-50"
                                 >
                                     {passwordUpdating ? "Updating..." : "Update Password"}
                                 </button>
@@ -624,7 +624,7 @@ export function TenantSettings() {
                                             <ShieldCheck className="size-5 text-emerald-500" />
                                         </div>
                                         <div>
-                                            <p className="text-sm font-bold text-white">2FA is Active</p>
+                                            <p className="text-sm font-black text-white">2FA is Active</p>
                                             <p className="text-xs text-neutral-400">Your account is protected with two-factor authentication.</p>
                                         </div>
                                     </div>
@@ -636,7 +636,7 @@ export function TenantSettings() {
                                 <div className="space-y-6 max-w-lg">
                                     <p className="text-sm text-neutral-400">Two-factor authentication adds an extra layer of security by requiring a verification code in addition to your password.</p>
                                     <button 
-                                        className="w-full rounded-2xl bg-primary py-3 text-sm font-bold text-white transition-all hover:bg-primary/90"
+                                        className="w-full rounded-2xl bg-primary py-3 text-sm font-black text-white transition-all hover:bg-primary/90"
                                         onClick={() => toast.info("2FA setup is not yet available. Contact support to enable.")}
                                     >
                                         Enable Two-Factor Authentication
@@ -650,9 +650,9 @@ export function TenantSettings() {
                         <GlassCard title="Active Sessions" description="Devices currently logged into your account.">
                             <div className="space-y-4 max-w-lg">
                                 {isSessionsLoading && sessions.length === 0 ? (
-                                    <div className="text-center py-4 text-xs text-neutral-500 uppercase tracking-widest font-bold">Loading sessions...</div>
+                                    <div className="text-center py-4 text-xs text-neutral-500 uppercase tracking-widest font-black">Loading sessions...</div>
                                 ) : sessions.length === 0 ? (
-                                    <div className="text-center py-4 text-xs text-neutral-500 uppercase tracking-widest font-bold">No sessions found</div>
+                                    <div className="text-center py-4 text-xs text-neutral-500 uppercase tracking-widest font-black">No sessions found</div>
                                 ) : (
                                     sessions.map((sess) => {
                                         const parser = new UAParser(sess.user_agent);
@@ -675,14 +675,14 @@ export function TenantSettings() {
                                                 <div className="flex items-center gap-4">
                                                     <Icon className={cn("size-5", isCurrent ? "text-primary" : "text-neutral-400")} />
                                                     <div>
-                                                        <h4 className="text-sm font-bold text-white">{browser} on {os}</h4>
+                                                        <h4 className="text-sm font-black text-white">{browser} on {os}</h4>
                                                         <p className="text-[10px] text-neutral-500 uppercase tracking-wider">
                                                             {isCurrent ? "Current Session" : <>Last seen <ClientOnlyDate date={sess.updated_at} format={{ month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }} /></>} • IP: {sess.ip}
                                                         </p>
                                                     </div>
                                                 </div>
                                                 {isCurrent && (
-                                                    <span className="rounded-lg bg-primary/20 px-2 py-1 text-[10px] font-bold text-primary">ACTIVE</span>
+                                                    <span className="rounded-lg bg-primary/20 px-2 py-1 text-[10px] font-black text-primary">ACTIVE</span>
                                                 )}
                                             </div>
                                         );
@@ -693,7 +693,7 @@ export function TenantSettings() {
                                     <button 
                                         onClick={handleSignOutOthers}
                                         disabled={isSessionsLoading}
-                                        className="mt-2 flex items-center gap-2 text-xs font-bold text-red-400 hover:text-red-300 transition-colors disabled:opacity-50"
+                                        className="mt-2 flex items-center gap-2 text-xs font-black text-red-400 hover:text-red-300 transition-colors disabled:opacity-50"
                                     >
                                         <LogOut className="size-3.5" /> Sign out all other devices
                                     </button>
@@ -712,7 +712,7 @@ export function TenantSettings() {
                 className="space-y-8"
             >
                 <div>
-                    <h2 className="text-3xl font-bold text-white">Security & Login</h2>
+                    <h2 className="text-3xl font-black text-white">Security & Login</h2>
                     <p className="text-neutral-400">Protect your account and manage active sessions.</p>
                 </div>
 
@@ -736,7 +736,7 @@ export function TenantSettings() {
             className="space-y-8"
         >
             <div>
-                <h2 className="text-3xl font-bold text-white">Notifications</h2>
+                <h2 className="text-3xl font-black text-white">Notifications</h2>
                 <p className="text-neutral-400">Choose how and when you want to be alerted.</p>
             </div>
 
@@ -751,10 +751,10 @@ export function TenantSettings() {
                     <table className="w-full text-left">
                         <thead>
                             <tr className="border-b border-white/5 bg-white/[0.02]">
-                                <th className="px-8 py-5 text-xs font-bold uppercase tracking-widest text-neutral-500">Activity Type</th>
-                                <th className="px-4 py-5 text-center text-xs font-bold uppercase tracking-widest text-neutral-500">Email</th>
-                                <th className="px-4 py-5 text-center text-xs font-bold uppercase tracking-widest text-neutral-500">Push</th>
-                                <th className="px-4 py-5 text-center text-xs font-bold uppercase tracking-widest text-neutral-500">SMS</th>
+                                <th className="px-8 py-5 text-xs font-black uppercase tracking-widest text-neutral-500">Activity Type</th>
+                                <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-neutral-500">Email</th>
+                                <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-neutral-500">Push</th>
+                                <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-neutral-500">SMS</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
@@ -767,7 +767,7 @@ export function TenantSettings() {
                             ].map((item) => (
                                 <tr key={item.key} className="transition-colors hover:bg-white/[0.01]">
                                     <td className="px-8 py-6">
-                                        <h4 className="text-sm font-bold text-white">{item.label}</h4>
+                                        <h4 className="text-sm font-black text-white">{item.label}</h4>
                                         <p className="text-xs text-neutral-500">{item.desc}</p>
                                     </td>
                                     <td className="px-4 py-6 text-center">
@@ -796,10 +796,10 @@ export function TenantSettings() {
                         </tbody>
                     </table>
                     <div className="flex items-center justify-end gap-3 border-t border-white/5 p-6 bg-white/[0.02]">
-                        <button className="text-xs font-bold text-neutral-400 hover:text-white transition-colors">Reset to Defaults</button>
+                        <button className="text-xs font-black text-neutral-400 hover:text-white transition-colors">Reset to Defaults</button>
                         <button 
                             onClick={() => toast.success("Notification preferences saved")}
-                            className="rounded-xl bg-white/10 px-4 py-2 text-xs font-bold text-white hover:bg-white/20 transition-all"
+                            className="rounded-xl bg-white/10 px-4 py-2 text-xs font-black text-white hover:bg-white/20 transition-all"
                         >
                             Save Preferences
                         </button>
@@ -827,7 +827,7 @@ export function TenantSettings() {
                                                 <p className="text-xs text-neutral-500">Connected</p>
                                             </div>
                                         </div>
-                                        <span className="rounded-lg bg-primary/20 px-2 py-1 text-[10px] font-bold text-primary">DEFAULT</span>
+                                        <span className="rounded-lg bg-primary/20 px-2 py-1 text-[10px] font-black text-primary">DEFAULT</span>
                                     </div>
                                     
                                     <button className="flex items-center justify-center gap-2 w-full p-4 rounded-2xl border border-dashed border-white/10 text-sm text-neutral-500 hover:text-white hover:border-white/20 transition-all">
@@ -858,7 +858,7 @@ export function TenantSettings() {
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-4">
-                                            <span className="text-sm font-bold text-white">{item.amount}</span>
+                                            <span className="text-sm font-black text-white">{item.amount}</span>
                                             <button className="opacity-0 group-hover:opacity-100 text-xs text-primary hover:text-primary/80 font-medium transition-all">
                                                 <Download className="size-4" />
                                             </button>
@@ -879,7 +879,7 @@ export function TenantSettings() {
                 className="space-y-8"
             >
                 <div>
-                    <h2 className="text-3xl font-bold text-white">Billing & Payments</h2>
+                    <h2 className="text-3xl font-black text-white">Billing & Payments</h2>
                     <p className="text-neutral-400">Manage your payment methods and view transaction history.</p>
                 </div>
 
@@ -931,7 +931,7 @@ export function TenantSettings() {
                                     <p className="text-xs text-neutral-500 flex items-center gap-1">
                                         <Info className="size-3" /> Export may take up to 24 hours to process.
                                     </p>
-                                    <button className="flex items-center gap-2 rounded-2xl bg-primary px-6 py-3 text-sm font-bold text-white transition-all hover:bg-primary/90">
+                                    <button className="flex items-center gap-2 rounded-2xl bg-primary px-6 py-3 text-sm font-black text-white transition-all hover:bg-primary/90">
                                         <Download className="size-4" /> Request Export
                                     </button>
                                 </div>
@@ -947,13 +947,13 @@ export function TenantSettings() {
                                         <AlertTriangle className="size-6 text-red-500" />
                                     </div>
                                     <div>
-                                        <h4 className="text-base font-bold text-red-400">Delete Account</h4>
+                                        <h4 className="text-base font-black text-red-400">Delete Account</h4>
                                         <p className="text-sm text-neutral-400 mt-1">Permanently delete your account and all associated data. This action cannot be undone.</p>
                                     </div>
                                 </div>
 
                                 <div className="rounded-2xl bg-white/5 border border-white/5 p-4">
-                                    <h5 className="text-sm font-bold text-white mb-3">What will be deleted:</h5>
+                                    <h5 className="text-sm font-black text-white mb-3">What will be deleted:</h5>
                                     <ul className="space-y-2">
                                         {[
                                             "Your profile and personal information",
@@ -973,7 +973,7 @@ export function TenantSettings() {
                             {!showDeleteConfirm ? (
                                 <button
                                     onClick={() => setShowDeleteConfirm(true)}
-                                    className="px-6 py-3 rounded-2xl bg-red-600 hover:bg-red-500 text-white text-sm font-bold transition-all shadow-lg shadow-red-600/20"
+                                    className="px-6 py-3 rounded-2xl bg-red-600 hover:bg-red-500 text-white text-sm font-black transition-all shadow-lg shadow-red-600/20"
                                 >
                                     I understand, delete my account
                                 </button>
@@ -984,7 +984,7 @@ export function TenantSettings() {
                                     className="space-y-4 border-t border-red-500/10 pt-4"
                                 >
                                     <p className="text-sm text-neutral-400">
-                                        Please type <span className="text-red-500 font-mono font-bold">DELETE</span> to confirm:
+                                        Please type <span className="text-red-500 font-mono font-black">DELETE</span> to confirm:
                                     </p>
                                     <input
                                         type="text"
@@ -998,7 +998,7 @@ export function TenantSettings() {
                                             onClick={handleDeleteAccount}
                                             disabled={deleteConfirmText !== "DELETE"}
                                             className={cn(
-                                                "px-6 py-3 rounded-2xl text-sm font-bold transition-all",
+                                                "px-6 py-3 rounded-2xl text-sm font-black transition-all",
                                                 deleteConfirmText === "DELETE"
                                                     ? "bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-600/20"
                                                     : "bg-white/5 text-neutral-500 cursor-not-allowed"
@@ -1008,7 +1008,7 @@ export function TenantSettings() {
                                         </button>
                                         <button
                                             onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText(""); }}
-                                            className="px-4 py-3 rounded-2xl border border-white/10 text-sm font-bold text-neutral-400 hover:text-white transition-all"
+                                            className="px-4 py-3 rounded-2xl border border-white/10 text-sm font-black text-neutral-400 hover:text-white transition-all"
                                         >
                                             Cancel
                                         </button>
@@ -1029,7 +1029,7 @@ export function TenantSettings() {
                 className="space-y-8"
             >
                 <div>
-                    <h2 className="text-3xl font-bold text-white">Data & Privacy</h2>
+                    <h2 className="text-3xl font-black text-white">Data & Privacy</h2>
                     <p className="text-neutral-400">Manage your data and account longevity.</p>
                 </div>
 
@@ -1068,8 +1068,8 @@ export function TenantSettings() {
                         <Layout className="size-6" />
                     </div>
                     <div>
-                        <h1 className="text-xl font-bold text-white">Settings</h1>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">Control Center</p>
+                        <h1 className="text-xl font-black text-white">Settings</h1>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Control Center</p>
                     </div>
                 </div>
 
@@ -1097,7 +1097,7 @@ export function TenantSettings() {
                                         />
                                     )}
                                 </div>
-                                <span className="mt-3 text-sm font-bold">{item.label}</span>
+                                <span className="mt-3 text-sm font-black">{item.label}</span>
                                 <span className="text-[10px] font-medium opacity-60">{item.description}</span>
                             </button>
                         );

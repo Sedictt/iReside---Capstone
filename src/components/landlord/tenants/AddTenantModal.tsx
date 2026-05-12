@@ -198,8 +198,8 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                             {/* Header */}
                             <div className="flex items-center justify-between border-b border-border bg-muted/30 px-8 pt-6 pb-2">
                                 <div className="space-y-1">
-                                    <h2 className="text-2xl font-bold tracking-tight text-foreground">Onboard Residents</h2>
-                                    <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">
+                                    <h2 className="text-2xl font-black tracking-tight text-foreground">Onboard Residents</h2>
+                                    <p className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
                                         Streamline entry for running apartments
                                     </p>
                                 </div>
@@ -221,7 +221,7 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                         key={tab.id}
                                         onClick={() => setActiveTab(tab.id as 'manual' | 'invite')}
                                         className={cn(
-                                            "flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-widest transition-all",
+                                            "flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-black uppercase tracking-widest transition-all",
                                             activeTab === tab.id 
                                                 ? "bg-foreground text-background shadow-md"
                                                 : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -239,13 +239,13 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                         <div className="grid gap-8 sm:grid-cols-2">
                                             {/* Tenant Info Section */}
                                             <div className="space-y-6">
-                                                <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-primary">
+                                                <h3 className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-primary">
                                                     <User className="size-4" />
                                                     Resident Profile
                                                 </h3>
                                                 
                                                 <div className="space-y-2">
-                                                    <label htmlFor="fullName" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Full Name</label>
+                                                    <label htmlFor="fullName" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Full Name</label>
                                                     <div className="relative">
                                                         <User className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40" />
                                                         <input
@@ -255,13 +255,13 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                                             placeholder="Juan Dela Cruz"
                                                             value={formData.fullName}
                                                             onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
-                                                            className="w-full rounded-2xl border border-border bg-muted/50 py-3.5 pl-12 pr-5 text-sm font-bold outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
+                                                            className="w-full rounded-2xl border border-border bg-muted/50 py-3.5 pl-12 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
                                                         />
                                                     </div>
                                                 </div>
 
                                                 <div className="space-y-2">
-                                                    <label htmlFor="email" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Email Address</label>
+                                                    <label htmlFor="email" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Email Address</label>
                                                     <div className="relative">
                                                         <Mail className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40" />
                                                         <input
@@ -271,13 +271,13 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                                             placeholder="juan@example.com"
                                                             value={formData.email}
                                                             onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                                                            className="w-full rounded-2xl border border-border bg-muted/50 py-3.5 pl-12 pr-5 text-sm font-bold outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
+                                                            className="w-full rounded-2xl border border-border bg-muted/50 py-3.5 pl-12 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
                                                         />
                                                     </div>
                                                 </div>
 
                                                 <div className="space-y-2">
-                                                    <label htmlFor="phone" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Phone Number</label>
+                                                    <label htmlFor="phone" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Phone Number</label>
                                                     <div className="relative">
                                                         <Phone className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40" />
                                                         <input
@@ -287,7 +287,7 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                                             placeholder="0912 345 6789"
                                                             value={formData.phone}
                                                             onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                                                            className="w-full rounded-2xl border border-border bg-muted/50 py-3.5 pl-12 pr-5 text-sm font-bold outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
+                                                            className="w-full rounded-2xl border border-border bg-muted/50 py-3.5 pl-12 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
                                                         />
                                                     </div>
                                                 </div>
@@ -295,13 +295,13 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
 
                                             {/* Lease Info Section */}
                                             <div className="space-y-6">
-                                                <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-primary">
+                                                <h3 className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-primary">
                                                     <Building2 className="size-4" />
                                                     Lease Agreement
                                                 </h3>
 
                                                 <div className="space-y-2">
-                                                    <label htmlFor="propertyId" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Property</label>
+                                                    <label htmlFor="propertyId" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Property</label>
                                                     <div className="relative">
                                                         <Building2 className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40" />
                                                         <select
@@ -309,7 +309,7 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                                             required
                                                             value={formData.propertyId}
                                                             onChange={(e) => handlePropertyChange(e.target.value)}
-                                                            className="w-full appearance-none rounded-2xl border border-border bg-muted/50 py-3.5 pl-12 pr-5 text-sm font-bold outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
+                                                            className="w-full appearance-none rounded-2xl border border-border bg-muted/50 py-3.5 pl-12 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
                                                         >
                                                             <option value="" disabled>Select Property</option>
                                                             {properties.map(p => (
@@ -320,7 +320,7 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                                 </div>
 
                                                 <div className="space-y-2">
-                                                    <label htmlFor="unitId" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Unit</label>
+                                                    <label htmlFor="unitId" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Unit</label>
                                                     <div className="relative">
                                                         <Home className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40" />
                                                         <select
@@ -328,7 +328,7 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                                             required
                                                             value={formData.unitId}
                                                             onChange={(e) => handleUnitChange(e.target.value)}
-                                                            className="w-full appearance-none rounded-2xl border border-border bg-muted/50 py-3.5 pl-12 pr-5 text-sm font-bold outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
+                                                            className="w-full appearance-none rounded-2xl border border-border bg-muted/50 py-3.5 pl-12 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
                                                         >
                                                             <option value="" disabled>Select Unit</option>
                                                             {availableUnits.map(u => (
@@ -340,54 +340,54 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
 
                                                 <div className="grid grid-cols-2 gap-4">
                                                     <div className="space-y-2">
-                                                        <label htmlFor="startDate" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Start Date</label>
+                                                        <label htmlFor="startDate" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Start Date</label>
                                                         <input
                                                             id="startDate"
                                                             required
                                                             type="date"
                                                             value={formData.startDate}
                                                             onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
-                                                            className="w-full rounded-2xl border border-border bg-muted/50 px-5 py-3.5 text-sm font-bold outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
+                                                            className="w-full rounded-2xl border border-border bg-muted/50 px-5 py-3.5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
                                                         />
                                                     </div>
                                                     <div className="space-y-2">
-                                                        <label htmlFor="endDate" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">End Date</label>
+                                                        <label htmlFor="endDate" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">End Date</label>
                                                         <input
                                                             id="endDate"
                                                             required
                                                             type="date"
                                                             value={formData.endDate}
                                                             onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
-                                                            className="w-full rounded-2xl border border-border bg-muted/50 px-5 py-3.5 text-sm font-bold outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
+                                                            className="w-full rounded-2xl border border-border bg-muted/50 px-5 py-3.5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
                                                         />
                                                     </div>
                                                 </div>
 
                                                 <div className="grid grid-cols-2 gap-4">
                                                     <div className="space-y-2">
-                                                        <label htmlFor="monthlyRent" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Monthly Rent</label>
+                                                        <label htmlFor="monthlyRent" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Monthly Rent</label>
                                                         <div className="relative">
-                                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground/60">₱</span>
+                                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-muted-foreground/60">₱</span>
                                                             <input
                                                                 id="monthlyRent"
                                                                 required
                                                                 type="number"
                                                                 value={formData.monthlyRent}
                                                                 onChange={(e) => setFormData(prev => ({ ...prev, monthlyRent: parseFloat(e.target.value) }))}
-                                                                className="w-full rounded-2xl border border-border bg-muted/50 py-3.5 pl-8 pr-5 text-sm font-bold outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
+                                                                className="w-full rounded-2xl border border-border bg-muted/50 py-3.5 pl-8 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
                                                             />
                                                         </div>
                                                     </div>
                                                     <div className="space-y-2">
-                                                        <label htmlFor="securityDeposit" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Security Deposit</label>
+                                                        <label htmlFor="securityDeposit" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Security Deposit</label>
                                                         <div className="relative">
-                                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground/60">₱</span>
+                                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-muted-foreground/60">₱</span>
                                                             <input
                                                                 id="securityDeposit"
                                                                 type="number"
                                                                 value={formData.securityDeposit}
                                                                 onChange={(e) => setFormData(prev => ({ ...prev, securityDeposit: parseFloat(e.target.value) }))}
-                                                                className="w-full rounded-2xl border border-border bg-muted/50 py-3.5 pl-8 pr-5 text-sm font-bold outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
+                                                                className="w-full rounded-2xl border border-border bg-muted/50 py-3.5 pl-8 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
                                                             />
                                                         </div>
                                                     </div>
@@ -400,14 +400,14 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                             <button
                                                 type="button"
                                                 onClick={onClose}
-                                                className="flex-1 rounded-2xl border border-border bg-muted/30 py-4 text-sm font-bold transition-all hover:bg-muted"
+                                                className="flex-1 rounded-2xl border border-border bg-muted/30 py-4 text-sm font-black transition-all hover:bg-muted"
                                             >
                                                 Cancel
                                             </button>
                                             <button
                                                 type="submit"
                                                 disabled={loading}
-                                                className="flex-[2] rounded-2xl bg-primary py-4 text-sm font-bold text-primary-foreground shadow-2xl shadow-primary/20 transition-all hover:bg-primary/90 hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+                                                className="flex-[2] rounded-2xl bg-primary py-4 text-sm font-black text-primary-foreground shadow-2xl shadow-primary/20 transition-all hover:bg-primary/90 hover:scale-[1.02] active:scale-95 disabled:opacity-50"
                                             >
                                                 {loading ? (
                                                     <div className="flex items-center justify-center gap-2">
@@ -424,13 +424,13 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                             <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
                                                 <Sparkles className="size-6" />
                                             </div>
-                                            <h3 className="text-lg font-bold text-foreground">Self-Onboarding Link</h3>
+                                            <h3 className="text-lg font-black text-foreground">Self-Onboarding Link</h3>
                                             <p className="mt-1 text-sm text-muted-foreground">Residents can register their current lease details via this link.</p>
                                         </div>
 
                                         <div className="space-y-6">
                                             <div className="space-y-2">
-                                                <label htmlFor="invitePropertyId" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Target Property</label>
+                                                <label htmlFor="invitePropertyId" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Target Property</label>
                                                 <div className="relative">
                                                     <Building2 className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40" />
                                                     <select
@@ -438,7 +438,7 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                                         required
                                                         value={inviteData.propertyId}
                                                         onChange={(e) => setInviteData(prev => ({ ...prev, propertyId: e.target.value }))}
-                                                        className="w-full appearance-none rounded-2xl border border-border bg-muted/50 py-3.5 pl-12 pr-5 text-sm font-bold outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
+                                                        className="w-full appearance-none rounded-2xl border border-border bg-muted/50 py-3.5 pl-12 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
                                                     >
                                                         <option value="" disabled>Select Property</option>
                                                         {properties.map(p => (
@@ -449,7 +449,7 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                             </div>
 
                                             <div className="space-y-2">
-                                                <label htmlFor="expiresAt" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Expiration (Optional)</label>
+                                                <label htmlFor="expiresAt" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Expiration (Optional)</label>
                                                 <div className="relative">
                                                     <Calendar className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40" />
                                                     <input
@@ -457,7 +457,7 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                                         type="date"
                                                         value={inviteData.expiresAt}
                                                         onChange={(e) => setInviteData(prev => ({ ...prev, expiresAt: e.target.value }))}
-                                                        className="w-full rounded-2xl border border-border bg-muted/50 py-3.5 pl-12 pr-5 text-sm font-bold outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
+                                                        className="w-full rounded-2xl border border-border bg-muted/50 py-3.5 pl-12 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
                                                     />
                                                 </div>
                                             </div>
@@ -467,14 +467,14 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                             <button
                                                 type="button"
                                                 onClick={onClose}
-                                                className="flex-1 rounded-2xl border border-border bg-muted/30 py-4 text-sm font-bold transition-all hover:bg-muted"
+                                                className="flex-1 rounded-2xl border border-border bg-muted/30 py-4 text-sm font-black transition-all hover:bg-muted"
                                             >
                                                 Cancel
                                             </button>
                                             <button
                                                 onClick={handleGenerateInvite}
                                                 disabled={loading}
-                                                className="flex-[2] rounded-2xl bg-primary py-4 text-sm font-bold text-primary-foreground shadow-2xl shadow-primary/20 transition-all hover:bg-primary/90 hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+                                                className="flex-[2] rounded-2xl bg-primary py-4 text-sm font-black text-primary-foreground shadow-2xl shadow-primary/20 transition-all hover:bg-primary/90 hover:scale-[1.02] active:scale-95 disabled:opacity-50"
                                             >
                                                 {loading ? (
                                                     <div className="flex items-center justify-center gap-2">
@@ -495,20 +495,20 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                     <div className="mx-auto mb-6 flex size-20 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500">
                                         <CheckCircle2 className="size-10" />
                                     </div>
-                                    <h2 className="text-2xl font-bold text-foreground">Resident Registered!</h2>
+                                    <h2 className="text-2xl font-black text-foreground">Resident Registered!</h2>
                                     <p className="mt-2 text-muted-foreground">The resident has been successfully added to the system.</p>
                                     
                                     {successData.tempPassword ? (
                                         <div className="mt-8 rounded-[2rem] border border-border bg-muted/30 p-8">
-                                            <div className="mb-4 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground/60">
+                                            <div className="mb-4 flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground/60">
                                                 <AlertCircle className="size-4" />
                                                 <span>Temporary Credentials</span>
                                             </div>
                                             <div className="space-y-4">
                                                 <div className="flex items-center justify-between rounded-2xl bg-background p-4 border border-border">
                                                     <div className="text-left">
-                                                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Email</p>
-                                                        <p className="text-sm font-bold text-foreground">{successData.email}</p>
+                                                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Email</p>
+                                                        <p className="text-sm font-black text-foreground">{successData.email}</p>
                                                     </div>
                                                     <button onClick={() => copyToClipboard(successData.email)} className="p-2 text-muted-foreground hover:text-primary">
                                                         <Copy className="size-4" />
@@ -516,8 +516,8 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                                 </div>
                                                 <div className="flex items-center justify-between rounded-2xl bg-background p-4 border border-border">
                                                     <div className="text-left">
-                                                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Temp Password</p>
-                                                        <p className="font-mono text-lg font-bold text-primary tracking-wider">{successData.tempPassword}</p>
+                                                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Temp Password</p>
+                                                        <p className="font-mono text-lg font-black text-primary tracking-wider">{successData.tempPassword}</p>
                                                     </div>
                                                     <button onClick={() => copyToClipboard(successData.tempPassword!)} className="p-2 text-muted-foreground hover:text-primary">
                                                         <Copy className="size-4" />
@@ -527,7 +527,7 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                         </div>
                                     ) : (
                                         <div className="mt-8 rounded-[2rem] border border-border bg-emerald-500/5 p-8 text-emerald-600">
-                                            <p className="text-sm font-bold">This email is already registered on iReside. The resident can log in using their existing credentials.</p>
+                                            <p className="text-sm font-black">This email is already registered on iReside. The resident can log in using their existing credentials.</p>
                                         </div>
                                     )}
                                 </>
@@ -536,7 +536,7 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                     <div className="mx-auto mb-6 flex size-20 items-center justify-center rounded-full bg-primary/10 text-primary">
                                         <QrCode className="size-10" />
                                     </div>
-                                    <h2 className="text-2xl font-bold text-foreground">Onboarding Link Ready</h2>
+                                    <h2 className="text-2xl font-black text-foreground">Onboarding Link Ready</h2>
                                     <p className="mt-2 text-muted-foreground">Share this with your residents to start self-onboarding.</p>
 
                                     <div className="mt-8 space-y-6">
@@ -555,8 +555,8 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
 
                                         <div className="flex items-center justify-between rounded-2xl bg-muted/30 p-4 border border-border">
                                             <div className="text-left truncate max-w-[300px]">
-                                                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Onboarding URL</p>
-                                                <p className="text-sm font-bold text-foreground truncate">{inviteResult.shareUrl}</p>
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Onboarding URL</p>
+                                                <p className="text-sm font-black text-foreground truncate">{inviteResult.shareUrl}</p>
                                             </div>
                                             <div className="flex gap-2">
                                                 <button onClick={() => copyToClipboard(inviteResult.shareUrl)} className="p-2 text-muted-foreground hover:text-primary">
@@ -573,7 +573,7 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
 
                             <button
                                 onClick={onClose}
-                                className="mt-10 w-full rounded-2xl bg-foreground py-4 text-sm font-bold text-background transition-all hover:bg-foreground/90 active:scale-95"
+                                className="mt-10 w-full rounded-2xl bg-foreground py-4 text-sm font-black text-background transition-all hover:bg-foreground/90 active:scale-95"
                             >
                                 Done
                             </button>

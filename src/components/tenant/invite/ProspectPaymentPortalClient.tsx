@@ -218,7 +218,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
             <div className="min-h-screen bg-[#0f1218] text-white flex items-center justify-center p-6">
                 <div className="max-w-lg w-full rounded-3xl border border-red-500/20 bg-red-500/10 p-8 text-center">
                     <ShieldAlert className="mx-auto size-10 text-red-400" />
-                    <h1 className="mt-3 text-2xl font-bold">Payment Portal Unavailable</h1>
+                    <h1 className="mt-3 text-2xl font-black">Payment Portal Unavailable</h1>
                     <p className="mt-3 text-sm text-red-200">{error || "This link is invalid or expired."}</p>
                 </div>
             </div>
@@ -229,8 +229,8 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
         <div className="min-h-screen bg-[#0f1218] text-white">
             <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
                 <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-                    <p className="text-[11px] uppercase tracking-[0.25em] text-primary font-bold">Move-in Payment Portal</p>
-                    <h1 className="mt-3 text-3xl font-bold">{payload.application.propertyName}</h1>
+                    <p className="text-[11px] uppercase tracking-[0.25em] text-primary font-black">Move-in Payment Portal</p>
+                    <h1 className="mt-3 text-3xl font-black">{payload.application.propertyName}</h1>
                     <p className="mt-2 text-sm text-zinc-300">
                         Unit: {payload.application.unitName} | Applicant: {payload.application.applicantName}
                     </p>
@@ -241,7 +241,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
 
                 {payload.destination && (
                     <div className="mt-4 rounded-2xl border border-blue-400/20 bg-blue-500/10 p-4 text-sm">
-                        <p className="font-bold text-blue-200">GCash Destination</p>
+                        <p className="font-black text-blue-200">GCash Destination</p>
                         <p className="mt-1 text-blue-100">
                             Account: {payload.destination.accountName || "Not set"} | Number: {payload.destination.accountNumber || "Not set"}
                         </p>
@@ -275,8 +275,8 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                         return (
                             <section key={request.id} className="rounded-2xl border border-white/10 bg-white/5 p-5">
                                 <div className="flex flex-wrap items-center justify-between gap-2">
-                                    <h2 className="text-lg font-bold">{request.label}</h2>
-                                    <span className="text-xs font-bold uppercase tracking-wider text-zinc-300">
+                                    <h2 className="text-lg font-black">{request.label}</h2>
+                                    <span className="text-xs font-black uppercase tracking-wider text-zinc-300">
                                         {statusLabel(request.status)}
                                     </span>
                                 </div>
@@ -288,7 +288,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                 )}
 
                                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+                                    <label className="text-xs font-black uppercase tracking-wider text-zinc-400">
                                         Method
                                         <select
                                             value={state.method}
@@ -304,7 +304,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                             <option value="cash">Cash (in person)</option>
                                         </select>
                                     </label>
-                                    <label className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+                                    <label className="text-xs font-black uppercase tracking-wider text-zinc-400">
                                         Reference Number
                                         <input
                                             value={state.referenceNumber}
@@ -316,7 +316,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                     </label>
                                 </div>
 
-                                <label className="mt-3 block text-xs font-bold uppercase tracking-wider text-zinc-400">
+                                <label className="mt-3 block text-xs font-black uppercase tracking-wider text-zinc-400">
                                     Note
                                     <textarea
                                         value={state.note}
@@ -328,7 +328,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                     />
                                 </label>
 
-                                <label className="mt-3 block text-xs font-bold uppercase tracking-wider text-zinc-400">
+                                <label className="mt-3 block text-xs font-black uppercase tracking-wider text-zinc-400">
                                     Proof Upload {state.method === "gcash" ? "(Required for GCash)" : "(Optional for cash)"}
                                     <input
                                         type="file"
@@ -361,7 +361,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                         type="button"
                                         disabled={readOnly || savingRequestId === request.id}
                                         onClick={() => void submitRequest(request)}
-                                        className="inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-black disabled:opacity-50"
+                                        className="inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-black text-black disabled:opacity-50"
                                     >
                                         {savingRequestId === request.id ? (
                                             <Loader2 className="size-4 animate-spin" />

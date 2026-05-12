@@ -89,7 +89,7 @@ function LeasesContent() {
             <div className="mx-auto max-w-7xl px-4 py-8 md:px-8">
                 <button 
                     onClick={() => back()}
-                    className="mb-6 flex items-center gap-2 text-sm font-bold text-muted-foreground transition-colors hover:text-foreground"
+                    className="mb-6 flex items-center gap-2 text-sm font-black text-muted-foreground transition-colors hover:text-foreground"
                 >
                     <ArrowLeft className="size-4" />
                     Back to Leases
@@ -98,16 +98,16 @@ function LeasesContent() {
                 {loading ? (
                     <div className="flex h-96 flex-col items-center justify-center gap-4">
                         <Loader2 className="size-8 animate-spin text-primary" />
-                        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Loading Lease Record...</p>
+                        <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Loading Lease Record...</p>
                     </div>
                 ) : error ? (
                     <div className="flex h-96 flex-col items-center justify-center gap-4 rounded-[2.5rem] border border-red-500/20 bg-red-500/5 text-center">
                         <AlertCircle className="size-12 text-red-500" />
-                        <h3 className="text-xl font-bold text-foreground">Error Loading Lease</h3>
+                        <h3 className="text-xl font-black text-foreground">Error Loading Lease</h3>
                         <p className="text-sm text-muted-foreground">{error}</p>
                         <button 
                             onClick={() => void fetchLease(leaseId)}
-                            className="mt-4 rounded-xl bg-red-500 px-6 py-2 text-sm font-bold text-white transition-all hover:bg-red-600"
+                            className="mt-4 rounded-xl bg-red-500 px-6 py-2 text-sm font-black text-white transition-all hover:bg-red-600"
                         >
                             Try Again
                         </button>
@@ -121,13 +121,13 @@ function LeasesContent() {
                                     <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
                                         <div className="space-y-1">
                                             <div className="flex items-center gap-3">
-                                                <h1 className="text-3xl font-bold tracking-tight text-foreground">Lease Agreement</h1>
+                                                <h1 className="text-3xl font-black tracking-tight text-foreground">Lease Agreement</h1>
                                                 <LeaseStatusBadge status={lease.status} />
                                             </div>
                                             <p className="text-sm font-medium text-muted-foreground">ID: {lease.id}</p>
                                         </div>
                                         <div className="flex items-center gap-3">
-                                            <button className="flex h-11 items-center gap-2 rounded-xl border border-border bg-background px-5 text-xs font-bold uppercase tracking-widest transition-all hover:bg-muted">
+                                            <button className="flex h-11 items-center gap-2 rounded-xl border border-border bg-background px-5 text-xs font-black uppercase tracking-widest transition-all hover:bg-muted">
                                                 <Download className="size-4" />
                                                 Export PDF
                                             </button>
@@ -138,27 +138,27 @@ function LeasesContent() {
                                 <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-12">
                                     {/* Parties */}
                                     <div className="space-y-6">
-                                        <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Parties Involved</h3>
+                                        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Parties Involved</h3>
                                         
                                         <div className="space-y-4">
                                             <div className="flex items-start gap-4">
-                                                <div className="size-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-bold">
+                                                <div className="size-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black">
                                                     <User className="size-6" />
                                                 </div>
                                                 <div>
-                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Tenant</p>
-                                                    <p className="text-lg font-bold text-foreground">{lease.tenant?.full_name}</p>
+                                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tenant</p>
+                                                    <p className="text-lg font-black text-foreground">{lease.tenant?.full_name}</p>
                                                     <p className="text-xs font-medium text-muted-foreground">{lease.tenant?.email}</p>
                                                 </div>
                                             </div>
 
                                             <div className="flex items-start gap-4">
-                                                <div className="size-12 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground font-bold">
+                                                <div className="size-12 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground font-black">
                                                     <ShieldCheck className="size-6" />
                                                 </div>
                                                 <div>
-                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Landlord</p>
-                                                    <p className="text-lg font-bold text-foreground">{lease.landlord?.full_name}</p>
+                                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Landlord</p>
+                                                    <p className="text-lg font-black text-foreground">{lease.landlord?.full_name}</p>
                                                     <p className="text-xs font-medium text-muted-foreground">{lease.landlord?.email}</p>
                                                 </div>
                                             </div>
@@ -167,27 +167,27 @@ function LeasesContent() {
 
                                     {/* Property & Unit */}
                                     <div className="space-y-6">
-                                        <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Premises Details</h3>
+                                        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Premises Details</h3>
                                         
                                         <div className="space-y-4">
                                             <div className="flex items-start gap-4">
-                                                <div className="size-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500 font-bold">
+                                                <div className="size-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500 font-black">
                                                     <Home className="size-6" />
                                                 </div>
                                                 <div>
-                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Property</p>
-                                                    <p className="text-lg font-bold text-foreground">{lease.unit?.property?.name}</p>
+                                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Property</p>
+                                                    <p className="text-lg font-black text-foreground">{lease.unit?.property?.name}</p>
                                                     <p className="text-xs font-medium text-muted-foreground">{lease.unit?.property?.address}</p>
                                                 </div>
                                             </div>
 
                                             <div className="flex items-start gap-4">
-                                                <div className="size-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 font-bold">
+                                                <div className="size-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 font-black">
                                                     <LayoutGrid className="size-6" />
                                                 </div>
                                                 <div>
-                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Unit</p>
-                                                    <p className="text-lg font-bold text-foreground">Unit {lease.unit?.name}</p>
+                                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Unit</p>
+                                                    <p className="text-lg font-black text-foreground">Unit {lease.unit?.name}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -196,25 +196,25 @@ function LeasesContent() {
 
                                 <div className="p-8 border-t border-border grid grid-cols-1 sm:grid-cols-3 gap-8">
                                     <div className="space-y-1">
-                                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Term Period</p>
-                                        <p className="text-sm font-bold text-foreground">
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Term Period</p>
+                                        <p className="text-sm font-black text-foreground">
                                             {formatDate(lease.start_date)} - {formatDate(lease.end_date)}
                                         </p>
                                     </div>
                                     <div className="space-y-1">
-                                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Monthly Rent</p>
-                                        <p className="text-sm font-bold text-foreground">{formatCurrency(lease.monthly_rent)}</p>
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Monthly Rent</p>
+                                        <p className="text-sm font-black text-foreground">{formatCurrency(lease.monthly_rent)}</p>
                                     </div>
                                     <div className="space-y-1">
-                                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Security Deposit</p>
-                                        <p className="text-sm font-bold text-foreground">{formatCurrency(lease.security_deposit)}</p>
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Security Deposit</p>
+                                        <p className="text-sm font-black text-foreground">{formatCurrency(lease.security_deposit)}</p>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Terms Section */}
                             <div className="rounded-[2.5rem] border border-border bg-card p-8 shadow-sm">
-                                <h3 className="mb-6 text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Lease Terms & Conditions</h3>
+                                <h3 className="mb-6 text-[10px] font-black uppercase tracking-[0.2em] text-primary">Lease Terms & Conditions</h3>
                                 <div className="prose prose-sm prose-invert max-w-none text-muted-foreground">
                                     {lease.terms ? (
                                         typeof lease.terms === 'string' ? (
@@ -235,14 +235,14 @@ function LeasesContent() {
                         <div className="space-y-8">
                             <div className="rounded-[2.5rem] border border-border bg-card p-8 shadow-sm">
                                 <div className="mb-6 flex items-center justify-between">
-                                    <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Audit Trail</h3>
+                                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Audit Trail</h3>
                                     <History className="size-4 text-muted-foreground/50" />
                                 </div>
                                 <LeaseAuditTrail events={[]} /> {/* We might need to fetch real events if available */}
                             </div>
 
                             <div className="rounded-[2.5rem] border border-border bg-card p-8 shadow-sm space-y-6">
-                                <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Signature Status</h3>
+                                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Signature Status</h3>
                                 
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between rounded-2xl bg-muted/30 p-4">
@@ -254,7 +254,7 @@ function LeasesContent() {
                                                 {lease.tenant_signed_at ? <CheckCircle2 className="size-4" /> : <Clock className="size-4" />}
                                             </div>
                                             <div>
-                                                <p className="text-xs font-bold text-foreground">Tenant</p>
+                                                <p className="text-xs font-black text-foreground">Tenant</p>
                                                 <p className="text-[10px] font-medium text-muted-foreground">
                                                     {lease.tenant_signed_at ? `Signed ${formatDate(lease.tenant_signed_at)}` : "Pending Signature"}
                                                 </p>
@@ -271,7 +271,7 @@ function LeasesContent() {
                                                 {lease.landlord_signed_at ? <CheckCircle2 className="size-4" /> : <Clock className="size-4" />}
                                             </div>
                                             <div>
-                                                <p className="text-xs font-bold text-foreground">Landlord</p>
+                                                <p className="text-xs font-black text-foreground">Landlord</p>
                                                 <p className="text-[10px] font-medium text-muted-foreground">
                                                     {lease.landlord_signed_at ? `Signed ${formatDate(lease.landlord_signed_at)}` : "Pending Signature"}
                                                 </p>
@@ -305,7 +305,7 @@ function LeasesContent() {
                                             }
                                         }}
                                         disabled={countersignLoading}
-                                        className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-bold uppercase tracking-widest text-xs transition-all hover:bg-primary/90 shadow-lg shadow-primary/20 disabled:opacity-50"
+                                        className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-xs transition-all hover:bg-primary/90 shadow-lg shadow-primary/20 disabled:opacity-50"
                                     >
                                         {countersignLoading ? "Generating Link..." : "Countersign Lease"}
                                     </button>
@@ -323,7 +323,7 @@ function LeasesContent() {
         <div className="mx-auto max-w-7xl space-y-8 px-4 py-8 md:px-8">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
-                    <h1 className="text-4xl font-bold tracking-tight text-foreground">Lease Hub</h1>
+                    <h1 className="text-4xl font-black tracking-tight text-foreground">Lease Hub</h1>
                     <p className="mt-1 text-muted-foreground">Monitor and manage all tenancy agreements across your portfolio.</p>
                 </div>
             </div>
@@ -339,7 +339,7 @@ function LeasesContent() {
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as any)}
                         className={cn(
-                            "flex items-center gap-2 px-6 py-4 text-sm font-bold uppercase tracking-widest transition-all relative",
+                            "flex items-center gap-2 px-6 py-4 text-sm font-black uppercase tracking-widest transition-all relative",
                             activeTab === tab.id ? "text-primary" : "text-muted-foreground hover:text-foreground"
                         )}
                     >
@@ -363,7 +363,7 @@ function LeasesContent() {
                         <div className="p-6 rounded-full bg-muted/50 mb-6">
                             <FileText className="size-12 text-muted-foreground/20" />
                         </div>
-                        <h3 className="text-xl font-bold text-foreground">Coming Soon</h3>
+                        <h3 className="text-xl font-black text-foreground">Coming Soon</h3>
                         <p className="mt-2 text-sm text-muted-foreground max-w-sm">
                             We're building the full lease management portal. For now, you can manage renewals here or view specific leases via notifications.
                         </p>

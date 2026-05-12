@@ -214,7 +214,7 @@ export function ProfileCard() {
                                         {profile?.avatar_url ? (
                                             <Image src={profile.avatar_url} alt={profile.full_name || "User"} fill sizes="80px" className="object-cover" unoptimized />
                                         ) : (
-                                            <span className="text-2xl font-bold text-white/90">{initials}</span>
+                                            <span className="text-2xl font-black text-white/90">{initials}</span>
                                         )}
                                         <div className="absolute -bottom-0.5 -right-0.5 size-5 rounded-full border-4 border-card bg-emerald-500" />
                                     </div>
@@ -223,7 +223,7 @@ export function ProfileCard() {
                                         <div className="flex items-center gap-2 mt-1">
                                             <div className="text-sm text-muted-foreground font-medium">{isLandlord ? "Property Owner" : "Loft Resident"}</div>
                                             {trustScore && (
-                                                <div className="flex items-center gap-1 text-xs font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full">
+                                                <div className="flex items-center gap-1 text-xs font-black text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full">
                                                     <ShieldCheck className="size-3" />
                                                     {trustScore}
                                                 </div>
@@ -240,22 +240,22 @@ export function ProfileCard() {
                         <div className="px-8 pb-4 space-y-3">
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="rounded-2xl bg-muted/40 p-4 border border-border/50">
-                                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-1">Current Unit</p>
-                                    <div className="text-sm font-bold text-foreground">{loading && !leaseData ? <Skeleton className="h-4 w-20" /> : leaseData?.unitName || "—"}</div>
+                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-1">Current Unit</p>
+                                    <div className="text-sm font-black text-foreground">{loading && !leaseData ? <Skeleton className="h-4 w-20" /> : leaseData?.unitName || "—"}</div>
                                 </div>
                                 <div className="rounded-2xl bg-muted/40 p-4 border border-border/50">
-                                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-1">Lease Status</p>
-                                    <div className="text-sm font-bold text-emerald-500 capitalize">{leaseData?.status || "—"}</div>
+                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-1">Lease Status</p>
+                                    <div className="text-sm font-black text-emerald-500 capitalize">{leaseData?.status || "—"}</div>
                                 </div>
                             </div>
                             {leaseData?.termMonths && (
                                 <div className="rounded-2xl bg-muted/20 p-4 border border-border/30 flex items-center justify-between">
                                     <div>
-                                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Lease Analytics</p>
-                                        <p className="text-xs font-bold text-foreground">{leaseData.termMonths} Month Term</p>
+                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Lease Analytics</p>
+                                        <p className="text-xs font-black text-foreground">{leaseData.termMonths} Month Term</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-xs font-bold text-foreground">₱{leaseData.monthlyRent?.toLocaleString()}</p>
+                                        <p className="text-xs font-black text-foreground">₱{leaseData.monthlyRent?.toLocaleString()}</p>
                                         <p className="text-[10px] text-muted-foreground">Monthly Rent</p>
                                     </div>
                                 </div>

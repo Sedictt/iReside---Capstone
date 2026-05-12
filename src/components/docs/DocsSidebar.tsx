@@ -321,7 +321,7 @@ export function DocsSidebar() {
       <div className="flex flex-col gap-8 p-6">
         {DOCS_NAV.map((section) => (
           <div key={section.title} className="flex flex-col gap-2">
-            <h4 className="text-xs font-bold uppercase tracking-widest text-text-disabled">
+            <h4 className="text-xs font-black uppercase tracking-widest text-text-disabled">
               {section.title}
             </h4>
             <div className="flex flex-col gap-1">

@@ -288,7 +288,7 @@ export default async function LandlordProfilePage() {
                         {/* Name & Badge Area */}
                         <div className="space-y-3 mb-8">
                             <div className="flex items-center justify-center gap-4">
-                                <h1 className="text-4xl md:text-5xl font-display font-bold text-white tracking-tight">
+                                <h1 className="text-4xl md:text-5xl font-display font-black text-white tracking-tight">
                                     {profile.full_name}
                                 </h1>
                                 {verificationStatus && (
@@ -306,7 +306,7 @@ export default async function LandlordProfilePage() {
                         <div className="flex items-center gap-4 mb-12">
                             <Link
                                 href="/landlord/settings"
-                                className="px-10 py-3 rounded-2xl bg-white text-black font-bold text-[11px] tracking-widest uppercase transition-all duration-300 hover:scale-105 active:scale-95 shadow-xl shadow-white/5"
+                                className="px-10 py-3 rounded-2xl bg-white text-black font-black text-[11px] tracking-widest uppercase transition-all duration-300 hover:scale-105 active:scale-95 shadow-xl shadow-white/5"
                             >
                                 Edit Profile
                             </Link>
@@ -324,21 +324,21 @@ export default async function LandlordProfilePage() {
                                 <div className="size-10 rounded-full bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20 group-hover/item:scale-110 transition-transform">
                                     <Mail size={18} className="text-[#6d9838]" />
                                 </div>
-                                <p className="text-[10px] font-bold tracking-widest text-neutral-500 uppercase">Email Address</p>
+                                <p className="text-[10px] font-black tracking-widest text-neutral-500 uppercase">Email Address</p>
                                 <a href={`mailto:${profile.email}`} className="text-sm text-white/90 font-medium hover:text-[#6d9838] transition-colors">{profile.email}</a>
                             </div>
                             <div className="flex flex-col items-center gap-2 group/item transition-all text-center">
                                 <div className="size-10 rounded-full bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20 group-hover/item:scale-110 transition-transform">
                                     <Phone size={18} className="text-[#6d9838]" />
                                 </div>
-                                <p className="text-[10px] font-bold tracking-widest text-neutral-500 uppercase">Phone Number</p>
+                                <p className="text-[10px] font-black tracking-widest text-neutral-500 uppercase">Phone Number</p>
                                 <a href={`tel:${profile.phone}`} className="text-sm text-white/90 font-medium hover:text-[#6d9838] transition-colors">{profile.phone || '+63 (---) --- ----'}</a>
                             </div>
                             <div className="flex flex-col items-center gap-2 group/item transition-all text-center">
                                 <div className="size-10 rounded-full bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20 group-hover/item:scale-110 transition-transform">
                                     <MapPin size={18} className="text-[#6d9838]" />
                                 </div>
-                                <p className="text-[10px] font-bold tracking-widest text-neutral-500 uppercase">Primary Location</p>
+                                <p className="text-[10px] font-black tracking-widest text-neutral-500 uppercase">Primary Location</p>
                                 <p className="text-sm text-white/90 font-medium">{properties[0]?.city || 'Valenzuela, Metro Manila'}</p>
                             </div>
                         </div>
@@ -354,7 +354,7 @@ export default async function LandlordProfilePage() {
                         <div className="size-12 rounded-2xl bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20">
                             <User size={20} className="text-[#6d9838]" />
                         </div>
-                        <h2 className="text-2xl font-display font-bold text-white tracking-tight">Biography</h2>
+                        <h2 className="text-2xl font-display font-black text-white tracking-tight">Biography</h2>
                     </div>
                     <div className="max-w-4xl">
                         <EditableBio initialBio={profile.bio || ''} />
@@ -374,16 +374,16 @@ export default async function LandlordProfilePage() {
                         <div className="size-12 rounded-2xl bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20">
                             <TrendingUp size={20} className="text-[#6d9838]" />
                         </div>
-                        <h2 className="text-2xl font-display font-bold text-white tracking-tight">Portfolio Stats</h2>
+                        <h2 className="text-2xl font-display font-black text-white tracking-tight">Portfolio Stats</h2>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
                         <div className="bg-white/5 border border-white/5 p-6 rounded-[2rem]">
-                            <p className="text-[10px] font-bold tracking-widest text-neutral-500 uppercase mb-2">Total Units</p>
-                            <p className="text-4xl font-display font-bold text-white">{units.length}</p>
+                            <p className="text-[10px] font-black tracking-widest text-neutral-500 uppercase mb-2">Total Units</p>
+                            <p className="text-4xl font-display font-black text-white">{units.length}</p>
                         </div>
                         <div className="bg-white/5 border border-white/5 p-6 rounded-[2rem]">
-                            <p className="text-[10px] font-bold tracking-widest text-neutral-500 uppercase mb-2">Occupancy</p>
-                            <p className="text-4xl font-display font-bold text-white">{occupancyRate}%</p>
+                            <p className="text-[10px] font-black tracking-widest text-neutral-500 uppercase mb-2">Occupancy</p>
+                            <p className="text-4xl font-display font-black text-white">{occupancyRate}%</p>
                         </div>
                     </div>
                 </div>

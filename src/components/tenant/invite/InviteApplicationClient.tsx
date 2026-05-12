@@ -329,7 +329,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
     if (loading) {
         return (
             <div className="min-h-screen bg-[#0f1218] text-white flex items-center justify-center">
-                <div className="flex items-center gap-3 text-sm font-bold tracking-wide text-zinc-300">
+                <div className="flex items-center gap-3 text-sm font-black tracking-wide text-zinc-300">
                     <Loader2 className="size-5 animate-spin" />
                     Loading private invite...
                 </div>
@@ -347,9 +347,9 @@ export function InviteApplicationClient({ token }: { token: string }) {
                     <div className="mx-auto size-24 bg-gradient-to-br from-red-500/20 to-red-900/20 rounded-3xl flex items-center justify-center shadow-2xl mb-8 border border-red-500/20">
                         <ShieldAlert className="size-10 text-red-500" />
                     </div>
-                    <h1 className="text-3xl font-bold tracking-tight text-white mb-4">Invite <span className="text-red-400 italic">unavailable</span></h1>
+                    <h1 className="text-3xl font-black tracking-tight text-white mb-4">Invite <span className="text-red-400 italic">unavailable</span></h1>
                     <p className="text-sm leading-relaxed text-white/60 mb-8">{loadError || "This invite is no longer available."}</p>
-                    <Link href="/login" className="inline-flex w-full sm:w-auto items-center justify-center rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 px-8 py-4 text-sm font-bold text-white transition-all active:scale-95">
+                    <Link href="/login" className="inline-flex w-full sm:w-auto items-center justify-center rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 px-8 py-4 text-sm font-black text-white transition-all active:scale-95">
                         Back to Login
                     </Link>
                 </div>
@@ -380,18 +380,18 @@ export function InviteApplicationClient({ token }: { token: string }) {
                         <CheckCircle2 className="size-12 text-black" />
                     </motion.div>
 
-                    <h1 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight text-white leading-tight">
+                    <h1 className="text-4xl md:text-5xl font-black mb-6 tracking-tight text-white leading-tight">
                         Application <br /><span className="text-primary italic">Successfully</span> Sent
                     </h1>
 
                     <p className="text-white/60 text-lg mb-12 leading-relaxed">
-                        Excellent Choice! Your application for <span className="text-white font-bold">{invite.propertyName}</span> is now being reviewed by the team. You&apos;ll only receive an account after approval.
+                        Excellent Choice! Your application for <span className="text-white font-black">{invite.propertyName}</span> is now being reviewed by the team. You&apos;ll only receive an account after approval.
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
                         <Link
                             href="/login"
-                            className="w-full sm:w-auto px-10 py-5 rounded-2xl bg-white text-black font-bold hover:bg-white/90 transition-all flex items-center justify-center gap-3 active:scale-95 shadow-xl shadow-white/5"
+                            className="w-full sm:w-auto px-10 py-5 rounded-2xl bg-white text-black font-black hover:bg-white/90 transition-all flex items-center justify-center gap-3 active:scale-95 shadow-xl shadow-white/5"
                         >
                             <User className="size-4" />
                             Return Home
@@ -423,7 +423,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                     {/* Left Panel: Context & Navigation */}
                     <div className="w-full lg:w-[380px] space-y-6 flex-shrink-0">
                         <div className="space-y-4">
-                            <h1 className="text-4xl font-bold text-white tracking-tighter leading-none">
+                            <h1 className="text-4xl font-black text-white tracking-tighter leading-none">
                                 Application <br />
                                 <span className="text-primary italic">Process</span>
                             </h1>
@@ -462,7 +462,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
 
                                         <div className="min-w-0">
                                             <p className={cn(
-                                                "text-sm font-bold transition-colors leading-tight",
+                                                "text-sm font-black transition-colors leading-tight",
                                                 isActive ? "text-white" : "text-white/60"
                                             )}>
                                                 {stepDef.title}
@@ -485,14 +485,14 @@ export function InviteApplicationClient({ token }: { token: string }) {
                         
                         <div className="rounded-[2.5rem] bg-card/60 backdrop-blur-3xl border border-white/10 overflow-hidden shadow-2xl flex flex-col p-6">
                             <div className="space-y-4">
-                                <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-blue-300">Invite Intelligence</h3>
+                                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-300">Invite Intelligence</h3>
                                 <div className="space-y-2">
-                                  <p className="text-sm font-bold text-white tracking-tight">{invite.propertyName}</p>
+                                  <p className="text-sm font-black text-white tracking-tight">{invite.propertyName}</p>
                                   <p className="text-xs text-white/50">{isOnlineInvite ? "Online Document Processing" : "Face-to-face Document Checking"}</p>
                                 </div>
                                 {invite.expiresAt && (
                                     <div className="pt-4 border-t border-white/10">
-                                        <p className="text-[10px] font-bold uppercase text-red-400">Expires At</p>
+                                        <p className="text-[10px] font-black uppercase text-red-400">Expires At</p>
                                         <p className="text-xs text-white/70 mt-1"><ClientOnlyDate date={invite.expiresAt} format={{ dateStyle: 'full', timeStyle: 'short' }} /></p>
                                     </div>
                                 )}
@@ -526,9 +526,9 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                                 return <Icon className="size-5" />;
                                             })()}
                                         </div>
-                                        <span className="text-[10px] font-bold text-white/40 uppercase tracking-[0.3em]">Step {step + 1} of {totalSteps}</span>
+                                        <span className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em]">Step {step + 1} of {totalSteps}</span>
                                     </div>
-                                    <h2 className="text-3xl font-bold text-white tracking-tight mb-3">
+                                    <h2 className="text-3xl font-black text-white tracking-tight mb-3">
                                         {stepDefinitions[step].title}
                                     </h2>
                                     <p className="text-white/50 text-sm leading-relaxed max-w-2xl">
@@ -537,7 +537,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                 </header>
                                 
                                 {submitError && (
-                                    <div className="mb-6 rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-sm font-bold text-red-300">
+                                    <div className="mb-6 rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-sm font-black text-red-300">
                                         {submitError}
                                     </div>
                                 )}
@@ -591,7 +591,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                                         <div key={key} className="rounded-3xl border border-white/10 bg-white/5 p-5 relative group hover:border-primary/40 transition-colors">
                                                             <div className="flex items-start justify-between mb-4">
                                                                 <div>
-                                                                    <p className="text-xs font-bold uppercase tracking-[0.1em] text-white">
+                                                                    <p className="text-xs font-black uppercase tracking-[0.1em] text-white">
                                                                         {REQUIREMENT_LABELS[key] ?? key}
                                                                     </p>
                                                                     {key !== "application_form" && (
@@ -600,7 +600,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                                                 </div>
                                                                 <div className="flex flex-col gap-2 relative z-10">
                                                                     {key !== "application_form" && (
-                                                                        <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.15em] hover:bg-white/20 transition-colors">
+                                                                        <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-[10px] font-black uppercase tracking-[0.15em] hover:bg-white/20 transition-colors">
                                                                             <Upload className="size-3" />
                                                                             {uploadingRequirementKey === key ? "WAIT..." : "UPLOAD"}
                                                                             <input
@@ -620,7 +620,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                                                         type="button"
                                                                         onClick={() => toggleRequirement(key)}
                                                                         className={cn(
-                                                                            "rounded-xl border px-3 py-2 text-[10px] font-bold uppercase tracking-[0.15em] transition-colors",
+                                                                            "rounded-xl border px-3 py-2 text-[10px] font-black uppercase tracking-[0.15em] transition-colors",
                                                                             checked
                                                                                 ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20"
                                                                                 : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10"
@@ -673,7 +673,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                             <div className="rounded-[2.5rem] border border-white/10 bg-white/5 p-6 lg:p-8">
                                                 <div className="flex items-center gap-3 opacity-50 mb-3">
                                                     <FileText className="size-4" />
-                                                    <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-400">Detailed Notes</p>
+                                                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">Detailed Notes</p>
                                                 </div>
                                                 <p className="text-sm leading-relaxed text-zinc-200">{formData.message || "No additional notes provided."}</p>
                                             </div>
@@ -683,7 +683,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                                     <CheckCircle2 className="size-8 text-emerald-500" />
                                                 </div>
                                                 <div>
-                                                    <h4 className="text-white font-bold text-lg mb-1">Final Review</h4>
+                                                    <h4 className="text-white font-black text-lg mb-1">Final Review</h4>
                                                     <p className="text-white/50 text-sm leading-relaxed font-medium">
                                                         By proceeding, you grant permission for basic background validation based on the requirements provided.
                                                     </p>
@@ -699,7 +699,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                         type="button"
                                         onClick={handleBack}
                                         className={cn(
-                                            "flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm transition-all active:scale-95 hover:bg-white/5",
+                                            "flex items-center gap-2 px-6 py-3 rounded-2xl font-black text-sm transition-all active:scale-95 hover:bg-white/5",
                                             step === 0 ? "opacity-0 pointer-events-none" : "text-white/40 hover:text-white"
                                         )}
                                     >
@@ -711,7 +711,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                         type="button"
                                         onClick={step === finalStepIndex ? handleSubmit : handleNext}
                                         disabled={submitting}
-                                        className="h-14 px-10 rounded-2xl bg-primary hover:bg-primary-dark text-black font-bold text-sm transition-all shadow-[0_10px_30px_rgba(109,152,56,0.3)] flex items-center gap-3 disabled:opacity-50 active:scale-[0.98] relative overflow-hidden group"
+                                        className="h-14 px-10 rounded-2xl bg-primary hover:bg-primary-dark text-black font-black text-sm transition-all shadow-[0_10px_30px_rgba(109,152,56,0.3)] flex items-center gap-3 disabled:opacity-50 active:scale-[0.98] relative overflow-hidden group"
                                     >
                                         <div className="absolute inset-x-0 bottom-0 h-1 bg-black/10 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
                                         {submitting ? (
@@ -751,9 +751,9 @@ function SummaryCard({ label, value, icon: Icon }: any) {
             <div className="relative z-10">
                 <div className="flex items-center gap-2 opacity-50 mb-3 block">
                     <Icon className="size-3.5" />
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">{label}</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">{label}</p>
                 </div>
-                <p className="text-lg font-bold tracking-tight text-white line-clamp-1">{value}</p>
+                <p className="text-lg font-black tracking-tight text-white line-clamp-1">{value}</p>
             </div>
         </div>
     );
@@ -763,7 +763,7 @@ function Seal({ icon: Icon, label }: any) {
     return (
         <div className="flex items-center gap-2 grayscale hover:grayscale-0 transition-all cursor-default duration-500">
             <Icon className="size-4" />
-            <span className="text-[9px] font-bold uppercase tracking-widest">{label}</span>
+            <span className="text-[9px] font-black uppercase tracking-widest">{label}</span>
         </div>
     );
 }

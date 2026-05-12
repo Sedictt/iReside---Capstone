@@ -66,7 +66,7 @@ export function UnitHistoryModal({
                                     <span className="material-icons-round text-2xl">history</span>
                                 </div>
                                 <div>
-                                    <h2 className={`text-2xl font-bold tracking-tight text-foreground`}>
+                                    <h2 className={`text-2xl font-black tracking-tight text-foreground`}>
                                         Unit {unit.name} History
                                     </h2>
                                     <p className={`text-sm font-medium text-muted-foreground`}>Full audit trail and historical logs</p>
@@ -78,13 +78,13 @@ export function UnitHistoryModal({
                             <div className="flex gap-2 p-1.5 rounded-2xl bg-muted w-fit">
                                 <button 
                                     onClick={() => setActiveTab("tenants")}
-                                    className={`px-6 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${activeTab === "tenants" ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                    className={`px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === "tenants" ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                                 >
                                     Tenants
                                 </button>
                                 <button 
                                     onClick={() => setActiveTab("maintenance")}
-                                    className={`px-6 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${activeTab === "maintenance" ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                    className={`px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === "maintenance" ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                                 >
                                     Maintenance
                                 </button>
@@ -96,13 +96,13 @@ export function UnitHistoryModal({
                                 {activeTab === "tenants" ? (
                                     tenantHistory.map((item) => (
                                         <div key={item.id} className={`flex items-center gap-4 p-5 rounded-2xl border border-border bg-muted/30 transition-colors hover:bg-muted/50`}>
-                                            <div className={`flex size-10 shrink-0 items-center justify-center rounded-full text-white text-[10px] font-bold ${item.avatarBg}`}>
+                                            <div className={`flex size-10 shrink-0 items-center justify-center rounded-full text-white text-[10px] font-black ${item.avatarBg}`}>
                                                 {item.name.charAt(0)}
                                             </div>
                                             <div className="flex-1">
                                                 <div className="flex items-center justify-between">
-                                                    <p className={`text-sm font-bold text-foreground`}>{item.name}</p>
-                                                    <span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-full ${
+                                                    <p className={`text-sm font-black text-foreground`}>{item.name}</p>
+                                                    <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-full ${
                                                         item.status === 'Completed' 
                                                             ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' 
                                                             : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
@@ -110,13 +110,13 @@ export function UnitHistoryModal({
                                                         {item.status}
                                                     </span>
                                                 </div>
-                                                <p className="text-[10px] font-bold text-muted-foreground mt-1">
+                                                <p className="text-[10px] font-black text-muted-foreground mt-1">
                                                     <ClientOnlyDate date={item.leaseStart} /> &mdash; <ClientOnlyDate date={item.leaseEnd} />
                                                 </p>
                                             </div>
                                             <div className="text-right">
-                                                <p className={`text-xs font-bold text-foreground`}>₱{item.rent.toLocaleString()}</p>
-                                                <p className="text-[9px] font-bold text-muted-foreground">Monthly Rent</p>
+                                                <p className={`text-xs font-black text-foreground`}>₱{item.rent.toLocaleString()}</p>
+                                                <p className="text-[9px] font-black text-muted-foreground">Monthly Rent</p>
                                             </div>
                                         </div>
                                     ))
@@ -128,16 +128,16 @@ export function UnitHistoryModal({
                                             </div>
                                             <div className="flex-1">
                                                 <div className="flex items-center justify-between">
-                                                    <p className={`text-sm font-bold text-foreground`}>{item.title}</p>
-                                                    <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                                                    <p className={`text-sm font-black text-foreground`}>{item.title}</p>
+                                                    <span className="text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
                                                         {item.status}
                                                     </span>
                                                 </div>
-                                                <p className="text-[10px] font-bold text-muted-foreground mt-1"><ClientOnlyDate date={item.date} /> &bull; {item.description}</p>
+                                                <p className="text-[10px] font-black text-muted-foreground mt-1"><ClientOnlyDate date={item.date} /> &bull; {item.description}</p>
                                             </div>
                                             <div className="text-right">
-                                                <p className={`text-xs font-bold text-foreground`}>₱{item.cost.toLocaleString()}</p>
-                                                <p className="text-[9px] font-bold text-muted-foreground">Cost</p>
+                                                <p className={`text-xs font-black text-foreground`}>₱{item.cost.toLocaleString()}</p>
+                                                <p className="text-[9px] font-black text-muted-foreground">Cost</p>
                                             </div>
                                         </div>
                                     ))
@@ -148,7 +148,7 @@ export function UnitHistoryModal({
                         <div className="p-8 border-t border-border bg-muted/20">
                             <button 
                                 onClick={onClose}
-                                className="w-full py-4 rounded-2xl bg-primary text-primary-foreground text-xs font-bold uppercase tracking-[0.2em] transition-all hover:opacity-90 active:scale-[0.98] shadow-lg shadow-primary/20"
+                                className="w-full py-4 rounded-2xl bg-primary text-primary-foreground text-xs font-black uppercase tracking-[0.2em] transition-all hover:opacity-90 active:scale-[0.98] shadow-lg shadow-primary/20"
                             >
                                 Close History View
                             </button>
