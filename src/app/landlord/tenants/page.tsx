@@ -15,10 +15,9 @@ import { Tenant } from "@/components/landlord/tenants/TenantCard";
 function TenantsContent() {
     const { openDetailModal } = useProfileCard();
     const searchParams = useSearchParams();
-    const { get } = searchParams;
     const router = useRouter();
     const { push } = router;
-    const currentTab = get("tab") || "directory";
+    const currentTab = searchParams.get("tab") || "directory";
 
     const { selectedPropertyId } = useProperty();
     const [tenants, setTenants] = useState<Tenant[]>([]);

@@ -46,14 +46,39 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
         unitId: '',
         startDate: '',
         endDate: '',
-        monthlyRent: 0,
-        securityDeposit: 0,
+        monthlyRent: '',
+        securityDeposit: '',
     })
 
     const [inviteData, setInviteData] = useState({
         propertyId: '',
         expiresAt: '',
     })
+
+    // Reset state when modal opens
+    useEffect(() => {
+        if (isOpen) {
+            setActiveTab('manual')
+            setLoading(false)
+            setSuccessData(null)
+            setInviteResult(null)
+            setFormData({
+                fullName: '',
+                email: '',
+                phone: '',
+                propertyId: '',
+                unitId: '',
+                startDate: '',
+                endDate: '',
+                monthlyRent: '',
+                securityDeposit: '',
+            })
+            setInviteData({
+                propertyId: '',
+                expiresAt: '',
+            })
+        }
+    }, [isOpen])
 
     // Auto-select first property
     useEffect(() => {
@@ -63,7 +88,7 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                 ...prev,
                 propertyId: firstProp.id,
                 unitId: firstProp.units[0]?.id || '',
-                monthlyRent: firstProp.units[0]?.rentAmount || 0
+                monthlyRent: firstProp.units[0]?.rentAmount?.toString() || ''
             }))
             setInviteData(prev => ({
                 ...prev,
@@ -81,7 +106,7 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
             ...prev,
             propertyId,
             unitId: prop?.units[0]?.id || '',
-            monthlyRent: prop?.units[0]?.rentAmount || 0
+            monthlyRent: prop?.units[0]?.rentAmount?.toString() || ''
         }))
     }
 
@@ -90,7 +115,7 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
         setFormData(prev => ({
             ...prev,
             unitId,
-            monthlyRent: unit?.rentAmount || 0
+            monthlyRent: unit?.rentAmount?.toString() || ''
         }))
     }
 
@@ -103,10 +128,15 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
 
         try {
             setLoading(true)
+            const payload = {
+                ...formData,
+                monthlyRent: formData.monthlyRent ? Number(formData.monthlyRent) : 0,
+                securityDeposit: formData.securityDeposit ? Number(formData.securityDeposit) : 0,
+            }
             const response = await fetch('/api/landlord/tenants/manual', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData)
+                body: JSON.stringify(payload)
             })
 
             const data = await response.json()
@@ -373,7 +403,7 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                                                 required
                                                                 type="number"
                                                                 value={formData.monthlyRent}
-                                                                onChange={(e) => setFormData(prev => ({ ...prev, monthlyRent: parseFloat(e.target.value) }))}
+                                                                onChange={(e) => setFormData(prev => ({ ...prev, monthlyRent: e.target.value }))}
                                                                 className="w-full rounded-2xl border border-border bg-muted/50 py-3.5 pl-8 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
                                                             />
                                                         </div>
@@ -386,7 +416,7 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                                                 id="securityDeposit"
                                                                 type="number"
                                                                 value={formData.securityDeposit}
-                                                                onChange={(e) => setFormData(prev => ({ ...prev, securityDeposit: parseFloat(e.target.value) }))}
+                                                                onChange={(e) => setFormData(prev => ({ ...prev, securityDeposit: e.target.value }))}
                                                                 className="w-full rounded-2xl border border-border bg-muted/50 py-3.5 pl-8 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
                                                             />
                                                         </div>

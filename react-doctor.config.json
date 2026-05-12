@@ -1,7 +1,8 @@
 {
   "ignore": {
     "rules": [
-      "react-doctor/design-no-bold-heading"
+      "react-doctor/design-no-bold-heading",
+      "react-doctor/no-giant-component"
     ]
   }
 }

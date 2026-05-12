@@ -10,7 +10,6 @@ import {
     Clock,
     CheckCircle2,
     Search,
-    Plus,
     ArrowRight,
     Home,
     Zap,
@@ -56,13 +55,12 @@ export interface MaintenanceRequest {
 }
 
 export function MaintenanceDashboard() {
-    const { selectedPropertyId, selectedProperty } = useProperty();
+    const { selectedPropertyId } = useProperty();
     const searchParams = useSearchParams();
     const [filter, setFilter] = useState<"All" | Status>("All");
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedRequest, setSelectedRequest] = useState<MaintenanceRequest | null>(null);
     const [requests, setRequests] = useState<MaintenanceRequest[]>([]);
-    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [previewMode, setPreviewMode] = useState<string | null>(null);
     const [priorityFilter, setPriorityFilter] = useState<"All" | Priority>("All");
     const [sortBy, setSortBy] = useState<"newest" | "oldest" | "priority-desc" | "priority-asc">("priority-desc");
@@ -276,10 +274,6 @@ export function MaintenanceDashboard() {
                         Coordinate, assign, and track property repairs. IRIS AI automatically prioritizes urgent requests for faster resolution.
                     </p>
                 </div>
-                <button onClick={() => setIsCreateModalOpen(true)} className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3.5 rounded-3xl font-black uppercase tracking-wider text-xs hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all active:scale-95 shrink-0">
-                    <Plus className="size-5" />
-                    Report an Issue
-                </button>
             </div>
 
             {/* Main Content Area */}
@@ -395,21 +389,6 @@ export function MaintenanceDashboard() {
                 request={selectedRequest}
                 onRequestUpdated={handleLandlordRequestUpdate}
             />
-
-            {isCreateModalOpen && selectedPropertyId !== "all" && (
-                <MaintenanceRequestModal
-                    isOpen={isCreateModalOpen}
-                    onClose={() => setIsCreateModalOpen(false)}
-                    request={null}
-                    mode="create"
-                    propertyId={selectedPropertyId}
-                    units={selectedProperty?.units ?? []}
-                    onRequestCreated={(newRequest) => {
-                        setRequests(prev => [newRequest, ...prev]);
-                        setIsCreateModalOpen(false);
-                    }}
-                />
-            )}
         </div>
     );
 }
