@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Property Management System - Context DFD (Level 0)</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f8f9fa;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+    h1 {
+      color: #2c3e50;
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+    .subtitle {
+      color: #7f8c8d;
+      font-size: 0.875rem;
+      margin-bottom: 32px;
+    }
+    .diagram-container {
+      background: #ffffff;
+      border: 1px solid #e1e4e8;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      padding: 24px;
+    }
+    svg.diagram {
+      display: block;
+    }
+    /* Entity styles - Gane & Sarson: rectangle with name inside */
+    .entity {
+      cursor: move;
+    }
+    .entity-rect {
+      fill: #ffffff;
+      stroke: #2c3e50;
+      stroke-width: 2;
+      transition: fill 0.15s;
+    }
+    .entity:hover .entity-rect {
+      fill: #f0f4f8;
+    }
+    .entity-text {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      fill: #2c3e50;
+      text-anchor: middle;
+      dominant-baseline: middle;
+      pointer-events: none;
+      user-select: none;
+    }
+    /* Process styles - Gane & Sarson: circle/rounded rect with number */
+    .process {
+      cursor: move;
+    }
+    .process-circle {
+      fill: #3498db;
+      stroke: #2c3e50;
+      stroke-width: 2;
+    }
+    .process-text {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      fill: #ffffff;
+      text-anchor: middle;
+      dominant-baseline: middle;
+      pointer-events: none;
+      user-select: none;
+    }
+    .process-label {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      fill: #2c3e50;
+      text-anchor: middle;
+      pointer-events: none;
+      user-select: none;
+    }
+    /* Flow arrow styles */
+    .flow-line {
+      fill: none;
+      stroke: #34495e;
+      stroke-width: 1.5;
+    }
+    .flow-arrow {
+      fill: #34495e;
+    }
+    .flow-label {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 10px;
+      fill: #2c3e50;
+      pointer-events: none;
+      user-select: none;
+    }
+    .flow-bg {
+      fill: #ffffff;
+      stroke: none;
+    }
+    .legend {
+      margin-top: 24px;
+      display: flex;
+      gap: 24px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #5a6c7d;
+    }
+    .legend-entity {
+      width: 40px;
+      height: 24px;
+      border: 2px solid #2c3e50;
+      background: #fff;
+    }
+    .legend-process {
+      width: 32px;
+      height: 32px;
+      border: 2px solid #2c3e50;
+      border-radius: 50%;
+      background: #3498db;
+    }
+    .legend-line {
+      width: 40px;
+      height: 2px;
+      background: #34495e;
+      position: relative;
+    }
+    .legend-line::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: -3px;
+      border: 4px solid transparent;
+      border-left: 6px solid #34495e;
+    }
+    .hint {
+      margin-top: 16px;
+      font-size: 11px;
+      color: #95a5a6;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>Property Management System</h1>
+  <div class="subtitle">Context Data Flow Diagram (DFD Level 0) — Gane & Sarson Notation</div>
+
+  <div class="diagram-container">
+    <svg class="diagram" width="800" height="520" viewBox="0 0 800 520">
+      <defs>
+        <!-- Arrow marker for data flows -->
+        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+          <polygon points="0 0, 10 3.5, 0 7" class="flow-arrow"/>
+        </marker>
+      </defs>
+
+      <!-- Data Flow Paths (orthogonal routing) -->
+      <!-- Admin flows -->
+      <g id="flows">
+        <!-- Admin -> System -->
+        <path id="flow-admin-sys" class="flow-line" marker-end="url(#arrowhead)"
+              d="M 170 130 L 280 130 L 320 160 L 340 160"/>
+
+        <!-- Admin <- System -->
+        <path id="flow-sys-admin" class="flow-line" marker-end="url(#arrowhead)"
+              d="M 340 200 L 320 200 L 280 230 L 170 230"/>
+
+        <!-- Landlord -> System -->
+        <path id="flow-landlord-sys" class="flow-line" marker-end="url(#arrowhead)"
+              d="M 170 340 L 280 340 L 320 310 L 340 310"/>
+
+        <!-- Landlord <- System -->
+        <path id="flow-sys-landlord" class="flow-line" marker-end="url(#arrowhead)"
+              d="M 340 350 L 320 350 L 280 380 L 170 380"/>
+
+        <!-- Tenant -> System -->
+        <path id="flow-tenant-sys" class="flow-line" marker-end="url(#arrowhead)"
+              d="M 170 470 L 280 470 L 320 410 L 340 410"/>
+
+        <!-- Tenant <- System -->
+        <path id="flow-sys-tenant" class="flow-line" marker-end="url(#arrowhead)"
+              d="M 340 450 L 320 450 L 280 490 L 170 490"/>
+      </g>
+
+      <!-- External Entity: Admin (top-left) -->
+      <g class="entity" id="entity-admin" transform="translate(50, 95)">
+        <rect class="entity-rect" x="0" y="0" width="120" height="70" rx="0"/>
+        <text class="entity-text" x="60" y="35">Admin</text>
+      </g>
+
+      <!-- External Entity: Landlord (bottom-left) -->
+      <g class="entity" id="entity-landlord" transform="translate(50, 305)">
+        <rect class="entity-rect" x="0" y="0" width="120" height="70" rx="0"/>
+        <text class="entity-text" x="60" y="35">Landlord</text>
+      </g>
+
+      <!-- External Entity: Tenant (bottom-left, below landlord) -->
+      <g class="entity" id="entity-tenant" transform="translate(50, 435)">
+        <rect class="entity-rect" x="0" y="0" width="120" height="70" rx="0"/>
+        <text class="entity-text" x="60" y="35">Tenant</text>
+      </g>
+
+      <!-- Central Process: Property Management System -->
+      <g class="process" id="process-system" transform="translate(340, 265)">
+        <circle class="process-circle" cx="60" cy="80" r="55"/>
+        <text class="process-text" x="60" y="72">1.0</text>
+        <text class="process-label" x="60" y="160">Property Management</text>
+        <text class="process-label" x="60" y="175">System</text>
+      </g>
+
+      <!-- Flow Labels -->
+      <g id="flow-labels">
+        <!-- Admin flows -->
+        <rect class="flow-bg" x="215" y="112" width="70" height="14" rx="2"/>
+        <text class="flow-label" x="250" y="122">Auth Request</text>
+
+        <rect class="flow-bg" x="210" y="212" width="70" height="14" rx="2"/>
+        <text class="flow-label" x="245" y="222">Auth Response</text>
+
+        <!-- Landlord flows -->
+        <rect class="flow-bg" x="210" y="322" width="75" height="14" rx="2"/>
+        <text class="flow-label" x="247" y="332">Property Data</text>
+
+        <rect class="flow-bg" x="210" y="372" width="70" height="14" rx="2"/>
+        <text class="flow-label" x="245" y="382">Status/Reports</text>
+
+        <!-- Tenant flows -->
+        <rect class="flow-bg" x="210" y="432" width="70" height="14" rx="2"/>
+        <text class="flow-label" x="245" y="442">Lease Request</text>
+
+        <rect class="flow-bg" x="210" y="462" width="70" height="14" rx="2"/>
+        <text class="flow-label" x="245" y="472">Lease Status</text>
+      </g>
+    </svg>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-entity"></div>
+      <span>External Entity</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-process"></div>
+      <span>Process</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-line"></div>
+      <span>Data Flow</span>
+    </div>
+  </div>
+
+  <div class="hint">Drag entities to reposition • SVG-based render</div>
+
+  <script>
+    // Minimal drag-and-drop for entities
+    (function() {
+      const svg = document.querySelector('svg.diagram');
+      let dragging = null;
+      let offset = { x: 0, y: 0 };
+      let started = false;
+      let startPt = { x: 0, y: 0 };
+
+      svg.addEventListener('mousedown', function(e) {
+        const target = e.target.closest('.entity, .process');
+        if (!target) return;
+        dragging = target;
+        const pt = svg.createSVGPoint();
+        pt.x = e.clientX;
+        pt.y = e.clientY;
+        const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
+        const transform = target.getAttribute('transform');
+        const match = transform.match(/translate\((\d+),\s*(\d+)\)/);
+        if (match) {
+          offset.x = svgP.x - parseFloat(match[1]);
+          offset.y = svgP.y - parseFloat(match[2]);
+        }
+        startPt.x = svgP.x;
+        startPt.y = svgP.y;
+        started = true;
+        e.preventDefault();
+      });
+
+      svg.addEventListener('mousemove', function(e) {
+        if (!dragging) return;
+        const pt = svg.createSVGPoint();
+        pt.x = e.clientX;
+        pt.y = e.clientY;
+        const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
+        const x = Math.round(svgP.x - offset.x);
+        const y = Math.round(svgP.y - offset.y);
+        dragging.setAttribute('transform', `translate(${x}, ${y})`);
+      });
+
+      svg.addEventListener('mouseup', function(e) {
+        if (dragging && !started) return;
+        dragging = null;
+        started = false;
+      });
+
+      svg.addEventListener('mouseleave', function() {
+        dragging = null;
+        started = false;
+      });
+    })();
+  </script>
+</body>
+</html>
