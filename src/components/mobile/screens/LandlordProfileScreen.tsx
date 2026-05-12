@@ -17,6 +17,7 @@ import {
     Wrench,
 } from "lucide-react";
 import { useNavigation } from "../navigation";
+import { createClient } from "@/lib/supabase/client";
 import styles from "./LandlordProfileScreen.module.css";
 
 export default function LandlordProfileScreen() {
@@ -124,7 +125,12 @@ export default function LandlordProfileScreen() {
                     <div className={styles.menuBlock}>
                         <button
                             className={`${styles.menuItem} ${styles.dangerItem}`}
-                            onClick={() => navigate("splash")}
+                            onClick={async () => {
+                                const supabase = createClient();
+                                await supabase.auth.signOut();
+                                setRole(null as any);
+                                navigate("login");
+                            }}
                         >
                             <div className={styles.menuItemIcon}>
                                 <LogOut />

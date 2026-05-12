@@ -14,6 +14,7 @@ import {
     ArrowRight,
 } from "lucide-react";
 import { useNavigation } from "../navigation";
+import { createClient } from "@/lib/supabase/client";
 import styles from "./SignUpScreen.module.css";
 
 type RoleOption = "tenant" | "landlord" | null;
@@ -28,6 +29,8 @@ export default function SignUpScreen() {
     const [showConfirm, setShowConfirm] = useState(false);
     const [selectedRole, setSelectedRole] = useState<RoleOption>(null);
     const [agreedToTerms, setAgreedToTerms] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const isFormValid =
         fullName.trim() &&
@@ -37,10 +40,40 @@ export default function SignUpScreen() {
         selectedRole &&
         agreedToTerms;
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!isFormValid) return;
-        // Navigate to email verification
-        navigate("emailVerification");
+        
+        setIsLoading(true);
+        setError(null);
+
+        if (password !== confirmPassword) {
+            setError("Passwords do not match");
+            setIsLoading(false);
+            return;
+        }
+
+        try {
+            const supabase = createClient();
+            const { error: signUpError } = await supabase.auth.signUp({
+                email: email.trim(),
+                password: password,
+                options: {
+                    data: {
+                        full_name: fullName.trim(),
+                        role: selectedRole,
+                    },
+                },
+            });
+
+            if (signUpError) throw signUpError;
+
+            // Navigate to email verification screen
+            navigate("emailVerification", { email: email.trim() });
+        } catch (err: any) {
+            setError(err.message || "Something went wrong during sign up.");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -193,6 +226,9 @@ export default function SignUpScreen() {
                     </p>
                 </div>
 
+                {/* Error Message */}
+                {error && <div className={styles.errorMessage}>{error}</div>}
+
                 {/* Terms */}
                 <div className={styles.termsRow}>
                     <div
@@ -213,10 +249,10 @@ export default function SignUpScreen() {
                 <button
                     className={styles.submitButton}
                     onClick={handleSubmit}
-                    disabled={!isFormValid}
+                    disabled={!isFormValid || isLoading}
                 >
-                    Create Account
-                    <ArrowRight />
+                    {isLoading ? "Creating Account..." : "Create Account"}
+                    {!isLoading && <ArrowRight />}
                 </button>
             </div>
 

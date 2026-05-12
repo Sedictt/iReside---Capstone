@@ -3,16 +3,20 @@
 import { useState, useRef, useEffect, useCallback, KeyboardEvent } from "react";
 import { ArrowLeft, Mail, ArrowRight } from "lucide-react";
 import { useNavigation } from "../navigation";
+import { createClient } from "@/lib/supabase/client";
 import styles from "./EmailVerificationScreen.module.css";
 
 const OTP_LENGTH = 6;
 const RESEND_COOLDOWN = 30;
 
 export default function EmailVerificationScreen() {
-    const { goBack, setRole } = useNavigation();
+    const { goBack, setRole, screenParams } = useNavigation();
     const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
     const [countdown, setCountdown] = useState(RESEND_COOLDOWN);
     const [canResend, setCanResend] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const email = (screenParams.email as string) || "your email address";
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
     // Focus first input on mount
@@ -99,13 +103,31 @@ export default function EmailVerificationScreen() {
     };
 
     // Handle verify
-    const handleVerify = () => {
+    const handleVerify = async () => {
         const code = otp.join("");
         if (code.length !== OTP_LENGTH) return;
 
-        // For now, set role to tenant and navigate to dashboard
-        // In the future, this will verify the OTP with Supabase
-        setRole("tenant");
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const supabase = createClient();
+            const { data, error: verifyError } = await supabase.auth.verifyOtp({
+                email,
+                token: code,
+                type: 'signup',
+            });
+
+            if (verifyError) throw verifyError;
+
+            // Success! Get user role and navigate
+            const userRole = data.user?.user_metadata?.role || "tenant";
+            setRole(userRole as "tenant" | "landlord");
+        } catch (err: any) {
+            setError(err.message || "Invalid or expired verification code.");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const isComplete = otp.every((digit) => digit !== "");
@@ -134,10 +156,19 @@ export default function EmailVerificationScreen() {
                 <h1 className={styles.headerTitle}>Verify Your Email</h1>
                 <p className={styles.headerSub}>
                     We sent a 6-digit code to{" "}
-                    <span className={styles.headerEmail}>your email address</span>. Enter
+                    <span className={styles.headerEmail}>{email}</span>. Enter
                     the code below to verify.
                 </p>
             </div>
+
+            {/* Error Message */}
+            {error && <p className={styles.errorMessage} style={{ 
+                color: '#ef4444', 
+                fontSize: '13px', 
+                textAlign: 'center', 
+                marginBottom: '16px',
+                fontWeight: '600'
+            }}>{error}</p>}
 
             {/* OTP Inputs */}
             <div className={styles.otpRow}>
@@ -165,10 +196,10 @@ export default function EmailVerificationScreen() {
             <button
                 className={styles.verifyButton}
                 onClick={handleVerify}
-                disabled={!isComplete}
+                disabled={!isComplete || isLoading}
             >
-                Verify & Continue
-                <ArrowRight />
+                {isLoading ? "Verifying..." : "Verify & Continue"}
+                {!isLoading && <ArrowRight />}
             </button>
 
             {/* Resend Area */}
