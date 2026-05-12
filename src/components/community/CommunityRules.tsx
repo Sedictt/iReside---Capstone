@@ -1,7 +1,7 @@
 "use client"
 
 import { m as motion } from "framer-motion"
-import { Flag, MoreHorizontal, Shield } from "lucide-react"
+import { X, Shield } from "lucide-react"
 
 interface CommunityRulesProps {
     onClose: () => void
@@ -30,7 +30,7 @@ export function CommunityRules({ onClose }: CommunityRulesProps) {
                         onClick={onClose}
                         className="flex size-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:text-white/40 dark:hover:bg-white/5 dark:hover:text-white"
                     >
-                        <MoreHorizontal className="size-5 rotate-90" />
+                        <X className="size-5" />
                     </button>
                 </div>
                 <div className="grid grid-cols-1 gap-6 p-8 md:grid-cols-3">

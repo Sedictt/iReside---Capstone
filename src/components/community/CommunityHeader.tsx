@@ -5,6 +5,14 @@ import { m as motion } from "framer-motion"
 import { Search, Flag, Bell, Building2, ChevronDown, Check, Megaphone, MessageCircle, Bookmark } from "lucide-react"
 import { ComponentType } from "react"
 
+interface TabButtonProps {
+    active: boolean
+    onClick: () => void
+    icon: ComponentType<any>
+    label: string
+    badge?: number
+}
+
 interface CommunityHeaderProps {
     title: string
     description: string
@@ -23,6 +31,7 @@ interface CommunityHeaderProps {
     shouldUseNavbarPropertySelector: boolean
     profile: any
     userInitial: string
+    pendingCount?: number
 }
 
 export function CommunityHeader({
@@ -42,7 +51,8 @@ export function CommunityHeader({
     setIsPropertyDropdownOpen,
     shouldUseNavbarPropertySelector,
     profile,
-    userInitial
+    userInitial,
+    pendingCount
 }: CommunityHeaderProps) {
     return (
         <div className="space-y-8">
@@ -159,50 +169,66 @@ export function CommunityHeader({
                 </div>
             </header>
 
-            <nav className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                <TabButton 
-                    active={activeTab === "live"} 
-                    onClick={() => onTabChange("live")} 
-                    icon={Megaphone} 
-                    label="Live Feed" 
+            <nav className="flex items-center gap-1 overflow-x-auto pb-2 scrollbar-hide border-b border-border/50 dark:border-white/10">
+                <TabButton
+                    active={activeTab === "live"}
+                    onClick={() => onTabChange("live")}
+                    icon={Megaphone}
+                    label="Live Feed"
                 />
-                <TabButton 
-                    active={activeTab === "mine"} 
-                    onClick={() => onTabChange("mine")} 
-                    icon={MessageCircle} 
-                    label="My Posts" 
+                <TabButton
+                    active={activeTab === "mine"}
+                    onClick={() => onTabChange("mine")}
+                    icon={MessageCircle}
+                    label="My Posts"
                 />
                 {isManagementUser && (
-                    <TabButton 
-                        active={activeTab === "approvals"} 
-                        onClick={() => onTabChange("approvals")} 
-                        icon={Check} 
-                        label="Approvals" 
+                    <TabButton
+                        active={activeTab === "approvals"}
+                        onClick={() => onTabChange("approvals")}
+                        icon={Check}
+                        label="Approvals"
+                        badge={pendingCount}
                     />
                 )}
-                <TabButton 
-                    active={activeTab === "saved"} 
-                    onClick={() => onTabChange("saved")} 
-                    icon={Bookmark} 
-                    label="Saved" 
+                <TabButton
+                    active={activeTab === "saved"}
+                    onClick={() => onTabChange("saved")}
+                    icon={Bookmark}
+                    label="Saved"
                 />
             </nav>
         </div>
     )
 }
 
-function TabButton({ active, onClick, icon: Icon, label }: { active: boolean, onClick: () => void, icon: ComponentType<any>, label: string }) {
+function TabButton({ active, onClick, icon: Icon, label, badge }: TabButtonProps) {
     return (
         <button
             onClick={onClick}
-            className={`flex items-center gap-2 whitespace-nowrap rounded-2xl px-6 py-3 text-sm font-bold transition-all ${
-                active 
-                ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/10' 
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-white/5 dark:hover:text-white'
+            className={`group relative flex items-center gap-2 whitespace-nowrap px-4 py-3 text-sm font-medium transition-all duration-200 ${
+                active
+                    ? 'text-primary'
+                    : 'text-muted-foreground hover:text-foreground dark:hover:text-white'
             }`}
         >
-            <Icon className="size-4" />
-            {label}
+            <Icon className={`size-4 transition-transform duration-200 ${active ? 'scale-110' : 'group-hover:scale-110'}`} />
+            <span className="relative">
+                {label}
+                {badge !== undefined && badge > 0 && (
+                    <span className="absolute -top-1 -right-5 flex size-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white animate-in fade-in zoom-in-75">
+                        {badge > 99 ? '99+' : badge}
+                    </span>
+                )}
+            </span>
+            {active && (
+                <motion.div
+                    layoutId="activeTabIndicator"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
+                    initial={false}
+                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                />
+            )}
         </button>
     )
 }

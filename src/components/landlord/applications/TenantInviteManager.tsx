@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useMemo, useState } from "react";
-import { Building2, Calendar, CircleHelp, Copy, DoorClosed, DoorOpen, History, Link2, MapPin, QrCode, RefreshCw, ShieldCheck, Users, Globe, Handshake, XCircle } from "lucide-react";
+import { Building2, Calendar, CircleHelp, Copy, DoorClosed, DoorOpen, History, Link2, MapPin, QrCode, RefreshCw, ShieldCheck, Globe, Handshake, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type InviteMode = "property" | "unit";
@@ -238,14 +238,16 @@ export function TenantInviteManager({
 
     const scopeControls: Array<{
         key: InviteMode;
+        label: string;
+        description: string;
         icon: typeof Building2;
-        tooltip: string;
         onClick: () => void;
     }> = [
         {
             key: "property",
+            label: "Property Wide",
+            description: "Any vacant unit",
             icon: Building2,
-            tooltip: "Property-wide invite",
             onClick: () => {
                 setMode("property");
                 setUnitId("");
@@ -254,8 +256,9 @@ export function TenantInviteManager({
         },
         {
             key: "unit",
+            label: "Specific Unit",
+            description: "Targeted single unit",
             icon: DoorClosed,
-            tooltip: "Single-unit invite",
             onClick: () => {
                 setMode("unit");
                 setUnitId("");
@@ -266,11 +269,22 @@ export function TenantInviteManager({
 
     const applicationTypeControls: Array<{
         key: InviteApplicationType;
+        label: string;
+        description: string;
         icon: typeof Handshake;
-        tooltip: string;
     }> = [
-        { key: "face_to_face", icon: Handshake, tooltip: "Face-to-face application" },
-        { key: "online", icon: Globe, tooltip: "Online application with uploads" },
+        { 
+            key: "face_to_face", 
+            label: "In-Person", 
+            description: "Manual verification",
+            icon: Handshake 
+        },
+        { 
+            key: "online", 
+            label: "Online App", 
+            description: "Digital submissions",
+            icon: Globe 
+        },
     ];
 
     return (
@@ -322,14 +336,30 @@ export function TenantInviteManager({
 
             <div className="mt-8 grid gap-6 xl:grid-cols-[1fr_400px]">
                 <div className="flex flex-col rounded-[2rem] border border-border bg-background/50 p-6 shadow-sm xl:p-8">
-                    <div className="mb-5 flex flex-col items-start justify-between gap-3 border-b border-border/50 pb-5 xl:flex-row xl:items-center">
+                    <div className="mb-6 flex flex-col items-start justify-between gap-4 border-b border-border/50 pb-5 xl:flex-row xl:items-center">
                         <div>
-                            <h3 className="text-lg font-bold text-foreground">Generator Settings</h3>
-                            <p className="mt-1 text-sm text-muted-foreground">Configure the scope and expiration of your invite.</p>
+                            <h3 className="text-xl font-bold text-foreground">Generator Settings</h3>
+                            <p className="mt-1 text-sm text-muted-foreground">Customize how your future tenants will receive and interact with the invite.</p>
                         </div>
-                        <div className="w-full overflow-x-auto">
-                            <div className="flex min-w-max items-center gap-3">
-                                <div className="inline-flex rounded-xl border border-border bg-card p-1 shadow-sm">
+                        <button
+                            type="button"
+                            aria-label="Toggle help information"
+                            title="Toggle help information"
+                            className="group relative inline-flex items-center justify-center rounded-xl border border-border bg-card p-2.5 text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+                        >
+                            <CircleHelp className="size-5" />
+                            <div className="pointer-events-none absolute right-0 top-12 z-30 hidden w-72 rounded-2xl border border-border bg-background p-4 text-left text-xs font-bold leading-relaxed text-foreground shadow-2xl group-hover:block group-focus-visible:block">
+                                <p className="font-bold uppercase tracking-wider text-primary">Configuration Guide</p>
+                                <p className="mt-3 text-muted-foreground">Scope: Choose if this link allows applicants to pick any vacant unit in the property, or if it&apos;s locked to a specific unit.</p>
+                                <p className="mt-2 text-muted-foreground">Application Mode: Online mode requires tenants to upload documents immediately. In-person allows you to verify physical documents later.</p>
+                            </div>
+                        </button>
+                    </div>
+
+                    <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        <div className="space-y-3">
+                            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">1. Select Scope</label>
+                            <div className="grid grid-cols-2 gap-3">
                                 {scopeControls.map((control) => {
                                     const Icon = control.icon;
                                     const active = mode === control.key;
@@ -338,24 +368,34 @@ export function TenantInviteManager({
                                             key={control.key}
                                             type="button"
                                             onClick={control.onClick}
-                                            aria-label={control.tooltip}
-                                            title={control.tooltip}
                                             className={cn(
-                                                "group relative inline-flex items-center justify-center rounded-lg p-2 transition-all",
+                                                "flex flex-col items-center gap-3 rounded-[1.5rem] border p-4 transition-all text-center group",
                                                 active
-                                                    ? "bg-primary text-primary-foreground shadow-md"
-                                                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                                                    ? "border-primary bg-primary/5 text-primary shadow-[0_0_20px_rgba(var(--primary-rgb),0.1)]"
+                                                    : "border-border bg-card/40 text-muted-foreground hover:border-primary/30 hover:bg-muted/30"
                                             )}
                                         >
-                                            <Icon className="size-4" />
-                                            <span className="pointer-events-none absolute -bottom-8 left-1/2 z-20 hidden -translate-x-1/2 whitespace-nowrap rounded-md border border-border bg-background px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-foreground shadow-md group-hover:block">
-                                                {control.tooltip}
-                                            </span>
+                                            <div className={cn(
+                                                "flex size-10 items-center justify-center rounded-xl transition-colors",
+                                                active ? "bg-primary text-primary-foreground" : "bg-muted group-hover:bg-muted/80"
+                                            )}>
+                                                <Icon className="size-5" />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-xs font-bold uppercase tracking-wider">{control.label}</p>
+                                                <p className="text-[10px] leading-tight opacity-70 font-medium">
+                                                    {control.description}
+                                                </p>
+                                            </div>
                                         </button>
                                     );
                                 })}
-                                </div>
-                                <div className="inline-flex rounded-xl border border-border bg-card p-1 shadow-sm">
+                            </div>
+                        </div>
+
+                        <div className="space-y-3">
+                            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">2. Application Mode</label>
+                            <div className="grid grid-cols-2 gap-3">
                                 {applicationTypeControls.map((control) => {
                                     const Icon = control.icon;
                                     const active = applicationType === control.key;
@@ -364,53 +404,36 @@ export function TenantInviteManager({
                                             key={control.key}
                                             type="button"
                                             onClick={() => setApplicationType(control.key)}
-                                            aria-label={control.tooltip}
-                                            title={control.tooltip}
                                             className={cn(
-                                                "group relative inline-flex items-center justify-center rounded-lg p-2 transition-all",
+                                                "flex flex-col items-center gap-3 rounded-[1.5rem] border p-4 transition-all text-center group",
                                                 active
-                                                    ? "bg-primary text-primary-foreground shadow-md"
-                                                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                                                    ? "border-primary bg-primary/5 text-primary shadow-[0_0_20px_rgba(var(--primary-rgb),0.1)]"
+                                                    : "border-border bg-card/40 text-muted-foreground hover:border-primary/30 hover:bg-muted/30"
                                             )}
                                         >
-                                            <Icon className="size-4" />
-                                            <span className="pointer-events-none absolute -bottom-8 left-1/2 z-20 hidden -translate-x-1/2 whitespace-nowrap rounded-md border border-border bg-background px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-foreground shadow-md group-hover:block">
-                                                {control.tooltip}
-                                            </span>
+                                            <div className={cn(
+                                                "flex size-10 items-center justify-center rounded-xl transition-colors",
+                                                active ? "bg-primary text-primary-foreground" : "bg-muted group-hover:bg-muted/80"
+                                            )}>
+                                                <Icon className="size-5" />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-xs font-bold uppercase tracking-wider">{control.label}</p>
+                                                <p className="text-[10px] leading-tight opacity-70 font-medium">
+                                                    {control.description}
+                                                </p>
+                                            </div>
                                         </button>
                                     );
                                 })}
-                                </div>
-                                <button
-                                    type="button"
-                                    aria-label="Toggle help information"
-                                    title="Toggle help information"
-                                    className="group relative inline-flex items-center justify-center rounded-lg border border-border bg-card p-2 text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
-                                >
-                                    <CircleHelp className="size-4" />
-                                    <div className="pointer-events-none absolute right-0 top-10 z-30 hidden w-64 rounded-xl border border-border bg-background p-3 text-left text-[11px] font-bold leading-relaxed text-foreground shadow-xl group-hover:block group-focus-visible:block">
-                                        <p className="font-bold uppercase tracking-wider text-muted-foreground">Quick Help</p>
-                                        <p className="mt-2">First buttons: choose if this link is for one unit or the whole property.</p>
-                                        <p>Second buttons: choose how tenants will apply.</p>
-                                        <p className="mt-1 text-muted-foreground">Online asks tenants to upload required photos. Face-to-face lets you check documents in person later.</p>
-                                    </div>
-                                </button>
                             </div>
                         </div>
                     </div>
-                    <div className="mb-2 inline-flex w-fit items-center gap-1 whitespace-nowrap rounded-lg border border-border bg-card px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                        <Users className="size-3" />
-                        {applicationType === "online" ? "Online" : "In-person"}
-                    </div>
-                    <p className="mb-5 text-xs text-muted-foreground">
-                        {applicationType === "online"
-                            ? "Tenant uploads required photos."
-                            : "Landlord checks documents later."}
-                    </p>
 
                     {applicationType === "online" && (
-                        <div className="mb-5 rounded-2xl border border-border bg-card/60 p-4">
-                            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Required Documents For Online Submission</p>
+                        <div className="mb-8 rounded-[2rem] border border-primary/20 bg-primary/5 p-5 animate-in fade-in zoom-in duration-300">
+                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">3. Required Documents</p>
+                            <p className="mt-1 text-[11px] text-muted-foreground font-medium">Tenant must upload these to complete their application.</p>
                             <div className="mt-3 grid gap-2 sm:grid-cols-2">
                                 {REQUIREMENT_OPTIONS.map((option) => {
                                     const checked = requiredRequirements.includes(option.key);
@@ -480,11 +503,20 @@ export function TenantInviteManager({
                         </div>
                     )}
 
-                    <div className="grid gap-6 md:grid-cols-2">
-                        <div className="group space-y-2">
-                            <label htmlFor="select-property" className="text-xs font-bold uppercase tracking-wider text-muted-foreground transition-colors group-focus-within:text-primary">
-                                Select Property
-                            </label>
+                    <div className="space-y-6">
+                        <div className="flex items-center gap-3">
+                            <div className="h-px flex-1 bg-border/50" />
+                            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground whitespace-nowrap">
+                                {applicationType === "online" ? "4. Details & Expiration" : "3. Details & Expiration"}
+                            </span>
+                            <div className="h-px flex-1 bg-border/50" />
+                        </div>
+
+                        <div className="grid gap-6 md:grid-cols-2">
+                            <div className="group space-y-2">
+                                <label htmlFor="select-property" className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground transition-colors group-focus-within:text-primary">
+                                    Select Property
+                                </label>
                             <div className="relative">
                                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
                                     <MapPin className="size-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
@@ -512,11 +544,11 @@ export function TenantInviteManager({
                             </div>
                         </div>
 
-                        {mode === "unit" && (
-                            <div className="group space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                                <label htmlFor="select-unit" className="text-xs font-bold uppercase tracking-wider text-muted-foreground transition-colors group-focus-within:text-primary">
-                                    Select Vacant Unit
-                                </label>
+                            {mode === "unit" && (
+                                <div className="group space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <label htmlFor="select-unit" className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground transition-colors group-focus-within:text-primary">
+                                        Select Vacant Unit
+                                    </label>
                                 <div className="relative">
                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
                                         <DoorOpen className="size-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
@@ -544,11 +576,11 @@ export function TenantInviteManager({
                             </div>
                         )}
 
-                        {mode === "property" && (
-                            <div className="group space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                                <label htmlFor="preview-unit" className="text-xs font-bold uppercase tracking-wider text-muted-foreground transition-colors group-focus-within:text-primary">
-                                    Preview Unit Rent Basis
-                                </label>
+                            {mode === "property" && (
+                                <div className="group space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <label htmlFor="preview-unit" className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground transition-colors group-focus-within:text-primary">
+                                        Preview Unit Rent Basis
+                                    </label>
                                 <div className="relative">
                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
                                         <DoorOpen className="size-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
@@ -576,12 +608,12 @@ export function TenantInviteManager({
                             </div>
                         )}
 
-                        <div className="group space-y-2">
-                            <div className="flex items-center justify-between">
-                                <label htmlFor="expires-at" className="text-xs font-bold uppercase tracking-wider text-muted-foreground transition-colors group-focus-within:text-primary">
-                                    Expires at
-                                </label>
-                            </div>
+                            <div className="group space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <label htmlFor="expires-at" className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground transition-colors group-focus-within:text-primary">
+                                        Link Expiration
+                                    </label>
+                                </div>
                             <div className="relative overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all hover:border-primary/50 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
                                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
                                     <Calendar className="size-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
@@ -617,6 +649,7 @@ export function TenantInviteManager({
                                     </button>
                                 ))}
                             </div>
+                        </div>
                         </div>
                     </div>
 

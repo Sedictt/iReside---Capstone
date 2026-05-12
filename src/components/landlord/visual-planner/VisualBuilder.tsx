@@ -82,7 +82,7 @@ const UnitHistoryModal = ({
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         className="absolute inset-0 bg-background/60 backdrop-blur-md" 
-                        onClick={onClose}
+                        onClick={() => setIsInviteModalOpen(false)}
                     />
                     <motion.div 
                         initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -91,7 +91,7 @@ const UnitHistoryModal = ({
                         className={`relative w-full max-w-2xl h-[600px] flex flex-col rounded-3xl border border-border bg-card shadow-[0_24px_60px_-30px_rgba(0,0,0,0.3)] overflow-hidden`}
                     >
                         <div className="absolute right-6 top-6 z-10">
-                            <button onClick={onClose} className={`rounded-full p-2 transition-colors hover:bg-muted text-muted-foreground`}>
+                            <button onClick={() => setIsInviteModalOpen(false)} className={`rounded-full p-2 transition-colors hover:bg-muted text-muted-foreground`}>
                                 <X className="size-6" />
                             </button>
                         </div>
@@ -183,7 +183,7 @@ const UnitHistoryModal = ({
 
                         <div className="p-8 border-t border-border bg-muted/20">
                             <button 
-                                onClick={onClose}
+                                onClick={() => setIsInviteModalOpen(false)}
                                 className="w-full py-4 rounded-2xl bg-primary text-primary-foreground text-xs font-bold uppercase tracking-[0.2em] transition-all hover:opacity-90 active:scale-[0.98] shadow-lg shadow-primary/20"
                             >
                                 Close History View
@@ -251,7 +251,11 @@ const ComplaintModal = ({
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         className="absolute inset-0 bg-background/60 backdrop-blur-md" 
-                        onClick={onClose}
+                        onClick={() => setIsInviteModalOpen(false)}
+                        role="button"
+                        tabIndex={0}
+                        aria-label="Close modal"
+                        onKeyDown={(e) => e.key === 'Enter' && onClose()}
                     />
                     <motion.div 
                         initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -260,7 +264,7 @@ const ComplaintModal = ({
                         className={`relative w-full max-w-lg flex flex-col rounded-[2.5rem] border border-border bg-card shadow-[0_32px_80px_-20px_rgba(0,0,0,0.5)] overflow-hidden`}
                     >
                         <div className="absolute right-6 top-6 z-10">
-                            <button onClick={onClose} className="rounded-full p-2 transition-colors hover:bg-muted text-muted-foreground">
+                            <button onClick={() => setIsInviteModalOpen(false)} className="rounded-full p-2 transition-colors hover:bg-muted text-muted-foreground">
                                 <X className="size-6" />
                             </button>
                         </div>
@@ -336,6 +340,10 @@ const ComplaintModal = ({
                                                 attachment ? 'border-primary/50 bg-primary/5' : 'border-border hover:border-primary/30 hover:bg-muted/30'
                                             }`}
                                             onClick={() => document.getElementById('photo-upload')?.click()}
+                                            role="button"
+                                            tabIndex={0}
+                                            aria-label="Upload photo"
+                                            onKeyDown={(e) => e.key === 'Enter' && document.getElementById('photo-upload')?.click()}
                                         >
                                             <input 
                                                 id="photo-upload"
@@ -3860,6 +3868,10 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                 exit={{ opacity: 0 }}
                                 className="absolute inset-0 z-[100] flex items-center justify-center bg-zinc-950/60 backdrop-blur-md p-6"
                                 onClick={() => setShowHotkeys(false)}
+                                role="button"
+                                tabIndex={0}
+                                aria-label="Close shortcuts panel"
+                                onKeyDown={(e) => e.key === 'Enter' && setShowHotkeys(false)}
                             >
                                 <motion.div
                                     initial={{ scale: 0.9, y: 20 }}
@@ -4162,13 +4174,17 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                 <AnimatePresence>
                     {isInviteModalOpen && (
                         <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
-                            <motion.div 
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                className="absolute inset-0 bg-black/80 backdrop-blur-md" 
-                                onClick={() => setIsInviteModalOpen(false)}
-                            />
+<motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 bg-background/60 backdrop-blur-md" 
+                        onClick={() => setIsInviteModalOpen(false)}
+                        role="button"
+                        tabIndex={0}
+                        aria-label="Close modal"
+                        onKeyDown={(e) => e.key === 'Enter' && setIsInviteModalOpen(false)}
+                    />
                             <motion.div 
                                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}

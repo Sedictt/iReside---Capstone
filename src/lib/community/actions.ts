@@ -1055,9 +1055,176 @@ export async function reportPost(postId: string, reason: CommunityReportReason) 
 
     if (error) {
         console.error('reportPost error:', error)
-        throw new Error('Unable to submit report right now.')
+        throw new Error('Unable to submit report.')
     }
 
     revalidatePath('/tenant/community')
     revalidatePath('/landlord/community')
+}
+
+export async function getSavedPostIds(): Promise<string[]> {
+    const session = await auth()
+    if (!session) {
+        return []
+    }
+    const userId = await getAuthenticatedUserId()
+    const supabase = (await createClient()) as any
+
+    const { data, error } = await supabase
+        .from('saved_posts')
+        .select('post_id')
+        .eq('user_id', userId)
+
+    if (error) {
+        console.error('getSavedPostIds error:', error)
+        return []
+    }
+
+    return (data || []).map((row: { post_id: string }) => row.post_id)
+}
+
+export async function toggleSavePost(postId: string): Promise<{ saved: boolean }> {
+    const session = await auth()
+    if (!session) {
+        throw new Error("Unauthorized")
+    }
+    const userId = await getAuthenticatedUserId()
+    const supabase = (await createClient()) as any
+
+    const { data: existing } = await supabase
+        .from('saved_posts')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('post_id', postId)
+        .maybeSingle()
+
+    if (existing) {
+        const { error } = await supabase
+            .from('saved_posts')
+            .delete()
+            .eq('id', existing.id)
+
+        if (error) {
+            console.error('toggleSavePost delete error:', error)
+            throw new Error('Unable to unsave post.')
+        }
+
+        revalidatePath('/tenant/community')
+        revalidatePath('/landlord/community')
+        return { saved: false }
+    } else {
+        const { error } = await supabase
+            .from('saved_posts')
+            .insert({ user_id: userId, post_id: postId })
+
+        if (error) {
+            console.error('toggleSavePost insert error:', error)
+            throw new Error('Unable to save post.')
+        }
+
+        revalidatePath('/tenant/community')
+        revalidatePath('/landlord/community')
+        return { saved: true }
+    }
+}
+
+export async function updateComment(commentId: string, content: string) {
+    const session = await auth()
+    if (!session) {
+        throw new Error("Unauthorized")
+    }
+    const userId = await getAuthenticatedUserId()
+    const supabase = (await createClient()) as any
+
+    const trimmedContent = content.trim()
+    if (!trimmedContent) {
+        throw new Error('Comment cannot be empty.')
+    }
+
+    const { error } = await supabase
+        .from('community_comments')
+        .update({ content: trimmedContent, updated_at: new Date().toISOString() })
+        .eq('id', commentId)
+        .eq('author_id', userId)
+
+    if (error) {
+        console.error('updateComment error:', error)
+        throw new Error('Unable to update comment.')
+    }
+
+    revalidatePath('/tenant/community')
+    revalidatePath('/landlord/community')
+}
+
+export async function deleteComment(commentId: string) {
+    const session = await auth()
+    if (!session) {
+        throw new Error("Unauthorized")
+    }
+    const userId = await getAuthenticatedUserId()
+    const supabase = (await createClient()) as any
+
+    const { error } = await supabase
+        .from('community_comments')
+        .delete()
+        .eq('id', commentId)
+        .eq('author_id', userId)
+
+    if (error) {
+        console.error('deleteComment error:', error)
+        throw new Error('Unable to delete comment.')
+    }
+
+    revalidatePath('/tenant/community')
+    revalidatePath('/landlord/community')
+}
+
+export async function togglePinPost(postId: string): Promise<{ isPinned: boolean }> {
+    const session = await auth()
+    if (!session) {
+        throw new Error("Unauthorized")
+    }
+    const { userId, role } = await getAuthenticatedCommunityContext()
+    if (!isManagementRole(role)) {
+        throw new Error('Only management can pin posts.')
+    }
+
+    const supabase = (await createClient()) as any
+
+    const { data: post, error: fetchError } = await supabase
+        .from('community_posts')
+        .select('id, property_id, is_pinned')
+        .eq('id', postId)
+        .maybeSingle()
+
+    if (fetchError || !post) {
+        throw new Error('Post not found.')
+    }
+
+    if (role === 'landlord') {
+        const { data: property } = await supabase
+            .from('properties')
+            .select('id')
+            .eq('id', post.property_id)
+            .eq('landlord_id', userId)
+            .maybeSingle()
+
+        if (!property) {
+            throw new Error('You can only pin posts for your own properties.')
+        }
+    }
+
+    const { error: updateError } = await supabase
+        .from('community_posts')
+        .update({ is_pinned: !post.is_pinned, updated_at: new Date().toISOString() })
+        .eq('id', postId)
+
+    if (updateError) {
+        console.error('togglePinPost error:', updateError)
+        throw new Error('Unable to update pin status.')
+    }
+
+    revalidatePath('/tenant/community')
+    revalidatePath('/landlord/community')
+    return { isPinned: !post.is_pinned }
 }

@@ -2,20 +2,20 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { m as motion } from "framer-motion";
-import { cn } from "@/lib/utils";
-import {
-    X,
-    CheckCircle2,
-    Loader2,
-    AlertCircle,
-    Calendar,
-    Banknote,
-    User,
-    Home,
-    Mail,
-    ShieldCheck,
-} from "lucide-react";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
+
+import {
+    ContractHeader,
+    ApplicationInfo,
+    LeaseFormFields,
+    PolicyConfirmation,
+    ContractActions,
+} from "./components";
+
+import {
+    CheckCircle2,
+    AlertCircle,
+} from "lucide-react";
 
 type ContractTemplateLike = Record<string, unknown>;
 
@@ -287,24 +287,7 @@ export function ContractPreviewModal({
                 exit={{ opacity: 0, scale: 0.95, y: 10 }}
                 className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-[#111] border border-white/10 rounded-3xl shadow-2xl z-10"
             >
-                <div className="sticky top-0 z-20 bg-[#111] border-b border-white/5 p-6 flex items-center justify-between">
-                    <div>
-                        <h2 className="text-xl font-bold text-white">
-                            {isFinalApproval ? "Finalize Approval" : "Request Payments"}
-                        </h2>
-                        <p className="text-xs text-neutral-400">
-                            {isFinalApproval
-                                ? "Complete approval after both payment requests are confirmed."
-                                : "Move application to payment-pending and send secure portal link."}
-                        </p>
-                    </div>
-                    <button
-                        onClick={onClose}
-                        className="p-2 text-neutral-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-full transition-colors"
-                    >
-                        <X className="size-5" />
-                    </button>
-                </div>
+                <ContractHeader isFinalApproval={isFinalApproval} onClose={onClose} />
 
                 <div className="p-6 space-y-6">
                     {error && (
@@ -353,139 +336,38 @@ export function ContractPreviewModal({
                         </div>
                     ) : (
                         <>
-                            <div className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-3 text-sm">
-                                <div className="flex items-center gap-3 text-neutral-300">
-                                    <Home className="size-4 text-neutral-500" />
-                                    <span className="font-medium text-white">{contractData.property_name}</span>
-                                    <span className="text-neutral-500">-</span>
-                                    <span>{contractData.unit_name}</span>
-                                </div>
-                                <div className="flex items-center gap-3 text-neutral-300">
-                                    <User className="size-4 text-neutral-500" />
-                                    <span>Tenant: <span className="text-white font-medium">{contractData.applicant_name}</span></span>
-                                </div>
-                                <div className="flex items-center gap-3 text-neutral-300">
-                                    <Mail className="size-4 text-neutral-500" />
-                                    <span>{contractData.applicant_email}</span>
-                                </div>
-                            </div>
+                            <ApplicationInfo
+                                propertyName={contractData.property_name}
+                                unitName={contractData.unit_name}
+                                applicantName={contractData.applicant_name}
+                                applicantEmail={contractData.applicant_email}
+                            />
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <label htmlFor="lease-start" className="text-xs font-bold uppercase tracking-wide text-neutral-300 flex items-center gap-2">
-                                        <Calendar className="size-3.5" />
-                                        Lease Start Date
-                                    </label>
-                                    <input
-                                        id="lease-start"
-                                        type="date"
-                                        value={leaseStart}
-                                        onChange={(event) => setLeaseStart(event.target.value)}
-                                        className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-white text-sm focus:border-primary/50 focus:outline-none transition-colors"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label htmlFor="lease-end" className="text-xs font-bold uppercase tracking-wide text-neutral-300 flex items-center gap-2">
-                                        <Calendar className="size-3.5" />
-                                        Lease End Date
-                                    </label>
-                                    <input
-                                        id="lease-end"
-                                        type="date"
-                                        value={leaseEnd}
-                                        disabled
-                                        className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-neutral-400 text-sm"
-                                    />
-                                </div>
-                            </div>
+                            <LeaseFormFields
+                                leaseStart={leaseStart}
+                                leaseEnd={leaseEnd}
+                                monthlyRent={monthlyRent}
+                                advanceAmount={advanceAmount}
+                                securityDeposit={securityDeposit}
+                                isFinalApproval={isFinalApproval}
+                                onLeaseStartChange={setLeaseStart}
+                                onMonthlyRentChange={setMonthlyRent}
+                                onAdvanceAmountChange={setAdvanceAmount}
+                                onSecurityDepositChange={setSecurityDeposit}
+                            />
 
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                <div className="space-y-2">
-                                    <label htmlFor="monthly-rent" className="text-xs font-bold uppercase tracking-wide text-neutral-300 flex items-center gap-2">
-                                        <Banknote className="size-3.5" />
-                                        Monthly Rent
-                                    </label>
-                                    <input
-                                        id="monthly-rent"
-                                        type="number"
-                                        min={0}
-                                        value={monthlyRent}
-                                        onChange={(event) => setMonthlyRent(Number(event.target.value) || 0)}
-                                        className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-white text-sm focus:border-primary/50 focus:outline-none transition-colors"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label htmlFor="advance-invoice" className="text-xs font-bold uppercase tracking-wide text-neutral-300 flex items-center gap-2">
-                                        <Banknote className="size-3.5" />
-                                        Advance Invoice
-                                    </label>
-                                    <input
-                                        id="advance-invoice"
-                                        type="number"
-                                        min={0}
-                                        value={advanceAmount}
-                                        onChange={(event) => setAdvanceAmount(Number(event.target.value) || 0)}
-                                        className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-white text-sm focus:border-primary/50 focus:outline-none transition-colors"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label htmlFor="security-deposit" className="text-xs font-bold uppercase tracking-wide text-neutral-300 flex items-center gap-2">
-                                        <Banknote className="size-3.5" />
-                                        Security Deposit
-                                    </label>
-                                    <input
-                                        id="security-deposit"
-                                        type="number"
-                                        min={0}
-                                        value={securityDeposit}
-                                        onChange={(event) => setSecurityDeposit(Number(event.target.value) || 0)}
-                                        className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-white text-sm focus:border-primary/50 focus:outline-none transition-colors"
-                                    />
-                                </div>
-                            </div>
+                            <PolicyConfirmation
+                                policyConfirmed={policyConfirmed}
+                                isFinalApproval={isFinalApproval}
+                                onPolicyConfirmedChange={setPolicyConfirmed}
+                            />
 
-                            <div className="rounded-xl border border-amber-400/20 bg-amber-400/10 p-4 text-xs text-amber-100">
-                                <p className="font-bold mb-1">Policy enforcement</p>
-                                <p>
-                                    Approval creates pending invoices only. Move-in payment completion is counted after
-                                    landlord-confirmed proof, not at application submission.
-                                </p>
-                            </div>
-
-                            {!isFinalApproval && (
-                                <label className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/5 p-4 cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={policyConfirmed}
-                                        onChange={(event) => setPolicyConfirmed(event.target.checked)}
-                                        className="mt-0.5 size-4 rounded border-white/20 bg-transparent"
-                                    />
-                                    <span className="text-xs text-neutral-300 leading-relaxed">
-                                        I confirm this should start payment-pending stage and send the payment portal
-                                        link to the prospect.
-                                    </span>
-                                </label>
-                            )}
-
-                            <button
+                            <ContractActions
+                                canSubmit={canSubmit}
+                                submitting={submitting}
+                                isFinalApproval={isFinalApproval}
                                 onClick={handleFinalize}
-                                disabled={!canSubmit}
-                                className={cn(
-                                    "w-full h-14 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-3 disabled:opacity-40 disabled:cursor-not-allowed",
-                                    canSubmit
-                                        ? "bg-emerald-500 hover:bg-emerald-400 text-black shadow-[0_0_30px_rgba(16,185,129,0.3)]"
-                                        : "bg-white/10 text-neutral-500"
-                                )}
-                            >
-                                {submitting ? <Loader2 className="size-5 animate-spin" /> : <ShieldCheck className="size-5" />}
-                                {submitting
-                                    ? isFinalApproval
-                                        ? "Finalizing…"
-                                        : "Requesting…"
-                                    : isFinalApproval
-                                      ? "Finalize Approval"
-                                      : "Request Payments"}
-                            </button>
+                            />
                         </>
                     )}
                 </div>

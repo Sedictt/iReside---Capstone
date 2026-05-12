@@ -28,7 +28,6 @@ import {
     MapPin,
     Wallet,
     PenTool,
-    DollarSign,
 } from "lucide-react";
 
 const SignaturePad = dynamic(() => import("./SignaturePad").then(mod => mod.SignaturePad), {
@@ -37,7 +36,6 @@ const SignaturePad = dynamic(() => import("./SignaturePad").then(mod => mod.Sign
 });
 
 import { generateLeasePdf } from "@/lib/lease-pdf";
-import { Logo } from "@/components/ui/Logo";
 import { SigningModeSelector } from "./SigningModeSelector";
 import { PaymentRecordForm } from "./PaymentRecordForm";
 import { ToolAccessBar } from "./ToolAccessBar";

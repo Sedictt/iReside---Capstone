@@ -105,12 +105,12 @@ export function CommunityComposer({
                                 value={body}
                                 onChange={(e) => {
                                     setBody(e.target.value)
-                                    const scrollHeight = e.target.scrollHeight
-                                    e.target.style.cssText = `height: ${scrollHeight}px;`
+                                    e.target.style.height = 'auto'
+                                    e.target.style.height = `${e.target.scrollHeight}px`
                                 }}
                                 placeholder={
-                                    composerType === "announcement" ? "What's the announcement about?..." : 
-                                    composerType === "poll" ? "Ask your neighbors a question..." : 
+                                    composerType === "announcement" ? "What's the announcement about?..." :
+                                    composerType === "poll" ? "Ask your neighbors a question..." :
                                     "What's on your mind, neighbor?..."
                                 }
                                 className="block min-h-[40px] w-full resize-none overflow-hidden border-none bg-transparent p-0 text-xl font-medium leading-relaxed text-foreground outline-none focus:ring-0 dark:text-white dark:placeholder:text-white/20"
@@ -120,7 +120,7 @@ export function CommunityComposer({
                             {composerType === "poll" && (
                                 <div className="space-y-2 pt-2">
                                     {pollOptions.map((option, index) => (
-                                        <div key={option || `option-${index}`} className="group relative">
+                                        <div key={`poll-option-${index}`} className="group relative">
                                             <input
                                                 type="text"
                                                 value={option}
@@ -167,7 +167,7 @@ export function CommunityComposer({
                                     initial={{ opacity: 0, scale: 0.8 }}
                                     animate={{ opacity: 1, scale: 1 }}
                                     exit={{ opacity: 0, scale: 0.8 }}
-                                    key={URL.createObjectURL(photo)} 
+                                    key={`photo-${index}-${photo.name}`} 
                                     className="group relative size-20 overflow-hidden rounded-xl border border-border dark:border-white/10"
                                 >
                                     <Image src={URL.createObjectURL(photo)} alt="Preview" fill className="object-cover" />
@@ -205,7 +205,7 @@ export function CommunityComposer({
                         </div>
                         <button 
                             type="submit" 
-                            disabled={isSubmitting || uploadingPhotos || (!body.trim() && !title.trim() && selectedPhotos.length === 0)} 
+                            disabled={isSubmitting || uploadingPhotos || (!body.trim() && selectedPhotos.length === 0)} 
                             className="flex items-center gap-2 rounded-2xl bg-primary px-8 py-2.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
                         >
                             {uploadingPhotos ? "Uploading..." : isSubmitting ? "Publishing..." : "Publish"}

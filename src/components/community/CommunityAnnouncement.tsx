@@ -1,7 +1,7 @@
 "use client"
 
 import { m as motion } from "framer-motion"
-import { Megaphone, X, Pin } from "lucide-react"
+import { Megaphone, X, ChevronUp, Clock } from "lucide-react"
 
 interface CommunityAnnouncementProps {
     announcement: any
@@ -47,11 +47,12 @@ export function CommunityAnnouncement({
         >
             <div className={`relative overflow-hidden rounded-[2rem] border-2 ${config.cardBorder} ${config.cardBg} shadow-lg`}>
                 <div className="absolute right-0 top-0 p-4">
-                    <button 
+                    <button
                         onClick={() => onToggle(true)}
                         className="flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+                        title="Minimize announcement"
                     >
-                        <Pin className="size-4" />
+                        <ChevronUp className="size-4" />
                     </button>
                 </div>
                 
@@ -66,7 +67,7 @@ export function CommunityAnnouncement({
                                 {config.badge}
                             </span>
                             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                <Pin className="h-3 w-3 rotate-45" />
+                                <Clock className="h-3 w-3" />
                                 <span>{formatRelative(announcement.created_at)}</span>
                             </div>
                         </div>

@@ -2,19 +2,15 @@
 
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { m as motion, AnimatePresence } from "framer-motion";
-import { 
-    Layers, 
-    Grid2X2, 
-    CheckCircle2, 
-    AlertCircle, 
-    Loader2, 
-    Move, 
-    ChevronRight, 
-    GripVertical,
+import {
+    Grid2X2,
+    CheckCircle2,
+    AlertCircle,
+    Loader2,
+    ChevronRight,
     ArrowRight,
     Layout,
     Sparkles,
-    Trash2,
     Plus
 } from "lucide-react";
 import {
@@ -32,147 +28,19 @@ import {
 } from "@dnd-kit/core";
 import {
     arrayMove,
-    SortableContext,
     sortableKeyboardCoordinates,
-    verticalListSortingStrategy,
-    rectSortingStrategy,
-    useSortable,
 } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/lib/utils";
 
-interface DbUnit {
-    id: string;
-    name: string;
-    floor: number;
-    status: string;
-    beds: number;
-    baths: number;
-    sqft: number | null;
-    position: { floor_key: string; x: number; y: number; w: number; h: number } | null;
-}
-
-interface FloorConfig {
-    id: string;
-    floor_number: number;
-    floor_key: string;
-    display_name: string | null;
-    sort_order: number;
-}
+import { SortableUnit, FloorLane, floorDisplayName } from "./components/WizardUnits";
+import type { DbUnit, FloorConfig } from "./components/WizardUnits";
+import { BulkOrganizerPanel } from "./components/BulkOrganizerPanel";
 
 interface MapSetupWizardProps {
     propertyId: string;
     propertyName: string;
     onSetupComplete: () => void;
 }
-
-const floorDisplayName = (fc: FloorConfig) => {
-    if (fc.display_name) return fc.display_name;
-    if (fc.floor_number === 0) return "Ground Floor";
-    return `Floor ${fc.floor_number}`;
-};
-
-/* ------------------------------------------------------------------ */
-/*  Sortable Components                                                */
-/* ------------------------------------------------------------------ */
-
-function SortableUnit({ unit, isOverlay = false }: { unit: DbUnit; isOverlay?: boolean }) {
-    const {
-        attributes,
-        listeners,
-        setNodeRef,
-        transform,
-        transition,
-        isDragging,
-    } = useSortable({ id: unit.id, data: { unit } });
-
-    const style = {
-        transform: CSS.Translate.toString(transform),
-        transition,
-    };
-
-    return (
-        <div
-            ref={setNodeRef}
-            style={style}
-            className={cn(
-                "group relative flex items-center gap-2 rounded-xl border p-3 transition-all cursor-grab active:cursor-grabbing",
-                isDragging ? "opacity-30 grayscale" : "opacity-100",
-                isOverlay ? "z-50 border-primary bg-primary/10 shadow-2xl shadow-primary/20 scale-105" : "border-white/10 bg-white/5 hover:border-white/30 hover:bg-white/10"
-            )}
-            {...attributes}
-            {...listeners}
-        >
-            <GripVertical className="size-3.5 text-neutral-600 transition-colors group-hover:text-neutral-400" />
-            <div className="flex-1 min-w-0">
-                <p className="truncate text-xs font-bold text-white">{unit.name}</p>
-            </div>
-            <div className="flex size-5 items-center justify-center rounded-md bg-white/5 text-[10px] font-bold text-neutral-500">
-                {unit.beds}B
-            </div>
-        </div>
-    );
-}
-
-function FloorLane({ floor, units, onRemove }: { floor: FloorConfig; units: DbUnit[]; onRemove: () => void }) {
-    const { setNodeRef } = useSortable({
-        id: `floor-${floor.floor_number}`,
-        data: { type: "floor", floorNumber: floor.floor_number },
-    });
-
-    return (
-        <div className="group flex flex-col gap-3">
-            <div className="flex items-center justify-between px-1">
-                <div className="flex items-center gap-2">
-                    <div className="flex size-6 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                        <Layers className="size-3.5" />
-                    </div>
-                    <h3 className="text-sm font-bold uppercase tracking-widest text-white">
-                        {floorDisplayName(floor)}
-                    </h3>
-                    <button
-                        onClick={onRemove}
-                        className="ml-2 size-7 flex items-center justify-center rounded-xl bg-rose-500/10 text-rose-500/40 hover:bg-rose-500 hover:text-white transition-all shadow-sm"
-                        title="Remove Floor"
-                    >
-                        <Trash2 className="size-3.5" />
-                    </button>
-                </div>
-                <span className="text-[10px] font-bold text-neutral-500 bg-white/5 px-2 py-0.5 rounded-full border border-white/5">
-                    {units.length} Units
-                </span>
-            </div>
-
-            <div
-                ref={setNodeRef}
-                className={cn(
-                    "relative min-h-[100px] rounded-[1.5rem] border border-dashed border-white/10 bg-white/[0.02] p-4 transition-colors",
-                    units.length === 0 ? "border-white/5" : "border-white/10"
-                )}
-            >
-                <SortableContext items={units.map(u => u.id)} strategy={rectSortingStrategy}>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {units.map((unit) => (
-                            <SortableUnit key={unit.id} unit={unit} />
-                        ))}
-                    </div>
-                </SortableContext>
-                
-                {units.length === 0 && (
-                    <div className="flex h-16 items-center justify-center text-center">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-600">
-                            Drop units here
-                        </p>
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Main Wizard Component                                             */
-/* ------------------------------------------------------------------ */
 
 export function MapSetupWizard({ propertyId, propertyName, onSetupComplete }: MapSetupWizardProps) {
     const [units, setUnits] = useState<DbUnit[]>([]);
@@ -323,7 +191,7 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete }: Ma
     };
 
     const redistributeUnitsSequentially = (newDistribution: Record<number, number>) => {
-        const sortedUnits = [...units].sort((a, b) => {
+        const sortedUnits = units.toSorted((a, b) => {
             const aNum = parseInt(a.name.replace(/\D/g, ""), 10) || 0;
             const bNum = parseInt(b.name.replace(/\D/g, ""), 10) || 0;
             return aNum - bNum;
@@ -472,7 +340,7 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete }: Ma
     const handleApplyDistribution = async () => {
         setIsSaving(true);
         try {
-            const sortedUnits = [...units].sort((a, b) => {
+            const sortedUnits = units.toSorted((a, b) => {
                 const aNum = parseInt(a.name.replace(/\D/g, ""), 10) || 0;
                 const bNum = parseInt(b.name.replace(/\D/g, ""), 10) || 0;
                 return aNum - bNum;
@@ -524,7 +392,7 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete }: Ma
             <div className="flex-1 flex items-center justify-center bg-[#080808]">
                 <div className="flex flex-col items-center gap-4">
                     <Loader2 className="size-10 text-primary animate-spin" />
-                    <p className="text-neutral-500 text-sm font-bold uppercase tracking-widest">Building Layout...</p>
+                    <p className="text-neutral-500 text-sm font-bold uppercase tracking-widest">Building Layout…</p>
                 </div>
             </div>
         );
@@ -590,123 +458,19 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete }: Ma
 
             <main className="flex-1 overflow-hidden relative">
                 {/* Bulk Organizer Side Panel */}
-                <AnimatePresence>
-                    {isBulkOrganizerOpen && (
-                        <motion.div
-                            initial={{ x: "100%" }}
-                            animate={{ x: 0 }}
-                            exit={{ x: "100%" }}
-                            transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                            className="absolute inset-y-0 right-0 z-50 w-[400px] border-l border-white/10 bg-[#0A0A0A]/95 backdrop-blur-2xl p-8 shadow-2xl"
-                        >
-                            <div className="flex flex-col h-full">
-                                <div className="mb-8">
-                                    <div className="flex items-center justify-between">
-                                        <h3 className="text-xl font-bold text-white">Bulk Organizer</h3>
-                                        <div className={cn(
-                                            "flex flex-col items-end px-3 py-1 rounded-xl border",
-                                            Object.values(floorDistribution).reduce((a, b) => a + b, 0) > totalUnits 
-                                                ? "border-rose-500/30 bg-rose-500/10" 
-                                                : "border-primary/30 bg-primary/10"
-                                        )}>
-                                            <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Remaining</span>
-                                            <span className={cn(
-                                                "text-xs font-bold",
-                                                totalUnits - Object.values(floorDistribution).reduce((a, b) => a + b, 0) < 0 ? "text-rose-400" : "text-primary"
-                                            )}>
-                                                {totalUnits - Object.values(floorDistribution).reduce((a, b) => a + b, 0)}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <p className="mt-2 text-xs font-medium text-neutral-500 leading-relaxed">
-                                        Distribute your <span className="text-white font-bold">{totalUnits} units</span> across floors.
-                                    </p>
-                                </div>
-
-                                <div className="flex-1 overflow-y-auto pr-2 space-y-6 no-scrollbar">
-                                    {floorConfigs.map(fc => {
-                                        const currentVal = floorDistribution[fc.floor_number] || 0;
-
-                                        return (
-                                            <div key={fc.floor_key} className="group/item space-y-3 p-4 rounded-2xl bg-white/[0.02] border border-white/5 transition-all hover:bg-white/[0.04]">
-                                                <div className="flex items-center justify-between">
-                                                    <label className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 group-hover/item:text-primary transition-colors">
-                                                        {floorDisplayName(fc)}
-                                                    </label>
-                                                    <span className="text-xs font-bold text-white">{currentVal} Units</span>
-                                                </div>
-                                                <div className="relative flex items-center gap-4">
-                                                    <input
-                                                        type="range"
-                                                        min="0"
-                                                        max={totalUnits}
-                                                        value={currentVal}
-                                                        onChange={(e) => {
-                                                            const newVal = parseInt(e.target.value, 10);
-                                                            // Calculate max allowed for this floor (remaining units + current value)
-                                                            const otherFloorsTotal = Object.entries(floorDistribution)
-                                                                .reduce((sum, [key, val]) => key === String(fc.floor_number) ? sum : sum + val, 0);
-                                                            const maxAllowed = totalUnits - otherFloorsTotal;
-                                                            const constrainedVal = Math.min(newVal, maxAllowed);
-                                                            
-                                                            const newDist = { ...floorDistribution, [fc.floor_number]: constrainedVal };
-                                                            setFloorDistribution(newDist);
-                                                            redistributeUnitsSequentially(newDist);
-                                                        }}
-                                                        className="flex-1 h-1.5 bg-white/5 rounded-full appearance-none cursor-pointer accent-primary"
-                                                    />
-                                                    <input
-                                                        type="number"
-                                                        min="0"
-                                                        max={totalUnits}
-                                                        value={currentVal}
-                                                        onChange={(e) => {
-                                                            const inputVal = parseInt(e.target.value, 10) || 0;
-                                                            // Calculate max allowed for this floor (remaining units + current value)
-                                                            const otherFloorsTotal = Object.entries(floorDistribution)
-                                                                .reduce((sum, [key, val]) => key === String(fc.floor_number) ? sum : sum + val, 0);
-                                                            const maxAllowed = totalUnits - otherFloorsTotal;
-                                                            const newVal = Math.max(0, Math.min(inputVal, maxAllowed));
-                                                            
-                                                            const newDist = { ...floorDistribution, [fc.floor_number]: newVal };
-                                                            setFloorDistribution(newDist);
-                                                            redistributeUnitsSequentially(newDist);
-                                                        }}
-                                                        className="w-12 bg-white/5 border border-white/10 rounded-lg py-1 px-2 text-xs font-bold text-center focus:border-primary outline-none"
-                                                    />
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-
-                                <div className="pt-8 border-t border-white/5 mt-auto">
-                                    <div className="mb-4 flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-white/5">
-                                        <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">Total Assigned</span>
-                                        <span className={cn(
-                                            "text-xs font-bold",
-                                            Object.values(floorDistribution).reduce((a, b) => a + b, 0) === totalUnits ? "text-emerald-400" : "text-rose-400"
-                                        )}>
-                                            {Object.values(floorDistribution).reduce((a, b) => a + b, 0)} / {totalUnits}
-                                        </span>
-                                    </div>
-
-                                    <button
-                                        onClick={handleApplyDistribution}
-                                        disabled={isSaving || Object.values(floorDistribution).reduce((a, b) => a + b, 0) !== totalUnits}
-                                        className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-primary text-black font-bold text-xs uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:grayscale"
-                                    >
-                                        {isSaving ? <Loader2 className="size-4 animate-spin" /> : "Save & Close"}
-                                    </button>
-                                    
-                                    <p className="mt-4 text-[10px] text-center text-neutral-600 font-bold uppercase tracking-widest">
-                                        Changes are saved automatically as you move.
-                                    </p>
-                                </div>
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                {isBulkOrganizerOpen && (
+                    <BulkOrganizerPanel
+                        floorDistribution={floorDistribution}
+                        setFloorDistribution={setFloorDistribution}
+                        units={units}
+                        totalUnits={totalUnits}
+                        floorConfigs={floorConfigs}
+                        redistributeUnitsSequentially={redistributeUnitsSequentially}
+                        handleApplyDistribution={handleApplyDistribution}
+                        isSaving={isSaving}
+                        onClose={() => setIsBulkOrganizerOpen(false)}
+                    />
+                )}
 
                 <DndContext
                     sensors={sensors}

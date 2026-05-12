@@ -65,6 +65,7 @@ export interface Database {
                     gmail_token_expiry?: string | null
                     otp_code?: string | null
                     otp_expiry?: string | null
+                    has_changed_password: boolean
                 }
                 Insert: {
                     id: string
@@ -92,6 +93,7 @@ export interface Database {
                     gmail_token_expiry?: string | null
                     otp_code?: string | null
                     otp_expiry?: string | null
+                    has_changed_password?: boolean
                 }
                 Update: {
                     id?: string
@@ -118,6 +120,7 @@ export interface Database {
                     gmail_token_expiry?: string | null
                     otp_code?: string | null
                     otp_expiry?: string | null
+                    has_changed_password?: boolean
                 }
                 Relationships: any[]
             }

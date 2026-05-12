@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useReducer, useCallback } from "react";
+import React, { createContext, useContext, useEffect, useReducer, useCallback, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useOptionalProperty } from "@/context/PropertyContext";
@@ -146,7 +146,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         },
     });
 
-    const supabase = createClient();
+    const supabase = useMemo(() => createClient(), []);
 
     const fetchCounts = useCallback(async () => {
         if (!user || !profile) return;
@@ -232,7 +232,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
                 dispatch({
                     type: 'SET_COUNTS',
                     payload: {
-                        ...state.counts,
+                        applications: 0,
+                        maintenance: 0,
                         messages: msgCount || 0,
                     },
                 });
@@ -240,7 +241,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         } catch (err) {
             console.error("Error fetching counts:", err);
         }
-    }, [user, profile, selectedPropertyId, supabase, state.counts]);
+    }, [user, profile, selectedPropertyId, supabase]);
 
     const fetchNotifications = useCallback(async () => {
         if (!user) return;

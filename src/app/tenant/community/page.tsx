@@ -1,6 +1,8 @@
 "use client"
 
 import { FormEvent, useEffect, useRef, useState, useTransition } from "react"
+import { usePathname } from "next/navigation"
+import { cn } from "@/lib/utils"
 import { AnimatePresence, m as motion } from "framer-motion"
 import { MessageCircle } from "lucide-react"
 import {
@@ -15,8 +17,15 @@ import {
     getCurrentTenantPosts,
     getPostComments,
     getManagementProperties,
+    getSavedPostIds,
     reportPost,
     toggleReaction,
+    toggleSavePost,
+    togglePinPost,
+    updateOwnPost,
+    deleteOwnPost,
+    updateComment,
+    deleteComment,
     votePoll
 } from "@/lib/community/actions"
 import type { CommunityPost, CommunityReactionType } from "@/lib/community/types"
@@ -156,6 +165,93 @@ export default function TenantCommunityHubPage() {
             void loadPendingPosts()
         }
     }, [loading, user?.id, activeTab, isManagementUser, activePropertyId])
+
+    useEffect(() => {
+        if (loading || !user?.id) return
+        getSavedPostIds().then(setSavedPostIds).catch(console.error)
+    }, [loading, user?.id])
+
+    const handleEditPost = async (postId: string, title: string, content: string) => {
+        startPostMutation(async () => {
+            try {
+                await updateOwnPost(postId, { title, content })
+                await loadPosts("replace")
+            } catch {
+                setError("Failed to update post.")
+            }
+        })
+    }
+
+    const handleDeletePost = async (postId: string) => {
+        startPostMutation(async () => {
+            try {
+                await deleteOwnPost(postId)
+                setPosts(current => current.filter(p => p.id !== postId))
+            } catch {
+                setError("Failed to delete post.")
+            }
+        })
+    }
+
+    const handlePinPost = async (postId: string) => {
+        startPostMutation(async () => {
+            try {
+                const result = await togglePinPost(postId)
+                setPosts(current => current.map(p => p.id === postId ? { ...p, is_pinned: result.isPinned } : p))
+            } catch {
+                setError("Failed to update pin status.")
+            }
+        })
+    }
+
+    const handleToggleSave = async (postId: string) => {
+        try {
+            const { saved } = await toggleSavePost(postId)
+            setSavedPostIds(prev => saved ? [...prev, postId] : prev.filter(id => id !== postId))
+        } catch {
+            setError("Failed to update saved status.")
+        }
+    }
+
+    const handleEditComment = async (commentId: string, content: string) => {
+        startPostMutation(async () => {
+            try {
+                await updateComment(commentId, content)
+                setCommentsByPost(prev => {
+                    const updated = { ...prev }
+                    for (const postId in updated) {
+                        updated[postId] = updated[postId].map(c =>
+                            c.id === commentId ? { ...c, content } : c
+                        )
+                    }
+                    return updated
+                })
+            } catch {
+                setError("Failed to update comment.")
+            }
+        })
+    }
+
+    const handleDeleteComment = async (commentId: string) => {
+        startPostMutation(async () => {
+            try {
+                await deleteComment(commentId)
+                setCommentsByPost(prev => {
+                    const updated = { ...prev }
+                    for (const postId in updated) {
+                        updated[postId] = updated[postId].filter(c => c.id !== commentId)
+                    }
+                    return updated
+                })
+                setPosts(current => current.map(p => ({
+                    ...p,
+                    commentCount: p.commentCount > 0 ? p.commentCount - 1 : 0
+                })))
+            } catch {
+                setError("Failed to delete comment.")
+            }
+        })
+    }
 
     const handleComposerSubmit = (data: { title: string, body: string, type: string, pollOptions: string[], photos: File[] }) => {
         startSubmit(async () => {
@@ -331,11 +427,17 @@ export default function TenantCommunityHubPage() {
 
     const userInitial = (profile?.full_name || user?.email || "U").charAt(0).toUpperCase()
 
+    const pathname = usePathname()
+    const isTenantRoute = pathname === "/tenant/community"
+
     return (
-        <div className="mx-auto min-h-screen max-w-7xl px-4 pb-20 pt-8 md:px-8">
+        <div className={cn(
+            "w-full min-h-full",
+            isTenantRoute ? "pb-12" : "mx-auto max-w-7xl px-4 pb-20 pt-8 md:px-8"
+        )}>
             <CommunityTour />
             
-            <CommunityHeader 
+            <CommunityHeader
                 title="Community Hub"
                 description="Stay connected with your neighbors, discover events, and join the conversation."
                 searchQuery={searchQuery}
@@ -353,6 +455,7 @@ export default function TenantCommunityHubPage() {
                 shouldUseNavbarPropertySelector={shouldUseNavbarPropertySelector}
                 profile={profile}
                 userInitial={userInitial}
+                pendingCount={pendingPosts.length}
             />
 
             <div className="relative mt-8 space-y-8">
@@ -426,19 +529,24 @@ export default function TenantCommunityHubPage() {
                     {activeTab !== "approvals" && (
                         <div className="space-y-8">
                             {visiblePosts.map(post => (
-                                <CommunityPostCard 
+                                <CommunityPostCard
                                     key={post.id}
                                     post={post}
                                     isSaved={savedPostIds.includes(post.id)}
-                                    onToggleSave={(id) => setSavedPostIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id])}
+                                    onToggleSave={handleToggleSave}
                                     onReact={handleReact}
                                     onVote={handleVote}
                                     onReport={(id) => setReportModalPostId(id)}
                                     onToggleComments={handleToggleComments}
+                                    onEditPost={handleEditPost}
+                                    onDeletePost={handleDeletePost}
+                                    onPinPost={handlePinPost}
                                     isOpen={openCommentPostId === post.id}
                                     comments={commentsByPost[post.id] || []}
                                     loadingComments={loadingCommentsPostId === post.id}
                                     onCommentSubmit={handleCommentSubmit}
+                                    onEditComment={handleEditComment}
+                                    onDeleteComment={handleDeleteComment}
                                     isMutating={isMutatingPost}
                                     currentUserId={user?.id}
                                     isManagementUser={isManagementUser}
