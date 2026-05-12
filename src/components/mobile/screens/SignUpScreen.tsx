@@ -77,6 +77,23 @@ export default function SignUpScreen() {
         }
     };
 
+    const formatError = (msg: string) => {
+        if (msg.includes("at least one character of each")) {
+            return (
+                <div className={styles.errorList}>
+                    <p>Password must include:</p>
+                    <ul>
+                        <li>At least one lowercase letter</li>
+                        <li>At least one uppercase letter</li>
+                        <li>At least one number</li>
+                        <li>At least one special character</li>
+                    </ul>
+                </div>
+            );
+        }
+        return msg;
+    };
+
     const handleBack = () => {
         if (step === 2) {
             setStep(1);
@@ -223,7 +240,7 @@ export default function SignUpScreen() {
                     </div>
 
                     {/* Error Message */}
-                    {error && <div className={styles.errorMessage}>{error}</div>}
+                    {error && <div className={styles.errorMessage}>{formatError(error)}</div>}
 
                     {/* Terms */}
                     <div className={styles.termsRow}>
