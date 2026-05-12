@@ -31,6 +31,7 @@ import ClickSpark from "@/components/ui/ClickSpark";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { playSound } from "@/hooks/useSound";
+import { useAppToast } from "@/hooks/useAppToast";
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -61,13 +62,14 @@ const PROPERTY_LOAD_TIMEOUT_MS = 12_000;
 
 function NewAssetContent() {
     const { push } = useRouter();
-    const { get } = useSearchParams();
-    const mode = get("mode");
-    const id = get("id");
+    const searchParams = useSearchParams();
+    const mode = searchParams?.get("mode");
+    const id = searchParams?.get("id");
     const isEditMode = mode === "edit";
 
     const { user, profile } = useAuth();
     const supabase = createClient();
+    const toast = useAppToast();
     
     const [step, setStep] = useState<Step>(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -129,7 +131,7 @@ function NewAssetContent() {
                 setFormData({
                     propertyName: p.name,
                     address: p.address,
-                    totalUnits: String(p.unitCount ?? 1),
+                    totalUnits: String(p.total_units ?? 1),
                     floorCount: String(p.total_floors ?? 1),
                     description: p.description ?? "",
                     occupancyLimit: String(p.env_policy?.max_occupants_per_unit ?? 5),
@@ -229,7 +231,13 @@ function NewAssetContent() {
 
             let propId = id;
             if (isEditMode && id) {
-                await supabase.from("properties").update(propPayload).eq("id", id);
+                const { error: updateError } = await supabase
+                    .from("properties")
+                    .update(propPayload)
+                    .eq("id", id)
+                    .select()
+                    .single();
+                if (updateError) throw new Error(`Failed to update property: ${updateError.message}`);
             } else {
                 const { data, error } = await supabase.from("properties").insert(propPayload).select("id").single();
                 if (error) throw error;
@@ -251,18 +259,19 @@ function NewAssetContent() {
 
                 const mapping = policyMapping[formData.utilityBilling] || policyMapping.fixed_charge;
 
-                await supabase.from("property_environment_policies").upsert({
+                // Save environment policy
+                const { error: policyError } = await supabase.from("property_environment_policies").upsert({
                     property_id: propId,
                     environment_mode: "residential",
                     max_occupants_per_unit: parseInt(formData.occupancyLimit),
                     utility_policy_mode: mapping.mode as any,
-                    utility_split_method: mapping.split as any,
                     updated_at: new Date().toISOString()
                 } as any, { onConflict: "property_id" });
+                if (policyError) throw new Error(`Failed to save environment policy: ${policyError.message}`);
 
                 // Sync contract metadata if generated
                 if (formData.contractMode === "generate") {
-                    await supabase.from("properties").update({
+                    const { error: contractError } = await supabase.from("properties").update({
                         contract_template: {
                             answers: {
                                 rent: formData.baseRent.toString(),
@@ -279,27 +288,29 @@ function NewAssetContent() {
                             last_updated: new Date().toISOString()
                         }
                     }).eq("id", propId);
+                    if (contractError) throw new Error(`Failed to save contract template: ${contractError.message}`);
                 } else if (formData.contractMode === "upload") {
-                    await supabase.from("properties").update({
+                    const { error: uploadError } = await supabase.from("properties").update({
                         contract_template: {
                             contract_mode: "upload",
                             file_name: formData.contractFile,
                             last_updated: new Date().toISOString()
                         }
                     }).eq("id", propId);
+                    if (uploadError) throw new Error(`Failed to save uploaded contract: ${uploadError.message}`);
                 }
+
             }
 
             if (propId) {
                 // ... (rest of the logic)
             }
 
-            playSound("success");
+            toast.success(isEditMode ? "Property updated successfully!" : "Property created successfully!");
+            setIsSubmitting(false);
             push("/landlord/properties");
         } catch (e) {
-            playSound("error");
-            setLoadError("Critical save failure.");
-        } finally {
+            toast.error(e instanceof Error ? e.message : "Failed to save property. Please try again.");
             setIsSubmitting(false);
         }
     };
@@ -314,7 +325,7 @@ function NewAssetContent() {
     return (
         <div className="min-h-screen pb-20 relative selection:bg-primary/30">
             <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
-                <div className="absolute top-[-10%] right-[-10%] w-[50rem] h-[50rem] rounded-full bg-primary/10 blur-[150px] opacity-50 animate-pulse" />
+                <div className="absolute top-[-10%] right-[-10%] size-[50rem] rounded-full bg-primary/10 blur-[150px] opacity-50 animate-pulse" />
             </div>
 
             <div className="max-w-4xl mx-auto px-4 pt-8 space-y-8 animate-in fade-in duration-700">
@@ -416,7 +427,7 @@ function NewAssetContent() {
                                                 value={formData.address} 
                                                 onChange={e => handleInputChange("address", e.target.value)} 
                                                 className={`w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm font-medium text-white/80 outline-none focus:border-primary/50 resize-none ${isEditMode ? "opacity-50 cursor-not-allowed bg-black/20" : ""}`} 
-                                                placeholder="Full address..." 
+                                                placeholder="Full address…" 
                                             />
                                         </div>
                                         {isEditMode && (
@@ -635,8 +646,8 @@ function NewAssetContent() {
                                                                 setCustomAmenity("");
                                                             }
                                                         }}
-                                                        placeholder="Define a new property rule..."
-                                                        className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-sm text-white focus:border-primary/50 transition-all placeholder:text-white/10 outline-none"
+                                                        placeholder="Define a new property rule…"
+                                                        className="flex-1 bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-white focus:border-primary/50 transition-all placeholder:text-white/10 outline-none"
                                                     />
                                                     <button 
                                                         onClick={() => {

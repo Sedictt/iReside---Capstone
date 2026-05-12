@@ -72,8 +72,11 @@ type MiniChatState = {
     error: string | null;
 };
 
+const EMPTY_ARRAY = Object.freeze([]) as any[];
+const EMPTY_OBJECT = Object.freeze({}) as any;
+
 const DEFAULT_CHAT_STATE: MiniChatState = {
-    messages: [],
+    messages: EMPTY_ARRAY,
     draft: "",
     isLoading: false,
     isSending: false,
@@ -81,8 +84,6 @@ const DEFAULT_CHAT_STATE: MiniChatState = {
     isOtherUserTyping: false,
     error: null,
 };
-
-const MESSAGE_CACHE_TTL_MS = 2 * 60 * 1000;
 
 const FALLBACK_AVATAR = "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&w=150&q=80";
 
@@ -124,15 +125,15 @@ export function ContactsSidebar() {
     const supabase = useMemo(() => createSupabaseClient(), []);
     const [isHovered, setIsHovered] = useState(false);
     const [activeTab, setActiveTab] = useState<"messages" | "contacts">("messages");
-    const [openChats, setOpenChats] = useState<OpenChatUser[]>([]);
-    const [conversations, setConversations] = useState<ChatUser[]>([]);
+    const [openChats, setOpenChats] = useState<OpenChatUser[]>(EMPTY_ARRAY);
+    const [conversations, setConversations] = useState<ChatUser[]>(EMPTY_ARRAY);
     const [isLoadingConversations, setIsLoadingConversations] = useState(true);
     const [conversationsError, setConversationsError] = useState<string | null>(null);
-    const [chatStateById, setChatStateById] = useState<Record<string, MiniChatState>>({});
+    const [chatStateById, setChatStateById] = useState<Record<string, MiniChatState>>(EMPTY_OBJECT);
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
     const [menuActionId, setMenuActionId] = useState<string | null>(null);
     const [sharedFilesChatId, setSharedFilesChatId] = useState<string | null>(null);
-    const openChatsRef = useRef<OpenChatUser[]>([]);
+    const openChatsRef = useRef<OpenChatUser[]>(EMPTY_ARRAY);
     const channelRef = useRef<RealtimeChannel | null>(null);
     const refreshInFlightRef = useRef<Promise<ChatUser[]> | null>(null);
     const incomingQueueRef = useRef<Set<string>>(new Set());
