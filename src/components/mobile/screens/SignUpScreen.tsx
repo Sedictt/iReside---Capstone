@@ -78,6 +78,11 @@ export default function SignUpScreen() {
     };
 
     const formatError = (msg: string) => {
+        // We hide these specific errors from the global box since they'll show under the inputs
+        if (msg.includes("already registered") || msg.includes("already been registered") || msg === "Passwords do not match") {
+            return null;
+        }
+
         if (msg.includes("at least one character of each")) {
             return (
                 <div className={styles.errorList}>
@@ -180,7 +185,7 @@ export default function SignUpScreen() {
                     {/* Email */}
                     <div className={styles.inputGroup}>
                         <label className={styles.inputLabel}>Email</label>
-                        <div className={styles.inputWrapper}>
+                        <div className={`${styles.inputWrapper} ${error?.includes("registered") ? styles.inputWrapperError : ""}`}>
                             <Mail className={styles.inputIcon} />
                             <input
                                 className={styles.input}
@@ -191,6 +196,9 @@ export default function SignUpScreen() {
                                 autoComplete="email"
                             />
                         </div>
+                        {error?.includes("registered") && (
+                            <span className={styles.inlineError}>This email is already registered.</span>
+                        )}
                     </div>
 
                     {/* Password */}
@@ -219,7 +227,7 @@ export default function SignUpScreen() {
                     {/* Confirm Password */}
                     <div className={styles.inputGroup}>
                         <label className={styles.inputLabel}>Confirm Password</label>
-                        <div className={styles.inputWrapper}>
+                        <div className={`${styles.inputWrapper} ${error === "Passwords do not match" ? styles.inputWrapperError : ""}`}>
                             <Lock className={styles.inputIcon} />
                             <input
                                 className={styles.input}
@@ -237,10 +245,15 @@ export default function SignUpScreen() {
                                 {showConfirm ? <EyeOff /> : <Eye />}
                             </button>
                         </div>
+                        {error === "Passwords do not match" && (
+                            <span className={styles.inlineError}>Passwords do not match.</span>
+                        )}
                     </div>
 
                     {/* Error Message */}
-                    {error && <div className={styles.errorMessage}>{formatError(error)}</div>}
+                    {error && formatError(error) && (
+                        <div className={styles.errorMessage}>{formatError(error)}</div>
+                    )}
 
                     {/* Terms */}
                     <div className={styles.termsRow}>

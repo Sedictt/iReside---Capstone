@@ -111,6 +111,15 @@
     box-shadow: 0 0 0 3px rgba(109, 152, 56, 0.1);
 }
 
+.inputWrapperError {
+    border-color: #ef4444 !important;
+    background: rgba(239, 68, 68, 0.05) !important;
+}
+
+.inputWrapperError:focus-within {
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
 .inputIcon {
     width: 18px;
     height: 18px;
@@ -283,6 +292,20 @@
 .errorList li {
     font-size: 13px;
     opacity: 0.9;
+}
+
+.inlineError {
+    color: #ef4444;
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 4px;
+    display: block;
+    animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 /* ─── Terms ────────────────────────────────────────────── */
