@@ -255,6 +255,7 @@ export function RoleSidebar({
                                     ) : (
                                         <button
                                             type="button"
+                                            suppressHydrationWarning
                                             onClick={() => toggleSection(section.category, fallbackExpanded)}
                                             className={cn(
                                                 "group flex w-full items-center justify-between rounded-lg px-3 py-2 text-left transition-all",
@@ -302,6 +303,7 @@ export function RoleSidebar({
                 
                 <button
                     type="button"
+                    suppressHydrationWarning
                     onClick={onLogout}
                     className={cn(
                         "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all duration-300 text-muted-foreground hover:bg-red-500/10 hover:text-red-500",

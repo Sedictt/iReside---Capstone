@@ -35,7 +35,6 @@ import { AddAmenityModal } from "@/components/landlord/AddAmenityModal";
 
 import * as LucideIcons from 'lucide-react';
 
-// Helper to get icon component by name
 const getIconByName = (name: string | null) => {
     if (!name) return LucideIcons.Zap;
     // @ts-expect-error - dynamic lookup
@@ -139,6 +138,7 @@ export default function LandlordUtilitiesPage() {
                         <div className="flex flex-wrap gap-4">
                             <button 
                                 onClick={() => setIsAddModalOpen(true)}
+                                suppressHydrationWarning
                                 className="flex items-center gap-3 rounded-2xl bg-primary px-8 py-4 text-sm font-black text-primary-foreground shadow-2xl shadow-primary/20 transition-all hover:bg-primary/90 hover:scale-[1.05] active:scale-95"
                             >
                                 <Plus className="size-5" />
@@ -150,7 +150,6 @@ export default function LandlordUtilitiesPage() {
             </div>
 
             <div className="mx-auto w-full max-w-7xl space-y-12 p-6 md:p-12">
-                {/* Controls & Navigation - More Breathing Room */}
                 <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
                     <div className="flex w-full items-center gap-2 rounded-3xl bg-muted/30 p-2 sm:w-fit border border-border/40 backdrop-blur-sm">
                         {[
@@ -160,6 +159,7 @@ export default function LandlordUtilitiesPage() {
                         ].map((tab) => (
                             <button
                                 key={tab.id}
+                                suppressHydrationWarning
                                 onClick={() => setActiveTab(tab.id as "list" | "requests" | "history")}
                                 className={cn(
                                     "relative flex items-center gap-3 rounded-2xl px-6 py-3.5 text-sm font-black transition-all",
@@ -190,13 +190,17 @@ export default function LandlordUtilitiesPage() {
                             <Search className="absolute left-5 top-1/2 size-5 -translate-y-1/2 text-muted-foreground/40" />
                             <input
                                 type="text"
+                                suppressHydrationWarning
                                 placeholder="Find a facility..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="w-full rounded-[2rem] border border-border bg-card py-4 pl-14 pr-6 text-base font-medium outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-8 shadow-sm"
                             />
                         </div>
-                        <button className="flex size-14 items-center justify-center rounded-[2rem] border border-border bg-card text-muted-foreground transition-all hover:bg-muted hover:text-primary active:scale-90">
+                        <button 
+                            suppressHydrationWarning
+                            className="flex size-14 items-center justify-center rounded-[2rem] border border-border bg-card text-muted-foreground transition-all hover:bg-muted hover:text-primary active:scale-90"
+                        >
                             <Filter className="size-5" />
                         </button>
                     </div>
@@ -215,6 +219,7 @@ export default function LandlordUtilitiesPage() {
                             {/* Create New Card */}
                             <button 
                                 onClick={() => setIsAddModalOpen(true)}
+                                suppressHydrationWarning
                                 className="group relative flex flex-col items-center justify-center gap-5 rounded-3xl border-2 border-dashed border-border/50 bg-muted/10 p-8 transition-all hover:bg-primary/[0.03] hover:border-primary/30 hover:shadow-lg min-h-[340px]"
                             >
                                 <div className="flex size-16 items-center justify-center rounded-2xl bg-muted text-muted-foreground transition-all duration-300 group-hover:bg-primary group-hover:text-primary-foreground group-hover:scale-105">

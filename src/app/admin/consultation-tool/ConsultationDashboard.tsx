@@ -62,7 +62,7 @@ export default function ConsultationDashboard() {
         .from('consultation-documents')
         .getPublicUrl(fileName);
 
-      const { error: dbError } = await supabase
+      const { error: dbError } = await (supabase as any)
         .from('consultation_documents')
         .insert([{
           file_name: file.name,

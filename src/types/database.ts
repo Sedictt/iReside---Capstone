@@ -1378,6 +1378,12 @@ export interface Database {
                     entered_at: string
                     status: string
                     invoice_id: string | null
+                    note: string | null
+                    proof_image_path: string | null
+                    proof_image_url: string | null
+                    payment_id: string | null
+                    created_at: string
+                    updated_at: string
                 }
                 Insert: {
                     id?: string
@@ -1397,6 +1403,12 @@ export interface Database {
                     entered_at?: string
                     status?: string
                     invoice_id?: string | null
+                    note?: string | null
+                    proof_image_path?: string | null
+                    proof_image_url?: string | null
+                    payment_id?: string | null
+                    created_at?: string
+                    updated_at?: string
                 }
                 Update: {
                     id?: string
@@ -1416,6 +1428,12 @@ export interface Database {
                     entered_at?: string
                     status?: string
                     invoice_id?: string | null
+                    note?: string | null
+                    proof_image_path?: string | null
+                    proof_image_url?: string | null
+                    payment_id?: string | null
+                    created_at?: string
+                    updated_at?: string
                 }
                 Relationships: [
                     {

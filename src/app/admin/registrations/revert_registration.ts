@@ -4,7 +4,7 @@ async function revertRegistration() {
     const adminClient = createAdminClient();
 
     // Find the most recent approved registration
-    const { data: registration, error: findError } = await adminClient
+    const { data: registration, error: findError } = await (adminClient as any)
         .from("landlord_applications")
         .select("id, email, full_name, status")
         .eq("status", "approved")
@@ -20,7 +20,7 @@ async function revertRegistration() {
     console.log(`Found approved registration: ${registration.full_name} (${registration.email})`);
 
     // Reset status to pending and clear onboarding tokens
-    const { error: updateError } = await adminClient
+    const { error: updateError } = await (adminClient as any)
         .from("landlord_applications")
         .update({
             status: "pending",

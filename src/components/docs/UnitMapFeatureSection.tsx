@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Map, CheckCircle, Maximize2, X } from "lucide-react";
-import { m as motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import VisualBuilder from "@/components/landlord/visual-planner/VisualBuilder";
 
 import { createPortal } from "react-dom";
@@ -19,7 +19,7 @@ export function UnitMapFeatureSection() {
     <AnimatePresence>
       {isLightboxOpen && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 md:p-12 overflow-hidden">
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -36,7 +36,7 @@ export function UnitMapFeatureSection() {
             </button>
           </div>
 
-          <motion.div
+          <m.div
             initial={{ opacity: 0, scale: 0.95, y: 30 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 30 }}
@@ -52,7 +52,7 @@ export function UnitMapFeatureSection() {
                 ESC TO EXIT PREVIEW
               </p>
             </div>
-          </motion.div>
+          </m.div>
         </div>
       )}
     </AnimatePresence>
@@ -127,4 +127,3 @@ export function UnitMapFeatureSection() {
     </section>
   );
 }
-

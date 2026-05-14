@@ -1,24 +1,15 @@
 import React from "react";
-import Link from "next/link";
 import { 
-  Building2, 
-  Map, 
+  ShieldCheck, 
   FileText, 
   Wallet, 
   MessageSquare, 
   Wrench, 
-  ShieldCheck,
   CheckCircle,
-  LayoutGrid,
   ArrowRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-export const metadata = {
-  title: "Core Features - iReside Documentation",
-  description: "Learn about the core platform capabilities of iReside like the Unit Map, Document Manager, Financial Hub, Communication, and Maintenance.",
-};
-
+import Link from "next/link";
 import { UnitMapFeatureSection } from "@/components/docs/UnitMapFeatureSection";
 
 export default function FeaturesPage() {
@@ -30,11 +21,11 @@ export default function FeaturesPage() {
           Platform Capabilities
         </div>
         <h1 className="text-4xl font-black tracking-tight text-text-high sm:text-5xl">
-          Core Features of <span className="text-primary">iReside</span>
+          Designed for Clarity and Control
         </h1>
-        <p className="text-xl text-text-medium max-w-3xl leading-relaxed">
-          iReside goes beyond basic property management, providing specialized tools
-          engineered specifically for private landlords and their tenants to organize
+        <p className="max-w-3xl text-xl leading-relaxed text-text-medium">
+          iReside goes beyond basic property management, providing specialized tools 
+          engineered specifically for private landlords and their tenants to organize 
           their transactions directly.
         </p>
       </section>
@@ -42,13 +33,14 @@ export default function FeaturesPage() {
       {/* Unit Map - The Hero Feature */}
       <UnitMapFeatureSection />
 
-
       {/* Grid Features */}
       <section className="grid gap-8 sm:grid-cols-2">
         {/* Document & Lease */}
         <div id="document-manager" className="scroll-mt-24 space-y-4 rounded-2xl border border-divider bg-surface-1 p-8 hover:border-primary/30 transition-colors">
           <div className="inline-flex items-center justify-center rounded-xl bg-orange-500/10 text-orange-500">
-            <FileText className="size-6" />
+            <div className="p-3">
+              <FileText className="size-6" />
+            </div>
           </div>
           <h3 className="text-2xl font-black text-text-high">Document & Lease Manager</h3>
           <p className="text-text-medium leading-relaxed">
@@ -73,7 +65,9 @@ export default function FeaturesPage() {
         {/* Financial Hub */}
         <div id="financial-hub" className="scroll-mt-24 space-y-4 rounded-2xl border border-divider bg-surface-1 p-8 hover:border-primary/30 transition-colors">
           <div className="inline-flex items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
-            <Wallet className="size-6" />
+            <div className="p-3">
+              <Wallet className="size-6" />
+            </div>
           </div>
           <h3 className="text-2xl font-black text-text-high">Financial Hub & Analytics</h3>
           <p className="text-text-medium leading-relaxed">
@@ -98,7 +92,9 @@ export default function FeaturesPage() {
         {/* Communication System */}
         <div id="communication" className="scroll-mt-24 space-y-4 rounded-2xl border border-divider bg-surface-1 p-8 hover:border-primary/30 transition-colors">
           <div className="inline-flex items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
-            <MessageSquare className="size-6" />
+            <div className="p-3">
+              <MessageSquare className="size-6" />
+            </div>
           </div>
           <h3 className="text-2xl font-black text-text-high">In-App Chat Messaging</h3>
           <p className="text-text-medium leading-relaxed">
@@ -123,7 +119,9 @@ export default function FeaturesPage() {
         {/* Maintenance Tracking */}
         <div id="maintenance" className="scroll-mt-24 space-y-4 rounded-2xl border border-divider bg-surface-1 p-8 hover:border-primary/30 transition-colors">
           <div className="inline-flex items-center justify-center rounded-xl bg-purple-500/10 text-purple-500">
-            <Wrench className="size-6" />
+            <div className="p-3">
+              <Wrench className="size-6" />
+            </div>
           </div>
           <h3 className="text-2xl font-black text-text-high">Maintenance Ticketing</h3>
           <p className="text-text-medium leading-relaxed">
@@ -147,15 +145,15 @@ export default function FeaturesPage() {
       </section>
 
       {/* Verification Safety note */}
-      <section className="rounded-2xl bg-zinc-950 dark:bg-black border border-zinc-800 p-8 text-white">
+      <section className="rounded-2xl bg-zinc-900 dark:bg-black border border-zinc-800 p-8 text-white transition-colors">
         <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center">
           <div className="flex px-4 py-4 rounded-full bg-zinc-800 shrink-0">
             <ShieldCheck className="size-8 text-zinc-300" />
           </div>
           <div>
             <h3 className="text-xl font-black mb-2">Verified Landlords for Safe Transacting</h3>
-            <p className="text-zinc-400">
-              In iReside, to maintain the safety of the ecosystem, landlord users undergo screening administered completely by platform administrators. Once proven verified, landlords have the authority to manage their own custom standards and manually screen tenants under their criteria�giving private owners full autonomy while blocking malicious actors from entering the system.
+            <p className="text-zinc-400 leading-relaxed">
+              In iReside, to maintain the safety of the ecosystem, landlord users undergo screening administered completely by platform administrators. Once proven verified, landlords have the authority to manage their own custom standards and manually screen tenants under their criteria—giving private owners full autonomy while blocking malicious actors from entering the system.
             </p>
           </div>
         </div>
@@ -163,7 +161,7 @@ export default function FeaturesPage() {
 
       {/* Nav footer */}
       <div className="flex items-center justify-end pt-8">
-        <Button className="bg-primary hover:bg-primary-dark text-white" asChild>
+        <Button className="bg-primary hover:bg-primary-dark text-white rounded-xl h-12 px-8 font-black" asChild>
           <Link href="/docs/getting-started/quick-start">
             Continue to Quick Start <ArrowRight className="ml-2 size-4" />
           </Link>

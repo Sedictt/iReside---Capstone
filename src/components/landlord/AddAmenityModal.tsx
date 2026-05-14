@@ -79,7 +79,8 @@ import {
     Sparkle,
     Plus,
     Minus,
-    Check
+    Check,
+    type LucideIcon
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useProperty } from '@/context/PropertyContext'
@@ -90,7 +91,7 @@ import { createClient } from '@/lib/supabase/client'
 interface AddAmenityModalProps {
     isOpen: boolean
     onClose: () => void
-    onSuccess: () => void
+    onSuccess: () => Promise<void> | void
     landlordId: string
 }
 
@@ -104,9 +105,9 @@ function ModernSelect({
 }: { 
     value: string; 
     onChange: (val: string) => void; 
-    options: { value: string; label: string }[]; 
+    options: { value: string; label: string; icon?: LucideIcon }[]; 
     placeholder: string;
-    icon?: any;
+    icon?: LucideIcon;
     className?: string;
 }) {
     const [isOpen, setIsOpen] = useState(false)
@@ -117,19 +118,19 @@ function ModernSelect({
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex w-full items-center justify-between rounded-2xl border border-border bg-muted/50 py-3.5 pl-4 pr-4 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
+                className="flex w-full items-center justify-between rounded-2xl border border-border bg-card py-3.5 pl-4 pr-4 text-sm font-black outline-none ring-primary/20 transition-all hover:border-primary/30 focus:border-primary/50 focus:ring-4 shadow-sm"
             >
                 <div className="flex items-center gap-3">
                     {Icon && <Icon className="size-4 text-muted-foreground/40" />}
                     <span className={cn(
                         "truncate",
-                        !value && "text-muted-foreground/60"
+                        !value && "text-muted-foreground/50"
                     )}>
                         {selectedOption ? selectedOption.label : placeholder}
                     </span>
                 </div>
                 <ChevronDown className={cn(
-                    "size-4 text-muted-foreground/40 transition-transform duration-300",
+                    "size-4 text-muted-foreground/30 transition-transform duration-300",
                     isOpen && "rotate-180"
                 )} />
             </button>
@@ -141,13 +142,14 @@ function ModernSelect({
                             className="fixed inset-0 z-[110]" 
                             onClick={() => setIsOpen(false)} 
                         />
-                        <motion.div
+                        <motion.div 
                             initial={{ opacity: 0, y: 10, scale: 0.95 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                            className="absolute left-0 top-full z-[120] mt-2 w-full overflow-hidden rounded-[1.5rem] border border-border bg-card/95 p-1.5 shadow-2xl backdrop-blur-xl"
+                            transition={{ type: "spring", damping: 20, stiffness: 300 }}
+                            className="absolute left-0 right-0 top-full z-[120] mt-2 max-h-[300px] overflow-auto rounded-2xl border border-border/50 bg-card/90 p-2 shadow-2xl shadow-black/20 backdrop-blur-xl"
                         >
-                            <div className="max-h-[240px] overflow-y-auto custom-scrollbar-premium">
+                            <div className="space-y-1">
                                 {options.map((option) => (
                                     <button
                                         key={option.value}
@@ -157,12 +159,24 @@ function ModernSelect({
                                             setIsOpen(false)
                                         }}
                                         className={cn(
-                                            "flex w-full items-center justify-between rounded-xl px-4 py-3 text-left text-sm font-bold transition-all hover:bg-muted",
-                                            value === option.value ? "bg-primary/10 text-primary" : "text-foreground/80"
+                                            "group flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm transition-all duration-200",
+                                            value === option.value 
+                                                ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" 
+                                                : "hover:bg-primary/5 hover:text-primary font-medium"
                                         )}
                                     >
-                                        {option.label}
-                                        {value === option.value && <Check className="size-4" />}
+                                        <div className="flex items-center gap-3">
+                                            {option.icon && <option.icon className={cn(
+                                                "size-4",
+                                                value === option.value ? "text-primary-foreground" : "text-muted-foreground/50 group-hover:text-primary"
+                                            )} />}
+                                            <span className={value === option.value ? "font-bold" : ""}>
+                                                {option.label}
+                                            </span>
+                                        </div>
+                                        {value === option.value && (
+                                            <div className="size-1.5 rounded-full bg-primary-foreground" />
+                                        )}
                                     </button>
                                 ))}
                             </div>
@@ -328,17 +342,32 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
 
         try {
             setLoading(true)
+            console.log('[AddAmenityModal] Starting submission...', formData)
             
             let uploadedImageUrl = formData.image_url
             if (photoFile) {
+                console.log('[AddAmenityModal] Uploading photo...')
                 const supabase = createClient()
-                const fileExt = photoFile.name.split('.').pop()
+                const fileExt = photoFile.name.split('.').pop()?.toLowerCase() || 'jpg'
                 const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`
                 const filePath = `amenities/${fileName}`
 
+                let contentType = photoFile.type
+                if (!contentType || contentType === 'application/octet-stream') {
+                    if (fileExt === 'png') contentType = 'image/png'
+                    else if (fileExt === 'webp' || fileExt === 'web') contentType = 'image/webp'
+                    else if (fileExt === 'gif') contentType = 'image/gif'
+                    else if (fileExt === 'svg') contentType = 'image/svg+xml'
+                    else contentType = 'image/jpeg'
+                }
+
                 const { error: uploadError } = await supabase.storage
                     .from('property-images')
-                    .upload(filePath, photoFile)
+                    .upload(filePath, photoFile, {
+                        contentType,
+                        cacheControl: '3600',
+                        upsert: false
+                    })
 
                 if (uploadError) throw uploadError
 
@@ -347,8 +376,10 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                     .getPublicUrl(filePath)
                 
                 uploadedImageUrl = publicUrl
+                console.log('[AddAmenityModal] Photo uploaded successfully:', uploadedImageUrl)
             }
 
+            console.log('[AddAmenityModal] Upserting amenity data...')
             await upsertAmenity({
                 ...formData,
                 landlord_id: landlordId,
@@ -356,12 +387,18 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                 price_per_unit: formData.price_per_unit === '' ? 0 : Number(formData.price_per_unit),
                 capacity: Number(formData.capacity)
             })
+            console.log('[AddAmenityModal] Amenity upserted successfully')
+
             toast.success('Facility added successfully')
-            onSuccess()
+            
             onClose()
+            
+            if (onSuccess) {
+                onSuccess()
+            }
         } catch (error) {
-            console.error('Error adding facility:', error)
-            toast.error('Failed to add facility')
+            console.error('[AddAmenityModal] Submission error:', error)
+            toast.error(error instanceof Error ? error.message : 'Failed to add facility')
         } finally {
             setLoading(false)
         }
@@ -386,7 +423,6 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                     exit={{ opacity: 0, scale: 0.95, y: 20 }}
                     className="relative w-full max-w-4xl overflow-hidden rounded-[2.5rem] border border-border bg-card shadow-2xl"
                 >
-                    {/* Header */}
                     <div className="flex items-center justify-between border-b border-border bg-muted/30 px-8 py-6">
                         <div className="space-y-1">
                             <h2 className="text-2xl font-black tracking-tight">Add New Facility</h2>
@@ -404,7 +440,6 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
 
                     <form onSubmit={handleSubmit} className="p-8">
                         <div className="grid gap-8 sm:grid-cols-2">
-                            {/* Left Column */}
                             <div className="space-y-6">
                                 <div className="space-y-2">
                                     <label htmlFor="property-select" className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
@@ -595,10 +630,10 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                                 value={formData.price_per_unit}
                                                 onChange={(e) => {
                                                     const val = e.target.value
-                                                    setFormData({ 
-                                                        ...formData, 
-                                                        price_per_unit: val === '' ? '' : String(parseFloat(val) || 0)
-                                                    })
+                                                    // Allow decimal points while typing
+                                                    if (val === '' || val === '.' || !isNaN(Number(val))) {
+                                                        setFormData({ ...formData, price_per_unit: val })
+                                                    }
                                                 }}
                                                 className="w-full rounded-2xl border border-border bg-muted/50 py-3.5 pl-8 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
                                             />
@@ -723,6 +758,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                         <input 
                                             id="facility-photo-input"
                                             type="file" 
+                                            suppressHydrationWarning
                                             accept="image/*"
                                             className="hidden"
                                             onChange={(e) => {
@@ -742,6 +778,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                         <div className="mt-10 flex gap-4">
                             <button
                                 type="button"
+                                suppressHydrationWarning
                                 onClick={onClose}
                                 className="flex-1 rounded-2xl border border-border bg-muted/30 py-4 text-sm font-black transition-all hover:bg-muted"
                             >
@@ -749,6 +786,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                             </button>
                             <button
                                 type="submit"
+                                suppressHydrationWarning
                                 disabled={loading}
                                 className="flex-[2] rounded-2xl bg-primary py-4 text-sm font-black text-primary-foreground shadow-2xl shadow-primary/20 transition-all hover:bg-primary/90 hover:scale-[1.02] active:scale-95 disabled:opacity-50"
                             >
