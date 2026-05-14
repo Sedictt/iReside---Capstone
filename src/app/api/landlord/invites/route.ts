@@ -101,7 +101,7 @@ export async function GET(request: Request) {
     const adminClient = createAdminClient();
 
     const { data: invites, error } = await adminClient
-        .from("tenant_intake_invites")
+        .from("tenant_intake_invites" as any)
         .select("id, landlord_id, property_id, unit_id, mode, application_type, required_requirements, public_token, status, max_uses, use_count, expires_at, last_used_at, created_at")
         .eq("landlord_id", user.id)
         .order("created_at", { ascending: false });
@@ -114,7 +114,7 @@ export async function GET(request: Request) {
         );
     }
 
-    const inviteRows = (invites ?? []) as InviteRow[];
+    const inviteRows = (invites ?? []) as unknown as InviteRow[];
     const propertyIds = [...new Set(inviteRows.map((invite) => invite.property_id))];
 
     const { data: properties } = propertyIds.length
@@ -289,7 +289,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Select at least one required document for online applications." }, { status: 400 });
     }
 
-    const { error: insertError } = await adminClient.from("tenant_intake_invites").insert({
+    const { error: insertError } = await adminClient.from("tenant_intake_invites" as any).insert({
         id: inviteId,
         landlord_id: user.id,
         property_id: propertyId,
@@ -313,7 +313,7 @@ export async function POST(request: Request) {
         );
     }
 
-    const { error: eventError } = await adminClient.from("tenant_intake_invite_events").insert({
+    const { error: eventError } = await adminClient.from("tenant_intake_invite_events" as any).insert({
         invite_id: inviteId,
         event_type: "created",
         metadata: {

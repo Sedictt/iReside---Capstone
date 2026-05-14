@@ -104,21 +104,23 @@ export async function GET() {
         return NextResponse.json({ error: "Failed to fetch properties." }, { status: 500 });
     }
 
+    const actionQuery = supabase
+        .from("landlord_inquiry_actions" as any)
+        .select("inquiry_id, is_read, is_archived, deleted_at");
+
     const { data: actionRows, error: actionsError } =
         inquiryIds.length > 0
-            ? await supabase
-                  .from("landlord_inquiry_actions")
-                  .select("inquiry_id, is_read, is_archived, deleted_at")
+            ? await actionQuery
                   .eq("landlord_id", user.id)
-                  .in("inquiry_id", inquiryIds)
+                  .in("inquiry_id", inquiryIds) as any
             : { data: [], error: null };
 
     if (actionsError) {
         return NextResponse.json({ error: "Failed to fetch inquiry actions." }, { status: 500 });
     }
 
-    const actionMap = new Map(
-        (actionRows ?? []).map((row) => [
+    const actionMap: Map<string, any> = new Map(
+        (actionRows ?? []).map((row: any) => [
             row.inquiry_id,
             {
                 is_read: row.is_read,

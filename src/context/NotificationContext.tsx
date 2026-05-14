@@ -193,7 +193,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
                     .from("maintenance_requests")
                     .select("*", { count: "exact", head: true })
                     .eq("landlord_id", user.id)
-                    .in("status", ["pending", "in_progress", "resolved"]);
+                    .in("status", ["open", "in_progress", "resolved"]);
 
                 if (propertyUnitIds) {
                     if (propertyUnitIds.length === 0) {

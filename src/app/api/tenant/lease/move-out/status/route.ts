@@ -11,7 +11,7 @@ export async function GET() {
 
   try {
     const { data: request, error: fetchError } = await (supabase
-      .from("move_out_requests")
+      .from("move_out_requests" as any)
       .select(`
         *,
         landlord:profiles(id, full_name, email)

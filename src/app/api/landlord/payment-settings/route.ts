@@ -60,10 +60,7 @@ export async function POST(request: Request) {
             qrUrl = uploaded.publicUrl;
         }
 
-        const { error: destinationError } = await supabase
-            .from("landlord_payment_destinations")
-            .upsert(
-                {
+        const upsertPayload = {
                     landlord_id: user.id,
                     provider: "gcash",
                     account_name: accountName,
@@ -71,9 +68,10 @@ export async function POST(request: Request) {
                     qr_image_path: qrPath,
                     qr_image_url: qrUrl,
                     is_enabled: isEnabled,
-                },
-                { onConflict: "landlord_id,provider" },
-            );
+                } as any;
+                const { error: destinationError } = await supabase
+                    .from("landlord_payment_destinations" as any)
+                    .upsert(upsertPayload, { onConflict: "landlord_id,provider" });
 
         if (destinationError) throw destinationError;
 

@@ -14,6 +14,7 @@ import {
     Search,
     ChevronLeft,
     ChevronRight,
+    ChevronDown,
     Dumbbell,
     Wifi,
     Tv,
@@ -75,7 +76,10 @@ import {
     Drumstick,
     Plane,
     Ship,
-    Sparkle
+    Sparkle,
+    Plus,
+    Minus,
+    Check
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useProperty } from '@/context/PropertyContext'
@@ -88,6 +92,86 @@ interface AddAmenityModalProps {
     onClose: () => void
     onSuccess: () => void
     landlordId: string
+}
+
+function ModernSelect({ 
+    value, 
+    onChange, 
+    options, 
+    placeholder, 
+    icon: Icon,
+    className 
+}: { 
+    value: string; 
+    onChange: (val: string) => void; 
+    options: { value: string; label: string }[]; 
+    placeholder: string;
+    icon?: any;
+    className?: string;
+}) {
+    const [isOpen, setIsOpen] = useState(false)
+    const selectedOption = options.find(o => o.value === value)
+
+    return (
+        <div className={cn("relative", className)}>
+            <button
+                type="button"
+                onClick={() => setIsOpen(!isOpen)}
+                className="flex w-full items-center justify-between rounded-2xl border border-border bg-muted/50 py-3.5 pl-4 pr-4 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
+            >
+                <div className="flex items-center gap-3">
+                    {Icon && <Icon className="size-4 text-muted-foreground/40" />}
+                    <span className={cn(
+                        "truncate",
+                        !value && "text-muted-foreground/60"
+                    )}>
+                        {selectedOption ? selectedOption.label : placeholder}
+                    </span>
+                </div>
+                <ChevronDown className={cn(
+                    "size-4 text-muted-foreground/40 transition-transform duration-300",
+                    isOpen && "rotate-180"
+                )} />
+            </button>
+
+            <AnimatePresence>
+                {isOpen && (
+                    <>
+                        <div 
+                            className="fixed inset-0 z-[110]" 
+                            onClick={() => setIsOpen(false)} 
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                            className="absolute left-0 top-full z-[120] mt-2 w-full overflow-hidden rounded-[1.5rem] border border-border bg-card/95 p-1.5 shadow-2xl backdrop-blur-xl"
+                        >
+                            <div className="max-h-[240px] overflow-y-auto custom-scrollbar-premium">
+                                {options.map((option) => (
+                                    <button
+                                        key={option.value}
+                                        type="button"
+                                        onClick={() => {
+                                            onChange(option.value)
+                                            setIsOpen(false)
+                                        }}
+                                        className={cn(
+                                            "flex w-full items-center justify-between rounded-xl px-4 py-3 text-left text-sm font-bold transition-all hover:bg-muted",
+                                            value === option.value ? "bg-primary/10 text-primary" : "text-foreground/80"
+                                        )}
+                                    >
+                                        {option.label}
+                                        {value === option.value && <Check className="size-4" />}
+                                    </button>
+                                ))}
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
+        </div>
+    )
 }
 
 const AMENITY_TYPES = ['Room', 'Amenity', 'Utility']
@@ -171,7 +255,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
         name: '',
         type: 'Amenity',
         description: '',
-        price_per_unit: 0,
+        price_per_unit: '',
         unit_type: 'hour',
         capacity: 10,
         icon_name: 'Zap',
@@ -185,6 +269,39 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
 
     const [searchTerm, setSearchTerm] = useState('')
     const [currentPage, setCurrentPage] = useState(0)
+    const [showLocationSuggestions, setShowLocationSuggestions] = useState(false)
+    const [filteredLocationSuggestions, setFilteredLocationSuggestions] = useState<string[]>([])
+
+    const LOCATION_SUGGESTIONS = [
+        'Ground Floor',
+        '1st Floor',
+        '2nd Floor',
+        '3rd Floor',
+        '4th Floor',
+        '5th Floor',
+        'Rooftop',
+        'Basement',
+        'Main Wing',
+        'East Wing',
+        'West Wing',
+        'North Wing',
+        'South Wing',
+        'Main Building',
+        'Building A',
+        'Building B',
+        'Building C',
+        'Amenity Room',
+        'Lobby',
+        'Corridor',
+        'Parking Area',
+        'Garden Area',
+        'Pool Area',
+        'Gym Area',
+        'Clubhouse',
+        'Mail Room',
+        'Laundry Room',
+        'Storage Room'
+    ]
 
     const filteredIcons = ICONS.filter(item => 
         item.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -236,7 +353,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                 ...formData,
                 landlord_id: landlordId,
                 image_url: uploadedImageUrl,
-                price_per_unit: Number(formData.price_per_unit),
+                price_per_unit: formData.price_per_unit === '' ? 0 : Number(formData.price_per_unit),
                 capacity: Number(formData.capacity)
             })
             toast.success('Facility added successfully')
@@ -267,7 +384,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                     initial={{ opacity: 0, scale: 0.95, y: 20 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                    className="relative w-full max-w-2xl overflow-hidden rounded-[2.5rem] border border-border bg-card shadow-2xl"
+                    className="relative w-full max-w-4xl overflow-hidden rounded-[2.5rem] border border-border bg-card shadow-2xl"
                 >
                     {/* Header */}
                     <div className="flex items-center justify-between border-b border-border bg-muted/30 px-8 py-6">
@@ -293,18 +410,13 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                     <label htmlFor="property-select" className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
                                         Property
                                     </label>
-                                    <select
-                                        id="property-select"
-                                        required
+                                    <ModernSelect
                                         value={formData.property_id}
-                                        onChange={(e) => setFormData({ ...formData, property_id: e.target.value })}
-                                        className="w-full rounded-2xl border border-border bg-muted/50 px-5 py-3.5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
-                                    >
-                                        <option value="" disabled>Select a property</option>
-                                        {properties.map(p => (
-                                            <option key={p.id} value={p.id}>{p.name}</option>
-                                        ))}
-                                    </select>
+                                        onChange={(val) => setFormData({ ...formData, property_id: val })}
+                                        options={properties.map(p => ({ value: p.id, label: p.name }))}
+                                        placeholder="Select a property"
+                                        icon={Building2}
+                                    />
                                 </div>
 
                                 <div className="space-y-2">
@@ -317,6 +429,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                             id="facility-name"
                                             required
                                             type="text"
+                                            autoComplete="off"
                                             placeholder="e.g., Sky Pool, Game Room"
                                             value={formData.name}
                                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -330,30 +443,44 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                         <label htmlFor="facility-type" className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
                                             Type
                                         </label>
-                                        <select
-                                            id="facility-type"
+                                        <ModernSelect
                                             value={formData.type}
-                                            onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                                            className="w-full rounded-2xl border border-border bg-muted/50 px-5 py-3.5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
-                                        >
-                                            {AMENITY_TYPES.map(t => (
-                                                <option key={t} value={t}>{t}</option>
-                                            ))}
-                                        </select>
+                                            onChange={(val) => setFormData({ ...formData, type: val })}
+                                            options={AMENITY_TYPES.map(t => ({ value: t, label: t }))}
+                                            placeholder="Select Type"
+                                        />
                                     </div>
                                     <div className="space-y-2">
                                         <label htmlFor="facility-capacity" className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
                                             Capacity
                                         </label>
-                                        <div className="relative">
-                                            <Users className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40" />
-                                            <input
-                                                id="facility-capacity"
-                                                type="number"
-                                                value={formData.capacity}
-                                                onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) })}
-                                                className="w-full rounded-2xl border border-border bg-muted/50 py-3.5 pl-12 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
-                                            />
+                                        <div className="flex items-center gap-3">
+                                            <button
+                                                type="button"
+                                                onClick={() => setFormData({ ...formData, capacity: Math.max(1, formData.capacity - 1) })}
+                                                className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-border bg-muted/80 text-muted-foreground transition-all hover:bg-primary/20 hover:text-primary"
+                                            >
+                                                <Minus className="size-5" />
+                                            </button>
+                                            <div className="relative flex-1">
+                                                <input
+                                                    id="facility-capacity"
+                                                    type="number"
+                                                    value={formData.capacity}
+                                                    onChange={(e) => {
+                                                        const val = parseInt(e.target.value)
+                                                        setFormData({ ...formData, capacity: isNaN(val) ? 1 : Math.max(1, val) })
+                                                    }}
+                                                    className="w-full rounded-2xl border border-border bg-muted/50 py-3.5 px-4 text-center text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
+                                                />
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setFormData({ ...formData, capacity: formData.capacity + 1 })}
+                                                className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-border bg-muted/80 text-muted-foreground transition-all hover:bg-primary/20 hover:text-primary"
+                                            >
+                                                <Plus className="size-5" />
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -466,19 +593,28 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                                 type="number"
                                                 placeholder="Price"
                                                 value={formData.price_per_unit}
-                                                onChange={(e) => setFormData({ ...formData, price_per_unit: parseFloat(e.target.value) })}
+                                                onChange={(e) => {
+                                                    const val = e.target.value
+                                                    setFormData({ 
+                                                        ...formData, 
+                                                        price_per_unit: val === '' ? '' : String(parseFloat(val) || 0)
+                                                    })
+                                                }}
                                                 className="w-full rounded-2xl border border-border bg-muted/50 py-3.5 pl-8 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
                                             />
                                         </div>
-                                        <select
-                                            value={formData.unit_type}
-                                            onChange={(e) => setFormData({ ...formData, unit_type: e.target.value })}
-                                            className="w-full rounded-2xl border border-border bg-muted/50 px-5 py-3.5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
-                                        >
-                                            <option value="hour">Per Hour</option>
-                                            <option value="day">Per Day</option>
-                                            <option value="free">Free</option>
-                                        </select>
+                                        <div className="relative">
+                                            <ModernSelect
+                                                value={formData.unit_type}
+                                                onChange={(val) => setFormData({ ...formData, unit_type: val })}
+                                                options={[
+                                                    { value: 'hour', label: 'Per Hour' },
+                                                    { value: 'day', label: 'Per Day' },
+                                                    { value: 'free', label: 'Free' }
+                                                ]}
+                                                placeholder="Unit Type"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
 
@@ -487,15 +623,60 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                         Specific Location
                                     </label>
                                     <div className="relative">
-                                        <MapPin className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40" />
+                                        <MapPin className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40 z-10" />
                                         <input
                                             id="location-details"
                                             type="text"
+                                            autoComplete="off"
+                                            spellCheck={false}
                                             placeholder="e.g., 5th Floor, Main Wing"
                                             value={formData.location_details}
-                                            onChange={(e) => setFormData({ ...formData, location_details: e.target.value })}
+                                            onChange={(e) => {
+                                                const value = e.target.value
+                                                setFormData({ ...formData, location_details: value })
+                                                if (value.trim()) {
+                                                    const filtered = LOCATION_SUGGESTIONS.filter(s => 
+                                                        s.toLowerCase().includes(value.toLowerCase())
+                                                    ).slice(0, 6)
+                                                    setFilteredLocationSuggestions(filtered)
+                                                    setShowLocationSuggestions(filtered.length > 0)
+                                                } else {
+                                                    setShowLocationSuggestions(false)
+                                                }
+                                            }}
+                                            onFocus={() => {
+                                                if (formData.location_details.trim()) {
+                                                    const filtered = LOCATION_SUGGESTIONS.filter(s => 
+                                                        s.toLowerCase().includes(formData.location_details.toLowerCase())
+                                                    ).slice(0, 6)
+                                                    setFilteredLocationSuggestions(filtered)
+                                                    setShowLocationSuggestions(filtered.length > 0)
+                                                }
+                                            }}
+                                            onBlur={() => {
+                                                setTimeout(() => setShowLocationSuggestions(false), 200)
+                                            }}
                                             className="w-full rounded-2xl border border-border bg-muted/50 py-3.5 pl-12 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
                                         />
+                                        {showLocationSuggestions && filteredLocationSuggestions.length > 0 && (
+                                            <div className="absolute z-50 mt-1 w-full rounded-xl border border-border bg-background py-1.5 shadow-lg">
+                                                {filteredLocationSuggestions.map((suggestion, index) => (
+                                                    <button
+                                                        key={index}
+                                                        type="button"
+                                                        onMouseDown={(e) => {
+                                                            e.preventDefault()
+                                                            setFormData({ ...formData, location_details: suggestion })
+                                                            setShowLocationSuggestions(false)
+                                                        }}
+                                                        className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm hover:bg-muted transition-colors"
+                                                    >
+                                                        <MapPin className="size-3.5 text-muted-foreground/40" />
+                                                        {suggestion}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 

@@ -72,8 +72,9 @@ type MiniChatState = {
     error: string | null;
 };
 
-const EMPTY_ARRAY = Object.freeze([]) as any[];
+const EMPTY_ARRAY: any[] = [];
 const EMPTY_OBJECT = Object.freeze({}) as any;
+const MESSAGE_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 const DEFAULT_CHAT_STATE: MiniChatState = {
     messages: EMPTY_ARRAY,

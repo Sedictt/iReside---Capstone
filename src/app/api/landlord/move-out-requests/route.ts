@@ -15,7 +15,7 @@ export async function GET(req: Request) {
     const propertyId = searchParams.get("property_id");
 
     let query = supabase
-      .from("move_out_requests")
+      .from("move_out_requests" as any)
       .select(`
         *,
         lease:leases(

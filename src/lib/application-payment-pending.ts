@@ -254,7 +254,7 @@ export async function applyPaymentPendingExpiry(
     }
 
     const { data: requests, error: requestsError } = await adminClient
-        .from("application_payment_requests")
+        .from("application_payment_requests" as any)
         .select("id, status, requirement_type")
         .eq("application_id", applicationId);
 
@@ -290,7 +290,7 @@ export async function applyPaymentPendingExpiry(
     }
 
     await adminClient
-        .from("application_payment_requests")
+        .from("application_payment_requests" as any)
         .update({ status: "expired" })
         .eq("application_id", applicationId)
         .in("status", ["pending", "processing"]);

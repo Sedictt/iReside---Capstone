@@ -476,12 +476,13 @@ export async function GET(request: Request) {
     const leaseById = new Map(leasesRows.map((leaseRow) => [leaseRow.id, leaseRow]));
 
     const leaseIds = Array.from(new Set(leasesRows.map((leaseRow) => leaseRow.id).filter(Boolean)));
+    const auditQuery = supabase
+        .from("lease_signing_audit" as any)
+        .select("id, lease_id, event_type, metadata, created_at, actor_id");
     const { data: auditRowsRaw } = leaseIds.length
-        ? await supabase
-              .from("lease_signing_audit")
-              .select("id, lease_id, event_type, metadata, created_at, actor_id")
+        ? await auditQuery
               .in("lease_id", leaseIds as string[])
-              .order("created_at", { ascending: false })
+              .order("created_at", { ascending: false }) as any
         : { data: [] as AuditRow[] };
     const auditRows = (auditRowsRaw ?? []) as AuditRow[];
 
@@ -493,13 +494,15 @@ export async function GET(request: Request) {
     const actorMap = new Map(actorProfiles.map((profile) => [profile.id, profile]));
 
     const applicationIds = applicationRows.map((row) => row.id).filter(Boolean);
-    const { data: paymentRequestRowsRaw } = applicationIds.length
-        ? await supabase
-              .from("application_payment_requests")
+    const reqQuery = applicationIds.length
+        ? supabase
+              .from("application_payment_requests" as any)
               .select(
                   "id, application_id, requirement_type, amount, due_at, status, method, submitted_at, reviewed_at, payment_proof_url, review_note, bypassed"
               )
-              .in("application_id", applicationIds)
+        : null;
+    const { data: paymentRequestRowsRaw } = reqQuery
+        ? await reqQuery.in("application_id", applicationIds) as any
         : { data: [] as PaymentRequestRow[] };
     const paymentRequestRows = (paymentRequestRowsRaw ?? []) as PaymentRequestRow[];
     const paymentRequestsByApplication = new Map<

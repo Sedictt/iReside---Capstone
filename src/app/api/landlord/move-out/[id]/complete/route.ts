@@ -22,12 +22,14 @@ export async function PUT(
     }
 
     // Verify ownership and inspection status
-    const { data: moveOutRequest, error: fetchError } = await supabase
-      .from("move_out_requests")
-      .select("*, lease:leases(*)")
+    const reqQuery = supabase
+      .from("move_out_requests" as any)
+      .select("*, lease:leases(*)");
+
+    const { data: moveOutRequest, error: fetchError } = await reqQuery
       .eq("id", id)
       .eq("landlord_id", user.id)
-      .single();
+      .single() as any;
 
     if (fetchError || !moveOutRequest) {
       return NextResponse.json({ error: "Move-out request not found" }, { status: 404 });
@@ -42,13 +44,14 @@ export async function PUT(
 
     // Perform updates in a pseudo-transaction (using Rpc if available, or just sequential updates)
     // 1. Update move-out request
-    const { error: moveOutUpdateError } = await supabase
-      .from("move_out_requests")
-      .update({
+    const updatePayload = {
         status: "completed",
         completed_at: new Date().toISOString(),
-      })
-      .eq("id", id);
+      } as any;
+      const { error: moveOutUpdateError } = await supabase
+        .from("move_out_requests" as any)
+        .update(updatePayload)
+        .eq("id", id);
 
     if (moveOutUpdateError) throw moveOutUpdateError;
 
@@ -75,7 +78,7 @@ export async function PUT(
       title: "Move-Out Finalized",
       message: "Your move-out has been finalized. Thank you for staying with us!",
       data: { move_out_request_id: id }
-    });
+    } as any);
 
     return NextResponse.json({
       message: "Move-out completed successfully",

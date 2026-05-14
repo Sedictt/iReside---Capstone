@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useReducer } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { LazyMotion, domAnimation, m, AnimatePresence } from "framer-motion";
 import Image from "next/image";
@@ -31,8 +31,6 @@ export function ProfileCard() {
     const { push } = useRouter();
     const pathname = usePathname();
     const isLandlordPortal = pathname?.startsWith('/landlord');
-    const [profile, setProfile] = useState<Profile | null>(null);
-    const [loading, setLoading] = useState(false);
     const [leaseData, setLeaseData] = useState<{
         unitName: string | null;
         status: string | null;
@@ -43,6 +41,34 @@ export function ProfileCard() {
     const [trustScore, setTrustScore] = useState<number | null>(null);
     const cardRef = useRef<HTMLDivElement>(null);
     const supabase = createClient();
+
+    // Reducer for profile and loading state to avoid multiple setState calls
+    type ProfileState = { profile: Profile | null; loading: boolean };
+    type ProfileAction =
+        | { type: 'SET_PROFILE'; payload: Profile | null }
+        | { type: 'SET_LOADING'; payload: boolean }
+        | { type: 'INIT_WITH_DATA'; payload: Profile }
+        | { type: 'INIT_FROM_FETCH'; payload: Profile };
+
+    const profileReducer = (state: ProfileState, action: ProfileAction): ProfileState => {
+        switch (action.type) {
+            case 'SET_PROFILE':
+                return { ...state, profile: action.payload };
+            case 'SET_LOADING':
+                return { ...state, loading: action.payload };
+            case 'INIT_WITH_DATA':
+                return { profile: action.payload, loading: false };
+            case 'INIT_FROM_FETCH':
+                return { profile: action.payload, loading: false };
+            default:
+                return state;
+        }
+    };
+
+    const [profileState, dispatch] = useReducer(profileReducer, { profile: null, loading: false });
+    const { profile, loading } = profileState;
+    const setProfile = (p: Profile | null) => dispatch({ type: 'SET_PROFILE', payload: p });
+    const setLoading = (l: boolean) => dispatch({ type: 'SET_LOADING', payload: l });
 
     useEffect(() => {
         if (userId) {
@@ -96,12 +122,11 @@ export function ProfileCard() {
 
         const fetchProfileData = async () => {
             if (initialData) {
-                setProfile(initialData as Profile);
-                setLoading(false);
+                dispatch({ type: 'INIT_WITH_DATA', payload: initialData as Profile });
                 return;
             }
 
-            setLoading(true);
+            dispatch({ type: 'SET_LOADING', payload: true });
             try {
                 const { data, error } = await supabase
                     .from('profiles')
@@ -110,10 +135,10 @@ export function ProfileCard() {
                     .single();
 
                 if (!error && data) {
-                    setProfile(data as Profile);
+                    dispatch({ type: 'INIT_FROM_FETCH', payload: data as Profile });
                 }
             } finally {
-                setLoading(false);
+                dispatch({ type: 'SET_LOADING', payload: false });
             }
         };
 

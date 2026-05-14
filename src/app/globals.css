@@ -124,8 +124,8 @@ body {
 .text-medium { color: var(--text-medium); }
 .text-disabled { color: var(--text-disabled); }
 
-/* Dark-mode consistency: remove expensive blur glass effects globally */
-.dark :where(.backdrop-blur, .backdrop-blur-sm, .backdrop-blur-md, .backdrop-blur-lg, .backdrop-blur-xl, .backdrop-blur-2xl) {
+/* Dark-mode consistency: remove expensive blur glass effects globally, but exclude premium components like toasts */
+.dark :where(.backdrop-blur, .backdrop-blur-sm, .backdrop-blur-md, .backdrop-blur-lg, .backdrop-blur-xl, .backdrop-blur-2xl):not([data-sonner-toast]) {
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
 }
@@ -296,3 +296,185 @@ input[type="number"] {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* Sonner Toast Custom Styling - Premium Redesign */
+[data-sonner-toast] {
+  --radius: 1.25rem !important;
+  --normal-bg: var(--card) !important;
+  --normal-border: var(--border) !important;
+  --normal-text: var(--foreground) !important;
+  --toast-bg: rgba(255, 255, 255, 0.95);
+  
+  font-family: var(--font-display), var(--font-sans), sans-serif !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  box-shadow: 
+    0 10px 15px -3px rgba(0, 0, 0, 0.1), 
+    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  padding: 1.25rem 1.5rem !important;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  overflow: hidden !important;
+  background: var(--toast-bg) !important;
+}
+
+.dark [data-sonner-toast] {
+  --toast-bg: rgba(23, 23, 23, 0.92);
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 
+    0 10px 15px -3px rgba(0, 0, 0, 0.3), 
+    0 25px 60px -15px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Ensure rich colors don't compromise readability or premium feel */
+[data-sonner-toast][data-rich-colors="true"] {
+  background: var(--toast-bg) !important;
+}
+
+[data-sonner-toast][data-rich-colors="true"][data-type="success"] {
+  --success-bg: transparent !important;
+  --success-border: rgba(16, 185, 129, 0.2) !important;
+  --success-text: #10b981 !important;
+}
+
+[data-sonner-toast][data-rich-colors="true"][data-type="error"] {
+  --error-bg: transparent !important;
+  --error-border: rgba(239, 68, 68, 0.2) !important;
+  --error-text: #ef4444 !important;
+}
+
+[data-sonner-toast][data-rich-colors="true"][data-type="warning"] {
+  --warning-bg: transparent !important;
+  --warning-border: rgba(245, 158, 11, 0.2) !important;
+  --warning-text: #f59e0b !important;
+}
+
+[data-sonner-toast][data-rich-colors="true"][data-type="info"] {
+  --info-bg: transparent !important;
+  --info-border: rgba(59, 130, 246, 0.2) !important;
+  --info-text: #3b82f6 !important;
+}
+
+/* Layout and Content styling */
+[data-sonner-toast] [data-icon] {
+  margin-right: 16px !important;
+  margin-top: 2px !important;
+  transform: scale(1.2);
+  flex-shrink: 0;
+}
+
+[data-sonner-toast] [data-content] {
+  padding: 0 !important;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+[data-sonner-toast] [data-title] {
+  font-weight: 700 !important;
+  letter-spacing: -0.01em !important;
+  font-size: 0.95rem !important;
+  line-height: 1.4 !important;
+  color: var(--foreground) !important;
+}
+
+[data-sonner-toast] [data-description] {
+  color: var(--muted-foreground) !important;
+  font-size: 0.85rem !important;
+  line-height: 1.5 !important;
+  font-weight: 400 !important;
+  margin-top: 2px !important;
+}
+
+/* Action and Cancel Buttons */
+[data-sonner-toast] [data-button] {
+  border-radius: 0.75rem !important;
+  font-weight: 600 !important;
+  font-size: 0.8125rem !important;
+  padding: 0.5rem 1rem !important;
+  transition: all 0.2s ease !important;
+  margin-left: 12px !important;
+}
+
+/* Close button - refined positioning and style */
+[data-sonner-toast] [data-close-button] {
+  top: 10px !important;
+  right: 10px !important;
+  left: auto !important;
+  background: rgba(0, 0, 0, 0.06) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  color: var(--foreground) !important;
+  border-radius: 0.5rem !important;
+  width: 22px !important;
+  height: 22px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  z-index: 50 !important;
+  transform: scale(0.9);
+}
+
+[data-sonner-toast]:hover [data-close-button] {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.dark [data-sonner-toast] [data-close-button] {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+[data-sonner-toast] [data-close-button]:hover {
+  background: var(--primary) !important;
+  color: white !important;
+  border-color: var(--primary) !important;
+}
+
+/* Top Accent Bar - Sleek and non-overlapping */
+[data-sonner-toast]::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: var(--primary);
+  opacity: 1;
+  z-index: 100;
+  transition: all 0.3s ease;
+}
+
+[data-sonner-toast][data-type="success"]::before { background: linear-gradient(90deg, #10b981, #059669); }
+[data-sonner-toast][data-type="error"]::before { background: linear-gradient(90deg, #ef4444, #dc2626); }
+[data-sonner-toast][data-type="warning"]::before { background: linear-gradient(90deg, #f59e0b, #d97706); }
+[data-sonner-toast][data-type="info"]::before { background: linear-gradient(90deg, #3b82f6, #2563eb); }
+[data-sonner-toast][data-type="loading"]::before { background: linear-gradient(90deg, var(--primary), var(--primary-dark)); }
+
+/* Ensure the accent bar is always visible but clean */
+[data-sonner-toast][data-type] {
+  padding-top: 1.5rem !important;
+}
+
+/* Remove any legacy side accents */
+[data-sonner-toast]::after {
+  display: none !important;
+}
+
+/* Custom classes from layout.tsx for extra control */
+.ireside-toast {
+  /* Additional overrides if needed */
+}
+
+.ireside-toast-title {
+  /* Font overrides */
+}
+
+.ireside-toast-description {
+  /* Font overrides */
+}
+

@@ -36,8 +36,8 @@ interface PropertyPolicy {
     quiet_hours_end: string | null;
     gender_restriction_mode: string;
     utility_policy_mode: string;
-    utility_split_method: string | null;
-    utility_fixed_charge_amount: number | null;
+    utility_split_method?: string | null;
+    utility_fixed_charge_amount?: number | null;
     needs_review: boolean;
     reviewed_at: string | null;
     created_at: string;
@@ -153,7 +153,7 @@ export default function PropertyEnvironmentPage() {
                 if (propError) throw propError;
                 setPropertyName(propData.name);
 
-                const { data: policyData, error: policyError } = await supabase
+                const { data: policyData, error: policyError } = await (supabase as any)
                     .from("property_environment_policies")
                     .select("*")
                     .eq("property_id", propertyId)
@@ -175,7 +175,7 @@ export default function PropertyEnvironmentPage() {
                         quiet_hours_end: policyData.quiet_hours_end ?? getDefaultsForMode(mode).quiet_hours_end ?? "",
                         gender_restriction_mode: (policyData.gender_restriction_mode as GenderRestrictionMode) ?? "none",
                         utility_policy_mode: (policyData.utility_policy_mode as UtilityPolicyMode) ?? "included_in_rent",
-                        utility_fixed_charge_amount: policyData.utility_fixed_charge_amount ?? null,
+                        utility_fixed_charge_amount: (policyData as any).utility_fixed_charge_amount ?? null,
                     });
                     setMode((policyData.environment_mode as EnvironmentMode) || mode);
                 } else {
@@ -229,7 +229,7 @@ export default function PropertyEnvironmentPage() {
         setSuccess(false);
 
         try {
-            const payload = {
+            const payload: any = {
                 property_id: propertyId,
                 environment_mode: mode,
                 max_occupants_per_unit: formData.max_occupants_per_unit,
@@ -241,14 +241,13 @@ export default function PropertyEnvironmentPage() {
                 quiet_hours_end: formData.quiet_hours_end || null,
                 gender_restriction_mode: formData.gender_restriction_mode,
                 utility_policy_mode: formData.utility_policy_mode,
-                utility_fixed_charge_amount: formData.utility_fixed_charge_amount,
                 needs_review: false,
                 reviewed_at: new Date().toISOString(),
             };
 
-            const { error: upsertError } = await supabase
+            const { error: upsertError } = await (supabase as any)
                 .from("property_environment_policies")
-                .upsert({ ...payload, updated_at: new Date().toISOString() }, { onConflict: "property_id" })
+                .upsert(payload, { onConflict: "property_id" })
                 .select();
 
             if (upsertError) throw upsertError;

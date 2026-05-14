@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
     TENANT_PRODUCT_TOUR_STEPS,
@@ -30,15 +30,73 @@ const isTourEnabledClient = () => {
     return ["1", "true", "yes", "on"].includes(value.toLowerCase());
 };
 
+type TourUiState = {
+    loading: boolean;
+    submitting: boolean;
+    tourState: TenantProductTourState | null;
+    eligible: boolean;
+    error: string | null;
+};
+
+type TourUiAction =
+    | { type: "REFRESH_NOT_ENABLED" }
+    | { type: "REFRESH_START" }
+    | { type: "REFRESH_SUCCESS"; payload: { eligible: boolean; state: TenantProductTourState | null } }
+    | { type: "REFRESH_ERROR"; error: string }
+    | { type: "COMPLETE_STEP_START" }
+    | { type: "COMPLETE_STEP_SUCCESS"; state: TenantProductTourState }
+    | { type: "COMPLETE_STEP_ERROR"; error: string }
+    | { type: "SKIP_TOUR_START" }
+    | { type: "SKIP_TOUR_SUCCESS"; state: TenantProductTourState }
+    | { type: "SKIP_TOUR_ERROR"; error: string };
+
+const INITIAL_TOUR_UI_STATE: TourUiState = {
+    loading: true,
+    submitting: false,
+    tourState: null,
+    eligible: false,
+    error: null,
+};
+
+function tourUiReducer(state: TourUiState, action: TourUiAction): TourUiState {
+    switch (action.type) {
+        case "REFRESH_NOT_ENABLED":
+            return { ...state, loading: false };
+        case "REFRESH_START":
+            return { ...state, loading: true, error: null };
+        case "REFRESH_SUCCESS":
+            return { ...state, loading: false, eligible: action.payload.eligible, tourState: action.payload.state, error: null };
+        case "REFRESH_ERROR":
+            return { ...state, loading: false, error: action.error };
+        case "COMPLETE_STEP_START":
+            return { ...state, submitting: true, error: null };
+        case "COMPLETE_STEP_SUCCESS":
+            return { ...state, submitting: false, tourState: action.state, error: null };
+        case "COMPLETE_STEP_ERROR":
+            return { ...state, submitting: false, error: action.error };
+        case "SKIP_TOUR_START":
+            return { ...state, submitting: true, error: null };
+        case "SKIP_TOUR_SUCCESS":
+            return { ...state, submitting: false, tourState: action.state, error: null };
+        case "SKIP_TOUR_ERROR":
+            return { ...state, submitting: false, error: action.error };
+        default:
+            return state;
+    }
+}
+
 export function TenantProductTourOverlay() {
     const pathname = usePathname();
     const router = useRouter();
-    const [loading, setLoading] = useState(true);
-    const [submitting, setSubmitting] = useState(false);
-    const [tourState, setTourState] = useState<TenantProductTourState | null>(null);
-    const [eligible, setEligible] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [tourUi, dispatchTourUi] = useReducer(tourUiReducer, INITIAL_TOUR_UI_STATE);
     const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
+
+    // Derived state from tourUi
+    const loading = tourUi.loading;
+    const submitting = tourUi.submitting;
+    const tourState = tourUi.tourState;
+    const eligible = tourUi.eligible;
+    const error = tourUi.error;
 
     const stepIndex = tourState?.current_step_index ?? 0;
     const activeStep = TENANT_PRODUCT_TOUR_STEPS[stepIndex] ?? null;
@@ -51,7 +109,7 @@ export function TenantProductTourOverlay() {
 
     const refreshState = useCallback(async () => {
         if (!isTourEnabledClient()) {
-            setLoading(false);
+            dispatchTourUi({ type: "REFRESH_NOT_ENABLED" });
             return;
         }
 
@@ -62,13 +120,9 @@ export function TenantProductTourOverlay() {
                 throw new Error(payload.error ?? "Failed to load tour state.");
             }
 
-            setEligible(Boolean(payload.enabled && payload.eligible));
-            setTourState(payload.state ?? null);
-            setError(null);
+            dispatchTourUi({ type: "REFRESH_SUCCESS", payload: { eligible: Boolean(payload.enabled && payload.eligible), state: payload.state ?? null } });
         } catch (caught) {
-            setError(caught instanceof Error ? caught.message : "Failed to load tour state.");
-        } finally {
-            setLoading(false);
+            dispatchTourUi({ type: "REFRESH_ERROR", error: caught instanceof Error ? caught.message : "Failed to load tour state." });
         }
     }, []);
 
@@ -110,8 +164,7 @@ export function TenantProductTourOverlay() {
 
     const completeCurrentStep = useCallback(async () => {
         if (!activeStep) return;
-        setSubmitting(true);
-        setError(null);
+        dispatchTourUi({ type: "COMPLETE_STEP_START" });
 
         try {
             const response = await fetch("/api/tenant/tour/step", {
@@ -135,7 +188,7 @@ export function TenantProductTourOverlay() {
                 throw new Error(payload.error ?? "Failed to complete step.");
             }
 
-            setTourState(payload.state);
+            dispatchTourUi({ type: "COMPLETE_STEP_SUCCESS", state: payload.state });
             if (payload.completed) {
                 router.push("/tenant/tour?completed=1");
                 return;
@@ -146,16 +199,13 @@ export function TenantProductTourOverlay() {
                 router.push(nextStep.route);
             }
         } catch (caught) {
-            setError(caught instanceof Error ? caught.message : "Failed to complete step.");
-        } finally {
-            setSubmitting(false);
+            dispatchTourUi({ type: "COMPLETE_STEP_ERROR", error: caught instanceof Error ? caught.message : "Failed to complete step." });
         }
     }, [activeStep, isAnchorVisible, pathname, router]);
 
     const skipTour = useCallback(async () => {
         if (!activeStep) return;
-        setSubmitting(true);
-        setError(null);
+        dispatchTourUi({ type: "SKIP_TOUR_START" });
 
         try {
             const response = await fetch("/api/tenant/tour/skip", {
@@ -176,11 +226,9 @@ export function TenantProductTourOverlay() {
                 throw new Error(payload.error ?? "Failed to skip tour.");
             }
 
-            setTourState(payload.state);
+            dispatchTourUi({ type: "SKIP_TOUR_SUCCESS", state: payload.state });
         } catch (caught) {
-            setError(caught instanceof Error ? caught.message : "Failed to skip tour.");
-        } finally {
-            setSubmitting(false);
+            dispatchTourUi({ type: "SKIP_TOUR_ERROR", error: caught instanceof Error ? caught.message : "Failed to skip tour." });
         }
     }, [activeStep, pathname]);
 

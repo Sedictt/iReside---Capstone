@@ -20,7 +20,7 @@ type PaymentReviewAction = 'accept_partial' | 'request_completion' | 'reject' | 
 export type UtilityType = 'water' | 'electricity'
 export type UtilityBillingMode = 'included_in_rent' | 'tenant_paid'
 export type ApplicationStatus = 'pending' | 'reviewing' | 'approved' | 'rejected' | 'withdrawn' | 'payment_pending'
-export type MaintenanceStatus = 'pending' | 'in_progress' | 'resolved' | 'cancelled'
+export type MaintenanceStatus = 'pending' | 'open' | 'assigned' | 'in_progress' | 'resolved' | 'closed' | 'cancelled'
 export type MaintenancePriority = 'low' | 'medium' | 'high' | 'urgent'
 export type MoveOutStatus = 'pending' | 'approved' | 'denied' | 'completed'
 type UnitTransferStatus = 'pending' | 'approved' | 'denied' | 'cancelled'
@@ -497,6 +497,9 @@ export interface Database {
                     house_rules: string[]
                     images: string[]
                     is_featured: boolean
+                    advance_rent_months: number
+                    security_deposit_months: number
+                    map_decorations: Json | null
                     created_at: string
                     updated_at: string
                     contract_template: Json | null
@@ -518,6 +521,9 @@ export interface Database {
                     house_rules?: string[]
                     images?: string[]
                     is_featured?: boolean
+                    advance_rent_months?: number
+                    security_deposit_months?: number
+                    map_decorations?: Json | null
                     created_at?: string
                     updated_at?: string
                     contract_template?: Json | null
@@ -1140,35 +1146,56 @@ export interface Database {
             message_user_reports: {
                 Row: {
                     id: string
-                    message_id: string
-                    reporter_id: string
-                    reason: string
+                    reporter_user_id: string
+                    target_user_id: string
+                    conversation_id: string | null
+                    category: string
+                    details: string
+                    status: string
+                    metadata: Record<string, unknown> | null
                     created_at: string
+                    updated_at: string
                 }
                 Insert: {
                     id?: string
-                    message_id: string
-                    reporter_id: string
-                    reason: string
+                    reporter_user_id: string
+                    target_user_id: string
+                    conversation_id?: string | null
+                    category?: string
+                    details?: string
+                    status?: string
+                    metadata?: Record<string, unknown> | null
                     created_at?: string
+                    updated_at?: string
                 }
                 Update: {
                     id?: string
-                    message_id?: string
-                    reporter_id?: string
-                    reason?: string
+                    reporter_user_id?: string
+                    target_user_id?: string
+                    conversation_id?: string | null
+                    category?: string
+                    details?: string
+                    status?: string
+                    metadata?: Record<string, unknown> | null
+                    updated_at?: string
                 }
                 Relationships: [
                     {
-                        foreignKeyName: "message_user_reports_message_id_fkey"
-                        columns: ["message_id"]
-                        referencedRelation: "messages"
+                        foreignKeyName: "message_user_reports_reporter_user_id_fkey"
+                        columns: ["reporter_user_id"]
+                        referencedRelation: "profiles"
                         referencedColumns: ["id"]
                     },
                     {
-                        foreignKeyName: "message_user_reports_reporter_id_fkey"
-                        columns: ["reporter_id"]
+                        foreignKeyName: "message_user_reports_target_user_id_fkey"
+                        columns: ["target_user_id"]
                         referencedRelation: "profiles"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "message_user_reports_conversation_id_fkey"
+                        columns: ["conversation_id"]
+                        referencedRelation: "conversations"
                         referencedColumns: ["id"]
                     }
                 ]
@@ -1176,28 +1203,31 @@ export interface Database {
             landlord_reviews: {
                 Row: {
                     id: string
+                    lease_id: string
                     landlord_id: string
                     tenant_id: string
                     rating: number
-                    review: string
+                    comment: string | null
                     created_at: string
                     updated_at: string
                 }
                 Insert: {
                     id?: string
+                    lease_id: string
                     landlord_id: string
                     tenant_id: string
                     rating: number
-                    review: string
+                    comment?: string | null
                     created_at?: string
                     updated_at?: string
                 }
                 Update: {
                     id?: string
+                    lease_id?: string
                     landlord_id?: string
                     tenant_id?: string
                     rating?: number
-                    review?: string
+                    comment?: string | null
                     updated_at?: string
                 }
                 Relationships: [
@@ -1219,27 +1249,36 @@ export interface Database {
                 Row: {
                     id: string
                     landlord_id: string
-                    type: string
-                    destination: string
-                    is_default: boolean
+                    provider: string
+                    account_name: string
+                    account_number: string
+                    qr_image_path: string | null
+                    qr_image_url: string | null
+                    is_enabled: boolean
                     created_at: string
                     updated_at: string
                 }
                 Insert: {
                     id?: string
                     landlord_id: string
-                    type: string
-                    destination: string
-                    is_default?: boolean
+                    provider: string
+                    account_name: string
+                    account_number: string
+                    qr_image_path?: string | null
+                    qr_image_url?: string | null
+                    is_enabled?: boolean
                     created_at?: string
                     updated_at?: string
                 }
                 Update: {
                     id?: string
                     landlord_id?: string
-                    type?: string
-                    destination?: string
-                    is_default?: boolean
+                    provider?: string
+                    account_name?: string
+                    account_number?: string
+                    qr_image_path?: string | null
+                    qr_image_url?: string | null
+                    is_enabled?: boolean
                     updated_at?: string
                 }
                 Relationships: [
@@ -1397,19 +1436,46 @@ export interface Database {
                 Row: {
                     id: string
                     payment_id: string
-                    receipt_url: string
+                    landlord_id: string
+                    tenant_id: string
+                    receipt_number: string
+                    amount: number
+                    receipt_url: string | null
+                    issued_at: string
+                    issued_by: string
+                    notes: string | null
+                    method: string | null
+                    amount_breakdown: Json | null
                     created_at: string
                 }
                 Insert: {
                     id?: string
                     payment_id: string
-                    receipt_url: string
+                    landlord_id: string
+                    tenant_id: string
+                    receipt_number: string
+                    amount: number
+                    receipt_url?: string | null
+                    issued_at?: string
+                    issued_by?: string
+                    notes?: string | null
+                    method?: string | null
+                    amount_breakdown?: Json | null
                     created_at?: string
                 }
                 Update: {
                     id?: string
                     payment_id?: string
-                    receipt_url?: string
+                    landlord_id?: string
+                    tenant_id?: string
+                    receipt_number?: string
+                    amount?: number
+                    receipt_url?: string | null
+                    issued_at?: string
+                    issued_by?: string
+                    notes?: string | null
+                    method?: string | null
+                    amount_breakdown?: Json | null
                 }
                 Relationships: [
                     {
@@ -1582,6 +1648,8 @@ export interface Database {
             move_out_requests: {
                 Row: {
                     id: string
+                    landlord_id: string
+                    lease_id: string
                     unit_id: string
                     tenant_id: string
                     status: MoveOutStatus
@@ -1592,6 +1660,8 @@ export interface Database {
                 }
                 Insert: {
                     id?: string
+                    landlord_id: string
+                    lease_id: string
                     unit_id: string
                     tenant_id: string
                     status?: MoveOutStatus
@@ -1602,6 +1672,8 @@ export interface Database {
                 }
                 Update: {
                     id?: string
+                    landlord_id?: string
+                    lease_id?: string
                     unit_id?: string
                     tenant_id?: string
                     status?: MoveOutStatus

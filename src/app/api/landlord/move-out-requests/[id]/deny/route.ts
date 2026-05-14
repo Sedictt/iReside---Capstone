@@ -21,27 +21,30 @@ export async function PUT(req: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "Denial reason is required" }, { status: 400 });
     }
 
-    const { data: existingRequest, error: fetchError } = await supabase
-      .from("move_out_requests")
+    const selectQuery = supabase
+      .from("move_out_requests" as any)
       .select("*, tenant_id")
       .eq("id", id)
       .eq("landlord_id", user.id)
       .eq("status", "pending")
       .single();
 
+    const { data: existingRequest, error: fetchError } = await selectQuery as any;
+
     if (fetchError || !existingRequest) {
       return NextResponse.json({ error: "Move-out request not found or already processed" }, { status: 404 });
     }
 
-    const { error: updateError } = await supabase
-      .from("move_out_requests")
-      .update({
+    const updatePayload = {
         status: "denied",
         denied_at: new Date().toISOString(),
         denial_reason,
         updated_at: new Date().toISOString(),
-      })
-      .eq("id", id);
+      } as any;
+      const { error: updateError } = await supabase
+        .from("move_out_requests" as any)
+        .update(updatePayload)
+        .eq("id", id);
 
     if (updateError) throw updateError;
 

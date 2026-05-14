@@ -25,7 +25,7 @@ export async function GET(request: Request) {
 
     // Get move-out requests first
     let query = supabase
-      .from("move_out_requests")
+      .from("move_out_requests" as any)
       .select("*")
       .eq("landlord_id", user.id);
 
@@ -34,7 +34,7 @@ export async function GET(request: Request) {
       query = query.eq("status", statusFilter as any);
     }
 
-    const { data: moveOutRequests, error: fetchError } = await query.order("created_at", { ascending: false });
+    const { data: moveOutRequests, error: fetchError } = await query.order("created_at", { ascending: false }) as any;
 
     if (fetchError) {
       console.error("[landlord-move-out] Database error:", JSON.stringify(fetchError));
@@ -49,7 +49,7 @@ export async function GET(request: Request) {
     }
 
     // Get related data in separate queries
-    const leaseIds = moveOutRequests.map(r => r.lease_id);
+    const leaseIds = (moveOutRequests as any[]).map((r: any) => r.lease_id);
 
     // Fetch leases
     const { data: leases } = await supabase
@@ -58,7 +58,7 @@ export async function GET(request: Request) {
       .in("id", leaseIds) as any;
 
     // Build response with related data
-    const enrichedRequests = moveOutRequests.map(req => {
+    const enrichedRequests = (moveOutRequests as any[]).map((req: any) => {
       const lease = (leases as any[])?.find((l: any) => l.id === req.lease_id);
       return {
         ...req,

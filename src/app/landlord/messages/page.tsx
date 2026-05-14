@@ -1,7 +1,7 @@
 "use client";
 
 import Image from 'next/image';
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState, useReducer } from "react";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { ThemeToggle } from "@/components/theme-toggle";
 import {
@@ -253,11 +253,11 @@ const mergeCensorshipState = (incoming: UiMessageType, previous?: UiMessageType)
 function MessagesContent() {
     const { push, replace } = useRouter();
     const pathname = usePathname();
-    const { get, toString } = useSearchParams();
+    const searchParams = useSearchParams();
     const { user } = useAuth();
     const supabase = useMemo(() => createSupabaseClient(), []);
-    const conversationFromUrl = get("conversation")?.trim() || null;
-    const panelFromUrl = get("panel")?.trim() || null;
+    const conversationFromUrl = searchParams.get("conversation")?.trim() || null;
+    const panelFromUrl = searchParams.get("panel")?.trim() || null;
 
     const [contacts, setContacts] = useState<ContactItemType[]>([]);
     const [activeConversationId, setActiveConversationId] = useState<string | null>(() => conversationFromUrl);
@@ -287,6 +287,109 @@ function MessagesContent() {
     const fileUploadErrorRef = useRef<string | null>(null);
     const [isComposerDragOver, setIsComposerDragOver] = useState(false);
     const [isGlobalFileDrag, setIsGlobalFileDrag] = useState(false);
+
+    // Reducer 1: Conversation cache loading state (line 473)
+    type ConversationCacheState = { contacts: ContactItemType[]; isSidebarLoading: boolean; activeConversationId: string | null };
+    type ConversationCacheAction =
+        | { type: 'LOAD_CACHE'; payload: { contacts: ContactItemType[]; activeConversationId: string | null } }
+        | { type: 'CLEAR' };
+    const [conversationCacheState, dispatchConversationCache] = useReducer((_state: ConversationCacheState, action: ConversationCacheAction): ConversationCacheState => {
+        switch (action.type) {
+            case 'LOAD_CACHE':
+                return { contacts: action.payload.contacts, isSidebarLoading: false, activeConversationId: action.payload.activeConversationId };
+            case 'CLEAR':
+                return { contacts: [], isSidebarLoading: false, activeConversationId: null };
+            default:
+                return _state;
+        }
+    }, { contacts: [], isSidebarLoading: true, activeConversationId: null });
+
+    // Reducer 2: Sidebar & conversation cleanup state (line 619)
+    type SidebarCleanupState = { showInfoSidebar: boolean; showFilesSidebar: boolean; activeConversationId: string | null };
+    type SidebarCleanupAction =
+        | { type: 'HIDE_SIDEBARS' }
+        | { type: 'SET_ACTIVE_CONVERSATION'; payload: string | null };
+    const [sidebarCleanupState, dispatchSidebarCleanup] = useReducer((_state: SidebarCleanupState, action: SidebarCleanupAction): SidebarCleanupState => {
+        switch (action.type) {
+            case 'HIDE_SIDEBARS':
+                return { ..._state, showInfoSidebar: false, showFilesSidebar: false };
+            case 'SET_ACTIVE_CONVERSATION':
+                return { ..._state, activeConversationId: action.payload };
+            default:
+                return _state;
+        }
+    }, { showInfoSidebar: false, showFilesSidebar: false, activeConversationId: null });
+
+    // Reducer 3: Messages state (line 997)
+    type MessagesViewState = { messagesState: UiMessageType[]; isOtherUserTyping: boolean; isMessagesLoading: boolean };
+    type MessagesViewAction =
+        | { type: 'RESET' }
+        | { type: 'LOAD_CACHED'; payload: UiMessageType[] }
+        | { type: 'LOAD_NEW' }
+        | { type: 'SET_TYPING'; payload: boolean }
+        | { type: 'SET_LOADING'; payload: boolean }
+        | { type: 'LOADED' };
+    const [messagesViewState, dispatchMessagesView] = useReducer((_state: MessagesViewState, action: MessagesViewAction): MessagesViewState => {
+        switch (action.type) {
+            case 'RESET':
+                return { messagesState: [], isOtherUserTyping: false, isMessagesLoading: false };
+            case 'LOAD_CACHED':
+                return { messagesState: action.payload, isOtherUserTyping: false, isMessagesLoading: false };
+            case 'LOAD_NEW':
+                return { messagesState: [], isOtherUserTyping: false, isMessagesLoading: true };
+            case 'SET_TYPING':
+                return { ..._state, isOtherUserTyping: action.payload };
+            case 'SET_LOADING':
+                return { ..._state, isMessagesLoading: action.payload };
+            case 'LOADED':
+                return { ..._state, isMessagesLoading: false };
+            default:
+                return _state;
+        }
+    }, { messagesState: [], isOtherUserTyping: false, isMessagesLoading: false });
+
+    // Reducer 4: Online presence state (line 1023)
+    type PresenceState = { isOtherUserTyping: boolean; contacts: ContactItemType[] };
+    type PresenceAction =
+        | { type: 'SET_TYPING'; payload: boolean }
+        | { type: 'SET_CONTACT_ONLINE'; payload: { conversationId: string; isOnline: boolean } };
+    const [presenceState, dispatchPresence] = useReducer((_state: PresenceState, action: PresenceAction): PresenceState => {
+        switch (action.type) {
+            case 'SET_TYPING':
+                return { ..._state, isOtherUserTyping: action.payload };
+            case 'SET_CONTACT_ONLINE':
+                return {
+                    ..._state,
+                    contacts: _state.contacts.map(c =>
+                        c.id === action.payload.conversationId ? { ...c, isOnline: action.payload.isOnline } : c
+                    )
+                };
+            default:
+                return _state;
+        }
+    }, { isOtherUserTyping: false, contacts: [] });
+
+    // Reducer 5: User search state (line 1086)
+    type UserSearchState = { userSearchResults: MessageUserSearchResult[]; userSearchError: string | null; isSearchingUsers: boolean };
+    type UserSearchAction =
+        | { type: 'RESET' }
+        | { type: 'SET_RESULTS'; payload: MessageUserSearchResult[] }
+        | { type: 'SET_ERROR'; payload: string | null }
+        | { type: 'SET_LOADING'; payload: boolean };
+    const [userSearchState, dispatchUserSearch] = useReducer((_state: UserSearchState, action: UserSearchAction): UserSearchState => {
+        switch (action.type) {
+            case 'RESET':
+                return { userSearchResults: [], userSearchError: null, isSearchingUsers: false };
+            case 'SET_RESULTS':
+                return { ..._state, userSearchResults: action.payload, userSearchError: null, isSearchingUsers: false };
+            case 'SET_ERROR':
+                return { ..._state, userSearchError: action.payload, isSearchingUsers: false };
+            case 'SET_LOADING':
+                return { ..._state, isSearchingUsers: action.payload };
+            default:
+                return _state;
+        }
+    }, { userSearchResults: [], userSearchError: null, isSearchingUsers: false });
     const [previewImages, setPreviewImages] = useState<{ url: string; id: string }[]>([]);
     const [previewImageIndex, setPreviewImageIndex] = useState(0);
     const [pendingConfirmAction, setPendingConfirmAction] = useState<ConfirmActionType | null>(null);
@@ -429,18 +532,18 @@ const seen = new Set<string>();
         if (!conversationFromUrl || activeConversationId !== conversationFromUrl) return;
         setShowInfoSidebar(false);
         setShowFilesSidebar(true);
-        const nextParams = new URLSearchParams(toString());
+        const nextParams = new URLSearchParams(searchParams.toString());
         nextParams.delete("panel");
         const nextQuery = nextParams.toString();
         const nextHref = nextQuery ? `${pathname}?${nextQuery}` : pathname;
         replace(nextHref, { scroll: false });
-    }, [activeConversationId, conversationFromUrl, panelFromUrl, pathname, replace, toString]);
+    }, [activeConversationId, conversationFromUrl, panelFromUrl, pathname, replace, searchParams]);
 
     useEffect(() => {
-        const currentConversationInUrl = get("conversation")?.trim() || null;
+        const currentConversationInUrl = searchParams.get("conversation")?.trim() || null;
         const nextConversationForUrl = activeConversationId;
         if (currentConversationInUrl === nextConversationForUrl) return;
-        const nextParams = new URLSearchParams(toString());
+        const nextParams = new URLSearchParams(searchParams.toString());
         if (!nextConversationForUrl) {
             nextParams.delete("conversation");
         } else {
@@ -449,7 +552,7 @@ const seen = new Set<string>();
         const nextQuery = nextParams.toString();
         const nextHref = nextQuery ? `${pathname}?${nextQuery}` : pathname;
         replace(nextHref, { scroll: false });
-    }, [activeConversationId, pathname, replace, toString, get]);
+    }, [activeConversationId, pathname, replace, searchParams]);
 
     useEffect(() => {
         if (!user?.id) {
@@ -480,14 +583,13 @@ const seen = new Set<string>();
             if (typeof parsed.cachedAt === "number" && Date.now() - parsed.cachedAt > CONVERSATIONS_CACHE_TTL_MS) return;
             const cachedConversations = parsed.contacts.filter((contact): contact is ContactItemType => Boolean(contact && typeof contact === "object" && typeof contact.id === "string"));
             
-            // Batch state updates for conversation cache loading
-            setContacts(cachedConversations);
-            setIsSidebarLoading(false);
-            setActiveConversationId((current) => {
-                if (current && cachedConversations.some((contact) => contact.id === current)) return current;
+            // Batch state updates via reducer (previously 3 setState calls)
+            const computedActiveId = (() => {
+                if (activeConversationId && cachedConversations.some((contact) => contact.id === activeConversationId)) return activeConversationId;
                 if (conversationFromUrl && cachedConversations.some((contact) => contact.id === conversationFromUrl)) return conversationFromUrl;
                 return cachedConversations[0]?.id ?? null;
-            });
+            })();
+            dispatchConversationCache({ type: 'LOAD_CACHE', payload: { contacts: cachedConversations, activeConversationId: computedActiveId } });
         } catch { }
     }, [conversationFromUrl, user?.id]);
 
@@ -621,10 +723,9 @@ setPaymentHistory([]);
         const stillVisible = visibleContacts.some((contact) => contact.id === activeConversationId);
         if (stillVisible) return;
         
-        // Batch state updates for conversation cleanup
-        setShowInfoSidebar(false);
-        setShowFilesSidebar(false);
-        setActiveConversationId(visibleContacts[0]?.id ?? null);
+        // Batch state updates via reducer (previously 3 setState calls)
+        dispatchSidebarCleanup({ type: 'HIDE_SIDEBARS' });
+        dispatchSidebarCleanup({ type: 'SET_ACTIVE_CONVERSATION', payload: visibleContacts[0]?.id ?? null });
     }, [activeConversationId, isSidebarLoading, visibleContacts]);
 
     const updateActiveContactActionState = useCallback((nextState: { archived?: boolean; blocked?: boolean }) => {
@@ -996,27 +1097,21 @@ if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation
 
     useEffect(() => {
         if (!activeConversationId) { 
-            // Batch state updates for conversation reset
-            setMessagesState([]); 
-            setIsOtherUserTyping(false); 
-            setIsMessagesLoading(false); 
+            // Batch state updates via reducer (previously 3 setState calls)
+            dispatchMessagesView({ type: 'RESET' });
             return; 
         }
-        if (!user?.id) { setIsMessagesLoading(true); return; }
+        if (!user?.id) { dispatchMessagesView({ type: 'SET_LOADING', payload: true }); return; }
         const cached = messagesCacheRef.current.get(activeConversationId);
         if (cached) { 
-            // Batch state updates for cached messages
-            setMessagesState(cached); 
-            setIsOtherUserTyping(false); 
-            setIsMessagesLoading(false); 
+            // Batch state updates via reducer
+            dispatchMessagesView({ type: 'LOAD_CACHED', payload: cached });
             return; 
         }
-        // Batch state updates for loading new messages
-        setMessagesState([]); 
-        setIsOtherUserTyping(false); 
-        setIsMessagesLoading(true);
+        // Batch state updates via reducer
+        dispatchMessagesView({ type: 'LOAD_NEW' });
         let cancelled = false;
-        void (async () => { await refreshMessages(activeConversationId); if (!cancelled) setIsMessagesLoading(false); })();
+        void (async () => { await refreshMessages(activeConversationId); if (!cancelled) dispatchMessagesView({ type: 'LOADED' }); })();
         return () => { cancelled = true; };
     }, [activeConversationId, user?.id]);
 
@@ -1035,9 +1130,10 @@ if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation
             .on("broadcast", { event: "typing" }, ({ payload }) => {
                 const candidate = payload as { conversationId?: string; userId?: string; isTyping?: boolean };
                 if (candidate.conversationId !== activeConversationId || !candidate.userId || candidate.userId === user?.id) return;
-                setIsOtherUserTyping(Boolean(candidate.isTyping));
+                // Batch state updates via reducer (previously setState calls)
+                dispatchPresence({ type: 'SET_TYPING', payload: Boolean(candidate.isTyping) });
                 if (remoteTypingTimeoutRef.current) window.clearTimeout(remoteTypingTimeoutRef.current);
-                if (candidate.isTyping) remoteTypingTimeoutRef.current = window.setTimeout(() => { setIsOtherUserTyping(false); remoteTypingTimeoutRef.current = null; }, 1800);
+                if (candidate.isTyping) remoteTypingTimeoutRef.current = window.setTimeout(() => { dispatchPresence({ type: 'SET_TYPING', payload: false }); remoteTypingTimeoutRef.current = null; }, 1800);
             })
             .on("presence", { event: "sync" }, () => {
                 const state = channel.presenceState();
@@ -1045,13 +1141,8 @@ if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation
                 if (!otherUserId) return;
                 
                 const isOnline = (Object.values(state).flat() as unknown as { userId?: string }[]).some((p: { userId?: string }) => p.userId === otherUserId);
-                setContacts(prev => {
-                    const current = prev.find(c => c.id === activeConversationId);
-                    if (current && current.isOnline === isOnline) return prev;
-                    return prev.map(c => 
-                        c.id === activeConversationId ? { ...c, isOnline } : c
-                    );
-                });
+                // Batch state updates via reducer (previously setContacts with callback)
+                dispatchPresence({ type: 'SET_CONTACT_ONLINE', payload: { conversationId: activeConversationId, isOnline } });
             })
             .subscribe(async (status) => {
                 if (status === "SUBSCRIBED" && user?.id) {

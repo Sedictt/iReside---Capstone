@@ -166,7 +166,7 @@ export async function POST(request: Request) {
 
     // --- Environment Validations ---
     const { data: policy } = await adminClient
-        .from("property_environment_policies")
+        .from("property_environment_policies" as any)
         .select("needs_review, max_occupants_per_unit")
         .eq("property_id", property.id)
         .single();

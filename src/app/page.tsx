@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { m as motion } from "framer-motion";
 import { ThemeToggle } from '@/components/theme-toggle';
-import { Building, ChevronRight, ArrowRight, Home, Users, BarChart3, Clock, Lock, Zap, FileText, CheckCircle2, Sparkles, Activity, LayoutDashboard, MapPin, Receipt, Hammer, PieChart, MessageSquare, Twitter, Github, Linkedin, Mail } from "lucide-react";
+import Link from 'next/link';
+import { Building, ChevronRight, ArrowRight, Home, Users, BarChart3, Clock, Lock, Zap, FileText, CheckCircle2, Sparkles, Activity, LayoutDashboard, MapPin, Receipt, Hammer, PieChart, MessageSquare, Github, Mail, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/Logo";
 import gsap from "gsap";
@@ -150,6 +151,20 @@ export default function ScrollyTellingLandingPage() {
     const navRef = useRef<HTMLElement>(null);
     const backToTopRef = useRef<HTMLButtonElement>(null);
     const { user, profile } = useAuth();
+
+    // State for UI controls
+    const [showMoreMenu, setShowMoreMenu] = useState(false);
+
+    // Close More menu on scroll
+    useEffect(() => {
+        const handleScroll = () => {
+            if (showMoreMenu) {
+                setShowMoreMenu(false);
+            }
+        };
+        window.addEventListener("scroll", handleScroll, { passive: true });
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, [showMoreMenu]);
 
     const dashboardHref = profile?.role 
         ? `/${profile.role}/dashboard` 
@@ -577,29 +592,31 @@ export default function ScrollyTellingLandingPage() {
             <nav 
                 ref={navRef}
                 aria-label="Primary Navigation"
-                className="fixed top-0 w-full z-50 border-b border-border bg-background/80 backdrop-blur-2xl"
+                className="fixed top-0 w-full z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl"
             >
-                <div className="max-w-7xl mx-auto px-6 md:px-12 h-20 md:h-24 flex items-center justify-between">
+                <div className="max-w-6xl mx-auto px-6 md:px-8 h-16 md:h-20 flex items-center justify-between">
+                    {/* Logo Section */}
                     <div 
-                        className="flex items-center gap-4 group cursor-pointer" 
+                        className="flex items-center gap-3 group cursor-pointer" 
                         onClick={() => gsap.to(window, { scrollTo: 0, duration: 1, ease: "power2.inOut" })}
                         role="button"
                         aria-label="iReside Home - Scroll to top"
                         tabIndex={0}
                         onKeyDown={(e) => { if(e.key === 'Enter' || e.key === ' ') { gsap.to(window, { scrollTo: 0, duration: 1, ease: "power2.inOut" }); } }}
                     >
-                        <Logo className="h-8 md:h-10 w-auto transition-transform group-hover:scale-105" aria-hidden="true" />
-                        <div className="flex flex-col border-l border-border/50 pl-4">
-                            <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.25em] text-primary leading-tight">Landlord Access</span>
-                        </div>
+                        <Logo className="h-9 md:h-11 w-auto transition-transform group-hover:scale-105" aria-hidden="true" />
+                        <span className="hidden sm:block text-[10px] md:text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-relaxed">
+                            Property<br />Management
+                        </span>
                     </div>
 
-                    <div className="hidden lg:flex items-center gap-8">
+                    {/* Nav Links - Centered */}
+                    <div className="hidden md:flex items-center gap-1">
                         {[
-                            { label: "Our Process", id: "#how-it-works" },
-                            { label: "Smart Tools", id: "#features" },
-                            { label: "Meet iRis", id: "#iris" },
-                            { label: "Why iReside", id: "#outcomes" },
+                            { label: "How It Works", id: "#how-it-works" },
+                            { label: "What You Get", id: "#features" },
+                            { label: "Your AI Assistant", id: "#iris" },
+                            { label: "Why Choose Us", id: "#outcomes" },
                         ].map((item) => (
                             <button
                                 key={item.id}
@@ -608,27 +625,52 @@ export default function ScrollyTellingLandingPage() {
                                     duration: 1.2, 
                                     ease: "power2.inOut" 
                                 })}
-                                className="text-sm font-black text-muted-foreground hover:text-primary transition-colors tracking-tight"
+                                className="px-4 py-2 text-[13px] font-semibold text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted/50"
                             >
                                 {item.label}
                             </button>
                         ))}
+
+                        {/* More Dropdown */}
+                        <div className="relative">
+                            <button
+                                onClick={() => setShowMoreMenu(!showMoreMenu)}
+                                onBlur={() => setTimeout(() => setShowMoreMenu(false), 150)}
+                                className="px-4 py-2 text-[13px] font-semibold text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted/50 flex items-center gap-1"
+                            >
+                                More <ChevronRight className="size-3 rotate-90" />
+                            </button>
+                            {showMoreMenu && (
+                                <div className="absolute top-full mt-2 right-0 w-48 bg-background border border-border rounded-lg shadow-lg py-2 z-50">
+                                    <Link href="/docs" className="block px-4 py-2 text-sm hover:bg-muted transition-colors">Documentation</Link>
+                                    <Link href="/about" className="block px-4 py-2 text-sm hover:bg-muted transition-colors">About Us</Link>
+                                    <Link href="/faqs" className="block px-4 py-2 text-sm hover:bg-muted transition-colors">FAQs</Link>
+                                    <div className="border-t border-border my-2" />
+                                    <Link href="/privacy" className="block px-4 py-2 text-sm hover:bg-muted transition-colors">Privacy Policy</Link>
+                                    <Link href="/terms" className="block px-4 py-2 text-sm hover:bg-muted transition-colors">Terms of Service</Link>
+                                    <div className="border-t border-border my-2" />
+                                    <a href="mailto:support@ireside.ai" className="block px-4 py-2 text-sm hover:bg-muted transition-colors">Contact Support</a>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
-                    <div className="flex items-center gap-4">
+                    {/* Actions Section */}
+                    <div className="flex items-center gap-3">
                         <ThemeToggle />
-                        <TransitionLink 
-                            href={user ? dashboardHref : "/login"} 
-                            className="relative flex items-center gap-2 overflow-hidden group px-6 py-2.5 rounded-full border border-zinc-200 bg-muted border-border text-sm font-black text-foreground transition-all hover:bg-muted/80 hover:border-primary/30"
+                        <TransitionLink
+                            href={user ? dashboardHref : "/login"}
+                            className="relative flex items-center gap-2 overflow-hidden group px-5 py-2.5 rounded-full border border-zinc-200 dark:border-zinc-700 bg-muted/50 hover:bg-muted transition-all"
                         >
-                            <span className="relative z-10 hidden md:block">
-                                {user ? "Dashboard" : "Log-in"}
+                            <span className="relative z-10 hidden md:block text-[13px] font-semibold">
+                                {user ? "Dashboard" : "Log in"}
                             </span>
-                            <span className="relative z-10 md:hidden">
+                            <span className="relative z-10 md:hidden text-[13px] font-semibold">
                                 {user ? "Dashboard" : "Login"}
                             </span>
-                        <ChevronRight className="size-4 relative z-10 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
-                    </TransitionLink></div>
+                            <ChevronRight className="size-4 relative z-10 text-muted-foreground group-hover:translate-x-0.5 transition-all" />
+                        </TransitionLink>
+                    </div>
                 </div>
             </nav>
 
@@ -830,95 +872,101 @@ export default function ScrollyTellingLandingPage() {
 
                 {/* Particle Glow */}
                 <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl opacity-0 group-hover:opacity-40 transition-opacity" />
-            </button>
-            {/* Premium Footer */}
-            <footer className="relative pt-32 pb-16 px-6 border-t border-border bg-card z-20 overflow-hidden">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(109,152,56,0.08),transparent_60%)] pointer-events-none" />
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-                
-                <div className="max-w-7xl mx-auto">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-32">
-                        <div className="flex flex-col gap-10 col-span-1 lg:col-span-1">
-                            <div className="flex flex-col gap-5">
-                                <Logo className="h-10 w-auto" />
-                                <div className="flex items-center gap-2">
-                                    <div className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500/80">Systems Operational</span>
-                                </div>
-                            </div>
-                            <p className="text-muted-foreground text-[17px] font-medium leading-relaxed">
-                                Reimagining rental operations with intelligent workflows and a calm, centered experience for modern portfolios.
-                            </p>
-                            <div className="flex items-center gap-3">
-                                {[Github, Mail].map((Icon, i) => (
-                                    <button key={i} className="size-12 rounded-2xl border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all group shadow-sm cursor-pointer bg-transparent">
-                                        <Icon className="size-5 transition-transform group-hover:scale-110" />
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-12 lg:col-span-3">
-                            <div className="flex flex-col gap-8">
-                                <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-foreground/40">Platform Modules</h4>
-                                <ul className="flex flex-col gap-6">
-                                    {[
-                                        { name: "Portfolio Map", href: "/modules/unit-map" },
-                                        { name: "Maintenance Ops", href: "/landlord/maintenance" },
-                                        { name: "Financials", href: "/modules/financials" },
-                                        { name: "Tenant Screening", href: "/apply" }
-                                    ].map(link => (
-                                        <li key={link.name}>
-                                            <TransitionLink href={link.href} className="text-[15px] font-black text-muted-foreground hover:text-primary transition-all flex items-center gap-3 group">
-                                                <div className="w-1.5 h-px bg-primary/30 group-hover:w-4 transition-all" />
-                                                {link.name}
-                                            </TransitionLink>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-
-                            <div className="flex flex-col gap-8">
-                                <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-foreground/40">Company</h4>
-                                <ul className="flex flex-col gap-6">
-                                    {[
-                                        { name: "About iReside", href: "#" },
-                                        { name: "Documentation", href: "#" },
-                                        { name: "FAQs", href: "#" },
-                                        { name: "Contact Support", href: "mailto:support@ireside.ai" }
-                                    ].map(link => (
-                                        <li key={link.name}>
-                                            <a href={link.href} className="text-[15px] font-black text-muted-foreground hover:text-primary transition-all hover:translate-x-1 inline-block">
-                                                {link.name}
-                                            </a>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        </div>
+</button>
+            {/* Footer */}
+            <footer className="relative z-20 border-t border-border bg-background/80 backdrop-blur-sm">
+              <div className="max-w-7xl mx-auto px-6 py-16">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+                  {/* Brand Column */}
+                  <div className="flex flex-col gap-4">
+                    <div className="flex items-center gap-3">
+                      <Logo className="h-8 w-auto" />
+                      <span className="font-bold text-lg">iReside</span>
                     </div>
+                    <p className="text-sm text-muted-foreground">
+                      Modern property management for landlords and tenants.
+                    </p>
+                  </div>
 
-                    <div className="pt-12 border-t border-border/50 flex flex-col md:flex-row items-center justify-between gap-10">
-                        <div className="flex flex-col md:flex-row items-center gap-6 md:gap-12">
-                            <p className="text-[13px] font-black text-muted-foreground/60">© 2026 iReside Technologies Inc.</p>
-                            <div className="flex items-center gap-8 text-[13px] font-black text-muted-foreground/80">
-                                <button className="hover:text-primary transition-colors cursor-pointer bg-transparent border-0 p-0">Privacy Policy</button>
-                                <button className="hover:text-primary transition-colors cursor-pointer bg-transparent border-0 p-0">Terms of Service</button>
-                            </div>
-                        </div>
-                        
-                        <div className="flex items-center gap-4 px-6 py-3 rounded-2xl border border-primary/20 bg-primary/5 backdrop-blur-sm group cursor-default shadow-sm hover:border-primary/40 transition-colors">
-                            <div className="relative">
-                                <Sparkles className="size-4 text-primary animate-pulse" />
-                                <div className="absolute inset-0 bg-primary blur-lg opacity-20 group-hover:opacity-40 transition-opacity" />
-                            </div>
-                            <div className="flex flex-col">
-                                <span className="text-[11px] font-black uppercase tracking-[0.2em] text-primary">Powered by iRis AI</span>
-                                <span className="text-[9px] font-black text-primary/50 uppercase tracking-[0.1em]">Intelligence Engine v2.4</span>
-                            </div>
-                        </div>
+                  {/* Documentation Column */}
+                  <div className="flex flex-col gap-4">
+                    <h4 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground/70">
+                      Documentation
+                    </h4>
+                    <div className="flex flex-col gap-2">
+                      <Link href="/docs" className="text-sm hover:text-primary transition-colors">
+                        Getting Started
+                      </Link>
                     </div>
+                  </div>
+
+                  {/* Company Column */}
+                  <div className="flex flex-col gap-4">
+                    <h4 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground/70">
+                      Company
+                    </h4>
+                    <div className="flex flex-col gap-2">
+                      <Link href="/about" className="text-sm hover:text-primary transition-colors">
+                        About Us
+                      </Link>
+                      <Link href="/faqs" className="text-sm hover:text-primary transition-colors">
+                        FAQs
+                      </Link>
+                      <a
+                        href="mailto:support@ireside.ai"
+                        className="text-sm hover:text-primary transition-colors"
+                      >
+                        Contact Support
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* Legal + Connect Column */}
+                  <div className="flex flex-col gap-4">
+                    <h4 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground/70">
+                      Legal
+                    </h4>
+                    <div className="flex flex-col gap-2 mb-4">
+                      <Link href="/privacy" className="text-sm hover:text-primary transition-colors">
+                        Privacy Policy
+                      </Link>
+                      <Link href="/terms" className="text-sm hover:text-primary transition-colors">
+                        Terms of Service
+                      </Link>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <a
+                        href="https://github.com/ireside"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-muted-foreground hover:text-primary transition-colors"
+                        aria-label="GitHub"
+                      >
+                        <Github className="size-5" />
+                      </a>
+                      <a
+                        href="mailto:hello@ireside.com"
+                        className="text-muted-foreground hover:text-primary transition-colors"
+                        aria-label="Email"
+                      >
+                        <Mail className="size-5" />
+                      </a>
+                    </div>
+                  </div>
                 </div>
+
+                {/* Bottom Bar */}
+                <div className="pt-8 border-t border-border/50 flex flex-col md:flex-row items-center justify-between gap-4">
+                  <p className="text-sm text-muted-foreground/60">
+                    © {new Date().getFullYear()} iReside Technologies Inc. All rights reserved.
+                  </p>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground/60">
+                    <span>Built with</span>
+                    <Heart className="size-4 text-red-500" />
+                    <span>for property managers</span>
+                  </div>
+                </div>
+              </div>
             </footer>
             </main>
         </div>

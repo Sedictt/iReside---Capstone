@@ -68,13 +68,14 @@ export async function POST(
         if (updateError) throw updateError;
 
         // Notify Landlord via Dynamic System Message Update
-        const [{ data: tenantProfile }, { sendPaymentSystemMessage, createAdminClient }] = await Promise.all([
+        const [{ data: tenantProfile }, { sendPaymentSystemMessage }, { createAdminClient }] = await Promise.all([
             supabase
                 .from("profiles")
                 .select("full_name")
                 .eq("id", user.id)
                 .single(),
-            import("@/lib/billing/workflow").then(m => ({ sendPaymentSystemMessage: m.sendPaymentSystemMessage })),
+            import("@/lib/billing/workflow"),
+            import("@/lib/supabase/admin"),
         ]);
         
         const adminClient = createAdminClient();

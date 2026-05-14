@@ -80,7 +80,6 @@ const resolveStatus = (status: MaintenanceStatus | null | undefined): Maintenanc
         case "in_progress":
             return "In Progress";
         case "resolved":
-        case "closed":
             return "Resolved";
         case "open":
         default:

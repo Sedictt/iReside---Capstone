@@ -260,13 +260,13 @@ function NewAssetContent() {
                 const mapping = policyMapping[formData.utilityBilling] || policyMapping.fixed_charge;
 
                 // Save environment policy
-                const { error: policyError } = await supabase.from("property_environment_policies").upsert({
+                const { error: policyError } = await (supabase as any).from("property_environment_policies").upsert({
                     property_id: propId,
                     environment_mode: "residential",
                     max_occupants_per_unit: parseInt(formData.occupancyLimit),
-                    utility_policy_mode: mapping.mode as any,
+                    utility_policy_mode: mapping.mode,
                     updated_at: new Date().toISOString()
-                } as any, { onConflict: "property_id" });
+                }, { onConflict: "property_id" });
                 if (policyError) throw new Error(`Failed to save environment policy: ${policyError.message}`);
 
                 // Sync contract metadata if generated

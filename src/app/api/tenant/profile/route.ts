@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/supabase/auth";
+import type { Database } from "@/types/database";
 
 /**
  * GET /api/tenant/profile
@@ -35,7 +36,7 @@ export async function PATCH(request: Request) {
         const { has_changed_password, ...otherFields } = body;
 
         // Build update payload - only allow certain fields to be updated
-        const updates: Record<string, unknown> = {
+        const updates: Database["public"]["Tables"]["profiles"]["Update"] = {
             updated_at: new Date().toISOString(),
         };
 
@@ -45,7 +46,7 @@ export async function PATCH(request: Request) {
         }
 
         // Allow other safe profile fields to be updated
-        const allowedFields = ["full_name", "phone", "bio", "address"];
+        const allowedFields = ["full_name", "phone", "bio", "address"] as const;
         for (const field of allowedFields) {
             if (field in otherFields) {
                 updates[field] = otherFields[field];

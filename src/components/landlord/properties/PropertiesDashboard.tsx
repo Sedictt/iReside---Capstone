@@ -8,7 +8,6 @@ import { PropertyEnvironmentBanner } from "@/components/landlord/PropertyEnviron
 import {
     Search,
     Plus,
-    Filter,
     MapPin,
     Building2,
     Settings,
@@ -41,10 +40,10 @@ type PropertyCard = {
     image: string;
 };
 
-const FILTER_TABS = ["All", "Performing", "Attention Required"] as const;
+const FILTER_TABS = ["All Portfolio", "Stable Assets", "Action Required"] as const;
 
 const getStyleByStatus = (status: PropertyStatus) => {
-    if (status === "Performing") {
+    if (status === "Performing" || status === "Stable") {
         return {
             iconColor: "text-emerald-500",
             bgIcon: "bg-emerald-500/10",
@@ -53,8 +52,8 @@ const getStyleByStatus = (status: PropertyStatus) => {
 
     if (status === "Attention Required") {
         return {
-            iconColor: "text-amber-500",
-            bgIcon: "bg-amber-500/10",
+            iconColor: "text-rose-500",
+            bgIcon: "bg-rose-500/10",
         };
     }
 
@@ -69,7 +68,7 @@ export function PropertiesDashboard() {
     const [isLoading, setIsLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
-    const [activeTab, setActiveTab] = useState<"All" | "Performing" | "Attention Required">("All");
+    const [activeTab, setActiveTab] = useState<typeof FILTER_TABS[number]>(FILTER_TABS[0]);
     const [hubModalId, setHubModalId] = useState<string | null>(null);
 
     const loadProperties = useCallback(async (signal?: AbortSignal) => {
@@ -118,9 +117,9 @@ export function PropertiesDashboard() {
                 prop.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 prop.address.toLowerCase().includes(searchQuery.toLowerCase());
             const matchesTab =
-                activeTab === "All" ||
-                (activeTab === "Performing" && (prop.status === "Performing" || prop.status === "Stable")) ||
-                (activeTab === "Attention Required" && prop.status === "Attention Required");
+                activeTab === "All Portfolio" ||
+                (activeTab === "Stable Assets" && (prop.status === "Performing" || prop.status === "Stable")) ||
+                (activeTab === "Action Required" && prop.status === "Attention Required");
             return matchesSearch && matchesTab;
         });
     }, [properties, searchQuery, activeTab]);
@@ -147,10 +146,6 @@ export function PropertiesDashboard() {
                     </div>
 
                     <div className="flex gap-3">
-                        <button className="flex h-12 items-center gap-2 rounded-xl border border-border bg-background/75 px-6 font-medium text-foreground transition-all hover:bg-muted/70">
-                            <Filter className="size-5" />
-                            Analytics
-                        </button>
                         <Link href="/landlord/properties/new" className="flex h-12 items-center gap-2 rounded-xl bg-primary px-6 font-black text-primary-foreground shadow-[0_14px_30px_-18px_rgba(var(--primary-rgb),0.65)] transition-all hover:bg-primary/90">
                             <Plus className="size-4" />
                             New Asset
@@ -184,7 +179,7 @@ export function PropertiesDashboard() {
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                     <input
                         type="text"
-                        placeholder="Search properties..."
+                        placeholder="Filter portfolio by name or location..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="h-11 w-full rounded-xl border border-border bg-card/95 pl-11 pr-4 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus:border-primary/35 focus:outline-none"
@@ -396,17 +391,17 @@ export function PropertiesDashboard() {
 
                                 <div className="grid grid-cols-2 gap-3">
                                     <Link href={`/landlord/properties/new?id=${activeProperty.id}&mode=edit`} className="group flex flex-col items-center justify-center rounded-2xl border border-border bg-background/75 p-4 transition-all hover:bg-muted">
-                                        <div className="size-12 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                        <div className="size-12 bg-primary/20 text-primary rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                                             <Edit3 className="size-5" />
                                         </div>
-                                        <span className="text-sm font-medium text-foreground">Edit Details</span>
+                                        <span className="text-sm font-medium text-foreground">Manage Property</span>
                                     </Link>
                                     
                                     <Link href={`/landlord/unit-map?property=${activeProperty.id}`} className="group flex flex-col items-center justify-center rounded-2xl border border-border bg-background/75 p-4 transition-all hover:bg-muted">
-                                        <div className="size-12 bg-rose-500/20 text-rose-400 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                        <div className="size-12 bg-primary/20 text-primary rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                                             <Map className="size-5" />
                                         </div>
-                                        <span className="text-sm font-medium text-foreground">Unit Map</span>
+                                        <span className="text-sm font-medium text-foreground">View Floor Plan</span>
                                     </Link>
 
 

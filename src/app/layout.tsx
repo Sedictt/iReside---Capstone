@@ -61,7 +61,17 @@ export default function RootLayout({
                 <FramerMotionProvider>
                   <GlobalClickSpark>
                     {children}
-                    <Toaster position="top-right" richColors closeButton theme="dark" />
+                    <Toaster
+                      position="top-right"
+                      richColors
+                      closeButton
+                      expand={true}
+                      theme="system"
+                      className="ireside-toaster"
+                      toastOptions={{
+                        className: 'ireside-toast',
+                      }}
+                    />
                     <CookieConsent />
                   </GlobalClickSpark>
                 </FramerMotionProvider>

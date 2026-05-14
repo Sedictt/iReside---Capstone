@@ -106,8 +106,6 @@ export type InvoiceReadingDetail = Pick<
     | "usage"
     | "billed_rate"
     | "computed_charge"
-    | "note"
-    | "proof_image_url"
     | "entered_at"
 >;
 
@@ -314,8 +312,6 @@ async function getReadingMap(supabase: AppSupabaseClient, paymentIds: string[]) 
             usage,
             billed_rate,
             computed_charge,
-            note,
-            proof_image_url,
             entered_at
         `)
         .in("payment_id", paymentIds);

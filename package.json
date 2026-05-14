@@ -74,10 +74,12 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
+    "@tailwindcss/postcss": "^4.3.0",
     "@types/dom-to-image": "^2.6.7",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
+    "enhanced-resolve": "^5.21.3",
     "eslint-plugin-react-hooks": "^7.1.1",
     "fast-check": "^4.6.0",
     "jsdom": "^29.0.0",

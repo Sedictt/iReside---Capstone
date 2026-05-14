@@ -154,13 +154,13 @@ async function resolvePortalContext(token: string) {
 
 async function fetchPortalPayload(adminClient: ReturnType<typeof createAdminClient>, application: PortalApplication) {
     const [{ data: requests }, { data: destination }] = await Promise.all([
-        adminClient
-            .from("application_payment_requests")
-            .select(REQUEST_SELECT)
+        (adminClient
+            .from("application_payment_requests" as any)
+            .select(REQUEST_SELECT) as any)
             .eq("application_id", application.id)
             .order("requirement_type", { ascending: true }),
-        adminClient
-            .from("landlord_payment_destinations")
+        (adminClient
+            .from("landlord_payment_destinations") as any)
             .select("account_name, account_number, qr_image_url, is_enabled")
             .eq("landlord_id", application.landlord_id)
             .eq("provider", "gcash")
@@ -182,7 +182,7 @@ async function fetchPortalPayload(adminClient: ReturnType<typeof createAdminClie
                   qrImageUrl: destination.qr_image_url ?? null,
               }
             : null,
-        requests: ((requests ?? []) as PortalPaymentRequestRow[]).map((request) => ({
+        requests: ((requests ?? []) as unknown as PortalPaymentRequestRow[]).map((request) => ({
             id: request.id,
             requirementType: request.requirement_type,
             label: toRequirementLabel(request.requirement_type),
@@ -261,12 +261,14 @@ export async function POST(request: Request, context: RouteContext) {
     if (!method) {
         return NextResponse.json({ error: "method must be either gcash or cash." }, { status: 400 });
     }
-    const { data: requestRow, error: requestError } = await adminClient
-        .from("application_payment_requests")
-        .select(REQUEST_SELECT)
-        .eq("id", paymentRequestId)
-        .eq("application_id", application.id)
-        .maybeSingle();
+    const reqQuery = adminClient
+            .from("application_payment_requests" as any)
+            .select(REQUEST_SELECT);
+
+        const { data: requestRow, error: requestError } = await reqQuery
+            .eq("id", paymentRequestId)
+            .eq("application_id", application.id)
+            .maybeSingle() as any;
 
     if (requestError || !requestRow) {
         return NextResponse.json({ error: "Payment request not found." }, { status: 404 });
@@ -293,8 +295,8 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     const nowIso = new Date().toISOString();
-    const { data: updated, error: updateError } = await adminClient
-        .from("application_payment_requests")
+    const updateResult = await adminClient
+        .from("application_payment_requests" as any)
         .update({
             method,
             status: "processing",
@@ -316,6 +318,7 @@ export async function POST(request: Request, context: RouteContext) {
         .eq("application_id", application.id)
         .select(REQUEST_SELECT)
         .single();
+    const { data: updated, error: updateError } = updateResult as any;
 
     if (updateError || !updated) {
         return NextResponse.json({ error: "Failed to submit payment proof." }, { status: 500 });

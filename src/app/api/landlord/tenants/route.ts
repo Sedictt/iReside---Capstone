@@ -208,7 +208,13 @@ export async function GET(request: Request) {
 
     const { data: moveOutRows, error: moveOutError } =
         leaseIds.length > 0
-            ? await supabase.from("move_out_requests").select("lease_id, status").in("lease_id", leaseIds)
+            ? ((await (supabase as any)
+                  .from("move_out_requests")
+                  .select("lease_id, status")
+                  .in("lease_id", leaseIds)) as {
+                  data: Array<{ lease_id: string; status: string }> | null;
+                  error: any;
+              })
             : { data: [], error: null };
 
     if (moveOutError) {

@@ -25,12 +25,14 @@ export async function POST(
     const { inspection_date, inspection_notes, inspection_photos, checklist_data, deposit_deductions, deposit_refund_amount } = body;
 
     // Verify ownership and status
-    const { data: moveOutRequest, error: fetchError } = await supabase
-      .from("move_out_requests")
-      .select("*")
+    const reqQuery = supabase
+      .from("move_out_requests" as any)
+      .select("*");
+
+    const { data: moveOutRequest, error: fetchError } = await reqQuery
       .eq("id", id)
       .eq("landlord_id", user.id)
-      .single();
+      .single() as any;
 
     if (fetchError || !moveOutRequest) {
       return NextResponse.json({ error: "Move-out request not found" }, { status: 404 });
@@ -44,20 +46,23 @@ export async function POST(
     }
 
     // Update move-out request with inspection data
-    const { data: updated, error: updateError } = await supabase
-      .from("move_out_requests")
-      .update({
-        inspection_date: inspection_date || new Date().toISOString().split('T')[0],
-        inspection_notes,
-        inspection_photos,
-        checklist_data,
-        deposit_deductions,
-        deposit_refund_amount,
-        updated_at: new Date().toISOString()
-      })
+    const updatePayload = {
+      inspection_date: inspection_date || new Date().toISOString().split('T')[0],
+      inspection_notes,
+      inspection_photos,
+      checklist_data,
+      deposit_deductions,
+      deposit_refund_amount,
+      updated_at: new Date().toISOString()
+    } as any;
+    const updateQuery = supabase
+      .from("move_out_requests" as any)
+      .update(updatePayload)
       .eq("id", id)
       .select()
       .single();
+
+    const { data: updated, error: updateError } = await updateQuery as any;
 
     if (updateError) {
       console.error("[landlord-move-out-inspection] Update error:", updateError);
@@ -71,7 +76,7 @@ export async function POST(
       title: "Inspection Completed",
       message: "The move-out inspection for your unit has been completed. You can now view the results.",
       data: { move_out_request_id: id }
-    });
+    } as any);
 
     return NextResponse.json({
       message: "Inspection recorded successfully",
@@ -102,12 +107,14 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data: moveOut, error: fetchError } = await supabase
-      .from("move_out_requests")
+    const selectQuery = supabase
+      .from("move_out_requests" as any)
       .select("lease_id")
       .eq("id", id)
       .eq("landlord_id", user.id)
       .single();
+
+    const { data: moveOut, error: fetchError } = await selectQuery as any;
 
     if (fetchError || !moveOut) {
       return NextResponse.json({ error: "Move-out request not found" }, { status: 404 });

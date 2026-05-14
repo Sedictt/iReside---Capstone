@@ -62,10 +62,13 @@ export async function GET() {
         .select("id, property_id, status, rent_amount")
         .in("property_id", propertyIds);
 
-    const { data: policies, error: policiesError } = await supabase
+    const { data: policies, error: policiesError } = (await (supabase as any)
         .from("property_environment_policies")
         .select("property_id, environment_mode, needs_review")
-        .in("property_id", propertyIds);
+        .in("property_id", propertyIds)) as {
+        data: Array<{ property_id: string; environment_mode: string | null; needs_review: boolean | null }> | null;
+        error: any;
+    };
 
     if (unitsError) {
         return NextResponse.json({ error: "Failed to fetch units." }, { status: 500 });
@@ -148,7 +151,7 @@ export async function GET() {
         const activeMaintenance = (maintenanceRows ?? []).filter(
             (request) =>
                 propertyUnitIds.has(request.unit_id) &&
-                (request.status === "open" || request.status === "in_progress")
+                (request.status === "open" || request.status === "assigned" || request.status === "in_progress")
         ).length;
 
         const propertyLeaseIds = propertyUnits.flatMap((unit) => leasesByUnit.get(unit.id) ?? []);

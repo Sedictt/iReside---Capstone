@@ -3,13 +3,87 @@
 ## 🎯 System Philosophy & Core Refactor
 
 > [!IMPORTANT]
-> **Adviser-Mandated Refactor**: Following the last consultation, the system has been fundamentally refactored. It is no longer a public-facing marketplace (e.g., Airbnb for apartments). 
-> 
->  iReside is now an **exclusive system for landlords**:
-> - **Landlord as Owner**: A landlord can manage multiple **Properties** (analogous to Discord Servers).
-> - **Tenants as Members**: Each property has its own set of **Tenants** (analogous to Server Members).
-> - **Isolation & Privacy**: Each property is a private, isolated ecosystem.
+> **Adviser-Mandated Refactor**: Following the last consultation, the system has been fundamentally refactored. It is no longer a public-facing marketplace (e.g., Airbnb for apartments).
+>
+> iReside is now an **exclusive deployment system for landlords**:
+> - **Deployment-Based Model**: The development team deploys and hands over independent property instances to landlords.
+> - **Landlord as Owner & Admin**: Each landlord independently manages their own property deployment (no centralized operator).
+> - **Limited Maintenance Scope**: Development team handles only initial deployment, critical security patches, and optional paid updates.
+> - **Self-Sufficient Operations**: Landlords operate their properties autonomously after deployment.
 > - **No Public Discovery**: There is **no unit listing, searching, or public discovery** of listings/properties/units.
+
+---
+
+## O. Deployment Ownership & Maintenance Boundaries
+
+> [!IMPORTANT]
+> **Addressing the Turnover Problem**: Unlike traditional capstone projects with a dedicated institutional client (school, company, barangay), iReside serves generalized landlords—individual property owners who cannot collectively receive a centralized system handover. To resolve this, the project adopts a **Deployment-Based Delivery Model** that establishes clear ownership boundaries while ensuring system viability.
+
+### Deployment Model Overview
+
+The study **does not establish a centralized institutional operator** such as a barangay office, homeowners association, or government agency. Instead, the platform follows a deployment-based delivery model:
+
+| Aspect | Traditional SaaS | iReside Deployment Model |
+|--------|------------------|--------------------------|
+| **Operator** | Centralized company | Each landlord (individual) |
+| **Updates** | Continuous, mandatory | On-request, paid optional |
+| **Support** | Dedicated team | Limited scope (see below) |
+| **Scaling** | Enterprise-level | Single-property deployment |
+
+### Landlord as Independent Administrator
+
+Upon deployment, **participating landlords become the independent administrators** of their own operational environments:
+
+- **Self-Sufficiency**: Landlords manage their own properties, tenants, and day-to-day operations
+- **No Dependency on Development Team**: Once deployed, the system operates independently
+- **Local Ownership**: Each property deployment is isolated and autonomously managed
+
+### Development Team Responsibilities (Limited Scope)
+
+The development team's obligations are **strictly bounded** to:
+
+| Responsibility | Scope | Description |
+|----------------|-------|-------------|
+| **Initial Deployment** | ✅ Included | Provisioning and setting up the system for the landlord |
+| **Critical Security Updates** | ✅ Included | Patching vulnerabilities that could compromise tenant data |
+| **Optional Paid Updates** | ⚠️ Paid Add-on | Feature enhancements or customizations requested by the landlord |
+| **Bug Fixes (Deployment Defects)** | ✅ Included | Errors introduced during initial deployment |
+
+### What's Outside Scope
+
+The study explicitly **does not evaluate or provide**:
+
+- ❌ Continuous feature development after deployment
+- ❌ Large-scale operational staffing or enterprise support teams
+- ❌ Long-term commercial SaaS operations model
+- ❌ Enterprise-level customer support infrastructure
+- ❌ Nationwide deployment scalability testing
+- ❌ Centralized platform maintenance beyond security patches
+
+### Paid Update Model (Sustainability)
+
+Landlords may request **optional paid services** subject to separate arrangements:
+
+- Custom feature development
+- Additional property deployments
+- Advanced analytics or integrations
+- Priority support tickets
+
+This model ensures:
+1. **No ongoing free support burden** on the development team
+2. **Sustainable maintenance pathway** for landlords needing custom work
+3. **Clear boundaries** between deployment obligations and extended services
+
+### Panel Defense Summary
+
+> [!TIP]
+> **For Panelists**: If questioned about turnover, ownership, or maintenance:
+> 
+> 1. **The "Generalized Client" Problem**: Unlike a school or company, landlords are not a single entity—they cannot collectively receive a centralized system
+> 2. **Solution**: Each landlord receives their own independently operated deployment
+> 3. **Development Team Role**: One-time deployment + security maintenance only
+> 4. **Sustainability**: Optional paid updates provide a path for extended services without perpetual obligation
+> 5. **No "Abandoned System" Risk**: Critical security patches remain the development team's responsibility
 
 ---
 
@@ -28,9 +102,12 @@
 
 ## 👤 User Roles & Their Functions
 
-The system serves **4 distinct user roles**:
+The system serves **3 distinct user roles** (plus the development team as temporary Super Admin during deployment):
 
-### 1. 🛡️ Super Administrator
+> [!NOTE]
+> **Super Administrator Role**: During the initial deployment phase, the development team acts as Super Administrator to provision the landlord's environment. Post-deployment, this role may be transferred to a designated landlord administrator or retained by the development team for security oversight.
+
+### 1. 🛡️ Super Administrator (Development Team)
 
 | Function | Description |
 |---|---|
@@ -249,3 +326,32 @@ graph LR
 | **Community Features** | 12 core engagement capabilities |
 | **Admin Features** | 13 specific capabilities |
 | **AI Capabilities** | RAG, chat, content moderation |
+
+---
+
+## 📋 Deployment Model Summary
+
+| Deployment Aspect | Value |
+|---|---|
+| **Delivery Model** | Deployment-Based (not centralized SaaS) |
+| **Post-Deployment Operator** | Individual Landlord (independent) |
+| **Development Team Role** | Limited: Deployment + Security + Paid Updates |
+| **Ongoing Feature Updates** | Optional paid add-ons only |
+| **Client Generalization Solution** | Per-landlord deployment handover |
+
+---
+
+## 🎓 For the Panel: Key Points to Remember
+
+1. **The Problem**: Landlords are generalized clients—they cannot collectively receive a centralized system handover (unlike a school or company that would be the sole client)
+
+2. **The Solution**: Deployment-Based Delivery—each landlord receives their own independently operated instance
+
+3. **Development Team Boundaries**:
+   - ✅ Deploy the system
+   - ✅ Security patches (critical)
+   - ✅ Optional paid customizations
+
+4. **Sustainability**: Paid update model ensures extended services are available without perpetual obligation
+
+5. **No Abandoned System Risk**: Security maintenance remains the development team's responsibility

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import Image from "next/image";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -184,6 +184,83 @@ const mergeCensorshipState = (incoming: UiMessageType, previous?: UiMessageType)
         disclosureAllowed: strictDisclosureAllowed,
     };
 };
+
+// Reducers for batching state updates in useEffects
+
+type ConversationFromUrlAction =
+    | { type: 'IRIS_ACTIVATED' }
+    | { type: 'CONVERSATION_SELECTED'; payload: string };
+
+function conversationFromUrlReducer(_state: undefined, action: ConversationFromUrlAction) {
+    switch (action.type) {
+        case 'IRIS_ACTIVATED':
+            return { isIrisActive: true, activeConversationId: null };
+        case 'CONVERSATION_SELECTED':
+            return { isIrisActive: false, activeConversationId: action.payload };
+        default:
+            return undefined;
+    }
+}
+
+type ConversationCacheAction =
+    | { type: 'CACHE_LOADED'; payload: { contacts: ContactItemType[]; activeConversationId: string | null } };
+
+function conversationCacheReducer(state: { contacts: ContactItemType[]; isSidebarLoading: boolean; activeConversationId: string | null }, action: ConversationCacheAction) {
+    switch (action.type) {
+        case 'CACHE_LOADED':
+            return { ...state, contacts: action.payload.contacts, isSidebarLoading: false, activeConversationId: action.payload.activeConversationId };
+        default:
+            return state;
+    }
+}
+
+type ConversationCleanupAction =
+    | { type: 'CLEANUP'; payload: { activeConversationId: string | null } };
+
+function conversationCleanupReducer(_state: undefined, action: ConversationCleanupAction) {
+    switch (action.type) {
+        case 'CLEANUP':
+            return { showInfoSidebar: false, showFilesSidebar: false, activeConversationId: action.payload.activeConversationId };
+        default:
+            return undefined;
+    }
+}
+
+type MessagesStateAction =
+    | { type: 'RESET' }
+    | { type: 'LOADING' }
+    | { type: 'LOAD_CACHED'; payload: UiMessageType[] };
+
+function messagesStateReducer(_state: undefined, action: MessagesStateAction) {
+    switch (action.type) {
+        case 'RESET':
+            return { messagesState: [], isOtherUserTyping: false, isMessagesLoading: false };
+        case 'LOADING':
+            return { messagesState: [], isOtherUserTyping: false, isMessagesLoading: true };
+        case 'LOAD_CACHED':
+            return { messagesState: action.payload, isOtherUserTyping: false, isMessagesLoading: false };
+        default:
+            return undefined;
+    }
+}
+
+type SearchAction =
+    | { type: 'RESET' }
+    | { type: 'SET_LOADING' }
+    | { type: 'SET_RESULTS'; payload: { data: MessageUserSearchResult[]; error: string | null } };
+
+function searchReducer(_state: undefined, action: SearchAction) {
+    switch (action.type) {
+        case 'RESET':
+            return { userSearchResults: [], userSearchError: null, isSearchingUsers: false };
+        case 'SET_LOADING':
+            return { userSearchResults: [], userSearchError: null, isSearchingUsers: true };
+        case 'SET_RESULTS':
+            return { userSearchResults: action.payload.data, userSearchError: action.payload.error, isSearchingUsers: false };
+        default:
+            return undefined;
+    }
+}
 
 export default function TenantMessagesPage() {
     const router = useRouter();

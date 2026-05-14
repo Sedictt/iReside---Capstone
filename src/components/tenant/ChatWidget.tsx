@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useReducer } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -21,7 +21,33 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { fetchIrisHistory, getCachedIrisHistory, setCachedIrisHistory, type IrisHistoryMessage } from "@/lib/iris/client";
 
-const EMPTY_ARRAY = Object.freeze([]) as any[];
+const EMPTY_ARRAY = Object.freeze([]) as unknown as any[];
+
+// Reducer for chat initialization state
+type ChatInitState = {
+    messages: Message[];
+    isChatInitializing: boolean;
+};
+
+type ChatInitAction =
+    | { type: "SET_MESSAGES"; payload: Message[] }
+    | { type: "SET_INITIALIZING"; payload: boolean };
+
+function chatInitReducer(state: ChatInitState, action: ChatInitAction): ChatInitState {
+    switch (action.type) {
+        case "SET_MESSAGES":
+            return { ...state, messages: action.payload };
+        case "SET_INITIALIZING":
+            return { ...state, isChatInitializing: action.payload };
+        default:
+            return state;
+    }
+}
+
+const initialChatInitState: ChatInitState = {
+    messages: EMPTY_ARRAY,
+    isChatInitializing: true,
+};
 
 interface Message {
     id: string;
@@ -56,10 +82,11 @@ export function ChatWidget({
 
     const firstName = getFirstName(profile?.full_name ?? user?.user_metadata?.full_name ?? user?.email ?? null);
 
-    const [messages, setMessages] = useState<Message[]>(EMPTY_ARRAY);
+    const [chatInitState, dispatchChatInit] = useReducer(chatInitReducer, initialChatInitState);
     const [input, setInput] = useState("");
     const [isTyping, setIsTyping] = useState(false);
-    const [isChatInitializing, setIsChatInitializing] = useState(true);
+    const messages = chatInitState.messages;
+    const isChatInitializing = chatInitState.isChatInitializing;
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const scrollToBottom = () => {
@@ -77,58 +104,62 @@ export function ChatWidget({
 
         const loadHistory = async () => {
             if (!user?.id) {
-                setMessages([
-                    {
+                dispatchChatInit({
+                    type: "SET_MESSAGES",
+                    payload: [{
                         id: "1",
                         role: "iris",
                         content: buildWelcomeMessage(firstName),
                         timestamp: new Date(),
-                    },
-                ]);
-                setIsChatInitializing(false);
+                    }],
+                });
+                dispatchChatInit({ type: "SET_INITIALIZING", payload: false });
                 return;
             }
 
             const cached = getCachedIrisHistory(user.id);
             if (cached && cached.length > 0) {
-                setMessages(
-                    cached.map((msg) => ({
+                dispatchChatInit({
+                    type: "SET_MESSAGES",
+                    payload: cached.map((msg) => ({
                         id: msg.id,
                         role: msg.role === "assistant" ? "iris" : "user",
                         content: msg.content,
                         timestamp: new Date(msg.created_at),
-                    }))
-                );
-                setIsChatInitializing(false);
+                    })),
+                });
+                dispatchChatInit({ type: "SET_INITIALIZING", payload: false });
                 return;
             }
 
-            setIsChatInitializing(true);
+            dispatchChatInit({ type: "SET_INITIALIZING", payload: true });
             const { data } = await fetchIrisHistory(100, { userId: user.id, useCache: true });
             if (isCancelled) return;
 
             if (data.length > 0) {
-                setMessages(
-                    data.map((msg) => ({
+                dispatchChatInit({
+                    type: "SET_MESSAGES",
+                    payload: data.map((msg) => ({
                         id: msg.id,
                         role: msg.role === "assistant" ? "iris" : "user",
                         content: msg.content,
                         timestamp: new Date(msg.created_at),
-                    }))
-                );
-                setIsChatInitializing(false);
+                    })),
+                });
+                dispatchChatInit({ type: "SET_INITIALIZING", payload: false });
                 return;
             }
 
-            setMessages([
-                {
+            dispatchChatInit({
+                type: "SET_MESSAGES",
+                payload: [{
                     id: "1",
                     role: "iris",
                     content: buildWelcomeMessage(firstName),
                     timestamp: new Date(),
-                },
-            ]);
-            setIsChatInitializing(false);
+                }],
+            });
+            dispatchChatInit({ type: "SET_INITIALIZING", payload: false });
         };
 
         loadHistory();
@@ -136,7 +167,7 @@ export function ChatWidget({
         return () => {
             isCancelled = true;
         };
-    }, [user?.id]);
+    }, [user?.id, firstName]);
 
     useEffect(() => {
         if (!user?.id || messages.length === 0) {
@@ -155,10 +186,10 @@ export function ChatWidget({
     }, [messages, user?.id]);
 
     useEffect(() => {
-        setMessages((prev) => {
-            const [first, ...rest] = prev;
+        dispatchChatInit({ type: "SET_MESSAGES", payload: (() => {
+            const [first, ...rest] = chatInitState.messages;
             if (!first || first.role !== "iris" || !first.content.toLowerCase().includes("welcome back")) {
-                return prev;
+                return chatInitState.messages;
             }
 
             return [
@@ -168,7 +199,7 @@ export function ChatWidget({
                 },
                 ...rest,
             ];
-        });
+        })() });
     }, [firstName]);
 
     const handleSend = async () => {
@@ -182,7 +213,7 @@ export function ChatWidget({
             timestamp: new Date(),
         };
 
-        setMessages(prev => [...prev, userMsg]);
+        dispatchChatInit({ type: "SET_MESSAGES", payload: [...chatInitState.messages, userMsg] });
         const userInput = input;
         setInput("");
         setIsTyping(true);
@@ -212,7 +243,7 @@ export function ChatWidget({
                 timestamp: new Date(),
             };
 
-            setMessages(prev => [...prev, irisMsg]);
+            dispatchChatInit({ type: "SET_MESSAGES", payload: [...chatInitState.messages, irisMsg] });
         } catch (error) {
             console.error('Error calling iRis API:', error);
 
@@ -223,7 +254,7 @@ export function ChatWidget({
                 content: "I apologize, but I'm having trouble connecting right now. Please try again in a moment.",
                 timestamp: new Date(),
             };
-            setMessages(prev => [...prev, errorMsg]);
+            dispatchChatInit({ type: "SET_MESSAGES", payload: [...chatInitState.messages, errorMsg] });
         } finally {
             setIsTyping(false);
         }

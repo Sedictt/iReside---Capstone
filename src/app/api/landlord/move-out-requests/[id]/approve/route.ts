@@ -21,27 +21,30 @@ export async function PUT(req: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "Inspection date is required" }, { status: 400 });
     }
 
-    const { data: existingRequest, error: fetchError } = await supabase
-      .from("move_out_requests")
-      .select("*, lease:leases(start_date, end_date)")
+    const reqQuery = supabase
+      .from("move_out_requests" as any)
+      .select("*, lease:leases(start_date, end_date)");
+
+    const { data: existingRequest, error: fetchError } = await reqQuery
       .eq("id", id)
       .eq("landlord_id", user.id)
       .eq("status", "pending")
-      .single();
+      .single() as any;
 
     if (fetchError || !existingRequest) {
       return NextResponse.json({ error: "Move-out request not found or already processed" }, { status: 404 });
     }
 
-    const { error: updateError } = await supabase
-      .from("move_out_requests")
-      .update({
+    const updatePayload = {
         status: "approved",
         approved_at: new Date().toISOString(),
         inspection_date,
         updated_at: new Date().toISOString(),
-      })
-      .eq("id", id);
+      } as any;
+      const { error: updateError } = await supabase
+        .from("move_out_requests" as any)
+        .update(updatePayload)
+        .eq("id", id);
 
     if (updateError) throw updateError;
 

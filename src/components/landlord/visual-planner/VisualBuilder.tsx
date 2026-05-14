@@ -5,6 +5,7 @@ import Image from "next/image";
 import { AnimatePresence, m as motion } from "framer-motion";
 import { flushSync } from "react-dom";
 import { useTheme } from "next-themes";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Link from "next/link";
 import styles from "./blueprint.module.css";
@@ -18,7 +19,7 @@ const WalkInApplicationModal = dynamic(() => import("@/components/landlord/appli
 });
 
 import { TenantInviteManager } from "@/components/landlord/applications/TenantInviteManager";
-import { QrCode, X } from "lucide-react";
+import { QrCode, X, ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
 
@@ -411,15 +412,18 @@ const ComplaintModal = ({
 
 
 
-export default function VisualBuilder({ 
-    readOnly = false, 
+export default function VisualBuilder({
+    readOnly = false,
     propertyId: externalPropertyId,
-    demoMode = false 
-}: { 
-    readOnly?: boolean; 
+    demoMode = false,
+    showBackButton = false
+}: {
+    readOnly?: boolean;
     propertyId?: string;
     demoMode?: boolean;
+    showBackButton?: boolean;
 } = {}) {
+    const { back } = useRouter();
     const propertyContext = useOptionalProperty();
     const selectedPropertyId = externalPropertyId ?? propertyContext?.selectedPropertyId ?? "all";
     const selectedProperty = propertyContext?.selectedProperty;
@@ -2678,6 +2682,16 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                         className={`overflow-hidden flex items-center justify-between px-6 shrink-0 z-20 backdrop-blur ${isDark ? 'bg-surface-dark border-b border-zinc-800 shadow-none' : 'bg-card/95 border-b border-border shadow-sm'}`}
                     >
                 <div className="flex items-center gap-4">
+                    {showBackButton && (
+                        <button
+                            onClick={() => back()}
+                            className={`flex items-center gap-2 ${isDark ? 'text-zinc-400 hover:text-zinc-100' : 'text-zinc-500 hover:text-zinc-900'} transition-colors group`}
+                        >
+                            <div className={`size-8 rounded-full flex items-center justify-center border ${isDark ? 'bg-zinc-800 border-zinc-700' : 'bg-white border-neutral-200 shadow-sm'} group-hover:shadow transition-all`}>
+                                <ChevronLeft className="size-4" />
+                            </div>
+                        </button>
+                    )}
                     <div className="flex items-center gap-2">
                         <Logo className="h-6 w-auto" />
                     </div>

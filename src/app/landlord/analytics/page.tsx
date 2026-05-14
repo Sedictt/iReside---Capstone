@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { BarChart, ChevronDown, Download, Eye, EyeOff, FileText, History, TrendingUp, X } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { cn } from "@/lib/utils";
@@ -231,6 +231,48 @@ const getDateLabels = (start: Date, end: Date, pointsCount: number) => {
     });
 };
 
+// ─── Stats Reducer ───────────────────────────────────────────────────
+type StatsState = {
+    primaryKpis: KpiItem[];
+    extendedKpis: KpiItem[];
+    financialChart: OverviewApiResponse["financialChart"];
+    operationalSnapshot: OverviewApiResponse["operationalSnapshot"];
+    statsLoading: boolean;
+    statsError: string | null;
+};
+
+type StatsAction =
+    | { type: "LOAD_START" }
+    | { type: "LOAD_SUCCESS"; payload: { primaryKpis: KpiItem[]; extendedKpis: KpiItem[]; financialChart: OverviewApiResponse["financialChart"]; operationalSnapshot: OverviewApiResponse["operationalSnapshot"] } }
+    | { type: "LOAD_ERROR"; error: string }
+    | { type: "MERGE_KPIS"; primaryKpis: KpiItem[]; extendedKpis: KpiItem[] };
+
+function statsReducer(state: StatsState, action: StatsAction): StatsState {
+    switch (action.type) {
+        case "LOAD_START":
+            return { ...state, statsLoading: true, statsError: null };
+        case "LOAD_SUCCESS":
+            return {
+                ...state,
+                primaryKpis: action.payload.primaryKpis,
+                extendedKpis: action.payload.extendedKpis,
+                financialChart: action.payload.financialChart,
+                operationalSnapshot: action.payload.operationalSnapshot,
+                statsLoading: false,
+            };
+        case "LOAD_ERROR":
+            return { ...state, statsError: action.error, statsLoading: false };
+        case "MERGE_KPIS":
+            return {
+                ...state,
+                primaryKpis: action.primaryKpis,
+                extendedKpis: action.extendedKpis,
+            };
+        default:
+            return state;
+    }
+}
+
 export default function AnalyticsPage() {
     const { profile } = useAuth();
     const { selectedPropertyId } = useProperty();
@@ -244,14 +286,19 @@ export default function AnalyticsPage() {
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
     const [exportFormat, setExportFormat] = useState<"csv" | "pdf">("pdf");
     const [exportHistory, setExportHistory] = useState<ExportAuditItem[]>([]);
-    const [primaryKpis, setPrimaryKpis] = useState<KpiItem[]>(DEFAULT_PRIMARY_KPIS);
-    const [extendedKpis, setExtendedKpis] = useState<KpiItem[]>(DEFAULT_EXTENDED_KPIS);
-    const [financialChart, setFinancialChart] = useState<OverviewApiResponse["financialChart"]>(DEFAULT_FINANCIAL_CHART);
-    const [operationalSnapshot, setOperationalSnapshot] = useState<OverviewApiResponse["operationalSnapshot"]>(DEFAULT_OPERATIONAL_SNAPSHOT);
-    const [statsLoading, setStatsLoading] = useState(false);
-    const [statsError, setStatsError] = useState<string | null>(null);
     const [historyOffset, setHistoryOffset] = useState(0);
     const [hasMoreHistory, setHasMoreHistory] = useState(true);
+
+    // Stats state managed by reducer
+    const [statsState, dispatchStats] = useReducer(statsReducer, {
+        primaryKpis: DEFAULT_PRIMARY_KPIS,
+        extendedKpis: DEFAULT_EXTENDED_KPIS,
+        financialChart: DEFAULT_FINANCIAL_CHART,
+        operationalSnapshot: DEFAULT_OPERATIONAL_SNAPSHOT,
+        statsLoading: false,
+        statsError: null,
+    });
+    const { primaryKpis, extendedKpis, financialChart, operationalSnapshot, statsLoading, statsError } = statsState;
     const HISTORY_LIMIT = 5;
 
     const reportStartDate = useMemo(() => new Date(`${startDate}T00:00:00`), [startDate]);
@@ -544,8 +591,7 @@ export default function AnalyticsPage() {
         };
 
         const loadOverview = async () => {
-            setStatsLoading(true);
-            setStatsError(null);
+            dispatchStats({ type: "LOAD_START" });
 
             try {
                 const params = new URLSearchParams({
@@ -563,15 +609,19 @@ export default function AnalyticsPage() {
                 }
 
                 const payload = (await response.json()) as OverviewApiResponse;
-                setPrimaryKpis((previous) => mergeKpiValues(previous, payload.primaryKpis ?? []));
-                setExtendedKpis((previous) => mergeKpiValues(previous, payload.extendedKpis ?? []));
-                setFinancialChart(payload.financialChart ?? DEFAULT_FINANCIAL_CHART);
-                setOperationalSnapshot(payload.operationalSnapshot ?? DEFAULT_OPERATIONAL_SNAPSHOT);
+                
+                dispatchStats({
+                    type: "LOAD_SUCCESS",
+                    payload: {
+                        primaryKpis: mergeKpiValues(primaryKpis, payload.primaryKpis ?? []),
+                        extendedKpis: mergeKpiValues(extendedKpis, payload.extendedKpis ?? []),
+                        financialChart: payload.financialChart ?? DEFAULT_FINANCIAL_CHART,
+                        operationalSnapshot: payload.operationalSnapshot ?? DEFAULT_OPERATIONAL_SNAPSHOT,
+                    }
+                });
             } catch (error) {
                 if ((error as Error).name === "AbortError") return;
-                setStatsError("Unable to load live analytics right now.");
-            } finally {
-                setStatsLoading(false);
+                dispatchStats({ type: "LOAD_ERROR", error: "Unable to load live analytics right now." });
             }
         };
 

@@ -47,31 +47,38 @@ export async function GET() {
     const property = unitInfo.properties;
     const propertyId = property.id;
 
-    // 2. Fetch all related property data in parallel
+    // 2. Fetch units first to get unit IDs
+    const { data: units, error: unitsError } = await supabase
+        .from("units")
+        .select("id, name, floor, status, beds, baths, sqft, rent_amount")
+        .eq("property_id", propertyId)
+        .order("floor", { ascending: true })
+        .order("name", { ascending: true });
+
+    if (unitsError) {
+        return NextResponse.json({ error: "Failed to load units." }, { status: 500 });
+    }
+
+    const unitIds = (units ?? []).map(u => u.id);
+
+    // 3. Fetch all related property data in parallel
     const [
-        { data: units, error: unitsError },
         { data: positions, error: posError },
         { data: requests, error: requestsError },
         { data: floorConfigs, error: floorError }
     ] = await Promise.all([
-        supabase
-            .from("units")
-            .select("id, name, floor, status, beds, baths, sqft, rent_amount")
-            .eq("property_id", propertyId)
-            .order("floor", { ascending: true })
-            .order("name", { ascending: true }),
-        supabase
+        (supabase as any)
             .from("unit_map_positions")
             .select("unit_id, floor_key, x, y, w, h")
-            .eq("property_id", propertyId), // Assuming unit_map_positions has property_id or we filter by unit_ids later
-        supabase
+            .in("unit_id", unitIds),
+        (supabase as any)
             .from("unit_transfer_requests")
             .select("id, requested_unit_id, status, reason, created_at, landlord_note")
             .eq("tenant_id", user.id)
             .eq("property_id", propertyId)
             .order("created_at", { ascending: false })
             .limit(10),
-        supabase
+        (supabase as any)
             .from("property_floor_configs")
             .select("id, floor_number, floor_key, display_name, sort_order")
             .eq("property_id", propertyId)
@@ -79,8 +86,9 @@ export async function GET() {
     ]);
 
     // Map positions to units
+    type UnitPosition = { unit_id: string; floor_key: string; x: number; y: number; w: number; h: number };
     const positionsByUnitId = new Map(
-        (positions ?? [])
+        ((positions ?? []) as UnitPosition[])
             .filter(p => p.x !== null && p.y !== null && p.w !== null && p.h !== null)
             .map(p => [p.unit_id, p] as const)
     );
@@ -186,7 +194,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Only vacant units can be requested." }, { status: 400 });
     }
 
-    const { data: pendingRequest } = await supabase
+    const { data: pendingRequest } = await (supabase as any)
         .from("unit_transfer_requests")
         .select("id")
         .eq("tenant_id", user.id)
@@ -202,7 +210,7 @@ export async function POST(request: NextRequest) {
         );
     }
 
-    const { data: created, error: createError } = await supabase
+    const { data: created, error: createError } = await (supabase as any)
         .from("unit_transfer_requests")
         .insert({
             lease_id: lease.id,

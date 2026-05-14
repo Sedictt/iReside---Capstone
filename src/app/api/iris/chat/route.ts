@@ -124,7 +124,7 @@ export async function POST(request: Request) {
         // Return response
         return NextResponse.json({
             response: aiResponse,
-            hasDataCard: hasWifiInfo && context.property?.amenities?.some(a => 
+            hasDataCard: hasWifiInfo && context.property?.amenities?.some((a: string) => 
                 a.toLowerCase().includes('wifi') || a.toLowerCase().includes('internet')
             ),
             metadata: {

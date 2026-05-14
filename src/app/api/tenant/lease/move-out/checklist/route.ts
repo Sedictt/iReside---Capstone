@@ -22,12 +22,12 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: "Checklist data is required" }, { status: 400 });
     }
 
-    const { data: existingRequest, error: fetchError } = await supabase
+    const { data: existingRequest, error: fetchError } = (await (supabase as any)
       .from("move_out_requests")
       .select("id, checklist_data")
       .eq("tenant_id", user.id)
       .eq("status", "approved")
-      .single();
+      .single()) as { data: { id: string; checklist_data: Record<string, unknown> } | null; error: any };
 
     if (fetchError || !existingRequest) {
       return NextResponse.json({ 
@@ -52,7 +52,7 @@ export async function PUT(req: Request) {
     );
 
     const { error: updateError } = await supabase
-      .from("move_out_requests")
+      .from("move_out_requests" as any)
       .update({
         checklist_data: mergedChecklist,
         checklist_completed: allCompleted,

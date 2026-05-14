@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from "next/link";
 import { Building2, ArrowRight, CheckCircle2, Upload, FileCheck, Check, Eye, Trash2, FileText } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { saveWizardState, loadWizardState, clearWizardState } from "@/lib/wizard-storage";
 import { MAX_FILE_SIZE, MAX_FILE_SIZE_MB } from "@/lib/constants";
@@ -280,13 +280,7 @@ export default function SignUpPage() {
                 <div className="my-auto w-full flex flex-col pb-8">
                 {/* Hero Title Area */}
                 <div className="text-center mb-6 sm:mb-8 space-y-2 sm:space-y-3 animate-in fade-in slide-in-from-bottom-8 duration-700 fill-mode-both shrink-0">
-                    <div className="inline-flex items-center gap-2 px-4 py-1.5 sm:px-5 sm:py-2 rounded-full bg-primary/10 border border-primary/20 text-primary font-black text-xs sm:text-sm tracking-wide uppercase shadow-[0_0_20px_rgba(109,152,56,0.15)] mb-1">
-                        <span className="relative flex size-2">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                          <span className="relative inline-flex rounded-full size-2 bg-primary"></span>
-                        </span>
-                        Partner Portal
-                    </div>
+                    
                     
                     <h1 className="text-3xl md:text-4xl font-black tracking-tight text-white drop-shadow-sm pb-1">
                         Landlord Registration

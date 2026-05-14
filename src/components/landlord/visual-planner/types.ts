@@ -1,5 +1,3 @@
-import { Unit as BaseUnit } from "@/context/PropertyContext";
-
 export interface Unit {
     id: string;       // local canvas id (same as dbId for real units)
     dbId: string;     // real UUID from `units` table

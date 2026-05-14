@@ -75,11 +75,13 @@ export async function POST(request: Request, context: RouteContext) {
 
     const nowIso = new Date().toISOString();
     const reviewNote = `Bypass confirmed by landlord. Reason: ${reason}`;
-    const { data: requests, error: requestsError } = await adminClient
-        .from("application_payment_requests")
-        .select("id, requirement_type, status")
+    const query = adminClient
+        .from("application_payment_requests" as any)
+        .select("id, requirement_type, status");
+
+    const { data: requests, error: requestsError } = await query
         .eq("application_id", application.id)
-        .in("requirement_type", ["advance_rent", "security_deposit"]);
+        .in("requirement_type", ["advance_rent", "security_deposit"]) as any;
 
     if (requestsError || !requests || requests.length === 0) {
         return NextResponse.json({ error: "No payment requests found for bypass." }, { status: 404 });
@@ -99,7 +101,7 @@ export async function POST(request: Request, context: RouteContext) {
         }
 
         const { error: updateError } = await adminClient
-            .from("application_payment_requests")
+            .from("application_payment_requests" as any)
             .update(bypassUpdate)
             .eq("id", row.id)
             .eq("application_id", application.id);
@@ -121,10 +123,12 @@ export async function POST(request: Request, context: RouteContext) {
         });
     }
 
-    const { data: allRequests } = await adminClient
-        .from("application_payment_requests")
-        .select("requirement_type, status")
-        .eq("application_id", application.id);
+    const allQuery = adminClient
+        .from("application_payment_requests" as any)
+        .select("requirement_type, status");
+
+    const { data: allRequests } = await allQuery
+        .eq("application_id", application.id) as any;
 
     return NextResponse.json({
         success: true,

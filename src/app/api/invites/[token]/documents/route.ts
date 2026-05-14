@@ -32,11 +32,11 @@ const sanitizeFileName = (name: string) =>
 
 async function loadInviteRecord(token: string) {
     const adminClient = createAdminClient();
-    const { data, error } = await adminClient
-        .from("tenant_intake_invites")
+    const { data, error } = await (adminClient
+        .from("tenant_intake_invites" as any)
         .select("id, application_type, status, max_uses, use_count, expires_at, token_hash, required_requirements")
         .eq("public_token", token)
-        .maybeSingle();
+        .maybeSingle() as any);
 
     if (error) throw error;
     if (!data) return null;

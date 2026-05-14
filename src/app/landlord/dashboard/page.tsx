@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useReducer } from "react";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { DashboardBanner } from "@/components/landlord/dashboard/DashboardBanner";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -53,6 +53,34 @@ const INACTIVE_INVITE_STATUSES = ["expired", "revoked", "inactive", "disabled", 
 
 const FALLBACK_AVATAR = "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&w=150&q=80";
 
+// --- Payments Loading Reducer ---
+type PaymentsState = {
+    paymentsByCategory: Record<PaymentCategory, PaymentListItem[]>;
+    loading: boolean;
+    error: string | null;
+};
+
+type PaymentsAction =
+    | { type: "LOAD_START" }
+    | { type: "LOAD_SUCCESS"; payload: Record<PaymentCategory, PaymentListItem[]> }
+    | { type: "LOAD_ERROR"; error: string }
+    | { type: "RESET" };
+
+function paymentsReducer(state: PaymentsState, action: PaymentsAction): PaymentsState {
+    switch (action.type) {
+        case "LOAD_START":
+            return { ...state, loading: true, error: null };
+        case "LOAD_SUCCESS":
+            return { ...state, loading: false, error: null, paymentsByCategory: action.payload };
+        case "LOAD_ERROR":
+            return { ...state, loading: false, error: action.error };
+        case "RESET":
+            return { ...state, paymentsByCategory: { Overdue: [], "Near Due": [], Paid: [] }, loading: false, error: null };
+        default:
+            return state;
+    }
+}
+
 const PAYMENT_CATEGORIES: Array<{ key: PaymentCategory; label: string; hint: string; emptyState: string; tone: string; dot: string }> = [
     {
         key: "Overdue",
@@ -84,13 +112,11 @@ export default function LandlordDashboard() {
     const { selectedPropertyId } = useProperty();
     const [mounted, setMounted] = useState(false);
     const [openPaymentModal, setOpenPaymentModal] = useState<"Overdue" | "Near Due" | "Paid" | null>(null);
-    const [paymentsByCategory, setPaymentsByCategory] = useState<Record<PaymentCategory, PaymentListItem[]>>({
-        Overdue: [],
-        "Near Due": [],
-        Paid: [],
+    const [paymentsState, dispatchPayments] = useReducer(paymentsReducer, {
+        paymentsByCategory: { Overdue: [], "Near Due": [], Paid: [] },
+        loading: true,
+        error: null,
     });
-    const [paymentsLoading, setPaymentsLoading] = useState(true);
-    const [paymentsError, setPaymentsError] = useState<string | null>(null);
 
     const [isWalkInModalOpen, setIsWalkInModalOpen] = useState(false);
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
@@ -131,8 +157,8 @@ export default function LandlordDashboard() {
         return tenantInvites.filter(i => i.propertyId === selectedPropertyId);
     }, [tenantInvites, selectedPropertyId]);
 
-    const overdueCount = paymentsByCategory.Overdue.length;
-    const nearDueCount = paymentsByCategory["Near Due"].length;
+    const overdueCount = paymentsState.paymentsByCategory.Overdue.length;
+    const nearDueCount = paymentsState.paymentsByCategory["Near Due"].length;
     const openUnitsCount = filteredUnits.filter((unit) => {
         const normalizedStatus = (unit.status ?? "").toLowerCase();
         if (!normalizedStatus) return true;
@@ -151,9 +177,7 @@ export default function LandlordDashboard() {
         const controller = new AbortController();
 
         const loadPayments = async () => {
-            // Batch initial state updates
-            setPaymentsLoading(true);
-            setPaymentsError(null);
+            dispatchPayments({ type: "LOAD_START" });
 
             try {
                 const response = await fetch(`/api/landlord/payments/overview?propertyId=${selectedPropertyId}`, {
@@ -169,20 +193,20 @@ export default function LandlordDashboard() {
                     payments?: Record<PaymentCategory, PaymentListItem[]>;
                 };
 
-                // Batch payment data update
-                setPaymentsByCategory({
-                    Overdue: payload.payments?.Overdue ?? [],
-                    "Near Due": payload.payments?.["Near Due"] ?? [],
-                    Paid: payload.payments?.Paid ?? [],
+                dispatchPayments({
+                    type: "LOAD_SUCCESS",
+                    payload: {
+                        Overdue: payload.payments?.Overdue ?? [],
+                        "Near Due": payload.payments?.["Near Due"] ?? [],
+                        Paid: payload.payments?.Paid ?? [],
+                    },
                 });
             } catch (error) {
                 if ((error as Error).name === "AbortError") {
                     return;
                 }
 
-                setPaymentsError("Unable to load payments right now.");
-            } finally {
-                setPaymentsLoading(false);
+                dispatchPayments({ type: "LOAD_ERROR", error: "Unable to load payments right now." });
             }
         };
 
@@ -405,7 +429,7 @@ export default function LandlordDashboard() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 relative z-10">
                         {PAYMENT_CATEGORIES.map(({ key, label, hint, emptyState, dot, tone }) => {
-                            const items = paymentsByCategory[key] ?? [];
+                            const items = paymentsState.paymentsByCategory[key] ?? [];
                             const topItem = items[0] ?? null;
 
                             return (
@@ -427,7 +451,7 @@ export default function LandlordDashboard() {
                                     </div>
                                     
                                     <div className="flex min-h-[140px] flex-1 flex-col justify-center rounded-[1.75rem] border border-white/10 bg-card/70 p-4 transition-all hover:bg-card">
-                                        {paymentsLoading ? (
+                                        {paymentsState.loading ? (
                                             <div className="space-y-4 animate-pulse px-2">
                                                 <div className="flex items-center gap-4">
                                                     <div className="size-12 rounded-full bg-muted/40" />
@@ -437,9 +461,9 @@ export default function LandlordDashboard() {
                                                     </div>
                                                 </div>
                                             </div>
-                                        ) : paymentsError ? (
+                                        ) : paymentsState.error ? (
                                             <div className="p-4 text-center">
-                                                <p className="text-xs text-red-500/80 font-black">{paymentsError}</p>
+                                                <p className="text-xs text-red-500/80 font-black">{paymentsState.error}</p>
                                             </div>
                                         ) : topItem ? (
                                             <PaymentCard
@@ -477,7 +501,7 @@ export default function LandlordDashboard() {
                 isOpen={openPaymentModal !== null}
                 onClose={() => setOpenPaymentModal(null)}
                 category={openPaymentModal}
-                paymentsByCategory={paymentsByCategory}
+                paymentsByCategory={paymentsState.paymentsByCategory}
             />
 
             <WalkInApplicationModal 

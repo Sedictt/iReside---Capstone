@@ -26,12 +26,14 @@ export async function PUT(
     }
 
     // Get move-out request and verify ownership
-    const { data: moveOutRequest, error: fetchError } = await supabase
-      .from("move_out_requests")
-      .select("*, lease:leases!inner(*)")
+    const reqQuery = supabase
+      .from("move_out_requests" as any)
+      .select("*, lease:leases!inner(*)");
+
+    const { data: moveOutRequest, error: fetchError } = await reqQuery
       .eq("id", id)
       .eq("landlord_id", user.id)
-      .single();
+      .single() as any;
 
     if (fetchError || !moveOutRequest) {
       return NextResponse.json(
@@ -56,16 +58,19 @@ export async function PUT(
     const { inspection_date } = body;
 
     // Update move-out request
-    const { data: updated, error: updateError } = await supabase
-      .from("move_out_requests")
-      .update({
+    const updatePayload = {
         status: "approved",
         approved_at: new Date().toISOString(),
         inspection_date: inspection_date || null
-      })
-      .eq("id", id)
-      .select()
-      .single();
+      } as any;
+      const updateQuery = supabase
+        .from("move_out_requests" as any)
+        .update(updatePayload)
+        .eq("id", id)
+        .select()
+        .single();
+
+    const { data: updated, error: updateError } = await updateQuery as any;
 
     if (updateError) {
       console.error("[landlord-move-out-approve] Update error:", updateError);
@@ -90,11 +95,11 @@ export async function PUT(
       .from("notifications")
       .insert({
         user_id: moveOutRequest.tenant_id,
-        type: "move_out_approved",
+        type: "move_out_approved" as string,
         title: "Move-Out Approved",
         message: `Your move-out request for ${moveOutRequest.requested_date} has been approved.`,
         data: { move_out_request_id: id, inspection_date }
-      });
+      } as any);
 
     return NextResponse.json({
       message: "Move-out request approved",

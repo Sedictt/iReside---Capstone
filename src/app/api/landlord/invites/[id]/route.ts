@@ -24,7 +24,7 @@ export async function PATCH(
     }
 
     const { data: invite, error: findError } = await adminClient
-        .from("tenant_intake_invites")
+        .from("tenant_intake_invites" as any)
         .select("id")
         .eq("id", id)
         .eq("landlord_id", user.id)
@@ -35,7 +35,7 @@ export async function PATCH(
     }
 
     const { error: updateError } = await adminClient
-        .from("tenant_intake_invites")
+        .from("tenant_intake_invites" as any)
         .update({ status: "revoked" })
         .eq("id", id)
         .eq("landlord_id", user.id);
@@ -44,7 +44,7 @@ export async function PATCH(
         return NextResponse.json({ error: "Failed to revoke invite." }, { status: 500 });
     }
 
-    await adminClient.from("tenant_intake_invite_events").insert({
+    await adminClient.from("tenant_intake_invite_events" as any).insert({
         invite_id: id,
         event_type: "revoked",
         metadata: {},

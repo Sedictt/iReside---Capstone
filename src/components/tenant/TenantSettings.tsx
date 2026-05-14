@@ -30,7 +30,7 @@ import {
     X,
 } from "lucide-react";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useReducer } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -230,9 +230,30 @@ export function TenantSettings() {
     const [isDisabling, setIsDisabling] = useState(false);
 
     // Sessions States
-    const [sessions, setSessions] = useState<any[]>([]);
-    const [isSessionsLoading, setIsSessionsLoading] = useState(false);
-    const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+    // Reducer to avoid multiple setState calls in useEffect
+    type SessionsState = { sessions: any[]; isSessionsLoading: boolean; currentSessionId: string | null };
+    type SessionsAction =
+        | { type: 'FETCH_SESSIONS_START' }
+        | { type: 'FETCH_SESSIONS_SUCCESS'; payload: { sessions: any[]; currentSessionId: string | null } }
+        | { type: 'FETCH_SESSIONS_ERROR' };
+
+    const sessionsReducer = (state: SessionsState, action: SessionsAction): SessionsState => {
+        switch (action.type) {
+            case 'FETCH_SESSIONS_START':
+                return { ...state, isSessionsLoading: true };
+            case 'FETCH_SESSIONS_SUCCESS':
+                return { ...state, isSessionsLoading: false, sessions: action.payload.sessions, currentSessionId: action.payload.currentSessionId };
+            case 'FETCH_SESSIONS_ERROR':
+                return { ...state, isSessionsLoading: false };
+            default:
+                return state;
+        }
+    };
+
+    const [sessionsState, dispatchSessions] = useReducer(sessionsReducer, {
+        sessions: [], isSessionsLoading: false, currentSessionId: null
+    });
+    const { sessions, isSessionsLoading, currentSessionId } = sessionsState;
 
     // Notification States
     const [notifications, setNotifications] = useState({
@@ -274,18 +295,19 @@ export function TenantSettings() {
     useEffect(() => {
         if (activeTab === "Security" && activeSubTab === "Sessions") {
             const fetchSessions = async () => {
-                setIsSessionsLoading(true);
+                dispatchSessions({ type: 'FETCH_SESSIONS_START' });
                 try {
                     const { data, error } = await (supabase as any).from('user_sessions').select('*').order('updated_at', { ascending: false });
                     if (error) throw error;
-                    
+
                     const { data: { session } } = await supabase.auth.getSession();
-                    setSessions(data || []);
-                    setCurrentSessionId(session ? (session as any).id : null);
+                    dispatchSessions({
+                        type: 'FETCH_SESSIONS_SUCCESS',
+                        payload: { sessions: data || [], currentSessionId: session ? (session as any).id : null }
+                    });
                 } catch (err) {
                     console.error("[Sessions] Failed to fetch sessions:", err);
-                } finally {
-                    setIsSessionsLoading(false);
+                    dispatchSessions({ type: 'FETCH_SESSIONS_ERROR' });
                 }
             };
             fetchSessions();
@@ -379,18 +401,22 @@ export function TenantSettings() {
     };
 
     const handleSignOutOthers = async () => {
-        setIsSessionsLoading(true);
+        dispatchSessions({ type: 'FETCH_SESSIONS_START' });
         const loadingToast = toast.loading("Signing out other devices...");
         try {
             const { error } = await supabase.auth.signOut({ scope: "others" });
             if (error) throw error;
             toast.success("Signed out of all other devices successfully", { id: loadingToast });
             const { data } = await (supabase as any).from('user_sessions').select('*').order('updated_at', { ascending: false });
-            if (data) setSessions(data);
+            if (data) {
+                dispatchSessions({ 
+                    type: 'FETCH_SESSIONS_SUCCESS', 
+                    payload: { sessions: data, currentSessionId: currentSessionId } 
+                });
+            }
         } catch (error: any) {
             toast.error(error.message || "Failed to sign out other devices", { id: loadingToast });
-        } finally {
-            setIsSessionsLoading(false);
+            dispatchSessions({ type: 'FETCH_SESSIONS_ERROR' });
         }
     };
 

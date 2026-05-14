@@ -33,11 +33,11 @@ type InviteRecord = {
 
 async function loadInviteRecord(token: string) {
     const adminClient = createAdminClient();
-    const { data, error } = await adminClient
-        .from("tenant_intake_invites")
+    const { data, error } = await (adminClient
+        .from("tenant_intake_invites" as any)
         .select("id, landlord_id, property_id, unit_id, mode, application_type, required_requirements, public_token, token_hash, status, max_uses, use_count, expires_at")
         .eq("public_token", token)
-        .maybeSingle();
+        .maybeSingle() as any);
 
     if (error) {
         throw error;
@@ -65,8 +65,8 @@ async function expireInviteIfNeeded(invite: InviteRecord) {
     });
 
     if (availability.expired && invite.status !== "expired") {
-        await adminClient.from("tenant_intake_invites").update({ status: "expired" }).eq("id", invite.id);
-        await adminClient.from("tenant_intake_invite_events").insert({
+        await adminClient.from("tenant_intake_invites" as any).update({ status: "expired" }).eq("id", invite.id);
+        await adminClient.from("tenant_intake_invite_events" as any).insert({
             invite_id: invite.id,
             event_type: "expired",
             metadata: {},
@@ -135,7 +135,7 @@ export async function GET(
         const selectedUnit = invite.mode === "unit" ? eligibleUnits[0] ?? null : null;
         const fallbackPreviewUnit = selectedUnit ?? eligibleUnits[0] ?? null;
 
-        await adminClient.from("tenant_intake_invite_events").insert({
+        await adminClient.from("tenant_intake_invite_events" as any).insert({
             invite_id: invite.id,
             event_type: "opened",
             metadata: { mode: invite.mode },
@@ -362,13 +362,11 @@ export async function POST(
             }
         }
 
-        const insertPayload: ApplicationInsert = {
+        const insertPayload = {
             unit_id: resolvedUnitId,
-            applicant_id: null,
             landlord_id: invite.landlord_id,
-            created_by: null,
-            applicant_name: body.applicant_name.trim(),
-            applicant_email: body.applicant_email.trim(),
+            applicant_name: applicantName,
+            applicant_email: applicantEmail,
             applicant_phone: body.applicant_phone?.trim() || null,
             move_in_date: body.move_in_date || null,
             emergency_contact_name: body.emergency_contact_name?.trim() || null,
@@ -385,12 +383,16 @@ export async function POST(
             message: body.message?.trim() || null,
             status: "pending",
             application_source: "invite_link",
-            invite_id: invite.id,
-        };
+        } as any;
+
+        // applicant_id and created_by are intentionally omitted — they are assigned by the auth flow
+        // Cast applicant_id as null since it is only set when the applicant logs in
+        (insertPayload as any).applicant_id = null;
+        (insertPayload as any).created_by = null;
 
         const { data: application, error: insertError } = await adminClient
             .from("applications")
-            .insert(insertPayload)
+            .insert(insertPayload as any)
             .select("id, status, created_at")
             .single();
 
@@ -402,7 +404,7 @@ export async function POST(
         const nextStatus = nextUseCount >= invite.max_uses ? "consumed" : invite.status;
 
         await adminClient
-            .from("tenant_intake_invites")
+            .from("tenant_intake_invites" as any)
             .update({
                 use_count: nextUseCount,
                 status: nextStatus,
@@ -410,7 +412,7 @@ export async function POST(
             })
             .eq("id", invite.id);
 
-        await adminClient.from("tenant_intake_invite_events").insert({
+        await adminClient.from("tenant_intake_invite_events" as any).insert({
             invite_id: invite.id,
             event_type: nextStatus === "consumed" ? "consumed" : "submitted",
             metadata: {

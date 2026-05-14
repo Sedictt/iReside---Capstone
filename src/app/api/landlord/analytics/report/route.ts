@@ -64,21 +64,21 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase
         .from("landlord_statistics_exports")
-        .select("id, format, report_range, created_at, metadata")
+        .select("id, export_type, file_url, created_at")
         .eq("landlord_id", user.id)
         .order("created_at", { ascending: false })
-        .range(offset, offset + limit - 1);
+        .range(offset, offset + limit - 1) as any);
 
     if (error) {
         return NextResponse.json({ error: "Failed to fetch export history." }, { status: 500 });
     }
 
-    const history = (data ?? []).map((row) => ({
+    const history = (data ?? []).map((row: any) => ({
         id: row.id,
-        format: row.format,
-        range: row.report_range,
+        format: row.export_type,
+        range: null,
         generatedAt: row.created_at,
         rows: (row.metadata as Record<string, unknown>)?.rows as ReportRow[] ?? [],
     }));
@@ -112,18 +112,18 @@ export async function POST(request: Request) {
         rows: body.rows,
     };
 
-    const { error: insertError } = await supabase.from("landlord_statistics_exports").insert({
+    const insertPayload = {
         landlord_id: user.id,
-        format: payload.format,
-        report_range: payload.range,
-        mode: payload.mode,
-        include_expanded_kpis: payload.includeExpandedKpis,
-        row_count: payload.rows.length,
+        export_type: payload.format,
         metadata: {
             generatedAt: payload.generatedAt ?? new Date().toLocaleString(),
             rows: payload.rows,
         },
-    });
+    } as any;
+
+    const { error: insertError } = await supabase
+        .from("landlord_statistics_exports")
+        .insert(insertPayload);
 
     if (insertError) {
         return NextResponse.json({ error: "Failed to record export history." }, { status: 500 });

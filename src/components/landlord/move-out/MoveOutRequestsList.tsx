@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useReducer } from "react";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import {
@@ -41,9 +41,43 @@ interface MoveOutRequest {
 
 export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview = false }: { onSelect: (request: MoveOutRequest) => void, initialFilter?: MoveOutStatus | "all", preview?: boolean }) {
   const { selectedPropertyId } = useProperty();
-  const [requests, setRequests] = useState<MoveOutRequest[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  
+  // Reducer for requests state to avoid multiple setState calls
+  type RequestsState = { requests: MoveOutRequest[]; loading: boolean; error: string | null };
+  type RequestsAction =
+      | { type: 'SET_REQUESTS'; payload: MoveOutRequest[] }
+      | { type: 'SET_LOADING'; payload: boolean }
+      | { type: 'SET_ERROR'; payload: string | null }
+      | { type: 'START_FETCH' }
+      | { type: 'FETCH_SUCCESS'; payload: MoveOutRequest[] }
+      | { type: 'FETCH_ERROR'; payload: string }
+      | { type: 'FETCH_PREVIEW_SUCCESS'; payload: MoveOutRequest[] };
+
+  const requestsReducer = (state: RequestsState, action: RequestsAction): RequestsState => {
+      switch (action.type) {
+          case 'SET_REQUESTS':
+              return { ...state, requests: action.payload };
+          case 'SET_LOADING':
+              return { ...state, loading: action.payload };
+          case 'SET_ERROR':
+              return { ...state, error: action.payload };
+          case 'START_FETCH':
+              return { ...state, loading: true, error: null };
+          case 'FETCH_SUCCESS':
+              return { ...state, loading: false, requests: action.payload };
+          case 'FETCH_ERROR':
+              return { ...state, loading: false, error: action.payload };
+          case 'FETCH_PREVIEW_SUCCESS':
+              return { ...state, loading: false, requests: action.payload };
+          default:
+              return state;
+      }
+  };
+
+  const [requestsState, dispatch] = useReducer(requestsReducer, { requests: [], loading: true, error: null });
+  const { requests, loading, error } = requestsState;
+  const setRequests = (r: MoveOutRequest[]) => dispatch({ type: 'SET_REQUESTS', payload: r });
+  
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<MoveOutStatus | "all">(initialFilter);
 
@@ -145,13 +179,11 @@ export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview =
         // Simulate network delay
         await new Promise(resolve => setTimeout(resolve, 800));
         if (isCancelled) return;
-        setRequests(MOCK_REQUESTS);
-        setLoading(false);
+        dispatch({ type: 'FETCH_PREVIEW_SUCCESS', payload: MOCK_REQUESTS });
         return;
       }
 
-      setLoading(true);
-      setError(null);
+      dispatch({ type: 'START_FETCH' });
       try {
         const params = new URLSearchParams();
         if (selectedPropertyId !== "all") {
@@ -167,14 +199,11 @@ export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview =
         
         const data = await response.json();
         if (isCancelled) return;
-        setRequests(data);
+        dispatch({ type: 'FETCH_SUCCESS', payload: data });
       } catch (err) {
         if (isCancelled) return;
         console.error("Error loading move-out requests:", err);
-        setError("Failed to load move-out requests. Please try again.");
-      } finally {
-        if (isCancelled) return;
-        setLoading(false);
+        dispatch({ type: 'FETCH_ERROR', payload: "Failed to load move-out requests. Please try again." });
       }
     }
 

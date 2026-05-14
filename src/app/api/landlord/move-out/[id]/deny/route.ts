@@ -44,12 +44,14 @@ export async function PUT(
     }
 
     // Get move-out request and verify ownership
-    const { data: moveOutRequest, error: fetchError } = await supabase
-      .from("move_out_requests")
-      .select("*")
+    const reqQuery = supabase
+      .from("move_out_requests" as any)
+      .select("*");
+
+    const { data: moveOutRequest, error: fetchError } = await reqQuery
       .eq("id", id)
       .eq("landlord_id", user.id)
-      .single();
+      .single() as any;
 
     if (fetchError || !moveOutRequest) {
       return NextResponse.json(
@@ -66,16 +68,19 @@ export async function PUT(
     }
 
     // Update move-out request
-    const { data: updated, error: updateError } = await supabase
-      .from("move_out_requests")
-      .update({
+    const updatePayload = {
         status: "denied",
         denied_at: new Date().toISOString(),
         denial_reason: denial_reason
-      })
-      .eq("id", id)
-      .select()
-      .single();
+      } as any;
+      const updateQuery = supabase
+        .from("move_out_requests" as any)
+        .update(updatePayload)
+        .eq("id", id)
+        .select()
+        .single();
+
+      const { data: updated, error: updateError } = await updateQuery as any;
 
     if (updateError) {
       console.error("[landlord-move-out-deny] Update error:", updateError);
@@ -94,7 +99,7 @@ export async function PUT(
         title: "Move-Out Denied",
         message: `Your move-out request has been denied. Reason: ${denial_reason}`,
         data: { move_out_request_id: id, denial_reason }
-      });
+      } as any);
 
     return NextResponse.json({
       message: "Move-out request denied",

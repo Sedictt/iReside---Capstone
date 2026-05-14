@@ -59,14 +59,16 @@ export async function POST(request: Request, context: RouteContext) {
         return NextResponse.json({ error: "Application is not in payment-pending stage." }, { status: 409 });
     }
 
-    const { data: paymentRequest, error: requestError } = await adminClient
-        .from("application_payment_requests")
+    const reqQuery = adminClient
+        .from("application_payment_requests" as any)
         .select(
             "id, requirement_type, status, method, payment_proof_url, payment_proof_path, payment_note, reference_number, amount, bypassed"
-        )
+        );
+
+    const { data: paymentRequest, error: requestError } = await reqQuery
         .eq("id", requestId)
         .eq("application_id", application.id)
-        .maybeSingle();
+        .maybeSingle() as any;
 
     if (requestError || !paymentRequest) {
         return NextResponse.json({ error: "Payment request not found." }, { status: 404 });
@@ -88,20 +90,24 @@ export async function POST(request: Request, context: RouteContext) {
         }
     }
 
-    const { data: updatedRequest, error: updateError } = await adminClient
-        .from("application_payment_requests")
-        .update({
-            status: nextStatus,
-            reviewed_at: nowIso,
-            reviewed_by: user.id,
-            review_note: note || null,
-        })
+    const updatePayload = {
+        status: nextStatus,
+        reviewed_at: nowIso,
+        reviewed_by: user.id,
+        review_note: note || null,
+    } as any;
+
+    const updateQuery = adminClient
+        .from("application_payment_requests" as any)
+        .update(updatePayload)
         .eq("id", paymentRequest.id)
         .eq("application_id", application.id)
         .select(
             "id, requirement_type, status, method, payment_note, reference_number, amount, due_at, payment_proof_url, submitted_at, reviewed_at, review_note, bypassed"
         )
         .single();
+
+    const { data: updatedRequest, error: updateError } = await updateQuery as any;
 
     if (updateError || !updatedRequest) {
         return NextResponse.json({ error: "Failed to update payment review." }, { status: 500 });
@@ -126,10 +132,12 @@ export async function POST(request: Request, context: RouteContext) {
         },
     });
 
-    const { data: allRequests, error: allRequestsError } = await adminClient
-        .from("application_payment_requests")
-        .select("requirement_type, status")
-        .eq("application_id", application.id);
+    const allQuery = adminClient
+        .from("application_payment_requests" as any)
+        .select("requirement_type, status");
+
+    const { data: allRequests, error: allRequestsError } = await allQuery
+        .eq("application_id", application.id) as any;
 
     if (allRequestsError) {
         return NextResponse.json({ error: "Updated request but failed to compute completion state." }, { status: 500 });

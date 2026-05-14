@@ -303,24 +303,26 @@ function AlbumGrid({ attachments, isMe, onImageClick }: { attachments: UiMessage
                 const isLarge = idx === 0 && count === 3;
                 
                 return (
-                    <div 
-                        key={att.id} 
+                    <div
+                        key={att.id}
                         className={cn(
                             "relative overflow-hidden aspect-square bg-surface-3",
                             isLarge && "row-span-2 aspect-auto"
                         )}
                     >
-                        <Image
-                            src={att.fileUrl}
-                            fill
-                            sizes="(max-width: 768px) 50vw, 33vw"
-                            className={cn("object-cover", onImageClick && "cursor-pointer hover:opacity-90 transition-opacity")}
-                            alt=""
-                            onClick={() => onImageClick?.(attachments.map(a => ({ url: a.fileUrl!, id: a.id })), idx)}
-                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onImageClick?.(attachments.map(a => ({ url: a.fileUrl!, id: a.id })), idx); }}}
-                            tabIndex={onImageClick ? 0 : -1}
-                            role={onImageClick ? "button" : undefined}
-                        />
+                        {att.fileUrl && (
+                            <Image
+                                src={att.fileUrl}
+                                fill
+                                sizes="(max-width: 768px) 50vw, 33vw"
+                                className={cn("object-cover", onImageClick && "cursor-pointer hover:opacity-90 transition-opacity")}
+                                alt=""
+                                onClick={() => onImageClick?.(attachments.map(a => ({ url: a.fileUrl!, id: a.id })), idx)}
+                                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onImageClick?.(attachments.map(a => ({ url: a.fileUrl!, id: a.id })), idx); }}}
+                                tabIndex={onImageClick ? 0 : -1}
+                                role={onImageClick ? "button" : undefined}
+                            />
+                        )}
                         {isExtra && (
                             <div
                                 className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-[2px] cursor-pointer hover:bg-black/70 transition-colors"

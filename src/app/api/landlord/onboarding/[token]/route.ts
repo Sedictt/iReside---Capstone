@@ -398,7 +398,7 @@ export async function POST(request: Request, context: RouteParams) {
         // Apply environment policies
         if (property) {
             await adminClient
-                .from("property_environment_policies")
+                .from("property_environment_policies" as any)
                 .upsert({
                     property_id: property.id,
                     environment_mode: property.type || "residential",
@@ -460,7 +460,7 @@ export async function POST(request: Request, context: RouteParams) {
                     sort_order: i 
                 });
             }
-            await adminClient.from("property_floor_configs").upsert(floorConfigs, { onConflict: "property_id,floor_key" });
+            await adminClient.from("property_floor_configs" as any).upsert(floorConfigs, { onConflict: "property_id,floor_key" });
 
             // 3. Generate Default Contract Template if requested
             if (parsed.propertyConfig?.contractMode === "generate") {

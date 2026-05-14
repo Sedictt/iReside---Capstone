@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useReducer } from "react";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import {
@@ -36,17 +36,8 @@ export function MoveOutInspectionForm({
   onCancel,
 }: MoveOutInspectionFormProps) {
   const [loading, setLoading] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
-  const [systemStatus, setSystemStatus] = useState<{
-    rent_settled: boolean;
-    utilities_settled: boolean;
-    outstanding_balance: number;
-    water_balance: number;
-    electricity_balance: number;
-    pending_readings: number;
-  } | null>(null);
 
   const [notes, setNotes] = useState("");
   const [deductions, setDeductions] = useState<Deduction[]>([]);
@@ -59,6 +50,76 @@ export function MoveOutInspectionForm({
     other_dues_cleared: false,
   });
 
+  // Reducer for draft state (notes, deductions, checklist) to avoid multiple setState calls
+  type DraftState = { notes: string; deductions: Deduction[]; checklist: typeof checklist };
+  type DraftAction =
+      | { type: 'RESTORE_DRAFT'; payload: { notes: string; deductions: Deduction[]; checklist: typeof checklist } };
+
+  const draftReducer = (state: DraftState, action: DraftAction): DraftState => {
+      switch (action.type) {
+          case 'RESTORE_DRAFT':
+              return { notes: action.payload.notes, deductions: action.payload.deductions, checklist: action.payload.checklist };
+          default:
+              return state;
+      }
+  };
+
+  // Reducer for clearance status state to avoid multiple setState calls
+  type ClearanceStatus = {
+    rent_settled: boolean;
+    utilities_settled: boolean;
+    outstanding_balance: number;
+    water_balance: number;
+    electricity_balance: number;
+    pending_readings: number;
+  } | null;
+  type ClearanceState = { systemStatus: ClearanceStatus; checklist: typeof checklist; initialLoading: boolean };
+  type ClearanceAction =
+      | { type: 'SET_SYSTEM_STATUS'; payload: ClearanceStatus }
+      | { type: 'UPDATE_CHECKLIST'; payload: Partial<typeof checklist> }
+      | { type: 'SET_INITIAL_LOADING'; payload: boolean }
+      | { type: 'RESTORE_FROM_FETCH'; payload: ClearanceStatus }
+      | { type: 'CLEARANCE_POLL_SUCCESS'; payload: { systemStatus: ClearanceStatus; checklistUpdate: Partial<typeof checklist> } }
+      | { type: 'CLEARANCE_POLL_ERROR' };
+
+  const clearanceReducer = (state: ClearanceState, action: ClearanceAction): ClearanceState => {
+      switch (action.type) {
+          case 'SET_SYSTEM_STATUS':
+              return { ...state, systemStatus: action.payload };
+          case 'UPDATE_CHECKLIST':
+              return { ...state, checklist: { ...state.checklist, ...action.payload } };
+          case 'SET_INITIAL_LOADING':
+              return { ...state, initialLoading: action.payload };
+          case 'RESTORE_FROM_FETCH':
+              return {
+                  ...state,
+                  systemStatus: action.payload,
+                  checklist: { ...state.checklist, ...action.payload ? { rent_settled: action.payload.rent_settled, utilities_settled: action.payload.utilities_settled } : {} }
+              };
+          case 'CLEARANCE_POLL_SUCCESS':
+              return {
+                  ...state,
+                  systemStatus: action.payload.systemStatus,
+                  checklist: { ...state.checklist, ...action.payload.checklistUpdate },
+                  initialLoading: false
+              };
+          case 'CLEARANCE_POLL_ERROR':
+              return { ...state, initialLoading: false };
+          default:
+              return state;
+      }
+  };
+
+  const [clearanceState, dispatchClearance] = useReducer(clearanceReducer, {
+      systemStatus: null,
+      checklist,
+      initialLoading: true,
+  });
+  const { systemStatus, initialLoading: clearanceLoading } = clearanceState;
+  const setSystemStatus = (status: ClearanceStatus) => dispatchClearance({ type: 'SET_SYSTEM_STATUS', payload: status });
+  const setChecklistForClearance = (update: Partial<typeof checklist>) => dispatchClearance({ type: 'UPDATE_CHECKLIST', payload: update });
+  const setInitialLoading = (loading: boolean) => dispatchClearance({ type: 'SET_INITIAL_LOADING', payload: loading });
+
   // Local Storage Persistence
   useEffect(() => {
     const saved = localStorage.getItem(`inspection_draft_${requestId}`);
@@ -66,9 +127,9 @@ export function MoveOutInspectionForm({
       const parsed = JSON.parse(saved);
       setNotes(parsed.notes || "");
       setDeductions(parsed.deductions || []);
-      setChecklist(prev => ({ ...prev, ...parsed.checklist }));
+      setChecklist({ ...checklist, ...parsed.checklist });
     }
-  }, [requestId]);
+  }, [requestId, checklist]);
 
   useEffect(() => {
     const draft = { notes, deductions, checklist };
@@ -88,13 +149,16 @@ export function MoveOutInspectionForm({
           electricity_balance: requestId === "req-2" ? 3200 : 0,
           pending_readings: requestId === "req-2" ? 2 : 0,
         };
-        setSystemStatus(mockData);
-        setChecklist(prev => ({
-          ...prev,
-          rent_settled: mockData.rent_settled,
-          utilities_settled: mockData.utilities_settled,
-        }));
-        setInitialLoading(false);
+        dispatchClearance({
+          type: 'CLEARANCE_POLL_SUCCESS',
+          payload: {
+            systemStatus: mockData,
+            checklistUpdate: {
+              rent_settled: mockData.rent_settled,
+              utilities_settled: mockData.utilities_settled,
+            }
+          }
+        });
         return;
       }
 
@@ -102,18 +166,21 @@ export function MoveOutInspectionForm({
         const response = await fetch(`/api/landlord/move-out/${requestId}/inspection`);
         if (response.ok) {
           const data = await response.json();
-          setSystemStatus(data);
           // Only auto-check if they were previously unchecked to avoid overriding manual overrides
-          setChecklist(prev => ({
-            ...prev,
-            rent_settled: data.rent_settled,
-            utilities_settled: data.utilities_settled,
-          }));
+          dispatchClearance({
+            type: 'CLEARANCE_POLL_SUCCESS',
+            payload: {
+              systemStatus: data,
+              checklistUpdate: {
+                rent_settled: data.rent_settled,
+                utilities_settled: data.utilities_settled,
+              }
+            }
+          });
         }
       } catch (err) {
         console.error("Failed to fetch clearance status", err);
-      } finally {
-        setInitialLoading(false);
+        dispatchClearance({ type: 'CLEARANCE_POLL_ERROR' });
       }
     }
 
@@ -184,7 +251,7 @@ export function MoveOutInspectionForm({
     }
   };
 
-  return initialLoading ? (
+  return clearanceLoading ? (
     <div className="flex h-[400px] items-center justify-center rounded-[2.5rem] border border-border bg-card">
       <Loader2 className="size-8 animate-spin text-primary" />
     </div>

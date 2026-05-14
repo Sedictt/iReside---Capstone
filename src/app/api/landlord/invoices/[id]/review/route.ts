@@ -49,15 +49,17 @@ async function syncMoveInPaymentChecklist(supabase: Awaited<ReturnType<typeof cr
             (payment) => payment.status === "completed" && payment.landlord_confirmed === true,
         );
 
-    const { data: applications, error: applicationError } = await supabase
+    const appQuery = supabase
         .from("applications")
-        .select("id, requirements_checklist")
-        .eq("lease_id", leaseId);
+        .select("id, requirements_checklist");
+
+    const { data: applications, error: applicationError } = await appQuery
+        .eq("lease_id", leaseId) as any;
 
     if (applicationError) throw applicationError;
 
     await Promise.all(
-        (applications ?? []).map(async (application) => {
+        (applications ?? []).map(async (application: any) => {
             const currentChecklist =
                 application.requirements_checklist &&
                 typeof application.requirements_checklist === "object" &&
@@ -65,14 +67,15 @@ async function syncMoveInPaymentChecklist(supabase: Awaited<ReturnType<typeof cr
                     ? (application.requirements_checklist as Record<string, unknown>)
                     : {};
 
+            const updatePayload = {
+                requirements_checklist: {
+                    ...currentChecklist,
+                    move_in_payment: moveInPaymentComplete,
+                },
+            } as any;
             const { error: updateError } = await supabase
-                .from("applications")
-                .update({
-                    requirements_checklist: {
-                        ...currentChecklist,
-                        move_in_payment: moveInPaymentComplete,
-                    },
-                })
+                .from("applications" as any)
+                .update(updatePayload)
                 .eq("id", application.id);
 
             if (updateError) throw updateError;

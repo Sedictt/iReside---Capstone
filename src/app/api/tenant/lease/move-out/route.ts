@@ -44,7 +44,7 @@ export async function POST(req: Request) {
 
         // 2. Check for existing pending request
         const { data: existing } = await supabase
-            .from("move_out_requests")
+            .from("move_out_requests" as any)
             .select("id")
             .eq("lease_id", lease.id)
             .eq("status", "pending")
@@ -56,7 +56,7 @@ export async function POST(req: Request) {
 
         // 3. Create request
         const { error: insertError } = await supabase
-            .from("move_out_requests")
+            .from("move_out_requests" as any)
             .insert({
                 lease_id: lease.id,
                 tenant_id: user.id,

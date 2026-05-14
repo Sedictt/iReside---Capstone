@@ -16,13 +16,13 @@ export interface AuditEvent {
 export async function logAuditEvent(event: AuditEvent): Promise<void> {
   const supabase = await createClient();
 
-  const { error } = await supabase.from("lease_signing_audit").insert({
+  const { error } = await (supabase as any).from("lease_signing_audit").insert({
     lease_id: event.leaseId,
     event_type: event.eventType,
     actor_id: event.actorId || null,
     ip_address: event.ipAddress || null,
     user_agent: event.userAgent || null,
-    metadata: event.metadata || null as any,
+    metadata: event.metadata || null,
   });
 
   if (error) {

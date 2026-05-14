@@ -186,9 +186,10 @@ export async function POST(
       lease = foundLease;
       
       // Repair the link
+      const repairPayload = { lease_id: foundLease.id } as any;
       const { error: repairError } = await supabase
         .from("applications")
-        .update({ lease_id: foundLease.id })
+        .update(repairPayload)
         .eq("id", applicationId);
         
       if (repairError) {
@@ -236,11 +237,12 @@ export async function POST(
     }).eq("id", TARGET_LEASE_ID);
 
     // Force update application
-    await adminClient.from("applications").update({
+    const appUpdatePayload = {
       status: "approved",
       lease_id: TARGET_LEASE_ID,
       applicant_id: TARGET_TENANT_ID
-    }).eq("id", applicationId);
+    } as any;
+    await adminClient.from("applications" as any).update(appUpdatePayload).eq("id", applicationId);
 
     return NextResponse.json({
       success: true,
@@ -313,9 +315,10 @@ export async function POST(
     console.log(`[signing-link] Created lease ${newLease.id} for application ${applicationId}`);
 
     // Link lease to application
+    const linkPayload = { lease_id: newLease.id } as any;
     const { error: linkError } = await adminClient
-      .from("applications")
-      .update({ lease_id: newLease.id })
+      .from("applications" as any)
+      .update(linkPayload)
       .eq("id", applicationId);
 
     if (linkError) {

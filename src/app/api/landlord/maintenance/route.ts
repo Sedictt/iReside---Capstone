@@ -94,13 +94,16 @@ const extractSelfRepairDetails = (description: string, category: string | null |
 
 const resolveStatus = (status: MaintenanceStatus | null | undefined): MaintenanceStatusLabel => {
     switch (status) {
+        case "open":
+            return "Pending";
+        case "assigned":
+            return "Assigned";
         case "in_progress":
             return "In Progress";
         case "resolved":
             return "Resolved";
-        case "cancelled":
-            return "Pending"; // Or maybe "Cancelled" if we add it to the labels
-        case "pending":
+        case "closed":
+            return "Resolved";
         default:
             return "Pending";
     }
@@ -673,7 +676,7 @@ export async function POST(request: Request) {
             title: body.title.trim(),
             description: body.description.trim(),
             priority: toDbPriority(body.priority),
-            status: "pending",
+            status: "open",
             category: null,
             images: [],
             self_repair_requested: false,

@@ -2,7 +2,6 @@
 
 import VisualBuilder from "@/components/landlord/visual-planner/VisualBuilder";
 import { useState, useEffect } from "react";
-import { Loader2 } from "lucide-react";
 
 interface TenantUnitMapData {
     property: { id: string; name: string; address: string };
@@ -35,18 +34,18 @@ export default function TenantUnitMapPage() {
                 const status = res.status;
                 const data = await res.json();
                 console.log("Tenant unit-map API:", status, data);
-                
+
                 if (!res.ok) {
                     setError(data.error || "Failed to load unit map");
                     return;
                 }
-                
+
                 // If we get data but no property, it means no active lease found
                 if (!data.property) {
                     setError("No active lease found for this account");
                     return;
                 }
-                
+
                 setUnitMapData(data);
             } catch (err) {
                 console.error("Unit map load error:", err);
@@ -59,24 +58,35 @@ export default function TenantUnitMapPage() {
         fetchUnitMap();
     }, []);
 
-    return loading ? (
-        <div className="flex-1 flex items-center justify-center bg-[#fafafa]">
-            <div className="flex flex-col items-center gap-4">
-                <Loader2 className="size-8 text-primary animate-spin" />
-                <p className="text-neutral-500 text-sm">Loading your unit map...</p>
+    if (loading) {
+        return (
+            <div className="flex-1 flex items-center justify-center bg-background dark:bg-background-dark">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="size-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                    <p className="text-neutral-500 dark:text-neutral-400 text-sm">Loading your unit map...</p>
+                </div>
             </div>
-        </div>
-    ) : error || !unitMapData ? (
-        <div className="flex-1 flex items-center justify-center bg-[#fafafa]">
-            <div className="flex flex-col items-center gap-4 text-center">
-                <p className="text-neutral-500">{error || "No unit map found"}</p>
-                <p className="text-sm text-neutral-400">
-                    You need an active lease to view your unit map.
-                </p>
+        );
+    }
+
+    if (error || !unitMapData) {
+        return (
+            <div className="flex-1 flex items-center justify-center bg-background dark:bg-background-dark">
+                <div className="flex flex-col items-center gap-4 text-center">
+                    <p className="text-neutral-500 dark:text-neutral-400">{error || "No unit map found"}</p>
+                    <p className="text-sm text-neutral-400 dark:text-neutral-500">
+                        You need an active lease to view your unit map.
+                    </p>
+                </div>
             </div>
-        </div>
-    ) : (
-        <VisualBuilder readOnly propertyId={unitMapData.property.id} />
+        );
+    }
+
+    return (
+        <VisualBuilder
+            readOnly
+            propertyId={unitMapData.property.id}
+            showBackButton
+        />
     );
 }
-

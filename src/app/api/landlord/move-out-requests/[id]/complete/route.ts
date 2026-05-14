@@ -19,7 +19,7 @@ export async function PUT(req: Request, { params }: RouteParams) {
     const { inspection_notes, inspection_photos, deposit_deductions } = body;
 
     const { data: existingRequest, error: fetchError } = await (supabase
-      .from("move_out_requests")
+      .from("move_out_requests" as any)
       .select("*, lease:leases(id, unit_id, security_deposit)")
       .eq("id", id)
       .eq("landlord_id", user.id)
@@ -50,7 +50,7 @@ export async function PUT(req: Request, { params }: RouteParams) {
     }
 
     const { error: updateError } = await supabase
-      .from("move_out_requests")
+      .from("move_out_requests" as any)
       .update(updateData)
       .eq("id", id);
 

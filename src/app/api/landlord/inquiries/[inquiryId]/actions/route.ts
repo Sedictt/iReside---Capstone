@@ -67,7 +67,7 @@ export async function POST(
     }
 
     const { error: upsertError } = await supabase
-        .from("landlord_inquiry_actions")
+        .from("landlord_inquiry_actions" as any)
         .upsert(
             {
                 inquiry_id: inquiryId,

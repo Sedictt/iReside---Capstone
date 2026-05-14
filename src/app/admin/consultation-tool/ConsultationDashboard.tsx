@@ -11,10 +11,10 @@ interface Document {
   id: string;
   file_name: string;
   file_url: string;
-  status: 'pending' | 'signed';
+  status: string;
   signed_file_url: string | null;
-  created_at: string;
-  updated_at: string;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 export default function ConsultationDashboard() {
@@ -169,7 +169,7 @@ export default function ConsultationDashboard() {
 
                   <div>
                     <h3 className="text-xl font-black truncate text-zinc-100 mb-1">{doc.file_name}</h3>
-                    <p className="text-xs text-zinc-500 font-medium">Prepared <span suppressHydrationWarning>{new Date(doc.created_at).toLocaleDateString()}</span></p>
+                    <p className="text-xs text-zinc-500 font-medium">Prepared <span suppressHydrationWarning>{doc.created_at ? new Date(doc.created_at).toLocaleDateString() : 'N/A'}</span></p>
                   </div>
 
                   <div className="mt-8 space-y-3">

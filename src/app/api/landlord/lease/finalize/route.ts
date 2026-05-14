@@ -68,11 +68,12 @@ export async function POST(request: Request) {
     }
 
     // Fetch property environment policy
-    const { data: policy } = await adminClient
-        .from("property_environment_policies")
-        .select("needs_review, max_occupants_per_unit")
+    const policyQuery = adminClient
+        .from("property_environment_policies" as any)
+        .select("needs_review, max_occupants_per_unit");
+    const { data: policy } = await policyQuery
         .eq("property_id", unit.property_id)
-        .single();
+        .single() as any;
     
     if (policy?.needs_review) {
         return NextResponse.json(

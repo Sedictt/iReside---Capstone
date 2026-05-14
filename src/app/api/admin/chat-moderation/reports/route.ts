@@ -65,9 +65,23 @@ export async function GET() {
     }
 
     const adminClient = createAdminClient();
+
+    // Join message_user_reports with messages to get sender/conversation info
+    // DB columns: message_user_reports has reporter_id, message_id; messages has sender_id, conversation_id
     const { data, error } = await adminClient
         .from("message_user_reports")
-        .select("id, reporter_user_id, target_user_id, conversation_id, category, details, status, metadata, created_at")
+        .select(`
+            id,
+            message_id,
+            reporter_id,
+            reason,
+            created_at,
+            messages (
+                id,
+                sender_id,
+                conversation_id
+            )
+        `)
         .order("created_at", { ascending: false })
         .limit(250);
 
@@ -75,7 +89,31 @@ export async function GET() {
         return NextResponse.json({ error: "Failed to load chat moderation reports." }, { status: 500 });
     }
 
-    const rows = (data ?? []) as RawReportRow[];
+    // Transform to match RawReportRow shape (DB columns differ from type expectations)
+    // TODO: align RawReportRow type with actual DB schema
+    const raw = (data ?? []) as unknown as Array<{
+        id: string;
+        message_id: string;
+        reporter_id: string;
+        reason: string;
+        created_at: string;
+        messages: { id: string; sender_id: string; conversation_id: string } | null;
+    }>;
+    const rows: RawReportRow[] = raw.map((r) => ({
+        id: r.id,
+        reporter_user_id: r.reporter_id,
+        target_user_id: r.messages?.sender_id ?? "",
+        conversation_id: r.messages?.conversation_id ?? null,
+        category: r.reason,
+        details: "",
+        status: "open",
+        metadata: {
+            reportedMessageId: r.message_id,
+            conversationId: r.messages?.conversation_id ?? null,
+        },
+        created_at: r.created_at,
+    }));
+
     const profileIds = Array.from(new Set(rows.flatMap((row) => [row.reporter_user_id, row.target_user_id])));
     const reportedMessageIds = Array.from(
         new Set(

@@ -41,7 +41,7 @@ export async function GET(
 
     // Load environment policy fields for wizard hydration (best-effort)
     const { data: envPolicy } = await supabase
-        .from("property_environment_policies")
+        .from("property_environment_policies" as any)
         .select("utility_split_method, utility_fixed_charge_amount, max_occupants_per_unit")
         .eq("property_id", propertyId)
         .maybeSingle();

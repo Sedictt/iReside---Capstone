@@ -98,8 +98,7 @@ function LoginContent() {
                     className="object-cover opacity-20 dark:opacity-10 grayscale-[50%]"
                     priority
                 />
-                <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background to-background" />
-                <div className="absolute top-[-20%] left-[-10%] w-[60rem] h-[60rem] rounded-full bg-primary/5 blur-[120px] pointer-events-none dark:bg-primary/10" />
+                <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/80 to-background" />
             </div>
 
             {/* Utility Header */}
@@ -129,7 +128,7 @@ function LoginContent() {
                         </h1>
                         <div className="space-y-4">
                             <p className="text-xl text-muted-foreground font-medium leading-relaxed max-w-md">
-                                A seamless ecosystem designed for modern property owners and discerning residents.
+                                Manage properties, communicate with residents, and handle maintenance — all in one place.
                             </p>
                             <Link href="/about" className="inline-flex items-center gap-2 text-sm font-black uppercase tracking-widest text-primary hover:gap-3 transition-all group">
                                 Learn more about iReside
@@ -139,12 +138,12 @@ function LoginContent() {
                     </div>
 
                     <div className="grid grid-cols-2 gap-4 max-w-lg pt-4">
-                        <div className="p-6 rounded-[2rem] bg-surface-1/30 border border-border/50 backdrop-blur-sm">
+                        <div className="p-6 rounded-2xl border border-border bg-card">
                             <ShieldCheck className="size-8 text-primary mb-4" />
                             <h3 className="font-black text-foreground">Secure Access</h3>
                             <p className="text-xs text-muted-foreground mt-1">Reliable and secure digital protection.</p>
                         </div>
-                        <div className="p-6 rounded-[2rem] bg-surface-1/30 border border-border/50 backdrop-blur-sm">
+                        <div className="p-6 rounded-2xl border border-border bg-card">
                             <ArrowRight className="size-8 text-primary mb-4" />
                             <h3 className="font-black text-foreground">Smart Flows</h3>
                             <p className="text-xs text-muted-foreground mt-1">Operational excellence at your fingertips.</p>
@@ -154,7 +153,7 @@ function LoginContent() {
 
                 {/* Right Side: Auth Card */}
                 <div className="relative">
-                    <section className="relative rounded-[3rem] border border-white/10 bg-background/60 dark:bg-surface-1/40 backdrop-blur-3xl shadow-2xl p-10 lg:p-12 space-y-6">
+                    <section className="relative rounded-[2rem] border border-border bg-card shadow-xl p-10 lg:p-12 space-y-6">
                         <div className="space-y-2">
                             <h2 className="text-4xl font-black tracking-tight leading-none">Sign In</h2>
                             <p className="text-base text-muted-foreground font-medium">Access your personalized portal.</p>
@@ -276,8 +275,8 @@ function LoginContent() {
                                                 <div className="flex items-center gap-1.5 mb-1">
                                                     <span className="text-[10px] font-black uppercase tracking-widest text-primary/70 leading-none">Resident</span>
                                                     <div className="flex items-center gap-1">
-                                                        <span className="text-[8px] font-black bg-amber-500/10 text-amber-600 px-1.5 py-0.5 rounded-full border border-amber-500/10">Private</span>
-                                                        <Info className="size-2.5 text-amber-600/50" />
+                                                        <span className="text-[8px] font-black bg-blue-500/10 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded-full border border-blue-500/20">Private</span>
+                                                        <Info className="size-2.5 text-blue-600/50" />
                                                     </div>
                                                 </div>
                                                 <span className="text-sm font-black">Join</span>
@@ -289,7 +288,7 @@ function LoginContent() {
                                     {/* Hint Tooltip */}
                                     <div className="absolute bottom-full left-0 mb-2 w-48 p-3 rounded-xl bg-surface-2 border border-border shadow-2xl opacity-0 translate-y-2 pointer-events-none group-hover/hint:opacity-100 group-hover/hint:translate-y-0 transition-all z-[60]">
                                         <p className="text-[10px] font-medium leading-relaxed text-muted-foreground">
-                                            <span className="text-amber-600 font-black">Invite Only:</span> Access requires a private link or QR code provided by your landlord.
+                                            <span className="text-blue-600 dark:text-blue-400 font-black">Invite Only:</span> Access requires a private link or QR code provided by your landlord.
                                         </p>
                                         <div className="absolute top-full left-6 -translate-y-[1px] border-8 border-transparent border-t-surface-2" />
                                     </div>

@@ -249,7 +249,7 @@ function ApplicationsSkeletonList() {
 export function RentApplications() {
     const { selectedPropertyId } = useProperty();
     const mounted = useRef(false);
-    const { get } = useSearchParams();
+    const searchParams = useSearchParams();
 
     const [activeTab, setActiveTab] = useState<"pending" | "approved" | "rejected" | "archived">("pending");
     const [searchQuery, setSearchQuery] = useState("");
@@ -400,11 +400,11 @@ export function RentApplications() {
     useEffect(() => {
         mounted.current = true;
         setLoading(true);
-        const action = get("action");
+        const action = searchParams.get("action");
         if (action === "tenant-application" || action === "walk-in") {
             setShowTenantApplicationModal(true);
         }
-    }, [get]);
+    }, [searchParams]);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -427,7 +427,7 @@ export function RentApplications() {
                     setApplications(fetchedApps);
 
                     // Handle deep linking via ?id=
-                    const deepLinkId = get("id");
+                    const deepLinkId = searchParams.get("id");
                     if (deepLinkId) {
                         const targetApp = fetchedApps.find(a => a.id === deepLinkId);
                         if (targetApp) {

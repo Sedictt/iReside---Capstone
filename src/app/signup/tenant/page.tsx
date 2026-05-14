@@ -148,18 +148,18 @@ export default function TenantInformationPage() {
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ delay: 0.2 }}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-black uppercase tracking-widest mb-8"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 text-xs font-black uppercase tracking-widest mb-8"
                     >
                         <Lock className="size-3.5" />
                         Private Residency — Invite Only
                     </motion.div>
 
                     <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.1] mb-6">
-                        Your all-in-one<br />
-                        <span className="text-primary">resident hub</span>
+                        Your resident<br />
+                        <span className="text-primary">dashboard</span>
                     </h1>
                     <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
-                        iReside is an exclusive ecosystem for residents. Once invited, you will have access to lease management, payments, maintenance, messaging, and more — all in one place.
+                        Once invited, you can manage your lease, pay rent, submit maintenance requests, and message your landlord — all from one dashboard.
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -205,7 +205,7 @@ export default function TenantInformationPage() {
                                 transition={{ delay: 0.3 + idx * 0.1 }}
                                 className="relative rounded-3xl border border-border bg-card p-8 shadow-sm"
                             >
-                                <div className="absolute -top-4 left-8 px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-black uppercase tracking-widest">
+                                <div className="absolute -top-4 left-8 px-3 py-1 rounded-2xl bg-primary text-primary-foreground text-xs font-black uppercase tracking-widest">
                                     Step {step.number}
                                 </div>
                                 <div className="mt-4">
@@ -296,7 +296,7 @@ export default function TenantInformationPage() {
                     transition={{ duration: 0.6, delay: 0.4 }}
                     className="rounded-[2rem] border border-border bg-card p-10 sm:p-14 text-center shadow-sm"
                 >
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-black uppercase tracking-widest mb-6">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 text-xs font-black uppercase tracking-widest mb-6">
                         <CheckCircle2 className="size-3.5" />
                         Invite Only Community
                     </div>
