@@ -243,11 +243,13 @@ export async function generateLeasePdf(data: LeasePdfData): Promise<Blob> {
   
   if (data.tenantSignature) {
     try {
-      // Render signature at larger size (80mm wide, auto-height to maintain aspect ratio)
       const sigWidth = 80;
       const sigHeight = 25;
+      // jsPDF natively handles data URLs — pass the PNG data URL with format param
       doc.addImage(data.tenantSignature, 'PNG', margin, sigY - sigHeight + 2, sigWidth, sigHeight);
-    } catch (e) {}
+    } catch (e) {
+      console.error('[lease-pdf] Failed to embed tenant signature:', e);
+    }
   }
 
   // Right: Date Signed (Tenant)
@@ -272,11 +274,12 @@ export async function generateLeasePdf(data: LeasePdfData): Promise<Blob> {
 
   if (data.landlordSignature) {
     try {
-      // Render signature at larger size (80mm wide, auto-height to maintain aspect ratio)
       const sigWidth = 80;
       const sigHeight = 25;
       doc.addImage(data.landlordSignature, 'PNG', margin, landlordSigY - sigHeight + 2, sigWidth, sigHeight);
-    } catch (e) {}
+    } catch (e) {
+      console.error('[lease-pdf] Failed to embed landlord signature:', e);
+    }
   }
 
   // Right: Date Signed (Landlord)

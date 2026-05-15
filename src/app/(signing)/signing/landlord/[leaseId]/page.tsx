@@ -25,6 +25,7 @@ interface LeaseDetails {
   terms: any;
   tenant_signature: string;
   tenant_signed_at: string;
+  signed_document_url?: string;
   unit: {
     name: string;
     property: {
@@ -79,21 +80,47 @@ function LandlordSigningContent({ params }: { params: Promise<{ leaseId: string 
         const leaseData = await response.json();
         setLease(leaseData);
 
-        // Generate PDF
-        const pdfBlob = await generateLeasePdf({
-            id: leaseData.id,
-            startDate: new Date(leaseData.start_date).toLocaleDateString(),
-            endDate: new Date(leaseData.end_date).toLocaleDateString(),
-            monthlyRent: leaseData.monthly_rent,
-            securityDeposit: leaseData.security_deposit,
-            property: leaseData.unit.property,
-            unit: leaseData.unit,
-            landlord: { name: leaseData.landlord.full_name, email: leaseData.landlord.email },
-            tenant: { name: leaseData.tenant.full_name, email: leaseData.tenant.email },
-            terms: leaseData.terms,
-            tenantSignature: leaseData.tenant_signature,
-            tenantSignedAt: leaseData.tenant_signed_at
-        });
+        // Use the stored tenant-signed PDF if available (more reliable than regenerating)
+        let pdfBlob: Blob;
+        if (leaseData.signed_document_url) {
+          const pdfResponse = await fetch(leaseData.signed_document_url);
+          if (pdfResponse.ok) {
+            pdfBlob = await pdfResponse.blob();
+          } else {
+            // Fallback to regenerating if fetch fails
+            console.warn("[landlord-sign] Failed to fetch stored signed doc, regenerating");
+            pdfBlob = await generateLeasePdf({
+                id: leaseData.id,
+                startDate: new Date(leaseData.start_date).toLocaleDateString(),
+                endDate: new Date(leaseData.end_date).toLocaleDateString(),
+                monthlyRent: leaseData.monthly_rent,
+                securityDeposit: leaseData.security_deposit,
+                property: leaseData.unit.property,
+                unit: leaseData.unit,
+                landlord: { name: leaseData.landlord.full_name, email: leaseData.landlord.email },
+                tenant: { name: leaseData.tenant.full_name, email: leaseData.tenant.email },
+                terms: leaseData.terms,
+                tenantSignature: leaseData.tenant_signature,
+                tenantSignedAt: leaseData.tenant_signed_at
+            });
+          }
+        } else {
+          // No stored document - regenerate from lease data
+          pdfBlob = await generateLeasePdf({
+              id: leaseData.id,
+              startDate: new Date(leaseData.start_date).toLocaleDateString(),
+              endDate: new Date(leaseData.end_date).toLocaleDateString(),
+              monthlyRent: leaseData.monthly_rent,
+              securityDeposit: leaseData.security_deposit,
+              property: leaseData.unit.property,
+              unit: leaseData.unit,
+              landlord: { name: leaseData.landlord.full_name, email: leaseData.landlord.email },
+              tenant: { name: leaseData.tenant.full_name, email: leaseData.tenant.email },
+              terms: leaseData.terms,
+              tenantSignature: leaseData.tenant_signature,
+              tenantSignedAt: leaseData.tenant_signed_at
+          });
+        }
         setLeasePdf(pdfBlob);
 
       } catch (err) {

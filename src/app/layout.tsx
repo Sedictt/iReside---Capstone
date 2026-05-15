@@ -43,6 +43,15 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+        {/*
+          Strip fdprocessedid injected by Fiddler/form-fill browser extensions
+          before React hydrates, preventing hydration mismatch errors.
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{new MutationObserver(function(m){for(var i=0;i<m.length;i++){if(m[i].type==="attributes"&&m[i].attributeName==="fdprocessedid"){m[i].target.removeAttribute("fdprocessedid")}}}).observe(document.documentElement,{attributes:true,subtree:true,attributeFilter:["fdprocessedid"]})}catch(e){}})();`,
+          }}
+        />
       </head>
       <body
         suppressHydrationWarning

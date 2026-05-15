@@ -15,6 +15,7 @@ type ActionBody = {
         security_deposit: number;
         terms: Record<string, any>;
         landlord_signature: string;
+        tenant_signature?: string;
         signed_document_url?: string;
         signed_document_path?: string;
     };
@@ -54,6 +55,7 @@ async function createLeaseRecord(
         monthly_rent: number;
         security_deposit: number;
         landlord_signature: string;
+        tenant_signature?: string;
         signed_document_url?: string;
         signed_document_path?: string;
         terms: Record<string, any>;
@@ -77,6 +79,7 @@ async function createLeaseRecord(
             security_deposit: data.security_deposit,
             terms: data.terms as Json,
             landlord_signature: data.landlord_signature,
+            tenant_signature: data.tenant_signature || null,
             signed_document_url: data.signed_document_url || null,
             signed_document_path: data.signed_document_path || null,
         })
@@ -484,6 +487,7 @@ export async function POST(
                     monthly_rent: body.lease_data.monthly_rent,
                     security_deposit: body.lease_data.security_deposit,
                     landlord_signature: body.lease_data.landlord_signature,
+                    tenant_signature: body.lease_data.tenant_signature,
                     signed_document_url: body.lease_data.signed_document_url,
                     signed_document_path: body.lease_data.signed_document_path,
                     terms: leaseTerms,

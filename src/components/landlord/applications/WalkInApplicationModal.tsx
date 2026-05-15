@@ -409,6 +409,9 @@ export function WalkInApplicationModal({
                     endDate: leaseData.end_date,
                     monthlyRent: leaseData.monthly_rent,
                     securityDeposit: leaseData.security_deposit,
+                    tenantSignature: leaseData.tenant_signature || undefined,
+                    tenantSignedAt: leaseData.tenant_signature ? new Date().toISOString() : undefined,
+                    landlordSignature: leaseData.landlord_signature || undefined,
                 });
                 setLeasePdfBlob(blob);
             } catch (err) {
@@ -662,6 +665,7 @@ export function WalkInApplicationModal({
                     security_deposit: leaseData.security_deposit,
                     terms: leaseData.terms,
                     landlord_signature: leaseData.landlord_signature,
+                    tenant_signature: leaseData.tenant_signature,
                     signing_mode: leaseData.signing_mode,
                     signed_document_url: leaseData.signed_document_url,
                     signed_document_path: leaseData.signed_document_path,

@@ -75,16 +75,20 @@ export function SignaturePad({
     if (dataUrl) onSave(dataUrl);
   }, [onSave]);
 
-  const handleFullSignerComplete = async (signedBlob: Blob) => {
-    // In full signer mode, we get a signed PDF blob.
-    // We pass it back to the caller who should handle PDF storage.
-    const reader = new FileReader();
-    reader.readAsDataURL(signedBlob);
-    reader.onloadend = () => {
-        onSave(reader.result as string, signedBlob);
-        setShowFullSigner(false);
-        toast.success("Document signed successfully");
-    };
+  const handleFullSignerComplete = async (signedBlob: Blob, signatureDataUrl?: string) => {
+    // DigitalSigner passes the raw ink signature as a PNG data URL (2nd arg).
+    // Use that directly — generateLeasePdf / doc.addImage expects PNG data.
+    if (signatureDataUrl) {
+      onSave(signatureDataUrl, signedBlob);
+    } else {
+      // Fallback: photo upload → blob isn't PNG, convert the signed blob.
+      const reader = new FileReader();
+      reader.readAsDataURL(signedBlob);
+      await new Promise<void>((resolve) => { reader.onloadend = () => resolve(); });
+      onSave(reader.result as string, signedBlob);
+    }
+    setShowFullSigner(false);
+    toast.success("Document signed successfully");
   };
 
   return (

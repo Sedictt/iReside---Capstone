@@ -9,6 +9,7 @@ import {
 import { logAuditEvent, extractIpAddress, extractUserAgent } from "@/lib/audit-logging";
 import { sendTenantSignedNotification } from "@/lib/email";
 import { isValidLeaseStatusTransition, getTransitionErrorMessage } from "@/lib/lease-status-transitions";
+import { generateLeasePdf } from "@/lib/lease-pdf";
 
 type SignLeaseBody = {
   tenant_signature: string;
@@ -276,6 +277,108 @@ export async function POST(
   } catch (emailError) {
     console.error("[sign-lease] Email notification error:", emailError);
     // Non-blocking error, continue with response
+  }
+
+  // Generate and store tenant-signed PDF document in vault
+  // This ensures the landlord sees the exact PDF the tenant signed.
+  try {
+    const { createAdminClient } = await import("@/lib/supabase/admin");
+    const adminClient = createAdminClient();
+
+    // Fetch full lease details for PDF generation
+    const { data: leaseData } = await adminClient
+      .from("leases")
+      .select(`
+        id,
+        start_date,
+        end_date,
+        monthly_rent,
+        security_deposit,
+        terms,
+        tenant_id,
+        landlord_id,
+        tenant_signature,
+        tenant_signed_at,
+        units (
+          id,
+          name,
+          properties (
+            id,
+            name,
+            address,
+            house_rules,
+            contract_template
+          )
+        )
+      `)
+      .eq("id", leaseId)
+      .single();
+
+    if (leaseData && !('error' in leaseData)) {
+      // Fetch tenant profile
+      const { data: tProfile } = await adminClient
+        .from("profiles")
+        .select("email, full_name")
+        .eq("id", leaseData.tenant_id)
+        .single();
+
+      // Fetch landlord profile  
+      const { data: lProfile } = await adminClient
+        .from("profiles")
+        .select("email, full_name")
+        .eq("id", leaseData.landlord_id)
+        .single();
+
+      if (tProfile && lProfile) {
+        const pdfBlob = await generateLeasePdf({
+          id: leaseData.id,
+          startDate: new Date(leaseData.start_date).toLocaleDateString(),
+          endDate: new Date(leaseData.end_date).toLocaleDateString(),
+          monthlyRent: leaseData.monthly_rent,
+          securityDeposit: leaseData.security_deposit,
+          property: (leaseData as any).units?.properties,
+          unit: (leaseData as any).units,
+          landlord: { name: lProfile.full_name || "Landlord", email: lProfile.email },
+          tenant: { name: tProfile.full_name || "Tenant", email: tProfile.email },
+          terms: leaseData.terms,
+          tenantSignature: sanitizedSignature,
+          tenantSignedAt: signedAt,
+        });
+
+        const arrayBuffer = await pdfBlob.arrayBuffer();
+        const fileName = `leases/${leaseData.landlord_id}/${leaseId}/tenant-signed-${Date.now()}.pdf`;
+        const { error: uploadError } = await adminClient
+          .storage
+          .from("landlord-documents")
+          .upload(fileName, arrayBuffer, {
+            contentType: "application/pdf",
+            upsert: true,
+          });
+
+        if (uploadError) {
+          console.error("[sign-lease] Document upload error:", uploadError);
+        } else {
+          const { data: { publicUrl } } = adminClient
+            .storage
+            .from("landlord-documents")
+            .getPublicUrl(fileName);
+
+          await adminClient
+            .from("leases")
+            .update({
+              signed_document_url: publicUrl,
+              signed_document_path: fileName,
+              updated_at: signedAt,
+            })
+            .eq("id", leaseId);
+
+          console.log("[sign-lease] Tenant-signed document stored in vault:", publicUrl);
+        }
+      }
+    }
+  } catch (docError) {
+    console.error("[sign-lease] Document generation/storage error:", docError);
+    // Non-blocking - lease is still signed even if document storage fails
   }
 
   return NextResponse.json({
