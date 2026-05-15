@@ -34,30 +34,28 @@ export function InvoiceModal({
 }) {
     const [invoice, setInvoice] = useState<InvoiceDetail>(null);
     const [loading, setLoading] = useState(false);
-    const [actionLoading, setActionLoading] = useState<"confirm" | "confirm_received" | "reject" | "request_completion" | "remind" | null>(null);
+    const [processingAction, setProcessingAction] = useState<"confirm" | "confirm_received" | "reject" | "request_completion" | "remind" | null>(null);
     const [pendingAction, setPendingAction] = useState<{ type: any; label: string; desc: string; isCrucial?: boolean } | null>(null);
     const [confirmCountdown, setConfirmCountdown] = useState(0);
-    const [reviewNote, setReviewNote] = useState("");
+    const [tenantComment, setTenantComment] = useState("");
     const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
     const [rejectionReason, setRejectionReason] = useState("");
-    const [issueType, setIssueType] = useState<"insufficient_amount" | "excessive_amount" | "not_received" | "invalid_proof" | "other" | "">("");
+    const [paymentDiscrepancyType, setPaymentDiscrepancyType] = useState<"insufficient_amount" | "excessive_amount" | "not_received" | "invalid_proof" | "other" | "">("");
     const [shortfallAmount, setShortfallAmount] = useState<number | "">("");
     const [showRejectionWarning, setShowRejectionWarning] = useState(false);
-    const [nonExactAction, setNonExactAction] = useState<"accept_partial" | "request_completion" | "reject">("accept_partial");
+    const [mismatchResolution, setMismatchResolution] = useState<"accept_partial" | "request_completion" | "reject">("accept_partial");
     const [activeTab, setActiveTab] = useState<"approve" | "issue">("approve");
     const [refundProofFile, setRefundProofFile] = useState<File | null>(null);
 
     useEffect(() => {
         if (!invoiceId) return;
         
-        // Reset all state when opening a new invoice to prevent data leak between tenants/invoices
         setRefundProofFile(null);
-        setReviewNote("");
+        setTenantComment("");
         setRejectionReason("");
-        setIssueType("");
+        setPaymentDiscrepancyType("");
         setShortfallAmount("");
-        setNonExactAction("accept_partial");
-        // Always open on approve tab (RefundCenter shows there when refund details exist)
+        setMismatchResolution("accept_partial");
         setActiveTab("approve");
         setPendingAction(null);
         setConfirmCountdown(0);
@@ -98,11 +96,11 @@ export function InvoiceModal({
                 if (alive) {
                     setInvoice(payload.invoice ?? null);
                     if (payload.invoice?.amountTag !== "exact") {
-                        setNonExactAction("accept_partial");
+                        setMismatchResolution("accept_partial");
                     }
                 }
-            } catch (err) {
-                console.error("[InvoiceModal] Load Error:", err);
+            } catch (error) {
+                console.error("[InvoiceModal] Load Error:", error);
                 if (alive) setInvoice(mockInvoice(invoiceId));
             } finally {
                 if (alive) setLoading(false);
@@ -126,7 +124,7 @@ export function InvoiceModal({
 
     if (!invoiceId) return null;
 
-    const runAction = async (action: "confirm" | "confirm_received" | "reject" | "request_completion" | "remind") => {
+    const performAction = async (action: "confirm" | "confirm_received" | "reject" | "request_completion" | "remind") => {
         // Intercept if not already confirmed
         if (!pendingAction && action !== "remind") {
             const config = {
@@ -143,36 +141,35 @@ export function InvoiceModal({
             return;
         }
 
-        // Validate rejection reason before proceeding
-        const needsRejectionReason = action === "reject" || action === "request_completion" || nonExactAction === "reject" || nonExactAction === "request_completion";
+        const needsRejectionReason = action === "reject" || action === "request_completion" || mismatchResolution === "reject" || mismatchResolution === "request_completion";
         if (needsRejectionReason && !rejectionReason.trim()) {
             setShowRejectionWarning(true);
             return;
         }
 
         setShowRejectionWarning(false);
-        setActionLoading(action);
-        console.log("[InvoiceModal] runAction called:", action, "pendingAction:", pendingAction, "refundProofFile:", !!refundProofFile);
+        setProcessingAction(action);
+        console.log("[InvoiceModal] performAction called:", action, "pendingAction:", pendingAction, "refundProofFile:", !!refundProofFile);
         try {
             const endpoint = action === "remind" ? "reminder" : "review";
             const amountTag = invoice?.amountTag ?? "exact";
-            const effectiveIssueType = issueType || ((invoice?.metadata as any)?.refund_preference ? "excessive_amount" : undefined);
+            const effectiveIssueType = paymentDiscrepancyType || ((invoice?.metadata as any)?.refund_preference ? "excessive_amount" : undefined);
             
             const payload = {
                 action,
-                note: reviewNote || undefined,
+                note: tenantComment || undefined,
                 amountTag,
                 acceptedAmount: shortfallAmount !== "" 
                     ? Number(invoice?.totalAmount ?? 0) - Number(shortfallAmount)
                     : Number(invoice?.totalAmount ?? 0),
-                nonExactAction: amountTag !== "exact" && (action === "confirm" || action === "confirm_received")
-                    ? nonExactAction
+                mismatchResolution: amountTag !== "exact" && (action === "confirm" || action === "confirm_received")
+                    ? mismatchResolution
                     : undefined,
                 rejectionReason:
-                    action === "reject" || action === "request_completion" || nonExactAction === "reject" || nonExactAction === "request_completion"
+                    action === "reject" || action === "request_completion" || mismatchResolution === "reject" || mismatchResolution === "request_completion"
                         ? rejectionReason || undefined
                         : undefined,
-                issueType: effectiveIssueType,
+                paymentDiscrepancyType: effectiveIssueType,
                 shortfallAmount: shortfallAmount !== "" ? Number(shortfallAmount) : undefined,
             };
 
@@ -221,7 +218,7 @@ export function InvoiceModal({
             console.error("[InvoiceModal] Action failed:", error);
             alert(error.message || "An unexpected error occurred. Please try again.");
         } finally {
-            setActionLoading(null);
+            setProcessingAction(null);
         }
         setPendingAction(null);
     };
@@ -649,8 +646,8 @@ export function InvoiceModal({
                                                     {(invoice.metadata as any)?.refund_preference || refundMessage?.hasRefundDetails ? (
                                                         <RefundCenter 
                                                             invoice={invoice} 
-                                                            runAction={runAction} 
-                                                            actionLoading={actionLoading}
+                                                            performAction={performAction} 
+                                                            isActionProcessing={processingAction}
                                                             proofFile={refundProofFile}
                                                             onProofChange={setRefundProofFile}
                                                             refundMessage={refundMessage}
@@ -663,10 +660,10 @@ export function InvoiceModal({
                                                     ) : invoice.paymentMethod === "in_person" || invoice.paymentMethod === "cash" ? (
                                                         <F2FActionCenter 
                                                             invoice={invoice}
-                                                            runAction={runAction}
-                                                            actionLoading={actionLoading}
-                                                            reviewNote={reviewNote}
-                                                            setReviewNote={setReviewNote}
+                                                            performAction={performAction}
+                                                            isActionProcessing={processingAction}
+                                                            tenantComment={tenantComment}
+                                                            setTenantComment={setTenantComment}
                                                         />
                                                     ) : (
                                                         <>
@@ -685,8 +682,8 @@ export function InvoiceModal({
                                                             <div className="space-y-4">
                                                                 <div className="relative group">
                                                                     <textarea 
-                                                                        value={reviewNote} 
-                                                                        onChange={(event) => setReviewNote(event.target.value)} 
+                                                                        value={tenantComment} 
+                                                                        onChange={(event) => setTenantComment(event.target.value)} 
                                                                         rows={3} 
                                                                         className="w-full resize-none rounded-2xl border border-white/10 bg-surface-2 px-5 py-4 text-sm text-text-high placeholder:text-text-disabled focus:border-primary/50 focus:ring-4 focus:ring-primary/10 outline-none transition-all shadow-inner" 
                                                                         placeholder="Add an optional message for the tenant (e.g. 'Thank you for the prompt payment!')" 
@@ -698,8 +695,8 @@ export function InvoiceModal({
  
                                                                 <div className="space-y-3">
                                                                     <ActionButton 
-                                                                        onClick={() => runAction("confirm")} 
-                                                                        loading={actionLoading === "confirm"} 
+                                                                        onClick={() => performAction("confirm")} 
+                                                                        loading={processingAction === "confirm"} 
                                                                         variant="primary"
                                                                         fullWidth
                                                                         icon={<CheckCircle2 className="size-5" />}
@@ -726,18 +723,18 @@ export function InvoiceModal({
 
                                                     <WizardFlow 
                                                         invoice={invoice} 
-                                                        runAction={runAction} 
-                                                        actionLoading={actionLoading}
-                                                        reviewNote={reviewNote}
-                                                        setReviewNote={setReviewNote}
+                                                        performAction={performAction} 
+                                                        isActionProcessing={processingAction}
+                                                        tenantComment={tenantComment}
+                                                        setTenantComment={setTenantComment}
                                                         rejectionReason={rejectionReason}
                                                         setRejectionReason={setRejectionReason}
-                                                        nonExactAction={nonExactAction}
-                                                        setNonExactAction={setNonExactAction}
+                                                        mismatchResolution={mismatchResolution}
+                                                        setMismatchResolution={setMismatchResolution}
                                                         showRejectionWarning={showRejectionWarning}
                                                         setShowRejectionWarning={setShowRejectionWarning}
-                                                        issueType={issueType}
-                                                        setIssueType={setIssueType}
+                                                        paymentDiscrepancyType={paymentDiscrepancyType}
+                                                        setPaymentDiscrepancyType={setPaymentDiscrepancyType}
                                                         shortfallAmount={shortfallAmount}
                                                         setShortfallAmount={setShortfallAmount}
                                                     />
@@ -745,11 +742,11 @@ export function InvoiceModal({
                                                     <div className="pt-4 border-t border-white/5">
                                                         <div className="relative group/nudge">
                                                             <button 
-                                                                onClick={() => runAction("remind")}
-                                                                disabled={!!actionLoading}
+                                                                onClick={() => performAction("remind")}
+                                                                disabled={!!processingAction}
                                                                 className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-surface-2/30 py-3 text-[10px] font-black uppercase tracking-widest text-text-medium transition-all hover:bg-surface-3 hover:text-text-high hover:border-white/20 group"
                                                             >
-                                                                {actionLoading === "remind" ? <Loader2 className="size-3 animate-spin" /> : <Send className="size-3 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />}
+                                                                {processingAction === "remind" ? <Loader2 className="size-3 animate-spin" /> : <Send className="size-3 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />}
                                                                 Send a Gentle Nudge
                                                                 <HelpCircle className="size-3 text-text-disabled group-hover:text-amber-400 transition-colors" />
                                                             </button>
@@ -874,7 +871,7 @@ export function InvoiceModal({
                                 <div className="grid gap-3">
                                     <button 
                                         disabled={confirmCountdown > 0}
-                                        onClick={() => runAction(pendingAction.type)}
+                                        onClick={() => performAction(pendingAction.type)}
                                         className={cn(
                                             "relative h-14 overflow-hidden rounded-2xl text-sm font-black uppercase tracking-widest transition-all active:scale-[0.98]",
                                             confirmCountdown > 0 
@@ -882,29 +879,17 @@ export function InvoiceModal({
                                                 : "bg-primary text-primary-foreground hover:brightness-110 shadow-lg"
                                         )}
                                     >
-                                        {/* Progress Bar for Crucial Timer */}
-                                        {confirmCountdown > 0 && (
-                                            <motion.div 
-                                                key="countdown-overlay"
-                                                initial={{ scaleX: 1 }}
-                                                animate={{ scaleX: 0 }}
-                                                transition={{ duration: 3, ease: "linear" }}
-                                                className="absolute inset-0 bg-amber-500/30 origin-left z-0"
-                                            />
+                                        {confirmCountdown > 0 ? (
+                                            <>
+                                                <Clock3 className="size-4 animate-pulse" />
+                                                Hold to Confirm ({confirmCountdown}s)
+                                            </>
+                                        ) : (
+                                            <>
+                                                <CheckCircle2 className="size-4" />
+                                                Yes, Proceed
+                                            </>
                                         )}
-                                        <span className="relative z-10 flex items-center justify-center gap-2">
-                                            {confirmCountdown > 0 ? (
-                                                <>
-                                                    <Clock3 className="size-4 animate-pulse" />
-                                                    Hold to Confirm ({confirmCountdown}s)
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <CheckCircle2 className="size-4" />
-                                                    Yes, Proceed
-                                                </>
-                                            )}
-                                        </span>
                                     </button>
                                     <button 
                                         onClick={() => setPendingAction(null)}
@@ -963,16 +948,16 @@ export function InvoiceModal({
 
 function F2FActionCenter({ 
     invoice, 
-    runAction, 
-    actionLoading, 
-    reviewNote, 
-    setReviewNote 
+    performAction, 
+    isActionProcessing, 
+    tenantComment, 
+    setTenantComment 
 }: {
     invoice: NonNullable<InvoiceDetail>;
-    runAction: (action: any) => void;
-    actionLoading: any;
-    reviewNote: string;
-    setReviewNote: (v: string) => void;
+    performAction: (action: any) => void;
+    isActionProcessing: any;
+    tenantComment: string;
+    setTenantComment: (value: string) => void;
 }) {
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
@@ -1010,8 +995,8 @@ function F2FActionCenter({
 
                 <div className="relative group">
                     <textarea 
-                        value={reviewNote} 
-                        onChange={(event) => setReviewNote(event.target.value)} 
+                        value={tenantComment} 
+                        onChange={(event) => setTenantComment(event.target.value)} 
                         rows={2} 
                         className="w-full resize-none rounded-2xl border border-white/10 bg-surface-2 px-5 py-4 text-sm text-text-high placeholder:text-text-disabled focus:border-primary/50 outline-none transition-all" 
                         placeholder="Note (e.g. 'Received at unit 202')" 
@@ -1019,8 +1004,8 @@ function F2FActionCenter({
                 </div>
 
                 <ActionButton 
-                    onClick={() => runAction("confirm_received")} 
-                    loading={actionLoading === "confirm_received"} 
+                    onClick={() => performAction("confirm_received")} 
+                    loading={isActionProcessing === "confirm_received"} 
                     variant="primary"
                     fullWidth
                     icon={<ShieldCheck className="size-5" />}
@@ -1034,36 +1019,36 @@ function F2FActionCenter({
 
 function WizardFlow({ 
     invoice, 
-    runAction, 
-    actionLoading, 
-    reviewNote, 
-    setReviewNote, 
+    performAction, 
+    isActionProcessing, 
+    tenantComment, 
+    setTenantComment, 
     rejectionReason, 
     setRejectionReason, 
-    nonExactAction, 
-    setNonExactAction,
+    mismatchResolution, 
+    setMismatchResolution,
     showRejectionWarning,
     setShowRejectionWarning,
-    issueType,
-    setIssueType,
+    paymentDiscrepancyType,
+    setPaymentDiscrepancyType,
     shortfallAmount,
     setShortfallAmount
 }: {
     invoice: NonNullable<InvoiceDetail>;
-    runAction: (action: any) => void;
-    actionLoading: any;
-    reviewNote: string;
-    setReviewNote: (v: string) => void;
+    performAction: (action: any) => void;
+    isActionProcessing: any;
+    tenantComment: string;
+    setTenantComment: (value: string) => void;
     rejectionReason: string;
-    setRejectionReason: (v: string) => void;
-    nonExactAction: string;
-    setNonExactAction: (v: any) => void;
+    setRejectionReason: (value: string) => void;
+    mismatchResolution: string;
+    setMismatchResolution: (value: any) => void;
     showRejectionWarning: boolean;
-    setShowRejectionWarning: (v: boolean) => void;
-    issueType: string;
-    setIssueType: (v: any) => void;
+    setShowRejectionWarning: (value: boolean) => void;
+    paymentDiscrepancyType: string;
+    setPaymentDiscrepancyType: (value: any) => void;
     shortfallAmount: number | "";
-    setShortfallAmount: (v: number | "") => void;
+    setShortfallAmount: (value: number | "") => void;
 }) {
     const [step, setStep] = useState<"diagnose" | "adjust" | "resolve" | "communicate">("diagnose");
     const [diagnosis, setDiagnosis] = useState<"amount" | "proof" | "other" | null>(null);
@@ -1072,12 +1057,12 @@ function WizardFlow({
     const handleDiagnosis = (d: "amount" | "proof" | "other") => {
         setDiagnosis(d);
         if (d === "proof") {
-            setNonExactAction("reject");
+            setMismatchResolution("reject");
             setStep("communicate");
         } else if (d === "amount") {
             setStep("adjust");
         } else {
-            setNonExactAction("other");
+            setMismatchResolution("reject");
             setStep("communicate");
         }
     };
@@ -1098,19 +1083,19 @@ function WizardFlow({
                             <DiagnosisCard 
                                 icon={<AlertTriangle className="size-5" />}
                                 title="Amount is Incorrect"
-                                desc="The tenant paid more or less than required"
+                                description="The tenant paid more or less than required"
                                 onClick={() => handleDiagnosis("amount")}
                             />
                             <DiagnosisCard 
                                 icon={<FileText className="size-5" />}
                                 title="Invalid Proof"
-                                desc="Receipt is blurry, fake, or incorrect"
+                                description="Receipt is blurry, fake, or incorrect"
                                 onClick={() => handleDiagnosis("proof")}
                             />
                             <DiagnosisCard 
                                 icon={<MessageSquare className="size-5" />}
                                 title="Something Else"
-                                desc="Another issue not listed above"
+                                description="Another issue not listed above"
                                 onClick={() => handleDiagnosis("other")}
                             />
                         </div>
@@ -1201,12 +1186,12 @@ function WizardFlow({
 
                                     {(shortfallAmount as number) > 0 && (
                                         <ResolutionCard 
-                                            active={issueType === "insufficient_amount"}
+                                            active={paymentDiscrepancyType === "insufficient_amount"}
                                             title="Insufficient Amount"
-                                            desc="Ask the tenant to pay the remaining balance."
+                                            description="Ask the tenant to pay the remaining balance."
                                             onClick={() => { 
-                                                setIssueType("insufficient_amount"); 
-                                                setNonExactAction("request_completion"); 
+                                                setPaymentDiscrepancyType("insufficient_amount"); 
+                                                setMismatchResolution("request_completion"); 
                                                 setRejectionReason(`The payment amount is insufficient. Please pay the remaining balance of ${formatPhpCurrency(shortfallAmount as number)}.`);
                                                 setStep("communicate"); 
                                             }}
@@ -1215,12 +1200,12 @@ function WizardFlow({
 
                                     {(shortfallAmount as number) < 0 && (
                                         <ResolutionCard 
-                                            active={issueType === "excessive_amount"}
+                                            active={paymentDiscrepancyType === "excessive_amount"}
                                             title="Too Much Amount"
-                                            desc="Credit the overpayment to next month."
+                                            description="Credit the overpayment to next month."
                                             onClick={() => { 
-                                                setIssueType("excessive_amount"); 
-                                                setNonExactAction("accept_partial"); 
+                                                setPaymentDiscrepancyType("excessive_amount"); 
+                                                setMismatchResolution("accept_partial"); 
                                                 setRejectionReason(`The payment amount is excessive by ${formatPhpCurrency(Math.abs(shortfallAmount as number))}. We will credit the excess to your next month's rent.`);
                                                 setStep("communicate"); 
                                             }}
@@ -1230,24 +1215,24 @@ function WizardFlow({
                             )}
                             {diagnosis === "proof" && (
                                 <ResolutionCard 
-                                    active={issueType === "not_received"}
+                                    active={paymentDiscrepancyType === "not_received"}
                                     title="Not Received"
-                                    desc="The funds haven't arrived in the account."
+                                    description="The funds haven't arrived in the account."
                                     onClick={() => { 
-                                        setIssueType("not_received"); 
-                                        setNonExactAction("reject"); 
+                                        setPaymentDiscrepancyType("not_received"); 
+                                        setMismatchResolution("reject"); 
                                         setRejectionReason("We did not receive the payment in our records. Please verify the transaction details and resubmit proof.");
                                         setStep("communicate"); 
                                     }}
                                 />
                             )}
                             <ResolutionCard 
-                                active={nonExactAction === "reject" && issueType === "invalid_proof"}
+                                active={mismatchResolution === "reject" && paymentDiscrepancyType === "invalid_proof"}
                                 title="Reject Entirely"
-                                desc="Tell the tenant the evidence is invalid"
+                                description="Tell the tenant the evidence is invalid"
                                 onClick={() => { 
-                                    setIssueType("invalid_proof");
-                                    setNonExactAction("reject"); 
+                                    setPaymentDiscrepancyType("invalid_proof");
+                                    setMismatchResolution("reject"); 
                                     setRejectionReason("The proof of payment provided is invalid or unreadable. Please resubmit.");
                                     setStep("communicate"); 
                                 }}
@@ -1277,10 +1262,10 @@ function WizardFlow({
                                 Effect of this action
                             </p>
                             <p className="text-[11px] text-text-medium leading-relaxed font-medium">
-                                {nonExactAction === "reject" && "The payment will be cancelled. The tenant will be asked to resubmit a valid payment proof and amount."}
-                                {nonExactAction === "request_completion" && "The tenant will be notified that they still owe a balance, but their current payment will be recorded."}
-                                {nonExactAction === "accept_partial" && "The payment will be accepted and the invoice will be marked as partially paid."}
-                                {nonExactAction === "other" && "The payment will be flagged with your custom reason and the tenant will be notified."}
+                                {mismatchResolution === "reject" && "The payment will be cancelled. The tenant will be asked to resubmit a valid payment proof and amount."}
+                                {mismatchResolution === "request_completion" && "The tenant will be notified that they still owe a balance, but their current payment will be recorded."}
+                                {mismatchResolution === "accept_partial" && "The payment will be accepted and the invoice will be marked as partially paid."}
+                                {diagnosis === "other" && "The payment will be flagged with your custom reason and the tenant will be notified."}
                             </p>
                         </div>
 
@@ -1310,11 +1295,11 @@ function WizardFlow({
 
                             <ActionButton 
                                 onClick={() => {
-                                    if (nonExactAction === "accept_partial") runAction("confirm");
-                                    else if (nonExactAction === "request_completion") runAction("request_completion");
-                                    else runAction("reject");
+                                    if (mismatchResolution === "accept_partial") performAction("confirm");
+                                    else if (mismatchResolution === "request_completion") performAction("request_completion");
+                                    else performAction("reject");
                                 }} 
-                                loading={actionLoading === "reject" || actionLoading === "request_completion" || actionLoading === "confirm"} 
+                                loading={isActionProcessing === "reject" || isActionProcessing === "request_completion" || isActionProcessing === "confirm"} 
                                 variant="danger"
                                 fullWidth
                                 icon={<CheckCircle2 className="size-5" />}
@@ -1329,7 +1314,7 @@ function WizardFlow({
     );
 }
 
-function DiagnosisCard({ icon, title, desc, onClick }: { icon: ReactNode, title: string, desc: string, onClick: () => void }) {
+function DiagnosisCard({ icon, title, description, onClick }: { icon: ReactNode, title: string, description: string, onClick: () => void }) {
     return (
         <button 
             onClick={onClick}
@@ -1340,14 +1325,14 @@ function DiagnosisCard({ icon, title, desc, onClick }: { icon: ReactNode, title:
             </div>
             <div className="space-y-0.5">
                 <p className="text-xs font-black text-text-high">{title}</p>
-                <p className="text-[10px] text-text-disabled font-medium">{desc}</p>
+                <p className="text-[10px] text-text-disabled font-medium">{description}</p>
             </div>
             <ChevronRight className="size-4 text-text-disabled ml-auto group-hover:translate-x-1 transition-transform" />
         </button>
     );
 }
 
-function ResolutionCard({ title, desc, onClick, active, disabled }: { title: string, desc: string, onClick: () => void, active?: boolean, disabled?: boolean }) {
+function ResolutionCard({ title, description, onClick, active, disabled }: { title: string, description: string, onClick: () => void, active?: boolean, disabled?: boolean }) {
     return (
         <button 
             onClick={onClick}
@@ -1362,7 +1347,7 @@ function ResolutionCard({ title, desc, onClick, active, disabled }: { title: str
                 <p className={cn("text-xs font-black", active ? "text-amber-400" : "text-text-high")}>{title}</p>
                 <div className={cn("size-2 rounded-full", active ? "bg-amber-500" : "bg-white/10")} />
             </div>
-            <p className="text-[10px] text-text-disabled font-medium mt-1">{desc}</p>
+            <p className="text-[10px] text-text-disabled font-medium mt-1">{description}</p>
         </button>
     );
 }
@@ -1457,16 +1442,16 @@ function ActionButton({
 
 function RefundCenter({ 
     invoice, 
-    runAction, 
-    actionLoading,
+    performAction, 
+    isActionProcessing,
     proofFile,
     onProofChange,
     refundMessage,
     onRefundSuccess
 }: { 
     invoice: InvoiceDetail; 
-    runAction: (action: any) => void;
-    actionLoading: string | null;
+    performAction: (action: any) => void;
+    isActionProcessing: string | null;
     proofFile: File | null;
     onProofChange: (file: File | null) => void;
     refundMessage?: any;
@@ -1576,7 +1561,7 @@ function RefundCenter({
                                 type="file" 
                                 className="hidden" 
                                 accept="image/*"
-                                onChange={(e) => onProofChange(e.target.files?.[0] || null)}
+                                onChange={(event) => onProofChange(event.target.files?.[0] || null)}
                             />
                         </label>
                     ) : (
@@ -1642,14 +1627,14 @@ function RefundSubmitButton({
             );
 
             if (!response.ok) {
-                const data = await response.json().catch(() => ({}));
-                throw new Error(data.error || "Failed to mark refund as processed.");
+                const responseData = await response.json().catch(() => ({}));
+                throw new Error(responseData.error || "Failed to mark refund as processed.");
             }
 
             onProofChange(null);
             onSuccess?.();
-        } catch (err: any) {
-            setError(err.message || "Something went wrong. Please try again.");
+        } catch (error: any) {
+            setError(error.message || "Something went wrong. Please try again.");
         } finally {
             setIsSubmitting(false);
         }
@@ -1688,14 +1673,14 @@ function CreditCardIcon({ className }: { className?: string }) {
     );
 }
 
-function mockInvoice(id: string): any {
+function mockInvoice(targetInvoiceId: string): any {
     const now = new Date().toISOString();
-    const isSelective = id.includes("selective");
-    const isF2FPreview = id.includes("preview") || id.includes("in_person");
+    const isSelective = targetInvoiceId.includes("selective");
+    const isF2FPreview = targetInvoiceId.includes("preview") || targetInvoiceId.includes("in_person");
     
     return {
-        id,
-        invoiceNumber: isSelective ? "INV-SEL-2026-MOCK" : `INV-PREVIEW-${id.slice(0, 4).toUpperCase()}`,
+        id: targetInvoiceId,
+        invoiceNumber: isSelective ? "INV-SEL-2026-MOCK" : `INV-PREVIEW-${targetInvoiceId.slice(0, 4).toUpperCase()}`,
         status: "pending",
         workflowStatus: isF2FPreview ? "awaiting_in_person" : "pending",
         totalAmount: isSelective ? 52020.50 : 14070,

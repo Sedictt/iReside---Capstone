@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
+import Groq from "groq-sdk";
 import { createClient } from "@/lib/supabase/server";
 
-const openai = new OpenAI({
+const groq = new Groq({
     apiKey: process.env.GROQ_API_KEY,
-    baseURL: "https://api.groq.com/openai/v1",
 });
 
 const unwrapJsonBlock = (text: string) => {
@@ -177,11 +176,11 @@ export async function POST(request: Request) {
         
         Analyze this and provide the JSON response.`;
 
-        const completion = await openai.chat.completions.create({
-            model: "llama-3.1-70b-versatile",
+        const completion = await groq.chat.completions.create({
+            model: "qwen/qwen3-32b",
             temperature: 0.6,
-            max_tokens: 1000,
-            response_format: { type: "json_object" },
+            max_completion_tokens: 4096,
+            top_p: 0.95,
             messages: [
                 { role: "system", content: systemPrompt },
                 { role: "user", content: userPrompt },

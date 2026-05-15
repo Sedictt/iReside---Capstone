@@ -66,7 +66,7 @@ export async function GET(request: Request) {
 
     const { data, error } = await (supabase
         .from("landlord_statistics_exports")
-        .select("id, export_type, file_url, created_at")
+        .select("id, format, metadata, created_at")
         .eq("landlord_id", user.id)
         .order("created_at", { ascending: false })
         .range(offset, offset + limit - 1) as any);
@@ -77,7 +77,7 @@ export async function GET(request: Request) {
 
     const history = (data ?? []).map((row: any) => ({
         id: row.id,
-        format: row.export_type,
+        format: row.format,
         range: null,
         generatedAt: row.created_at,
         rows: (row.metadata as Record<string, unknown>)?.rows as ReportRow[] ?? [],
@@ -112,18 +112,20 @@ export async function POST(request: Request) {
         rows: body.rows,
     };
 
-    const insertPayload = {
-        landlord_id: user.id,
-        export_type: payload.format,
-        metadata: {
-            generatedAt: payload.generatedAt ?? new Date().toLocaleString(),
-            rows: payload.rows,
-        },
-    } as any;
-
-    const { error: insertError } = await supabase
+    const { error: insertError } = await (supabase
         .from("landlord_statistics_exports")
-        .insert(insertPayload);
+        .insert({
+            landlord_id: user.id,
+            format: payload.format,
+            report_range: payload.range,
+            mode: payload.mode,
+            include_expanded_kpis: payload.includeExpandedKpis,
+            row_count: payload.rows.length,
+            metadata: {
+                generatedAt: payload.generatedAt ?? new Date().toISOString(),
+                rows: payload.rows,
+            },
+        } as any));
 
     if (insertError) {
         return NextResponse.json({ error: "Failed to record export history." }, { status: 500 });

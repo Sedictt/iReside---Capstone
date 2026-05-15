@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { m as motion, AnimatePresence } from "framer-motion";
-import { X, Receipt, CheckCircle2, DollarSign, Calendar, Type } from "lucide-react";
+import { X, Receipt, CheckCircle2, Calendar, Type } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProperty } from "@/context/PropertyContext";
 
@@ -18,20 +18,38 @@ export function RecordExpenseModal({ isOpen, onClose, onSaved }: RecordExpenseMo
     const [amount, setAmount] = useState("");
     const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
     const [description, setDescription] = useState("");
-    const [loading, setLoading] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const formatWithCommas = (value: string) => {
+        const cleanValue = value.replace(/,/g, "");
+        if (cleanValue === "") return "";
+        const parts = cleanValue.split(".");
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        return parts.join(".");
+    };
+
+    const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value.replace(/,/g, "");
+        if (val === "" || /^\d*\.?\d*$/.test(val)) {
+            setAmount(formatWithCommas(val));
+        }
+    };
+
+    const rawAmount = amount.replace(/,/g, "");
+    const isAmountValid = rawAmount !== "" && !isNaN(parseFloat(rawAmount)) && parseFloat(rawAmount) > 0;
 
     if (!isOpen) return null;
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
+    const handleSubmit = async (event: React.FormEvent) => {
+        event.preventDefault();
+        setIsSubmitting(true);
         try {
             const response = await fetch("/api/landlord/expenses", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     category,
-                    amount: parseFloat(amount),
+                    amount: parseFloat(amount.replace(/,/g, "")),
                     date_incurred: date,
                     description,
                     propertyId: selectedPropertyId === "all" ? undefined : selectedPropertyId,
@@ -48,7 +66,7 @@ export function RecordExpenseModal({ isOpen, onClose, onSaved }: RecordExpenseMo
             console.error(error);
             alert("Failed to record expense. Please try again.");
         } finally {
-            setLoading(false);
+            setIsSubmitting(false);
         }
     };
 
@@ -102,22 +120,22 @@ export function RecordExpenseModal({ isOpen, onClose, onSaved }: RecordExpenseMo
                     <div className="space-y-3">
                         <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Expense Category</label>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                            {categories.map((cat) => (
+                            {categories.map((categoryOption) => (
                                 <button
-                                    key={cat.id}
+                                    key={categoryOption.id}
                                     type="button"
-                                    onClick={() => setCategory(cat.id)}
+                                    onClick={() => setCategory(categoryOption.id)}
                                     className={cn(
                                         "flex flex-col items-center gap-2 rounded-2xl border p-4 text-center transition-all",
-                                        category === cat.id
+                                        category === categoryOption.id
                                             ? "border-primary/50 bg-primary/10 shadow-sm"
                                             : "border-border bg-background/50 hover:bg-background"
                                     )}
                                 >
-                                    <div className={cn("flex size-8 items-center justify-center rounded-full", cat.bg, cat.color)}>
-                                        <CheckCircle2 className={cn("size-4", category === cat.id ? "opacity-100" : "opacity-0")} />
+                                    <div className={cn("flex size-8 items-center justify-center rounded-full", categoryOption.bg, categoryOption.color)}>
+                                        <CheckCircle2 className={cn("size-4", category === categoryOption.id ? "opacity-100" : "opacity-0")} />
                                     </div>
-                                    <span className={cn("text-xs font-black", category === cat.id ? "text-foreground" : "text-muted-foreground")}>{cat.label}</span>
+                                    <span className={cn("text-xs font-black", category === categoryOption.id ? "text-foreground" : "text-muted-foreground")}>{categoryOption.label}</span>
                                 </button>
                             ))}
                         </div>
@@ -127,15 +145,14 @@ export function RecordExpenseModal({ isOpen, onClose, onSaved }: RecordExpenseMo
                         <div className="space-y-3">
                             <label htmlFor="expense-amount" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Amount (PHP)</label>
                             <div className="relative group">
-                                <DollarSign className="absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-black text-muted-foreground group-focus-within:text-primary transition-colors select-none">₱</span>
                                 <input
                                     id="expense-amount"
-                                    type="number"
+                                    type="text"
+                                    inputMode="decimal"
                                     required
-                                    min="0"
-                                    step="0.01"
                                     value={amount}
-                                    onChange={(e) => setAmount(e.target.value)}
+                                    onChange={handleAmountChange}
                                     className="w-full rounded-2xl border border-border bg-background py-4 pl-12 pr-4 text-sm font-black text-foreground outline-none transition-all placeholder:text-muted-foreground/50 focus:border-primary focus:ring-4 focus:ring-primary/10"
                                     placeholder="0.00"
                                 />
@@ -151,7 +168,7 @@ export function RecordExpenseModal({ isOpen, onClose, onSaved }: RecordExpenseMo
                                     type="date"
                                     required
                                     value={date}
-                                    onChange={(e) => setDate(e.target.value)}
+                                    onChange={(event) => setDate(event.target.value)}
                                     className="w-full rounded-2xl border border-border bg-background py-4 pl-12 pr-4 text-sm font-black text-foreground outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/10"
                                 />
                             </div>
@@ -166,7 +183,7 @@ export function RecordExpenseModal({ isOpen, onClose, onSaved }: RecordExpenseMo
                                 id="expense-description"
                                 required
                                 value={description}
-                                onChange={(e) => setDescription(e.target.value)}
+                                onChange={(event) => setDescription(event.target.value)}
                                 rows={3}
                                 className="w-full resize-none rounded-2xl border border-border bg-background py-4 pl-12 pr-4 text-sm font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground/50 focus:border-primary focus:ring-4 focus:ring-primary/10"
                                 placeholder="What was this expense for? (e.g. Fixed leaky faucet in Unit 402)"
@@ -177,10 +194,10 @@ export function RecordExpenseModal({ isOpen, onClose, onSaved }: RecordExpenseMo
                     <div className="pt-4">
                         <button
                             type="submit"
-                            disabled={loading || !amount || !description}
+                            disabled={isSubmitting || !isAmountValid || !description}
                             className="group flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-4 text-sm font-black uppercase tracking-widest text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.01] hover:bg-primary/90 active:scale-95 disabled:pointer-events-none disabled:opacity-50"
                         >
-                            {loading ? (
+                            {isSubmitting ? (
                                 "Saving..."
                             ) : (
                                 <>

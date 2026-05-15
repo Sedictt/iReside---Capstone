@@ -43,10 +43,10 @@ interface LeaseDetails {
 
 function LeaseSigningContent({ params }: { params: Promise<{ leaseId: string }> }) {
   const { push } = useRouter();
-  const { get } = useSearchParams();
+  const searchParams = useSearchParams();
   const resolvedParams = use(params);
   const leaseId = resolvedParams.leaseId;
-  const token = get("token");
+  const token = searchParams?.get("token");
   
   const toast = useAppToast();
   const [lease, setLease] = useState<LeaseDetails | null>(null);

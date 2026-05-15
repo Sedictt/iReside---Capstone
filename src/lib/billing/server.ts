@@ -253,8 +253,6 @@ const PAYMENT_RELATION_SELECT = `
                 city,
                 description,
                 type,
-                lat,
-                lng,
                 amenities,
                 house_rules,
                 contract_template,

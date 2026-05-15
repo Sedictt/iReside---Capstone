@@ -436,9 +436,8 @@ export default function CheckoutPage() {
     const [submitted, setSubmitted] = useState(false);
     const [inPersonTriggered, setInPersonTriggered] = useState(false);
     const { back } = useRouter();
-    const { get } = useSearchParams();
-    const isFaceToFacePreview = get("preview") === "face_to_face";
-    const isSelectivePreview = get("preview") === "selective";
+    const isFaceToFacePreview = searchParams?.get("preview") === "face_to_face";
+    const isSelectivePreview = searchParams?.get("preview") === "selective";
 
     useEffect(() => {
         let alive = true;

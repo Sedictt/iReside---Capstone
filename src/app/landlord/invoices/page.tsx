@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
-import { CalendarDays, FileText, Loader2, Plus, Search, Filter } from "lucide-react";
+import { CalendarDays, FileText, Loader2, Plus, Search, Filter, Download } from "lucide-react";
 
 import { InvoiceModal } from "@/components/landlord/invoices/InvoiceModal";
 import { RecordExpenseModal } from "@/components/landlord/invoices/RecordExpenseModal";
@@ -22,7 +22,7 @@ interface ExpenseItem {
 
 export default function InvoicesPage() {
   const { selectedPropertyId } = useProperty();
-  const { get } = useSearchParams();
+  const searchParams = useSearchParams();
   const [invoices, setInvoices] = useState<InvoiceListItem[]>([]);
   const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
   const [metrics, setMetrics] = useState({ totalOutstanding: 0, overdueAmount: 0, collectedLast30Days: 0, totalInvoices: 0 });
@@ -61,25 +61,70 @@ export default function InvoicesPage() {
     }
   }, [selectedPropertyId]);
 
+  const handleExportCSV = () => {
+    const ledgerData = [
+      ...expenses.map(expense => ({
+        date: expense.date_incurred,
+        type: 'Expense',
+        category: expense.category,
+        description: expense.description,
+        amount: -expense.amount
+      })),
+      ...invoices
+        .filter(invoice => ['paid', 'receipted', 'confirmed'].includes(invoice.status))
+        .map(invoice => ({
+          date: invoice.issuedDate,
+          type: 'Income',
+          category: 'Rent Payment',
+          description: `Invoice ${invoice.invoiceNumber} - ${invoice.tenant}`,
+          amount: invoice.amount
+        }))
+    ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    const headers = ["Date", "Type", "Category", "Description", "Amount (PHP)"];
+    const csvContent = [
+      headers.join(","),
+      ...ledgerData.map(row => 
+        [
+          row.date,
+          row.type,
+          row.category,
+          `"${row.description.replace(/"/g, '""')}"`,
+          row.amount.toFixed(2)
+        ].join(",")
+      )
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `iReside_Ledger_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   useEffect(() => {
     void loadData();
   }, [loadData]);
 
   useEffect(() => {
-    const id = get("id");
-    if (id) {
-      setSelectedInvoiceId(id);
+    const invoiceId = searchParams?.get("id");
+    if (invoiceId) {
+      setSelectedInvoiceId(invoiceId);
       setActiveTab("invoices");
     }
-  }, [get]);
+  }, [searchParams]);
 
   const processedInvoices = useMemo(() => {
-    let result = invoices.filter((invoice) =>
+    let filteredInvoices = invoices.filter((invoice) =>
       `${invoice.invoiceNumber} ${invoice.tenant} ${invoice.property} ${invoice.unit}`.toLowerCase().includes(search.toLowerCase()),
     );
 
     if (filterMethod !== "all") {
-      result = result.filter((i) => {
+      filteredInvoices = filteredInvoices.filter((i) => {
         if (filterMethod === "gcash") return i.paymentMethod === "gcash";
         if (filterMethod === "in_person") return i.paymentMethod === "in_person" || i.paymentMethod === "cash" || i.workflowStatus === "awaiting_in_person";
         return true;
@@ -87,13 +132,13 @@ export default function InvoicesPage() {
     }
 
     if (filterStatus !== "all") {
-      result = result.filter((i) => {
+      filteredInvoices = filteredInvoices.filter((i) => {
         if (filterStatus === "refund_pending") return i.hasRefundRequest;
         return i.status === filterStatus || i.workflowStatus === filterStatus;
       });
     }
 
-    result.sort((a, b) => {
+    filteredInvoices.sort((a, b) => {
       if (sortBy === "newest") return new Date(b.issuedDate).getTime() - new Date(a.issuedDate).getTime();
       if (sortBy === "oldest") return new Date(a.issuedDate).getTime() - new Date(b.issuedDate).getTime();
       if (sortBy === "tenant_az") return a.tenant.localeCompare(b.tenant);
@@ -103,7 +148,7 @@ export default function InvoicesPage() {
       return 0;
     });
 
-    return result;
+    return filteredInvoices;
   }, [invoices, search, filterMethod, filterStatus, sortBy]);
 
   const getStatusConfig = (status: string) => {
@@ -137,7 +182,7 @@ export default function InvoicesPage() {
 
       <div data-tour-id="tour-finance-hub" className="grid gap-4 sm:grid-cols-3">
         {(() => {
-          const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+          const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
           const netCashFlow = metrics.collectedLast30Days - totalExpenses;
           return (
             <>
@@ -151,7 +196,6 @@ export default function InvoicesPage() {
 
       {message && <div className="rounded-2xl border border-primary/20 bg-primary/10 px-4 py-3 text-sm text-foreground">{message}</div>}
 
-      {/* Tabs Navigation */}
       <div className="flex items-center gap-2 overflow-x-auto border-b border-border/50 pb-px">
         {(["ledger", "invoices", "expenses"] as const).map((tab) => (
           <button
@@ -299,8 +343,12 @@ export default function InvoicesPage() {
                 <p className="text-[10px] font-black uppercase tracking-[0.25em] text-primary">Overview</p>
                 <h2 className="mt-2 text-2xl font-black text-foreground lg:text-3xl">Financial Ledger</h2>
               </div>
-              <button className="group inline-flex items-center gap-2.5 rounded-full border border-border/50 bg-background/80 px-6 py-3 text-sm font-black shadow-sm transition-all hover:bg-muted active:scale-95">
-                Download Statement
+              <button 
+                onClick={handleExportCSV}
+                className="group inline-flex items-center gap-2.5 rounded-full border border-border/50 bg-background/80 px-6 py-3 text-sm font-black shadow-sm transition-all hover:bg-muted active:scale-95"
+              >
+                <Download className="size-4 text-primary" />
+                Export Ledger (CSV)
               </button>
             </div>
           </div>
@@ -315,22 +363,21 @@ export default function InvoicesPage() {
                 </div>
             ) : (
                 <div className="space-y-4">
-                    {/* Simplified Timeline View */}
-                    {[...expenses.map(e => ({ type: 'expense' as const, date: new Date(e.date_incurred), amount: e.amount, label: e.category, desc: e.description })), ...invoices.filter(i => i.status === 'paid' || i.status === 'receipted' || i.status === 'confirmed').map(i => ({ type: 'income' as const, date: new Date(i.issuedDate), amount: i.amount, label: `Rent Payment`, desc: `Invoice ${i.invoiceNumber}` }))]
+                    {[...expenses.map(expense => ({ id: expense.id, type: 'expense' as const, date: new Date(expense.date_incurred), amount: expense.amount, label: expense.category, desc: expense.description })), ...invoices.filter(invoice => invoice.status === 'paid' || invoice.status === 'receipted' || invoice.status === 'confirmed').map(invoice => ({ id: invoice.id, type: 'income' as const, date: new Date(invoice.issuedDate), amount: invoice.amount, label: `Rent Payment`, desc: `Invoice ${invoice.invoiceNumber}` }))]
                     .sort((a, b) => b.date.getTime() - a.date.getTime())
-                    .map((item) => (
-                        <div key={`${item.type}-${item.date.getTime()}-${item.desc}`} className="flex items-center justify-between rounded-2xl border border-border/50 bg-card p-5">
+                    .map((ledgerEntry) => (
+                        <div key={`${ledgerEntry.type}-${ledgerEntry.id}`} className="flex items-center justify-between rounded-2xl border border-border/50 bg-card p-5">
                             <div className="flex items-center gap-4">
-                                <div className={cn("flex size-10 items-center justify-center rounded-full", item.type === 'income' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500')}>
-                                    {item.type === 'income' ? <Plus className="size-5" /> : <Filter className="size-5" />}
+                                <div className={cn("flex size-10 items-center justify-center rounded-full", ledgerEntry.type === 'income' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500')}>
+                                    {ledgerEntry.type === 'income' ? <Plus className="size-5" /> : <Filter className="size-5" />}
                                 </div>
                                 <div>
-                                    <p className="text-sm font-black text-foreground capitalize">{item.label}</p>
-                                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground" suppressHydrationWarning>{item.desc} • <span suppressHydrationWarning>{item.date.toLocaleDateString()}</span></p>
+                                    <p className="text-sm font-black text-foreground capitalize">{ledgerEntry.label}</p>
+                                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground" suppressHydrationWarning>{ledgerEntry.desc} ? <span suppressHydrationWarning>{ledgerEntry.date.toLocaleDateString()}</span></p>
                                 </div>
                             </div>
-                            <p className={cn("text-base font-black", item.type === 'income' ? 'text-emerald-500' : 'text-rose-500')}>
-                                {item.type === 'income' ? '+' : '-'}{formatPhpCurrency(item.amount)}
+                            <p className={cn("text-base font-black", ledgerEntry.type === 'income' ? 'text-emerald-500' : 'text-rose-500')}>
+                                {ledgerEntry.type === 'income' ? '+' : '-'}{formatPhpCurrency(ledgerEntry.amount)}
                             </p>
                         </div>
                     ))}
@@ -340,7 +387,6 @@ export default function InvoicesPage() {
         </div>
       )}
 
-      {/* Prototype: Expenses Tab */}
       {activeTab === "expenses" && (
         <div className="flex min-h-[50vh] flex-col rounded-[2.5rem] border border-border/50 bg-card/60 p-8 shadow-xl backdrop-blur-xl animate-in fade-in slide-in-from-bottom-4">
           <div className="mb-6 flex shrink-0 flex-col gap-4 border-b border-border/50 pb-6">
@@ -391,7 +437,7 @@ export default function InvoicesPage() {
       )}
 
       <InvoiceModal invoiceId={selectedInvoiceId} onClose={() => setSelectedInvoiceId(null)} onUpdated={loadData} />
-      <RecordExpenseModal isOpen={isExpenseModalOpen} onClose={() => setIsExpenseModalOpen(false)} />
+      <RecordExpenseModal isOpen={isExpenseModalOpen} onClose={() => setIsExpenseModalOpen(false)} onSaved={loadData} />
     </div>
   );
 }

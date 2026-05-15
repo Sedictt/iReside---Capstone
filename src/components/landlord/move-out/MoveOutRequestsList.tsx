@@ -42,9 +42,8 @@ interface MoveOutRequest {
 export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview = false }: { onSelect: (request: MoveOutRequest) => void, initialFilter?: MoveOutStatus | "all", preview?: boolean }) {
   const { selectedPropertyId } = useProperty();
   
-  // Reducer for requests state to avoid multiple setState calls
   type RequestsState = { requests: MoveOutRequest[]; loading: boolean; error: string | null };
-  type RequestsAction =
+  type Action =
       | { type: 'SET_REQUESTS'; payload: MoveOutRequest[] }
       | { type: 'SET_LOADING'; payload: boolean }
       | { type: 'SET_ERROR'; payload: string | null }
@@ -53,7 +52,7 @@ export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview =
       | { type: 'FETCH_ERROR'; payload: string }
       | { type: 'FETCH_PREVIEW_SUCCESS'; payload: MoveOutRequest[] };
 
-  const requestsReducer = (state: RequestsState, action: RequestsAction): RequestsState => {
+  const requestsReducer = (state: RequestsState, action: Action): RequestsState => {
       switch (action.type) {
           case 'SET_REQUESTS':
               return { ...state, requests: action.payload };
@@ -74,14 +73,13 @@ export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview =
       }
   };
 
-  const [requestsState, dispatch] = useReducer(requestsReducer, { requests: [], loading: true, error: null });
-  const { requests, loading, error } = requestsState;
+  const [state, dispatch] = useReducer(requestsReducer, { requests: [], loading: true, error: null });
+  const { requests, loading, error } = state;
   const setRequests = (r: MoveOutRequest[]) => dispatch({ type: 'SET_REQUESTS', payload: r });
   
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<MoveOutStatus | "all">(initialFilter);
 
-  // Sync activeFilter when initialFilter prop changes (e.g. via URL)
   useEffect(() => {
     setActiveFilter(initialFilter);
   }, [initialFilter]);
@@ -176,7 +174,6 @@ export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview =
           } as any
         ];
         
-        // Simulate network delay
         await new Promise(resolve => setTimeout(resolve, 800));
         if (isCancelled) return;
         dispatch({ type: 'FETCH_PREVIEW_SUCCESS', payload: MOCK_REQUESTS });
@@ -227,9 +224,9 @@ export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview =
   const stats = useMemo(() => {
     return {
       total: requests.length,
-      pending: requests.filter((r) => r.status === "pending").length,
-      approved: requests.filter((r) => r.status === "approved").length,
-      completed: requests.filter((r) => r.status === "completed").length,
+      pending: requests.filter((request) => request.status === "pending").length,
+      approved: requests.filter((request) => request.status === "approved").length,
+      completed: requests.filter((request) => request.status === "completed").length,
     };
   }, [requests]);
 
@@ -250,7 +247,6 @@ export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview =
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Search and Filters */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-1 rounded-2xl border border-border bg-background/50 p-1">
           {filterTabs.map((tab) => (
@@ -287,7 +283,6 @@ export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview =
         </div>
       </div>
 
-      {/* List Content */}
       <div className="min-h-[400px]">
         {loading ? (
           <div className="flex h-64 items-center justify-center">
@@ -312,61 +307,56 @@ export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview =
         ) : (
           <div className="grid gap-4 sm:grid-cols-1">
             <AnimatePresence mode="popLayout">
-              {filteredRequests.map((req, idx) => (
+              {filteredRequests.map((moveOutRequest, index) => (
                 <motion.div
-                  key={req.id}
+                  key={moveOutRequest.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.3, delay: idx * 0.05 }}
-                  onClick={() => onSelect(req)}
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                  onClick={() => onSelect(moveOutRequest)}
                   className="group relative flex cursor-pointer flex-col overflow-hidden rounded-3xl border border-border bg-card transition-all hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5"
                 >
                   <div className="flex flex-col p-6 md:flex-row md:items-center md:gap-6">
-                    {/* Status & Date */}
                     <div className="mb-4 flex flex-col gap-3 md:mb-0 md:min-w-[140px]">
-                      <MoveOutStatusBadge status={req.status} />
+                      <MoveOutStatusBadge status={moveOutRequest.status} />
                       <div className="flex items-center gap-2 text-[10px] font-black text-muted-foreground">
                         <Home className="size-5" />
-                        Requested: {formatDate(req.requested_date)}
+                        Requested: {formatDate(moveOutRequest.requested_date)}
                       </div>
                     </div>
 
-                    {/* Tenant Info */}
                     <div className="mb-4 flex flex-1 flex-col gap-1 md:mb-0">
                       <div className="flex items-center gap-2">
                         <User className="size-4 text-primary/60" />
                         <h4 className="text-sm font-black text-foreground group-hover:text-primary transition-colors">
-                          {req.lease.tenant.full_name}
+                          {moveOutRequest.lease.tenant.full_name}
                         </h4>
                       </div>
                       <p className="text-xs font-medium text-muted-foreground truncate max-w-[200px]">
-                        {req.lease.tenant.email}
+                        {moveOutRequest.lease.tenant.email}
                       </p>
                     </div>
 
-                    {/* Property/Unit Info */}
                     <div className="mb-4 flex flex-1 flex-col gap-1 md:mb-0">
                       <div className="flex items-center gap-2">
                         <Home className="size-4 text-primary/60" />
                         <span className="text-sm font-black text-foreground">
-                          {req.lease.unit.name}
+                          {moveOutRequest.lease.unit.name}
                         </span>
                       </div>
                       <p className="text-xs font-medium text-muted-foreground truncate max-w-[200px]">
-                        {req.lease.unit.property.name}
+                        {moveOutRequest.lease.unit.property.name}
                       </p>
                     </div>
 
-                    {/* Reason Preview */}
                     <div className="hidden flex-1 flex-col gap-1 lg:flex">
                       <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Reason</span>
                       <p className="text-xs font-medium text-foreground line-clamp-1 italic">
-                        &quot;{req.reason || "No reason provided"}&quot;
+                        &quot;{moveOutRequest.reason || "No reason provided"}&quot;
                       </p>
                     </div>
 
-                    {/* Action Arrow */}
                     <div className="absolute right-6 top-1/2 hidden -translate-y-1/2 md:block">
                       <div className="flex size-10 items-center justify-center rounded-2xl bg-muted transition-all group-hover:bg-primary group-hover:text-primary-foreground">
                         <ChevronRight className="size-5" />

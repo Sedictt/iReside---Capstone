@@ -29,8 +29,8 @@ const reasonLabel: Record<string, string> = {
 
 export default function TenantTourPage() {
     const { push } = useRouter();
-    const { get } = useSearchParams();
-    const source = get("source") ?? "manual";
+    const searchParams = useSearchParams();
+    const source = searchParams?.get("source") ?? "manual";
 
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);

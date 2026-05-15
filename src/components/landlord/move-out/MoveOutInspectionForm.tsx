@@ -12,12 +12,23 @@ import {
   Save,
   Loader2,
   Info,
+  CheckCircle2,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface Deduction {
   id: string;
   description: string;
   amount: number;
+}
+
+interface Checklist {
+  keys_returned: boolean;
+  unit_cleaned: boolean;
+  no_major_damage: boolean;
+  rent_settled: boolean;
+  utilities_settled: boolean;
+  other_dues_cleared: boolean;
 }
 
 interface MoveOutInspectionFormProps {
@@ -41,19 +52,11 @@ export function MoveOutInspectionForm({
 
   const [notes, setNotes] = useState("");
   const [deductions, setDeductions] = useState<Deduction[]>([]);
-  const [checklist, setChecklist] = useState({
-    keys_returned: false,
-    unit_cleaned: false,
-    no_major_damage: false,
-    rent_settled: false,
-    utilities_settled: false,
-    other_dues_cleared: false,
-  });
 
   // Reducer for draft state (notes, deductions, checklist) to avoid multiple setState calls
-  type DraftState = { notes: string; deductions: Deduction[]; checklist: typeof checklist };
+  type DraftState = { notes: string; deductions: Deduction[]; checklist: Checklist };
   type DraftAction =
-      | { type: 'RESTORE_DRAFT'; payload: { notes: string; deductions: Deduction[]; checklist: typeof checklist } };
+      | { type: 'RESTORE_DRAFT'; payload: { notes: string; deductions: Deduction[]; checklist: Checklist } };
 
   const draftReducer = (state: DraftState, action: DraftAction): DraftState => {
       switch (action.type) {
@@ -73,13 +76,13 @@ export function MoveOutInspectionForm({
     electricity_balance: number;
     pending_readings: number;
   } | null;
-  type ClearanceState = { systemStatus: ClearanceStatus; checklist: typeof checklist; initialLoading: boolean };
+  type ClearanceState = { systemStatus: ClearanceStatus; checklist: Checklist; initialLoading: boolean };
   type ClearanceAction =
       | { type: 'SET_SYSTEM_STATUS'; payload: ClearanceStatus }
-      | { type: 'UPDATE_CHECKLIST'; payload: Partial<typeof checklist> }
+      | { type: 'UPDATE_CHECKLIST'; payload: Partial<Checklist> }
       | { type: 'SET_INITIAL_LOADING'; payload: boolean }
       | { type: 'RESTORE_FROM_FETCH'; payload: ClearanceStatus }
-      | { type: 'CLEARANCE_POLL_SUCCESS'; payload: { systemStatus: ClearanceStatus; checklistUpdate: Partial<typeof checklist> } }
+      | { type: 'CLEARANCE_POLL_SUCCESS'; payload: { systemStatus: ClearanceStatus; checklistUpdate: Partial<Checklist> } }
       | { type: 'CLEARANCE_POLL_ERROR' };
 
   const clearanceReducer = (state: ClearanceState, action: ClearanceAction): ClearanceState => {
@@ -112,104 +115,76 @@ export function MoveOutInspectionForm({
 
   const [clearanceState, dispatchClearance] = useReducer(clearanceReducer, {
       systemStatus: null,
-      checklist,
+      checklist: {
+        keys_returned: false,
+        unit_cleaned: false,
+        no_major_damage: false,
+        rent_settled: false,
+        utilities_settled: false,
+        other_dues_cleared: false,
+      },
       initialLoading: true,
   });
-  const { systemStatus, initialLoading: clearanceLoading } = clearanceState;
-  const setSystemStatus = (status: ClearanceStatus) => dispatchClearance({ type: 'SET_SYSTEM_STATUS', payload: status });
-  const setChecklistForClearance = (update: Partial<typeof checklist>) => dispatchClearance({ type: 'UPDATE_CHECKLIST', payload: update });
-  const setInitialLoading = (loading: boolean) => dispatchClearance({ type: 'SET_INITIAL_LOADING', payload: loading });
+  const { systemStatus, checklist, initialLoading: clearanceLoading } = clearanceState;
 
-  // Local Storage Persistence
   useEffect(() => {
-    const saved = localStorage.getItem(`inspection_draft_${requestId}`);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      setNotes(parsed.notes || "");
-      setDeductions(parsed.deductions || []);
-      setChecklist({ ...checklist, ...parsed.checklist });
+    const cachedDraft = localStorage.getItem(`inspection_draft_${requestId}`);
+    if (cachedDraft) {
+      try {
+        const draftData = JSON.parse(cachedDraft);
+        setDeductions(draftData.deductions || []);
+        setNotes(draftData.notes || "");
+      } catch (err) {
+        console.error("Failed to parse inspection draft", err);
+      }
     }
-  }, [requestId, checklist]);
+  }, [requestId]);
 
   useEffect(() => {
     const draft = { notes, deductions, checklist };
     localStorage.setItem(`inspection_draft_${requestId}`, JSON.stringify(draft));
   }, [notes, deductions, checklist, requestId]);
 
-  // Real-time Polling for Clearance Status
   useEffect(() => {
-    async function fetchStatus() {
-      // Handle mock data for preview mode
-      if (requestId.startsWith("req-")) {
-        const mockData = {
-          rent_settled: requestId === "req-1" || requestId === "req-3",
-          utilities_settled: requestId === "req-1",
-          outstanding_balance: requestId === "req-2" ? 12500 : 0,
-          water_balance: requestId === "req-2" ? 1500 : 0,
-          electricity_balance: requestId === "req-2" ? 3200 : 0,
-          pending_readings: requestId === "req-2" ? 2 : 0,
-        };
-        dispatchClearance({
-          type: 'CLEARANCE_POLL_SUCCESS',
-          payload: {
-            systemStatus: mockData,
-            checklistUpdate: {
-              rent_settled: mockData.rent_settled,
-              utilities_settled: mockData.utilities_settled,
-            }
-          }
-        });
-        return;
-      }
-
+    const checkClearance = async () => {
       try {
-        const response = await fetch(`/api/landlord/move-out/${requestId}/inspection`);
+        const response = await fetch(`/api/landlord/move-out/check-clearance?requestId=${requestId}`);
         if (response.ok) {
-          const data = await response.json();
-          // Only auto-check if they were previously unchecked to avoid overriding manual overrides
+          const responseData = await response.json();
           dispatchClearance({
             type: 'CLEARANCE_POLL_SUCCESS',
             payload: {
-              systemStatus: data,
+              systemStatus: responseData,
               checklistUpdate: {
-                rent_settled: data.rent_settled,
-                utilities_settled: data.utilities_settled,
+                rent_settled: responseData.rent_settled,
+                utilities_settled: responseData.utilities_settled,
               }
             }
           });
         }
       } catch (err) {
-        console.error("Failed to fetch clearance status", err);
+        console.error("Clearance check failed", err);
         dispatchClearance({ type: 'CLEARANCE_POLL_ERROR' });
       }
-    }
+    };
 
-    fetchStatus();
-    const interval = setInterval(fetchStatus, 5000); // Poll every 5 seconds
-    return () => clearInterval(interval);
+    checkClearance();
+    const pollingInterval = setInterval(checkClearance, 5000);
+    return () => clearInterval(pollingInterval);
   }, [requestId]);
 
   const totalDeductions = useMemo(() => {
-    return deductions.reduce((sum, d) => sum + d.amount, 0);
+    return deductions.reduce((total, deduction) => total + deduction.amount, 0);
   }, [deductions]);
 
   const refundAmount = Math.max(0, originalDeposit - totalDeductions);
 
-  // Validation
   const validateForm = () => {
-    // 1. Check for empty deduction descriptions or amounts
     const hasInvalidDeduction = deductions.some(d => !d.description.trim() || d.amount <= 0);
     if (hasInvalidDeduction) {
       setError("Please provide a description and a positive amount for all deductions.");
       return false;
     }
-
-    // 2. Warn if rent/utilities are marked as settled but system says otherwise
-    if (checklist.rent_settled && systemStatus && !systemStatus.rent_settled) {
-      setError("Warning: You've marked Rent as Settled, but the system still shows an outstanding balance.");
-      // We'll let them proceed but show a confirmation dialog next
-    }
-
     return true;
   };
 
@@ -235,11 +210,10 @@ export function MoveOutInspectionForm({
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Failed to save inspection");
+        const responseData = await response.json();
+        throw new Error(responseData.error || "Failed to submit inspection");
       }
 
-      // Clear draft on success
       localStorage.removeItem(`inspection_draft_${requestId}`);
       onSuccess();
     } catch (err: unknown) {
@@ -258,7 +232,7 @@ export function MoveOutInspectionForm({
   ) : (
     <div className="relative">
       <div className={cn(
-        "flex flex-col gap-8 rounded-[2.5rem] border border-border bg-card p-8 shadow-sm transition-all",
+        "flex flex-col gap-10 rounded-[2.5rem] border border-border bg-card p-8 shadow-sm transition-all",
         showConfirmSubmit && "blur-sm pointer-events-none opacity-50"
       )}>
         <div className="flex flex-col gap-2">
@@ -284,49 +258,29 @@ export function MoveOutInspectionForm({
           </motion.div>
         )}
 
-        <div className="grid gap-8 lg:grid-cols-2">
-          {/* Left Column: Condition Checklist */}
-          <div className="space-y-6">
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Condition Checklist</h3>
-            <div className="grid gap-3">
-              {Object.entries(checklist).map(([key, value]) => {
-                const isSystemChecked = systemStatus && (key === "rent_settled" || key === "utilities_settled");
-                const systemValue = key === "rent_settled" ? systemStatus?.rent_settled : systemStatus?.utilities_settled;
-                
-                return (
-                  <label
-                    key={key}
-                    className={cn(
-                      "flex cursor-pointer items-center justify-between rounded-2xl border p-4 transition-all",
-                      value ? "border-primary/30 bg-primary/5" : "border-border bg-muted/20"
-                    )}
-                  >
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-black capitalize text-foreground">
-                          {key.replace(/_/g, " ")}
-                        </span>
-                        {isSystemChecked && (
-                          <div className={cn(
-                            "flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter",
-                            systemValue ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500"
-                          )}>
-                            <ShieldCheck className="size-2.5" />
-                            System Verified
-                          </div>
-                        )}
+        <div className="grid gap-10 lg:grid-cols-12">
+          <div className="flex flex-col gap-8 lg:col-span-7">
+            <section className="rounded-3xl border border-border bg-card p-8 shadow-sm">
+              <h3 className="mb-8 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Clearance Status</h3>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {Object.entries(checklist).map(([checklistKey, isCleared]) => (
+                  <div key={checklistKey} className="flex items-center justify-between rounded-2xl border border-border/50 bg-muted/10 p-4">
+                    <div className="flex items-center gap-3">
+                      <div className={cn(
+                        "flex size-8 items-center justify-center rounded-xl ring-1",
+                        isCleared ? "bg-emerald-500/10 text-emerald-500 ring-emerald-500/20" : "bg-amber-500/10 text-amber-500 ring-amber-500/20"
+                      )}>
+                        {isCleared ? <CheckCircle2 className="size-4" /> : <AlertCircle className="size-4" />}
                       </div>
+                      <span className="text-xs font-black capitalize text-foreground">{checklistKey.replace(/_/g, " ")}</span>
                     </div>
-                    <input
-                      type="checkbox"
-                      checked={value}
-                      onChange={(e) => setChecklist({ ...checklist, [key]: e.target.checked })}
-                      className="size-5 rounded-lg border-border text-primary focus:ring-primary/20"
-                    />
-                  </label>
-                );
-              })}
-            </div>
+                    <Badge variant={isCleared ? "success" : "warning"} className="h-6 rounded-lg text-[9px] font-black uppercase tracking-tighter">
+                      {isCleared ? "Cleared" : "Pending"}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </section>
 
             <div className="space-y-3">
               <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">General Notes</h3>
@@ -337,21 +291,10 @@ export function MoveOutInspectionForm({
                 className="h-32 w-full rounded-2xl border border-border bg-background p-4 text-sm font-medium text-foreground focus:border-primary/50 focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all placeholder:text-muted-foreground/30"
               />
             </div>
-
-            <div className="space-y-3">
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Photos</h3>
-              <div className="flex h-32 cursor-pointer flex-col items-center justify-center rounded-[2rem] border-2 border-dashed border-border bg-muted/20 text-muted-foreground transition-all hover:border-primary/30 hover:bg-primary/5">
-                <Camera className="mb-2 size-6 opacity-40" />
-                <span className="text-[10px] font-black uppercase tracking-widest">Upload Photos</span>
-                <span className="mt-1 text-[9px] opacity-50">JPEG, PNG up to 10MB</span>
-              </div>
-            </div>
           </div>
 
-          {/* Right Column: Financial Panel */}
-          <div className="flex flex-col gap-8">
-            {/* Bill Summary Card - Neutral Hierarchy */}
-            <div className="rounded-[2.5rem] border border-border bg-card p-8 shadow-sm">
+          <div className="flex flex-col gap-8 lg:col-span-5">
+            <section className="rounded-3xl border border-border bg-card p-8 shadow-sm">
               <div className="mb-8">
                 <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Outstanding Bills</h3>
               </div>
@@ -391,7 +334,7 @@ export function MoveOutInspectionForm({
                   </div>
                 </div>
               </div>
-            </div>
+            </section>
 
             {/* Deposit Deductions */}
             <div className="space-y-6">
@@ -412,17 +355,17 @@ export function MoveOutInspectionForm({
                     No deductions added.
                   </div>
                 ) : (
-                  deductions.map((d) => (
+                  deductions.map((deduction) => (
                     <motion.div
-                      key={d.id}
+                      key={deduction.id}
                       initial={{ opacity: 0, x: 10 }}
                       animate={{ opacity: 1, x: 0 }}
                       className="flex items-center gap-3"
                     >
                       <input
                         type="text"
-                        value={d.description}
-                        onChange={(e) => setDeductions(deductions.map(item => item.id === d.id ? { ...item, description: e.target.value } : item))}
+                        value={deduction.description}
+                        onChange={(e) => setDeductions(deductions.map(item => item.id === deduction.id ? { ...item, description: e.target.value } : item))}
                         placeholder="Damage description"
                         className="flex-1 rounded-xl border border-border bg-background px-4 py-2 text-xs font-black focus:border-primary/50 focus:outline-none"
                       />
@@ -430,13 +373,13 @@ export function MoveOutInspectionForm({
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-black">₱</span>
                         <input
                           type="number"
-                          value={d.amount}
-                          onChange={(e) => setDeductions(deductions.map(item => item.id === d.id ? { ...item, amount: parseFloat(e.target.value) || 0 } : item))}
+                          value={deduction.amount}
+                          onChange={(e) => setDeductions(deductions.map(item => item.id === deduction.id ? { ...item, amount: parseFloat(e.target.value) || 0 } : item))}
                           className="w-full rounded-xl border border-border bg-background pl-7 pr-3 py-2 text-xs font-black focus:border-primary/50 focus:outline-none"
                         />
                       </div>
                       <button
-                        onClick={() => setDeductions(deductions.filter(item => item.id !== d.id))}
+                        onClick={() => setDeductions(deductions.filter(item => item.id !== deduction.id))}
                         className="flex size-9 items-center justify-center rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20"
                       >
                         <Trash2 className="size-4" />
@@ -527,7 +470,7 @@ export function MoveOutInspectionForm({
                 {/* Conflict Warnings */}
                 {(checklist.rent_settled && systemStatus && !systemStatus.rent_settled) && (
                   <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-4 text-xs font-black text-red-500">
-                    Warning: System shows an outstanding rent balance of ₱{systemStatus.outstanding_balance.toLocaleString()}. Are you sure it has been settled?
+                    Warning: System shows an outstanding rent balance of ₱{(systemStatus.outstanding_balance || 0).toLocaleString()}. Are you sure it has been settled?
                   </div>
                 )}
 

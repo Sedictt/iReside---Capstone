@@ -113,14 +113,14 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
       });
       
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Failed to deny request");
+        const responseData = await response.json();
+        throw new Error(responseData.error || "Failed to deny request");
       }
       
       setShowDenyDialog(false);
       onUpdate();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (error: any) {
+      setError(error.message);
     } finally {
       setActionLoading(null);
     }
@@ -137,8 +137,8 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
       });
       
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Failed to complete move-out");
+        const responseData = await response.json();
+        throw new Error(responseData.error || "Failed to complete move-out");
       }
       
       onUpdate();
@@ -187,7 +187,6 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
 
   return (
     <div className="flex flex-col gap-8 pb-12">
-      {/* Header Section */}
       <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-5">
           <button
@@ -259,12 +258,9 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
         />
       ) : (
         <div className="grid gap-8 lg:grid-cols-12">
-          {/* Main Content Column */}
           <div className="flex flex-col gap-8 lg:col-span-8">
             
-            {/* Contextual Grid */}
             <div className="grid gap-6 md:grid-cols-2">
-              {/* Dates Snapshot */}
               <div className="col-span-full overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
                 <div className="grid divide-x divide-border md:grid-cols-2">
                   <div className="flex items-center gap-4 p-6">
@@ -288,7 +284,6 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
                 </div>
               </div>
 
-              {/* Tenant Card */}
               <div className="flex flex-col gap-4 rounded-3xl border border-border bg-card p-6 shadow-sm">
                 <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tenant Profile</h3>
                 <div className="flex items-center gap-4">
@@ -312,7 +307,6 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
                 </div>
               </div>
 
-              {/* Property Card */}
               <div className="flex flex-col gap-4 rounded-3xl border border-border bg-card p-6 shadow-sm">
                 <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Property & Unit</h3>
                 <div className="flex items-center gap-4">
@@ -330,7 +324,6 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
               </div>
             </div>
 
-            {/* Narrative Sections */}
             <div className="flex flex-col gap-6 rounded-3xl border border-border bg-card p-8 shadow-sm">
               <div className="space-y-4">
                 <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
@@ -367,7 +360,6 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
               )}
             </div>
 
-            {/* Action Banners */}
             {request.status === "approved" && !request.inspection_date && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -425,17 +417,15 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
             )}
           </div>
 
-          {/* Sidebar Column */}
           <div className="flex flex-col gap-6 lg:col-span-4">
-            {/* Clearance Checklist */}
             {(request.status === "completed" || request.checklist_data) && (
               <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
                 <h3 className="mb-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Clearance Checklist</h3>
                 <div className="space-y-2">
-                  {Object.entries(request.checklist_data || {}).map(([key, value]) => (
-                    <div key={key} className="flex items-center justify-between rounded-xl border border-border/50 bg-muted/10 px-4 py-3">
-                      <span className="text-[11px] font-black capitalize text-foreground">{key.replace(/_/g, " ")}</span>
-                      {value ? (
+                  {Object.entries(request.checklist_data || {}).map(([checklistKey, isCleared]) => (
+                    <div key={checklistKey} className="flex items-center justify-between rounded-xl border border-border/50 bg-muted/10 px-4 py-3">
+                      <span className="text-[11px] font-black capitalize text-foreground">{checklistKey.replace(/_/g, " ")}</span>
+                      {isCleared ? (
                         <div className="flex size-6 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500 ring-1 ring-emerald-500/20">
                           <CheckCircle2 className="size-3.5" />
                         </div>
@@ -450,7 +440,6 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
               </div>
             )}
 
-            {/* Workflow Timeline */}
             <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
               <h3 className="mb-8 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Workflow Timeline</h3>
               <div className="relative space-y-8">
@@ -483,7 +472,6 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
               </div>
             </div>
 
-            {/* Lease Stats Card */}
             <div className="rounded-3xl border border-border bg-muted/20 p-6">
               <h3 className="mb-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Lease Financials</h3>
               <div className="space-y-3">
@@ -507,7 +495,6 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
         </div>
       )}
 
-      {/* Deny Dialog */}
       <AnimatePresence>
         {showDenyDialog && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
