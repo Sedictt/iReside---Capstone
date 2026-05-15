@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { m as motion, AnimatePresence } from "framer-motion"
 import { 
     X, 
@@ -87,12 +87,14 @@ import { useProperty } from '@/context/PropertyContext'
 import { upsertAmenity } from '@/lib/queries/amenities'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
+import type { AmenityWithProperty } from '@/types/database'
 
 interface AddAmenityModalProps {
     isOpen: boolean
     onClose: () => void
     onSuccess: () => Promise<void> | void
     landlordId: string
+    editingAmenity?: AmenityWithProperty | null
 }
 
 function ModernSelect({ 
@@ -263,7 +265,7 @@ const ICONS = [
 
 const ITEMS_PER_PAGE = 8
 
-export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddAmenityModalProps) {
+export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editingAmenity }: AddAmenityModalProps) {
     const { properties } = useProperty()
     const [loading, setLoading] = useState(false)
     const [formData, setFormData] = useState({
@@ -282,6 +284,46 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
     })
     const [photoFile, setPhotoFile] = useState<File | null>(null)
     const [photoPreview, setPhotoPreview] = useState<string | null>(null)
+
+    // Populate form when editing an existing amenity
+    useEffect(() => {
+        if (editingAmenity) {
+            setFormData({
+                property_id: editingAmenity.property_id,
+                name: editingAmenity.name,
+                type: editingAmenity.type,
+                description: editingAmenity.description || '',
+                price_per_unit: editingAmenity.price_per_unit?.toString() || '',
+                unit_type: editingAmenity.unit_type || 'hour',
+                capacity: editingAmenity.capacity || 10,
+                icon_name: editingAmenity.icon_name || 'Zap',
+                location_details: editingAmenity.location_details || '',
+                status: editingAmenity.status,
+                tags: editingAmenity.tags || [],
+                image_url: editingAmenity.image_url || ''
+            });
+            setPhotoPreview(editingAmenity.image_url || null);
+            setPhotoFile(null);
+        } else if (isOpen) {
+            // Reset form when opening for create
+            setFormData({
+                property_id: properties[0]?.id || '',
+                name: '',
+                type: 'Amenity',
+                description: '',
+                price_per_unit: '',
+                unit_type: 'hour',
+                capacity: 10,
+                icon_name: 'Zap',
+                location_details: '',
+                status: 'Active',
+                tags: [],
+                image_url: ''
+            });
+            setPhotoPreview(null);
+            setPhotoFile(null);
+        }
+    }, [editingAmenity, isOpen]);
 
     const [searchTerm, setSearchTerm] = useState('')
     const [currentPage, setCurrentPage] = useState(0)
@@ -399,16 +441,22 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
             }
 
             console.log('[AddAmenityModal] Upserting amenity data with image:', finalImageUrl)
-            await upsertAmenity({
+            const payload: Record<string, unknown> = {
                 ...formData,
                 landlord_id: landlordId,
                 image_url: finalImageUrl,
                 price_per_unit: formData.price_per_unit === '' ? 0 : Number(formData.price_per_unit),
                 capacity: Number(formData.capacity)
-            })
+            };
+
+            if (editingAmenity) {
+                payload.id = editingAmenity.id;
+            }
+
+            await upsertAmenity(payload as Parameters<typeof upsertAmenity>[0]);
             console.log('[AddAmenityModal] Amenity upserted successfully')
 
-            toast.success('Facility added successfully')
+            toast.success(editingAmenity ? 'Facility updated successfully' : 'Facility added successfully')
             onClose()
             if (onSuccess) onSuccess()
         } catch (error) {
@@ -441,9 +489,9 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                 >
                     <div className="flex items-center justify-between border-b border-border bg-muted/30 px-8 py-6">
                         <div className="space-y-1">
-                            <h2 className="text-2xl font-black tracking-tight">Add New Facility</h2>
+                            <h2 className="text-2xl font-black tracking-tight">{editingAmenity ? 'Edit Facility' : 'Add New Facility'}</h2>
                             <p className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
-                                Expand your property assets
+                                {editingAmenity ? 'Update facility details and settings' : 'Expand your property assets'}
                             </p>
                         </div>
                         <button
@@ -807,7 +855,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                 disabled={loading}
                                 className="flex-[2] rounded-2xl bg-primary py-4 text-sm font-black text-primary-foreground shadow-2xl shadow-primary/20 transition-all hover:bg-primary/90 hover:scale-[1.02] active:scale-95 disabled:opacity-50"
                             >
-                                {loading ? 'Creating…' : 'Create Facility'}
+                                {loading ? 'Saving…' : editingAmenity ? 'Save Changes' : 'Create Facility'}
                             </button>
                         </div>
                     </form>

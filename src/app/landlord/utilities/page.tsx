@@ -51,6 +51,7 @@ export default function LandlordUtilitiesPage() {
     const [bookings, setBookings] = useState<AmenityBookingWithDetails[]>([]);
     const [loading, setLoading] = useState(true);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [editingAmenity, setEditingAmenity] = useState<AmenityWithProperty | null>(null);
 
     const fetchData = useCallback(async () => {
         if (!user) {
@@ -101,6 +102,16 @@ export default function LandlordUtilitiesPage() {
             console.error("[UtilitiesPage] Error deleting facility:", msg, error);
             toast.error(msg || "Failed to delete facility");
         }
+    };
+
+    const handleOpenEdit = (amenity: AmenityWithProperty) => {
+        setEditingAmenity(amenity);
+        setIsAddModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsAddModalOpen(false);
+        setEditingAmenity(null);
     };
 
     // Filter by property and search query
@@ -360,7 +371,9 @@ export default function LandlordUtilitiesPage() {
                                                         >
                                                             <X className="size-4" />
                                                         </button>
-                                                        <button className="flex items-center gap-1.5 rounded-xl bg-foreground px-4 py-2 text-xs font-black text-background transition-all hover:bg-primary hover:text-primary-foreground hover:shadow-md hover:shadow-primary/20">
+                                                        <button 
+                                                            onClick={() => handleOpenEdit(utility)}
+                                                            className="flex items-center gap-1.5 rounded-xl bg-foreground px-4 py-2 text-xs font-black text-background transition-all hover:bg-primary hover:text-primary-foreground hover:shadow-md hover:shadow-primary/20">
                                                             Manage
                                                         </button>
                                                     </div>
@@ -510,9 +523,10 @@ export default function LandlordUtilitiesPage() {
 
             <AddAmenityModal 
                 isOpen={isAddModalOpen} 
-                onClose={() => setIsAddModalOpen(false)} 
+                onClose={handleCloseModal} 
                 onSuccess={fetchData}
                 landlordId={user?.id || ''}
+                editingAmenity={editingAmenity}
             />
         </div>
     );
