@@ -141,6 +141,8 @@ function ModernSelect({
                         <div 
                             className="fixed inset-0 z-[110]" 
                             onClick={() => setIsOpen(false)} 
+                            onKeyDown={(e) => { if (e.key === 'Escape') setIsOpen(false) }}
+                            role="presentation"
                         />
                         <motion.div 
                             initial={{ opacity: 0, y: 10, scale: 0.95 }}
@@ -344,58 +346,71 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
             setLoading(true)
             console.log('[AddAmenityModal] Starting submission...', formData)
             
-            let uploadedImageUrl = formData.image_url
+            let finalImageUrl = formData.image_url
+
+            // Handle photo upload if present
             if (photoFile) {
-                console.log('[AddAmenityModal] Uploading photo...')
-                const supabase = createClient()
-                const fileExt = photoFile.name.split('.').pop()?.toLowerCase() || 'jpg'
-                const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`
-                const filePath = `amenities/${fileName}`
+                try {
+                    console.log('[AddAmenityModal] Uploading photo...')
+                    const supabase = createClient()
+                    const rawExt = photoFile.name.split('.').pop()?.toLowerCase() || 'jpg'
+                    const fileExt = rawExt === 'web' ? 'webp' : rawExt
+                    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`
+                    
+                    // Improved pathing: landlord/property/amenities/filename
+                    const filePath = `${landlordId}/${formData.property_id}/amenities/${fileName}`
 
-                let contentType = photoFile.type
-                if (!contentType || contentType === 'application/octet-stream') {
-                    if (fileExt === 'png') contentType = 'image/png'
-                    else if (fileExt === 'webp' || fileExt === 'web') contentType = 'image/webp'
-                    else if (fileExt === 'gif') contentType = 'image/gif'
-                    else if (fileExt === 'svg') contentType = 'image/svg+xml'
-                    else contentType = 'image/jpeg'
+                    const EXT_TO_MIME: Record<string, string> = {
+                        jpg: 'image/jpeg',
+                        jpeg: 'image/jpeg',
+                        png: 'image/png',
+                        gif: 'image/gif',
+                        webp: 'image/webp',
+                        svg: 'image/svg+xml',
+                    }
+                    const contentType = EXT_TO_MIME[fileExt] || 'image/jpeg'
+
+                    // Create a properly typed File to avoid browser MIME type issues
+                    // (e.g. webp files often report 'application/octet-stream').
+                    // Must use File (not Blob) so the Supabase SDK preserves the filename.
+                    const arrayBuffer = await photoFile.arrayBuffer()
+                    const typedFile = new File([arrayBuffer], fileName, { type: contentType })
+
+                    const { error: uploadError } = await supabase.storage
+                        .from('property-images')
+                        .upload(filePath, typedFile, {
+                            contentType,
+                            cacheControl: '3600',
+                            upsert: false
+                        })
+
+                    if (uploadError) throw uploadError
+
+                    const { data: { publicUrl } } = supabase.storage
+                        .from('property-images')
+                        .getPublicUrl(filePath)
+
+                    finalImageUrl = publicUrl
+                    console.log('[AddAmenityModal] Photo uploaded successfully:', finalImageUrl)
+                } catch (err) {
+                    console.error('[AddAmenityModal] Photo upload failed:', err)
+                    toast.error('Failed to upload photo. The facility will be created without it.')
                 }
-
-                const { error: uploadError } = await supabase.storage
-                    .from('property-images')
-                    .upload(filePath, photoFile, {
-                        contentType,
-                        cacheControl: '3600',
-                        upsert: false
-                    })
-
-                if (uploadError) throw uploadError
-
-                const { data: { publicUrl } } = supabase.storage
-                    .from('property-images')
-                    .getPublicUrl(filePath)
-                
-                uploadedImageUrl = publicUrl
-                console.log('[AddAmenityModal] Photo uploaded successfully:', uploadedImageUrl)
             }
 
-            console.log('[AddAmenityModal] Upserting amenity data...')
+            console.log('[AddAmenityModal] Upserting amenity data with image:', finalImageUrl)
             await upsertAmenity({
                 ...formData,
                 landlord_id: landlordId,
-                image_url: uploadedImageUrl,
+                image_url: finalImageUrl,
                 price_per_unit: formData.price_per_unit === '' ? 0 : Number(formData.price_per_unit),
                 capacity: Number(formData.capacity)
             })
             console.log('[AddAmenityModal] Amenity upserted successfully')
 
             toast.success('Facility added successfully')
-            
             onClose()
-            
-            if (onSuccess) {
-                onSuccess()
-            }
+            if (onSuccess) onSuccess()
         } catch (error) {
             console.error('[AddAmenityModal] Submission error:', error)
             toast.error(error instanceof Error ? error.message : 'Failed to add facility')
@@ -403,6 +418,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
             setLoading(false)
         }
     }
+
 
     if (!isOpen) return null
 
@@ -447,7 +463,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                     </label>
                                     <ModernSelect
                                         value={formData.property_id}
-                                        onChange={(val) => setFormData({ ...formData, property_id: val })}
+                                        onChange={(val) => setFormData(prev => ({ ...prev, property_id: val }))}
                                         options={properties.map(p => ({ value: p.id, label: p.name }))}
                                         placeholder="Select a property"
                                         icon={Building2}
@@ -467,7 +483,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                             autoComplete="off"
                                             placeholder="e.g., Sky Pool, Game Room"
                                             value={formData.name}
-                                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                                             className="w-full rounded-2xl border border-border bg-muted/50 py-3.5 pl-12 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
                                         />
                                     </div>
@@ -480,7 +496,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                         </label>
                                         <ModernSelect
                                             value={formData.type}
-                                            onChange={(val) => setFormData({ ...formData, type: val })}
+                                            onChange={(val) => setFormData(prev => ({ ...prev, type: val }))}
                                             options={AMENITY_TYPES.map(t => ({ value: t, label: t }))}
                                             placeholder="Select Type"
                                         />
@@ -492,7 +508,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                         <div className="flex items-center gap-3">
                                             <button
                                                 type="button"
-                                                onClick={() => setFormData({ ...formData, capacity: Math.max(1, formData.capacity - 1) })}
+                                                onClick={() => setFormData(prev => ({ ...prev, capacity: Math.max(1, prev.capacity - 1) }))}
                                                 className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-border bg-muted/80 text-muted-foreground transition-all hover:bg-primary/20 hover:text-primary"
                                             >
                                                 <Minus className="size-5" />
@@ -504,14 +520,14 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                                     value={formData.capacity}
                                                     onChange={(e) => {
                                                         const val = parseInt(e.target.value)
-                                                        setFormData({ ...formData, capacity: isNaN(val) ? 1 : Math.max(1, val) })
+                                                        setFormData(prev => ({ ...prev, capacity: isNaN(val) ? 1 : Math.max(1, val) }))
                                                     }}
                                                     className="w-full rounded-2xl border border-border bg-muted/50 py-3.5 px-4 text-center text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
                                                 />
                                             </div>
                                             <button
                                                 type="button"
-                                                onClick={() => setFormData({ ...formData, capacity: formData.capacity + 1 })}
+                                                onClick={() => setFormData(prev => ({ ...prev, capacity: prev.capacity + 1 }))}
                                                 className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-border bg-muted/80 text-muted-foreground transition-all hover:bg-primary/20 hover:text-primary"
                                             >
                                                 <Plus className="size-5" />
@@ -557,7 +573,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                                     <button
                                                         key={item.name}
                                                         type="button"
-                                                        onClick={() => setFormData({ ...formData, icon_name: item.name })}
+                                                        onClick={() => setFormData(prev => ({ ...prev, icon_name: item.name }))}
                                                         className={cn(
                                                             "flex h-12 w-full items-center justify-center rounded-2xl border transition-all",
                                                             formData.icon_name === item.name
@@ -592,7 +608,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                             <div className="flex gap-1.5">
                                                 {[...Array(totalPages)].map((_, i) => (
                                                     <button
-                                                        key={`page-${i}`}
+                                                        key={i}
                                                         type="button"
                                                         onClick={() => setCurrentPage(i)}
                                                         className={cn(
@@ -618,9 +634,9 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                             {/* Right Column */}
                             <div className="space-y-6">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
+                                    <span className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
                                         Pricing Details
-                                    </label>
+                                    </span>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="relative">
                                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-muted-foreground/60">₱</span>
@@ -632,7 +648,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                                     const val = e.target.value
                                                     // Allow decimal points while typing
                                                     if (val === '' || val === '.' || !isNaN(Number(val))) {
-                                                        setFormData({ ...formData, price_per_unit: val })
+                                                        setFormData(prev => ({ ...prev, price_per_unit: val }))
                                                     }
                                                 }}
                                                 className="w-full rounded-2xl border border-border bg-muted/50 py-3.5 pl-8 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
@@ -641,7 +657,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                         <div className="relative">
                                             <ModernSelect
                                                 value={formData.unit_type}
-                                                onChange={(val) => setFormData({ ...formData, unit_type: val })}
+                                                onChange={(val) => setFormData(prev => ({ ...prev, unit_type: val }))}
                                                 options={[
                                                     { value: 'hour', label: 'Per Hour' },
                                                     { value: 'day', label: 'Per Day' },
@@ -668,7 +684,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                             value={formData.location_details}
                                             onChange={(e) => {
                                                 const value = e.target.value
-                                                setFormData({ ...formData, location_details: value })
+                                                setFormData(prev => ({ ...prev, location_details: value }))
                                                 if (value.trim()) {
                                                     const filtered = LOCATION_SUGGESTIONS.filter(s => 
                                                         s.toLowerCase().includes(value.toLowerCase())
@@ -695,13 +711,13 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                         />
                                         {showLocationSuggestions && filteredLocationSuggestions.length > 0 && (
                                             <div className="absolute z-50 mt-1 w-full rounded-xl border border-border bg-background py-1.5 shadow-lg">
-                                                {filteredLocationSuggestions.map((suggestion, index) => (
+                                                {filteredLocationSuggestions.map((suggestion) => (
                                                     <button
-                                                        key={index}
+                                                        key={suggestion}
                                                         type="button"
                                                         onMouseDown={(e) => {
                                                             e.preventDefault()
-                                                            setFormData({ ...formData, location_details: suggestion })
+                                                            setFormData(prev => ({ ...prev, location_details: suggestion }))
                                                             setShowLocationSuggestions(false)
                                                         }}
                                                         className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm hover:bg-muted transition-colors"
@@ -723,18 +739,19 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                         id="facility-description"
                                         placeholder="Describe the facility's features and rules…"
                                         value={formData.description}
-                                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                                         className="min-h-[120px] w-full resize-none rounded-2xl border border-border bg-muted/50 px-5 py-4 text-sm font-medium outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
                                     />
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
+                                    <span className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
                                         Facility Photo
-                                    </label>
-                                    <div 
+                                    </span>
+                                    <button 
+                                        type="button"
                                         onClick={() => document.getElementById('facility-photo-input')?.click()}
-                                        className="relative group cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed border-border bg-muted/30 transition-all hover:border-primary/50 hover:bg-muted/50 h-[120px] flex items-center justify-center"
+                                        className="relative group cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed border-border bg-muted/30 transition-all hover:border-primary/50 hover:bg-muted/50 h-[120px] w-full flex items-center justify-center"
                                     >
                                         {photoPreview ? (
                                             <>
@@ -769,7 +786,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                                 }
                                             }}
                                         />
-                                    </div>
+                                    </button>
                                 </div>
                             </div>
                         </div>

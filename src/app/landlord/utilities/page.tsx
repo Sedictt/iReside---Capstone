@@ -53,7 +53,10 @@ export default function LandlordUtilitiesPage() {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
     const fetchData = useCallback(async () => {
-        if (!user) return;
+        if (!user) {
+            setLoading(false);
+            return;
+        }
         try {
             setLoading(true);
             const [amenitiesData, bookingsData] = await Promise.all([
@@ -63,8 +66,9 @@ export default function LandlordUtilitiesPage() {
             setAmenities(amenitiesData);
             setBookings(bookingsData);
         } catch (error) {
-            console.error("Error fetching data:", error);
-            toast.error("Failed to load facilities and bookings");
+            const msg = error instanceof Error ? error.message : JSON.stringify(error);
+            console.error("[UtilitiesPage] Error fetching data:", msg, error);
+            toast.error(msg || "Failed to load facilities and bookings");
         } finally {
             setLoading(false);
         }
@@ -80,8 +84,9 @@ export default function LandlordUtilitiesPage() {
             toast.success(`Booking ${status.toLowerCase()} successfully`);
             fetchData();
         } catch (error) {
-            console.error("Error updating booking:", error);
-            toast.error("Failed to update booking status");
+            const msg = error instanceof Error ? error.message : JSON.stringify(error);
+            console.error("[UtilitiesPage] Error updating booking:", msg, error);
+            toast.error(msg || "Failed to update booking status");
         }
     };
 
@@ -92,17 +97,18 @@ export default function LandlordUtilitiesPage() {
             toast.success("Facility deleted successfully");
             fetchData();
         } catch (error) {
-            console.error("Error deleting facility:", error);
-            toast.error("Failed to delete facility");
+            const msg = error instanceof Error ? error.message : JSON.stringify(error);
+            console.error("[UtilitiesPage] Error deleting facility:", msg, error);
+            toast.error(msg || "Failed to delete facility");
         }
     };
 
     // Filter by property and search query
     const filteredUtilities = amenities
-        .filter(u => selectedPropertyId === 'all' || u.property_id === selectedPropertyId)
         .filter(u => 
-            u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            u.type.toLowerCase().includes(searchQuery.toLowerCase())
+            (selectedPropertyId === 'all' || u.property_id === selectedPropertyId) &&
+            (u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            u.type.toLowerCase().includes(searchQuery.toLowerCase()))
         );
 
     const filteredBookings = bookings
@@ -238,7 +244,7 @@ export default function LandlordUtilitiesPage() {
 
                             {loading ? (
                                 // Skeleton loader
-                                [...Array(3)].map((_, i) => (
+                                Array.from({ length: 3 }).map((_, i) => (
                                     <div key={`utility-skeleton-${i}`} className="h-[400px] w-full animate-pulse rounded-3xl bg-muted/50" />
                                 ))
                             ) : filteredUtilities.length === 0 ? (
@@ -268,6 +274,7 @@ export default function LandlordUtilitiesPage() {
                                                         src={utility.image_url} 
                                                         alt={utility.name}
                                                         fill
+                                                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                                         className="object-cover transition-transform duration-500 group-hover:scale-105"
                                                     />
                                                 ) : (
