@@ -275,7 +275,29 @@ export async function GET(request: Request) {
         }
     });
 
-    const tenants: TenantItem[] = leaseRows.map((lease) => {
+    // Build best-lease-per-tenant map to avoid duplicate tenant IDs
+    // Prefers: active > expired/terminated, then later end_date
+    const bestLeasePerTenant = new Map<string, (typeof leaseRows)[0]>();
+    for (const lease of leaseRows) {
+        const existing = bestLeasePerTenant.get(lease.tenant_id);
+        if (!existing) {
+            bestLeasePerTenant.set(lease.tenant_id, lease);
+        } else {
+            const leaseScore = lease.status === "active" ? 2 : 1;
+            const existingScore = existing.status === "active" ? 2 : 1;
+            if (
+                leaseScore > existingScore ||
+                (leaseScore === existingScore &&
+                    lease.end_date &&
+                    existing.end_date &&
+                    lease.end_date > existing.end_date)
+            ) {
+                bestLeasePerTenant.set(lease.tenant_id, lease);
+            }
+        }
+    }
+
+    const tenants: TenantItem[] = Array.from(bestLeasePerTenant.values()).map((lease) => {
         const tenant = tenantMap.get(lease.tenant_id);
         const unit = unitMap.get(lease.unit_id);
         const property = unit ? propertyMap.get(unit.property_id) : null;
