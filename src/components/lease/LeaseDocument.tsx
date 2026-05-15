@@ -32,7 +32,7 @@ export function LeaseDocument(props: LeaseData) {
         end: end_date
     };
 
-    // Helper function to get ordinal suffix (1st, 2nd, 3rd, etc.)
+
     const getOrdinalSuffix = (day: number): string => {
         if (day > 3 && day < 21) return 'th';
         switch (day % 10) {
@@ -79,7 +79,6 @@ return (
             </header>
 
             <section className="space-y-6 relative z-10 leading-snug text-[13.5px]">
-                {/* Section 1: Parties */}
                 <div className="space-y-1.5">
                     <h2 className="text-[12px] font-black uppercase tracking-widest text-zinc-950 border-b border-zinc-200 pb-0.5">
                         1. PARTIES
@@ -99,7 +98,6 @@ return (
                     </div>
                 </div>
 
-                {/* Section 2: Property */}
                 <div className="space-y-1.5">
                     <h2 className="text-[12px] font-black uppercase tracking-widest text-zinc-950 border-b border-zinc-200 pb-0.5">
                         2. THE PREMISES
@@ -110,7 +108,6 @@ return (
                     </div>
                 </div>
 
-                {/* Section 3: Term */}
                 <div className="space-y-1.5">
                     <h2 className="text-[12px] font-black uppercase tracking-widest text-zinc-950 border-b border-zinc-200 pb-0.5">
                         3. TERM OF LEASE
@@ -120,7 +117,6 @@ return (
                     </p>
                 </div>
 
-                {/* Section 4: Rent */}
                 <div className="space-y-1.5">
                     <h2 className="text-[12px] font-black uppercase tracking-widest text-zinc-950 border-b border-zinc-200 pb-0.5">
                         4. RENT PAYMENTS
@@ -130,7 +126,6 @@ return (
                     </p>
                 </div>
 
-                {/* Section 5: Security Deposit */}
                 <div className="space-y-1.5">
                     <h2 className="text-[12px] font-black uppercase tracking-widest text-zinc-950 border-b border-zinc-200 pb-0.5">
                         5. SECURITY DEPOSIT
@@ -140,7 +135,6 @@ return (
                     </p>
                 </div>
 
-                {/* Section 6: Utilities */}
                 <div className="space-y-1.5">
                     <h2 className="text-[12px] font-black uppercase tracking-widest text-zinc-950 border-b border-zinc-200 pb-0.5">
                         6. UTILITIES AND SERVICES
@@ -156,17 +150,15 @@ return (
                     )}
                 </div>
 
-                {/* Section 7: Amenities & Facilities */}
                 <div className="space-y-1.5">
                     <h2 className="text-[12px] font-black uppercase tracking-widest text-zinc-950 border-b border-zinc-200 pb-0.5">
                         7. AMENITIES AND FACILITIES
                     </h2>
                     <p className="text-zinc-800">
-                        Access provided as part of residency: <span className="italic font-black text-zinc-950">{props.unit.property.amenities.length > 0 ? props.unit.property.amenities.map(a => a.name).join(", ") + "." : "Standard residential access."}</span>
+                        Access provided as part of residency: <span className="italic font-black text-zinc-950">{props.unit.property.amenities.length > 0 ? props.unit.property.amenities.map(amenity => amenity.name).join(", ") + "." : "Standard residential access."}</span>
                     </p>
                 </div>
 
-                {/* Section 8: Building Rules & Conduct */}
                 <div className="space-y-1.5">
                     <h2 className="text-[12px] font-black uppercase tracking-widest text-zinc-950 border-b border-zinc-200 pb-0.5">
                         8. BUILDING RULES & CONDUCT
@@ -182,7 +174,6 @@ return (
                     </p>
                 </div>
 
-                {/* Signature Placeholder */}
                 <div className="mt-8 pt-4 border-t border-zinc-200">
                     <div className="grid md:grid-cols-2 gap-12">
                         <div className="space-y-1.5">
@@ -201,7 +192,6 @@ return (
                 </div>
             </section>
 
-            {/* Watermark */}
             <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center overflow-hidden opacity-[0.015]">
                 <p className="-rotate-45 text-[min(10rem,12vw)] font-black uppercase text-zinc-950 select-none">
                     LEGAL DRAFT

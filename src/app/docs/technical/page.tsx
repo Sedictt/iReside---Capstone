@@ -2,63 +2,65 @@
 
 import React from "react";
 import { m } from "framer-motion";
-import { 
-  ShieldCheck, 
-  Cpu, 
-  Layers, 
-  Globe, 
-  Database, 
-  Zap, 
-  Lock, 
-  MessageSquare, 
-  ArrowRight, 
-  CheckCircle2, 
-  Server, 
-  Code2, 
-  Terminal, 
-  Search, 
-  Users, 
-  Key, 
-  FileText, 
-  Fingerprint, 
-  Activity, 
-  Box, 
-  Cloud, 
-  Network, 
-  Webhook, 
-  HardDrive, 
-  RefreshCcw, 
-  Smartphone, 
-  Eye, 
-  Info, 
-  Shield, 
-  CreditCard, 
-  Wrench, 
-  Scale, 
-  FileSearch, 
-  Binary, 
-  PieChart, 
-  BarChart3, 
-  Flame, 
-  MousePointer2, 
-  Wifi, 
-  Monitor, 
-  History as HistoryIcon, 
-  Mail, 
-  FileSignature, 
-  FileCode, 
-  GitBranch, 
-  Settings, 
-  Bell, 
-  LineChart, 
-  Table as TableIcon, 
-  Cpu as Chip, 
-  Radio, 
-  Share2, 
-  BookOpen, 
-  Hash, 
-  Compass, 
-  Target
+import {
+  ShieldCheck,
+  Cpu,
+  Layers,
+  Globe,
+  Database,
+  Zap,
+  Lock,
+  MessageSquare,
+  ArrowRight,
+  CheckCircle2,
+  Server,
+  Code2,
+  Terminal,
+  Search,
+  Users,
+  Key,
+  FileText,
+  Fingerprint,
+  Activity,
+  Box,
+  Cloud,
+  Network,
+  Webhook,
+  HardDrive,
+  RefreshCcw,
+  Smartphone,
+  Eye,
+  Info,
+  Shield,
+  CreditCard,
+  Wrench,
+  Scale,
+  FileSearch,
+  Binary,
+  PieChart,
+  BarChart3,
+  Flame,
+  MousePointer2,
+  Wifi,
+  Monitor,
+  History as HistoryIcon,
+  Mail,
+  FileSignature,
+  FileCode,
+  GitBranch,
+  Settings,
+  Bell,
+  LineChart,
+  Table as TableIcon,
+  Cpu as Chip,
+  Radio,
+  Share2,
+  BookOpen,
+  Hash,
+  Compass,
+  Target,
+  AlertCircle,
+  Gauge
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -746,6 +748,428 @@ USING (
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 11. Comprehensive API Reference */}
+      <section id="api" className="space-y-12">
+        <div className="space-y-4">
+          <h2 className="text-3xl font-black text-foreground tracking-tight">Comprehensive API Reference</h2>
+          <p className="text-muted-foreground max-w-2xl">Complete REST API documentation with authentication, endpoints, request/response formats, and error handling.</p>
+        </div>
+
+        {/* 11.1 Architecture & Authentication */}
+        <div className="rounded-[2rem] border border-border bg-card p-8 lg:p-12 space-y-8 shadow-sm">
+          <div className="flex items-center gap-4">
+            <div className="size-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+              <Server className="size-6" />
+            </div>
+            <div>
+              <h3 className="text-xl font-black text-foreground">Architecture & Authentication</h3>
+              <p className="text-sm text-muted-foreground">RESTful API with JSON bodies, served via Next.js</p>
+            </div>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground">
+                <Code2 className="size-4" /> Base URL
+              </div>
+              <code className="block bg-muted/50 border border-border rounded-xl px-4 py-3 text-sm font-mono text-foreground">
+                http://localhost:3000/api/
+              </code>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground">
+                <Lock className="size-4" /> Authentication
+              </div>
+              <code className="block bg-muted/50 border border-border rounded-xl px-4 py-3 text-sm font-mono text-foreground">
+                Authorization: Bearer {'<supabase_jwt>'}
+              </code>
+            </div>
+          </div>
+
+          <div className="rounded-xl bg-muted/30 border border-border p-6 space-y-3">
+            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground mb-3">
+              <Box className="size-4" /> Available Route Namespaces
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {[
+                { route: "/api/admin", desc: "Admin-only operations" },
+                { route: "/api/auth", desc: "Login, logout, session" },
+                { route: "/api/community", desc: "Posts, announcements, polls" },
+                { route: "/api/iris", desc: "AI Assistant (iRis)" },
+                { route: "/api/landlord/*", desc: "Landlord dashboard & KPIs" },
+                { route: "/api/messages", desc: "Real-time messaging" },
+                { route: "/api/profile", desc: "User profile management" },
+                { route: "/api/tenant/*", desc: "Tenant operations" },
+                { route: "/api/properties", desc: "Property-level operations" },
+                { route: "/api/application-payments", desc: "Payment processing" },
+                { route: "/api/cron", desc: "Scheduled tasks" },
+                { route: "/api/invites", desc: "Tenant onboarding" }
+              ].map((r) => (
+                <div key={r.route} className="flex items-start gap-2 text-xs">
+                  <code className="bg-primary/10 text-primary px-2 py-1 rounded-md font-mono shrink-0">{r.route}</code>
+                  <span className="text-muted-foreground">{r.desc}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* 11.2 Core Endpoints */}
+        <div className="space-y-6">
+          <h3 className="text-lg font-black text-foreground tracking-tight">Core Endpoints</h3>
+          <div className="grid gap-6">
+            {/* iRis Chat */}
+            <div className="rounded-[1.5rem] border border-border bg-card overflow-hidden shadow-sm">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/20">
+                <div className="flex items-center gap-3">
+                  <div className="size-8 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center">
+                    <Cpu className="size-4" />
+                  </div>
+                  <div>
+                    <code className="text-sm font-mono font-bold text-foreground">POST /api/iris/chat</code>
+                    <p className="text-[10px] text-muted-foreground">AI Assistant with RAG context retrieval</p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <span className="text-[10px] font-black uppercase bg-green-500/10 text-green-500 px-3 py-1 rounded-full tracking-widest">Auth Required</span>
+                  <span className="text-[10px] font-black uppercase bg-primary/10 text-primary px-3 py-1 rounded-full tracking-widest">30/min rate limit</span>
+                </div>
+              </div>
+              <div className="p-6 space-y-4">
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Request</span>
+                    <pre className="bg-muted/50 border border-border rounded-xl p-4 text-xs font-mono overflow-x-auto text-foreground">
+{`{
+  "message": "What amenities are available?",
+  "conversationHistory": [
+    { "role": "user", "content": "Hello" },
+    { "role": "assistant", "content": "Hi! How can I help?" }
+  ]
+}`}
+                    </pre>
+                  </div>
+                  <div className="space-y-2">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Response (200)</span>
+                    <pre className="bg-muted/50 border border-border rounded-xl p-4 text-xs font-mono overflow-x-auto text-foreground">
+{`{
+  "response": "Your property offers...",
+  "hasDataCard": true,
+  "dataCard": {
+    "type": "amenity_list",
+    "items": ["Pool", "Gym", "Parking"]
+  },
+  "metadata": {
+    "model": "llama-3.1-8b-instant",
+    "tokens": 245
+  }
+}`}
+                    </pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Landlord Statistics Insights */}
+            <div className="rounded-[1.5rem] border border-border bg-card overflow-hidden shadow-sm">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/20">
+                <div className="flex items-center gap-3">
+                  <div className="size-8 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
+                    <LineChart className="size-4" />
+                  </div>
+                  <div>
+                    <code className="text-sm font-mono font-bold text-foreground">POST /api/landlord/statistics/insights</code>
+                    <p className="text-[10px] text-muted-foreground">AI-powered KPI insights via Groq Llama</p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-black uppercase bg-green-500/10 text-green-500 px-3 py-1 rounded-full tracking-widest">Auth Required</span>
+              </div>
+              <div className="p-6 space-y-4">
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Request</span>
+                    <pre className="bg-muted/50 border border-border rounded-xl p-4 text-xs font-mono overflow-x-auto text-foreground">
+{`{
+  "propertyId": "uuid",
+  "period": "30d",
+  "kpis": {
+    "occupancyRate": 0.85,
+    "revenueCollected": 125000,
+    "revenueExpected": 150000,
+    "maintenanceOpen": 3
+  }
+}`}
+                    </pre>
+                  </div>
+                  <div className="space-y-2">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Response</span>
+                    <pre className="bg-muted/50 border border-border rounded-xl p-4 text-xs font-mono overflow-x-auto text-foreground">
+{`{
+  "insights": {
+    "summary": "Strong 85% occupancy...",
+    "recommendations": ["Consider adjusting..."],
+    "alerts": ["3 tickets > 7 days old"]
+  },
+  "source": "ai",
+  "generatedAt": "2026-05-15T10:30:00Z"
+}`}
+                    </pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Messaging Conversations */}
+            <div className="rounded-[1.5rem] border border-border bg-card overflow-hidden shadow-sm">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/20">
+                <div className="flex items-center gap-3">
+                  <div className="size-8 rounded-xl bg-green-500/10 text-green-500 flex items-center justify-center">
+                    <MessageSquare className="size-4" />
+                  </div>
+                  <div>
+                    <code className="text-sm font-mono font-bold text-foreground">GET /api/messages/conversations</code>
+                    <p className="text-[10px] text-muted-foreground">List all user conversations with pagination</p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-black uppercase bg-yellow-500/10 text-yellow-600 px-3 py-1 rounded-full tracking-widest">60/min</span>
+              </div>
+              <div className="p-6">
+                <div className="space-y-2">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Query Parameters</span>
+                  <div className="bg-muted/50 border border-border rounded-xl p-4 space-y-2">
+                    <div className="flex justify-between text-xs">
+                      <code className="text-foreground font-mono">limit</code>
+                      <span className="text-muted-foreground">integer (default: 20)</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <code className="text-foreground font-mono">offset</code>
+                      <span className="text-muted-foreground">integer (default: 0)</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Tenant Payments */}
+            <div className="rounded-[1.5rem] border border-border bg-card overflow-hidden shadow-sm">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/20">
+                <div className="flex items-center gap-3">
+                  <div className="size-8 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+                    <CreditCard className="size-4" />
+                  </div>
+                  <div>
+                    <code className="text-sm font-mono font-bold text-foreground">GET /api/tenant/payments</code>
+                    <p className="text-[10px] text-muted-foreground">Payment history with itemized billing breakdown</p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-black uppercase bg-green-500/10 text-green-500 px-3 py-1 rounded-full tracking-widest">Auth Required</span>
+              </div>
+              <div className="p-6">
+                <div className="space-y-2">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Response Structure</span>
+                  <pre className="bg-muted/50 border border-border rounded-xl p-4 text-xs font-mono overflow-x-auto text-foreground">
+{`{
+  "payments": [{
+    "id": "pay_uuid",
+    "period": "2026-05",
+    "amount": 15000,
+    "status": "paid",
+    "dueDate": "2026-05-01",
+    "paidAt": "2026-05-02T14:30:00Z",
+    "breakdown": {
+      "baseRent": 12000,
+      "electricity": 2000,
+      "water": 500,
+      "other": 500
+    }
+  }],
+  "summary": {
+    "totalPaid": 45000,
+    "totalPending": 15000,
+    "totalOverdue": 0
+  }
+}`}
+                  </pre>
+                </div>
+              </div>
+            </div>
+
+            {/* Maintenance Tenant */}
+            <div className="rounded-[1.5rem] border border-border bg-card overflow-hidden shadow-sm">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/20">
+                <div className="flex items-center gap-3">
+                  <div className="size-8 rounded-xl bg-orange-500/10 text-orange-500 flex items-center justify-center">
+                    <Wrench className="size-4" />
+                  </div>
+                  <div>
+                    <code className="text-sm font-mono font-bold text-foreground">POST /api/tenant/maintenance</code>
+                    <p className="text-[10px] text-muted-foreground">Submit new maintenance request with photo upload</p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-black uppercase bg-green-500/10 text-green-500 px-3 py-1 rounded-full tracking-widest">Auth Required</span>
+              </div>
+              <div className="p-6 space-y-4">
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Request</span>
+                    <pre className="bg-muted/50 border border-border rounded-xl p-4 text-xs font-mono overflow-x-auto text-foreground">
+{`{
+  "title": "Leaking faucet in bathroom",
+  "description": "Dripping for 2 days...",
+  "priority": "medium",
+  "category": "plumbing",
+  "photos": ["base64_encoded..."]
+}`}
+                    </pre>
+                  </div>
+                  <div className="space-y-2">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Response (201)</span>
+                    <pre className="bg-muted/50 border border-border rounded-xl p-4 text-xs font-mono overflow-x-auto text-foreground">
+{`{
+  "id": "req_uuid",
+  "status": "open",
+  "ticketNumber": "MNT-2026-0042",
+  "createdAt": "2026-05-15T10:00:00Z",
+  "estimatedResponse": "24h"
+}`}
+                    </pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Lease Signing */}
+            <div className="rounded-[1.5rem] border border-border bg-card overflow-hidden shadow-sm">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/20">
+                <div className="flex items-center gap-3">
+                  <div className="size-8 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center">
+                    <FileSignature className="size-4" />
+                  </div>
+                  <div>
+                    <code className="text-sm font-mono font-bold text-foreground">POST /api/tenant/lease/{'{leaseId}'}/sign</code>
+                    <p className="text-[10px] text-muted-foreground">Digital lease agreement signing with signature capture</p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-black uppercase bg-green-500/10 text-green-500 px-3 py-1 rounded-full tracking-widest">Auth Required</span>
+              </div>
+              <div className="p-6">
+                <div className="space-y-2">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Request Body</span>
+                  <pre className="bg-muted/50 border border-border rounded-xl p-4 text-xs font-mono overflow-x-auto text-foreground">
+{`{
+  "signature": "base64_encoded_signature_image",
+  "agreedToTerms": true,
+  "ipAddress": "203.0.113.42",
+  "signedAt": "2026-05-15T10:00:00Z"
+}`}
+                  </pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 11.3 Error Handling & Rate Limiting */}
+        <div className="grid sm:grid-cols-2 gap-6">
+          <div className="rounded-[1.5rem] border border-border bg-card p-8 space-y-6 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="size-10 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center">
+                <AlertCircle className="size-5" />
+              </div>
+              <h3 className="text-lg font-black text-foreground">Error Handling</h3>
+            </div>
+            <p className="text-sm text-muted-foreground">All errors follow a consistent JSON structure:</p>
+            <pre className="bg-muted/50 border border-border rounded-xl p-4 text-xs font-mono overflow-x-auto text-foreground">
+{`{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Invalid request fields.",
+    "details": [{
+      "field": "message",
+      "message": "Message is required"
+    }]
+  },
+  "requestId": "req_uuid"
+}`}
+            </pre>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { code: "400", label: "VALIDATION_ERROR" },
+                { code: "401", label: "UNAUTHORIZED" },
+                { code: "403", label: "FORBIDDEN" },
+                { code: "404", label: "NOT_FOUND" },
+                { code: "409", label: "CONFLICT" },
+                { code: "429", label: "RATE_LIMITED" }
+              ].map((e) => (
+                <div key={e.code} className="flex items-center gap-2 bg-muted/30 rounded-lg px-3 py-2">
+                  <span className="text-xs font-black text-red-500">{e.code}</span>
+                  <span className="text-[10px] font-mono text-muted-foreground">{e.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-[1.5rem] border border-border bg-card p-8 space-y-6 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="size-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
+                <Gauge className="size-5" />
+              </div>
+              <h3 className="text-lg font-black text-foreground">Rate Limiting</h3>
+            </div>
+            <p className="text-sm text-muted-foreground">Per-endpoint rate limits protect system stability:</p>
+            <div className="space-y-3">
+              {[
+                { endpoint: "/api/iris/*", limit: "30 req/min", color: "bg-purple-500/10 text-purple-500" },
+                { endpoint: "/api/messages/*", limit: "60 req/min", color: "bg-green-500/10 text-green-500" },
+                { endpoint: "All other endpoints", limit: "100 req/min", color: "bg-blue-500/10 text-blue-500" }
+              ].map((r) => (
+                <div key={r.endpoint} className="flex items-center justify-between py-3 border-b border-border last:border-0">
+                  <code className="text-xs font-mono text-foreground">{r.endpoint}</code>
+                  <span className={`text-[10px] font-black px-3 py-1 rounded-full tracking-widest ${r.color}`}>{r.limit}</span>
+                </div>
+              ))}
+            </div>
+            <div className="rounded-xl bg-muted/30 border border-border p-4 space-y-2">
+              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Response Headers</span>
+              {["X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset"].map((h) => (
+                <div key={h} className="flex justify-between text-xs font-mono">
+                  <span className="text-muted-foreground">{h}</span>
+                  <span className="text-foreground">Included in all responses</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* OpenAPI Reference */}
+        <div className="rounded-[1.5rem] border border-border bg-card p-8 space-y-4 shadow-sm">
+          <div className="flex items-center gap-4">
+            <div className="size-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+              <FileCode className="size-6" />
+            </div>
+            <div>
+              <h3 className="text-lg font-black text-foreground">OpenAPI 3.1 Specification</h3>
+              <p className="text-sm text-muted-foreground">Full interactive API documentation available at /openapi.json</p>
+            </div>
+          </div>
+          <div className="grid sm:grid-cols-3 gap-4">
+            {[
+              { label: "Import to", value: "Postman / Insomnia" },
+              { label: "Generate", value: "Client SDKs" },
+              { label: "Interactive Docs", value: "Swagger UI (coming soon)" }
+            ].map((item) => (
+              <div key={item.label} className="flex items-center gap-3 bg-muted/30 rounded-xl px-4 py-3">
+                <div className="size-1 rounded-full bg-primary" />
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block">{item.label}</span>
+                  <span className="text-sm font-bold text-foreground">{item.value}</span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>

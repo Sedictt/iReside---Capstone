@@ -205,36 +205,47 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
                 const { count: maintCount } = await maintenanceQuery;
 
-                // Fetch unread messages count (simplified: messages sent to user that are not read)
-                // This might need a more complex query depending on conversation participants
-                const { count: msgCount } = await supabase
-                    .from("messages")
-                    .select("*", { count: "exact", head: true })
-                    .neq("sender_id", user.id)
-                    .is("read_at", null);
+                let msgCount = 0;
+                try {
+                    const res = await fetch("/api/messages/unread-count");
+                    if (res.ok) {
+                        const data = await res.json();
+                        msgCount = data.count ?? 0;
+                    } else {
+                        console.warn("[notifications] unread-count API returned", res.status);
+                    }
+                } catch (fetchErr) {
+                    console.error("[notifications] failed to fetch unread count:", fetchErr);
+                }
 
                 dispatch({
                     type: 'SET_COUNTS',
                     payload: {
                         applications: appCount || 0,
                         maintenance: maintCount || 0,
-                        messages: msgCount || 0,
+                        messages: msgCount,
                     },
                 });
             } else if (profile.role === "tenant") {
-                 // Fetch unread messages count
-                 const { count: msgCount } = await supabase
-                    .from("messages")
-                    .select("*", { count: "exact", head: true })
-                    .neq("sender_id", user.id)
-                    .is("read_at", null);
+                 let msgCount = 0;
+                try {
+                    const res = await fetch("/api/messages/unread-count");
+                    if (res.ok) {
+                        const data = await res.json();
+                        msgCount = data.count ?? 0;
+                    } else {
+                        console.warn("[notifications] unread-count API returned", res.status);
+                    }
+                } catch (fetchErr) {
+                    console.error("[notifications] failed to fetch unread count:", fetchErr);
+                }
 
                 dispatch({
                     type: 'SET_COUNTS',
                     payload: {
                         applications: 0,
                         maintenance: 0,
-                        messages: msgCount || 0,
+                        messages: msgCount,
                     },
                 });
             }

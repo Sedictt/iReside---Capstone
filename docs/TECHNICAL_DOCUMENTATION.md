@@ -25,7 +25,20 @@
 6. [Security Model](#6-security-model)
 7. [Technology Stack](#7-technology-stack)
 8. [Key Technical Concepts](#8-key-technical-concepts)
-9. [API Overview](#9-api-overview)
+9. [Comprehensive API Reference](#9-comprehensive-api-reference)
+   - 9.1 [API Architecture](#91-api-architecture)
+   - 9.2 [API Routes Structure](#92-api-routes-structure)
+   - 9.3 [Authentication Endpoints](#93-authentication-endpoints)
+   - 9.4 [AI Assistant (iRis) API](#94-ai-assistant-iris-api)
+   - 9.5 [Landlord Statistics API](#95-landlord-statistics-api)
+   - 9.6 [Messaging API](#96-messaging-api)
+   - 9.7 [Community Hub API](#97-community-hub-api)
+   - 9.8 [Maintenance Request API](#98-maintenance-request-api)
+   - 9.9 [Payment API](#99-payment-api)
+   - 9.10 [Lease API](#910-lease-api)
+   - 9.11 [Error Handling](#911-error-handling)
+   - 9.12 [Rate Limiting](#912-rate-limiting)
+   - 9.13 [OpenAPI Specification](#913-openapi-specification)
 10. [Glossary](#10-glossary)
 
 ---
@@ -827,28 +840,101 @@ Real-time synchronization means changes appear instantly across all views. When 
 
 ---
 
-## 9. API Overview
+## 9. Comprehensive API Reference
 
-### API Routes Structure
+This section provides a complete reference for the iReside API. All endpoints require authentication via Supabase JWT tokens unless otherwise noted.
+
+### 9.1 API Architecture
+
+The iReside API follows RESTful principles with JSON request/response bodies. All endpoints are prefixed with `/api/` and are served from the Next.js application server.
+
+**Base URL:** `http://localhost:3000` (development)
+
+**Authentication:** Supabase JWT Bearer token in the `Authorization` header:
+```
+Authorization: Bearer <supabase_jwt_token>
+```
+
+---
+
+### 9.2 API Routes Structure
 
 ```
 /api/
-├── admin/          # Admin-only operations
-├── application-payments/  # Payment processing
-├── auth/           # Authentication
-├── community/      # Community features
-├── cron/           # Scheduled tasks
-├── invites/        # Tenant onboarding
-├── iris/           # AI assistant
-├── landlord/       # Landlord operations
-├── messages/       # Messaging
-├── profile/        # User profiles
-└── tenant/         # Tenant operations
+├── admin/                    # Admin-only operations
+├── application-payments/     # Payment processing
+├── auth/                     # Authentication (login, logout, session)
+├── community/                # Community Hub (posts, announcements, polls)
+├── cron/                     # Scheduled/automated tasks
+├── invites/                  # Tenant onboarding invitations
+├── iris/                     # AI Assistant (iRis)
+├── landlord/                 # Landlord-specific operations
+│   ├── dashboard/           # Dashboard data & KPIs
+│   ├── maintenance/          # Maintenance request management
+│   ├── payments/            # Payment tracking & reconciliation
+│   ├── properties/          # Property management
+│   ├── statistics/           # Analytics & AI insights
+│   └── units/                # Unit management
+├── messages/                 # Real-time messaging
+│   ├── conversations/       # Conversation CRUD
+│   └── users/                # User search for messaging
+├── profile/                  # User profile management
+├── properties/               # Property-level operations
+├── tenant/                   # Tenant-specific operations
+│   ├── maintenance/          # Submit & track maintenance requests
+│   ├── payments/            # View payments & billing
+│   └── lease/               # Lease viewing
+└── units/                    # Unit-level operations
 ```
 
-### Example: iRis Chat API
+---
 
-**Endpoint:** `POST /api/iris/chat`
+### 9.3 Authentication Endpoints
+
+#### POST /api/auth/login
+Initiates a Supabase authentication session.
+
+**Request:**
+```json
+{
+  "email": "user@example.com",
+  "password": "securepassword"
+}
+```
+
+**Response (200):**
+```json
+{
+  "session": {
+    "access_token": "eyJ...",
+    "refresh_token": "...",
+    "expires_in": 3600,
+    "user": {
+      "id": "uuid",
+      "email": "user@example.com",
+      "role": "landlord|tenant|admin"
+    }
+  }
+}
+```
+
+#### POST /api/auth/logout
+Ends the current session.
+
+**Response (200):**
+```json
+{
+  "message": "Logged out successfully"
+}
+```
+
+---
+
+### 9.4 AI Assistant (iRis) API
+
+#### POST /api/iris/chat
+
+Interacts with the iRis AI concierge with tenant-specific context. Uses RAG (Retrieval-Augmented Generation) to provide personalized responses based on the tenant's property, unit, and lease data.
 
 **Request:**
 ```json
@@ -856,22 +942,511 @@ Real-time synchronization means changes appear instantly across all views. When 
   "message": "What amenities are available?",
   "conversationHistory": [
     { "role": "user", "content": "Hello" },
-    { "role": "assistant", "content": "Hi! How can I help?" }
+    { "role": "assistant", "content": "Hi! How can I help you today?" }
   ]
 }
 ```
 
-**Response:**
+**Response (200):**
 ```json
 {
-  "response": "Your property offers: Swimming Pool, Gym, Parking...",
-  "hasDataCard": false,
+  "response": "Your property offers: Swimming Pool (6AM-10PM), Gym (24/7), Covered Parking, and Rooftop Garden. The pool is currently open for the summer season!",
+  "hasDataCard": true,
+  "dataCard": {
+    "type": "amenity_list",
+    "items": ["Swimming Pool", "Gym", "Parking", "Rooftop Garden"],
+    "hours": {
+      "pool": "6AM-10PM",
+      "gym": "24/7"
+    }
+  },
   "metadata": {
     "model": "llama-3.1-8b-instant",
-    "tokens": 245
+    "tokens": 245,
+    "tokensUsed": 1240
   }
 }
 ```
+
+**Error Responses:**
+- `401` - Unauthorized (invalid or missing token)
+- `429` - Rate limit exceeded (max 30 requests/minute)
+
+---
+
+### 9.5 Landlord Statistics API
+
+#### POST /api/landlord/statistics/insights
+
+Generates AI-powered insights from KPI data using Groq's Llama model.
+
+**Request:**
+```json
+{
+  "propertyId": "uuid",
+  "period": "30d",
+  "kpis": {
+    "occupancyRate": 0.85,
+    "revenueCollected": 125000,
+    "revenueExpected": 150000,
+    "maintenanceOpen": 3,
+    "maintenanceResolved": 12
+  }
+}
+```
+
+**Response (200):**
+```json
+{
+  "insights": {
+    "summary": "Property performance is strong with 85% occupancy.",
+    "recommendations": [
+      "Consider adjusting rent pricing to reduce the 17% collection gap",
+      "Maintenance response time improved by 20% this month"
+    ],
+    "alerts": [
+      "3 open maintenance tickets older than 7 days"
+    ]
+  },
+  "source": "ai",
+  "generatedAt": "2026-05-15T10:30:00Z"
+}
+```
+
+---
+
+### 9.6 Messaging API
+
+#### GET /api/messages/conversations
+
+Lists all conversations for the authenticated user.
+
+**Query Parameters:**
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `limit` | integer | 20 | Max results to return |
+| `offset` | integer | 0 | Pagination offset |
+
+**Response (200):**
+```json
+{
+  "conversations": [
+    {
+      "id": "conv_uuid",
+      "participants": [
+        { "id": "user1", "name": "Juan dela Cruz", "role": "landlord" },
+        { "id": "user2", "name": "Maria Santos", "role": "tenant" }
+      ],
+      "lastMessage": {
+        "content": "Your maintenance request has been resolved.",
+        "senderId": "user1",
+        "createdAt": "2026-05-15T09:00:00Z"
+      },
+      "unreadCount": 1
+    }
+  ],
+  "total": 15
+}
+```
+
+#### POST /api/messages/conversations
+
+Creates a new conversation or returns existing one between participants.
+
+**Request:**
+```json
+{
+  "participantIds": ["user_uuid_1", "user_uuid_2"],
+  "initialMessage": "Hello, I wanted to discuss..."
+}
+```
+
+**Response (201 - Created) or (200 - Existing):**
+```json
+{
+  "id": "conv_uuid",
+  "participants": [...],
+  "createdAt": "2026-05-15T10:00:00Z"
+}
+```
+
+#### GET /api/messages/conversations/{conversationId}
+
+Retrieves messages in a conversation with pagination.
+
+**Path Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `conversationId` | string (UUID) | Conversation identifier |
+
+**Query Parameters:**
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `limit` | integer | 100 | Max messages to return |
+| `before` | string (timestamp) | null | Get messages before this time |
+
+**Response (200):**
+```json
+{
+  "messages": [
+    {
+      "id": "msg_uuid",
+      "conversationId": "conv_uuid",
+      "senderId": "user_uuid",
+      "content": "Your rent is due on the 1st.",
+      "type": "text",
+      "readAt": null,
+      "createdAt": "2026-05-14T08:00:00Z"
+    }
+  ],
+  "hasMore": false
+}
+```
+
+#### POST /api/messages/conversations/{conversationId}
+
+Sends a message to an existing conversation.
+
+**Request:**
+```json
+{
+  "content": "Thank you for the reminder!",
+  "type": "text",
+  "metadata": {
+    "replyTo": "msg_uuid"
+  }
+}
+```
+
+**Response (201):**
+```json
+{
+  "id": "new_msg_uuid",
+  "conversationId": "conv_uuid",
+  "senderId": "current_user_uuid",
+  "content": "Thank you for the reminder!",
+  "type": "text",
+  "createdAt": "2026-05-14T08:05:00Z"
+}
+```
+
+#### GET /api/messages/users
+
+Searches for users to start a conversation with.
+
+**Query Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `q` | string | Yes | Search query (min 2 characters) |
+| `limit` | integer | No | Max results (default: 8) |
+
+**Response (200):**
+```json
+{
+  "users": [
+    {
+      "id": "user_uuid",
+      "name": "Juan dela Cruz",
+      "email": "juan@email.com",
+      "role": "landlord",
+      "avatarUrl": null
+    }
+  ]
+}
+```
+
+---
+
+### 9.7 Community Hub API
+
+#### GET /api/community/posts
+
+Retrieves community posts with filtering.
+
+**Query Parameters:**
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `type` | string | all | Filter by type: announcement, discussion, poll, album |
+| `propertyId` | string (UUID) | required | Property identifier |
+| `limit` | integer | 20 | Max results |
+| `offset` | integer | 0 | Pagination offset |
+
+**Response (200):**
+```json
+{
+  "posts": [
+    {
+      "id": "post_uuid",
+      "type": "announcement",
+      "title": "Scheduled Water Interruption",
+      "content": "Water will be cut off on May 20 from 9AM-12PM for pipe repairs.",
+      "author": {
+        "id": "user_uuid",
+        "name": "Juan dela Cruz",
+        "role": "landlord"
+      },
+      "requiresApproval": false,
+      "isPinned": true,
+      "reactions": {
+        "like": 5,
+        "heart": 2
+      },
+      "commentCount": 3,
+      "viewCount": 45,
+      "createdAt": "2026-05-15T07:00:00Z"
+    }
+  ],
+  "total": 25
+}
+```
+
+#### POST /api/community/posts
+
+Creates a new community post.
+
+**Request:**
+```json
+{
+  "type": "announcement",
+  "title": "Holiday Schedule",
+  "content": "Office will be closed on May 25 for national holiday.",
+  "requiresApproval": true,
+  "isPinned": false
+}
+```
+
+#### POST /api/community/posts/{postId}/reactions
+
+Adds a reaction to a post.
+
+**Request:**
+```json
+{
+  "type": "heart"
+}
+```
+
+---
+
+### 9.8 Maintenance Request API
+
+#### GET /api/landlord/maintenance
+
+Lists all maintenance requests (landlord view).
+
+**Query Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `status` | string | Filter: open, in_progress, resolved, closed |
+| `priority` | string | Filter: low, medium, high, urgent |
+| `propertyId` | string (UUID) | Property filter |
+
+#### POST /api/landlord/maintenance
+
+Creates a maintenance request on behalf of a tenant (landlord only).
+
+#### PATCH /api/landlord/maintenance/{requestId}
+
+Updates a maintenance request status or details.
+
+**Request:**
+```json
+{
+  "status": "in_progress",
+  "assignedTo": "contractor_uuid",
+  "notes": "Scheduled for May 18"
+}
+```
+
+#### GET /api/tenant/maintenance
+
+Lists maintenance requests for the authenticated tenant.
+
+#### POST /api/tenant/maintenance
+
+Submits a new maintenance request.
+
+**Request:**
+```json
+{
+  "title": "Leaking faucet in bathroom",
+  "description": "The faucet has been dripping for 2 days...",
+  "priority": "medium",
+  "category": "plumbing",
+  "photos": ["base64_encoded_image..."]
+}
+```
+
+---
+
+### 9.9 Payment API
+
+#### GET /api/tenant/payments
+
+Lists payment history for the authenticated tenant.
+
+**Query Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `status` | string | Filter: pending, paid, overdue, partial |
+| `from` | date | Start date filter |
+| `to` | date | End date filter |
+
+**Response (200):**
+```json
+{
+  "payments": [
+    {
+      "id": "pay_uuid",
+      "period": "2026-05",
+      "amount": 15000,
+      "status": "paid",
+      "dueDate": "2026-05-01",
+      "paidAt": "2026-05-02T14:30:00Z",
+      "breakdown": {
+        "baseRent": 12000,
+        "electricity": 2000,
+        "water": 500,
+        "other": 500
+      }
+    }
+  ],
+  "summary": {
+    "totalPaid": 45000,
+    "totalPending": 15000,
+    "totalOverdue": 0
+  }
+}
+```
+
+#### POST /api/application-payments
+
+Initiates a payment transaction.
+
+**Request:**
+```json
+{
+  "paymentId": "pay_uuid",
+  "method": "gcash",
+  "amount": 15000,
+  "referenceNumber": "GCASH123456"
+}
+```
+
+---
+
+### 9.10 Lease API
+
+#### GET /api/tenant/lease
+
+Retrieves the authenticated tenant's current lease agreement.
+
+**Response (200):**
+```json
+{
+  "id": "lease_uuid",
+  "property": {
+    "id": "prop_uuid",
+    "name": "Marulas Residence"
+  },
+  "unit": {
+    "id": "unit_uuid",
+    "number": "201",
+    "floor": 2
+  },
+  "status": "active",
+  "startDate": "2026-01-01",
+  "endDate": "2027-01-01",
+  "monthlyRent": 12000,
+  "deposit": 24000,
+  "terms": [...],
+  "documents": [
+    {
+      "id": "doc_uuid",
+      "name": "Lease Agreement",
+      "url": "https://storage.supabase.co/...",
+      "signedAt": "2026-01-01T10:00:00Z"
+    }
+  ]
+}
+```
+
+#### POST /api/tenant/lease/{leaseId}/sign
+
+Digitally signs a lease agreement.
+
+**Request:**
+```json
+{
+  "signature": "base64_encoded_signature_image",
+  "AgreedToTerms": true
+}
+```
+
+---
+
+### 9.11 Error Handling
+
+All API errors follow a consistent format:
+
+**Error Response Format:**
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "The request body contains invalid fields.",
+    "details": [
+      {
+        "field": "message",
+        "message": "Message is required"
+      }
+    ]
+  },
+  "requestId": "req_uuid"
+}
+```
+
+**Common Error Codes:**
+
+| HTTP Status | Code | Description |
+|-------------|------|-------------|
+| 400 | VALIDATION_ERROR | Request body failed validation |
+| 400 | INVALID_REQUEST | Malformed request |
+| 401 | UNAUTHORIZED | Missing or invalid token |
+| 403 | FORBIDDEN | Insufficient permissions |
+| 404 | NOT_FOUND | Resource doesn't exist |
+| 409 | CONFLICT | Resource state conflict |
+| 429 | RATE_LIMITED | Too many requests |
+| 500 | INTERNAL_ERROR | Server error |
+
+---
+
+### 9.12 Rate Limiting
+
+API endpoints are rate-limited to ensure system stability:
+
+| Endpoint Pattern | Limit |
+|------------------|-------|
+| `/api/iris/*` | 30 requests/minute |
+| `/api/messages/*` | 60 requests/minute |
+| All other endpoints | 100 requests/minute |
+
+Rate limit headers are included in all responses:
+```
+X-RateLimit-Limit: 30
+X-RateLimit-Remaining: 25
+X-RateLimit-Reset: 1715767200
+```
+
+---
+
+### 9.13 OpenAPI Specification
+
+The complete API is documented in OpenAPI 3.1 format at:
+- **Local:** `/openapi.json`
+- **Interactive docs:** Coming soon (Swagger UI)
+
+This specification can be imported into tools like Postman, Insomnia, or Bruno for API testing and exploration.
 
 ---
 

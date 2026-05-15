@@ -172,7 +172,30 @@ export default async function LandlordProfilePage() {
     const verificationStatus = applicationsRes.data?.verification_status === 'verified';
 
     if (!profile) {
-        redirect('/login');
+        return (
+            <div className="min-h-screen bg-[#0a0a0a] text-neutral-200 p-6 md:p-12">
+                <div className="mx-auto max-w-3xl rounded-[2.5rem] border border-neutral-800 bg-[#171717]/80 p-10 shadow-2xl">
+                    <h1 className="text-2xl font-display font-black text-white">Profile unavailable</h1>
+                    <p className="mt-3 text-sm text-neutral-400">
+                        We couldn&apos;t load your landlord profile yet. Please complete your account details or try again.
+                    </p>
+                    <div className="mt-6 flex flex-wrap gap-3">
+                        <Link
+                            href="/landlord/settings?category=Identity"
+                            className="rounded-2xl bg-white px-6 py-3 text-[11px] font-black uppercase tracking-widest text-black transition-all hover:scale-105"
+                        >
+                            Complete Profile
+                        </Link>
+                        <Link
+                            href="/landlord/dashboard"
+                            className="rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-[11px] font-black uppercase tracking-widest text-white transition-all hover:bg-white/10"
+                        >
+                            Back to Dashboard
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        );
     }
 
     const googleAvatarUrl = resolveGoogleAvatarUrl(user);

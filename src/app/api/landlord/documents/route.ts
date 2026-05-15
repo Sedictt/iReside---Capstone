@@ -13,7 +13,7 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Fetch profile
+
     const { data: profile } = await supabase
         .from("profiles")
         .select("*")
@@ -24,7 +24,7 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
-    // Get all applications for this user (or tenant) to aggregate documents
+
     let applicationsQuery = supabase
         .from(tenantId ? "applications" : "landlord_applications")
         .select("*");
@@ -35,13 +35,13 @@ export async function GET(request: Request) {
         applicationsQuery = (applicationsQuery as any).eq("profile_id", user.id);
     }
 
-    // Fetch properties to get contract templates
+
     let propertiesQuery = supabase
         .from("properties")
         .select("id, name, contract_template, base_rent_amount, updated_at")
         .eq("landlord_id", user.id);
     
-    // Fetch active/signed leases with signed document URLs
+
     let leasesQuery = supabase
         .from("leases")
         .select(`
@@ -61,7 +61,7 @@ export async function GET(request: Request) {
         leasesQuery = leasesQuery.eq("tenant_id", tenantId);
     }
 
-    // Parallelize: applications, properties, and leases fetches are independent
+
     const [applicationsResult, propertiesResult, leasesResult] = await Promise.all([
         applicationsQuery.order("created_at", { ascending: false }),
         propertiesQuery,
@@ -77,15 +77,14 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: "Failed to fetch documents" }, { status: 500 });
     }
 
-    // Combine applications data
+
     const latestApp = (applications && applications.length > 0) ? applications[0] : null;
     const fallbackDate = latestApp?.created_at || profile.created_at;
 
-    // Aggregate documents from all applications (pick newest non-null)
     const getDocument = (field: string) => {
         if (!applications) return null;
-        for (const app of applications) {
-            if ((app as any)[field]) return (app as any)[field];
+        for (const application of applications) {
+            if ((application as any)[field]) return (application as any)[field];
         }
         return null;
     };
@@ -137,28 +136,28 @@ export async function GET(request: Request) {
             category: "Identity",
             updatedAt: fallbackDate
         },
-        // Include property contract templates
-        ...(properties || []).map(p => ({
-            id: `template-${p.id}`,
-            name: `Contract Template - ${p.name}`,
+
+        ...(properties || []).map(property => ({
+            id: `template-${property.id}`,
+            name: `Contract Template - ${property.name}`,
             description: "Standard lease agreement for this property",
             url: "#",
             category: "Lease",
-            updatedAt: p.updated_at,
+            updatedAt: property.updated_at,
             isTemplate: true,
-            propertyId: p.id,
+            propertyId: property.id,
             templateData: {
-                ...(p.contract_template as any || {}),
-                base_rent_amount: p.base_rent_amount
+                ...(property.contract_template as any || {}),
+                base_rent_amount: property.base_rent_amount
             }
         })),
-        // Include all leases with any status
+
         ...(leases || [])
-            .map(l => {
-                const isComplete = l.status === "active" && l.signed_document_url;
-                const unitName = (l.unit as any)?.name;
-                const propertyName = (l.unit as any)?.property?.name;
-                const tenantName = (l.tenant as any)?.full_name;
+            .map(lease => {
+                const isComplete = lease.status === "active" && lease.signed_document_url;
+                const unitName = (lease.unit as any)?.name;
+                const propertyName = (lease.unit as any)?.property?.name;
+                const tenantName = (lease.tenant as any)?.full_name;
                 
                 let displayName = "Lease Agreement";
                 if (tenantName) {
@@ -166,32 +165,32 @@ export async function GET(request: Request) {
                 } else if (propertyName && unitName) {
                     displayName = `Lease - ${propertyName} (${unitName})`;
                 } else {
-                    displayName = `Lease - ${l.id.slice(0, 8)}`;
+                    displayName = `Lease - ${lease.id.slice(0, 8)}`;
                 }
 
                 return {
-                    id: `lease-${l.id}`,
+                    id: `lease-${lease.id}`,
                     name: displayName,
                     description: isComplete 
-                        ? `Fully executed lease agreement • Signed ${l.signed_at ? new Date(l.signed_at).toLocaleDateString() : 'N/A'}`
-                        : `Status: ${l.status || 'N/A'}`,
-                    url: l.signed_document_url || null,
+                        ? `Fully executed lease agreement • Signed ${lease.signed_at ? new Date(lease.signed_at).toLocaleDateString() : 'N/A'}`
+                        : `Status: ${lease.status || 'N/A'}`,
+                    url: lease.signed_document_url || null,
                     category: "Lease",
-                    updatedAt: l.signed_at || l.created_at,
-                    tenantId: l.tenant_id,
-                    propertyId: (l.unit as any)?.property_id,
-                    status: l.status,
+                    updatedAt: lease.signed_at || lease.created_at,
+                    tenantId: lease.tenant_id,
+                    propertyId: (lease.unit as any)?.property_id,
+                    status: lease.status,
                     isComplete
                 };
             })
     ].filter(doc => {
-        // Include leases even without URLs (may be pending signature)
+
         if (doc.category === "Lease") return true;
         
-        // Only include other docs if URL exists
+
         if (!doc.url) return false;
         
-        // Skip redundant permit card if same as paper permit
+
         if (doc.id === "permit-card" && doc.url === permitDoc) {
             return false;
         }

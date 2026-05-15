@@ -184,7 +184,7 @@ export function ProfileCard() {
 
     const handleOpenPortfolio = useCallback(() => {
         closeProfile();
-        push(isLandlordPortal ? '/landlord/dashboard' : '/tenant/dashboard');
+        push(isLandlordPortal ? '/landlord/profile' : '/tenant/profile');
     }, [closeProfile, push, isLandlordPortal]);
 
     if (!isOpen) return null;

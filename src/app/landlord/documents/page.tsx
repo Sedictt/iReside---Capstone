@@ -68,15 +68,15 @@ export default function DocumentsPage() {
     useEffect(() => {
         const fetchDocuments = async () => {
             try {
-                const res = await fetch("/api/landlord/documents");
-                const data = await res.json();
+                const response = await fetch("/api/landlord/documents");
+                const documentsData = await response.json();
                 
-                if (!res.ok) throw new Error(data.error || "Failed to fetch documents");
+                if (!response.ok) throw new Error(documentsData.error || "Failed to fetch documents");
                 
-                setDocuments(data.documents);
-                setProfile(data.profile);
-            } catch (err: any) {
-                console.error("Error fetching documents:", err);
+                setDocuments(documentsData.documents);
+                setProfile(documentsData.profile);
+            } catch (error: any) {
+                console.error("Error fetching documents:", error);
             } finally {
                 setLoadingState(false);
             }
@@ -109,39 +109,35 @@ export default function DocumentsPage() {
             <div className="flex h-screen items-center justify-center bg-background">
                 <div className="flex flex-col items-center gap-4">
                     <Loader2 className="size-10 animate-spin text-primary" />
-                    <p className="text-sm font-black uppercase tracking-widest text-neutral-500">Accessing Vault...</p>
+                    <p className="text-sm font-black uppercase tracking-widest text-neutral-500">Loading Documents...</p>
                 </div>
             </div>
         );
     }
 
-    const registrationDocs = documents.filter(d => d.category !== "Lease");
+    const registrationDocs = documents.filter(doc => doc.category !== "Lease");
     
-    const filteredLeaseDocs = documents.filter(d => {
-        if (d.category !== "Lease") return false;
+    const filteredLeaseDocs = documents.filter(doc => {
+        if (doc.category !== "Lease") return false;
         
-        // Property filter
-        if (selectedPropertyId && selectedPropertyId !== 'all' && d.propertyId && d.propertyId !== selectedPropertyId) return false;
+        if (selectedPropertyId && selectedPropertyId !== 'all' && doc.propertyId && doc.propertyId !== selectedPropertyId) return false;
         
-        // Search filter
         if (searchQuery) {
             const query = searchQuery.toLowerCase();
-            if (!(d.name.toLowerCase().includes(query) || 
-                d.description.toLowerCase().includes(query) ||
-                d.id.toLowerCase().includes(query))) return false;
+            if (!(doc.name.toLowerCase().includes(query) || 
+                doc.description.toLowerCase().includes(query) ||
+                doc.id.toLowerCase().includes(query))) return false;
         }
 
-        // Status filter
         if (statusFilter !== 'all') {
-            if (statusFilter === 'active' && d.status !== 'active') return false;
-            if (statusFilter === 'pending' && !d.status?.includes('pending')) return false;
-            if (statusFilter === 'terminated' && d.status !== 'terminated' && d.status !== 'expired') return false;
+            if (statusFilter === 'active' && doc.status !== 'active') return false;
+            if (statusFilter === 'pending' && !doc.status?.includes('pending')) return false;
+            if (statusFilter === 'terminated' && doc.status !== 'terminated' && doc.status !== 'expired') return false;
         }
 
-        // Type filter
         if (typeFilter !== 'all') {
-            if (typeFilter === 'template' && !d.isTemplate) return false;
-            if (typeFilter === 'lease' && d.isTemplate) return false;
+            if (typeFilter === 'template' && !doc.isTemplate) return false;
+            if (typeFilter === 'lease' && doc.isTemplate) return false;
         }
         
         return true;
@@ -157,7 +153,7 @@ export default function DocumentsPage() {
         <div className="min-h-screen bg-background p-8 pb-20">
             <div className="mx-auto max-w-6xl space-y-12">
                 
-                {/* ─── Hero Header ─── */}
+
                 <header className="relative overflow-hidden rounded-[3rem] border border-white/5 bg-gradient-to-br from-neutral-900 to-neutral-950 p-12 shadow-2xl">
                     <div className="absolute top-0 right-0 p-8">
                         <div className="flex size-24 items-center justify-center rounded-3xl border border-primary/20 bg-primary/5 backdrop-blur-xl">
@@ -171,16 +167,15 @@ export default function DocumentsPage() {
                                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"></span>
                                 <span className="relative inline-flex size-2 rounded-full bg-primary"></span>
                             </span>
-                            Secure Document Vault
+                            Document Archive
                         </div>
                         
                         <div className="space-y-2">
                             <h1 className="text-5xl font-black tracking-tighter text-white md:text-6xl">
-                                Professional Archive <br />
-                                & <span className="text-primary">Lease Vault.</span>
+                            Professional <span className="text-primary">Documents.</span>
                             </h1>
                             <p className="max-w-xl text-lg font-medium leading-relaxed text-neutral-400">
-                                Access your executed agreements, smart contract templates, and identity records in one secure, encrypted hub.
+                                Access your lease agreements, contract templates, and identity records in one secure location.
                             </p>
                         </div>
                     </div>
@@ -189,7 +184,6 @@ export default function DocumentsPage() {
                 <div className="space-y-8">
                     
                     <div className="space-y-8">
-                        {/* ─── Navigation Tabs ─── */}
                         <div className="flex items-center gap-1 border-b border-white/5">
                             <button 
                                 onClick={() => setActiveTab("compliance")}
@@ -218,8 +212,6 @@ export default function DocumentsPage() {
                                 )}
                             </button>
                         </div>
-
-                        {/* ─── Document Content ─── */}
                         <AnimatePresence mode="wait">
                             {activeTab === "compliance" ? (
                                 <motion.div 
@@ -229,7 +221,6 @@ export default function DocumentsPage() {
                                     exit={{ opacity: 0, y: -10 }}
                                     className="space-y-12"
                                 >
-                                    {/* Registration Credentials */}
                                     <div className="space-y-6">
                                         <div className="flex items-center justify-between px-2">
                                             <h2 className="text-xl font-black text-white tracking-tight flex items-center gap-3">
@@ -291,7 +282,6 @@ export default function DocumentsPage() {
                                     exit={{ opacity: 0, y: -10 }}
                                     className="space-y-12"
                                 >
-                                    {/* Lease Agreements */}
                                     <div className="space-y-6">
                                         <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between px-2">
                                             <div className="space-y-1">
@@ -304,9 +294,7 @@ export default function DocumentsPage() {
                                                 </p>
                                             </div>
 
-                                            {/* Search & Filters */}
                                             <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-                                                {/* Search Bar */}
                                                 <div className="relative group w-full sm:w-64">
                                                     <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
                                                         <SearchIcon className="size-4 text-neutral-500 transition-colors group-focus-within:text-primary" />
@@ -320,7 +308,6 @@ export default function DocumentsPage() {
                                                     />
                                                 </div>
 
-                                                {/* Status Filter */}
                                                 <div className="relative">
                                                     <select 
                                                         value={statusFilter}
@@ -335,7 +322,6 @@ export default function DocumentsPage() {
                                                     <Filter className="absolute right-4 top-1/2 -translate-y-1/2 size-3 text-neutral-500 pointer-events-none" />
                                                 </div>
 
-                                                {/* Type Filter */}
                                                 <div className="relative">
                                                     <select 
                                                         value={typeFilter}
@@ -432,11 +418,11 @@ export default function DocumentsPage() {
                                             )}
                                         </div>
 
-                                        {/* Pagination Controls */}
+
                                         {totalPages > 1 && (
                                             <div className="flex items-center justify-center gap-4 pt-8">
                                                 <button 
-                                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                                                     disabled={currentPage === 1}
                                                     className="flex size-12 items-center justify-center rounded-2xl border border-white/5 bg-neutral-900/40 text-neutral-400 transition-all hover:border-primary/20 hover:text-primary disabled:opacity-20 disabled:hover:border-white/5 disabled:hover:text-neutral-400"
                                                 >
@@ -444,24 +430,24 @@ export default function DocumentsPage() {
                                                 </button>
                                                 
                                                 <div className="flex items-center gap-2">
-                                                    {[...Array(totalPages)].map((_, i) => (
+                                                    {[...Array(totalPages)].map((_, index) => (
                                                         <button
-                                                            key={`doc-page-${i}`}
-                                                            onClick={() => setCurrentPage(i + 1)}
+                                                            key={`doc-page-${index}`}
+                                                            onClick={() => setCurrentPage(index + 1)}
                                                             className={cn(
                                                                 "size-12 rounded-2xl text-[11px] font-black transition-all",
-                                                                currentPage === i + 1 
+                                                                currentPage === index + 1 
                                                                     ? "bg-primary text-black shadow-lg shadow-primary/20" 
                                                                     : "border border-white/5 bg-neutral-900/40 text-neutral-500 hover:border-primary/20 hover:text-white"
                                                             )}
                                                         >
-                                                            {i + 1}
+                                                            {index + 1}
                                                         </button>
                                                     ))}
                                                 </div>
 
                                                 <button 
-                                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                                                     disabled={currentPage === totalPages}
                                                     className="flex size-12 items-center justify-center rounded-2xl border border-white/5 bg-neutral-900/40 text-neutral-400 transition-all hover:border-primary/20 hover:text-primary disabled:opacity-20 disabled:hover:border-white/5 disabled:hover:text-neutral-400"
                                                 >
@@ -476,21 +462,19 @@ export default function DocumentsPage() {
                     </div>
                 </div>
             </div>
-            {/* ─── Preview Modal ─── */}
             {showPreview && selectedTemplate && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8">
                     <div className="absolute inset-0 bg-black/95 backdrop-blur-xl" onClick={() => setShowPreview(false)} />
                     
                     <div className="relative w-full max-w-4xl max-h-full bg-neutral-900 rounded-[3rem] border border-white/10 overflow-hidden flex flex-col shadow-2xl animate-in fade-in zoom-in duration-300">
-                        {/* Modal Header */}
                         <div className="flex items-center justify-between px-10 py-8 border-b border-white/5 bg-neutral-900/50 backdrop-blur-md">
                             <div className="flex items-center gap-4">
                                 <div className="size-12 bg-primary/10 rounded-2xl flex items-center justify-center">
                                     <ShieldCheck className="size-6 text-primary" />
                                 </div>
                                 <div>
-                                    <h4 className="text-lg font-black text-white uppercase tracking-widest">Digital Agreement Preview</h4>
-                                    <p className="text-[10px] text-neutral-500 font-black uppercase tracking-widest">Smart Template • Secure Protocol v2.1</p>
+                                    <h4 className="text-lg font-black text-white uppercase tracking-widest">Document Preview</h4>
+                                    <p className="text-[10px] text-neutral-500 font-black uppercase tracking-widest">Standard Template</p>
                                 </div>
                             </div>
 
@@ -502,7 +486,6 @@ export default function DocumentsPage() {
                             </button>
                         </div>
 
-                        {/* Modal Body */}
                         <div className="flex-1 overflow-y-auto p-12 bg-neutral-950/50 custom-scrollbar">
                             <div className="max-w-3xl mx-auto shadow-2xl rounded-2xl overflow-hidden bg-white">
 <LeaseDocument 
@@ -526,7 +509,7 @@ export default function DocumentsPage() {
                                             address: "Property Address Sample",
                                             city: "Metro Manila",
                                             images: [],
-                                            house_rules: selectedTemplate.templateData?.customClauses?.map((c: any) => `${c.title}: ${c.description}`) || [],
+                                            house_rules: selectedTemplate.templateData?.customClauses?.map((clause: any) => `${clause.title}: ${clause.description}`) || [],
                                             amenities: []
                                         }
                                     } as any}
