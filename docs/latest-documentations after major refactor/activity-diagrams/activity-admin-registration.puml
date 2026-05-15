@@ -1,0 +1,60 @@
+@startuml
+' iReside - Admin Registration Governance
+skinparam backgroundColor #f8f9fa
+skinparam defaultFontSize 10
+skinparam activity {
+  BorderColor #1a3764
+  BackgroundColor #eef4ff
+  DiamondBorderColor #d6b656
+  DiamondBackgroundColor #fff2cc
+}
+
+|Applicant|
+start
+:Submit registration + docs;
+
+|Registration Engine|
+:Validate submission;
+
+if (Complete?) then (No)
+  |Applicant|
+  :Fix & resubmit;
+  stop
+else (Yes)
+  :Save as pending;
+endif
+
+fork
+  :Verify identity;
+fork again
+  :Check business permit;
+fork again
+  :Scan duplicates;
+end fork
+
+:Set status: reviewing;
+:Add to admin queue;
+
+|Super Admin|
+:Open review;
+:Check documents;
+:Add notes;
+
+if (Decision?) then (Reject)
+  |Registration Engine|
+  :Mark rejected;
+  :Notify applicant;
+  stop
+else (Approve)
+  |Registration Engine|
+  :Mark approved;
+endif
+
+fork
+  :Create landlord account;
+fork again
+  :Deploy property;
+end fork
+
+stop
+@enduml

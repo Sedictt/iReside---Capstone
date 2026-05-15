@@ -1,0 +1,78 @@
+@startuml
+' iReside - Community Hub
+' Landlord = Moderator. Independent flows for posting.
+skinparam backgroundColor #f8f9fa
+skinparam defaultFontSize 10
+skinparam activity {
+  BorderColor #1a3764
+  BackgroundColor #eef4ff
+  DiamondBorderColor #d6b656
+  DiamondBackgroundColor #fff2cc
+}
+
+title iReside - Community Hub
+
+' --- Parallel flows: Landlord announcement & Resident post ---
+
+|Landlord|
+start
+:Create announcement;
+
+|Community Engine|
+:Auto-publish;
+:Broadcast via Realtime;
+
+fork
+  :Notify residents;
+fork again
+  :Update feed;
+end fork
+
+stop
+
+' --- Resident creates post (independent flow) ---
+
+|Resident|
+start
+:Create discussion / poll / photo;
+:Submit;
+
+|Community Engine|
+:Validate content;
+
+if (Moderation?) then (Yes)
+  :Send to approval queue;
+  |Landlord (Moderator)|
+  :Review post;
+  if (Approve?) then (Approve)
+    |Community Engine|
+    :Publish;
+  else (Reject)
+    |Community Engine|
+    :Reject & notify;
+    stop
+  endif
+else (No)
+  |Community Engine|
+  :Publish instantly;
+endif
+
+:Broadcast via Realtime;
+
+fork
+  :Notify members;
+fork again
+  :Update feed;
+end fork
+
+|Resident|
+fork
+  :React / Like;
+fork again
+  :Comment;
+fork again
+  :Save / Report;
+end fork
+
+stop
+@enduml

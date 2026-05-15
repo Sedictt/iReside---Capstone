@@ -59,27 +59,39 @@ export function LeaseAuditTrail({ events, className }: LeaseAuditTrailProps) {
 
   if (sortedEvents.length === 0) {
     return (
-      <div className={cn("rounded-2xl border border-white/10 bg-white/[0.02] p-4", className)}>
-        <p className="text-xs font-medium text-neutral-400">No signing audit events yet.</p>
+      <div className={cn("rounded-2xl border border-border bg-muted/20 p-6 text-center", className)}>
+        <p className="text-xs font-medium text-muted-foreground">No audit events recorded yet.</p>
       </div>
     );
   }
 
   return (
-    <div className={cn("rounded-2xl border border-white/10 bg-white/[0.02] p-4 space-y-3", className)}>
+    <div className={cn("space-y-3", className)}>
       {sortedEvents.map((event) => (
         <div
           key={event.id}
-          className="rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 flex items-start justify-between gap-3"
+          className="relative pl-6 before:absolute before:left-[7px] before:top-2 before:h-full before:w-[1px] before:bg-border last:before:hidden"
         >
-          <div className="min-w-0">
-            <p className="text-xs font-black text-white">{EVENT_LABELS[event.event_type]}</p>
-            {event.actor_label && <p className="text-[11px] text-neutral-400 mt-0.5">By: {event.actor_label}</p>}
+          <div className="absolute left-0 top-1.5 size-3.5 rounded-full border-2 border-primary bg-background shadow-sm" />
+          <div className="rounded-2xl border border-border/50 bg-muted/20 px-4 py-3 transition-colors hover:bg-muted/30">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+              <p className="text-[13px] font-bold text-foreground">
+                {EVENT_LABELS[event.event_type]}
+              </p>
+              <p className="text-[10px] font-medium text-muted-foreground">
+                {formatAuditTimestamp(event.created_at)}
+              </p>
+            </div>
+            {event.actor_label && (
+              <p className="mt-1 text-[11px] font-medium text-muted-foreground/70">
+                Action by {event.actor_label}
+              </p>
+            )}
           </div>
-          <p className="text-[11px] text-neutral-400 whitespace-nowrap">{formatAuditTimestamp(event.created_at)}</p>
         </div>
       ))}
     </div>
   );
 }
+
 

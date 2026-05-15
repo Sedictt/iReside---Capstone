@@ -1,0 +1,54 @@
+@startuml
+' iReside - Real-Time Messaging
+skinparam backgroundColor #f8f9fa
+skinparam defaultFontSize 10
+skinparam activity {
+  BorderColor #1a3764
+  BackgroundColor #eef4ff
+  DiamondBorderColor #d6b656
+  DiamondBackgroundColor #fff2cc
+}
+
+|Sender|
+start
+:Open conversation;
+:Type message;
+
+fork
+  :Show typing...;
+fork again
+  :Attach files;
+end fork
+
+:Send;
+
+|Messaging Engine|
+:Receive message;
+
+fork
+  :AI toxicity check;
+fork again
+  :Save to DB;
+fork again
+  :Upload media;
+end fork
+
+if (Flagged?) then (Yes)
+  :Block & warn sender;
+  stop
+else (No)
+  :Publish via Realtime;
+endif
+
+|Recipient|
+:See message live;
+
+fork
+  :Show in UI;
+fork again
+  :Send read receipt;
+end fork
+
+:Read & reply;
+stop
+@enduml

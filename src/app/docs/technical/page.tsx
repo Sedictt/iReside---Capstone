@@ -61,6 +61,7 @@ import {
   Target
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -96,15 +97,18 @@ export default function TechnicalDocPage() {
           animate={{ opacity: 1, y: 0 }}
           className="relative z-10 space-y-8"
         >
-          <div className="flex flex-wrap gap-3">
-            <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-primary backdrop-blur-md">
-              <Terminal className="size-3" />
-              v2.5.4 Stable
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap gap-3">
+              <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-primary backdrop-blur-md">
+                <Terminal className="size-3" />
+                v2.5.4 Stable
+              </div>
+              <div className="inline-flex items-center gap-2 rounded-full bg-blue-500/10 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-blue-500 backdrop-blur-md">
+                <ShieldCheck className="size-3" />
+                Security Hardened
+              </div>
             </div>
-            <div className="inline-flex items-center gap-2 rounded-full bg-blue-500/10 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-blue-500 backdrop-blur-md">
-              <ShieldCheck className="size-3" />
-              Security Hardened
-            </div>
+            <ThemeToggle className="size-10 shrink-0" />
           </div>
           <h1 className="text-5xl font-black tracking-tighter text-foreground sm:text-7xl lg:text-[84px] leading-[0.85]">
             Technical <br />
@@ -179,7 +183,7 @@ export default function TechnicalDocPage() {
 
       {/* 3. Multi-Tenant Security (Expanded) */}
       <section id="security" className="space-y-12">
-        <div className="rounded-[3rem] border border-border bg-[#0a0a0a] p-8 sm:p-16 text-white overflow-hidden relative">
+        <div className="rounded-[3rem] border border-border bg-card p-8 sm:p-16 text-foreground overflow-hidden relative">
           <div className="absolute right-0 top-0 -z-0 opacity-10 blur-3xl">
             <Lock className="size-[600px] text-primary" />
           </div>
@@ -189,8 +193,8 @@ export default function TechnicalDocPage() {
               <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-primary">
                 Multi-Tenant Protocol
               </div>
-              <h2 className="text-4xl font-black leading-tight sm:text-5xl">Row-Level Security (RLS) Deep-Dive</h2>
-              <p className="text-xl text-white/60 leading-relaxed">
+              <h2 className="text-4xl font-black leading-tight sm:text-5xl text-foreground">Row-Level Security (RLS) Deep-Dive</h2>
+              <p className="text-xl text-muted-foreground leading-relaxed">
                 iReside employs a "Zero Trust" data architecture. We enforce data boundaries 
                 at the database engine level, ensuring that even a compromised application 
                 layer cannot access data belonging to another landlord or tenant.
@@ -200,23 +204,23 @@ export default function TechnicalDocPage() {
             <div className="grid gap-12 lg:grid-cols-2">
               <div className="space-y-8">
                 <div className="space-y-4">
-                  <h4 className="text-lg font-black flex items-center gap-3">
+                  <h4 className="text-lg font-black text-foreground flex items-center gap-3">
                     <Fingerprint className="size-5 text-primary" />
                     How Isolation Works
                   </h4>
-                  <div className="space-y-6 relative before:absolute before:left-3 before:top-4 before:bottom-4 before:w-px before:bg-white/10">
+                  <div className="space-y-6 relative before:absolute before:left-3 before:top-4 before:bottom-4 before:w-px before:bg-border">
                     {[
                       { label: "Token Binding", text: "JWT payloads include the user's workspace_id, cryptographically signed by Supabase Auth." },
                       { label: "Policy Injection", text: "PostgreSQL automatically appends WHERE clauses to every query based on the active session context." },
                       { label: "Bypass Prevention", text: "Direct table access is disabled; all queries must pass through the authenticated RLS layer." }
 ].map((item, i) => (
                       <div key={item.label} className="relative pl-10">
-                        <div className="absolute left-0 top-1 size-6 rounded-full bg-zinc-900 border border-primary/50 flex items-center justify-center text-[10px] font-black text-primary z-10">
+                        <div className="absolute left-0 top-1 size-6 rounded-full bg-muted border border-primary/50 flex items-center justify-center text-[10px] font-black text-primary z-10">
                           {i + 1}
                         </div>
                         <div>
-                          <p className="font-bold text-white text-sm">{item.label}</p>
-                          <p className="text-xs text-white/40 leading-relaxed">{item.text}</p>
+                          <p className="font-bold text-foreground text-sm">{item.label}</p>
+                          <p className="text-xs text-muted-foreground/60 leading-relaxed">{item.text}</p>
                         </div>
                       </div>
                     ))}
@@ -225,9 +229,9 @@ export default function TechnicalDocPage() {
               </div>
 
               <div className="space-y-6">
-                <div className="rounded-3xl border border-white/10 bg-white/5 p-8 font-mono text-xs shadow-2xl backdrop-blur-md">
-                  <div className="mb-4 flex items-center justify-between border-b border-white/10 pb-4">
-                    <span className="text-white/30 uppercase tracking-[0.2em] font-black">Internal SQL Policy</span>
+                <div className="rounded-3xl border border-border bg-muted/30 p-8 font-mono text-xs shadow-2xl backdrop-blur-md">
+                  <div className="mb-4 flex items-center justify-between border-b border-border pb-4">
+                    <span className="text-muted-foreground uppercase tracking-[0.2em] font-black">Internal SQL Policy</span>
                     <div className="flex gap-1.5">
                       <div className="size-2 rounded-full bg-red-500/30" />
                       <div className="size-2 rounded-full bg-yellow-500/30" />
@@ -251,8 +255,8 @@ USING (
                 </div>
                 <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6 flex items-start gap-4">
                   <ShieldCheck className="size-6 text-primary shrink-0" />
-                  <p className="text-xs text-white/50 leading-relaxed">
-                    <span className="text-white font-black uppercase">Standard Compliance:</span> Our RLS implementation meets the strict requirements for HIPAA and GDPR data isolation standards.
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    <span className="text-foreground font-black uppercase">Standard Compliance:</span> Our RLS implementation meets the strict requirements for HIPAA and GDPR data isolation standards.
                   </p>
                 </div>
               </div>
@@ -427,7 +431,7 @@ USING (
                 { label: "Emergency", val: "Critical Faults", color: "text-red-500" },
                 { label: "Standard", val: "Routine Repair", color: "text-blue-500" },
                 { label: "Priority", val: "Quality of Life", color: "text-orange-500" },
-                { label: "Deferred", val: "Aesthetic Only", color: "text-zinc-500" }
+                { label: "Deferred", val: "Aesthetic Only", color: "text-muted-foreground" }
               ].map((lvl) => (
                 <div key={lvl.label} className="p-4 rounded-xl border border-border bg-muted/20">
                   <p className={cn("text-[10px] font-black uppercase tracking-widest", lvl.color)}>{lvl.label}</p>
@@ -646,7 +650,7 @@ USING (
           <div className="min-w-[1000px] flex items-center justify-between pl-16 pr-10 relative">
             <div className="absolute top-[27px] left-24 right-24 h-0.5 bg-border -z-10" />
             {[
-              { status: "Draft", icon: FileText, color: "bg-zinc-400" },
+              { status: "Draft", icon: FileText, color: "bg-muted-foreground" },
               { status: "Verification", icon: Eye, color: "bg-blue-500" },
               { status: "Sign-off", icon: FileSignature, color: "bg-purple-500" },
               { status: "Active", icon: RefreshCcw, color: "bg-primary" },
@@ -654,7 +658,7 @@ USING (
               { status: "Closure", icon: Lock, color: "bg-red-500" }
             ].map((item, i) => (
               <div key={item.status} className="flex flex-col items-center gap-4 w-32 bg-background z-10">
-                <div className={cn("size-14 rounded-full flex items-center justify-center text-white shadow-xl transition-all hover:scale-110", item.color)}>
+                <div className={cn("size-14 rounded-full flex items-center justify-center text-primary-foreground shadow-xl transition-all hover:scale-110", item.color)}>
                   <item.icon className="size-6" />
                 </div>
                 <div className="text-center space-y-1">
@@ -747,28 +751,29 @@ USING (
       </section>
 
       {/* Master CTA / Developer Access */}
-      <section className="mt-16 rounded-[3rem] bg-foreground p-12 sm:p-24 text-background text-center space-y-10 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.05)_0,transparent_70%)]" />
-        <Chip className="absolute -right-20 -top-20 size-80 text-background/5 rotate-12" />
+      <section className="mt-16 rounded-[3rem] bg-foreground dark:bg-card dark:border dark:border-border p-12 sm:p-24 text-background dark:text-foreground text-center space-y-10 relative overflow-hidden shadow-sm">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 dark:opacity-100" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.05)_0%,transparent_100%)] dark:hidden" />
+        <Chip className="absolute -right-20 -top-20 size-80 text-background/5 dark:text-primary/5 rotate-12" />
         
         <div className="relative z-10 max-w-2xl mx-auto space-y-8">
-          <div className="size-20 rounded-[2rem] bg-primary flex items-center justify-center mx-auto shadow-2xl shadow-primary/30">
-            <Key className="size-10 text-white" />
+          <div className="size-20 rounded-[2rem] bg-primary flex items-center justify-center mx-auto shadow-2xl shadow-primary/30 dark:shadow-primary/20">
+            <Key className="size-10 text-primary-foreground" />
           </div>
           <div className="space-y-4">
-            <h2 className="text-4xl font-black text-white tracking-tighter sm:text-6xl">Unlock Developer Access</h2>
-            <p className="text-lg text-background/60 leading-relaxed font-medium">
+            <h2 className="text-4xl font-black text-background dark:text-foreground tracking-tighter sm:text-6xl">Unlock Developer Access</h2>
+            <p className="text-lg text-background/60 dark:text-muted-foreground leading-relaxed font-medium">
               Join the iReside ecosystem. Request verified developer keys to build on our API, 
               access internal webhooks, and integrate third-party rental services.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6">
-            <Button className="h-16 rounded-2xl px-10 font-black text-lg bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/20" asChild>
+            <Button className="h-16 rounded-2xl px-10 font-black text-lg bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl shadow-primary/20 dark:shadow-primary/10" asChild>
               <Link href="/docs/support/contact">
                 Request API Key <ArrowRight className="ml-2 size-5" />
               </Link>
             </Button>
-            <Button variant="ghost" className="h-16 rounded-2xl px-8 text-background hover:bg-background/10 font-black text-lg" asChild>
+            <Button variant="ghost" className="h-16 rounded-2xl px-8 text-background dark:text-foreground hover:bg-background/10 dark:hover:bg-muted/50 font-black text-lg" asChild>
               <Link href="/docs">Standard Docs</Link>
             </Button>
           </div>

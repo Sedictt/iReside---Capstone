@@ -42,8 +42,8 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
         try {
             const res = await fetch(`/api/landlord/properties/${propertyId}/renewal-settings`);
             if (res.ok) {
-                const data = await res.json();
-                setSettings(data);
+                const settingsResponse = await res.json();
+                setSettings(settingsResponse);
             }
         } catch (error) {
             toast.error("Failed to load settings");
@@ -90,7 +90,6 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
     return (
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-background/80 backdrop-blur-md p-4">
             <div className="relative w-full max-w-2xl bg-card rounded-[2.5rem] overflow-hidden border border-border shadow-2xl flex flex-col max-h-[90vh]">
-                {/* Header */}
                 <div className="p-8 border-b border-border flex justify-between items-center bg-primary/5">
                     <div className="flex items-center gap-4">
                         <div className="p-3 rounded-2xl bg-primary/10 text-primary">
@@ -115,7 +114,6 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
                     </div>
                 ) : (
                     <div className="p-8 overflow-y-auto space-y-8">
-                        {/* Disclosure Notice */}
                         <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex gap-4 items-start">
                             <Info className="size-5 text-amber-600 shrink-0 mt-0.5" />
                             <p className="text-xs text-amber-800 leading-relaxed">
@@ -123,7 +121,6 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
                             </p>
                         </div>
 
-                        {/* Rent Adjustment Section */}
                         <section className="space-y-4">
                             <h4 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground border-b border-border pb-2">Rent Adjustment</h4>
                             <div className="grid grid-cols-2 gap-6">
@@ -154,7 +151,6 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
                             </div>
                         </section>
 
-                        {/* New Rules Section */}
                         <section className="space-y-4">
                             <h4 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground border-b border-border pb-2">Updated Rules & Clauses</h4>
                             <div className="space-y-3">
@@ -186,7 +182,6 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
                             </div>
                         </section>
 
-                        {/* Landlord Memo */}
                         <section className="space-y-4">
                             <h4 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground border-b border-border pb-2">Landlord's Note to Residents</h4>
                             <textarea 
@@ -199,7 +194,6 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
                     </div>
                 )}
 
-                {/* Footer */}
                 <div className="p-6 border-t border-border bg-muted/20 flex gap-4">
                     <button onClick={onClose} className="flex-1 px-6 py-4 rounded-2xl border border-border text-muted-foreground hover:bg-muted font-black uppercase tracking-widest text-xs transition-all">
                         Cancel

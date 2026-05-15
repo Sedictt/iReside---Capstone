@@ -42,7 +42,11 @@ interface RenewalRequest {
     };
 }
 
-export default function LandlordRenewalReview() {
+interface LandlordRenewalReviewProps {
+    searchQuery?: string;
+}
+
+export default function LandlordRenewalReview({ searchQuery }: LandlordRenewalReviewProps) {
     const searchParams = useSearchParams();
     const isPreview = searchParams.get("preview_requests") === "true";
 
@@ -155,9 +159,9 @@ export default function LandlordRenewalReview() {
                 propertyId: selectedPropertyId 
             });
             const res = await fetch(`/api/landlord/renewals?${params.toString()}`);
-            const data = await res.json();
+            const renewalResponse = await res.json();
             if (res.ok) {
-                setRequests(data);
+                setRequests(renewalResponse);
             }
         } catch (error) {
             console.error("Failed to fetch renewal requests:", error);
@@ -181,9 +185,9 @@ export default function LandlordRenewalReview() {
                     ...(proposedDeposit && { proposed_security_deposit: parseMoney(proposedDeposit) }),
                 })
             });
-            const data = await res.json();
+            const approveResponse = await res.json();
             if (!res.ok) {
-                toast.error("Failed to approve", { description: data.error });
+                toast.error("Failed to approve", { description: approveResponse.error });
                 return;
             }
             toast.success("Renewal approved", {
@@ -210,9 +214,9 @@ export default function LandlordRenewalReview() {
                     landlord_notes: rejectNotes
                 })
             });
-            const data = await res.json();
+            const rejectResponse = await res.json();
             if (!res.ok) {
-                toast.error("Failed to reject", { description: data.error });
+                toast.error("Failed to reject", { description: rejectResponse.error });
                 return;
             }
             toast.success("Renewal rejected", {
@@ -345,7 +349,6 @@ export default function LandlordRenewalReview() {
             {selectedRequest && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-md p-4">
                     <div className="relative w-full max-w-2xl bg-card rounded-[2.5rem] overflow-hidden border border-border shadow-2xl flex flex-col max-h-[90vh]">
-                        {/* Header */}
                         <div className="p-8 border-b border-border flex justify-between items-center bg-muted/20">
                             <div className="flex items-center gap-4">
                                 <div className="p-3 rounded-2xl bg-primary/10 text-primary">
@@ -366,9 +369,7 @@ export default function LandlordRenewalReview() {
                             </button>
                         </div>
 
-                        {/* Content */}
                         <div className="p-8 overflow-y-auto space-y-8">
-                            {/* Summary Cards */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="bg-muted/30 rounded-3xl p-6 border border-border/50">
                                     <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-black mb-4">Current Lease</p>
@@ -398,7 +399,6 @@ export default function LandlordRenewalReview() {
                                 </div>
                             </div>
 
-                            {/* Editing Form */}
                             <div className="space-y-6">
                                 <h4 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground border-b border-border pb-2">Finalize New Terms</h4>
                                 
@@ -463,7 +463,6 @@ export default function LandlordRenewalReview() {
                                 </div>
                             </div>
 
-                            {/* Internal Notes */}
                             <div className="space-y-2">
                                 <label htmlFor="landlord-notes" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block">Landlord Notes (Optional)</label>
                                 <textarea
@@ -476,7 +475,6 @@ export default function LandlordRenewalReview() {
                             </div>
                         </div>
 
-                        {/* Footer */}
                         <div className="p-6 border-t border-border bg-muted/20 flex gap-4">
                             <button
                                 onClick={handleReject}

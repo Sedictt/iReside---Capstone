@@ -1,0 +1,81 @@
+@startuml
+' iReside - Digital Lease Signing
+skinparam backgroundColor #f8f9fa
+skinparam defaultFontSize 10
+skinparam activity {
+  BorderColor #1a3764
+  BackgroundColor #eef4ff
+  DiamondBorderColor #d6b656
+  DiamondBackgroundColor #fff2cc
+}
+
+|Landlord|
+start
+:Create lease;
+:Set terms (dates, rent);
+:Pick signing mode;
+
+|Lease Engine|
+:Generate document;
+:Validate terms;
+
+if (Valid?) then (Yes)
+  :Set status: pending_signature;
+else (No)
+  |Landlord|
+  :Fix errors;
+  stop
+endif
+
+if (Mode?) then (In-Person)
+  :Show dual-view;
+else (Remote)
+  :Create JWT link (30d);
+endif
+
+:Notify tenant;
+
+|Tenant|
+:Review lease;
+
+fork
+  :Check rent & dates;
+fork again
+  :Review policies;
+end fork
+
+if (Accept?) then (No)
+  |Lease Engine|
+  :Revert to draft;
+  stop
+else (Yes)
+  |Tenant|
+  :Sign digitally;
+endif
+
+|Lease Engine|
+:Validate signature;
+
+if (Valid?) then (No)
+  |Tenant|
+  :Re-sign;
+  |Lease Engine|
+  :Validate signature;
+else (Yes)
+  |Landlord|
+  :Sign lease;
+endif
+
+|Lease Engine|
+:Set status: active;
+
+fork
+  :Send confirmation;
+fork again
+  :Log audit trail;
+fork again
+  :Mark unit: occupied;
+end fork
+
+stop
+@enduml

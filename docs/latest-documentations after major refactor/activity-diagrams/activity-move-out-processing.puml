@@ -1,0 +1,51 @@
+@startuml
+' iReside - Move-Out Processing
+skinparam backgroundColor #f8f9fa
+skinparam defaultFontSize 10
+skinparam activity {
+  BorderColor #1a3764
+  BackgroundColor #eef4ff
+  DiamondBorderColor #d6b656
+  DiamondBackgroundColor #fff2cc
+}
+
+|Tenant|
+start
+:Start move-out request;
+:Set date & reason;
+:Submit;
+
+|Move-Out Engine|
+:Check eligibility;
+
+if (Eligible?) then (No)
+  :Tell tenant why not;
+  stop
+else (Yes)
+  :Save (pending);
+  :Alert landlord;
+endif
+
+|Landlord|
+:Review request;
+
+if (Decision?) then (Deny)
+  |Move-Out Engine|
+  :Mark denied;
+  :Notify tenant;
+  stop
+else (Approve)
+  |Move-Out Engine|
+  :Mark approved;
+endif
+
+fork
+  :Compute final bill;
+fork again
+  :Terminate lease;
+fork again
+  :Free unit;
+end fork
+
+stop
+@enduml

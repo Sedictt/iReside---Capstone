@@ -1,0 +1,45 @@
+@startuml
+' iReside - Property & Unit Management
+skinparam backgroundColor #f8f9fa
+skinparam defaultFontSize 10
+skinparam activity {
+  BorderColor #1a3764
+  BackgroundColor #eef4ff
+  DiamondBorderColor #d6b656
+  DiamondBackgroundColor #fff2cc
+}
+
+|Landlord|
+start
+:Create property (name, address);
+:Add amenities & media;
+
+|Property Engine|
+:Save property;
+
+fork
+  :Upload media;
+  |Storage|
+  :Store images;
+fork again
+  :Geocode address;
+end fork
+
+|Landlord|
+:Add units (size, price);
+:Design floor plan;
+:Tag amenities;
+:Save unit;
+
+|Property Engine|
+:Save unit (vacant);
+:Persist layout;
+
+fork
+  :Update availability;
+fork again
+  :Sync tenant view;
+end fork
+
+stop
+@enduml

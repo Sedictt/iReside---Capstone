@@ -21,7 +21,7 @@ export async function GET(
         current_lease:leases!renewal_requests_current_lease_id_fkey (
           *,
           unit:units!inner (*),
-          tenant:profiles!inner (id, full_name, email, phone)
+          tenant:profiles!leases_tenant_id_fkey!inner (id, full_name, email, phone)
         ),
         new_lease:leases!renewal_requests_new_lease_id_fkey (*)
       `)

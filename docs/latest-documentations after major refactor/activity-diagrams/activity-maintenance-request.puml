@@ -1,0 +1,96 @@
+@startuml
+' iReside - Maintenance Request Workflow
+' Updated: 2026-05-15
+
+skinparam backgroundColor #f9f9f9
+skinparam defaultFontSize 10
+skinparam activity {
+  BorderColor #1a3764
+  BackgroundColor #eef4ff
+  DiamondBorderColor #d6b656
+  DiamondBackgroundColor #fff2cc
+}
+
+|Tenant|
+start
+:Spot issue in unit;
+:Fill maintenance request form;
+if (Want to self-repair?) then (yes)
+  :Mark self-repair requested;
+endif
+:Attach photos;
+:Submit request;
+
+|Maintenance Engine|
+:Validate request data;
+:AI Triage: priority, sentiment, confidence;
+:Set status: open;
+:Save to database;
+:Notify landlord;
+
+|Landlord|
+:Review request + triage;
+if (Photos needed?) then (yes)
+  :Set photo_requested = true;
+  :Notify tenant;
+  |Tenant|
+  :Upload photos;
+  note right: tenant_provided_photos
+  |Landlord|
+endif
+
+if (Self-repair requested?) then (yes)
+  :Review self-repair request;
+  if (Approve?) then (approve)
+    :repair_method = self_repair;
+    :self_repair_decision = approved;
+    :status = assigned;
+    :Notify tenant;
+    |Tenant|
+    :Perform self-repair;
+    :Update tenant_repair_status;
+    :Mark done;
+    |Landlord|
+    :Review repair;
+  else (reject)
+    :self_repair_decision = rejected;
+  endif
+endif
+
+if (Standard repair?) then (yes)
+  :Choose repair method;
+  if (Third party?) then (yes)
+    :Enter contractor name;
+  endif
+  :Assign repair;
+  :status = assigned;
+  :Notify tenant;
+endif
+
+|Landlord|
+:Do repair;
+:status = in_progress;
+:Complete repair;
+:status = resolved;
+:Set resolved_at;
+
+|Maintenance Engine|
+:Notify tenant;
+
+|Tenant|
+:Review fix;
+if (Satisfied?) then (yes)
+  |Maintenance Engine|
+  :status = closed;
+  stop
+else (no)
+  :status = open;
+  :Notify landlord;
+  |Landlord|
+  :Review escalation;
+  :Corrective action;
+  :Re-resolve;
+endif
+
+stop
+@enduml

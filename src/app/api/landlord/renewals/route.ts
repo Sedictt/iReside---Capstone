@@ -46,7 +46,7 @@ export async function GET(request: Request) {
               address
             )
           ),
-          tenant:profiles!inner (
+          tenant:profiles!leases_tenant_id_fkey!inner (
             id,
             full_name,
             email,
@@ -65,8 +65,8 @@ export async function GET(request: Request) {
       query = query.eq("status", statusFilter as RenewalStatus);
     }
 
-    // Apply property filter if provided
-    if (propertyId) {
+    // Apply property filter if provided (skip if "all")
+    if (propertyId && propertyId !== "all") {
       query = query.eq("current_lease.unit.property_id", propertyId);
     }
 

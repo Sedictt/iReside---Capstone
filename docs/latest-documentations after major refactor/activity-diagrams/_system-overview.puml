@@ -1,0 +1,355 @@
+@startuml
+' iReside — Overall System Activity Diagram
+' Actors: Landlord, Tenant, Admin
+' Based on PlantUML Activity Diagram Beta syntax
+skinparam backgroundColor #fefefe
+skinparam defaultFontSize 11
+skinparam activity {
+  BorderColor #1a3764
+  BackgroundColor #eef4ff
+  DiamondBorderColor #d6b656
+  DiamondBackgroundColor #fff2cc
+  BarBorderColor #1a3764
+}
+
+title iReside - Overall System Activity Diagram
+
+' =====================================================
+' LANDLORD WORKFLOW
+' =====================================================
+
+|Landlord|
+start
+:Login to iReside;
+
+|System|
+:Authenticate credentials;
+
+if (Valid?) then (No)
+  |Landlord|
+  :Retry login;
+  stop
+else (Yes)
+  |System|
+  :Route to Landlord Dashboard;
+endif
+
+:Load profile & notifications;
+
+|Landlord|
+:Create property record;
+
+|System|
+:Save property to database;
+
+|Landlord|
+:Add units & define pricing;
+:Upload media & configure amenities;
+
+|System|
+:Store images in buckets;
+
+|Landlord|
+:Configure floor plan layout;
+
+|System|
+:Persist layout, set unit vacant;
+
+' --- Application processing ---
+
+|Landlord|
+:Open unit showcase for walk-in;
+:Capture applicant details;
+:Upload supporting docs;
+
+|System|
+:Validate and store application;
+
+fork
+  :Run background check;
+fork again
+  :Verify documents;
+fork again
+  :Check duplicates;
+end fork
+
+if (All clear?) then (Yes)
+  |System|
+  :Approve application;
+else (No)
+  |Landlord|
+  :Review flagged issues;
+  if (Approve?) then (Yes)
+    |System|
+    :Approve application;
+  else (No)
+    |System|
+    :Reject application;
+    stop
+  endif
+endif
+
+fork
+  :Provision tenant account;
+fork again
+  :Generate credentials;
+fork again
+  :Prepare lease draft;
+end fork
+
+' --- Lease creation and signing ---
+
+|Landlord|
+:Create lease with terms;
+:Set signing mode (In-Person / Remote);
+
+|System|
+:Validate terms, set pending_signature;
+
+if (Mode?) then (In-Person)
+  |System|
+  :Present for dual co-signing;
+else (Remote)
+  |System|
+  :Generate JWT link (30-day);
+endif
+
+:Notify tenant;
+
+|Tenant|
+:Review lease & terms;
+:Sign digitally;
+
+|System|
+:Validate signature format;
+
+if (Valid?) then (No)
+  |Tenant|
+  :Re-sign;
+  |System|
+  :Validate signature;
+else (Yes)
+  |Landlord|
+  :Sign lease;
+  |System|
+  :Set status active, unit occupied;
+endif
+
+' --- Maintenance ---
+
+|Tenant|
+:Submit maintenance request;
+
+|System|
+:Create ticket with AI triage;
+:Notify landlord;
+
+|Landlord|
+:Review & assign worker;
+:Perform repair;
+:Mark resolved;
+
+|System|
+:Update status resolved;
+
+|Tenant|
+:Confirm fix;
+
+if (Satisfied?) then (No)
+  |System|
+  :Reopen ticket;
+  stop
+else (Yes)
+  |System|
+  :Close ticket;
+endif
+
+' --- Move-out ---
+
+|Tenant|
+:Request move-out;
+
+|System|
+:Check eligibility;
+
+if (Eligible?) then (No)
+  |System|
+  :Deny & explain;
+  stop
+else (Yes)
+  |Landlord|
+  :Review & approve;
+endif
+
+fork
+  |System|
+  :Calculate final billing;
+fork again
+  :Terminate lease;
+fork again
+  :Set unit vacant;
+end fork
+
+|System|
+:Notify tenant of completion;
+stop
+
+' =====================================================
+' TENANT WORKFLOW (independent start)
+' =====================================================
+
+|Tenant|
+start
+:Receive account credentials;
+:Log in to portal;
+
+|System|
+:Route to Tenant Dashboard;
+
+|Tenant|
+:View lease & sign;
+
+|System|
+:Activate lease;
+
+' --- Payment (Manual Proof-Based) ---
+
+|Tenant|
+:View invoice dashboard;
+:Select invoice to pay;
+:Choose method (GCash / Card / Cash);
+
+if (Cash?) then (Yes)
+  :Trigger in-person intent;
+  |System|
+  :Set status awaiting in-person;
+  :Alert landlord;
+  |Landlord|
+  :Receive cash payment;
+  :Click confirm received;
+  |System|
+  :Mark invoice paid;
+else (No - GCash / Card)
+  |Tenant|
+  :Pay via external GCash app;
+  :Upload proof (screenshot + ref no.);
+  |System|
+  :Save proof, set under review;
+  :Notify landlord;
+  |Landlord|
+  :Review proof & amount;
+  if (Valid?) then (Yes)
+    |System|
+    :Confirm payment, mark paid;
+  else (No)
+    |System|
+    :Reject, require re-submission;
+    |Tenant|
+    :Re-upload corrected proof;
+    |Landlord|
+    :Review proof & amount;
+  endif
+endif
+
+fork
+  |System|
+  :Generate official receipt;
+fork again
+  :Update billing ledger;
+fork again
+  :Deliver receipt to vault & chat;
+end fork
+
+' --- Messaging ---
+
+|Tenant|
+:Open conversation;
+:Type & send message;
+
+|System|
+:Run AI content filter;
+if (Flagged?) then (Yes)
+  :Block & warn sender;
+  stop
+else (No)
+  :Deliver via Realtime;
+endif
+
+|Landlord|
+:Read & reply;
+
+' --- Community ---
+
+|Tenant|
+:Create community post;
+
+|System|
+:Validate content;
+
+if (Moderation?) then (Yes)
+  |Landlord|
+  :Review & approve;
+  |System|
+  :Publish;
+else (No)
+  |System|
+  :Publish instantly;
+endif
+
+fork
+  :Notify members;
+fork again
+  :Update feed;
+end fork
+
+|Tenant|
+:Like, comment, or save;
+stop
+
+' =====================================================
+' ADMIN WORKFLOW (independent start)
+' =====================================================
+
+|Admin|
+start
+:Log in to admin portal;
+
+|System|
+:Route to Admin Dashboard;
+:Show system metrics (users, properties, leases);
+
+|Admin|
+:Open registration queue;
+:Review landlord applicant;
+:Examine docs & photos;
+:Add internal notes;
+
+if (Decision?) then (Approve)
+  |System|
+  :Approve registration;
+else (Reject)
+  |System|
+  :Reject & notify;
+  stop
+endif
+
+fork
+  |System|
+  :Provision landlord account;
+fork again
+  :Initialize property deployment;
+end fork
+
+|Admin|
+:Monitor platform activity;
+:Manage user accounts;
+
+if (Issue?) then (Yes)
+  :Investigate & resolve;
+else (No)
+endif
+
+:Oversee system health;
+stop
+
+@enduml

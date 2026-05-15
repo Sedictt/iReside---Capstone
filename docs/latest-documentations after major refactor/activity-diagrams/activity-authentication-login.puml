@@ -1,0 +1,61 @@
+@startuml
+' iReside - Authentication & Login
+skinparam backgroundColor #f8f9fa
+skinparam defaultFontSize 10
+skinparam activity {
+  BorderColor #1a3764
+  BackgroundColor #eef4ff
+  DiamondBorderColor #d6b656
+  DiamondBackgroundColor #fff2cc
+  BarBorderColor #1a3764
+}
+
+|User|
+start
+:Navigate to login;
+:Enter email & password;
+
+|iReside System|
+:Validate format;
+
+if (Valid?) then (Yes)
+  :Send to Supabase Auth;
+else (No)
+  |User|
+  :Show field errors;
+  :Fix & retry;
+  stop
+endif
+
+|Supabase Auth|
+:Check credentials;
+
+if (Match?) then (Yes)
+  :Return session + JWT;
+else (No)
+  |iReside System|
+  :Show login error;
+  |User|
+  :View error, retry;
+  stop
+endif
+
+|iReside System|
+:Extract role from JWT;
+
+if (Role?) then (Tenant)
+  :Go to Tenant Dashboard;
+elseif (Landlord)
+  :Go to Landlord Dashboard;
+elseif (Admin)
+  :Go to Admin Dashboard;
+endif
+
+fork
+  :Load profile;
+fork again
+  :Load notifications;
+end fork
+
+stop
+@enduml

@@ -1,0 +1,56 @@
+@startuml
+' iReside - Payment & Billing
+skinparam backgroundColor #f8f9fa
+skinparam defaultFontSize 10
+skinparam activity {
+  BorderColor #1a3764
+  BackgroundColor #eef4ff
+  DiamondBorderColor #d6b656
+  DiamondBackgroundColor #fff2cc
+}
+
+|Tenant|
+start
+:View invoices;
+:Pick invoice to pay;
+:Choose payment method;
+
+if (Cash?) then (Yes)
+  :Pay landlord in cash;
+  |Landlord|
+  :Confirm receipt;
+  |Billing Engine|
+  :Mark as paid;
+else (No)
+  |Billing Engine|
+  :Start transaction;
+  :Build secure payload;
+  :Send to gateway;
+  |Payment Gateway|
+  :Process payment;
+  if (OK?) then (No)
+    |Billing Engine|
+    :Log failure;
+    |Tenant|
+    :Retry;
+    stop
+  else (Yes)
+    |Payment Gateway|
+    :Return receipt;
+    |Billing Engine|
+    :Mark as paid;
+  endif
+endif
+
+fork
+  :Generate PDF receipt;
+fork again
+  :Update ledger;
+fork again
+  :Notify both parties;
+end fork
+
+|Tenant|
+:Download receipt;
+stop
+@enduml

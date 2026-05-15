@@ -1,0 +1,67 @@
+@startuml
+' iReside - Walk-in Tenant Application
+skinparam backgroundColor #f8f9fa
+skinparam defaultFontSize 10
+skinparam activity {
+  BorderColor #1a3764
+  BackgroundColor #eef4ff
+  DiamondBorderColor #d6b656
+  DiamondBackgroundColor #fff2cc
+}
+
+|Landlord|
+start
+:Open unit showcase;
+:Capture applicant data;
+:Upload documents;
+
+|iReside System|
+:Validate data & docs;
+
+if (Complete?) then (No)
+  |Landlord|
+  :Show errors;
+  :Fix & retry;
+  stop
+else (Yes)
+  :Save as pending;
+endif
+
+fork
+  :Background check;
+fork again
+  :Verify documents;
+fork again
+  :Check duplicates;
+end fork
+
+if (Passed?) then (Yes)
+  :Mark approved;
+else (No)
+  |Landlord|
+  :Review issues;
+  if (Approve?) then (Yes)
+    |iReside System|
+    :Mark approved;
+  else (No)
+    |iReside System|
+    :Mark rejected;
+    stop
+  endif
+endif
+
+fork
+  :Create tenant account;
+fork again
+  :Generate credentials;
+fork again
+  :Prepare lease draft;
+end fork
+
+:Send credentials;
+
+|Tenant|
+:Receive access;
+:Log in to portal;
+stop
+@enduml
