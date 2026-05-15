@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -305,16 +305,13 @@ export const DOCS_NAV: NavSection[] = [
 
 export function DocsSidebar() {
   const pathname = usePathname();
-  const [isManualCollapse, setIsManualCollapse] = useState(false);
-
-  // Reset manual collapse when navigating to a new page
-  useEffect(() => {
-    setIsManualCollapse(false);
-  }, [pathname]);
+  const [isManualCollapse, setIsManualCollapse] = useState<Record<string, boolean>>({});
 
   const toggleCollapse = () => {
-    setIsManualCollapse((prev) => !prev);
+    setIsManualCollapse((prev) => ({ ...prev, [pathname]: !prev[pathname] }));
   };
+
+  const isCollapsed = isManualCollapse[pathname] ?? false;
 
   return (
     <aside className="fixed left-0 top-16 z-30 hidden h-[calc(100vh-4rem)] w-64 shrink-0 overflow-y-auto border-r border-divider bg-surface-0/50 backdrop-blur-md lg:block custom-scrollbar-premium">
@@ -328,7 +325,7 @@ export function DocsSidebar() {
               {section.items.map((item) => {
                 const isActive = pathname === item.href;
                 const Icon = item.icon || ChevronRight;
-                const isExpanded = isActive && !isManualCollapse;
+                const isExpanded = isActive && !isCollapsed;
 
                 return (
                   <div key={item.href} className="flex flex-col gap-1">

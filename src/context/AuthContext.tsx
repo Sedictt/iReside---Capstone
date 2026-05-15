@@ -220,6 +220,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         const applyAuthedState = async (session: Session) => {
+            if (cancelled) return
             const resolved = await resolveUserFromSession(session)
             if (cancelled) return
 
@@ -229,6 +230,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
 
             const currentUser = resolved.user
+            if (cancelled) return
             const fetchedProfile = await fetchProfile(currentUser.id)
             if (cancelled) return
 
@@ -243,13 +245,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         const boot = async () => {
-            // 2-second timeout to prevent perpetual loading
+            // 10-second timeout to prevent perpetual loading (generous to cover
+            // @supabase/gotrue-js cross-tab lock recovery which can take ~5s)
             timeoutId = setTimeout(() => {
                 if (!cancelled) {
-                    console.warn('[AuthProvider] Boot timeout - clearing auth state to prevent perpetual loading')
+                    console.warn('[α3] Boot timeout - clearing auth state to prevent perpetual loading')
                     clearAuthState()
                 }
-            }, 2000)
+            }, 10000)
 
             try {
                 // 1. Get the session (fast, from cookie/local-storage)

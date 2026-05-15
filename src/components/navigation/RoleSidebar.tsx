@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import { 
     ChevronDown, 
@@ -52,7 +52,7 @@ interface RoleSidebarProps {
 }
 
 function LogoLink({ children }: { children: React.ReactNode }) {
-    const router = useRouter();
+    const { push } = useRouter();
     const { user, loading } = useAuth();
 
     const getRedirectPath = () => {
@@ -70,13 +70,13 @@ function LogoLink({ children }: { children: React.ReactNode }) {
         }
     };
 
-    const handleClick = (e: React.MouseEvent) => {
+    const handleLogoNavigation = (e: React.MouseEvent) => {
         e.preventDefault();
-        router.push(getRedirectPath());
+        push(getRedirectPath());
     };
 
     return (
-        <a href={getRedirectPath()} onClick={handleClick} className="cursor-pointer">
+        <a href={getRedirectPath()} onClick={handleLogoNavigation} className="cursor-pointer">
             {children}
         </a>
     );
@@ -95,12 +95,7 @@ export function RoleSidebar({
     showCollapseToggle = false,
 }: RoleSidebarProps) {
     const pathname = usePathname();
-    const [mounted, setMounted] = useState(false);
     const [expandedOverrides, setExpandedOverrides] = useState<Record<string, boolean>>({});
-
-    useEffect(() => {
-        setMounted(true);
-    }, []);
 
     const isItemActive = (href: string) => pathname === href || pathname?.startsWith(`${href}/`);
     const getSectionId = (category: string) => `sidebar-section-${category.replace(/\s+/g, "-").toLowerCase()}`;
@@ -237,7 +232,7 @@ export function RoleSidebar({
 
                 <div className="space-y-4">
                     {sections.map((section) => {
-                        const hasActiveItem = mounted && section.items.some((item) => isItemActive(item.href));
+                        const hasActiveItem = section.items.some((item) => isItemActive(item.href));
                         const isCollapsible = section.collapsible ?? !section.hideHeading;
                         const fallbackExpanded = section.defaultExpanded ?? hasActiveItem;
                         const isExpanded = !isCollapsible ? true : (expandedOverrides[section.category] ?? fallbackExpanded);
