@@ -10,7 +10,7 @@ const OTP_LENGTH = 6;
 const RESEND_COOLDOWN = 30;
 
 export default function EmailVerificationScreen() {
-    const { goBack, setRole, screenParams } = useNavigation();
+    const { navigate, goBack, setRole, screenParams } = useNavigation();
     const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
     const [countdown, setCountdown] = useState(RESEND_COOLDOWN);
     const [canResend, setCanResend] = useState(false);
@@ -94,37 +94,76 @@ export default function EmailVerificationScreen() {
     );
 
     // Handle resend
-    const handleResend = () => {
+    const handleResend = async () => {
         if (!canResend) return;
-        setCountdown(RESEND_COOLDOWN);
-        setCanResend(false);
-        setOtp(Array(OTP_LENGTH).fill(""));
-        inputRefs.current[0]?.focus();
+        
+        setIsLoading(true);
+        setError(null);
+        try {
+            const response = await fetch("/api/auth/send-otp", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: email }),
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || "Failed to resend code");
+            }
+
+            setCountdown(RESEND_COOLDOWN);
+            setCanResend(false);
+            setOtp(Array(OTP_LENGTH).fill(""));
+            inputRefs.current[0]?.focus();
+            alert("New code sent to your email!");
+        } catch (err: any) {
+            setError(err.message || "Failed to resend code.");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     // Handle verify
     const handleVerify = async () => {
-        const code = otp.join("");
-        if (code.length !== OTP_LENGTH) return;
+        const fullCode = otp.join("");
+        if (fullCode.length !== OTP_LENGTH) return;
 
         setIsLoading(true);
         setError(null);
 
         try {
-            const supabase = createClient();
-            const { data, error: verifyError } = await supabase.auth.verifyOtp({
-                email,
-                token: code,
-                type: 'signup',
+            // Type cast the screenParams to access our custom data
+            const registrationData = screenParams?.registrationData as any;
+
+            const response = await fetch("/api/auth/verify-otp", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ 
+                    email: email, 
+                    code: fullCode,
+                    userData: registrationData 
+                }),
             });
 
-            if (verifyError) throw verifyError;
+            const data = await response.json();
 
-            // Success! Get user role and navigate
-            const userRole = data.user?.user_metadata?.role || "tenant";
-            setRole(userRole as "tenant" | "landlord");
+            if (!response.ok) throw new Error(data.error || "Verification failed");
+
+            // Successful verification! Now sign them in
+            const supabase = createClient();
+            const { error: loginError } = await supabase.auth.signInWithPassword({
+                email: email,
+                password: registrationData?.password,
+            });
+
+            if (loginError) throw loginError;
+
+            // Route to dashboard based on role
+            const role = registrationData?.role || "tenant";
+            navigate(role === "landlord" ? "landlordHome" : "tenantHome");
+
         } catch (err: any) {
-            setError(err.message || "Invalid or expired verification code.");
+            setError(err.message || "Invalid or expired code. Please try again.");
         } finally {
             setIsLoading(false);
         }

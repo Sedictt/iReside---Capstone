@@ -30,78 +30,88 @@ export default function SignUpScreen() {
     const [selectedRole, setSelectedRole] = useState<RoleOption>(null);
     const [agreedToTerms, setAgreedToTerms] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [errors, setErrors] = useState<Record<string, string>>({});
     const [step, setStep] = useState<1 | 2>(1);
 
-    const isFormValid =
-        fullName.trim() &&
-        email.trim() &&
-        password.trim() &&
-        confirmPassword.trim() &&
-        selectedRole &&
-        agreedToTerms;
+    const validateEmail = (email: string) => {
+        return String(email)
+            .toLowerCase()
+            .match(
+                /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+            );
+    };
+
+    const isFormValid = agreedToTerms && selectedRole; // Only disable if checkbox or role is missing
 
     const handleSubmit = async () => {
         if (!isFormValid) return;
         
-        setIsLoading(true);
-        setError(null);
+        const newErrors: Record<string, string> = {};
 
-        if (password !== confirmPassword) {
-            setError("Passwords do not match");
-            setIsLoading(false);
-            return;
+        // 1. Check for empty fields
+        if (!fullName.trim()) newErrors.fullName = "Full name is required.";
+        if (!email.trim()) newErrors.email = "Email is required.";
+        if (!password.trim()) newErrors.password = "Password is required.";
+        if (!confirmPassword.trim()) newErrors.confirmPassword = "Confirm your password.";
+
+        // 2. Check email format (if not empty)
+        if (email.trim() && !validateEmail(email)) {
+            newErrors.email = "Please enter a valid email address.";
         }
 
+        // 3. Check password match (if not empty)
+        if (password.trim() && confirmPassword.trim() && password !== confirmPassword) {
+            newErrors.confirmPassword = "Passwords do not match.";
+        }
+
+        setErrors(newErrors);
+
+        // If there are any validation errors, stop here
+        if (Object.keys(newErrors).length > 0) return;
+
+        setIsLoading(true);
+
         try {
-            const supabase = createClient();
-            const { error: signUpError } = await supabase.auth.signUp({
-                email: email.trim(),
-                password: password,
-                options: {
-                    data: {
-                        full_name: fullName.trim(),
-                        role: selectedRole,
-                    },
-                },
+            // Call our new custom Send OTP API
+            const response = await fetch("/api/auth/send-otp", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: email.trim() }),
             });
 
-            if (signUpError) throw signUpError;
+            const data = await response.json();
 
-            // Navigate to email verification screen
-            navigate("emailVerification", { email: email.trim() });
+            if (!response.ok) {
+                if (data.error?.includes("registered")) {
+                    setErrors({ email: "This email is already registered." });
+                } else {
+                    alert(data.error || "Failed to send code");
+                }
+                setIsLoading(false);
+                return;
+            }
+
+            // Navigate to verification screen with user data for final creation
+            navigate("emailVerification", { 
+                email: email.trim(),
+                registrationData: {
+                    fullName: fullName.trim(),
+                    email: email.trim(),
+                    password: password,
+                    role: selectedRole
+                }
+            });
         } catch (err: any) {
-            setError(err.message || "Something went wrong during sign up.");
+            alert("Something went wrong during sign up.");
         } finally {
             setIsLoading(false);
         }
     };
 
-    const formatError = (msg: string) => {
-        // We hide these specific errors from the global box since they'll show under the inputs
-        if (msg.includes("already registered") || msg.includes("already been registered") || msg === "Passwords do not match") {
-            return null;
-        }
-
-        if (msg.includes("at least one character of each")) {
-            return (
-                <div className={styles.errorList}>
-                    <p>Password must include:</p>
-                    <ul>
-                        <li>At least one lowercase letter</li>
-                        <li>At least one uppercase letter</li>
-                        <li>At least one number</li>
-                        <li>At least one special character</li>
-                    </ul>
-                </div>
-            );
-        }
-        return msg;
-    };
-
     const handleBack = () => {
         if (step === 2) {
             setStep(1);
+            setErrors({}); // Clear errors when going back
         } else {
             goBack();
         }
@@ -169,49 +179,61 @@ export default function SignUpScreen() {
                     {/* Full Name */}
                     <div className={styles.inputGroup}>
                         <label className={styles.inputLabel}>Full Name</label>
-                        <div className={styles.inputWrapper}>
+                        <div className={`${styles.inputWrapper} ${errors.fullName ? styles.inputWrapperError : ""}`}>
                             <User className={styles.inputIcon} />
                             <input
                                 className={styles.input}
                                 type="text"
                                 placeholder="Enter your full name"
                                 value={fullName}
-                                onChange={(e) => setFullName(e.target.value)}
+                                onChange={(e) => {
+                                    setFullName(e.target.value);
+                                    if (errors.fullName) setErrors(prev => ({ ...prev, fullName: "" }));
+                                }}
                                 autoComplete="name"
                             />
                         </div>
+                        {errors.fullName && (
+                            <span className={styles.inlineError}>{errors.fullName}</span>
+                        )}
                     </div>
 
                     {/* Email */}
                     <div className={styles.inputGroup}>
                         <label className={styles.inputLabel}>Email</label>
-                        <div className={`${styles.inputWrapper} ${error?.includes("registered") ? styles.inputWrapperError : ""}`}>
+                        <div className={`${styles.inputWrapper} ${errors.email ? styles.inputWrapperError : ""}`}>
                             <Mail className={styles.inputIcon} />
                             <input
                                 className={styles.input}
                                 type="email"
                                 placeholder="Enter your email"
                                 value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                onChange={(e) => {
+                                    setEmail(e.target.value);
+                                    if (errors.email) setErrors(prev => ({ ...prev, email: "" }));
+                                }}
                                 autoComplete="email"
                             />
                         </div>
-                        {error?.includes("registered") && (
-                            <span className={styles.inlineError}>This email is already registered.</span>
+                        {errors.email && (
+                            <span className={styles.inlineError}>{errors.email}</span>
                         )}
                     </div>
 
                     {/* Password */}
                     <div className={styles.inputGroup}>
                         <label className={styles.inputLabel}>Password</label>
-                        <div className={styles.inputWrapper}>
+                        <div className={`${styles.inputWrapper} ${errors.password ? styles.inputWrapperError : ""}`}>
                             <Lock className={styles.inputIcon} />
                             <input
                                 className={styles.input}
                                 type={showPassword ? "text" : "password"}
                                 placeholder="Create a password"
                                 value={password}
-                                onChange={(e) => setPassword(e.target.value)}
+                                onChange={(e) => {
+                                    setPassword(e.target.value);
+                                    if (errors.password) setErrors(prev => ({ ...prev, password: "" }));
+                                }}
                                 autoComplete="new-password"
                             />
                             <button
@@ -222,19 +244,25 @@ export default function SignUpScreen() {
                                 {showPassword ? <EyeOff /> : <Eye />}
                             </button>
                         </div>
+                        {errors.password && (
+                            <span className={styles.inlineError}>{errors.password}</span>
+                        )}
                     </div>
 
                     {/* Confirm Password */}
                     <div className={styles.inputGroup}>
                         <label className={styles.inputLabel}>Confirm Password</label>
-                        <div className={`${styles.inputWrapper} ${error === "Passwords do not match" ? styles.inputWrapperError : ""}`}>
+                        <div className={`${styles.inputWrapper} ${errors.confirmPassword ? styles.inputWrapperError : ""}`}>
                             <Lock className={styles.inputIcon} />
                             <input
                                 className={styles.input}
                                 type={showConfirm ? "text" : "password"}
                                 placeholder="Confirm your password"
                                 value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                onChange={(e) => {
+                                    setConfirmPassword(e.target.value);
+                                    if (errors.confirmPassword) setErrors(prev => ({ ...prev, confirmPassword: "" }));
+                                }}
                                 autoComplete="new-password"
                             />
                             <button
@@ -245,15 +273,13 @@ export default function SignUpScreen() {
                                 {showConfirm ? <EyeOff /> : <Eye />}
                             </button>
                         </div>
-                        {error === "Passwords do not match" && (
-                            <span className={styles.inlineError}>Passwords do not match.</span>
+                        {errors.confirmPassword && (
+                            <span className={styles.inlineError}>{errors.confirmPassword}</span>
                         )}
                     </div>
 
                     {/* Error Message */}
-                    {error && formatError(error) && (
-                        <div className={styles.errorMessage}>{formatError(error)}</div>
-                    )}
+                    {/* (Global box removed as requested) */}
 
                     {/* Terms */}
                     <div className={styles.termsRow}>
