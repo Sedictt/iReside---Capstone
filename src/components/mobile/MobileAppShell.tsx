@@ -6,6 +6,7 @@ import WelcomeScreen from "./screens/WelcomeScreen";
 import LoginScreen from "./screens/LoginScreen";
 import SignUpScreen from "./screens/SignUpScreen";
 import EmailVerificationScreen from "./screens/EmailVerificationScreen";
+import RoleSelectionScreen from "./screens/RoleSelectionScreen";
 import TenantHomeScreen from "./screens/TenantHomeScreen";
 import PropertyDetailScreen from "./screens/PropertyDetailScreen";
 import SavedPropertiesScreen from "./screens/SavedPropertiesScreen";
@@ -96,6 +97,7 @@ const SCREENS_WITHOUT_TABS: ScreenName[] = [
     "login",
     "signup",
     "emailVerification",
+    "roleSelection",
     "propertyDetail",
     "applicationForm",
     "applicationDetail",
@@ -204,6 +206,7 @@ function ScreenRouter() {
         login: LoginScreen,
         signup: SignUpScreen,
         emailVerification: EmailVerificationScreen,
+        roleSelection: RoleSelectionScreen,
         tenantHome: TenantHomeScreen,
         propertyDetail: PropertyDetailScreen,
         savedProperties: SavedPropertiesScreen,

@@ -11,6 +11,7 @@ export type ScreenName =
     | "login"
     | "signup"
     | "emailVerification"
+    | "roleSelection"
     // Tenant Screens
     | "tenantHome"
     | "propertyDetail"

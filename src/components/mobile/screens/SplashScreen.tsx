@@ -28,11 +28,11 @@ export default function SplashScreen() {
                         navigate("tenantHome");
                     }
                 } else {
-                    navigate("login");
+                    navigate("roleSelection");
                 }
             } catch (error) {
                 console.error("Session check failed", error);
-                navigate("login");
+                navigate("roleSelection");
             }
         };
 
