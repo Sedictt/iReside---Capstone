@@ -211,13 +211,6 @@ export default function LoginScreen() {
                 </p>
             </div>
 
-
-            {/* Test Accounts Help Text */}
-            <div className={styles.testAccountsHint}>
-                <b>Test Accounts (Pass: password)</b>
-                <p>tenant@ireside.com</p>
-                <p>landlord@ireside.com</p>
-            </div>
         </div>
     );
 }

@@ -9,6 +9,11 @@
     background: #0a0a0a;
     padding: 0 28px;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.container::-webkit-scrollbar {
+    display: none;
 }
 
 /* ─── Top Bar ──────────────────────────────────────────── */
