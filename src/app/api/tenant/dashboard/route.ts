@@ -122,6 +122,55 @@ const buildUtilities = (
         .filter((item) => Number.isFinite(item.amount));
 };
 
+type QuickActionItem = {
+    id: string;
+    iconName: string;
+    label: string;
+    href: string;
+    colorClass: string;
+    bgClass: string;
+};
+
+type DashboardResponse = {
+    userName: string;
+    lease: LeaseSummary | null;
+    nextPayment: NextPayment | null;
+    overduePayments: OverduePayment[];
+    utilities: UtilityItem[];
+    announcement: Announcement | null;
+    recentActivity: ActivityItem[];
+    paymentHistory: PaymentHistoryItem[];
+    upcomingMonths: UpcomingMonth[];
+    quickActions: QuickActionItem[];
+};
+
+const BUILT_IN_QUICK_ACTIONS: QuickActionItem[] = [
+    {
+        id: "request-repair",
+        iconName: "Wrench",
+        label: "Request Repair",
+        href: "/tenant/maintenance/new",
+        colorClass: "text-orange-500",
+        bgClass: "bg-orange-500/10",
+    },
+    {
+        id: "messages",
+        iconName: "MessageSquare",
+        label: "Messages",
+        href: "/tenant/messages",
+        colorClass: "text-emerald-500",
+        bgClass: "bg-emerald-500/10",
+    },
+    {
+        id: "unit-view",
+        iconName: "Home",
+        label: "Unit View",
+        href: "/tenant/unit-map",
+        colorClass: "text-blue-500",
+        bgClass: "bg-blue-500/10",
+    },
+];
+
 export async function GET() {
     const { user, supabase } = await requireUser();
 
@@ -130,6 +179,7 @@ export async function GET() {
 
     // Parallelize all data fetching!
     const [
+        { data: profileRows, error: profileError },
         { data: leaseRows, error: leaseError },
         { data: nextPayments, error: nextPaymentError },
         { data: overdueRows, error: overdueError },
@@ -139,6 +189,11 @@ export async function GET() {
         { data: paymentHistoryRows, error: paymentHistoryError },
         { data: upcomingPayments, error: upcomingPaymentsError }
     ] = await Promise.all([
+        supabase
+            .from("profiles")
+            .select("full_name")
+            .eq("id", user.id)
+            .maybeSingle(),
         supabase
             .from("leases")
             .select(`
@@ -202,6 +257,11 @@ export async function GET() {
             .order("billing_cycle", { ascending: true })
             .limit(3)
     ]);
+
+    // Derive user name: prefer profile.full_name, fall back to user_metadata, then email
+    const profileName = !profileError && profileRows ? (profileRows as { full_name: string | null }).full_name : null;
+    const metadataName = user.user_metadata?.full_name as string | undefined;
+    const userName = profileName ?? metadataName ?? user.email?.split("@")[0] ?? "Resident";
 
     if (leaseError || nextPaymentError || overdueError || paymentHistoryError) {
         return NextResponse.json({ error: "Failed to load dashboard data." }, { status: 500 });
@@ -340,7 +400,8 @@ export async function GET() {
         });
     }
 
-    return NextResponse.json({
+    const response: DashboardResponse = {
+        userName,
         lease: leaseSummary,
         nextPayment,
         overduePayments,
@@ -349,5 +410,8 @@ export async function GET() {
         recentActivity,
         paymentHistory,
         upcomingMonths,
-    });
+        quickActions: BUILT_IN_QUICK_ACTIONS,
+    };
+
+    return NextResponse.json(response);
 }

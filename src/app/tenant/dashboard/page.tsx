@@ -34,6 +34,7 @@ import LeaseRenewalReminder from "@/components/tenant/LeaseRenewalReminder";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
 
 type DashboardData = {
+    userName: string;
     lease: {
         id: string;
         status: string;
@@ -100,6 +101,21 @@ type DashboardData = {
         isForecast: boolean;
         status: string | null;
     }>;
+    quickActions: Array<{
+        id: string;
+        iconName: string;
+        label: string;
+        href: string;
+        colorClass: string;
+        bgClass: string;
+    }>;
+};
+
+// Map icon name strings from API to actual Lucide components
+const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+    Wrench,
+    MessageSquare,
+    Home,
 };
 
 const formatCurrency = (value: number, decimals = 0) => {
@@ -218,6 +234,8 @@ export default function TenantDashboard() {
     const lease = dashboardData?.lease ?? null;
     const paymentHistory = dashboardData?.paymentHistory ?? [];
     const upcomingMonths = dashboardData?.upcomingMonths ?? [];
+    const userName = dashboardData?.userName ?? "Resident";
+    const quickActions = dashboardData?.quickActions ?? [];
 
     const isInitialLoading = dashboardLoading && !dashboardData;
     const nextPaymentAmount = nextPayment?.amount ?? 0;
@@ -389,7 +407,7 @@ export default function TenantDashboard() {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2" data-tour-id="tour-dashboard-overview">
                     <div>
                         <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">
-                            Welcome back, {lease?.landlordName ? "Tenant" : "Resident"}
+                            Welcome back, {userName}
                         </h1>
                         <p className="mt-2 text-muted-foreground">
                             {lease ? `Everything is looking good at ${lease.propertyName}.` : "Welcome to your iReside dashboard."}
@@ -565,22 +583,21 @@ export default function TenantDashboard() {
                                 <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Quick Services</h3>
                             </div>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                {[
-                                    { icon: Wrench, label: "Request Repair", href: "/tenant/maintenance/new", color: "text-orange-500", bg: "bg-orange-500/10" },
-                                    { icon: MessageSquare, label: "Messages", href: "/tenant/messages", color: "text-emerald-500", bg: "bg-emerald-500/10" },
-                                    { icon: Home, label: "Unit View", href: "/tenant/unit-map", color: "text-blue-500", bg: "bg-blue-500/10" },
-                                ].map((quickActionItem) => (
-                                    <Link
-                                        key={quickActionItem.href}
-                                        href={quickActionItem.href}
-                                        className="bg-card/50 border border-border hover:border-primary/40 rounded-3xl p-6 flex flex-col items-center justify-center gap-4 transition-all hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 group backdrop-blur-sm"
-                                    >
-                                        <div className={cn("size-14 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110", quickActionItem.bg, quickActionItem.color)}>
-                                            <quickActionItem.icon className="size-7" />
-                                        </div>
-                                        <span className="text-xs font-black text-center group-hover:text-primary transition-colors uppercase tracking-widest">{quickActionItem.label}</span>
-                                    </Link>
-                                ))}
+                                {quickActions.map((quickActionItem) => {
+                                    const IconComponent = ICON_MAP[quickActionItem.iconName];
+                                    return (
+                                        <Link
+                                            key={quickActionItem.id}
+                                            href={quickActionItem.href}
+                                            className="bg-card/50 border border-border hover:border-primary/40 rounded-3xl p-6 flex flex-col items-center justify-center gap-4 transition-all hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 group backdrop-blur-sm"
+                                        >
+                                            <div className={cn("size-14 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110", quickActionItem.bgClass, quickActionItem.colorClass)}>
+                                                {IconComponent && <IconComponent className="size-7" />}
+                                            </div>
+                                            <span className="text-xs font-black text-center group-hover:text-primary transition-colors uppercase tracking-widest">{quickActionItem.label}</span>
+                                        </Link>
+                                    );
+                                })}
                                 <MoveOutRequest variant="quickAction" />
                             </div>
                         </div>
