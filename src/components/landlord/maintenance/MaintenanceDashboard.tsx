@@ -307,13 +307,13 @@ export function MaintenanceDashboard() {
                             </div>
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-3">
-                            <div className="flex items-center gap-2 bg-background border border-border rounded-xl px-3 py-1.5 shadow-sm">
+                        <div className="flex flex-wrap items-center gap-3 lg:justify-end">
+                            <div className="flex items-center gap-2 bg-background/50 border border-border/50 rounded-xl px-3 py-1.5 shadow-sm">
                                 <Filter className="size-3.5 text-muted-foreground" />
                                 <select 
                                     value={filter}
                                     onChange={(e) => setFilter(e.target.value as any)}
-                                    className="bg-transparent text-xs font-black text-foreground outline-none cursor-pointer min-w-[100px]"
+                                    className="bg-transparent text-[10px] font-black uppercase tracking-widest text-foreground outline-none cursor-pointer min-w-[100px]"
                                 >
                                     <option value="All">All Status</option>
                                     <option value="Pending">Pending</option>
@@ -323,12 +323,12 @@ export function MaintenanceDashboard() {
                                 </select>
                             </div>
 
-                            <div className="flex items-center gap-2 bg-background border border-border rounded-xl px-3 py-1.5 shadow-sm">
+                            <div className="flex items-center gap-2 bg-background/50 border border-border/50 rounded-xl px-3 py-1.5 shadow-sm">
                                 <AlertTriangle className="size-3.5 text-muted-foreground" />
                                 <select 
                                     value={priorityFilter}
                                     onChange={(e) => setPriorityFilter(e.target.value as any)}
-                                    className="bg-transparent text-xs font-black text-foreground outline-none cursor-pointer min-w-[100px]"
+                                    className="bg-transparent text-[10px] font-black uppercase tracking-widest text-foreground outline-none cursor-pointer min-w-[100px]"
                                 >
                                     <option value="All">All Priority</option>
                                     <option value="Critical">Critical Only</option>
@@ -338,14 +338,14 @@ export function MaintenanceDashboard() {
                                 </select>
                             </div>
 
-                            <div className="flex items-center gap-2 bg-background border border-border rounded-xl px-3 py-1.5 shadow-sm">
+                            <div className="flex items-center gap-2 bg-background/50 border border-border/50 rounded-xl px-3 py-1.5 shadow-sm">
                                 <ArrowUpDown className="size-3.5 text-muted-foreground" />
                                 <select 
                                     value={sortBy}
                                     onChange={(e) => setSortBy(e.target.value as any)}
-                                    className="bg-transparent text-xs font-black text-foreground outline-none cursor-pointer min-w-[150px]"
+                                    className="bg-transparent text-[10px] font-black uppercase tracking-widest text-foreground outline-none cursor-pointer min-w-[150px]"
                                 >
-                                    <option value="priority-desc">Smart Triage (Priority)</option>
+                                    <option value="priority-desc">Smart Triage</option>
                                     <option value="newest">Newest First</option>
                                     <option value="oldest">Oldest First</option>
                                     <option value="priority-asc">Priority (L-H)</option>
@@ -353,7 +353,7 @@ export function MaintenanceDashboard() {
                             </div>
 
                             {!isMobile && (
-                                <div className="flex items-center">
+                                <div className="flex items-center ml-2">
                                     <ViewToggle view={view} onChange={setView} />
                                 </div>
                             )}
@@ -370,7 +370,7 @@ export function MaintenanceDashboard() {
                                 : "flex flex-col gap-3"
                         )}>
                             {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                                <MaintenanceCardSkeleton key={`maintenance-skeleton-${i}`} />
+                                <MaintenanceCardSkeleton key={`maintenance-skeleton-${i}`} view={effectiveView} />
                             ))}
                         </div>
                     ) : error ? (
@@ -384,11 +384,19 @@ export function MaintenanceDashboard() {
                                 : "flex flex-col gap-3"
                         )}>
                             {sortedRequests.map((request) => (
-                                <MaintenanceCard
-                                    key={request.id}
-                                    request={request}
-                                    onClick={() => setSelectedRequest(request)}
-                                />
+                                effectiveView === "grid" ? (
+                                    <MaintenanceCard
+                                        key={request.id}
+                                        request={request}
+                                        onClick={() => setSelectedRequest(request)}
+                                    />
+                                ) : (
+                                    <MaintenanceListRow
+                                        key={request.id}
+                                        request={request}
+                                        onClick={() => setSelectedRequest(request)}
+                                    />
+                                )
                             ))}
 
                             {filteredRequests.length === 0 && (
@@ -431,7 +439,7 @@ function MaintenanceCard({ request, onClick }: { request: MaintenanceRequest, on
     return (
         <div
             onClick={onClick}
-            className="group relative flex flex-col bg-card border border-border rounded-3xl overflow-hidden hover:border-primary/30 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-xl"
+            className="group relative flex flex-col bg-card border border-border rounded-3xl overflow-hidden hover:border-primary/30 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-xl h-full"
         >
             {/* Top Image Preview Area */}
             <div className="relative h-48 w-full bg-muted border-b border-border overflow-hidden shrink-0">
@@ -488,7 +496,7 @@ function MaintenanceCard({ request, onClick }: { request: MaintenanceRequest, on
                 </h3>
 
                 {/* Property & Unit */}
-                <div className="space-y-2 mb-6">
+                <div className="space-y-2 mb-6 mt-auto">
                     <div className="flex items-center gap-2 text-muted-foreground">
                         <div className="p-1.5 bg-muted rounded-lg">
                             <Home className="size-3.5" />
@@ -508,7 +516,7 @@ function MaintenanceCard({ request, onClick }: { request: MaintenanceRequest, on
                 </div>
 
                 {/* Footer Info */}
-                <div className="flex items-center justify-between gap-4 shrink-0 pt-5 border-t border-border/50 mt-auto">
+                <div className="flex items-center justify-between gap-4 shrink-0 pt-5 border-t border-border/50">
                     <div className="flex -space-x-2 overflow-hidden">
                         <div
                             className="inline-block relative size-8 rounded-full ring-2 ring-background flex items-center justify-center text-[10px] font-black text-white overflow-hidden shrink-0"
@@ -543,6 +551,73 @@ function MaintenanceCard({ request, onClick }: { request: MaintenanceRequest, on
                     </button>
                 </div>
             </div>
+        </div>
+    );
+}
+
+function MaintenanceListRow({ request, onClick }: { request: MaintenanceRequest, onClick?: () => void }) {
+    const isCritical = request.priority === "Critical";
+    const isPending = request.status === "Pending";
+
+    return (
+        <div
+            onClick={onClick}
+            className="group relative flex items-center bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/30 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md p-4 gap-6"
+        >
+            {/* Left Section: Tenant & ID */}
+            <div className="flex items-center gap-4 shrink-0 w-[180px]">
+                <div
+                    className="relative size-10 rounded-full flex items-center justify-center text-xs font-black text-white overflow-hidden shrink-0 shadow-sm border border-white/10"
+                    style={{ backgroundColor: request.tenantAvatarBgColor || '#6d9838' }}
+                >
+                    {request.tenantAvatar ? (
+                        <Image className="object-cover" src={request.tenantAvatar} alt={request.tenant} fill />
+                    ) : (
+                        request.tenant.split(' ').map(n => n[0]).join('')
+                    )}
+                </div>
+                <div className="flex flex-col min-w-0">
+                    <span className="text-sm font-black text-foreground truncate group-hover:text-primary transition-colors">{request.tenant}</span>
+                    <span className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-widest">#{request.id.split('-')[0]}</span>
+                </div>
+            </div>
+
+            {/* Middle Section: Request Details */}
+            <div className="flex-1 min-w-0">
+                <h3 className="text-sm font-black text-foreground line-clamp-1 mb-1 leading-none tracking-tight">
+                    {request.title}
+                </h3>
+                <div className="flex items-center gap-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                    <div className="flex items-center gap-1.5 truncate max-w-[200px]">
+                        <Home className="size-3 text-muted-foreground/40" />
+                        {request.property}
+                    </div>
+                    <div className="flex items-center gap-1.5 text-primary/70 whitespace-nowrap">
+                        <Zap className="size-3 text-primary/30" />
+                        Unit {request.unit}
+                    </div>
+                </div>
+            </div>
+
+            {/* Right Section: Status & Priority */}
+            <div className="flex items-center gap-3 shrink-0 md:min-w-[400px] justify-end">
+                <div className="flex items-center gap-1 text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest hidden lg:flex mr-2">
+                    <Clock className="size-3" />
+                    {request.reportedAt}
+                </div>
+                
+                <PriorityBadge priority={request.priority} />
+                <StatusBadge status={request.status} tenantRepairStatus={request.tenantRepairStatus} />
+                
+                <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-all ml-2">
+                    <ArrowRight className="size-4" />
+                </div>
+            </div>
+
+            {/* Critical Indicator */}
+            {isCritical && isPending && (
+                <div className="absolute inset-y-0 left-0 w-1 bg-red-500 animate-pulse" />
+            )}
         </div>
     );
 }
@@ -602,7 +677,25 @@ function StatusBadge({ status, tenantRepairStatus }: { status: Status, tenantRep
     );
 }
 
-function MaintenanceCardSkeleton() {
+function MaintenanceCardSkeleton({ view }: { view?: string }) {
+    if (view === "list") {
+        return (
+            <div className="relative flex items-center bg-card/60 border border-border rounded-2xl p-4 gap-6 h-20 overflow-hidden shadow-sm">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-muted/20 to-transparent -translate-x-full animate-shimmer" />
+                <div className="size-10 bg-muted rounded-full shrink-0" />
+                <div className="w-32 h-4 bg-muted rounded" />
+                <div className="flex-1 space-y-2">
+                    <div className="h-4 w-1/2 bg-muted rounded" />
+                    <div className="h-3 w-1/3 bg-muted rounded" />
+                </div>
+                <div className="hidden md:flex gap-3">
+                    <div className="h-7 w-24 bg-muted rounded-lg" />
+                    <div className="h-7 w-24 bg-muted rounded-lg" />
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="relative flex flex-col bg-card border border-border rounded-3xl overflow-hidden shadow-sm h-[420px]">
             {/* Neutral Shimmer Layer */}

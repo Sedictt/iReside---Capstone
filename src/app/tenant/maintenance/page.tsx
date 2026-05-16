@@ -303,29 +303,32 @@ export default function TenantMaintenancePage() {
             </div>
 
 
-            {/* Filters */}
-            <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2 no-scrollbar">
-                {statusTabs.map((t) => (
-                    <button
-                        key={t}
-                        onClick={() => setFilter(t)}
-                        className={cn(
-                            "px-4 py-2 rounded-xl text-sm font-black transition-all whitespace-nowrap border",
-                            filter === t
-                                ? "bg-primary text-primary-foreground border-primary shadow-md"
-                                : "bg-card border-border text-muted-foreground hover:border-primary/30"
-                        )}
-                    >
-                        {t}
-                    </button>
-                ))}
-            </div>
-
-            {!isMobile && (
-                <div className="flex justify-end mb-4">
-                    <ViewToggle view={view} onChange={setView} />
+            {/* Controls Bar */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+                {/* Filters */}
+                <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar w-full sm:w-auto">
+                    {statusTabs.map((t) => (
+                        <button
+                            key={t}
+                            onClick={() => setFilter(t)}
+                            className={cn(
+                                "px-4 py-2 rounded-xl text-xs font-black transition-all whitespace-nowrap border uppercase tracking-widest",
+                                filter === t
+                                    ? "bg-primary text-primary-foreground border-primary shadow-md"
+                                    : "bg-card border-border text-muted-foreground hover:border-primary/30"
+                            )}
+                        >
+                            {t}
+                        </button>
+                    ))}
                 </div>
-            )}
+
+                {!isMobile && (
+                    <div className="shrink-0">
+                        <ViewToggle view={view} onChange={setView} />
+                    </div>
+                )}
+            </div>
 
             {loading ? (
                 <div className={cn(
@@ -334,7 +337,7 @@ export default function TenantMaintenancePage() {
                         : "flex flex-col gap-3"
                 )}>
                     {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                        <MaintenanceCardSkeleton key={`maintenance-skeleton-${i}`} />
+                        <MaintenanceCardSkeleton key={`maintenance-skeleton-${i}`} view={effectiveView} />
                     ))}
                 </div>
             ) : error ? (
@@ -371,11 +374,19 @@ export default function TenantMaintenancePage() {
                         : "flex flex-col gap-3"
                 )}>
                     {filteredRequests.map((request) => (
-                        <TenantMaintenanceCard
-                            key={request.id}
-                            request={request}
-                            onClick={() => setSelectedRequest(request)}
-                        />
+                        effectiveView === "grid" ? (
+                            <TenantMaintenanceCard
+                                key={request.id}
+                                request={request}
+                                onClick={() => setSelectedRequest(request)}
+                            />
+                        ) : (
+                            <TenantMaintenanceListRow
+                                key={request.id}
+                                request={request}
+                                onClick={() => setSelectedRequest(request)}
+                            />
+                        )
                     ))}
                 </div>
             )}
@@ -397,7 +408,7 @@ function TenantMaintenanceCard({ request, onClick }: { request: MaintenanceReque
     return (
         <div
             onClick={onClick}
-            className="group relative flex flex-col bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/20 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-lg"
+            className="group relative flex flex-col bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/20 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-lg h-full"
         >
             {/* Top Image Preview Area */}
             <div className="relative h-44 w-full bg-muted border-b border-border overflow-hidden shrink-0">
@@ -443,7 +454,7 @@ function TenantMaintenanceCard({ request, onClick }: { request: MaintenanceReque
             )}
 
             {/* Content Area */}
-            <div className="p-4 flex flex-col flex-1 bg-gradient-to-b from-card via-card to-muted/5 pb-2">
+            <div className="p-4 flex flex-col flex-1 bg-gradient-to-b from-card via-card to-muted/5">
                 {/* Header & Meta */}
                 <div className="flex items-center justify-between mb-2 text-[10px] font-black text-muted-foreground/60 tracking-wider uppercase shrink-0">
                     <span className="truncate max-w-[120px]">ID: {request.id.split('-')[0]}...</span>
@@ -451,13 +462,13 @@ function TenantMaintenanceCard({ request, onClick }: { request: MaintenanceReque
 
                 {/* Title */}
                 <div className="mb-4 shrink-0">
-                    <h3 className="text-base font-black text-foreground group-hover:text-primary transition-colors line-clamp-1 leading-tight tracking-tight">
+                    <h3 className="text-base font-black text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-tight tracking-tight">
                         {request.title}
                     </h3>
                 </div>
 
                 {/* Property & Unit */}
-                <div className="flex flex-col gap-2 mb-4 shrink-0">
+                <div className="flex flex-col gap-2 mb-4 shrink-0 mt-auto">
                     <div className="flex items-center gap-1.5 text-muted-foreground">
                         <Home className="size-3 shrink-0" />
                         <span className="text-[10px] font-black uppercase tracking-widest truncate">
@@ -486,11 +497,8 @@ function TenantMaintenanceCard({ request, onClick }: { request: MaintenanceReque
                     </div>
                 )}
 
-                {/* Spacer to push footer down */}
-                <div className="flex-1 min-h-[12px]" />
-
                 {/* Footer Info */}
-                <div className="flex items-center justify-between gap-4 shrink-0 pt-4 border-t border-border/50 mt-auto">
+                <div className="flex items-center justify-between gap-4 shrink-0 pt-4 border-t border-border/50 mt-4">
                     <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 min-w-0">
                         <Clock className="size-3.5 shrink-0" />
                         <span className="truncate">{request.reportedAt}</span>
@@ -511,6 +519,91 @@ function TenantMaintenanceCard({ request, onClick }: { request: MaintenanceReque
             {/* Pulsing effect for crucial items */}
             {isCritical && isPending && (
                 <div className="absolute inset-0 rounded-2xl ring-2 ring-red-500/20 ring-offset-2 ring-offset-background animate-pulse pointer-events-none" />
+            )}
+        </div>
+    );
+}
+
+function TenantMaintenanceListRow({ request, onClick }: { request: MaintenanceRequest, onClick?: () => void }) {
+    const isCritical = request.priority === "Critical";
+    const isPending = request.status === "Pending";
+
+    return (
+        <div
+            onClick={onClick}
+            className="group relative flex items-center bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/20 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md p-3 gap-4"
+        >
+            {/* Thumbnail */}
+            <div className="relative size-20 rounded-xl bg-muted border border-border overflow-hidden shrink-0">
+                {request.images && request.images.length > 0 ? (
+                    <Image
+                        src={request.images[0]}
+                        alt={request.title}
+                        fill
+                        className="object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                        <Wrench className="size-6 text-muted-foreground/30" />
+                    </div>
+                )}
+                {isCritical && isPending && (
+                    <div className="absolute inset-0 bg-red-500/10 animate-pulse" />
+                )}
+            </div>
+
+            {/* Content Area */}
+            <div className="flex-1 flex flex-col md:flex-row md:items-center gap-4 min-w-0">
+                {/* Info Column */}
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                        <h3 className="text-sm font-black text-foreground group-hover:text-primary transition-colors truncate leading-tight">
+                            {request.title}
+                        </h3>
+                        <span className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest hidden sm:inline">#{request.id.split('-')[0]}</span>
+                    </div>
+                    
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] font-black text-muted-foreground tracking-widest uppercase">
+                        <div className="flex items-center gap-1">
+                            <Home className="size-3 shrink-0" />
+                            <span className="truncate max-w-[150px]">{request.property}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-primary/70">
+                            <Zap className="size-3 shrink-0" />
+                            <span>{request.unit}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Status Column */}
+                <div className="flex flex-wrap items-center gap-2 shrink-0 md:min-w-[320px] md:justify-end">
+                    {request.photoRequested && request.status === "In Progress" && (!request.tenantProvidedPhotos || request.tenantProvidedPhotos.length === 0) && (
+                        <div className="flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-lg">
+                            <div className="size-1 rounded-full bg-amber-500 animate-pulse" />
+                            <span className="text-[9px] font-black text-amber-700 dark:text-amber-400 uppercase tracking-tighter">Photo Needed</span>
+                        </div>
+                    )}
+                    
+                    <PriorityBadge priority={request.priority} />
+                    
+                    <StatusBadge 
+                        status={request.status} 
+                        tenantRepairStatus={request.tenantRepairStatus}
+                        isSelfRepair={request.selfRepairRequested && request.selfRepairDecision === "approved"}
+                    />
+
+                    <div className="hidden lg:flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-2">
+                        <Clock className="size-3" />
+                        {request.reportedAt}
+                    </div>
+
+                    <ArrowRight className="size-4 text-muted-foreground/40 group-hover:text-primary group-hover:translate-x-1 transition-all ml-2" />
+                </div>
+            </div>
+
+            {/* Glowing border for critical items */}
+            {isCritical && isPending && (
+                <div className="absolute inset-y-0 left-0 w-1 bg-red-500 z-10" />
             )}
         </div>
     );
@@ -569,7 +662,24 @@ function StatusBadge({ status, tenantRepairStatus, isSelfRepair }: { status: Mai
     );
 }
 
-function MaintenanceCardSkeleton() {
+function MaintenanceCardSkeleton({ view }: { view?: string }) {
+    if (view === "list") {
+        return (
+            <div className="relative flex items-center bg-card/60 border border-border rounded-2xl p-3 gap-4 h-24 overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-muted/20 to-transparent -translate-x-full animate-shimmer" />
+                <div className="size-20 bg-muted rounded-xl shrink-0" />
+                <div className="flex-1 space-y-3">
+                    <div className="h-4 w-1/3 bg-muted rounded" />
+                    <div className="h-3 w-1/4 bg-muted rounded" />
+                </div>
+                <div className="hidden md:flex gap-2 mr-4">
+                    <div className="h-6 w-20 bg-muted rounded-lg" />
+                    <div className="h-6 w-20 bg-muted rounded-lg" />
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="relative flex flex-col bg-card/60 border border-border rounded-2xl overflow-hidden shadow-sm h-[400px]">
             {/* Neutral Shimmer Layer */}
