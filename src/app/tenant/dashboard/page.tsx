@@ -118,6 +118,14 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
     Home,
 };
 
+// Fallback quick actions — render immediately, never blank.
+// API can override these once it loads, but the grid is always visible.
+const DEFAULT_QUICK_ACTIONS = [
+    { id: "request-repair", iconName: "Wrench", label: "Request Repair", href: "/tenant/maintenance/new", colorClass: "text-orange-500", bgClass: "bg-orange-500/10" },
+    { id: "messages", iconName: "MessageSquare", label: "Messages", href: "/tenant/messages", colorClass: "text-emerald-500", bgClass: "bg-emerald-500/10" },
+    { id: "unit-view", iconName: "Home", label: "Unit View", href: "/tenant/unit-map", colorClass: "text-blue-500", bgClass: "bg-blue-500/10" },
+];
+
 const formatCurrency = (value: number, decimals = 0) => {
     if (!Number.isFinite(value)) return "0";
     return new Intl.NumberFormat("en-PH", {
@@ -235,7 +243,7 @@ export default function TenantDashboard() {
     const paymentHistory = dashboardData?.paymentHistory ?? [];
     const upcomingMonths = dashboardData?.upcomingMonths ?? [];
     const userName = dashboardData?.userName ?? "Resident";
-    const quickActions = dashboardData?.quickActions ?? [];
+    const quickActions = dashboardData?.quickActions ?? DEFAULT_QUICK_ACTIONS;
 
     const isInitialLoading = dashboardLoading && !dashboardData;
     const nextPaymentAmount = nextPayment?.amount ?? 0;
