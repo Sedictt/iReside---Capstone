@@ -16,17 +16,19 @@ import {
   Maximize2, 
   ChevronDown, 
   ChevronUp, 
-  Eye, 
-  EyeOff, 
   CheckCircle2,
   AlertTriangle,
-  Info 
+  Info,
+  ShieldCheck,
+  Loader2,
+  FileCheck
 } from 'lucide-react';
 import { m as motion, AnimatePresence } from "framer-motion";
 import { PDFDocument } from 'pdf-lib';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { playSound } from '@/hooks/useSound';
+import { IResideLoading } from '../IResideLoading';
 
 // Configure worker using the local build
 if (typeof window !== 'undefined') {
@@ -59,6 +61,7 @@ interface DigitalSignerProps {
   hideToolbar?: boolean;
   hideSidebar?: boolean;
   primaryActionLabel?: string;
+  onClose?: () => void;
 }
 
 export function DigitalSigner({ 
@@ -68,7 +71,8 @@ export function DigitalSigner({
   isProcessingInitial = false,
   hideToolbar = false,
   hideSidebar = false,
-  primaryActionLabel = "Finalize"
+  primaryActionLabel = "Finalize",
+  onClose
 }: DigitalSignerProps) {
   const [file, setFile] = useState<File | Blob | null>(null);
   const [pdfPages, setPdfPages] = useState<PdfPage[]>([]);
@@ -77,11 +81,8 @@ export function DigitalSigner({
   const [signatures, setSignatures] = useState<Signature[]>([]);
   const [isPenActive, setIsPenActive] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
-  const [zoom, setZoom] = useState(1);
+  const [zoom, setZoom] = useState(0.6);
   const [penSize, setPenSize] = useState(1.5);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(!hideSidebar);
-  const [isSettingsCollapsed, setIsSettingsCollapsed] = useState(false);
-  const [isToolbarHidden, setIsToolbarHidden] = useState(hideToolbar);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [hasDrawnOnCanvas, setHasDrawnOnCanvas] = useState(false);
 
@@ -123,21 +124,18 @@ export function DigitalSigner({
       if (!canvas) return;
 
       const rect = canvas.getBoundingClientRect();
-      const cssWidth = rect.width;
-      const cssHeight = rect.height;
+      const cssWidth = Math.round(rect.width);
+      const cssHeight = Math.round(rect.height);
       if (!cssWidth || !cssHeight) return;
 
-      const ratio = Math.max(window.devicePixelRatio || 1, 1);
-      const nextWidth = Math.round(cssWidth * ratio);
-      const nextHeight = Math.round(cssHeight * ratio);
       const previousSize = canvasSizesRef.current[idx];
       const previousPad = signaturePads.current[idx];
 
       const unchanged =
         previousPad &&
         previousSize &&
-        previousSize.width === nextWidth &&
-        previousSize.height === nextHeight;
+        previousSize.width === cssWidth &&
+        previousSize.height === cssHeight;
 
       if (unchanged) {
         previousPad.minWidth = penSize * 0.8;
@@ -149,8 +147,8 @@ export function DigitalSigner({
       if (preserveInk && previousPad && !previousPad.isEmpty()) {
         preservedData = previousPad.toData();
         if (previousSize && previousSize.width > 0 && previousSize.height > 0) {
-          const scaleX = nextWidth / previousSize.width;
-          const scaleY = nextHeight / previousSize.height;
+          const scaleX = cssWidth / previousSize.width;
+          const scaleY = cssHeight / previousSize.height;
           if (scaleX !== 1 || scaleY !== 1) {
             preservedData = scaleSignatureData(preservedData, scaleX, scaleY);
           }
@@ -159,12 +157,11 @@ export function DigitalSigner({
 
       previousPad?.off();
 
-      canvas.width = nextWidth;
-      canvas.height = nextHeight;
-      const context = canvas.getContext("2d");
-      if (!context) return;
-      context.setTransform(1, 0, 0, 1, 0, 0);
-      context.scale(ratio, ratio);
+      // Set canvas buffer to match CSS size 1:1.
+      // SignaturePad internally handles the coordinate mapping via canvas.width / rect.width,
+      // so we must NOT add a manual context.scale() — that causes double-scaling and offset.
+      canvas.width = cssWidth;
+      canvas.height = cssHeight;
 
       const pad = new SignaturePad(canvas, {
         backgroundColor: 'rgba(255, 255, 255, 0)',
@@ -178,7 +175,7 @@ export function DigitalSigner({
       });
 
       signaturePads.current[idx] = pad;
-      canvasSizesRef.current[idx] = { width: nextWidth, height: nextHeight };
+      canvasSizesRef.current[idx] = { width: cssWidth, height: cssHeight };
 
       if (preservedData && preservedData.length > 0) {
         pad.fromData(preservedData);
@@ -273,7 +270,6 @@ export function DigitalSigner({
   const scrollToPage = (idx: number) => {
     setCurrentPage(idx);
     pageRefs.current[idx]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    if (window.innerWidth < 768) setIsSidebarOpen(false);
   };
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -373,13 +369,55 @@ export function DigitalSigner({
       const blob = await generatePdfBlob();
       if (!blob) return;
 
-      // Extract a single representative signature for backend recording
+      // Extract a single representative signature for backend recording.
+      // We must crop to just the ink region — pad.toDataURL() exports the 
+      // entire page-sized canvas, making the actual signature appear tiny.
       let representativeSignature = "";
       
-      // Check for ink on pads first
-      for (const pad of signaturePads.current) {
+      for (let padIdx = 0; padIdx < signaturePads.current.length; padIdx++) {
+        const pad = signaturePads.current[padIdx];
         if (pad && !pad.isEmpty()) {
-          representativeSignature = pad.toDataURL();
+          const srcCanvas = canvasRefs.current[padIdx];
+          if (!srcCanvas) continue;
+          const ctx = srcCanvas.getContext("2d");
+          if (!ctx) continue;
+
+          const imgData = ctx.getImageData(0, 0, srcCanvas.width, srcCanvas.height);
+          const { data, width: imgW, height: imgH } = imgData;
+
+          // Find bounding box of non-transparent pixels
+          let minX = imgW, minY = imgH, maxX = 0, maxY = 0;
+          for (let y = 0; y < imgH; y++) {
+            for (let x = 0; x < imgW; x++) {
+              const alpha = data[(y * imgW + x) * 4 + 3];
+              if (alpha > 10) {
+                if (x < minX) minX = x;
+                if (x > maxX) maxX = x;
+                if (y < minY) minY = y;
+                if (y > maxY) maxY = y;
+              }
+            }
+          }
+
+          if (maxX >= minX && maxY >= minY) {
+            // Add padding around the cropped region
+            const pad2 = 20;
+            minX = Math.max(0, minX - pad2);
+            minY = Math.max(0, minY - pad2);
+            maxX = Math.min(imgW - 1, maxX + pad2);
+            maxY = Math.min(imgH - 1, maxY + pad2);
+
+            const cropW = maxX - minX + 1;
+            const cropH = maxY - minY + 1;
+            const cropCanvas = document.createElement("canvas");
+            cropCanvas.width = cropW;
+            cropCanvas.height = cropH;
+            const cropCtx = cropCanvas.getContext("2d");
+            if (cropCtx) {
+              cropCtx.drawImage(srcCanvas, minX, minY, cropW, cropH, 0, 0, cropW, cropH);
+              representativeSignature = cropCanvas.toDataURL("image/png");
+            }
+          }
           break;
         }
       }
@@ -407,165 +445,84 @@ export function DigitalSigner({
   };
 
   return (
-    <div className="h-screen bg-[#0a0a0a] text-zinc-100 flex flex-col font-sans overflow-hidden">
-      {/* Premium Sticky Toolbar */}
-      {/* Premium Sticky Toolbar */}
-      <AnimatePresence>
-        {!isToolbarHidden && (
-          <motion.header 
-            initial={{ y: -100 }}
-            animate={{ y: 0 }}
-            exit={{ y: -100 }}
-            className="h-20 border-b border-zinc-800 bg-zinc-900/50 backdrop-blur-2xl flex items-center justify-between px-4 md:px-8 z-[100] shrink-0"
-          >
-            <div className="flex items-center gap-2 md:gap-6">
-              <button 
-                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="md:hidden p-2 hover:bg-zinc-800 rounded-lg transition-colors"
-              >
-                <FileText className="size-5" />
-              </button>
-              
-              <div className="flex items-center gap-3">
-                <div className="hidden sm:flex size-10 rounded-xl bg-primary items-center justify-center shadow-[0_0_20px_-5px_rgba(var(--primary-rgb),0.5)]">
-                  <FileText className="size-5 text-primary-foreground" />
-                </div>
-                <div>
-                  <h1 className="text-[10px] md:text-sm font-black tracking-tight uppercase truncate max-w-[120px] md:max-w-[200px]">
-                    {title}
-                  </h1>
-                  <div className="flex items-center gap-2 text-[8px] md:text-[10px] text-zinc-500 font-black uppercase tracking-widest">
-                    <span className={cn("size-1.5 rounded-full", isPenActive ? "bg-primary animate-pulse" : "bg-emerald-500")} />
-                    <span className="hidden xs:inline">{isPenActive ? 'Drawing Mode' : 'View Mode'}</span>
-                    <span className="xs:hidden">{isPenActive ? 'Draw' : 'View'}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="hidden md:block h-8 w-px bg-zinc-800 mx-2" />
-
-              {/* View Controls - Mobile/Desktop */}
-              <div className="flex items-center bg-zinc-800/50 rounded-xl p-1 gap-1">
-                <button onClick={() => setZoom(Math.max(0.1, zoom - 0.2))} className="p-1.5 md:p-2 hover:bg-zinc-700 rounded-lg transition-colors">
-                  <ZoomOut className="size-4" />
-                </button>
-                <span className="text-[10px] font-black w-11 md:w-12 text-center uppercase tracking-tighter">{Math.round(zoom * 100)}%</span>
-                <button onClick={() => setZoom(Math.min(2, zoom + 0.2))} className="p-1.5 md:p-2 hover:bg-zinc-700 rounded-lg transition-colors">
-                  <ZoomIn className="size-4" />
-                </button>
-              </div>
-
-              <button 
-                onClick={() => setIsToolbarHidden(true)}
-                className="hidden lg:flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-400 transition-all text-[10px] font-black uppercase"
-              >
-                <EyeOff className="size-3.5" />
-                <span>Focus Mode</span>
-              </button>
-            </div>
-
-            {/* Action Controls */}
-            <div className="flex items-center gap-2 md:gap-4">
-              <div className="hidden lg:flex items-center gap-3 px-4 py-2 rounded-xl bg-zinc-800/30 border border-white/5 mr-2">
-                <div className={cn("size-2 rounded-full", signatures.length > 0 ? "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" : "bg-zinc-600")} />
-                <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">
-                  {signatures.length === 0 ? "No Signatures" : `${signatures.length} Signature${signatures.length > 1 ? 's' : ''} Added`}
-                </span>
-              </div>
-
-              <button
-                onClick={handleDownloadOnly}
-                disabled={isExporting}
-                className="hidden sm:flex p-2.5 md:px-5 md:py-2.5 rounded-xl bg-zinc-800/50 hover:bg-zinc-700 text-zinc-300 border border-white/5 transition-all text-xs font-black items-center gap-2"
-              >
-                <Save className="size-3.5" /> 
-                <span className="hidden md:inline">Save Draft</span>
-              </button>
-
-              <div className="hidden md:block h-8 w-px bg-zinc-800 mx-1" />
-
-              <button
-                onClick={() => setShowConfirmation(true)}
-                disabled={isExporting || (signatures.length === 0 && !hasDrawnOnCanvas)}
-                className={cn(
-                    "px-6 py-2.5 md:px-10 md:py-3 rounded-2xl transition-all text-[10px] md:text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2 md:gap-3 shadow-2xl relative overflow-hidden group",
-                    (signatures.length > 0 || hasDrawnOnCanvas)
-                        ? "bg-primary text-primary-foreground hover:scale-105 active:scale-95" 
-                        : "bg-zinc-800 text-zinc-500 cursor-not-allowed border border-white/5"
-                )}
-              >
-                {isExporting ? (
-                    <div className="size-3 border-2 border-primary-foreground/20 border-t-primary-foreground rounded-full animate-spin" />
-                ) : (
-                    <CheckCircle2 className={cn("size-4", (signatures.length > 0 || hasDrawnOnCanvas) ? "animate-bounce" : "opacity-30")} />
-                )}
-                {primaryActionLabel}
-              </button>
-            </div>
-          </motion.header>
-        )}
-      </AnimatePresence>
-
-      {!isToolbarHidden ? (
-          null
-      ) : (
+    <div className="h-screen bg-neutral-50 dark:bg-[#0a0a0a] text-foreground flex flex-col font-sans overflow-hidden">
+      {/* 
+        Integrated Modern Header 
+        - Simplified and focused on the core actions.
+      */}
+      <header className="h-20 border-b border-border/50 bg-background/80 backdrop-blur-xl flex items-center justify-between px-6 md:px-10 z-[100] shrink-0">
+        <div className="flex items-center gap-6">
           <button 
-            onClick={() => setIsToolbarHidden(false)}
-            className="fixed top-6 left-1/2 -translate-x-1/2 z-[1000] px-6 py-3 rounded-2xl bg-zinc-900/90 border border-zinc-800 text-primary font-black text-xs uppercase tracking-widest shadow-2xl flex items-center gap-3 backdrop-blur-xl"
+            onClick={() => onClose?.()}
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-all group"
           >
-            <Eye className="size-4" />
-            Restore Toolbar
+            <div className="size-10 rounded-full border border-border flex items-center justify-center group-hover:bg-muted transition-colors">
+              <X className="size-5" />
+            </div>
+            <span className="text-xs font-black uppercase tracking-widest hidden md:inline">Exit Signer</span>
           </button>
-      )}
+          
+          <div className="h-8 w-px bg-border/50 mx-2 hidden md:block" />
+
+          <div className="flex flex-col">
+            <h1 className="text-sm md:text-base font-black tracking-tight truncate max-w-[150px] md:max-w-[300px]">
+              {title}
+            </h1>
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+              <span className={cn("size-1.5 rounded-full", isPenActive ? "bg-primary animate-pulse" : "bg-emerald-500")} />
+              {isPenActive ? 'Active Signing' : 'Reviewing Document'}
+            </p>
+          </div>
+        </div>
+
+        {/* Action Controls */}
+        <div className="flex items-center gap-3">
+          <div className="hidden lg:flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-muted/50 border border-border mr-2">
+            <CheckCircle2 className={cn("size-4", signatures.length > 0 || hasDrawnOnCanvas ? "text-emerald-500" : "text-muted-foreground/30")} />
+            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+              {signatures.length === 0 && !hasDrawnOnCanvas ? "Awaiting Signature" : "Signature Ready"}
+            </span>
+          </div>
+
+          <button
+            onClick={() => setShowConfirmation(true)}
+            disabled={isExporting || (signatures.length === 0 && !hasDrawnOnCanvas)}
+            className={cn(
+                "px-6 py-2.5 md:px-8 md:py-3 rounded-2xl transition-all text-xs font-black uppercase tracking-[0.15em] flex items-center gap-3 shadow-xl relative overflow-hidden group",
+                (signatures.length > 0 || hasDrawnOnCanvas)
+                    ? "bg-primary text-primary-foreground hover:scale-[1.02] active:scale-[0.98] shadow-primary/20" 
+                    : "bg-muted text-muted-foreground cursor-not-allowed border border-border opacity-50"
+            )}
+          >
+            {isExporting ? (
+                <Loader2 className="size-4 animate-spin" />
+            ) : (
+                <FileCheck className="size-4" />
+            )}
+            {primaryActionLabel}
+          </button>
+        </div>
+      </header>
 
       <div className="flex flex-1 overflow-hidden relative">
-        {/* Thumbnails Sidebar */}
-        <aside className={cn(
-          "absolute inset-y-0 left-0 w-64 border-r border-zinc-800 bg-[#0d0d0d] flex flex-col shrink-0 z-50 transition-transform duration-300 md:relative md:translate-x-0",
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        )}>
-          <div className="p-4 border-b border-zinc-800 flex justify-between items-center">
-            <h3 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em]">Thumbnails</h3>
-            <button onClick={() => setIsSidebarOpen(false)} className="md:hidden text-zinc-500">
-              <X className="size-4" />
-            </button>
-          </div>
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
-            {pdfPages.map((page, idx) => (
-              <button
-                key={`pdf-nav-${idx}`}
-                onClick={() => scrollToPage(idx)}
-                className={cn(
-                  "w-full aspect-[1/1.4] rounded-xl border-2 transition-all relative group overflow-hidden bg-white",
-                  currentPage === idx ? "border-primary shadow-2xl scale-[1.02]" : "border-zinc-800 grayscale hover:grayscale-0 hover:border-zinc-600"
-                )}
-              >
-                <NextImage src={page.dataUrl} fill className="object-cover" alt={`Document thumbnail page ${idx + 1}`} />
-                <div className="absolute bottom-2 right-2 size-6 rounded-lg bg-black/60 backdrop-blur-md flex items-center justify-center text-[10px] font-black text-white">
-                  {idx + 1}
-                </div>
-              </button>
-            ))}
-          </div>
-        </aside>
-
-        {/* Backdrop for mobile sidebar */}
-        <AnimatePresence>
-          {isSidebarOpen && (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsSidebarOpen(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
+        {/* Floating Page Navigator (Left Side) */}
+        <div className="absolute left-6 top-1/2 -translate-y-1/2 z-50 hidden xl:flex flex-col gap-3">
+          {pdfPages.map((_, idx) => (
+            <button
+              key={`nav-dot-${idx}`}
+              onClick={() => scrollToPage(idx)}
+              className={cn(
+                "size-3 rounded-full transition-all duration-300",
+                currentPage === idx ? "bg-primary h-8" : "bg-muted-foreground/20 hover:bg-muted-foreground/40"
+              )}
+              title={`Go to page ${idx + 1}`}
             />
-          )}
-        </AnimatePresence>
-
+          ))}
+        </div>
         {/* Main View Area */}
         <main 
           ref={scrollContainerRef}
-          className="flex-1 overflow-auto bg-[#050505] relative custom-scrollbar p-4 md:p-12 scroll-smooth"
+          className="flex-1 overflow-auto bg-neutral-100 dark:bg-[#050505] relative custom-scrollbar p-6 md:p-16 lg:p-20 scroll-smooth"
           onScroll={(e) => {
             const scrollPos = (e.target as HTMLDivElement).scrollTop;
             const pageHeights = pageRefs.current.map(p => p?.offsetHeight || 0);
@@ -580,13 +537,13 @@ export function DigitalSigner({
             }
           }}
         >
-          <div className="max-w-fit mx-auto space-y-4 md:space-y-12 pb-48">
+          <div className="max-w-fit mx-auto space-y-8 md:space-y-16 pb-64">
             {pdfPages.map((page, idx) => (
               <div 
                 key={`pdf-page-${idx}`}
                 ref={el => { pageRefs.current[idx] = el; }}
                 className={cn(
-                  "relative bg-white shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] transition-all",
+                  "relative bg-white shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] transition-[opacity,transform] duration-300",
                   currentPage === idx ? "scale-100" : (isPenActive ? "scale-100 opacity-40" : "scale-[0.95] opacity-50")
                 )}
                 style={{ 
@@ -641,198 +598,186 @@ export function DigitalSigner({
           </div>
         </main>
 
-        {/* Floating Action Button (Lower Right) */}
-        <div className="fixed bottom-6 right-6 md:bottom-10 md:right-10 flex flex-col items-end gap-4 z-[200]">
+        {/* 
+          Master Tool Dock
+          - Centered, floating, and contains all necessary tools.
+        */}
+        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[200] flex flex-col items-center gap-4 w-full px-6">
           <AnimatePresence>
             {isPenActive && (
               <motion.div 
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="bg-zinc-900/90 backdrop-blur-2xl border border-zinc-800 p-4 md:p-6 rounded-3xl shadow-2xl flex flex-col md:gap-6 w-fit max-w-[calc(100vw-2rem)]"
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                className="bg-background/90 backdrop-blur-2xl border border-border p-2 rounded-[2rem] shadow-2xl flex items-center gap-2 mb-2"
               >
-                <div className="flex items-center justify-between mb-2 md:hidden">
-                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Pen Settings</span>
-                    <button onClick={() => setIsSettingsCollapsed(!isSettingsCollapsed)} className="p-1">
-                        {isSettingsCollapsed ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                    </button>
+                <div className="flex items-center px-4 gap-3 border-r border-border py-2">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">Weight</span>
+                  <div className="flex gap-1">
+                    {[0.5, 1.5, 3, 5].map((size) => (
+                      <button
+                        key={size}
+                        onClick={() => setPenSize(size)}
+                        className={cn(
+                          "size-8 rounded-full transition-all flex items-center justify-center",
+                          penSize === size ? "bg-primary text-primary-foreground shadow-lg" : "hover:bg-muted"
+                        )}
+                      >
+                        <div 
+                          className="bg-current rounded-full" 
+                          style={{ width: `${Math.max(2, size * 1.5)}px`, height: `${Math.max(2, size * 1.5)}px` }} 
+                        />
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
-                {!isSettingsCollapsed && (
-                  <div className="flex flex-row md:flex-col gap-4 md:gap-6 items-center md:items-stretch">
-                    {/* Custom Rect Thickness Component */}
-                    <div className="space-y-2 md:space-y-3">
-                      <div className="hidden md:flex justify-between items-center text-[10px] font-black text-zinc-500 uppercase tracking-widest">
-                        <span>Pen Weight</span>
-                        <button onClick={() => setIsSettingsCollapsed(true)} className="p-1 hover:text-white transition-colors">
-                            <ChevronDown size={14} />
-                        </button>
-                      </div>
-                      <div className="flex gap-1.5 md:gap-2">
-                        {[0.5, 1.5, 3, 5].map((size) => (
-                          <button
-                            key={size}
-                            onClick={() => setPenSize(size)}
-                            className={cn(
-                              "size-8 md:w-12 md:h-12 rounded-lg md:rounded-xl border-2 transition-all flex items-center justify-center relative group",
-                              penSize === size ? "bg-primary border-primary shadow-lg" : "bg-zinc-800 border-zinc-700 hover:border-zinc-500"
-                            )}
-                          >
-                            <div 
-                              className="bg-current rounded-full" 
-                              style={{ width: `${size * 1.5 + 2}px`, height: `${size * 1.5 + 2}px`, color: penSize === size ? 'var(--primary-foreground)' : '#71717a' }} 
-                            />
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                <div className="flex items-center gap-1 px-2">
+                  <button 
+                    onClick={() => {
+                      signaturePads.current[currentPage]?.clear();
+                      checkCanvasStatus();
+                      toast.success("Page cleared");
+                    }}
+                    className="h-10 px-4 rounded-full hover:bg-red-500/10 hover:text-red-500 text-muted-foreground transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-widest"
+                  >
+                    <Trash2 className="size-4" />
+                    Clear
+                  </button>
 
-                    <div className="hidden md:block h-px w-full bg-zinc-800" />
-                    <div className="md:hidden w-px h-8 bg-zinc-800" />
-
-                    <div className="flex flex-row gap-2 md:gap-3">
-                      <label className="p-2 md:p-4 rounded-xl md:rounded-2xl bg-zinc-800 hover:bg-zinc-700 transition-all cursor-pointer flex items-center justify-center gap-2 md:gap-3 text-[10px] font-black uppercase tracking-widest group">
-                        <ImageIcon className="size-4 text-zinc-400 group-hover:text-primary" />
-                        <span className="hidden md:inline">Upload</span>
-                        <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
-                      </label>
-
-                      <button 
-                        onClick={() => {
-                          signaturePads.current[currentPage]?.clear();
-                          checkCanvasStatus();
-                        }}
-                        className="p-2 md:p-4 rounded-xl md:rounded-2xl bg-zinc-800 hover:bg-red-500/10 hover:text-red-400 text-zinc-400 transition-all flex items-center justify-center gap-2 md:gap-3 text-[10px] font-black uppercase tracking-widest"
-                      >
-                        <Trash2 className="size-4" />
-                        <span className="hidden md:inline">Clear</span>
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {isSettingsCollapsed && (
-                    <button 
-                        onClick={() => setIsSettingsCollapsed(false)}
-                        className="hidden md:flex items-center gap-2 text-[10px] font-black text-primary uppercase tracking-widest"
-                    >
-                        <ChevronUp size={14} />
-                        Settings
-                    </button>
-                )}
+                  <label className="h-10 px-4 rounded-full hover:bg-primary/10 hover:text-primary text-muted-foreground transition-all cursor-pointer flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
+                    <ImageIcon className="size-4" />
+                    Upload
+                    <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
+                  </label>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
 
-          <button
-            onClick={() => {
-                setIsPenActive(!isPenActive);
-            }}
-            className={cn(
-              "size-14 md:w-20 md:h-20 rounded-[1.2rem] md:rounded-[2.5rem] flex items-center justify-center transition-all shadow-2xl group",
-              isPenActive ? "bg-zinc-900 border-2 border-primary text-primary" : "bg-primary text-primary-foreground hover:scale-110 active:scale-95"
-            )}
-          >
-            {isPenActive ? <X className="size-6 md:w-8 md:h-8" /> : <PenTool className="size-6 md:w-8 md:h-8 group-hover:rotate-12 transition-transform" />}
-          </button>
+          <div className="bg-background/90 backdrop-blur-2xl border border-border p-2 rounded-[2.5rem] shadow-2xl flex items-center gap-4">
+            {/* Zoom Controls */}
+            <div className="flex items-center bg-muted/50 rounded-full p-1 gap-1 ml-1">
+              <button onClick={() => setZoom(Math.max(0.1, zoom - 0.2))} className="p-2 hover:bg-background rounded-full transition-all active:scale-90">
+                <ZoomOut className="size-4" />
+              </button>
+              <span className="text-[10px] font-black w-12 text-center tabular-nums">{Math.round(zoom * 100)}%</span>
+              <button onClick={() => setZoom(Math.min(2, zoom + 0.2))} className="p-2 hover:bg-background rounded-full transition-all active:scale-90">
+                <ZoomIn className="size-4" />
+              </button>
+            </div>
+
+            <div className="h-8 w-px bg-border/50" />
+
+            {/* Primary Draw Toggle */}
+            <button
+              onClick={() => setIsPenActive(!isPenActive)}
+              className={cn(
+                "h-14 px-8 rounded-full flex items-center gap-3 transition-all font-black text-xs uppercase tracking-widest shadow-lg active:scale-95",
+                isPenActive 
+                  ? "bg-red-500 text-white shadow-red-500/20" 
+                  : "bg-primary text-primary-foreground shadow-primary/20 hover:scale-105"
+              )}
+            >
+              {isPenActive ? (
+                <>
+                  <X className="size-4" />
+                  Stop Signing
+                </>
+              ) : (
+                <>
+                  <PenTool className="size-4" />
+                  Sign Document
+                </>
+              )}
+            </button>
+
+            <div className="h-8 w-px bg-border/50" />
+
+            {/* Page Indicator / Quick Nav */}
+            <div className="flex items-center gap-2 px-4 py-2 bg-muted/50 rounded-full">
+              <button 
+                onClick={() => currentPage > 0 && scrollToPage(currentPage - 1)}
+                disabled={currentPage === 0}
+                className="text-muted-foreground hover:text-foreground disabled:opacity-30"
+              >
+                <ChevronUp className="size-4" />
+              </button>
+              <span className="text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
+                Pg {currentPage + 1} / {pdfPages.length}
+              </span>
+              <button 
+                onClick={() => currentPage < pdfPages.length - 1 && scrollToPage(currentPage + 1)}
+                disabled={currentPage === pdfPages.length - 1}
+                className="text-muted-foreground hover:text-foreground disabled:opacity-30"
+              >
+                <ChevronDown className="size-4" />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
 
-      <AnimatePresence>
-        {isProcessing && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[1000] bg-black/90 backdrop-blur-3xl flex flex-col items-center justify-center p-6 text-center"
-          >
-            <div className="relative">
-              <div className="size-24 md:w-32 md:h-32 border-2 border-primary/10 rounded-full" />
-              <div className="absolute inset-0 size-24 md:w-32 md:h-32 border-t-2 border-primary rounded-full animate-spin" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <FileText className="size-6 md:w-8 md:h-8 text-primary animate-pulse" />
-              </div>
-            </div>
-            <p className="text-xl md:text-2xl font-black mt-8 md:mt-12 tracking-tighter text-white uppercase italic">Processing Document</p>
-            <p className="text-zinc-500 text-[10px] md:text-xs mt-3 font-black uppercase tracking-[0.3em]">Building Signed Artifact</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <IResideLoading 
+        isVisible={isProcessing || isExporting} 
+        title={isExporting ? "Finalizing Document" : "Preparing Document"} 
+        subtext={isExporting ? "Encrypting and Saving" : "Building Secure Artifact"} 
+      />
 
       <AnimatePresence>
         {showConfirmation && (
-          <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 md:p-6">
+          <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4">
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowConfirmation(false)}
-              className="absolute inset-0 bg-black/80 backdrop-blur-md"
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
             />
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-xl bg-zinc-900 border border-white/5 rounded-[2.5rem] shadow-2xl overflow-hidden"
+              className="relative w-full max-w-lg bg-background border border-border rounded-[2.5rem] shadow-2xl overflow-hidden"
             >
               <div className="p-8 md:p-12 space-y-8">
                 <div className="flex flex-col items-center text-center space-y-6">
-                  <div className="size-20 rounded-full bg-primary/10 flex items-center justify-center ring-1 ring-primary/20">
-                    <AlertTriangle className="size-10 text-primary" />
+                  <div className="size-20 rounded-3xl bg-primary/10 flex items-center justify-center border border-primary/20 rotate-[10deg]">
+                    <ShieldCheck className="size-10 text-primary -rotate-[10deg]" />
                   </div>
                   <div className="space-y-2">
-                    <h2 className="text-3xl font-black tracking-tighter uppercase italic text-white">Ready to make it official?</h2>
-                    <p className="text-zinc-500 text-sm font-medium leading-relaxed">
-                      Take a quick moment to review everything. Once you sign, this document will be completed and shared with all parties.
+                    <h2 className="text-3xl font-black tracking-tighter uppercase italic text-foreground">Make it Official?</h2>
+                    <p className="text-muted-foreground text-sm font-medium leading-relaxed">
+                      By finalizing, you confirm that you have reviewed the document and your signature is legally binding.
                     </p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-4">
-                   <div className="p-5 rounded-2xl bg-zinc-800/50 border border-white/5 flex items-center gap-5 min-w-0">
-                      <div className="size-12 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
-                        <CheckCircle2 className="size-6 text-emerald-500" />
+                <div className="space-y-3">
+                   <div className="p-4 rounded-2xl bg-muted/50 border border-border flex items-center gap-4 min-w-0">
+                      <div className="size-10 rounded-xl bg-background border border-border flex items-center justify-center shrink-0">
+                        <FileText className="size-5 text-muted-foreground" />
                       </div>
                       <div className="text-left min-w-0 flex-1">
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-1">Agreement Name</p>
-                        <p className="text-sm text-white font-black truncate leading-none">{title}</p>
-                      </div>
-                   </div>
-                   <div className="p-5 rounded-2xl bg-zinc-800/50 border border-white/5 flex items-center gap-5 min-w-0">
-                      <div className="size-12 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
-                        <Info className="size-6 text-blue-500" />
-                      </div>
-                      <div className="text-left min-w-0 flex-1">
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-1">Current Status</p>
-                        <p className="text-sm text-white font-black leading-none">Ready for your signature</p>
-                      </div>
-                   </div>
-                   <div className="p-5 rounded-2xl bg-primary/5 border border-primary/10 flex items-center gap-5 min-w-0">
-                      <div className="size-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                        <motion.div
-                          animate={{ scale: [1, 1.1, 1] }}
-                          transition={{ repeat: Infinity, duration: 2 }}
-                        >
-                          <Info className="size-6 text-primary" />
-                        </motion.div>
-                      </div>
-                      <div className="text-left min-w-0 flex-1">
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60 mb-1">What happens next?</p>
-                        <p className="text-sm text-white font-black leading-none">The landlord will review & countersign</p>
+                        <p className="text-[9px] font-black uppercase tracking-[0.1em] text-muted-foreground mb-0.5">Agreement</p>
+                        <p className="text-xs text-foreground font-black truncate leading-tight">{title}</p>
                       </div>
                    </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <button
+                <div className="flex flex-col gap-3">
+                  <button 
+                    onClick={handleExport}
+                    className="w-full h-16 rounded-2xl bg-primary text-primary-foreground font-black text-sm uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                  >
+                    Confirm & Finalize
+                  </button>
+                  <button 
                     onClick={() => setShowConfirmation(false)}
-                    className="flex-1 px-8 py-5 rounded-2xl bg-zinc-800 hover:bg-zinc-700 text-white font-black uppercase tracking-widest text-[10px] transition-all"
+                    className="w-full h-14 rounded-2xl bg-muted text-muted-foreground font-black text-[10px] uppercase tracking-widest hover:bg-muted/80 transition-all"
                   >
                     Go Back
-                  </button>
-                  <button
-                    onClick={handleExport}
-                    className="flex-1 px-8 py-5 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-xl shadow-primary/20 transition-all"
-                  >
-                    Yes, Sign Now
                   </button>
                 </div>
               </div>
@@ -847,8 +792,8 @@ export function DigitalSigner({
           .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #27272a; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
         
         .signature-pad-canvas {
           -webkit-user-select: none;

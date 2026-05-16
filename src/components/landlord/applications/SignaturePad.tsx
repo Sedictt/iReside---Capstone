@@ -39,11 +39,11 @@ export function SignaturePad({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Adjust canvas for high DPI
-    const ratio = Math.max(window.devicePixelRatio || 1, 1);
-    canvas.width = canvas.offsetWidth * ratio;
-    canvas.height = canvas.offsetHeight * ratio;
-    canvas.getContext("2d")?.scale(ratio, ratio);
+    // Set canvas buffer to match CSS pixel dimensions 1:1.
+    // SignaturePad internally handles coordinate mapping via canvas.width / rect.width,
+    // so we must NOT add a manual context.scale() — that causes double-scaling and offset.
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
 
     const pad = new SignaturePadLibrary(canvas, {
       backgroundColor: "rgba(0,0,0,0)",
@@ -186,16 +186,11 @@ export function SignaturePad({
                     initialFile={pdfBlob}
                     title={documentTitle}
                     onSigned={handleFullSignerComplete}
+                    onClose={() => setShowFullSigner(false)}
                     isProcessingInitial={true}
                     hideToolbar={true}
                     hideSidebar={true}
                 />
-                <button 
-                    onClick={() => setShowFullSigner(false)}
-                    className="absolute top-6 left-6 z-[10000] p-3 rounded-full bg-black/50 text-white hover:bg-black transition-colors"
-                >
-                    <X size={24} />
-                </button>
             </motion.div>
         )}
       </AnimatePresence>
