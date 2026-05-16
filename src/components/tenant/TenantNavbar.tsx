@@ -84,7 +84,7 @@ const NAV_SECTIONS = [
         items: [
             { label: "Leases", href: "/tenant/lease", icon: FileText },
             { label: "Unit Map", href: "/tenant/unit-map", icon: Map },
-            { label: "Building Amenities", href: "/tenant/utilities", icon: LayoutGrid },
+            { label: "Facilities", href: "/tenant/utilities", icon: LayoutGrid },
             { label: "Maintenance", href: "/tenant/maintenance", icon: Wrench },
             { label: "Finance Hub", href: "/tenant/payments", icon: CreditCard },
             { label: "Messages", href: "/tenant/messages", icon: MessageSquare },

@@ -94,24 +94,24 @@ const buildUtilities = (
     };
 
     payments.forEach((payment) => {
-        payment.items?.forEach((item) => {
-            const category = normalizeCategory(item.category);
-            const label = normalizeCategory(item.label);
+        payment.items?.forEach((paymentItem) => {
+            const category = normalizeCategory(paymentItem.category);
+            const label = normalizeCategory(paymentItem.label);
 
             if (category.includes("electric") || label.includes("electric")) {
-                register("Electricity", Number(item.amount ?? 0));
+                register("Electricity", Number(paymentItem.amount ?? 0));
             }
             if (category.includes("water") || label.includes("water")) {
-                register("Water", Number(item.amount ?? 0));
+                register("Water", Number(paymentItem.amount ?? 0));
             }
         });
 
         if (!payment.items || payment.items.length === 0) {
-            const desc = normalizeCategory(payment.description);
-            if (desc.includes("electric")) {
+            const description = normalizeCategory(payment.description);
+            if (description.includes("electric")) {
                 register("Electricity", 0);
             }
-            if (desc.includes("water")) {
+            if (description.includes("water")) {
                 register("Water", 0);
             }
         }
@@ -249,13 +249,13 @@ export async function GET() {
         : null;
 
     const overduePayments: OverduePayment[] = (overdueRows ?? [])
-        .filter((row) => isPendingStatus(row.status as PaymentStatus))
-        .map((row) => ({
-            id: row.id,
-            amount: Number(row.amount ?? 0),
-            dueDate: row.due_date,
-            description: row.description ?? null,
-            reference: row.reference_number ?? null,
+        .filter((paymentRow) => isPendingStatus(paymentRow.status as PaymentStatus))
+        .map((paymentRow) => ({
+            id: paymentRow.id,
+            amount: Number(paymentRow.amount ?? 0),
+            dueDate: paymentRow.due_date,
+            description: paymentRow.description ?? null,
+            reference: paymentRow.reference_number ?? null,
         }));
 
     const utilities: UtilityItem[] = utilityError
@@ -279,29 +279,29 @@ export async function GET() {
 
     const recentActivity: ActivityItem[] = activityError
         ? []
-        : (activityRows ?? []).map((row) => ({
-            id: row.id,
-            type: row.type as NotificationType,
-            title: row.title,
-            message: row.message,
-            createdAt: row.created_at,
-            read: Boolean(row.read),
+        : (activityRows ?? []).map((activityRow) => ({
+            id: activityRow.id,
+            type: activityRow.type as NotificationType,
+            title: activityRow.title,
+            message: activityRow.message,
+            createdAt: activityRow.created_at,
+            read: Boolean(activityRow.read),
         }));
 
     // Process payment history
-    const paymentHistory: PaymentHistoryItem[] = (paymentHistoryRows ?? []).map((row) => {
+    const paymentHistory: PaymentHistoryItem[] = (paymentHistoryRows ?? []).map((historyRow) => {
         // Determine category from payment items
-        const items = row.items ?? [];
+        const items = historyRow.items ?? [];
         const firstItem = Array.isArray(items) && items.length > 0 ? items[0] : null;
         const category = firstItem?.category ?? null;
 
         return {
-            id: row.id,
-            amount: Number(row.amount ?? 0),
-            dueDate: row.due_date,
-            paidAt: row.paid_at ?? null,
-            status: row.status as PaymentStatus,
-            description: row.description ?? null,
+            id: historyRow.id,
+            amount: Number(historyRow.amount ?? 0),
+            dueDate: historyRow.due_date,
+            paidAt: historyRow.paid_at ?? null,
+            status: historyRow.status as PaymentStatus,
+            description: historyRow.description ?? null,
             category,
         };
     });
@@ -311,17 +311,17 @@ export async function GET() {
     const existingInvoices = new Map<string, any>();
     
     // Index existing invoices by billing cycle
-    for (const inv of (upcomingPayments ?? [])) {
-        if (inv.billing_cycle) {
-            existingInvoices.set(inv.billing_cycle, inv);
+    for (const invoice of (upcomingPayments ?? [])) {
+        if (invoice.billing_cycle) {
+            existingInvoices.set(invoice.billing_cycle, invoice);
         }
     }
 
     // Get monthly rent from active lease for estimates
     const monthlyRent = leaseSummary?.monthlyRent ?? 0;
 
-    for (let i = 1; i <= 3; i++) {
-        const targetDate = new Date(now.getFullYear(), now.getMonth() + i, 1);
+    for (let monthOffset = 1; monthOffset <= 3; monthOffset++) {
+        const targetDate = new Date(now.getFullYear(), now.getMonth() + monthOffset, 1);
         const monthKey = targetDate.toISOString().slice(0, 7); // YYYY-MM
         const cycleKey = `${monthKey}-01`;
         

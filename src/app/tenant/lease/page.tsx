@@ -26,7 +26,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import MoveOutRequest from "@/components/tenant/MoveOutRequest";
 import UnitTransferRequest from "@/components/tenant/UnitTransferRequest";
@@ -40,122 +39,50 @@ import { LeaseData } from "@/types/lease";
 type TabId = "agreement" | "property" | "services";
 
 function LeaseHubContent() {
-    const searchParams = useSearchParams();
-    const previewDays = searchParams.get("preview_days");
-    
     const [lease, setLease] = useState<LeaseData | null>(null);
     const [loading, setLoading] = useState(true);
-    
-    // Add mock data for previewing different move-out states
-    const previewParam = searchParams.get("preview");
-    const moveOutPreviewStatus = searchParams.get("moveOutStatus") || (previewParam !== null ? "approved" : null);
 
-    const [activeTab, setActiveTab] = useState<TabId>(moveOutPreviewStatus ? "services" : "agreement");
+    const [activeTab, setActiveTab] = useState<TabId>("agreement");
     const [isModalOpen, setIsModalOpen] = useState(false);
+    
     type RenewalStatus = "pending" | "approved" | "rejected";
 
-const [renewalRequest, setRenewalRequest] = useState<{
-  status: RenewalStatus;
-  landlord_notes?: string | null;
-  requested_date?: string;
-  created_at?: string;
-} | null>(null);
-
-    // Add mock data for previewing different move-out states
-    const mockMoveOutRequest = useMemo(() => {
-        if (!moveOutPreviewStatus) return null;
-        
-        const base = {
-            id: "mock-id",
-            requested_date: new Date(Date.now() + 30 * 86400000).toISOString(),
-            reason: "Moving closer to work",
-            denial_reason: null,
-            checklist_data: {
-                "Return Keys": false,
-                "Clean Unit": false,
-                "Remove Trash": true
-            },
-            deposit_deductions: [],
-            deposit_refund_amount: 15000,
-            created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
-            approved_at: null,
-            denied_at: null,
-            inspection_date: null,
-            completed_at: null,
-        };
-
-        switch (moveOutPreviewStatus) {
-            case "pending":
-                return { ...base, status: "pending" as const };
-            case "approved":
-                return { 
-                    ...base, 
-                    status: "approved" as const, 
-                    approved_at: new Date(Date.now() - 1 * 86400000).toISOString() 
-                };
-            case "denied":
-                return { 
-                    ...base, 
-                    status: "denied" as const, 
-                    denied_at: new Date(Date.now() - 1 * 86400000).toISOString(),
-                    denial_reason: "Notice period too short (minimum 30 days required)."
-                };
-            case "inspection":
-                return { 
-                    ...base, 
-                    status: "approved" as const, 
-                    approved_at: new Date(Date.now() - 3 * 86400000).toISOString(),
-                    inspection_date: new Date().toISOString(),
-                    deposit_deductions: [
-                        { description: "Wall Painting Touch-up", amount: 2500 },
-                        { description: "Cleaning Fee", amount: 1500 },
-                        { description: "Unpaid Electricity Bill", amount: 1250 }
-                    ],
-                    deposit_refund_amount: 9750
-                };
-            case "completed":
-                return { 
-                    ...base, 
-                    status: "completed" as const, 
-                    approved_at: new Date(Date.now() - 5 * 86400000).toISOString(),
-                    inspection_date: new Date(Date.now() - 2 * 86400000).toISOString(),
-                    completed_at: new Date().toISOString(),
-                    deposit_refund_amount: 15000
-                };
-            default:
-                return null;
-        }
-    }, [moveOutPreviewStatus]);
+    const [renewalRequest, setRenewalRequest] = useState<{
+        status: RenewalStatus;
+        landlord_notes?: string | null;
+        requested_date?: string;
+        created_at?: string;
+    } | null>(null);
 
     useEffect(() => {
         let isMounted = true;
-        const fetchData = async () => {
+        const fetchLeaseData = async () => {
             try {
-                const res = await fetch("/api/tenant/lease", { cache: "no-store" });
-                if (!res.ok) throw new Error("Failed to load lease");
-                const payload = await res.json();
-                if (isMounted && payload.lease) {
-                    setLease(payload.lease as LeaseData);
+                const response = await fetch("/api/tenant/lease", { cache: "no-store" });
+                if (!response.ok) throw new Error("Failed to load lease");
+                const responseData = await response.json();
+                
+                if (isMounted && responseData.lease) {
+                    setLease(responseData.lease as LeaseData);
                     
-                    // Fetch renewal requests for this lease
                     try {
-                        const renewRes = await fetch("/api/tenant/renewals", { cache: "no-store" });
-                        if (renewRes.ok) {
-                            const renewData = await renewRes.json();
-                            const leaseRenewal = renewData?.find((r: { current_lease_id: string }) => r.current_lease_id === payload.lease.id);
-                            if (isMounted) setRenewalRequest(leaseRenewal);
+                        const renewalResponse = await fetch("/api/tenant/renewals", { cache: "no-store" });
+                        if (renewalResponse.ok) {
+                            const renewalRequests = await renewalResponse.json();
+                            const activeLeaseRenewal = renewalRequests?.find((renewal: { current_lease_id: string }) => renewal.current_lease_id === responseData.lease.id);
+                            if (isMounted) setRenewalRequest(activeLeaseRenewal);
                         }
-                    } catch (e) {
-                        console.error("Failed to fetch renewal requests:", e);
+                    } catch (error) {
+                        console.error("Failed to fetch renewal requests:", error);
                     }
                 }
-            } catch (err) {
-                console.error(err);
+            } catch (error) {
+                console.error("Fetch error:", error);
             } finally {
                 if (isMounted) setLoading(false);
             }
         };
-        fetchData();
+        fetchLeaseData();
         return () => { isMounted = false; };
     }, []);
 
@@ -170,25 +97,14 @@ const [renewalRequest, setRenewalRequest] = useState<{
     };
 
     const progressData = useMemo(() => {
-        if (previewDays) {
-            const days = parseInt(previewDays);
-            const total = 365;
-            return { 
-                daysRemaining: days, 
-                totalDays: total, 
-                percent: Math.max(0, Math.min(100, ((total - days) / total) * 100)), 
-                dayCount: Math.max(1, total - days) 
-            };
-        }
-
         if (!lease?.start_date || !lease?.end_date) return { daysRemaining: 0, totalDays: 1, percent: 0, dayCount: 0 };
-        const start = new Date(lease.start_date).getTime();
-        const end = new Date(lease.end_date).getTime();
-        const now = Date.now();
+        const startTimestamp = new Date(lease.start_date).getTime();
+        const endTimestamp = new Date(lease.end_date).getTime();
+        const currentTimestamp = Date.now();
 
-        const totalMs = end - start;
-        const elapsedMs = Math.max(0, Math.min(now - start, totalMs));
-        const remainingMs = Math.max(0, end - now);
+        const totalMs = endTimestamp - startTimestamp;
+        const elapsedMs = Math.max(0, Math.min(currentTimestamp - startTimestamp, totalMs));
+        const remainingMs = Math.max(0, endTimestamp - currentTimestamp);
 
         const totalDays = Math.max(1, Math.round(totalMs / 86400000));
         const daysRemaining = Math.max(0, Math.round(remainingMs / 86400000));
@@ -196,7 +112,7 @@ const [renewalRequest, setRenewalRequest] = useState<{
         const dayCount = Math.round(elapsedMs / 86400000) + 1;
 
         return { daysRemaining, totalDays, percent, dayCount };
-    }, [lease, previewDays]);
+    }, [lease]);
 
     if (loading) {
         return (
@@ -226,9 +142,7 @@ const [renewalRequest, setRenewalRequest] = useState<{
         );
     }
 
-
-
-    const imgUrl = lease.unit.property.images?.[0] || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=2000&auto=format&fit=crop";
+    const propertyThumbnailUrl = lease.unit.property.images?.[0] || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=2000&auto=format&fit=crop";
     const shortHash = lease.id.replace(/-/g, "").substring(0, 8).toUpperCase();
 
     const tabs: { id: TabId; label: string; icon: LucideIcon }[] = [
@@ -241,23 +155,17 @@ const [renewalRequest, setRenewalRequest] = useState<{
         <div className="space-y-6 max-w-[1400px] mx-auto pb-12">
             <LeaseTour />
             <LeaseRenewalReminder 
-                                    daysRemaining={progressData.daysRemaining} 
-                                    leaseId={lease?.id}
-                                    teamMembers={lease?.landlord ? [{ avatar_url: lease.landlord.avatar_url, name: lease.landlord.full_name }] : undefined}
-                                />
+                daysRemaining={progressData.daysRemaining} 
+                leaseId={lease?.id}
+                teamMembers={lease?.landlord ? [{ avatar_url: lease.landlord.avatar_url, name: lease.landlord.full_name }] : undefined}
+            />
             
-            {/* Consistent Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div className="space-y-1">
                     <div className="flex items-center gap-2">
                         <h1 className="text-4xl font-black text-foreground tracking-tighter">
                             Lease Hub
                         </h1>
-                        {(previewDays || moveOutPreviewStatus) && (
-                            <div className="px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-[9px] font-black text-amber-600 uppercase tracking-widest animate-pulse">
-                                Preview Mode: {previewDays ? `${previewDays} Days` : `Move-Out ${moveOutPreviewStatus}`}
-                            </div>
-                        )}
                     </div>
                     <p className="text-muted-foreground font-medium text-sm max-w-2xl">
                         Your digital source of truth for your residency, agreement terms, and unit specifications.
@@ -279,38 +187,33 @@ const [renewalRequest, setRenewalRequest] = useState<{
                 </div>
             </div>
 
-            {/* Tab Navigation */}
             <div className="flex items-center gap-1 p-1 bg-muted/30 border border-border rounded-2xl w-full md:w-fit overflow-x-auto no-scrollbar">
-                {tabs.map((tab) => (
+                {tabs.map((tabItem) => (
                     <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
+                        key={tabItem.id}
+                        onClick={() => setActiveTab(tabItem.id)}
                         className={cn(
                             "flex items-center gap-2 px-7 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all shrink-0",
-                            activeTab === tab.id 
+                            activeTab === tabItem.id 
                                 ? "bg-card text-primary shadow-sm border border-border" 
                                 : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                         )}
                     >
-                        <tab.icon className="size-4" />
-                        {tab.label}
+                        <tabItem.icon className="size-4" />
+                        {tabItem.label}
                     </button>
                 ))}
             </div>
 
             <div className="animate-in fade-in slide-in-from-bottom-2 duration-400">
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
-                    
-                    {/* Main Content Column */}
                     <div className="lg:col-span-3 space-y-8">
-                        
                         {activeTab === "agreement" && (
                             <div className="space-y-8">
-                                {/* Hero Card - The Agreement */}
                                 <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm relative overflow-hidden ring-1 ring-border min-h-[300px] flex flex-col justify-between">
                                     <div className="absolute inset-0 z-0">
                                         <Image
-                                            src={imgUrl}
+                                            src={propertyThumbnailUrl}
                                             alt="Property"
                                             fill
                                             sizes="(max-width: 1024px) 100vw, 850px"
@@ -350,11 +253,11 @@ const [renewalRequest, setRenewalRequest] = useState<{
                                             </div>
                                             <div>
                                                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Monthly Rent</p>
-                                                <p className="text-base font-black text-primary">{formatCurrency(lease.monthly_rent)}</p>
+                                                <p className="text-base font-black text-primary">₱{formatCurrency(lease.monthly_rent)}</p>
                                             </div>
                                             <div>
                                                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Security Deposit</p>
-                                                <p className="text-base font-black text-foreground">{formatCurrency(lease.security_deposit)}</p>
+                                                <p className="text-base font-black text-foreground">₱{formatCurrency(lease.security_deposit)}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -376,7 +279,6 @@ const [renewalRequest, setRenewalRequest] = useState<{
                                     </div>
                                 </div>
 
-                                {/* Renewal Status Banner */}
                                 {renewalRequest && (
                                     <div className={cn(
                                         "border rounded-[2rem] p-6 shadow-sm flex items-center gap-4",
@@ -409,7 +311,6 @@ const [renewalRequest, setRenewalRequest] = useState<{
                                     </div>
                                 )}
 
-                                {/* Lease Lifecycle Section */}
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                                     <div className="md:col-span-2 bg-card border border-border rounded-[2.5rem] p-8 shadow-sm ring-1 ring-border relative overflow-hidden flex flex-col justify-center">
                                         <div className="absolute top-0 right-0 p-6 opacity-[0.02] select-none pointer-events-none">
@@ -470,86 +371,114 @@ const [renewalRequest, setRenewalRequest] = useState<{
 
                         {activeTab === "property" && (
                             <div className="space-y-8">
-                                {/* Unit Configuration */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm relative overflow-hidden ring-1 ring-border">
-                                        <div className="absolute top-0 right-0 p-8 opacity-[0.03] select-none pointer-events-none">
-                                            <Building2 className="size-32" />
-                                        </div>
-                                        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mb-4">Unit Specifications</p>
-                                        <div className="grid grid-cols-2 gap-y-8">
-                                            <div className="flex items-center gap-4">
-                                                <div className="size-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground">
-                                                    <Maximize className="size-5" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Floor Area</p>
-                                                    <p className="text-base font-black text-foreground">{lease.unit.sqft ? `${lease.unit.sqft} SQFT` : 'Contact for size'}</p>
-                                                </div>
+                                {/* Unit Specifications */}
+                                <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm relative overflow-hidden ring-1 ring-border">
+                                    <div className="absolute top-0 right-0 p-8 opacity-[0.02] select-none pointer-events-none">
+                                        <Maximize className="size-64 -mt-16 -mr-16" />
+                                    </div>
+                                    
+                                    <div className="flex items-center justify-between mb-8 relative z-10">
+                                        <div className="flex items-center gap-4">
+                                            <div className="size-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shadow-sm">
+                                                <Layers className="size-6" />
                                             </div>
-                                            <div className="flex items-center gap-4">
-                                                <div className="size-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground">
-                                                    <Layers className="size-5" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Level</p>
-                                                    <p className="text-base font-black text-foreground">Floor {lease.unit.floor}</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-4">
-                                                <div className="size-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground">
-                                                    <Bed className="size-5" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Bedrooms</p>
-                                                    <p className="text-base font-black text-foreground">{lease.unit.beds} Bedroom</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-4">
-                                                <div className="size-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground">
-                                                    <Bath className="size-5" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Bathrooms</p>
-                                                    <p className="text-base font-black text-foreground">{lease.unit.baths} Private</p>
-                                                </div>
+                                            <div>
+                                                <h4 className="text-lg font-black text-foreground tracking-tight">Unit Specifications</h4>
+                                                <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mt-0.5">Physical Configuration</p>
                                             </div>
                                         </div>
                                     </div>
-
-                                    <div className="lg:col-span-1 space-y-10">
-                                        {/* Building Amenities */}
-                                        <div className="space-y-6">
-                                            <div className="flex items-center gap-4">
-                                                <div className="size-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shadow-sm shadow-primary/5">
-                                                    <Building2 className="size-6" />
-                                                </div>
-                                                <div>
-                                                    <h4 className="text-lg font-black text-foreground tracking-tight">Building Amenities</h4>
-                                                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-0.5">Exclusive Residency Benefits</p>
-                                                </div>
+                                    
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 relative z-10">
+                                        <div className="flex flex-col gap-3 p-5 rounded-3xl bg-muted/30 border border-border/50 hover:bg-muted/50 transition-colors">
+                                            <div className="size-10 rounded-xl bg-background border border-border flex items-center justify-center text-muted-foreground shadow-sm">
+                                                <Maximize className="size-5" />
                                             </div>
-                                            <PropertyAmenities amenities={lease.unit.property.amenities || []} />
+                                            <div className="mt-2">
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Floor Area</p>
+                                                <p className="text-2xl font-black text-foreground">{lease.unit.sqft ? `${lease.unit.sqft} SQFT` : 'Contact'}</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="flex flex-col gap-3 p-5 rounded-3xl bg-muted/30 border border-border/50 hover:bg-muted/50 transition-colors">
+                                            <div className="size-10 rounded-xl bg-background border border-border flex items-center justify-center text-muted-foreground shadow-sm">
+                                                <Layers className="size-5" />
+                                            </div>
+                                            <div className="mt-2">
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Level</p>
+                                                <p className="text-2xl font-black text-foreground">Floor {lease.unit.floor}</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="flex flex-col gap-3 p-5 rounded-3xl bg-muted/30 border border-border/50 hover:bg-muted/50 transition-colors">
+                                            <div className="size-10 rounded-xl bg-background border border-border flex items-center justify-center text-muted-foreground shadow-sm">
+                                                <Bed className="size-5" />
+                                            </div>
+                                            <div className="mt-2">
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Bedrooms</p>
+                                                <p className="text-2xl font-black text-foreground">{lease.unit.beds} Bed</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="flex flex-col gap-3 p-5 rounded-3xl bg-muted/30 border border-border/50 hover:bg-muted/50 transition-colors">
+                                            <div className="size-10 rounded-xl bg-background border border-border flex items-center justify-center text-muted-foreground shadow-sm">
+                                                <Bath className="size-5" />
+                                            </div>
+                                            <div className="mt-2">
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Bathrooms</p>
+                                                <p className="text-2xl font-black text-foreground">{lease.unit.baths} Bath</p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* House Rules Section */}
-                                <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm ring-1 ring-border">
-                                    <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mb-6">Building Regulations</p>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
-                                        {lease.unit.property.house_rules.length > 0 ? (
-                                            lease.unit.property.house_rules.map((rule, i) => (
-                                                <div key={rule} className="flex items-start gap-4 group">
-                                                    <div className="size-6 rounded-lg bg-primary/5 border border-primary/10 flex items-center justify-center text-primary shrink-0 mt-0.5 group-hover:bg-primary group-hover:text-white transition-all">
-                                                        <p className="text-[10px] font-black">{i + 1}</p>
+                                {/* Amenities and Regulations */}
+                                <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
+                                    <div className="md:col-span-3 space-y-6">
+                                        <div className="flex items-center gap-4 px-2">
+                                            <div className="size-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shadow-sm shadow-primary/5">
+                                                <Building2 className="size-6" />
+                                            </div>
+                                            <div>
+                                                <h4 className="text-lg font-black text-foreground tracking-tight">Facilities & Amenities</h4>
+                                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-0.5">Exclusive Residency Benefits</p>
+                                            </div>
+                                        </div>
+                                        <PropertyAmenities amenities={lease.unit.property.amenities || []} />
+                                    </div>
+                                    
+                                    <div className="md:col-span-2 space-y-6">
+                                        <div className="flex items-center gap-4 px-2">
+                                            <div className="size-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-600 border border-amber-500/20 shadow-sm shadow-amber-500/5">
+                                                <ShieldCheck className="size-6" />
+                                            </div>
+                                            <div>
+                                                <h4 className="text-lg font-black text-foreground tracking-tight">Building Regulations</h4>
+                                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-0.5">Community Guidelines</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm ring-1 ring-border h-fit">
+                                            <div className="space-y-4">
+                                                {lease.unit.property.house_rules.length > 0 ? (
+                                                    lease.unit.property.house_rules.map((ruleText, ruleIndex) => (
+                                                        <div key={ruleText} className="flex items-start gap-4 p-4 rounded-2xl bg-muted/30 border border-border/50 group hover:bg-muted/50 transition-colors">
+                                                            <div className="size-7 rounded-xl bg-background border border-border flex items-center justify-center text-muted-foreground shrink-0 shadow-sm mt-0.5 group-hover:text-foreground transition-colors">
+                                                                <p className="text-[11px] font-black">{ruleIndex + 1}</p>
+                                                            </div>
+                                                            <p className="text-sm font-medium text-foreground leading-relaxed">{ruleText}</p>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <div className="flex flex-col items-center justify-center text-center space-y-3 py-10">
+                                                        <div className="size-12 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
+                                                            <FileText className="size-5" />
+                                                        </div>
+                                                        <p className="text-sm text-muted-foreground max-w-[200px]">Refer to the master lease for building-specific guidelines.</p>
                                                     </div>
-                                                    <p className="text-xs font-black text-foreground leading-relaxed">{rule}</p>
-                                                </div>
-                                            ))
-                                        ) : (
-                                            <p className="text-xs text-muted-foreground italic">Refer to the master lease for building-specific guidelines.</p>
-                                        )}
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -557,7 +486,6 @@ const [renewalRequest, setRenewalRequest] = useState<{
 
                         {activeTab === "services" && (
                             <div className="space-y-12">
-                                {/* Service Requests Grid */}
                                 <div className="space-y-6">
                                     <div className="flex items-center justify-between px-1">
                                         <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">Operational Requests</h3>
@@ -568,19 +496,16 @@ const [renewalRequest, setRenewalRequest] = useState<{
                                     </div>
                                     
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                         {/* Move Out Request Wrapper */}
                                           <div className="lg:col-span-1">
-                                              <MoveOutRequest variant="hub" initialRequest={mockMoveOutRequest} />
+                                              <MoveOutRequest variant="hub" />
                                           </div>
 
-                                         {/* Unit Transfer Request */}
                                          <div className="lg:col-span-1">
                                              <UnitTransferRequest currentUnitId={lease.unit.id} />
                                          </div>
                                      </div>
                                 </div>
 
-                                {/* Management Support Card */}
                                 <div className="bg-card border border-border rounded-[3rem] p-12 shadow-sm ring-1 ring-border relative overflow-hidden group">
                                     <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] via-transparent to-transparent opacity-80" />
                                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary/40 via-primary/60 to-primary/40" />
@@ -622,27 +547,38 @@ const [renewalRequest, setRenewalRequest] = useState<{
                         )}
                     </div>
 
-                    {/* Sidebar Column */}
-                    <div className="lg:col-span-1 space-y-6">
-                        {/* Quick Reference Card */}
-                        <div className="bg-muted/20 border border-dashed border-border rounded-[2rem] p-8 text-center flex flex-col items-center justify-center min-h-[200px]">
-                            <div className="size-12 rounded-2xl bg-background border border-border flex items-center justify-center text-muted-foreground mb-4">
-                                <Building2 className="size-6" />
+                    <div className="lg:col-span-1">
+                        <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm ring-1 ring-border relative overflow-hidden group transition-all hover:shadow-lg">
+                            <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity select-none pointer-events-none">
+                                <Building2 className="size-24" />
                             </div>
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-1">Assigned Unit</p>
-                            <p className="text-lg font-black text-foreground tracking-tight">{lease.unit.name}</p>
-                            <p className="text-[10px] text-muted-foreground font-black mt-1 uppercase tracking-widest">{lease.unit.property.name}</p>
-                            <div className="mt-6 pt-6 border-t border-border/50 w-full">
-                                <Link href="/tenant/dashboard" className="text-[9px] font-black uppercase tracking-widest text-primary hover:underline flex items-center justify-center gap-2">
-                                    Return to Dashboard <ArrowUpRight className="size-3" />
-                                </Link>
+                            
+                            <div className="flex flex-col items-center text-center space-y-6 relative z-10">
+                                <div className="size-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-sm">
+                                    <Building2 className="size-8" />
+                                </div>
+                                
+                                <div className="space-y-1">
+                                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">Assigned Unit</p>
+                                    <h3 className="text-2xl font-black text-foreground tracking-tighter">{lease.unit.name}</h3>
+                                    <p className="text-[10px] font-black text-primary uppercase tracking-widest">{lease.unit.property.name}</p>
+                                </div>
+                                
+                                <div className="w-full pt-6 border-t border-border/50">
+                                    <Link 
+                                        href="/tenant/dashboard" 
+                                        className="inline-flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors group/link"
+                                    >
+                                        Return to Dashboard 
+                                        <ArrowUpRight className="size-3.5 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 transition-transform" />
+                                    </Link>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Lease Modal */}
             {lease && (
                 <LeaseModal 
                     open={isModalOpen}

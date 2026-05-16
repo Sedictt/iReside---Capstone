@@ -3,10 +3,10 @@ import { requireUser } from "@/lib/supabase/auth";
 import { getTenantAmenities } from "@/lib/queries/amenities";
 
 export async function GET() {
-    const { user } = await requireUser();
+    const { user, supabase } = await requireUser();
 
     try {
-        const amenities = await getTenantAmenities(user.id);
+        const amenities = await getTenantAmenities(user.id, supabase);
 
         // Extract unique categories from amenities
         const categories = ["All", ...new Set(amenities?.map((a) => a.type).filter(Boolean) || [])];

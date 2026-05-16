@@ -1,12 +1,12 @@
 import { createClient } from '@/lib/supabase/client'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '@/types/database'
-
 
 type AmenityInsert = Database['public']['Tables']['amenities']['Insert']
 
-export async function getAmenities(landlordId: string) {
-    const supabase = createClient()
-    const { data, error } = await supabase
+export async function getAmenities(landlordId: string, supabase?: SupabaseClient<Database>) {
+    const client = supabase ?? createClient()
+    const { data, error } = await client
         .from('amenities')
         .select(`
             *,
@@ -19,9 +19,9 @@ export async function getAmenities(landlordId: string) {
     return data
 }
 
-export async function getAmenityBookings(landlordId: string) {
-    const supabase = createClient()
-    const { data, error } = await supabase
+export async function getAmenityBookings(landlordId: string, supabase?: SupabaseClient<Database>) {
+    const client = supabase ?? createClient()
+    const { data, error } = await client
         .from('amenity_bookings')
         .select(`
             *,
@@ -35,9 +35,9 @@ export async function getAmenityBookings(landlordId: string) {
     return data
 }
 
-export async function updateBookingStatus(bookingId: string, status: string) {
-    const supabase = createClient()
-    const { data, error } = await supabase
+export async function updateBookingStatus(bookingId: string, status: string, supabase?: SupabaseClient<Database>) {
+    const client = supabase ?? createClient()
+    const { data, error } = await client
         .from('amenity_bookings')
         .update({ status, updated_at: new Date().toISOString() })
         .eq('id', bookingId)
@@ -47,9 +47,9 @@ export async function updateBookingStatus(bookingId: string, status: string) {
     return data && data.length > 0 ? data[0] : null
 }
 
-export async function upsertAmenity(amenity: AmenityInsert) {
-    const supabase = createClient()
-    const { error } = await supabase
+export async function upsertAmenity(amenity: AmenityInsert, supabase?: SupabaseClient<Database>) {
+    const client = supabase ?? createClient()
+    const { error } = await client
         .from('amenities')
         .upsert({
             ...amenity,
@@ -60,9 +60,9 @@ export async function upsertAmenity(amenity: AmenityInsert) {
     return true
 }
 
-export async function deleteAmenity(id: string) {
-    const supabase = createClient()
-    const { error } = await supabase
+export async function deleteAmenity(id: string, supabase?: SupabaseClient<Database>) {
+    const client = supabase ?? createClient()
+    const { error } = await client
         .from('amenities')
         .delete()
         .eq('id', id)
@@ -70,12 +70,12 @@ export async function deleteAmenity(id: string) {
     if (error) throw error
 }
 
-// Tenant-facing queries
-export async function getTenantAmenities(tenantId: string) {
-    const supabase = createClient()
+// Tenant-facing queries (used by server-side API routes)
+export async function getTenantAmenities(tenantId: string, supabase?: SupabaseClient<Database>) {
+    const client = supabase ?? createClient()
     
     // Get tenant's active lease with unit/property info
-    const { data: leases, error: leaseError } = await supabase
+    const { data: leases, error: leaseError } = await client
         .from('leases')
         .select(`
             unit:units (
@@ -94,20 +94,20 @@ export async function getTenantAmenities(tenantId: string) {
 
     if (propertyIds.length === 0) return []
 
-    const { data, error } = await supabase
+    const { data, error } = await client
         .from('amenities')
         .select('*, property:properties(name)')
         .in('property_id', propertyIds)
-        .eq('status', 'active')
+        .ilike('status', 'Active')
         .order('created_at', { ascending: false })
 
     if (error) throw error
     return data
 }
 
-export async function getTenantBookings(tenantId: string) {
-    const supabase = createClient()
-    const { data, error } = await supabase
+export async function getTenantBookings(tenantId: string, supabase?: SupabaseClient<Database>) {
+    const client = supabase ?? createClient()
+    const { data, error } = await client
         .from('amenity_bookings')
         .select(`
             *,
@@ -127,11 +127,11 @@ export async function createAmenityBooking(booking: {
     start_time: string
     end_time: string
     notes?: string
-}) {
-    const supabase = createClient()
+}, supabase?: SupabaseClient<Database>) {
+    const client = supabase ?? createClient()
     
     // Get amenity details
-    const { data: amenity, error: amenityError } = await supabase
+    const { data: amenity, error: amenityError } = await client
         .from('amenities')
         .select('landlord_id, price_per_unit')
         .eq('id', booking.amenity_id)
@@ -145,7 +145,7 @@ export async function createAmenityBooking(booking: {
     const hours = endHour - startHour
     const total_price = (amenity.price_per_unit || 0) * hours
 
-    const { data, error } = await supabase
+    const { data, error } = await client
         .from('amenity_bookings')
         .insert({
             amenity_id: booking.amenity_id,
@@ -167,4 +167,3 @@ export async function createAmenityBooking(booking: {
     if (error) throw error
     return data
 }
-

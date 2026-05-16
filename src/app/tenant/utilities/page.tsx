@@ -298,7 +298,7 @@ export default function TenantUtilitiesPage() {
                                 transition={{ delay: 0.1 }}
                                 className="text-5xl font-black tracking-tight text-foreground md:text-6xl lg:text-7xl"
                             >
-                                Building <span className="text-primary">Amenities</span>
+                                <span className="text-primary">Facilities</span>
                             </motion.h1>
                             <motion.p 
                                 initial={{ opacity: 0, y: 20 }}

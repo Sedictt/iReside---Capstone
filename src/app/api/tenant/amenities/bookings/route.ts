@@ -3,10 +3,10 @@ import { requireUser } from "@/lib/supabase/auth";
 import { getTenantBookings, createAmenityBooking } from "@/lib/queries/amenities";
 
 export async function GET() {
-    const { user } = await requireUser();
+    const { user, supabase } = await requireUser();
 
     try {
-        const bookings = await getTenantBookings(user.id);
+        const bookings = await getTenantBookings(user.id, supabase);
         return NextResponse.json({ bookings: bookings || [] });
     } catch (error) {
         const message = error instanceof Error ? error.message : "Failed to fetch bookings";
@@ -15,7 +15,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-    const { user } = await requireUser();
+    const { user, supabase } = await requireUser();
 
     try {
         const body = await request.json();
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
             start_time,
             end_time,
             notes: notes || undefined,
-        });
+        }, supabase);
 
         return NextResponse.json({ booking }, { status: 201 });
     } catch (error) {

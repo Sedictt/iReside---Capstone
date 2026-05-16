@@ -3,7 +3,7 @@
 import { m as motion } from "framer-motion";
 import { LeaseData } from "@/types/lease";
 
-export function LeaseDocument(props: LeaseData) {
+export function LeaseDocument(leaseDataProps: LeaseData) {
     const {
         id: leaseId,
         landlord,
@@ -13,7 +13,7 @@ export function LeaseDocument(props: LeaseData) {
         end_date,
         monthly_rent,
         security_deposit,
-    } = props;
+    } = leaseDataProps;
 
     const parties = {
         landlord: landlord.full_name,
@@ -33,9 +33,9 @@ export function LeaseDocument(props: LeaseData) {
     };
 
 
-    const getOrdinalSuffix = (day: number): string => {
-        if (day > 3 && day < 21) return 'th';
-        switch (day % 10) {
+    const getOrdinalSuffix = (dayOfMonth: number): string => {
+        if (dayOfMonth > 3 && dayOfMonth < 21) return 'th';
+        switch (dayOfMonth % 10) {
             case 1: return 'st';
             case 2: return 'nd';
             case 3: return 'rd';
@@ -43,9 +43,9 @@ export function LeaseDocument(props: LeaseData) {
         }
     };
 
-const rent = {
+const rentDetails = {
         monthly: monthly_rent,
-        due: props.terms?.rent_due_day ? `${props.terms.rent_due_day}${getOrdinalSuffix(props.terms.rent_due_day)} of the month` : "1st of the month"
+        due: leaseDataProps.terms?.rent_due_day ? `${leaseDataProps.terms.rent_due_day}${getOrdinalSuffix(leaseDataProps.terms.rent_due_day)} of the month` : "1st of the month"
     };
 
 
@@ -122,7 +122,7 @@ return (
                         4. RENT PAYMENTS
                     </h2>
                     <p className="text-zinc-800">
-                        Monthly rent of <span className="font-black text-zinc-950">PHP {rent.monthly.toLocaleString()}.00</span> due on the {rent.due} day of each month.
+                        Monthly rent of <span className="font-black text-zinc-950">₱ {rentDetails.monthly.toLocaleString()}.00</span> due on the {rentDetails.due} day of each month.
                     </p>
                 </div>
 
@@ -131,7 +131,7 @@ return (
                         5. SECURITY DEPOSIT
                     </h2>
                     <p className="text-zinc-800">
-                        Deposit of <span className="font-black text-zinc-950">PHP {deposit.toLocaleString()}.00</span> held for damages or defaults.
+                        Deposit of <span className="font-black text-zinc-950">₱ {deposit.toLocaleString()}.00</span> held for damages or defaults.
                     </p>
                 </div>
 
@@ -139,7 +139,7 @@ return (
                     <h2 className="text-[12px] font-black uppercase tracking-widest text-zinc-950 border-b border-zinc-200 pb-0.5">
                         6. UTILITIES AND SERVICES
                     </h2>
-                    {props.unit.property.house_rules?.includes("strategy:inclusive") ? (
+                    {leaseDataProps.unit.property.house_rules?.includes("strategy:inclusive") ? (
                         <p className="text-zinc-800">
                             The monthly rent is <span className="font-black">INCLUSIVE</span> of standard essential utilities (Water and Electricity).
                         </p>
@@ -155,7 +155,7 @@ return (
                         7. AMENITIES AND FACILITIES
                     </h2>
                     <p className="text-zinc-800">
-                        Access provided as part of residency: <span className="italic font-black text-zinc-950">{props.unit.property.amenities.length > 0 ? props.unit.property.amenities.map(amenity => amenity.name).join(", ") + "." : "Standard residential access."}</span>
+                        Access provided as part of residency: <span className="italic font-black text-zinc-950">{leaseDataProps.unit.property.amenities.length > 0 ? leaseDataProps.unit.property.amenities.map(amenityItem => amenityItem.name).join(", ") + "." : "Standard residential access."}</span>
                     </p>
                 </div>
 
@@ -166,8 +166,8 @@ return (
                     <p className="text-zinc-800 leading-tight">
                         Compliance required for:{" "}
                         <span className="font-black text-zinc-950">
-                            {props.unit.property.house_rules
-                                ?.filter(rule => !rule.startsWith("strategy:"))
+                            {leaseDataProps.unit.property.house_rules
+                                ?.filter(ruleItem => !ruleItem.startsWith("strategy:"))
                                 .join(", ") || "Standard residential conduct"}
                         </span>. 
                         Violations may constitute a material breach of this Agreement.

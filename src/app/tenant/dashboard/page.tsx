@@ -184,19 +184,19 @@ export default function TenantDashboard() {
 
             try {
                 const response = await fetch("/api/tenant/dashboard", { cache: "no-store" });
-                const payload = (await response.json()) as DashboardData & { error?: string };
+                const responseData = (await response.json()) as DashboardData & { error?: string };
 
                 if (!response.ok) {
-                    throw new Error(payload?.error ?? "Failed to load dashboard data.");
+                    throw new Error(responseData?.error ?? "Failed to load dashboard data.");
                 }
 
                 if (isMounted) {
-                    setDashboardData(payload);
+                    setDashboardData(responseData);
                 }
             } catch (error) {
                 if (isMounted) {
-                    const message = error instanceof Error ? error.message : "Failed to load dashboard data.";
-                    setDashboardError(message);
+                    const errorMessage = error instanceof Error ? error.message : "Failed to load dashboard data.";
+                    setDashboardError(errorMessage);
                 }
             } finally {
                 if (isMounted) {
@@ -228,7 +228,6 @@ export default function TenantDashboard() {
         : nextPaymentParts;
 
     const timeRemaining = useMemo(() => {
-
         if (!nextPayment?.dueDate) {
             return { days: 0, hours: 0, isOverdue: false };
         }
@@ -236,18 +235,18 @@ export default function TenantDashboard() {
         if (Number.isNaN(due.getTime())) {
             return { days: 0, hours: 0, isOverdue: false };
         }
-        const diffMs = due.getTime() - Date.now();
-        if (diffMs <= 0) {
+        const timeDifferenceMs = due.getTime() - Date.now();
+        if (timeDifferenceMs <= 0) {
             return { days: 0, hours: 0, isOverdue: true };
         }
-        const totalHours = Math.floor(diffMs / (1000 * 60 * 60));
-        const days = Math.floor(totalHours / 24);
-        const hours = totalHours % 24;
+        const remainingHours = Math.floor(timeDifferenceMs / (1000 * 60 * 60));
+        const days = Math.floor(remainingHours / 24);
+        const hours = remainingHours % 24;
         return { days, hours, isOverdue: false };
     }, [nextPayment?.dueDate]);
 
     const overdueTotal = useMemo(
-        () => overduePayments.reduce((sum, payment) => sum + (Number(payment.amount ?? 0) || 0), 0),
+        () => overduePayments.reduce((totalAmount, payment) => totalAmount + (Number(payment.amount ?? 0) || 0), 0),
         [overduePayments]
     );
 
@@ -255,19 +254,19 @@ export default function TenantDashboard() {
         if (!lease?.startDate || !lease?.endDate) {
             return { monthsLeft: null, progressPercent: 0, endLabel: "No active lease" };
         }
-        const start = new Date(lease.startDate);
-        const end = new Date(lease.endDate);
-        if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+        const leaseStartDate = new Date(lease.startDate);
+        const leaseEndDate = new Date(lease.endDate);
+        if (Number.isNaN(leaseStartDate.getTime()) || Number.isNaN(leaseEndDate.getTime())) {
             return { monthsLeft: null, progressPercent: 0, endLabel: "No active lease" };
         }
-        const totalMs = end.getTime() - start.getTime();
-        const elapsedMs = Math.min(Math.max(Date.now() - start.getTime(), 0), totalMs);
+        const totalMs = leaseEndDate.getTime() - leaseStartDate.getTime();
+        const elapsedMs = Math.min(Math.max(Date.now() - leaseStartDate.getTime(), 0), totalMs);
         const progressPercent = totalMs > 0 ? Math.round((elapsedMs / totalMs) * 100) : 0;
         const monthsLeft = Math.max(
             0,
-            (end.getFullYear() - new Date().getFullYear()) * 12 + (end.getMonth() - new Date().getMonth())
+            (leaseEndDate.getFullYear() - new Date().getFullYear()) * 12 + (leaseEndDate.getMonth() - new Date().getMonth())
         );
-        const endLabel = end.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+        const endLabel = leaseEndDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
         return { monthsLeft, progressPercent, endLabel };
     }, [lease?.startDate, lease?.endDate]);
 
@@ -280,21 +279,21 @@ export default function TenantDashboard() {
     }, [lease?.endDate, previewDays]);
 
     const utilitiesByLabel = useMemo(() => {
-        const map = new Map<string, number>();
-        (dashboardData?.utilities ?? []).forEach((item) => {
-            map.set(item.label.toLowerCase(), item.amount);
+        const utilityAmountMap = new Map<string, number>();
+        (dashboardData?.utilities ?? []).forEach((utility) => {
+            utilityAmountMap.set(utility.label.toLowerCase(), utility.amount);
         });
-        return map;
+        return utilityAmountMap;
     }, [dashboardData?.utilities]);
 
     const electricityAmount = utilitiesByLabel.get("electricity") ?? null;
     const waterAmount = utilitiesByLabel.get("water") ?? null;
 
     const supportActions = useMemo(() => {
-        const items = [];
+        const actions = [];
 
         if (overduePayments.length > 0) {
-            items.push({
+            actions.push({
                 id: "overdue-payments",
                 title: `Billing support needed`,
                 description: `You have ${overduePayments.length} overdue bill${overduePayments.length === 1 ? "" : "s"} totaling ₱${formatCurrency(overdueTotal, 2)}.`,
@@ -305,7 +304,7 @@ export default function TenantDashboard() {
                 iconBg: "bg-red-500/10",
             });
         } else if (nextPayment) {
-            items.push({
+            actions.push({
                 id: "next-payment",
                 title: "Upcoming payment",
                 description: `${nextPayment.description ?? "Your next payment"} is due ${formatDueDate(nextPayment.dueDate)}.`,
@@ -318,7 +317,7 @@ export default function TenantDashboard() {
         }
 
         if (lease) {
-            items.push({
+            actions.push({
                 id: "lease-review",
                 title: "Lease questions",
                 description: `${lease.propertyName ?? "Your lease"} ends ${leaseProgress.endLabel}. Review terms, dates, and deposit details.`,
@@ -330,7 +329,7 @@ export default function TenantDashboard() {
             });
         }
 
-        items.push({
+        actions.push({
             id: "message-landlord",
             title: "Message landlord or support",
             description: "Open your inbox to contact your landlord or continue a conversation with iRis.",
@@ -341,12 +340,11 @@ export default function TenantDashboard() {
             iconBg: "bg-purple-500/10",
         });
 
-        return items.slice(0, 3);
+        return actions.slice(0, 3);
     }, [lease, leaseProgress.endLabel, nextPayment, overduePayments.length, overdueTotal]);
 
     return (
         <div className="relative md:pr-[104px] lg:pr-[112px]">
-            {/* Ambient Background */}
             <div className="fixed inset-0 z-0 pointer-events-none">
                 <Image
                     src="https://images.unsplash.com/photo-1481277542470-605612bd2d61?q=80&w=2600&auto=format&fit=crop"
@@ -388,7 +386,6 @@ export default function TenantDashboard() {
                     )}
                 </AnimatePresence>
 
-                {/* Command Center Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2" data-tour-id="tour-dashboard-overview">
                     <div>
                         <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">
@@ -400,14 +397,12 @@ export default function TenantDashboard() {
                     </div>
                 </div>
 
-                {/* Primary Command Card */}
                 <div className="relative overflow-hidden rounded-[2.5rem] border border-border/50 bg-card/50 p-8 shadow-xl backdrop-blur-md dark:bg-white/[0.02]">
                     <div className="absolute top-0 right-0 p-8 opacity-[0.03]">
                         <Home className="size-48" />
                     </div>
                     
                     <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
-                        {/* Next Payment Info */}
                         <div className="md:col-span-2 space-y-6">
                             <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20 shadow-sm">
                                 <span className="size-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(109,152,56,0.6)]" />
@@ -446,7 +441,6 @@ export default function TenantDashboard() {
                             </div>
                         </div>
 
-                        {/* Status Sidebar within Hero */}
                         <div className="bg-muted/30 rounded-3xl p-6 border border-border/50 space-y-4">
                             <div className="flex items-center justify-between">
                                 <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Lease Progress</p>
@@ -476,27 +470,26 @@ export default function TenantDashboard() {
                     </div>
                 </div>
 
-                {/* Upcoming Months Preview */}
                 {upcomingMonths.length > 0 && (
                     <div className="grid grid-cols-3 gap-3">
-                        {upcomingMonths.map((month) => (
+                        {upcomingMonths.map((monthForecast) => (
                             <div 
-                                key={month.month}
+                                key={monthForecast.month}
                                 className={cn(
                                     "rounded-2xl p-4 border",
-                                    month.isForecast 
+                                    monthForecast.isForecast 
                                         ? "bg-muted/30 border-border/50" 
                                         : "bg-primary/5 border-primary/20"
                                 )}
                             >
                                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">
-                                    {month.monthLabel}
+                                    {monthForecast.monthLabel}
                                 </p>
                                 <p className="text-lg font-black text-foreground mt-1">
-                                    ₱{formatCurrency(month.amount)}
+                                    ₱{formatCurrency(monthForecast.amount)}
                                 </p>
                                 <div className="flex items-center gap-1 mt-2">
-                                    {month.isForecast ? (
+                                    {monthForecast.isForecast ? (
                                         <span className="text-[9px] font-medium text-muted-foreground">Estimated</span>
                                     ) : (
                                         <span className="text-[9px] font-medium text-primary">Ready to Pay</span>
@@ -513,7 +506,6 @@ export default function TenantDashboard() {
                     </div>
                 )}
 
-                {/* Priority Feed (Alerts & Announcements) */}
                 <div className="grid grid-cols-1 gap-4">
                     {announcement && showBanner && (
                         <motion.div 
@@ -567,9 +559,7 @@ export default function TenantDashboard() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Main Content Area */}
                     <div className="lg:col-span-2 space-y-8">
-                        {/* Quick Actions - More compact & elegant */}
                         <div data-tour-id="tour-quick-actions">
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Quick Services</h3>
@@ -579,23 +569,22 @@ export default function TenantDashboard() {
                                     { icon: Wrench, label: "Request Repair", href: "/tenant/maintenance/new", color: "text-orange-500", bg: "bg-orange-500/10" },
                                     { icon: MessageSquare, label: "Messages", href: "/tenant/messages", color: "text-emerald-500", bg: "bg-emerald-500/10" },
                                     { icon: Home, label: "Unit View", href: "/tenant/unit-map", color: "text-blue-500", bg: "bg-blue-500/10" },
-                                ].map((action, i) => (
+                                ].map((quickActionItem) => (
                                     <Link
-                                        key={action.href}
-                                        href={action.href}
+                                        key={quickActionItem.href}
+                                        href={quickActionItem.href}
                                         className="bg-card/50 border border-border hover:border-primary/40 rounded-3xl p-6 flex flex-col items-center justify-center gap-4 transition-all hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 group backdrop-blur-sm"
                                     >
-                                        <div className={cn("size-14 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110", action.bg, action.color)}>
-                                            <action.icon className="size-7" />
+                                        <div className={cn("size-14 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110", quickActionItem.bg, quickActionItem.color)}>
+                                            <quickActionItem.icon className="size-7" />
                                         </div>
-                                        <span className="text-xs font-black text-center group-hover:text-primary transition-colors uppercase tracking-widest">{action.label}</span>
+                                        <span className="text-xs font-black text-center group-hover:text-primary transition-colors uppercase tracking-widest">{quickActionItem.label}</span>
                                     </Link>
                                 ))}
                                 <MoveOutRequest variant="quickAction" />
                             </div>
                         </div>
 
-                        {/* Recent Activity Section */}
                         <div className="bg-card/50 border border-border rounded-[2rem] p-8 shadow-sm backdrop-blur-sm">
                             <div className="flex items-center justify-between mb-8">
                                 <div>
@@ -609,23 +598,23 @@ export default function TenantDashboard() {
 
                             {paymentHistory.length > 0 ? (
                                 <div className="space-y-3">
-                                    {paymentHistory.slice(0, 4).map((payment) => {
-                                        const isAdvanceRent = payment.description?.toLowerCase().includes('advance rent');
-                                        const isSecurityDeposit = payment.category?.toLowerCase() === 'security_deposit';
+                                    {paymentHistory.slice(0, 4).map((paymentRecord) => {
+                                        const isAdvanceRent = paymentRecord.description?.toLowerCase().includes('advance rent');
+                                        const isSecurityDeposit = paymentRecord.category?.toLowerCase() === 'security_deposit';
                                         
                                         return (
-                                            <div key={payment.id} className="group flex items-center justify-between p-4 rounded-2xl border border-border/40 hover:border-primary/20 hover:bg-primary/[0.02] transition-all">
+                                            <div key={paymentRecord.id} className="group flex items-center justify-between p-4 rounded-2xl border border-border/40 hover:border-primary/20 hover:bg-primary/[0.02] transition-all">
                                                 <div className="flex items-center gap-4">
                                                     <div className={cn(
                                                         "size-10 rounded-xl flex items-center justify-center shrink-0",
-                                                        payment.status === 'completed' ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500"
+                                                        paymentRecord.status === 'completed' ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500"
                                                     )}>
-                                                        {payment.status === 'completed' ? <CheckCircle2 className="size-5" /> : <Clock className="size-5" />}
+                                                        {paymentRecord.status === 'completed' ? <CheckCircle2 className="size-5" /> : <Clock className="size-5" />}
                                                     </div>
                                                     <div className="min-w-0">
                                                         <div className="flex items-center gap-2">
                                                             <p className="font-black text-sm text-foreground truncate">
-                                                                {payment.description ?? "Payment"}
+                                                                {paymentRecord.description ?? "Payment"}
                                                             </p>
                                                             {(isAdvanceRent || isSecurityDeposit) && (
                                                                 <span className="px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-primary/10 text-primary border border-primary/20 shrink-0">
@@ -634,17 +623,17 @@ export default function TenantDashboard() {
                                                             )}
                                                         </div>
                                                         <p className="text-[10px] text-muted-foreground mt-0.5 uppercase font-black tracking-wider">
-                                                            {payment.paidAt ? <>Settled <ClientOnlyDate date={payment.paidAt} /></> : <>Due <ClientOnlyDate date={payment.dueDate} /></>}
+                                                            {paymentRecord.paidAt ? <>Settled <ClientOnlyDate date={paymentRecord.paidAt} /></> : <>Due <ClientOnlyDate date={paymentRecord.dueDate} /></>}
                                                         </p>
                                                     </div>
                                                 </div>
                                                 <div className="text-right shrink-0">
-                                                    <p className="font-black text-sm text-foreground tracking-tight">₱{formatCurrency(payment.amount, 2)}</p>
+                                                    <p className="font-black text-sm text-foreground tracking-tight">₱{formatCurrency(paymentRecord.amount, 2)}</p>
                                                     <p className={cn(
                                                         "text-[8px] font-black uppercase tracking-[0.2em] mt-0.5",
-                                                        payment.status === 'completed' ? "text-emerald-500" : "text-amber-500"
+                                                        paymentRecord.status === 'completed' ? "text-emerald-500" : "text-amber-500"
                                                     )}>
-                                                        {payment.status}
+                                                        {paymentRecord.status}
                                                     </p>
                                                 </div>
                                             </div>
@@ -657,13 +646,9 @@ export default function TenantDashboard() {
                                 </div>
                             )}
                         </div>
-
-
                     </div>
 
-                    {/* Sidebar Area */}
                     <div className="space-y-8">
-                        {/* Property Overview Card */}
                         <div className="bg-card/90 border border-border/60 rounded-[2rem] p-8 shadow-sm backdrop-blur-xl relative overflow-hidden" data-tour-id="tour-lease-details">
                             <div className="absolute top-0 right-0 size-32 bg-primary/5 blur-3xl -mr-8 -mt-8" />
                             <div className="relative z-10 space-y-6">
@@ -719,8 +704,6 @@ export default function TenantDashboard() {
                                 </div>
                             </div>
                         </div>
-
-
                     </div>
                 </div>
             {dashboardData?.lease && (
@@ -766,15 +749,7 @@ export default function TenantDashboard() {
                 />
             )}
             <TenantContactsSidebar />
+            </div>
         </div>
-    </div>
-);
+    );
 }
-
-
-
-
-
-
-
-

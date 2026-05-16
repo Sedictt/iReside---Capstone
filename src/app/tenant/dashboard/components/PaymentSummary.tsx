@@ -30,7 +30,6 @@ export function PaymentSummary({ nextPayment, overduePayments }: PaymentSummaryP
 
     return (
         <div className="space-y-4">
-            {/* Overdue Payments Alert */}
             {hasOverduePayments && (
                 <div className="bg-rose-500/10 border border-rose-500/20 rounded-2xl p-4">
                     <div className="flex items-start gap-3">
@@ -41,13 +40,13 @@ export function PaymentSummary({ nextPayment, overduePayments }: PaymentSummaryP
                                 You have {overduePayments.length} overdue payment{overduePayments.length > 1 ? 's' : ''}. Please pay as soon as possible.
                             </p>
                             <div className="space-y-2">
-                                {overduePayments.map((payment) => (
-                                    <div key={payment.id} className="flex items-center justify-between text-sm">
+                                {overduePayments.map((overduePayment) => (
+                                    <div key={overduePayment.id} className="flex items-center justify-between text-sm">
                                         <div>
-                                            <p className="font-medium text-foreground">{payment.description || "Rent Payment"}</p>
-                                            <p className="text-muted-foreground">Due: <ClientOnlyDate date={payment.dueDate} /></p>
+                                            <p className="font-medium text-foreground">{overduePayment.description || "Rent Payment"}</p>
+                                            <p className="text-muted-foreground">Due: <ClientOnlyDate date={overduePayment.dueDate} /></p>
                                         </div>
-                                        <p className="font-black text-rose-500">₱{payment.amount.toLocaleString()}</p>
+                                        <p className="font-black text-rose-500">₱{overduePayment.amount.toLocaleString()}</p>
                                     </div>
                                 ))}
                             </div>
@@ -56,7 +55,6 @@ export function PaymentSummary({ nextPayment, overduePayments }: PaymentSummaryP
                 </div>
             )}
 
-            {/* Next Payment */}
             {nextPayment && !hasOverduePayments && (
                 <div className="bg-gradient-to-r from-blue-500/10 to-blue-500/5 border border-blue-500/20 rounded-2xl p-6">
                     <div className="flex items-center justify-between mb-4">

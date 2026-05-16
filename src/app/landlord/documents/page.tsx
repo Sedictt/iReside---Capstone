@@ -50,9 +50,9 @@ interface LandlordProfile {
 }
 
 export default function DocumentsPage() {
-    const [documents, setDocuments] = useState<Document[]>([]);
-    const [profile, setProfile] = useState<LandlordProfile | null>(null);
-    const [loadingState, setLoadingState] = useState(true);
+    const [documentList, setDocumentList] = useState<Document[]>([]);
+    const [landlordProfile, setLandlordProfile] = useState<LandlordProfile | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
     const [selectedTemplate, setSelectedTemplate] = useState<Document | null>(null);
     const [showPreview, setShowPreview] = useState(false);
     const [previewStartDate, setPreviewStartDate] = useState("");
@@ -69,16 +69,16 @@ export default function DocumentsPage() {
         const fetchDocuments = async () => {
             try {
                 const response = await fetch("/api/landlord/documents");
-                const documentsData = await response.json();
+                const documentsResponse = await response.json();
                 
-                if (!response.ok) throw new Error(documentsData.error || "Failed to fetch documents");
+                if (!response.ok) throw new Error(documentsResponse.error || "Failed to fetch documents");
                 
-                setDocuments(documentsData.documents);
-                setProfile(documentsData.profile);
+                setDocumentList(documentsResponse.documents);
+                setLandlordProfile(documentsResponse.profile);
             } catch (error: any) {
                 console.error("Error fetching documents:", error);
             } finally {
-                setLoadingState(false);
+                setIsLoading(false);
             }
         };
 
@@ -104,7 +104,7 @@ export default function DocumentsPage() {
         }
     };
 
-    if (loadingState) {
+    if (isLoading) {
         return (
             <div className="flex h-screen items-center justify-center bg-background">
                 <div className="flex flex-col items-center gap-4">
@@ -115,36 +115,36 @@ export default function DocumentsPage() {
         );
     }
 
-    const registrationDocs = documents.filter(doc => doc.category !== "Lease");
+    const registrationDocuments = documentList.filter(docRecord => docRecord.category !== "Lease");
     
-    const filteredLeaseDocs = documents.filter(doc => {
-        if (doc.category !== "Lease") return false;
+    const filteredLeaseDocuments = documentList.filter(docRecord => {
+        if (docRecord.category !== "Lease") return false;
         
-        if (selectedPropertyId && selectedPropertyId !== 'all' && doc.propertyId && doc.propertyId !== selectedPropertyId) return false;
+        if (selectedPropertyId && selectedPropertyId !== 'all' && docRecord.propertyId && docRecord.propertyId !== selectedPropertyId) return false;
         
         if (searchQuery) {
             const query = searchQuery.toLowerCase();
-            if (!(doc.name.toLowerCase().includes(query) || 
-                doc.description.toLowerCase().includes(query) ||
-                doc.id.toLowerCase().includes(query))) return false;
+            if (!(docRecord.name.toLowerCase().includes(query) || 
+                docRecord.description.toLowerCase().includes(query) ||
+                docRecord.id.toLowerCase().includes(query))) return false;
         }
 
         if (statusFilter !== 'all') {
-            if (statusFilter === 'active' && doc.status !== 'active') return false;
-            if (statusFilter === 'pending' && !doc.status?.includes('pending')) return false;
-            if (statusFilter === 'terminated' && doc.status !== 'terminated' && doc.status !== 'expired') return false;
+            if (statusFilter === 'active' && docRecord.status !== 'active') return false;
+            if (statusFilter === 'pending' && !docRecord.status?.includes('pending')) return false;
+            if (statusFilter === 'terminated' && docRecord.status !== 'terminated' && docRecord.status !== 'expired') return false;
         }
 
         if (typeFilter !== 'all') {
-            if (typeFilter === 'template' && !doc.isTemplate) return false;
-            if (typeFilter === 'lease' && doc.isTemplate) return false;
+            if (typeFilter === 'template' && !docRecord.isTemplate) return false;
+            if (typeFilter === 'lease' && docRecord.isTemplate) return false;
         }
         
         return true;
     });
 
-    const totalPages = Math.ceil(filteredLeaseDocs.length / itemsPerPage);
-    const paginatedLeaseDocs = filteredLeaseDocs.slice(
+    const totalPages = Math.ceil(filteredLeaseDocuments.length / itemsPerPage);
+    const paginatedLeaseDocuments = filteredLeaseDocuments.slice(
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
     );
@@ -227,40 +227,40 @@ export default function DocumentsPage() {
                                                 <Fingerprint className="size-5 text-primary" />
                                                 Identity & Compliance
                                             </h2>
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500">{registrationDocs.length} Records</span>
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500">{registrationDocuments.length} Records</span>
                                         </div>
 
                                         <div className="grid gap-4">
-                                            {registrationDocs.map((doc) => {
-                                                const Icon = getIcon(doc.category);
+                                            {registrationDocuments.map((docRecord) => {
+                                                const CategoryIcon = getIcon(docRecord.category);
                                                 return (
                                                     <div 
-                                                        key={doc.id}
+                                                        key={docRecord.id}
                                                         className="group relative flex items-center gap-6 rounded-[2rem] border border-white/5 bg-neutral-900/40 p-6 transition-all duration-300 hover:border-primary/20 hover:bg-neutral-900/60"
                                                     >
                                                         <div className="flex size-16 shrink-0 items-center justify-center rounded-2xl border border-white/5 bg-white/[0.03] transition-colors group-hover:border-primary/20 group-hover:bg-primary/5">
-                                                            <Icon className="size-7 text-neutral-500 transition-colors group-hover:text-primary" strokeWidth={1.5} />
+                                                            <CategoryIcon className="size-7 text-neutral-500 transition-colors group-hover:text-primary" strokeWidth={1.5} />
                                                         </div>
                                                         
                                                         <div className="flex-1 min-w-0 space-y-1">
                                                             <div className="flex items-center gap-2">
-                                                                <h3 className="text-base font-black text-white truncate">{doc.name}</h3>
+                                                                <h3 className="text-base font-black text-white truncate">{docRecord.name}</h3>
                                                                 <span className="rounded-full bg-neutral-800 px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter text-neutral-400">
-                                                                    {doc.category}
+                                                                    {docRecord.category}
                                                                 </span>
                                                             </div>
-                                                            <p className="text-sm text-neutral-500 truncate">{doc.description}</p>
+                                                            <p className="text-sm text-neutral-500 truncate">{docRecord.description}</p>
                                                             <div className="flex items-center gap-4 pt-1">
                                                                 <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-neutral-600" suppressHydrationWarning>
                                                                     <Clock className="size-3" />
-                                                                    Uploaded {new Date(doc.updatedAt).toLocaleDateString()}
+                                                                    Uploaded {new Date(docRecord.updatedAt).toLocaleDateString()}
                                                                 </div>
                                                             </div>
                                                         </div>
 
                                                         <div className="flex gap-2">
                                                             <a 
-                                                                href={doc.url} 
+                                                                href={docRecord.url} 
                                                                 target="_blank" 
                                                                 rel="noreferrer"
                                                                 className="flex size-10 items-center justify-center rounded-xl border border-white/5 bg-white/[0.03] text-neutral-400 transition-all hover:border-primary/20 hover:bg-primary/5 hover:text-primary"
@@ -290,7 +290,7 @@ export default function DocumentsPage() {
                                                     Lease Contracts
                                                 </h2>
                                                 <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500">
-                                                    {filteredLeaseDocs.length} Total Documents Found
+                                                    {filteredLeaseDocuments.length} Total Documents Found
                                                 </p>
                                             </div>
 
@@ -303,7 +303,7 @@ export default function DocumentsPage() {
                                                         type="text"
                                                         placeholder="Search records..."
                                                         value={searchQuery}
-                                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                                        onChange={(event) => setSearchQuery(event.target.value)}
                                                         className="w-full h-12 bg-neutral-900/40 border border-white/5 rounded-2xl pl-11 pr-4 text-sm text-white placeholder:text-neutral-600 focus:outline-none focus:border-primary/20 focus:bg-neutral-900/60 transition-all"
                                                     />
                                                 </div>
@@ -311,7 +311,7 @@ export default function DocumentsPage() {
                                                 <div className="relative">
                                                     <select 
                                                         value={statusFilter}
-                                                        onChange={(e) => setStatusFilter(e.target.value)}
+                                                        onChange={(event) => setStatusFilter(event.target.value)}
                                                         className="h-12 bg-neutral-900/40 border border-white/5 rounded-2xl px-4 text-xs font-black text-neutral-400 focus:outline-none focus:border-primary/20 transition-all appearance-none pr-10 cursor-pointer hover:bg-neutral-900/60"
                                                     >
                                                         <option value="all">ALL STATUS</option>
@@ -325,7 +325,7 @@ export default function DocumentsPage() {
                                                 <div className="relative">
                                                     <select 
                                                         value={typeFilter}
-                                                        onChange={(e) => setTypeFilter(e.target.value)}
+                                                        onChange={(event) => setTypeFilter(event.target.value)}
                                                         className="h-12 bg-neutral-900/40 border border-white/5 rounded-2xl px-4 text-xs font-black text-neutral-400 focus:outline-none focus:border-primary/20 transition-all appearance-none pr-10 cursor-pointer hover:bg-neutral-900/60"
                                                     >
                                                         <option value="all">ALL TYPES</option>
@@ -338,13 +338,13 @@ export default function DocumentsPage() {
                                         </div>
 
                                         <div className="grid gap-4 min-h-[400px] content-start">
-                                            {paginatedLeaseDocs.length > 0 ? (
+                                            {paginatedLeaseDocuments.length > 0 ? (
                                                 <AnimatePresence mode="popLayout">
-                                                    {paginatedLeaseDocs.map((doc) => {
-                                                        const Icon = getIcon(doc.category);
+                                                    {paginatedLeaseDocuments.map((docRecord) => {
+                                                        const CategoryIcon = getIcon(docRecord.category);
                                                         return (
                                                             <motion.div 
-                                                                key={doc.id}
+                                                                key={docRecord.id}
                                                                 layout
                                                                 initial={{ opacity: 0, scale: 0.95 }}
                                                                 animate={{ opacity: 1, scale: 1 }}
@@ -352,33 +352,33 @@ export default function DocumentsPage() {
                                                                 className="group relative flex items-center gap-6 rounded-[2rem] border border-white/5 bg-neutral-900/40 p-6 transition-all duration-300 hover:border-primary/20 hover:bg-neutral-900/60"
                                                             >
                                                                 <div className="flex size-16 shrink-0 items-center justify-center rounded-2xl border border-white/5 bg-white/[0.03] transition-colors group-hover:border-primary/20 group-hover:bg-primary/5">
-                                                                    <Icon className="size-7 text-neutral-500 transition-colors group-hover:text-primary" strokeWidth={1.5} />
+                                                                    <CategoryIcon className="size-7 text-neutral-500 transition-colors group-hover:text-primary" strokeWidth={1.5} />
                                                                 </div>
                                                                 
                                                                 <div className="flex-1 min-w-0 space-y-1">
                                                                     <div className="flex items-center gap-2">
-                                                                        <h3 className="text-base font-black text-white truncate">{doc.name}</h3>
+                                                                        <h3 className="text-base font-black text-white truncate">{docRecord.name}</h3>
                                                                         <span className={cn(
                                                                             "rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter",
-                                                                            doc.isTemplate ? "bg-amber-500/10 text-amber-400" : "bg-primary/10 text-primary"
+                                                                            docRecord.isTemplate ? "bg-amber-500/10 text-amber-400" : "bg-primary/10 text-primary"
                                                                         )}>
-                                                                            {doc.isTemplate ? "TEMPLATE" : "EXECUTED"}
+                                                                            {docRecord.isTemplate ? "TEMPLATE" : "EXECUTED"}
                                                                         </span>
                                                                     </div>
-                                                                    <p className="text-sm text-neutral-500 truncate">{doc.description}</p>
+                                                                    <p className="text-sm text-neutral-500 truncate">{docRecord.description}</p>
                                                                     <div className="flex items-center gap-4 pt-1">
                                                                         <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-neutral-600">
                                                                             <Clock className="size-3" />
-                                                                            <span suppressHydrationWarning>Ref: {doc.id.slice(0, 8)} • <span suppressHydrationWarning>{new Date(doc.updatedAt).toLocaleDateString()}</span></span>
+                                                                            <span suppressHydrationWarning>Ref: {docRecord.id.slice(0, 8)} • <span suppressHydrationWarning>{new Date(docRecord.updatedAt).toLocaleDateString()}</span></span>
                                                                         </div>
                                                                     </div>
                                                                 </div>
 
                                                                 <div className="flex gap-2">
-                                                                    {doc.isTemplate ? (
+                                                                    {docRecord.isTemplate ? (
                                                                         <button 
                                                                             onClick={() => {
-                                                                                setSelectedTemplate(doc);
+                                                                                setSelectedTemplate(docRecord);
                                                                                 setShowPreview(true);
                                                                             }}
                                                                             className="flex size-10 items-center justify-center rounded-xl border border-white/5 bg-white/[0.03] text-neutral-400 transition-all hover:border-primary/20 hover:bg-primary/5 hover:text-primary"
@@ -388,7 +388,7 @@ export default function DocumentsPage() {
                                                                     ) : (
                                                                         <>
                                                                             <a 
-                                                                                href={doc.url}
+                                                                                href={docRecord.url}
                                                                                 target="_blank"
                                                                                 rel="noreferrer"
                                                                                 className="flex size-10 items-center justify-center rounded-xl border border-white/5 bg-white/[0.03] text-neutral-400 transition-all hover:border-primary/20 hover:bg-primary/5 hover:text-primary"
@@ -396,8 +396,8 @@ export default function DocumentsPage() {
                                                                                 <Eye className="size-4" />
                                                                             </a>
                                                                             <a 
-                                                                                href={doc.url}
-                                                                                download={`${doc.name.replace(/\s+/g, '_')}.pdf`}
+                                                                                href={docRecord.url}
+                                                                                download={`${docRecord.name.replace(/\s+/g, '_')}.pdf`}
                                                                                 className="flex size-10 items-center justify-center rounded-xl border border-white/5 bg-white/[0.03] text-neutral-400 transition-all hover:border-primary/20 hover:bg-primary/5 hover:text-primary"
                                                                             >
                                                                                 <Download className="size-4" />
@@ -422,7 +422,7 @@ export default function DocumentsPage() {
                                         {totalPages > 1 && (
                                             <div className="flex items-center justify-center gap-4 pt-8">
                                                 <button 
-                                                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                                    onClick={() => setCurrentPage(previousPage => Math.max(1, previousPage - 1))}
                                                     disabled={currentPage === 1}
                                                     className="flex size-12 items-center justify-center rounded-2xl border border-white/5 bg-neutral-900/40 text-neutral-400 transition-all hover:border-primary/20 hover:text-primary disabled:opacity-20 disabled:hover:border-white/5 disabled:hover:text-neutral-400"
                                                 >
@@ -430,24 +430,24 @@ export default function DocumentsPage() {
                                                 </button>
                                                 
                                                 <div className="flex items-center gap-2">
-                                                    {[...Array(totalPages)].map((_, index) => (
+                                                    {[...Array(totalPages)].map((_, pageIndex) => (
                                                         <button
-                                                            key={`doc-page-${index}`}
-                                                            onClick={() => setCurrentPage(index + 1)}
+                                                            key={`doc-page-${pageIndex}`}
+                                                            onClick={() => setCurrentPage(pageIndex + 1)}
                                                             className={cn(
                                                                 "size-12 rounded-2xl text-[11px] font-black transition-all",
-                                                                currentPage === index + 1 
+                                                                currentPage === pageIndex + 1 
                                                                     ? "bg-primary text-black shadow-lg shadow-primary/20" 
                                                                     : "border border-white/5 bg-neutral-900/40 text-neutral-500 hover:border-primary/20 hover:text-white"
                                                             )}
                                                         >
-                                                            {index + 1}
+                                                            {pageIndex + 1}
                                                         </button>
                                                     ))}
                                                 </div>
 
                                                 <button 
-                                                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                                    onClick={() => setCurrentPage(previousPage => Math.min(totalPages, previousPage + 1))}
                                                     disabled={currentPage === totalPages}
                                                     className="flex size-12 items-center justify-center rounded-2xl border border-white/5 bg-neutral-900/40 text-neutral-400 transition-all hover:border-primary/20 hover:text-primary disabled:opacity-20 disabled:hover:border-white/5 disabled:hover:text-neutral-400"
                                                 >
@@ -515,10 +515,10 @@ export default function DocumentsPage() {
                                     } as any}
                                     landlord={{
                                         id: "landlord-id",
-                                        full_name: profile?.full_name || "Landlord",
-                                        avatar_url: profile?.avatar_url || "",
-                                        avatar_bg_color: profile?.avatar_bg_color || "#10B981",
-                                        phone: profile?.phone || "000-000-0000"
+                                        full_name: landlordProfile?.full_name || "Landlord",
+                                        avatar_url: landlordProfile?.avatar_url || "",
+                                        avatar_bg_color: landlordProfile?.avatar_bg_color || "#10B981",
+                                        phone: landlordProfile?.phone || "000-000-0000"
                                     }}
                                     tenant={{
                                         full_name: "Prospective Tenant"

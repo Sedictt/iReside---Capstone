@@ -68,18 +68,17 @@ export async function GET(request: Request) {
         leasesQuery.order("signed_at", { ascending: false }),
     ]);
 
-    const { data: applications, error: appError } = applicationsResult;
+    const { data: applications, error: applicationFetchError } = applicationsResult;
     const { data: properties } = propertiesResult;
     const { data: leases } = leasesResult;
 
-    if (appError) {
-        console.error("[Documents API] Error fetching applications:", appError);
+    if (applicationFetchError) {
+        console.error("[Documents API] Error fetching applications:", applicationFetchError);
         return NextResponse.json({ error: "Failed to fetch documents" }, { status: 500 });
     }
 
-
-    const latestApp = (applications && applications.length > 0) ? applications[0] : null;
-    const fallbackDate = latestApp?.created_at || profile.created_at;
+    const latestApplicationRecord = (applications && applications.length > 0) ? applications[0] : null;
+    const fallbackDate = latestApplicationRecord?.created_at || profile.created_at;
 
     const getDocument = (field: string) => {
         if (!applications) return null;
@@ -137,27 +136,27 @@ export async function GET(request: Request) {
             updatedAt: fallbackDate
         },
 
-        ...(properties || []).map(property => ({
-            id: `template-${property.id}`,
-            name: `Contract Template - ${property.name}`,
+        ...(properties || []).map(propertyRecord => ({
+            id: `template-${propertyRecord.id}`,
+            name: `Contract Template - ${propertyRecord.name}`,
             description: "Standard lease agreement for this property",
             url: "#",
             category: "Lease",
-            updatedAt: property.updated_at,
+            updatedAt: propertyRecord.updated_at,
             isTemplate: true,
-            propertyId: property.id,
+            propertyId: propertyRecord.id,
             templateData: {
-                ...(property.contract_template as any || {}),
-                base_rent_amount: property.base_rent_amount
+                ...(propertyRecord.contract_template as any || {}),
+                base_rent_amount: propertyRecord.base_rent_amount
             }
         })),
 
         ...(leases || [])
-            .map(lease => {
-                const isComplete = lease.status === "active" && lease.signed_document_url;
-                const unitName = (lease.unit as any)?.name;
-                const propertyName = (lease.unit as any)?.property?.name;
-                const tenantName = (lease.tenant as any)?.full_name;
+            .map(leaseRecord => {
+                const isComplete = leaseRecord.status === "active" && leaseRecord.signed_document_url;
+                const unitName = (leaseRecord.unit as any)?.name;
+                const propertyName = (leaseRecord.unit as any)?.property?.name;
+                const tenantName = (leaseRecord.tenant as any)?.full_name;
                 
                 let displayName = "Lease Agreement";
                 if (tenantName) {
@@ -165,33 +164,30 @@ export async function GET(request: Request) {
                 } else if (propertyName && unitName) {
                     displayName = `Lease - ${propertyName} (${unitName})`;
                 } else {
-                    displayName = `Lease - ${lease.id.slice(0, 8)}`;
+                    displayName = `Lease - ${leaseRecord.id.slice(0, 8)}`;
                 }
 
                 return {
-                    id: `lease-${lease.id}`,
+                    id: `lease-${leaseRecord.id}`,
                     name: displayName,
                     description: isComplete 
-                        ? `Fully executed lease agreement • Signed ${lease.signed_at ? new Date(lease.signed_at).toLocaleDateString() : 'N/A'}`
-                        : `Status: ${lease.status || 'N/A'}`,
-                    url: lease.signed_document_url || null,
+                        ? `Fully executed lease agreement • Signed ${leaseRecord.signed_at ? new Date(leaseRecord.signed_at).toLocaleDateString() : 'N/A'}`
+                        : `Status: ${leaseRecord.status || 'N/A'}`,
+                    url: leaseRecord.signed_document_url || null,
                     category: "Lease",
-                    updatedAt: lease.signed_at || lease.created_at,
-                    tenantId: lease.tenant_id,
-                    propertyId: (lease.unit as any)?.property_id,
-                    status: lease.status,
+                    updatedAt: leaseRecord.signed_at || leaseRecord.created_at,
+                    tenantId: leaseRecord.tenant_id,
+                    propertyId: (leaseRecord.unit as any)?.property_id,
+                    status: leaseRecord.status,
                     isComplete
                 };
             })
-    ].filter(doc => {
+    ].filter(docEntry => {
+        if (docEntry.category === "Lease") return true;
 
-        if (doc.category === "Lease") return true;
-        
+        if (!docEntry.url) return false;
 
-        if (!doc.url) return false;
-        
-
-        if (doc.id === "permit-card" && doc.url === permitDoc) {
+        if (docEntry.id === "permit-card" && docEntry.url === permitDoc) {
             return false;
         }
         return true;
@@ -203,14 +199,14 @@ export async function GET(request: Request) {
             full_name: profile.full_name,
             avatar_url: profile.avatar_url,
             avatar_bg_color: (profile as any).avatar_bg_color,
-            phone: (latestApp as any)?.phone || (latestApp as any)?.applicant_phone || profile.phone
+            phone: (latestApplicationRecord as any)?.phone || (latestApplicationRecord as any)?.applicant_phone || profile.phone
         },
-        verification: latestApp ? {
-            status: latestApp.status,
-            verificationStatus: (latestApp as any).verification_status || latestApp.status,
-            verifiedAt: latestApp.updated_at
+        verification: latestApplicationRecord ? {
+            status: latestApplicationRecord.status,
+            verificationStatus: (latestApplicationRecord as any).verification_status || latestApplicationRecord.status,
+            verifiedAt: latestApplicationRecord.updated_at
         } : {
-            status: "approved", // Fallback for legacy landlords
+            status: "approved",
             verificationStatus: "verified",
             verifiedAt: profile.created_at
         }

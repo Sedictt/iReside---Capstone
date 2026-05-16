@@ -77,8 +77,8 @@ export default function FinanceHubPage() {
             try {
                 const response = await fetch("/api/tenant/payments", { cache: "no-store" });
                 if (!response.ok) throw new Error();
-                const next = (await response.json()) as PaymentsPayload;
-                if (alive) setPayload(next);
+                const paymentsData = (await response.json()) as PaymentsPayload;
+                if (alive) setPayload(paymentsData);
             } catch (error) {
                 console.error("Error fetching finance data:", error);
             } finally {
@@ -132,12 +132,12 @@ export default function FinanceHubPage() {
         if (!payload?.history || payload.history.length === 0) return;
 
         const headers = ["Invoice #", "Type", "Status", "Due Date", "Amount"];
-        const rows = payload.history.map(inv => [
-            inv.invoiceNumber,
-            inv.type,
-            inv.status,
-            inv.dueDate,
-            inv.amount.toString()
+        const rows = payload.history.map(invoice => [
+            invoice.invoiceNumber,
+            invoice.type,
+            invoice.status,
+            invoice.dueDate,
+            invoice.amount.toString()
         ]);
 
         const csvContent = [
@@ -203,25 +203,25 @@ export default function FinanceHubPage() {
 
         // Table Content
         doc.setFont("helvetica", "normal");
-        payload.history.forEach((inv, index) => {
+        payload.history.forEach((invoice, index) => {
             if (yPos > 270) {
                 doc.addPage();
                 yPos = 20;
             }
             
-            doc.text(inv.invoiceNumber, 16, yPos);
-            doc.text(inv.type, 60, yPos);
+            doc.text(invoice.invoiceNumber, 16, yPos);
+            doc.text(invoice.type, 60, yPos);
             
             // Color code status
-            if (inv.status === 'paid') doc.setTextColor(0, 150, 0);
-            else if (inv.status === 'overdue') doc.setTextColor(200, 0, 0);
+            if (invoice.status === 'paid') doc.setTextColor(0, 150, 0);
+            else if (invoice.status === 'overdue') doc.setTextColor(200, 0, 0);
             else doc.setTextColor(100);
             
-            doc.text(inv.status.toUpperCase(), 100, yPos);
+            doc.text(invoice.status.toUpperCase(), 100, yPos);
             doc.setTextColor(0);
             
-            doc.text(inv.dueDate, 140, yPos);
-            doc.text(formatPhpCurrency(inv.amount), 175, yPos);
+            doc.text(invoice.dueDate, 140, yPos);
+            doc.text(formatPhpCurrency(invoice.amount), 175, yPos);
             
             doc.setDrawColor(245);
             doc.line(14, yPos + 3, 196, yPos + 3);
@@ -231,8 +231,8 @@ export default function FinanceHubPage() {
         // Summary
         yPos += 10;
         const totalPaid = payload.history
-            .filter(h => h.status === 'paid')
-            .reduce((sum, h) => sum + h.amount, 0);
+            .filter(historyItem => historyItem.status === 'paid')
+            .reduce((totalAmount, historyItem) => totalAmount + historyItem.amount, 0);
             
         doc.setFillColor(245, 250, 245);
         doc.rect(130, yPos - 5, 66, 15, "F");
@@ -261,7 +261,7 @@ export default function FinanceHubPage() {
     const nextPayment = payload?.nextPayment ?? null;
     const history = payload?.history ?? [];
     const lease = payload?.lease ?? null;
-    const latestHistoryWithReadings = history.find(h => h.readings && h.readings.length > 0);
+    const latestHistoryWithReadings = history.find(invoice => invoice.readings && invoice.readings.length > 0);
     const activeReadings = nextPayment?.readings?.length ? nextPayment.readings : (latestHistoryWithReadings?.readings ?? []);
 
     const tabs: { id: TabId; label: string; icon: any }[] = [
