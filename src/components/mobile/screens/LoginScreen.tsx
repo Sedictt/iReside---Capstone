@@ -9,6 +9,7 @@ import {
     EyeOff,
     Check,
     Chrome,
+    ArrowLeft,
 } from "lucide-react";
 import { useNavigation } from "../navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -29,7 +30,7 @@ function FacebookIcon({ className }: { className?: string }) {
 }
 
 export default function LoginScreen() {
-    const { navigate, setRole } = useNavigation();
+    const { navigate, goBack, setRole } = useNavigation();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
@@ -86,6 +87,13 @@ export default function LoginScreen() {
 
     return (
         <div className={styles.container}>
+            {/* Top Bar with Back Button */}
+            <div className={styles.topBar}>
+                <button className={styles.backButton} onClick={() => navigate("roleSelection")}>
+                    <ArrowLeft />
+                </button>
+            </div>
+
             {/* Header */}
             <div className={styles.header}>
                 <div className={styles.brandMark}>

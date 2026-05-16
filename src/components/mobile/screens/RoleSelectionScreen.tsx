@@ -18,7 +18,7 @@ export default function RoleSelectionScreen() {
             
             <div className={styles.content}>
                 <div className={styles.header}>
-                    <h1 className={styles.title}>Welcome to iReside</h1>
+                    <h1 className={styles.title}>Welcome to <span className={styles.brandName}>iReside</span></h1>
                     <p className={styles.subtitle}>Choose your login type to continue</p>
                 </div>
 

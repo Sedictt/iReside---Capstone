@@ -1,12 +1,12 @@
 .container {
     min-height: 100vh;
-    background-color: #000000;
-    color: #ffffff;
+    background-color: #0a0a0a;
+    color: #fafafa;
     display: flex;
     flex-direction: column;
     position: relative;
     overflow: hidden;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: inherit;
 }
 
 .ambientGlow {
@@ -18,8 +18,8 @@
     height: 60%;
     background: radial-gradient(
         circle,
-        rgba(34, 197, 94, 0.15) 0%,
-        rgba(59, 130, 246, 0.1) 40%,
+        rgba(109, 152, 56, 0.12) 0%,
+        rgba(59, 130, 246, 0.06) 40%,
         rgba(0, 0, 0, 0) 70%
     );
     filter: blur(80px);
@@ -46,18 +46,20 @@
 }
 
 .title {
-    font-size: 2.5rem;
-    font-weight: 800;
-    letter-spacing: -0.02em;
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: -1px;
     margin-bottom: 0.75rem;
-    background: linear-gradient(to bottom right, #ffffff, #a1a1aa);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: #fafafa;
+}
+
+.brandName {
+    color: #6d9838;
 }
 
 .subtitle {
-    font-size: 1.1rem;
-    color: #a1a1aa;
+    font-size: 13px;
+    color: #737373;
     line-height: 1.5;
 }
 
@@ -69,24 +71,22 @@
 }
 
 .roleCard {
-    background: rgba(24, 24, 27, 0.6);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 1.5rem;
+    background: #141414;
+    border: 1.5px solid #262626;
+    border-radius: 20px;
     padding: 1.5rem;
     display: flex;
     align-items: center;
     gap: 1.25rem;
     text-align: left;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     width: 100%;
 }
 
 .roleCard:hover {
-    background: rgba(39, 39, 42, 0.8);
-    border-color: rgba(34, 197, 94, 0.3);
-    transform: translateY(-2px);
+    background: rgba(109, 152, 56, 0.04);
+    border-color: #6d9838;
 }
 
 .roleCard:active {
@@ -104,13 +104,13 @@
 }
 
 .tenantIcon {
-    background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.2) 100%);
-    color: #22c55e;
-    border: 1px solid rgba(34, 197, 94, 0.2);
+    background: linear-gradient(135deg, rgba(109, 152, 56, 0.1) 0%, rgba(109, 152, 56, 0.2) 100%);
+    color: #6d9838;
+    border: 1px solid rgba(109, 152, 56, 0.2);
 }
 
 .landlordIcon {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.2) 100%);
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0.15) 100%);
     color: #3b82f6;
     border: 1px solid rgba(59, 130, 246, 0.2);
 }
@@ -120,15 +120,15 @@
 }
 
 .roleName {
-    font-size: 1.25rem;
-    font-weight: 700;
+    font-size: 1.1rem;
+    font-weight: 800;
     margin-bottom: 0.25rem;
-    color: #ffffff;
+    color: #fafafa;
 }
 
 .roleDesc {
-    font-size: 0.9rem;
-    color: #a1a1aa;
+    font-size: 0.85rem;
+    color: #525252;
     line-height: 1.4;
 }
 
@@ -149,15 +149,16 @@
 }
 
 .footerText {
-    color: #a1a1aa;
-    font-size: 0.95rem;
+    color: #525252;
+    font-size: 0.9rem;
+    font-weight: 500;
 }
 
 .link {
     background: none;
     border: none;
-    color: #22c55e;
-    font-weight: 600;
+    color: #6d9838;
+    font-weight: 700;
     padding: 0;
     cursor: pointer;
     margin-left: 0.25rem;

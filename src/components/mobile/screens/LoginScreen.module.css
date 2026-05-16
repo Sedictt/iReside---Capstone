@@ -11,6 +11,39 @@
     overflow-y: auto;
 }
 
+/* ─── Top Bar ──────────────────────────────────────────── */
+.topBar {
+    display: flex;
+    align-items: center;
+    padding: 12px 0 8px;
+    flex-shrink: 0;
+}
+
+.backButton {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    border: none;
+    background: #141414;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #a3a3a3;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.2s ease;
+}
+
+.backButton:active {
+    background: #1a1a1a;
+    transform: scale(0.95);
+}
+
+.backButton svg {
+    width: 20px;
+    height: 20px;
+}
+
 /* ─── Header ───────────────────────────────────────────── */
 .header {
     display: flex;
