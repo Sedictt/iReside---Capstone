@@ -16,6 +16,8 @@ import {
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { TenantMaintenanceModal } from "@/components/tenant/maintenance/TenantMaintenanceModal";
+import { ViewToggle } from "@/components/shared/ViewToggle";
+import { useViewMode } from "@/hooks/useViewMode";
 
 type MaintenanceStatus = "Pending" | "Assigned" | "In Progress" | "Resolved";
 type Priority = "Critical" | "High" | "Medium" | "Low";
@@ -47,6 +49,15 @@ export default function TenantMaintenancePage() {
     const [filter, setFilter] = useState<"All" | MaintenanceStatus>("All");
     const [selectedRequest, setSelectedRequest] = useState<MaintenanceRequest | null>(null);
     const [previewMode, setPreviewMode] = useState<string | null>(null);
+    const [isMobile, setIsMobile] = useState(false);
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 640);
+        checkMobile();
+        window.addEventListener("resize", checkMobile);
+        return () => window.removeEventListener("resize", checkMobile);
+    }, []);
+    const [view, setView] = useViewMode("ireside:maintenance-view");
+    const effectiveView = isMobile ? "list" : view;
     const statusTabs: Array<"All" | "Pending" | "In Progress" | "Resolved"> = [
         "All",
         "Pending",
@@ -310,8 +321,18 @@ export default function TenantMaintenancePage() {
                 ))}
             </div>
 
+            {!isMobile && (
+                <div className="flex justify-end mb-4">
+                    <ViewToggle view={view} onChange={setView} />
+                </div>
+            )}
+
             {loading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className={cn(
+                    effectiveView === "grid"
+                        ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+                        : "flex flex-col gap-3"
+                )}>
                     {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
                         <MaintenanceCardSkeleton key={`maintenance-skeleton-${i}`} />
                     ))}
@@ -344,7 +365,11 @@ export default function TenantMaintenancePage() {
                     )}
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className={cn(
+                    effectiveView === "grid"
+                        ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+                        : "flex flex-col gap-3"
+                )}>
                     {filteredRequests.map((request) => (
                         <TenantMaintenanceCard
                             key={request.id}

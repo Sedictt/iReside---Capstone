@@ -19,6 +19,8 @@ import {
     Filter
 } from "lucide-react";
 import { MaintenanceRequestModal } from "./MaintenanceRequestModal";
+import { ViewToggle } from "@/components/shared/ViewToggle";
+import { useViewMode } from "@/hooks/useViewMode";
 import Link from "next/link";
 import { useProperty } from "@/context/PropertyContext";
 
@@ -68,6 +70,17 @@ export function MaintenanceDashboard() {
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 640);
+        checkMobile();
+        window.addEventListener("resize", checkMobile);
+        return () => window.removeEventListener("resize", checkMobile);
+    }, []);
+
+    const [view, setView] = useViewMode("ireside:maintenance-view");
+    const effectiveView = isMobile ? "list" : view;
 
     useEffect(() => {
         const controller = new AbortController();
@@ -338,6 +351,12 @@ export function MaintenanceDashboard() {
                                     <option value="priority-asc">Priority (L-H)</option>
                                 </select>
                             </div>
+
+                            {!isMobile && (
+                                <div className="flex items-center">
+                                    <ViewToggle view={view} onChange={setView} />
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -345,7 +364,11 @@ export function MaintenanceDashboard() {
                 {/* Grid Format Request List */}
                 <div className="p-6">
                     {loading ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        <div className={cn(
+                            effectiveView === "grid"
+                                ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+                                : "flex flex-col gap-3"
+                        )}>
                             {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
                                 <MaintenanceCardSkeleton key={`maintenance-skeleton-${i}`} />
                             ))}
@@ -355,7 +378,11 @@ export function MaintenanceDashboard() {
                             {error}
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        <div className={cn(
+                            effectiveView === "grid"
+                                ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+                                : "flex flex-col gap-3"
+                        )}>
                             {sortedRequests.map((request) => (
                                 <MaintenanceCard
                                     key={request.id}
@@ -365,7 +392,11 @@ export function MaintenanceDashboard() {
                             ))}
 
                             {filteredRequests.length === 0 && (
-                                <div className="col-span-1 md:col-span-2 lg:col-span-3 xl:col-span-4 py-20 flex flex-col items-center justify-center text-center">
+                                <div className={cn(
+                                    effectiveView === "grid"
+                                        ? "col-span-1 sm:col-span-2 lg:col-span-3 xl:col-span-4"
+                                        : "w-full"
+                                ) + " py-20 flex flex-col items-center justify-center text-center"}>
                                     <div className="size-20 bg-muted rounded-full flex items-center justify-center mb-4">
                                         <CheckCircle2 className="size-10 text-emerald-500" />
                                     </div>
