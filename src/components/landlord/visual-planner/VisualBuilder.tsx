@@ -47,6 +47,7 @@ import {
 } from "./constants";
 import { UnitTooltip } from "./components/UnitTooltip";
 import { TransferRequestModal } from "./components/TransferRequestModal";
+import { FloorSelector } from "./components/FloorSelector";
 
 /** Unit History Modal Component */
 const UnitHistoryModal = ({
@@ -2679,7 +2680,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 64, opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        className={`overflow-hidden flex items-center justify-between px-6 shrink-0 z-20 backdrop-blur ${isDark ? 'bg-surface-dark border-b border-zinc-800 shadow-none' : 'bg-card/95 border-b border-border shadow-sm'}`}
+                        className={`flex items-center justify-between px-6 shrink-0 z-20 backdrop-blur ${isDark ? 'bg-surface-dark border-b border-zinc-800 shadow-none' : 'bg-card/95 border-b border-border shadow-sm'}`}
                     >
                 <div className="flex items-center gap-4">
                     {showBackButton && (
@@ -2756,55 +2757,20 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                 />
                             </div>
                         ) : (
-                            <div className={`relative flex items-center mx-1 group cursor-pointer transition-colors rounded-lg ${isDark ? 'hover:bg-zinc-800' : 'hover:bg-white'}`}>
-                                <select
-                                    id="floor-selector"
-                                    value={activeFloor}
-                                    onChange={(event) => switchFloor(event.target.value)}
-                                    className={`appearance-none bg-transparent pl-3 pr-8 py-1.5 text-sm font-black w-[140px] md:w-[180px] cursor-pointer focus:outline-none z-10 ${isDark ? 'text-zinc-100' : 'text-zinc-800'}`}
-                                >
-                                    {floorTabs.map((floorTab) => (
-                                        <option key={floorTab.id} value={floorTab.id}>
-                                            {floorTab.title}
-                                        </option>
-                                    ))}
-                                </select>
-                                <div className={`absolute right-2 pointer-events-none transition-colors flex items-center group-hover:text-primary ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
-                                    <span className="material-icons-round text-[18px]">unfold_more</span>
-                                </div>
-                            </div>
+                            <FloorSelector
+                                floorTabs={floorTabs}
+                                activeFloor={activeFloor}
+                                onSelect={switchFloor}
+                                onCreate={createFloor}
+                                onRename={() => {
+                                    setEditingFloorName(floorLayoutsWithActiveSnapshot[activeFloor].name || getFloorDisplayLabel(activeFloor));
+                                    setIsRenamingFloor(true);
+                                }}
+                                isDark={isDark}
+                                readOnly={readOnly}
+                                itemCount={activeFloorItemCount}
+                            />
                         )}
-                        
-                        <div className={`flex items-center gap-1 pl-1 pr-1 border-l ${isDark ? 'border-zinc-700' : 'border-border'}`}>
-                            {!readOnly && !isRenamingFloor && (
-                                <button 
-                                    onClick={() => {
-                                        setEditingFloorName(floorLayoutsWithActiveSnapshot[activeFloor].name || getFloorDisplayLabel(activeFloor));
-                                        setIsRenamingFloor(true);
-                                    }}
-                                    className={`flex items-center justify-center size-7 border rounded-md transition-all hover:text-primary ${isDark ? 'bg-zinc-900 hover:bg-zinc-800 border-zinc-700 text-zinc-400' : 'bg-white hover:bg-zinc-200 border-border text-zinc-500 shadow-sm'}`}
-                                    title="Rename Floor"
-                                >
-                                    <span className="material-icons-round text-[16px]">edit</span>
-                                </button>
-                            )}
-                            <div className={`flex items-center border rounded-md px-2 py-1 h-7 ${isDark ? 'bg-zinc-900 border-zinc-700' : 'bg-white border-border shadow-sm'}`} title={`${activeFloorItemCount} items on this floor`}>
-                                <span className="size-1.5 rounded-full bg-primary/80 mr-2"></span>
-                                <span className={`text-xs font-mono font-black ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>
-                                    {activeFloorItemCount}
-                                </span>
-                            </div>
-
-                            {!readOnly && (
-                                <button 
-                                    onClick={createFloor} 
-                                    className={`flex items-center justify-center size-7 border rounded-md transition-all hover:bg-primary hover:border-primary hover:text-white ${isDark ? 'bg-zinc-900 border-zinc-700 text-zinc-300' : 'bg-white border-border text-zinc-600 shadow-sm'}`}
-                                    title="Add New Floor"
-                                >
-                                    <span className="material-icons-round text-[18px]">add</span>
-                                </button>
-                            )}
-                        </div>
                     </div>
                     {!readOnly && (
                         <>
