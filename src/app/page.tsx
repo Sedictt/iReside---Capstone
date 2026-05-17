@@ -154,16 +154,57 @@ export default function ScrollyTellingLandingPage() {
 
     // State for UI controls
     const [showMoreMenu, setShowMoreMenu] = useState(false);
+    
+    // State for scroll progress indicators (desktop pagination)
+    const [activeHowItWorks, setActiveHowItWorks] = useState(0);
+    const [activeShowcase, setActiveShowcase] = useState(0);
 
-    // Close More menu on scroll
+    // Refs for dropdown focus accessibility
+    const moreMenuRef = useRef<HTMLDivElement>(null);
+    const moreButtonRef = useRef<HTMLButtonElement>(null);
+
+    // Close More menu on scroll, click outside, focus outside, or Escape key
     useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            const menu = moreMenuRef.current;
+            const btn = moreButtonRef.current;
+            if (showMoreMenu && menu && btn && !menu.contains(event.target as Node) && !btn.contains(event.target as Node)) {
+                setShowMoreMenu(false);
+            }
+        };
+
+        const handleFocusOutside = (event: FocusEvent) => {
+            const menu = moreMenuRef.current;
+            const btn = moreButtonRef.current;
+            if (showMoreMenu && menu && btn && !menu.contains(event.target as Node) && !btn.contains(event.target as Node)) {
+                setShowMoreMenu(false);
+            }
+        };
+
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === "Escape" && showMoreMenu) {
+                setShowMoreMenu(false);
+                moreButtonRef.current?.focus();
+            }
+        };
+
         const handleScroll = () => {
             if (showMoreMenu) {
                 setShowMoreMenu(false);
             }
         };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        document.addEventListener("focusin", handleFocusOutside);
+        document.addEventListener("keydown", handleKeyDown);
         window.addEventListener("scroll", handleScroll, { passive: true });
-        return () => window.removeEventListener("scroll", handleScroll);
+
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+            document.removeEventListener("focusin", handleFocusOutside);
+            document.removeEventListener("keydown", handleKeyDown);
+            window.removeEventListener("scroll", handleScroll);
+        };
     }, [showMoreMenu]);
 
     const dashboardHref = profile?.role 
@@ -250,72 +291,100 @@ export default function ScrollyTellingLandingPage() {
         const moduleBodies = cards.map((card) => card.querySelector<HTMLElement>(".module-body"));
         const moduleCtas = cards.map((card) => card.querySelector<HTMLElement>(".module-cta"));
 
-        ScrollTrigger.getById("landing-showcase-stack")?.kill();
-        gsap.set(cards, { yPercent: 100, scale: 1, opacity: 1, force3D: true, willChange: "transform" });
-        gsap.set(cards[0], { yPercent: 0 });
-        gsap.set(moduleBodies, { autoAlpha: 0, y: 24 });
-        gsap.set(moduleCtas, { autoAlpha: 0, x: -12 });
-        
-        if (moduleBodies[0]) gsap.set(moduleBodies[0], { autoAlpha: 1, y: 0 });
-        if (moduleCtas[0]) gsap.set(moduleCtas[0], { autoAlpha: 1, x: 0 });
-        
-        const segments = Math.max(cards.length - 1, 1);
+        const mm = gsap.matchMedia();
 
-        ScrollTrigger.create({
-            id: "landing-showcase-stack",
-            trigger: showcaseRoot,
-            pin: true,
-            pinSpacing: true,
-            scrub: 1,
-            snap: segments > 1 ? {
-                snapTo: 1 / segments,
-                duration: { min: 0.15, max: 0.35 },
-                delay: 0.05,
-                ease: "power1.inOut",
-            } : undefined,
-            start: "top top",
-            end: `+=${window.innerHeight * segments}`,
-            anticipatePin: 1,
-            refreshPriority: 1,
-            invalidateOnRefresh: true,
-            onUpdate: (self) => {
-                const p = self.progress * segments;
-                const firstReveal = gsap.utils.clamp(0, 1, 1 - p);
-                if (moduleBodies[0]) {
-                    gsap.set(moduleBodies[0], {
-                        autoAlpha: firstReveal,
-                        y: (1 - firstReveal) * 24,
-                    });
-                }
-                if (moduleCtas[0]) {
-                    gsap.set(moduleCtas[0], {
-                        autoAlpha: firstReveal,
-                        x: (1 - firstReveal) * -12,
-                    });
-                }
+        mm.add("(min-width: 1024px)", () => {
+            ScrollTrigger.getById("landing-showcase-stack")?.kill();
+            gsap.set(cards, { yPercent: 100, scale: 1, opacity: 1, force3D: true, willChange: "transform" });
+            gsap.set(cards[0], { yPercent: 0 });
+            gsap.set(moduleBodies, { autoAlpha: 0, y: 24 });
+            gsap.set(moduleCtas, { autoAlpha: 0, x: -12 });
+            
+            if (moduleBodies[0]) gsap.set(moduleBodies[0], { autoAlpha: 1, y: 0 });
+            if (moduleCtas[0]) gsap.set(moduleCtas[0], { autoAlpha: 1, x: 0 });
+            
+            const segments = Math.max(cards.length - 1, 1);
 
-                for (let i = 1; i < cards.length; i++) {
-                    const local = gsap.utils.clamp(0, 1, p - (i - 1));
-                    gsap.set(cards[i], { yPercent: (1 - local) * 100 });
-                    if (moduleBodies[i]) {
-                        gsap.set(moduleBodies[i], {
-                            autoAlpha: local,
-                            y: (1 - local) * 24,
+            ScrollTrigger.create({
+                id: "landing-showcase-stack",
+                trigger: showcaseRoot,
+                pin: true,
+                pinSpacing: true,
+                scrub: 1,
+                snap: segments > 1 ? {
+                    snapTo: 1 / segments,
+                    duration: { min: 0.15, max: 0.35 },
+                    delay: 0.05,
+                    ease: "power1.inOut",
+                } : undefined,
+                start: "top top",
+                end: `+=${window.innerHeight * segments}`,
+                anticipatePin: 1,
+                refreshPriority: 1,
+                invalidateOnRefresh: true,
+                onUpdate: (self) => {
+                    const p = self.progress * segments;
+                    const activeIndex = Math.min(segments, Math.floor(self.progress * (segments + 0.99)));
+                    setActiveShowcase(activeIndex);
+
+                    const firstReveal = gsap.utils.clamp(0, 1, 1 - p);
+                    if (moduleBodies[0]) {
+                        gsap.set(moduleBodies[0], {
+                            autoAlpha: firstReveal,
+                            y: (1 - firstReveal) * 24,
                         });
                     }
-                    if (moduleCtas[i]) {
-                        gsap.set(moduleCtas[i], {
-                            autoAlpha: local,
-                            x: (1 - local) * -12,
+                    if (moduleCtas[0]) {
+                        gsap.set(moduleCtas[0], {
+                            autoAlpha: firstReveal,
+                            x: (1 - firstReveal) * -12,
                         });
                     }
+
+                    for (let i = 1; i < cards.length; i++) {
+                        const local = gsap.utils.clamp(0, 1, p - (i - 1));
+                        gsap.set(cards[i], { yPercent: (1 - local) * 100 });
+                        if (moduleBodies[i]) {
+                            gsap.set(moduleBodies[i], {
+                                autoAlpha: local,
+                                y: (1 - local) * 24,
+                            });
+                        }
+                        if (moduleCtas[i]) {
+                            gsap.set(moduleCtas[i], {
+                                autoAlpha: local,
+                                x: (1 - local) * -12,
+                            });
+                        }
+                    }
+                },
+            });
+        });
+
+        mm.add("(max-width: 1023px)", () => {
+            gsap.set(cards, { clearProps: "all" });
+            gsap.set(moduleBodies, { clearProps: "all" });
+            gsap.set(moduleCtas, { clearProps: "all" });
+            
+            // Add custom entrance scrolltrigger stagger for cards on mobile
+            gsap.fromTo(cards, 
+                { opacity: 0, y: 32 },
+                { 
+                    opacity: 1, 
+                    y: 0, 
+                    duration: 0.5, 
+                    stagger: 0.1,
+                    ease: "power2.out",
+                    scrollTrigger: {
+                        trigger: showcaseRoot,
+                        start: "top 85%",
+                    }
                 }
-            },
+            );
         });
 
         return () => {
-            ScrollTrigger.getById("landing-showcase-stack")?.kill();
-            gsap.set(cards, { clearProps: "transform,willChange" });
+            mm.revert();
         };
     }, { scope: showcaseContainerRef });
 
@@ -387,7 +456,21 @@ export default function ScrollyTellingLandingPage() {
                     anticipatePin: 1,
                     refreshPriority: 2,
                     invalidateOnRefresh: true,
-                    end: () => `+=${Math.max(getScrollDistance(), 1)}`
+                    end: () => `+=${Math.max(getScrollDistance(), 1)}`,
+                    onUpdate: (self) => {
+                        const stops = getSnapStops();
+                        const rawProgress = self.progress;
+                        let closestIndex = 0;
+                        let minDiff = Math.abs(rawProgress - stops[0]);
+                        for (let i = 1; i < stops.length; i++) {
+                            const diff = Math.abs(rawProgress - stops[i]);
+                            if (diff < minDiff) {
+                                closestIndex = i;
+                                minDiff = diff;
+                            }
+                        }
+                        setActiveHowItWorks(closestIndex);
+                    },
                 }
             });
         };
@@ -553,7 +636,7 @@ export default function ScrollyTellingLandingPage() {
 
             gsap.fromTo(irisHeaders, { autoAlpha: 0, y: 30 }, { autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.1, scrollTrigger: { trigger: irisSection, start: "top 80%" } });
             if (irisMascot) {
-                gsap.fromTo(irisMascot, { autoAlpha: 0, scale: 0.92 }, { autoAlpha: 0.8, scale: 1, duration: 0.9, ease: "power2.out", scrollTrigger: { trigger: irisSection, start: "top 70%" } });
+                gsap.fromTo(irisMascot, { autoAlpha: 0, scale: 0.92 }, { autoAlpha: 1, scale: 1, duration: 0.9, ease: "power2.out", scrollTrigger: { trigger: irisSection, start: "top 70%" } });
             }
             gsap.fromTo(irisCards, { autoAlpha: 0, y: 50 }, { autoAlpha: 1, y: 0, duration: 0.5, stagger: 0.1, scrollTrigger: { trigger: irisSection, start: "top 75%" } });
             gsap.fromTo(outcomeItems, { autoAlpha: 0, y: 40 }, { autoAlpha: 1, y: 0, duration: 0.5, stagger: 0.1, scrollTrigger: { trigger: outcomesSection, start: "top 75%" } });
@@ -634,22 +717,35 @@ export default function ScrollyTellingLandingPage() {
                         {/* More Dropdown */}
                         <div className="relative">
                             <button
-                                onClick={() => setShowMoreMenu(!showMoreMenu)}
-                                onBlur={() => setTimeout(() => setShowMoreMenu(false), 150)}
-                                className="px-4 py-2 text-[13px] font-semibold text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted/50 flex items-center gap-1"
+                                ref={moreButtonRef}
+                                onClick={() => setShowMoreMenu(prev => !prev)}
+                                aria-haspopup="true"
+                                aria-expanded={showMoreMenu}
+                                className="px-4 py-2 text-[13px] font-semibold text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted/50 flex items-center gap-1 focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2"
                             >
-                                More <ChevronRight className="size-3 rotate-90" />
+                                More 
+                                <ChevronRight 
+                                    className={cn(
+                                        "size-3 transition-transform duration-200", 
+                                        showMoreMenu ? "-rotate-90" : "rotate-90"
+                                    )} 
+                                />
                             </button>
                             {showMoreMenu && (
-                                <div className="absolute top-full mt-2 right-0 w-48 bg-background border border-border rounded-lg shadow-lg py-2 z-50">
-                                    <Link href="/docs" className="block px-4 py-2 text-sm hover:bg-muted transition-colors">Documentation</Link>
-                                    <Link href="/about" className="block px-4 py-2 text-sm hover:bg-muted transition-colors">About Us</Link>
-                                    <Link href="/faqs" className="block px-4 py-2 text-sm hover:bg-muted transition-colors">FAQs</Link>
+                                <div 
+                                    ref={moreMenuRef}
+                                    role="menu"
+                                    aria-label="More options"
+                                    className="absolute top-full mt-2 right-0 w-48 bg-background border border-border rounded-lg shadow-lg py-2 z-50 animate-view-map"
+                                >
+                                    <Link href="/docs" role="menuitem" className="block px-4 py-2 text-sm hover:bg-muted transition-colors">Documentation</Link>
+                                    <Link href="/about" role="menuitem" className="block px-4 py-2 text-sm hover:bg-muted transition-colors">About Us</Link>
+                                    <Link href="/faqs" role="menuitem" className="block px-4 py-2 text-sm hover:bg-muted transition-colors">FAQs</Link>
                                     <div className="border-t border-border my-2" />
-                                    <Link href="/privacy" className="block px-4 py-2 text-sm hover:bg-muted transition-colors">Privacy Policy</Link>
-                                    <Link href="/terms" className="block px-4 py-2 text-sm hover:bg-muted transition-colors">Terms of Service</Link>
+                                    <Link href="/privacy" role="menuitem" className="block px-4 py-2 text-sm hover:bg-muted transition-colors">Privacy Policy</Link>
+                                    <Link href="/terms" role="menuitem" className="block px-4 py-2 text-sm hover:bg-muted transition-colors">Terms of Service</Link>
                                     <div className="border-t border-border my-2" />
-                                    <a href="mailto:support@ireside.ai" className="block px-4 py-2 text-sm hover:bg-muted transition-colors">Contact Support</a>
+                                    <a href="mailto:support@ireside.ai" role="menuitem" className="block px-4 py-2 text-sm hover:bg-muted transition-colors">Contact Support</a>
                                 </div>
                             )}
                         </div>
@@ -699,15 +795,15 @@ export default function ScrollyTellingLandingPage() {
             </section>
 
             {/* How It Works */}
-            <section id="how-it-works" ref={containerRef} className="relative h-screen z-20 overflow-hidden bg-background">
-                <div ref={scrollWrapperRef} className="flex h-screen items-center w-max px-[5vw]">
-                    <div className="howit-panel w-[90vw] md:w-[60vw] shrink-0 flex flex-col justify-center px-12 md:px-20">
+            <section id="how-it-works" ref={containerRef} className="relative lg:h-screen h-auto z-20 lg:overflow-hidden overflow-visible bg-background py-20 lg:py-0">
+                <div ref={scrollWrapperRef} className="flex lg:flex-row flex-col lg:h-screen h-auto items-center lg:w-max w-full px-6 lg:px-[5vw] gap-12 lg:gap-0">
+                    <div className="howit-panel lg:w-[60vw] w-full shrink-0 flex flex-col justify-center px-4 lg:px-20 mb-8 lg:mb-0">
                         <h2 className="text-5xl md:text-8xl font-black mb-8">How It<br/>Works</h2>
                         <p className="text-2xl text-muted-foreground">A simpler, calmer way to manage your portfolio.</p>
                     </div>
                     {HOW_IT_WORKS.map((feature, i) => (
-                        <div key={feature.id} className="howit-panel w-[90vw] md:w-[70vw] lg:w-[60vw] shrink-0 h-[68vh] flex items-center px-6">
-                            <div className="relative w-full h-full rounded-[3rem] border border-border bg-card p-10 flex flex-col justify-between overflow-hidden group shadow-lg">
+                        <div key={feature.id} className="howit-panel lg:w-[60vw] md:w-[70vw] w-full shrink-0 lg:h-[68vh] h-auto flex items-center lg:px-6 px-0">
+                            <div className="relative w-full h-full rounded-[2.5rem] lg:rounded-[3rem] border border-border bg-card p-8 lg:p-10 flex flex-col justify-between overflow-hidden group shadow-lg min-h-[420px] lg:min-h-0">
                                 <div className="absolute -top-40 -right-40 w-[400px] h-[400px] rounded-full blur-[80px] opacity-20 bg-gradient-to-br from-primary/20 to-transparent" />
                                 <div>
                                     <div className="flex justify-between mb-8">
@@ -727,38 +823,109 @@ export default function ScrollyTellingLandingPage() {
                             </div>
                         </div>
                     ))}
-                    <div className="w-[10vw] shrink-0"></div>
+                    <div className="w-[10vw] shrink-0 hidden lg:block"></div>
+                </div>
+
+                {/* Desktop Scroll Progress Indicator Dots */}
+                <div className="hidden lg:flex fixed bottom-12 left-1/2 -translate-x-1/2 items-center gap-4 z-40 bg-background/60 backdrop-blur-md px-6 py-3 rounded-full border border-border/40 shadow-lg" role="navigation" aria-label="Feature Scroll Progress">
+                    {[0, 1, 2, 3].map((idx) => {
+                        const isActive = activeHowItWorks === idx;
+                        return (
+                            <button
+                                key={idx}
+                                onClick={() => {
+                                    const wrapper = scrollWrapperRef.current;
+                                    if (!wrapper) return;
+                                    const panels = gsap.utils.toArray<HTMLElement>(".howit-panel", wrapper);
+                                    const targetPanel = panels[idx];
+                                    if (!targetPanel) return;
+                                    const triggerST = ScrollTrigger.getById("landing-horizontal-features");
+                                    if (triggerST) {
+                                        const distance = wrapper.scrollWidth - window.innerWidth;
+                                        const progress = targetPanel.offsetLeft / distance;
+                                        const targetY = triggerST.start + (progress * (triggerST.end - triggerST.start));
+                                        gsap.to(window, { scrollTo: targetY, duration: 0.8, ease: "power2.inOut" });
+                                    }
+                                }}
+                                className={cn(
+                                    "size-3 rounded-full transition-all duration-300 relative group",
+                                    isActive 
+                                        ? "bg-primary scale-125 shadow-[0_0_12px_rgba(109,152,56,0.8)]" 
+                                        : "bg-muted-foreground/30 hover:bg-muted-foreground/60"
+                                )}
+                                aria-label={`Go to feature phase ${idx + 1}`}
+                            >
+                                <span className="absolute -top-10 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground text-[10px] font-bold py-1 px-2 rounded opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap shadow border border-border">
+                                    {idx === 0 ? "Introduction" : `Phase 0${idx}`}
+                                </span>
+                            </button>
+                        );
+                    })}
                 </div>
             </section>
 
             {/* Showcase Stack */}
-            <section id="features" ref={showcaseContainerRef} className="relative h-screen bg-background z-20 overflow-hidden">
-                <div className="absolute top-24 left-0 right-0 z-30 text-center pointer-events-none">
+            <section id="features" ref={showcaseContainerRef} className="relative lg:h-screen h-auto bg-background z-20 lg:overflow-hidden overflow-visible py-24 lg:py-0">
+                <div className="absolute top-24 left-0 right-0 z-30 text-center pointer-events-none hidden lg:block">
                     <p className="text-sm font-black uppercase tracking-widest text-primary mb-2">Featured Modules</p>
                     <h2 className="text-3xl font-black">Three core tools for confident management.</h2>
                 </div>
-                {SHOWCASE_MODULES.map((mod, i) => (
-                    <div key={mod.id} className="showcase-card absolute inset-0 flex items-center justify-center p-6 bg-background border-t border-border shadow-2xl" style={{ zIndex: i + 1 }}>
-                        <div className="max-w-7xl w-full flex flex-col items-center text-center mt-12">
-                            <div className="module-body flex flex-col items-center">
-                                <div className={cn("size-16 rounded-2xl flex items-center justify-center mb-8 shadow-xl", mod.color)}>
-                                    <mod.icon className="size-8 text-white" />
+                <div className="max-w-7xl mx-auto px-6 flex flex-col lg:block w-full">
+                    {SHOWCASE_MODULES.map((mod, i) => (
+                        <div key={mod.id} className="showcase-card lg:absolute relative inset-0 flex items-center justify-center p-6 lg:p-12 bg-background border border-border lg:border-t lg:border-x-0 lg:border-b-0 shadow-2xl rounded-3xl lg:rounded-none mb-12 lg:mb-0 lg:h-full min-h-[380px]" style={{ zIndex: i + 1 }}>
+                            <div className="max-w-3xl w-full flex flex-col items-center text-center">
+                                <div className="module-body flex flex-col items-center">
+                                    <div className={cn("size-16 rounded-2xl flex items-center justify-center mb-6 lg:mb-8 shadow-xl", mod.color)}>
+                                        <mod.icon className="size-8 text-white" />
+                                    </div>
+                                    <h2 className="text-4xl md:text-6xl font-black mb-4 lg:mb-6 tracking-tight">{mod.title}</h2>
+                                    <p className="text-xl md:text-2xl text-muted-foreground font-medium mb-6 lg:mb-8 leading-relaxed max-w-2xl">
+                                        {mod.desc}
+                                    </p>
+                                    <TransitionLink href={mod.href} className="module-cta inline-flex items-center gap-2 rounded-full border border-primary bg-primary/10 px-8 py-4 font-black text-primary uppercase text-sm hover:bg-primary/20 transition-all">
+                                        Explore Module <ChevronRight className="size-4" />
+                                    </TransitionLink>
                                 </div>
-                                <h2 className="text-4xl md:text-6xl font-black mb-6 tracking-tight">{mod.title}</h2>
-                                <p className="text-xl md:text-2xl text-muted-foreground font-medium mb-8 leading-relaxed max-w-2xl">
-                                    {mod.desc}
-                                </p>
-                                <TransitionLink href={mod.href} className="module-cta inline-flex items-center gap-2 rounded-full border border-primary bg-primary/10 px-8 py-4 font-black text-primary uppercase text-sm hover:bg-primary/20 transition-all">
-                                    Explore Module <ChevronRight className="size-4" />
-                                </TransitionLink>
                             </div>
                         </div>
-                    </div>
-                ))}
+                    ))}
+                </div>
+
+                {/* Desktop Scroll Progress Indicator Dots */}
+                <div className="hidden lg:flex fixed bottom-12 left-1/2 -translate-x-1/2 items-center gap-4 z-40 bg-background/60 backdrop-blur-md px-6 py-3 rounded-full border border-border/40 shadow-lg" role="navigation" aria-label="Module Scroll Progress">
+                    {SHOWCASE_MODULES.map((mod, idx) => {
+                        const isActive = activeShowcase === idx;
+                        return (
+                            <button
+                                key={mod.id}
+                                onClick={() => {
+                                    const triggerST = ScrollTrigger.getById("landing-showcase-stack");
+                                    if (triggerST) {
+                                        const segments = SHOWCASE_MODULES.length - 1;
+                                        const progress = idx / segments;
+                                        const targetY = triggerST.start + (progress * (triggerST.end - triggerST.start));
+                                        gsap.to(window, { scrollTo: targetY, duration: 0.8, ease: "power2.inOut" });
+                                    }
+                                }}
+                                className={cn(
+                                    "size-3 rounded-full transition-all duration-300 relative group",
+                                    isActive 
+                                        ? "bg-primary scale-125 shadow-[0_0_12px_rgba(109,152,56,0.8)]" 
+                                        : "bg-muted-foreground/30 hover:bg-muted-foreground/60"
+                                )}
+                                aria-label={`Go to showcase module ${mod.title}`}
+                            >
+                                <span className="absolute -top-10 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground text-[10px] font-bold py-1 px-2 rounded opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap shadow border border-border">
+                                    {mod.title}
+                                </span>
+                            </button>
+                        );
+                    })}
+                </div>
             </section>
 
             {/* iRis Section */}
-            <section id="iris" ref={irisSectionRef} className="relative h-[100svh] flex flex-col justify-center px-6 border-t border-border overflow-hidden z-20 bg-background">
+            <section id="iris" ref={irisSectionRef} className="relative lg:h-[100svh] h-auto flex flex-col justify-center px-6 py-20 lg:py-0 border-t border-border lg:overflow-hidden overflow-visible z-20 bg-background">
                 <div className="iris-glow absolute top-[30%] right-[10%] h-[30rem] w-[30rem] rounded-full bg-primary/10 blur-[100px] opacity-60 pointer-events-none" />
                 <div className="relative max-w-7xl mx-auto w-full">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
@@ -799,8 +966,8 @@ export default function ScrollyTellingLandingPage() {
                         <p className="outcomes-reveal text-sm font-black uppercase text-primary mb-5">Operational Outcomes</p>
                         <h2 className="outcomes-reveal text-5xl md:text-7xl font-black leading-tight">Calm operations,<br/>measurable gains.</h2>
                     </div>
-                    <div className="outcomes-right lg:w-1/2 overflow-hidden h-[min(70vh,36rem)] relative outcomes-right-viewport">
-                        <div className="grid gap-12 outcomes-right-track lg:absolute lg:inset-x-0 lg:top-0">
+                    <div className="outcomes-right lg:w-1/2 lg:overflow-hidden overflow-visible lg:h-[min(70vh,36rem)] h-auto relative outcomes-right-viewport">
+                        <div className="grid gap-12 outcomes-right-track lg:absolute relative lg:inset-x-0 lg:top-0">
                             {OUTCOMES.map(o => (
                                 <article key={o.label} className="outcome-item p-8 border-l-4 border-primary/30 bg-muted/20 rounded-r-3xl">
                                     <div className="flex items-center gap-4 mb-4"><span className="outcome-metric-value text-6xl font-black">{o.metric}</span><CheckCircle2 className="size-8 text-primary" /></div>

@@ -124,8 +124,8 @@ body {
 .text-medium { color: var(--text-medium); }
 .text-disabled { color: var(--text-disabled); }
 
-/* Dark-mode consistency: remove expensive blur glass effects globally, but exclude premium components like toasts */
-.dark :where(.backdrop-blur, .backdrop-blur-sm, .backdrop-blur-md, .backdrop-blur-lg, .backdrop-blur-xl, .backdrop-blur-2xl):not([data-sonner-toast]) {
+/* Dark-mode consistency: remove expensive blur glass effects globally, but exclude premium components like toasts and fixed headers/navbars */
+.dark :where(.backdrop-blur, .backdrop-blur-sm, .backdrop-blur-md, .backdrop-blur-lg, .backdrop-blur-xl, .backdrop-blur-2xl):not([data-sonner-toast]):not(nav):not(header) {
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
 }
