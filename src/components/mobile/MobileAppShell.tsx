@@ -53,9 +53,6 @@ import {
     MessageSquare,
     User,
     Building2,
-    Signal,
-    BatteryFull,
-    Wifi,
     Smartphone,
     Briefcase,
     LayoutGrid,
@@ -119,29 +116,11 @@ const SCREENS_WITHOUT_TABS: ScreenName[] = [
     "landlordMoveOutReview",
 ];
 
-// ─── Status Bar ────────────────────────────────────────────
+// ─── Minimal Top Bar ──────────────────────────────────────
 function StatusBar() {
-    const now = new Date();
-    const timeStr = now.toLocaleTimeString("en-US", {
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: false,
-    });
-
     return (
         <div className={styles.statusBar}>
-            <span className={styles.statusTime}>{timeStr}</span>
-            <div className={styles.statusIcons}>
-                <span className={styles.statusIcon}>
-                    <Signal size={13} strokeWidth={2.5} />
-                </span>
-                <span className={styles.statusIcon}>
-                    <Wifi size={13} strokeWidth={2.5} />
-                </span>
-                <span className={styles.statusIcon}>
-                    <BatteryFull size={15} strokeWidth={2.5} />
-                </span>
-            </div>
+            <span className={styles.statusTime}>iReside</span>
         </div>
     );
 }

@@ -68,11 +68,10 @@
     --m-tab-bar-height: 72px;
     --m-safe-bottom: 24px;
 
-    /* Viewport sizing */
+    /* Viewport sizing — full screen, no phone frame */
     position: relative;
-    width: 393px;
-    height: 852px;
-    max-height: 100dvh;
+    width: 100%;
+    height: 100dvh;
     background: #0a0a0a;
     overflow: hidden;
     display: flex;
@@ -81,28 +80,12 @@
     color: #fafafa;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-
-    /* Development frame */
-    border-radius: 40px;
-    border: 3px solid #555555;
-    box-shadow:
-        0 0 0 1px #444444,
-        0 0 50px rgba(109, 152, 56, 0.15),
-        0 25px 80px rgba(0, 0, 0, 0.6),
-        0 8px 30px rgba(0, 0, 0, 0.4);
 }
 
-/* Center the phone on the page during dev */
+/* Full-screen wrapper */
 .devWrapper {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    background: #111111;
-    background-image:
-        radial-gradient(ellipse at 30% 40%, rgba(109, 152, 56, 0.06) 0%, transparent 60%),
-        radial-gradient(ellipse at 70% 60%, rgba(59, 130, 246, 0.04) 0%, transparent 60%);
-    padding: 20px;
+    min-height: 100dvh;
+    background: #0a0a0a;
 }
 
 /* ─── Status Bar ───────────────────────────────────────── */
