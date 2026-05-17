@@ -2,8 +2,9 @@
 
 import Image from "next/image";
 import { useMemo, useState } from "react";
-import { Building2, Calendar, CircleHelp, Copy, DoorClosed, DoorOpen, History, Link2, MapPin, QrCode, RefreshCw, ShieldCheck, Globe, Handshake, XCircle } from "lucide-react";
+import { Building2, Calendar, CircleHelp, Copy, DoorClosed, DoorOpen, History, Link2, MapPin, QrCode, RefreshCw, ShieldCheck, Globe, Handshake, XCircle, AlertTriangle, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAppToast } from "@/hooks/useAppToast";
 
 type InviteMode = "property" | "unit";
 type InviteApplicationType = "online" | "face_to_face";
@@ -156,6 +157,14 @@ export function TenantInviteManager({
     const [freshInvite, setFreshInvite] = useState<InviteListItem | null>(null);
     const [showHistory, setShowHistory] = useState(false);
 
+    const toast = useAppToast();
+    const [copiedId, setCopiedId] = useState<string | null>(null);
+    const [copiedUrl, setCopiedUrl] = useState(false);
+    const [revokingId, setRevokingId] = useState<string | null>(null);
+    const [showHelpTooltip, setShowHelpTooltip] = useState(false);
+    const [showValidIdTooltip, setShowValidIdTooltip] = useState(false);
+    const [activePreset, setActivePreset] = useState<number | null>(7);
+
     const properties = useMemo(() => {
         const map = new Map<string, { id: string; name: string }>();
         for (const unit of availableUnits) {
@@ -171,7 +180,7 @@ export function TenantInviteManager({
         () =>
             availableUnits
                 .filter((unit) => unit.property_id === propertyId && (unit.status ?? "vacant") === "vacant")
-                .sort((a, b) => a.name.localeCompare(b.name)),
+                .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true })),
         [availableUnits, propertyId]
     );
 
@@ -187,6 +196,23 @@ export function TenantInviteManager({
         Boolean(propertyId) && (mode === "unit" ? Boolean(unitId) : Boolean(previewUnitId));
 
     const createInvite = async () => {
+        if (!propertyId) {
+            toast.error("Please select a property first.");
+            return;
+        }
+        if (mode === "unit" && !unitId) {
+            toast.error("Please select a specific vacant unit.");
+            return;
+        }
+        if (applicationType === "online" && requiredRequirements.length === 0) {
+            toast.error("Please select at least one required document.");
+            return;
+        }
+        if (!expiresAt) {
+            toast.error("Please select an expiration date.");
+            return;
+        }
+
         setSubmitting(true);
         setError(null);
         setFreshInvite(null);
@@ -208,9 +234,12 @@ export function TenantInviteManager({
                 throw new Error(payload.error || "Failed to create invite.");
             }
             setFreshInvite(payload.invite);
+            toast.success("Private invite link and QR code generated successfully!");
             onRefresh();
         } catch (createError) {
-            setError(createError instanceof Error ? createError.message : "Failed to create invite.");
+            const errorMsg = createError instanceof Error ? createError.message : "Failed to create invite.";
+            setError(errorMsg);
+            toast.error(errorMsg);
         } finally {
             setSubmitting(false);
         }
@@ -226,14 +255,29 @@ export function TenantInviteManager({
             if (!response.ok) {
                 throw new Error("Failed to revoke invite.");
             }
+            toast.success("Invite link successfully revoked.");
             onRefresh();
         } catch (revokeError) {
-            setError(revokeError instanceof Error ? revokeError.message : "Failed to revoke invite.");
+            const errorMsg = revokeError instanceof Error ? revokeError.message : "Failed to revoke invite.";
+            setError(errorMsg);
+            toast.error(errorMsg);
         }
     };
 
-    const copyLink = async (url: string) => {
-        await navigator.clipboard.writeText(url);
+    const copyLink = async (url: string, id?: string) => {
+        try {
+            await navigator.clipboard.writeText(url);
+            if (id) {
+                setCopiedId(id);
+                setTimeout(() => setCopiedId(null), 1500);
+            } else {
+                setCopiedUrl(true);
+                setTimeout(() => setCopiedUrl(false), 1500);
+            }
+            toast.success("Invite link copied to clipboard!");
+        } catch (err) {
+            toast.error("Failed to copy link.");
+        }
     };
 
     const scopeControls: Array<{
@@ -341,19 +385,25 @@ export function TenantInviteManager({
                             <h3 className="text-xl font-black text-foreground">Generator Settings</h3>
                             <p className="mt-1 text-sm text-muted-foreground">Customize how your future tenants will receive and interact with the invite.</p>
                         </div>
-                        <button
-                            type="button"
-                            aria-label="Toggle help information"
-                            title="Toggle help information"
-                            className="group relative inline-flex items-center justify-center rounded-xl border border-border bg-card p-2.5 text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
-                        >
-                            <CircleHelp className="size-5" />
-                            <div className="pointer-events-none absolute right-0 top-12 z-30 hidden w-72 rounded-2xl border border-border bg-background p-4 text-left text-xs font-black leading-relaxed text-foreground shadow-2xl group-hover:block group-focus-visible:block">
-                                <p className="font-black uppercase tracking-wider text-primary">Configuration Guide</p>
-                                <p className="mt-3 text-muted-foreground">Scope: Choose if this link allows applicants to pick any vacant unit in the property, or if it&apos;s locked to a specific unit.</p>
-                                <p className="mt-2 text-muted-foreground">Application Mode: Online mode requires tenants to upload documents immediately. In-person allows you to verify physical documents later.</p>
-                            </div>
-                        </button>
+                        <div className="relative">
+                            <button
+                                type="button"
+                                onClick={() => setShowHelpTooltip(!showHelpTooltip)}
+                                onBlur={() => setTimeout(() => setShowHelpTooltip(false), 200)}
+                                aria-label="Toggle help information"
+                                title="Toggle help information"
+                                className="relative inline-flex items-center justify-center rounded-xl border border-border bg-card p-2.5 text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+                            >
+                                <CircleHelp className="size-5" />
+                            </button>
+                            {showHelpTooltip && (
+                                <div className="absolute right-0 top-12 z-30 w-72 rounded-2xl border border-border bg-background p-4 text-left text-xs font-black leading-relaxed text-foreground shadow-2xl animate-in fade-in slide-in-from-top-2 duration-200">
+                                    <p className="font-black uppercase tracking-wider text-primary">Configuration Guide</p>
+                                    <p className="mt-3 text-muted-foreground">Scope: Choose if this link allows applicants to pick any vacant unit in the property, or if it&apos;s locked to a specific unit.</p>
+                                    <p className="mt-2 text-muted-foreground">Application Mode: Online mode requires tenants to upload documents immediately. In-person allows you to verify physical documents later.</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
@@ -460,16 +510,33 @@ export function TenantInviteManager({
                                             <span className="inline-flex items-center gap-1.5">
                                                 {option.label}
                                                 {option.key === "valid_id" && (
-                                                    <span className="group/validid relative inline-flex items-center">
-                                                        <CircleHelp
-                                                            className="size-4 rounded-full border border-amber-400/40 bg-amber-400/15 p-0.5 text-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.35)] animate-pulse"
-                                                            aria-label={VALID_ID_TOOLTIP}
-                                                            role="img"
+                                                    <span className="relative inline-flex items-center ml-1.5">
+                                                        <span
+                                                            role="button"
                                                             tabIndex={0}
-                                                        />
-                                                        <span className="pointer-events-none absolute left-0 top-6 z-30 hidden w-64 rounded-xl border border-border bg-background p-2.5 text-[10px] font-black normal-case tracking-normal text-foreground shadow-xl group-hover/validid:block group-focus-within/validid:block">
-                                                            {VALID_ID_TOOLTIP}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setShowValidIdTooltip(!showValidIdTooltip);
+                                                            }}
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === "Enter" || e.key === " ") {
+                                                                    e.stopPropagation();
+                                                                    setShowValidIdTooltip(!showValidIdTooltip);
+                                                                }
+                                                            }}
+                                                            onBlur={() => setTimeout(() => setShowValidIdTooltip(false), 200)}
+                                                            className="focus:outline-none cursor-pointer"
+                                                        >
+                                                            <CircleHelp
+                                                                className="size-4 rounded-full border border-amber-400/40 bg-amber-400/15 p-0.5 text-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.35)] animate-pulse"
+                                                                aria-label={VALID_ID_TOOLTIP}
+                                                            />
                                                         </span>
+                                                        {showValidIdTooltip && (
+                                                            <span className="absolute left-0 top-6 z-30 w-64 rounded-xl border border-border bg-background p-2.5 text-[10px] font-black normal-case tracking-normal text-foreground shadow-xl animate-in fade-in slide-in-from-top-2 duration-200">
+                                                                {VALID_ID_TOOLTIP}
+                                                            </span>
+                                                        )}
                                                     </span>
                                                 )}
                                             </span>
@@ -579,7 +646,7 @@ export function TenantInviteManager({
                             {mode === "property" && (
                                 <div className="group space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
                                     <label htmlFor="preview-unit" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground transition-colors group-focus-within:text-primary">
-                                        Preview Unit Rent Basis
+                                        Rent Preview Unit
                                     </label>
                                 <div className="relative">
                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
@@ -622,7 +689,10 @@ export function TenantInviteManager({
                                     id="expires-at"
                                     type="datetime-local"
                                     value={expiresAt}
-                                    onChange={(event) => setExpiresAt(event.target.value)}
+                                    onChange={(event) => {
+                                        setExpiresAt(event.target.value);
+                                        setActivePreset(null);
+                                    }}
                                     required
                                     className="h-12 w-full appearance-none bg-transparent pl-10 pr-4 text-sm font-black text-foreground outline-none transition-colors 
                                     [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0"
@@ -633,21 +703,30 @@ export function TenantInviteManager({
                                     { label: "+1 Day", days: 1 },
                                     { label: "+7 Days", days: 7 },
                                     { label: "+30 Days", days: 30 },
-                                ].map((preset) => (
-                                    <button
-                                        key={preset.days}
-                                        type="button"
-                                        onClick={() => {
-                                            const d = new Date();
-                                            d.setDate(d.getDate() + preset.days);
-                                            const tz = d.getTimezoneOffset() * 60000;
-                                            setExpiresAt(new Date(d.getTime() - tz).toISOString().slice(0, 16));
-                                        }}
-                                        className="rounded-lg border border-border bg-background px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-muted-foreground transition-colors hover:border-primary/30 hover:bg-primary/5 hover:text-foreground active:scale-95"
-                                    >
-                                        {preset.label}
-                                    </button>
-                                ))}
+                                ].map((preset) => {
+                                    const isActive = activePreset === preset.days;
+                                    return (
+                                        <button
+                                            key={preset.days}
+                                            type="button"
+                                            onClick={() => {
+                                                const d = new Date();
+                                                d.setDate(d.getDate() + preset.days);
+                                                const tz = d.getTimezoneOffset() * 60000;
+                                                setExpiresAt(new Date(d.getTime() - tz).toISOString().slice(0, 16));
+                                                setActivePreset(preset.days);
+                                            }}
+                                            className={cn(
+                                                "rounded-lg border px-3 py-1.5 text-[10px] font-black uppercase tracking-widest transition-colors active:scale-95",
+                                                isActive
+                                                    ? "border-primary bg-primary/10 text-primary shadow-[0_0_12px_rgba(var(--primary-rgb),0.15)]"
+                                                    : "border-border bg-background text-muted-foreground hover:border-primary/30 hover:bg-primary/5 hover:text-foreground"
+                                            )}
+                                        >
+                                            {preset.label}
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </div>
                         </div>
@@ -657,13 +736,7 @@ export function TenantInviteManager({
                         <button
                             type="button"
                             onClick={createInvite}
-                            disabled={
-                                submitting ||
-                                !propertyId ||
-                                (mode === "unit" && !unitId) ||
-                                !expiresAt ||
-                                (applicationType === "online" && requiredRequirements.length === 0)
-                            }
+                            disabled={submitting}
                             className="inline-flex h-12 items-center gap-2 rounded-xl bg-primary px-6 text-sm font-black text-primary-foreground shadow-[0_8px_16px_-6px_rgba(var(--primary-rgb),0.4)] transition-all hover:scale-[1.02] hover:bg-primary/90 active:scale-95 disabled:pointer-events-none disabled:opacity-50"
                         >
                             <Link2 className="size-5" />
@@ -701,10 +774,24 @@ export function TenantInviteManager({
                             <button
                                 type="button"
                                 onClick={() => void copyLink(freshInvite.shareUrl)}
-                                className="inline-flex w-full h-12 items-center justify-center gap-2 rounded-xl bg-foreground px-6 text-xs font-black uppercase tracking-[0.2em] text-background transition-transform hover:scale-[1.02] active:scale-95"
+                                className={cn(
+                                    "inline-flex w-full h-12 items-center justify-center gap-2 rounded-xl px-6 text-xs font-black uppercase tracking-[0.2em] transition-all active:scale-95",
+                                    copiedUrl
+                                        ? "bg-emerald-600 text-white shadow-[0_4px_12px_rgba(16,185,129,0.3)] hover:bg-emerald-700"
+                                        : "bg-foreground text-background hover:scale-[1.02]"
+                                )}
                             >
-                                <Copy className="size-4" />
-                                Copy Link
+                                {copiedUrl ? (
+                                    <>
+                                        <Check className="size-4" />
+                                        Copied!
+                                    </>
+                                ) : (
+                                    <>
+                                        <Copy className="size-4" />
+                                        Copy Link
+                                    </>
+                                )}
                             </button>
                         </div>
                     ) : (
@@ -771,21 +858,69 @@ export function TenantInviteManager({
                                         </a>
                                         <button
                                             type="button"
-                                            onClick={() => void copyLink(invite.shareUrl)}
-                                            className="inline-flex h-10 items-center gap-2 rounded-xl border border-border bg-card px-4 text-xs font-black uppercase tracking-wider text-foreground transition-colors hover:bg-muted"
+                                            onClick={() => void copyLink(invite.shareUrl, invite.id)}
+                                            className={cn(
+                                                "inline-flex h-10 items-center gap-2 rounded-xl border px-4 text-xs font-black uppercase tracking-wider transition-all active:scale-95",
+                                                copiedId === invite.id
+                                                    ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 animate-pulse"
+                                                    : "border-border bg-card text-foreground hover:bg-muted"
+                                            )}
                                         >
-                                            <Copy className="size-4" />
-                                            Copy URL
+                                            {copiedId === invite.id ? (
+                                                <>
+                                                    <Check className="size-4" />
+                                                    Copied!
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Copy className="size-4" />
+                                                    Copy URL
+                                                </>
+                                            )}
                                         </button>
                                         {invite.status === "active" && (
-                                            <button
-                                                type="button"
-                                                onClick={() => void revokeInvite(invite.id)}
-                                                className="inline-flex h-10 items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/5 px-4 text-xs font-black uppercase tracking-wider text-red-600 transition-colors hover:bg-red-500/10"
-                                            >
-                                                <XCircle className="size-4" />
-                                                Revoke
-                                            </button>
+                                            revokingId === invite.id ? (
+                                                <div className="flex items-center gap-1.5 animate-in fade-in zoom-in-95 duration-200">
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            void revokeInvite(invite.id);
+                                                            setRevokingId(null);
+                                                        }}
+                                                        className="inline-flex h-10 items-center gap-2 rounded-xl bg-red-600 px-4 text-xs font-black uppercase tracking-wider text-white transition-colors hover:bg-red-700 active:scale-95 shadow-[0_4px_12px_rgba(220,38,38,0.3)]"
+                                                    >
+                                                        <AlertTriangle className="size-4 animate-pulse" />
+                                                        Confirm Revoke
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setRevokingId(null);
+                                                        }}
+                                                        className="inline-flex h-10 items-center justify-center rounded-xl border border-border bg-card px-3 text-xs font-black uppercase tracking-wider text-muted-foreground hover:bg-muted active:scale-95"
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setRevokingId(invite.id);
+                                                        // Automatically reset back to "Revoke" state if not clicked after 4 seconds
+                                                        setTimeout(() => {
+                                                            setRevokingId((current) => current === invite.id ? null : current);
+                                                        }, 4000);
+                                                    }}
+                                                    className="inline-flex h-10 items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/5 px-4 text-xs font-black uppercase tracking-wider text-red-600 transition-colors hover:bg-red-500/10 active:scale-95"
+                                                >
+                                                    <XCircle className="size-4" />
+                                                    Revoke
+                                                </button>
+                                            )
                                         )}
                                     </div>
                                 </div>
