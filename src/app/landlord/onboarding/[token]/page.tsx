@@ -59,8 +59,8 @@ const STEPS: { id: Step; label: string; icon: any }[] = [
 
 export default function OnboardingPage({ params }: { params: Promise<{ token: string }> }) {
     const router = useRouter();
-    const { get: searchGet } = useSearchParams();
-    const isPreview = searchGet("preview") === "true";
+    const searchParams = useSearchParams();
+    const isPreview = searchParams.get("preview") === "true";
     const [token, setToken] = useState<string>("");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -537,7 +537,8 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-5 top-1/2 -translate-y-1/2 text-white/20 hover:text-white transition-colors"
+                                            aria-label={showPassword ? "Hide password" : "Show password"}
+                                            className="absolute right-5 top-1/2 -translate-y-1/2 text-white/20 hover:text-white transition-colors focus:outline-none focus:text-primary"
                                         >
                                             {showPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
                                         </button>
@@ -597,7 +598,8 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                         <button
                                             type="button"
                                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                            className="absolute right-5 top-1/2 -translate-y-1/2 text-white/20 hover:text-white transition-colors"
+                                            aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                                            className="absolute right-5 top-1/2 -translate-y-1/2 text-white/20 hover:text-white transition-colors focus:outline-none focus:text-primary"
                                         >
                                             {showConfirmPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
                                         </button>
@@ -747,8 +749,8 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
 
                                         <div className="grid gap-6">
                                             <div className="grid gap-3">
-                                                <label className="text-[10px] font-black uppercase tracking-wider text-white/30 px-1">Utility Management</label>
-                                                <div className="grid gap-2">
+                                                <span className="text-[10px] font-black uppercase tracking-wider text-white/30 px-1">Utility Management</span>
+                                                <div className="grid gap-2" role="radiogroup" aria-label="Utility Management Strategy">
                                                     {[
                                                         { id: "included_in_rent", label: "Included in Rent", desc: "Utilities are part of the rent", popular: false },
                                                         { id: "mixed", label: "Submetered", desc: "You bill tenants for usage", popular: true },
@@ -756,8 +758,10 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                     ].map((opt) => (
                                                         <button
                                                             key={opt.id}
+                                                            role="radio"
+                                                            aria-checked={utilityBilling === opt.id}
                                                             onClick={() => setUtilityBilling(opt.id as any)}
-                                                            className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl border transition-all text-left ${utilityBilling === opt.id ? "bg-primary/10 border-primary/50 shadow-lg shadow-primary/5" : "bg-white/5 border-white/5 hover:bg-white/[0.08]"}`}
+                                                            className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl border transition-all text-left focus:outline-none focus:ring-2 focus:ring-primary/40 ${utilityBilling === opt.id ? "bg-primary/10 border-primary/50 shadow-lg shadow-primary/5" : "bg-white/5 border-white/5 hover:bg-white/[0.08]"}`}
                                                         >
                                                             <div className="flex items-center gap-4">
                                                                 <div className={`size-2.5 rounded-full ${utilityBilling === opt.id ? "bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),1)]" : "bg-white/10"}`} />
@@ -803,10 +807,11 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                             </div>
 
                                             <div className="space-y-3">
-                                                <label className="text-[10px] font-black uppercase tracking-wider text-white/30 px-1">Standard Base Rent (PHP)</label>
+                                                <label htmlFor="base-rent" className="text-[10px] font-black uppercase tracking-wider text-white/30 px-1">Standard Base Rent (PHP)</label>
                                                 <div className="relative group">
-                                                    <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none text-xl font-black text-primary/40 group-focus-within:text-primary transition-colors">â‚±</div>
+                                                    <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none text-xl font-black text-primary/40 group-focus-within:text-primary transition-colors">₱</div>
                                                     <input 
+                                                        id="base-rent"
                                                         type="text" 
                                                         value={baseRent === 0 ? "" : baseRent.toLocaleString('en-US')}
                                                         onChange={(e) => {
@@ -838,11 +843,12 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                             ].map((amenity) => (
                                                 <button
                                                     key={amenity}
+                                                    aria-pressed={amenities.includes(amenity)}
                                                     onClick={() => {
                                                         if (amenities.includes(amenity)) setAmenities(prev => prev.filter(a => a !== amenity));
                                                         else setAmenities(prev => [...prev, amenity]);
                                                     }}
-                                                    className={`px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all text-center ${amenities.includes(amenity) ? "bg-primary text-black border-primary shadow-lg shadow-primary/20" : "bg-white/5 border-white/5 text-white/30 hover:text-white/50"}`}
+                                                    className={`px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all text-center focus:outline-none focus:ring-2 focus:ring-primary/40 ${amenities.includes(amenity) ? "bg-primary text-black border-primary shadow-lg shadow-primary/20" : "bg-white/5 border-white/5 text-white/30 hover:text-white/50"}`}
                                                 >
                                                     {amenity}
                                                 </button>
@@ -864,7 +870,9 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
 
                                         <div className="space-y-4">
                                             <div className="flex gap-2">
+                                                <label htmlFor="new-rule-input" className="sr-only">Define a new property rule</label>
                                                 <input 
+                                                    id="new-rule-input"
                                                     type="text"
                                                     value={newRule}
                                                     onChange={(e) => setNewRule(e.target.value)}
@@ -875,7 +883,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                         }
                                                     }}
                                                     placeholder="Define a new property rule..."
-                                                    className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-sm text-white focus:border-primary/50 transition-all placeholder:text-white/10 outline-none"
+                                                    className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-sm text-white focus:border-primary/50 transition-all placeholder:text-white/10 outline-none focus:ring-2 focus:ring-primary/40"
                                                 />
                                                 <button 
                                                     onClick={() => {
@@ -884,7 +892,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                             setNewRule("");
                                                         }
                                                     }}
-                                                    className="px-6 py-2 bg-primary text-black rounded-xl font-black hover:scale-[1.02] active:scale-[0.98] transition-all"
+                                                    className="px-6 py-2 bg-primary text-black rounded-xl font-black hover:scale-[1.02] active:scale-[0.98] transition-all focus:outline-none focus:ring-2 focus:ring-primary"
                                                 >
                                                     Add Rule
                                                 </button>
@@ -899,7 +907,8 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                         <span className="text-xs font-black text-white/80">{rule}</span>
                                                         <button 
                                                             onClick={() => setBuildingRules(buildingRules.filter((_, i) => i !== index))}
-                                                            className="text-white/20 hover:text-red-400 transition-colors"
+                                                            aria-label={`Remove rule: ${rule}`}
+                                                            className="text-white/20 hover:text-red-400 transition-colors focus:outline-none focus:text-red-400"
                                                         >
                                                             <X className="size-4" />
                                                         </button>
@@ -998,15 +1007,17 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                         </div>
                                         
                                         <div className="grid gap-5">
-                                            <div className="flex bg-white/5 p-1.5 rounded-2xl border border-white/5">
+                                            <div className="flex bg-white/5 p-1.5 rounded-2xl border border-white/5" role="tablist" aria-label="Contract Execution Strategy">
                                                 {[
                                                     { id: "generate", label: "Smart Draft" },
                                                     { id: "upload", label: "Own Document" }
                                                 ].map((mode) => (
                                                     <button 
                                                         key={mode.id}
+                                                        role="tab"
+                                                        aria-selected={contractMode === mode.id}
                                                         onClick={() => setContractMode(mode.id as any)}
-                                                        className={`flex-1 py-4 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${contractMode === mode.id ? "bg-primary text-black shadow-lg shadow-primary/10" : "text-white/30 hover:text-white/50"}`}
+                                                        className={`flex-1 py-4 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-primary/40 ${contractMode === mode.id ? "bg-primary text-black shadow-lg shadow-primary/10" : "text-white/30 hover:text-white/50"}`}
                                                     >
                                                         {mode.label}
                                                     </button>
@@ -1139,7 +1150,8 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                 )}
                                                 <button 
                                                     onClick={() => setShowLightbox(false)}
-                                                    className="size-10 bg-white/5 hover:bg-white/10 rounded-full flex items-center justify-center text-white/40 hover:text-white transition-all"
+                                                    aria-label="Close preview"
+                                                    className="size-10 bg-white/5 hover:bg-white/10 rounded-full flex items-center justify-center text-white/40 hover:text-white transition-all focus:outline-none focus:ring-2 focus:ring-primary/40"
                                                 >
                                                     <X className="size-5" />
                                                 </button>
@@ -1234,28 +1246,36 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                             
                             <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] overflow-hidden backdrop-blur-xl shadow-2xl">
                                 {/* Cover Photo Section */}
-                                <div className="relative h-40 group cursor-pointer bg-white/5 border-b border-white/5">
-                                    {coverPhoto ? (
-                                        <Image src={coverPhoto} alt="Cover" fill className="object-cover" />
-                                    ) : (
-                                        <div className="w-full h-full flex flex-col items-center justify-center gap-2">
-                                            <ImageIcon className="size-6 text-white/10" />
-                                            <span className="text-[9px] font-black text-white/20 uppercase tracking-widest">Set Cover Banner</span>
-                                        </div>
-                                    )}
-                                    <input 
-                                        type="file" 
-                                        onChange={handleCoverPhotoChange}
-                                        className="absolute inset-0 opacity-0 cursor-pointer z-10" 
-                                        accept="image/*"
-                                    />
-                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center backdrop-blur-[2px] pointer-events-none">
-                                        <div className="bg-white/10 border border-white/20 px-4 py-2 rounded-full flex items-center gap-2">
-                                            <Camera className="size-4 text-white" />
-                                            <span className="text-[10px] font-black text-white uppercase tracking-widest">Change Cover</span>
-                                        </div>
-                                    </div>
-                                </div>
+                                                                <input 
+                                                                    id="cover-photo-input"
+                                                                    type="file" 
+                                                                    onChange={handleCoverPhotoChange}
+                                                                    className="hidden" 
+                                                                    accept="image/*"
+                                                                />
+                                                                <div 
+                                                                    onClick={() => document.getElementById('cover-photo-input')?.click()}
+                                                                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); document.getElementById('cover-photo-input')?.click(); } }}
+                                                                    tabIndex={0}
+                                                                    role="button"
+                                                                    aria-label="Upload Cover Banner"
+                                                                    className="relative h-40 group cursor-pointer bg-white/5 border-b border-white/5 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:z-20"
+                                                                >
+                                                                    {coverPhoto ? (
+                                                                        <Image src={coverPhoto} alt="Cover" fill className="object-cover" />
+                                                                    ) : (
+                                                                        <div className="w-full h-full flex flex-col items-center justify-center gap-2">
+                                                                            <ImageIcon className="size-6 text-white/10" />
+                                                                            <span className="text-[9px] font-black text-white/20 uppercase tracking-widest">Set Cover Banner</span>
+                                                                        </div>
+                                                                    )}
+                                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center backdrop-blur-[2px] pointer-events-none">
+                                                                        <div className="bg-white/10 border border-white/20 px-4 py-2 rounded-full flex items-center gap-2">
+                                                                            <Camera className="size-4 text-white" />
+                                                                            <span className="text-[10px] font-black text-white uppercase tracking-widest">Change Cover</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
 
                                 {/* Profile Photo & Details Wrapper */}
                                 <div className="p-8 pt-0 -mt-12 relative z-10">
@@ -1266,7 +1286,8 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setIsAvatarPickerOpen(true); }}}
                                             tabIndex={0}
                                             role="button"
-                                            className="relative group shrink-0 cursor-pointer"
+                                            aria-label="Choose profile avatar"
+                                            className="relative group shrink-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/40 rounded-[2.5rem] focus:z-20"
                                         >
                                             <div 
                                                 className="size-32 rounded-[2.5rem] border-4 border-[#121212] overflow-hidden shadow-2xl relative transition-transform duration-500 group-hover:scale-105"

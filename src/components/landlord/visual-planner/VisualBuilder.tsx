@@ -742,6 +742,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const historyRef = useRef<FloorLayout[]>([DEFAULT_FLOOR_LAYOUTS[DEFAULT_ACTIVE_FLOOR]]);
     const historyIndexRef = useRef(0);
     const isUndoingRef = useRef(false);
+    const activeSidebarDragRef = useRef<any>(null);
 
     // Helper to update undo availability state
     const [undoAvailable, setUndoAvailable] = useState(false);
@@ -2067,12 +2068,14 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                 : blockType === "facility-function"
                                                     ? { blockType, label: "Function Room", w: 240, h: 180, variant: "function-room" }
                                                     : { blockType, label: "Studio Facility", w: 200, h: 160, variant: "studio" };
+        activeSidebarDragRef.current = { ...payload, dbUnitId };
         e.dataTransfer.setData(SIDEBAR_BLOCK_DRAG_TYPE, JSON.stringify({ ...payload, dbUnitId }));
         e.dataTransfer.effectAllowed = "copy";
     };
 
     const handleSidebarBlockDragEnd = () => {
         setSidebarBlockGhost(null);
+        activeSidebarDragRef.current = null;
     };
 
     const handleUnplacedUnitClick = (dbUnit: DbUnit) => {
@@ -2108,14 +2111,19 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
             e.preventDefault();
             e.dataTransfer.dropEffect = "copy";
 
-            const serialized = e.dataTransfer.getData(SIDEBAR_BLOCK_DRAG_TYPE);
-            if (!serialized) {
-                setSidebarBlockGhost(null);
-                return;
+            let parsed = activeSidebarDragRef.current;
+            if (!parsed) {
+                const serialized = e.dataTransfer.getData(SIDEBAR_BLOCK_DRAG_TYPE);
+                if (serialized) {
+                    try {
+                        parsed = JSON.parse(serialized);
+                    } catch {
+                        parsed = null;
+                    }
+                }
             }
 
-            const parsed = JSON.parse(serialized) as { blockType?: SidebarBlockType; label?: string; unitType?: Unit["type"]; w?: number; h?: number; variant?: Structure["variant"] };
-            if (!parsed.blockType || !parsed.w || !parsed.h) {
+            if (!parsed || !parsed.blockType || !parsed.w || !parsed.h) {
                 setSidebarBlockGhost(null);
                 return;
             }
@@ -2168,12 +2176,20 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     };
 
     const handleBlueprintDrop = (e: React.DragEvent<HTMLDivElement>) => {
+        let parsed = activeSidebarDragRef.current;
         const serialized = e.dataTransfer.getData(SIDEBAR_BLOCK_DRAG_TYPE);
-        if (!serialized) return;
+        if (!parsed && serialized) {
+            try {
+                parsed = JSON.parse(serialized);
+            } catch {
+                parsed = null;
+            }
+        }
+        if (!parsed) return;
 
         e.preventDefault();
         setSidebarBlockGhost(null);
-        const parsed = JSON.parse(serialized) as { blockType?: SidebarBlockType; label?: string; unitType?: Unit["type"]; w?: number; h?: number; variant?: string; dbUnitId?: string };
+        activeSidebarDragRef.current = null;
         if (!parsed.blockType || !parsed.w || !parsed.h) return;
 
         const worldPoint = getWorldPointFromClientPoint(e.clientX, e.clientY);
@@ -4117,6 +4133,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                 ) : (
                                     <SidebarBlockLibrary
                                         onDragStart={handleSidebarBlockDragStart}
+                                        onDragEnd={handleSidebarBlockDragEnd}
                                         onUnitClick={handleUnplacedUnitClick}
                                         styles={styles}
                                         isDark={isDark}
@@ -4940,6 +4957,7 @@ const UnitNotesPanel = ({
 /* Extracted Sidebar Library Component for cleaner main render */
 const SidebarBlockLibrary = ({
     onDragStart,
+    onDragEnd,
     onUnitClick,
     styles,
     isDark,
@@ -4950,6 +4968,7 @@ const SidebarBlockLibrary = ({
     onApplyPreset,
 }: {
     onDragStart: (type: SidebarBlockType, dbUnitId?: string) => (e: React.DragEvent<HTMLDivElement>) => void;
+    onDragEnd: () => void;
     styles: { readonly [key: string]: string; }
     isDark: boolean;
     unplacedUnits?: DbUnit[];
@@ -4959,9 +4978,7 @@ const SidebarBlockLibrary = ({
     activeFloorItemCount: number;
     onApplyPreset: (presetType: "double-loaded" | "u-shape" | "l-shape" | "single-loaded") => void;
 }) => {
-    const handleSidebarBlockDragEnd = () => {
-        // Optional cleanup if needed inside component, but parent tracks ghost
-    };
+    const handleSidebarBlockDragEnd = onDragEnd;
 
     return (
         <div className="flex flex-col h-full">
@@ -4977,6 +4994,7 @@ const SidebarBlockLibrary = ({
                                     key={u.id} 
                                     draggable
                                     onDragStart={onDragStart(blockType, u.id)}
+                                    onDragEnd={handleSidebarBlockDragEnd}
                                     onClick={() => onUnitClick?.(u)}
                                     className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-black cursor-grab active:cursor-grabbing transition-all ${isDark ? 'border-amber-500/20 bg-amber-500/10 text-amber-300 hover:border-amber-400/40' : 'border-amber-300 bg-amber-100/80 text-amber-800 hover:border-amber-400'}`}
                                 >
