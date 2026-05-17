@@ -54,15 +54,7 @@ export default function RoleSelectionScreen() {
                     </button>
                 </div>
 
-                <div className={styles.footer}>
-                    <p className={styles.footerText}>
-                        Don't have an account?{" "}
-                        <button className={styles.link} onClick={() => navigate("signup")}>
-                            Sign Up
-                        </button>
-                    </p>
                 </div>
-            </div>
         </div>
     );
 }
