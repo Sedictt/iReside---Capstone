@@ -15,7 +15,7 @@ export default function LandlordLoginPage() {
         const { error } = await supabase.auth.signInWithOAuth({
             provider: "google",
             options: {
-                redirectTo: `${window.location.origin}/api/auth/callback`,
+                redirectTo: window.location.origin,
             },
         });
         if (error) {
@@ -77,7 +77,7 @@ export default function LandlordLoginPage() {
                     <button
                         onClick={handleGoogleLogin}
                         disabled={googleLoading}
-                        className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-700 bg-transparent py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-700 bg-transparent py-3.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                         {googleLoading ? (
                             <Loader2 className="h-5 w-5 animate-spin" />
