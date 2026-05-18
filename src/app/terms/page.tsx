@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, ShieldCheck, Scale, Building, Coins, Brain, MessageSquare, AlertTriangle, MapPin } from "lucide-react"
+import { ArrowLeft, ShieldCheck, Scale, Building, Coins, Brain, MessageSquare, AlertTriangle } from "lucide-react"
 
 export default function TermsPage() {
   return (
@@ -42,7 +42,7 @@ export default function TermsPage() {
                 Platform License & Gated Service Terms
               </h3>
               <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-                iReside provides a private, landlord-centric property and tenant management ecosystem designed exclusively for multi-unit rental property operations in Valenzuela City. Access is gated and strictly provisioned via official landlord invitations. Please read these Terms of Service carefully before utilizing our portals, interfaces, or integrated operational services.
+                iReside provides a private, landlord-centric property and tenant management ecosystem designed for multi-unit rental property operations. Access is gated and strictly provisioned via official landlord invitations. Please read these Terms of Service carefully before utilizing our portals, interfaces, or integrated operational services.
               </p>
             </div>
           </div>
@@ -65,29 +65,8 @@ export default function TermsPage() {
           {/* Section 2 */}
           <section className="p-6 rounded-2xl border border-border/50 bg-card/40 backdrop-blur-sm shadow-sm space-y-4 hover:border-border transition-all">
             <h2 className="text-2xl font-bold text-foreground flex items-center gap-3">
-              <MapPin className="size-6 text-primary shrink-0" />
-              2. Geographic & Property Scope Boundaries
-            </h2>
-            <p className="text-muted-foreground leading-relaxed">
-              iReside is customized and optimized exclusively for residential multi-unit properties (apartments, dormitories, and boarding houses) situated within the geographic boundaries of the following barangays in <strong>Valenzuela City, Philippines</strong>:
-            </p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2">
-              {["Barangay Marulas", "Barangay Canumay", "Barangay Malinta", "Barangay Maysan"].map((barangay) => (
-                <div key={barangay} className="p-3 rounded-xl border border-border/40 bg-muted/30 text-center font-bold text-sm text-foreground/95">
-                  {barangay}
-                </div>
-              ))}
-            </div>
-            <p className="text-muted-foreground leading-relaxed text-sm pt-2">
-              Single-family residential homes, transient hotels, commercial leasing spaces, and properties situated outside these four specified barangays are explicitly outside the system's operational scope and licensing rules.
-            </p>
-          </section>
-
-          {/* Section 3 */}
-          <section className="p-6 rounded-2xl border border-border/50 bg-card/40 backdrop-blur-sm shadow-sm space-y-4 hover:border-border transition-all">
-            <h2 className="text-2xl font-bold text-foreground flex items-center gap-3">
               <Building className="size-6 text-primary shrink-0" />
-              3. Private Onboarding & Gated Access Model
+              2. Private Onboarding & Gated Access Model
             </h2>
             <p className="text-muted-foreground leading-relaxed">
               iReside operates as an exclusive, private ecosystem. 
@@ -100,11 +79,11 @@ export default function TermsPage() {
             </ul>
           </section>
 
-          {/* Section 4 */}
+          {/* Section 3 */}
           <section className="p-6 rounded-2xl border border-border/50 bg-card/40 backdrop-blur-sm shadow-sm space-y-4 hover:border-border transition-all">
             <h2 className="text-2xl font-bold text-foreground flex items-center gap-3">
               <AlertTriangle className="size-6 text-primary shrink-0" />
-              4. Visual Unit Map Constraints & Disclaimers
+              3. Visual Unit Map Constraints & Disclaimers
             </h2>
             <p className="text-muted-foreground leading-relaxed">
               The 2D Unit Map canvas is a digital visualization and spatial planning tool designed to represent unit locations, occupancy states, and active maintenance statuses in real-time.
@@ -116,11 +95,11 @@ export default function TermsPage() {
             </ul>
           </section>
 
-          {/* Section 5 */}
+          {/* Section 4 */}
           <section className="p-6 rounded-2xl border border-border/50 bg-card/40 backdrop-blur-sm shadow-sm space-y-4 hover:border-border transition-all">
             <h2 className="text-2xl font-bold text-foreground flex items-center gap-3">
               <Coins className="size-6 text-primary shrink-0" />
-              5. Financial Tracking & Manual Payment Audit Boundaries
+              4. Financial Tracking & Manual Payment Audit Boundaries
             </h2>
             <p className="text-muted-foreground leading-relaxed">
               The Real-Time Financial Ledger manages digital statements, billing schedules, and invoices for Base Rent, Water, and Electricity.
@@ -138,11 +117,11 @@ export default function TermsPage() {
             </div>
           </section>
 
-          {/* Section 6 */}
+          {/* Section 5 */}
           <section className="p-6 rounded-2xl border border-border/50 bg-card/40 backdrop-blur-sm shadow-sm space-y-4 hover:border-border transition-all">
             <h2 className="text-2xl font-bold text-foreground flex items-center gap-3">
               <Brain className="size-6 text-primary shrink-0" />
-              6. Advisory AI & Context Intelligence
+              5. Advisory AI & Context Intelligence
             </h2>
             <p className="text-muted-foreground leading-relaxed">
               The platform integrates smart operational features powered by a local <strong>Groq Llama 3.1 8B</strong> RAG (Retrieval-Augmented Generation) pipeline for building rule queries, maintenance severity categorization, analytics support, and message moderation.
@@ -154,11 +133,11 @@ export default function TermsPage() {
             </ul>
           </section>
 
-          {/* Section 7 */}
+          {/* Section 6 */}
           <section className="p-6 rounded-2xl border border-border/50 bg-card/40 backdrop-blur-sm shadow-sm space-y-4 hover:border-border transition-all">
             <h2 className="text-2xl font-bold text-foreground flex items-center gap-3">
               <MessageSquare className="size-6 text-primary shrink-0" />
-              7. Communication, Community, & Content Moderation
+              6. Communication, Community, & Content Moderation
             </h2>
             <p className="text-muted-foreground leading-relaxed">
               In-app chat and the Community Hub (discussion boards, notices, resident polls, and utility alerts) are facilitated via Supabase Realtime protocols.
@@ -170,11 +149,11 @@ export default function TermsPage() {
             </ul>
           </section>
 
-          {/* Section 8 */}
+          {/* Section 7 */}
           <section className="p-6 rounded-2xl border border-border/50 bg-card/40 backdrop-blur-sm shadow-sm space-y-4 hover:border-border transition-all">
             <h2 className="text-2xl font-bold text-foreground flex items-center gap-3">
               <ShieldCheck className="size-6 text-primary shrink-0" />
-              8. Deployment & Operational Support Model
+              7. Deployment & Operational Support Model
             </h2>
             <p className="text-muted-foreground leading-relaxed">
               iReside operates as a <strong>semi-managed, isolated deployment model</strong>. 
@@ -183,11 +162,11 @@ export default function TermsPage() {
             </p>
           </section>
 
-          {/* Section 9 */}
+          {/* Section 8 */}
           <section className="p-6 rounded-2xl border border-border/50 bg-card/40 backdrop-blur-sm shadow-sm space-y-4 hover:border-border transition-all">
             <h2 className="text-2xl font-bold text-foreground flex items-center gap-3">
               <Scale className="size-6 text-primary shrink-0" />
-              9. Document & Lease Signing Boundaries
+              8. Document & Lease Signing Boundaries
             </h2>
             <p className="text-muted-foreground leading-relaxed">
               The digital lease signing workflow supports canvas-based electronic signatures under the Philippine Electronic Commerce Act of 2000 (R.A. 8792) for operational convenience. 
