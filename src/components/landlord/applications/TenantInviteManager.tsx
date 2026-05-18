@@ -340,8 +340,8 @@ export function TenantInviteManager({
     ];
 
     return (
-        <section className="mb-10 relative overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] border border-border bg-card/60 p-4 sm:p-6 shadow-sm backdrop-blur-3xl xl:p-8">
-            <div className="absolute inset-x-0 -top-40 -z-10 h-72 rounded-[100%] bg-primary/5 blur-3xl pointer-events-none" />
+        <section className="mb-8 sm:mb-10 relative sm:overflow-hidden sm:rounded-[2.5rem] sm:border sm:border-border sm:bg-card/60 sm:p-6 sm:shadow-sm sm:backdrop-blur-3xl xl:p-8">
+            <div className="absolute inset-x-0 -top-40 -z-10 h-72 rounded-[100%] bg-primary/5 blur-3xl pointer-events-none hidden sm:block" />
 
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                 <div className="max-w-2xl">
@@ -387,7 +387,7 @@ export function TenantInviteManager({
             )}
 
             <div className="mt-6 sm:mt-8 grid gap-4 sm:gap-6 xl:grid-cols-[1fr_400px]">
-                <div className="flex flex-col rounded-[1.75rem] border border-border bg-background/50 p-3 xs:p-4 sm:p-6 shadow-sm xl:p-8">
+                <div className="flex flex-col sm:rounded-[1.75rem] sm:border sm:border-border sm:bg-background/50 sm:p-6 sm:shadow-sm xl:p-8">
                     <div className="mb-4 sm:mb-6 flex flex-row items-center justify-between gap-4 border-b border-border/50 pb-4 sm:pb-5">
                         <div>
                             <h3 className="text-lg sm:text-xl font-black text-foreground">Generator Settings</h3>
@@ -429,17 +429,17 @@ export function TenantInviteManager({
                                             role="radio"
                                             aria-checked={active}
                                             className={cn(
-                                                "flex flex-col items-center justify-center gap-2 sm:gap-3 rounded-2xl border p-3 sm:p-3.5 transition-all text-center group w-full",
+                                                "flex flex-col items-center justify-center gap-1.5 sm:gap-3 rounded-xl sm:rounded-2xl border p-2.5 sm:p-3.5 transition-all text-center group w-full",
                                                 active
                                                     ? "border-primary bg-primary/5 text-primary shadow-[0_0_20px_rgba(var(--primary-rgb),0.1)]"
                                                     : "border-border bg-card/40 text-muted-foreground hover:border-primary/30 hover:bg-muted/30"
                                             )}
                                         >
                                             <div className={cn(
-                                                "flex size-10 shrink-0 items-center justify-center rounded-xl transition-colors",
+                                                "flex size-8 sm:size-10 shrink-0 items-center justify-center rounded-lg sm:rounded-xl transition-colors",
                                                 active ? "bg-primary text-primary-foreground" : "bg-muted group-hover:bg-muted/80"
                                             )}>
-                                                <Icon className="size-5" />
+                                                <Icon className="size-4 sm:size-5" />
                                             </div>
                                             <div className="space-y-0.5 sm:space-y-1">
                                                 <p className="text-[10px] sm:text-xs font-black uppercase tracking-wider">{control.label}</p>
@@ -467,17 +467,17 @@ export function TenantInviteManager({
                                             role="radio"
                                             aria-checked={active}
                                             className={cn(
-                                                "flex flex-col items-center justify-center gap-2 sm:gap-3 rounded-2xl border p-3 sm:p-3.5 transition-all text-center group w-full",
+                                                "flex flex-col items-center justify-center gap-1.5 sm:gap-3 rounded-xl sm:rounded-2xl border p-2.5 sm:p-3.5 transition-all text-center group w-full",
                                                 active
                                                     ? "border-primary bg-primary/5 text-primary shadow-[0_0_20px_rgba(var(--primary-rgb),0.1)]"
                                                     : "border-border bg-card/40 text-muted-foreground hover:border-primary/30 hover:bg-muted/30"
                                             )}
                                         >
                                             <div className={cn(
-                                                "flex size-10 shrink-0 items-center justify-center rounded-xl transition-colors",
+                                                "flex size-8 sm:size-10 shrink-0 items-center justify-center rounded-lg sm:rounded-xl transition-colors",
                                                 active ? "bg-primary text-primary-foreground" : "bg-muted group-hover:bg-muted/80"
                                             )}>
-                                                <Icon className="size-5" />
+                                                <Icon className="size-4 sm:size-5" />
                                             </div>
                                             <div className="space-y-0.5 sm:space-y-1">
                                                 <p className="text-[10px] sm:text-xs font-black uppercase tracking-wider">{control.label}</p>
