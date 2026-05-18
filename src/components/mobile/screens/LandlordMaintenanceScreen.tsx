@@ -1,14 +1,31 @@
 "use client";
 
-import { useState } from "react";
-import { Search, Wrench } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Search, Wrench, Clock, User, AlertCircle } from "lucide-react";
 import { useNavigation } from "../navigation";
+import { useMaintenanceRequests } from "@/lib/hooks/useMaintenanceRequests";
 import styles from "./LandlordMaintenanceScreen.module.css";
-import { EmptyState } from "../../shared/EmptyState";
+
+const MAINTENANCE_STATUS_MAP: Record<string, string> = {
+  open: "pending",
+  in_progress: "active",
+  resolved: "resolved",
+  closed: "resolved",
+};
 
 export default function LandlordMaintenanceScreen({ isSubView = false }: { isSubView?: boolean }) {
     const [activeTab, setActiveTab] = useState<"all" | "pending" | "active" | "resolved">("all");
     const { navigate } = useNavigation();
+    const { requests, loading } = useMaintenanceRequests("landlord");
+
+    const filteredRequests = useMemo(() => {
+      if (activeTab === "all") return requests;
+      return requests.filter((r) => MAINTENANCE_STATUS_MAP[r.status] === activeTab);
+    }, [requests, activeTab]);
+
+    const pendingCount = requests.filter((r) => r.status === "open").length;
+    const activeCount = requests.filter((r) => r.status === "in_progress").length;
+    const resolvedCount = requests.filter((r) => r.status === "resolved" || r.status === "closed").length;
 
     return (
         <div className={styles.container}>
@@ -23,15 +40,15 @@ export default function LandlordMaintenanceScreen({ isSubView = false }: { isSub
 
                     <div className={styles.statsRow}>
                         <div className={styles.statCard}>
-                            <span className={`${styles.statValue} ${styles.pending}`}>0</span>
+                            <span className={`${styles.statValue} ${styles.pending}`}>{pendingCount}</span>
                             <span className={styles.statLabel}>Pending</span>
                         </div>
                         <div className={styles.statCard}>
-                            <span className={`${styles.statValue} ${styles.active}`}>0</span>
+                            <span className={`${styles.statValue} ${styles.active}`}>{activeCount}</span>
                             <span className={styles.statLabel}>In Progress</span>
                         </div>
                         <div className={styles.statCard}>
-                            <span className={`${styles.statValue} ${styles.resolved}`}>0</span>
+                            <span className={`${styles.statValue} ${styles.resolved}`}>{resolvedCount}</span>
                             <span className={styles.statLabel}>Resolved</span>
                         </div>
                     </div>
@@ -55,11 +72,58 @@ export default function LandlordMaintenanceScreen({ isSubView = false }: { isSub
             )}
 
             <div className={styles.scrollArea}>
-                <EmptyState
-                    icon={Wrench}
-                    title="No maintenance requests"
-                    description="When tenants submit maintenance tickets, they will show up here."
-                />
+                {loading ? (
+                    <div style={{ textAlign: "center", paddingTop: "40px", color: "#737373" }}>
+                        <p>Loading maintenance requests...</p>
+                    </div>
+                ) : filteredRequests.length === 0 ? (
+                    <div style={{ textAlign: "center", paddingTop: "40px", color: "#737373" }}>
+                        <p>No maintenance tickets found.</p>
+                    </div>
+                ) : (
+                    filteredRequests.map((ticket) => {
+                        const unitName = (ticket.unit as any)?.name ?? "";
+                        const propertyName = (ticket.unit as any)?.property?.name ?? "";
+
+                        return (
+                            <div
+                                key={ticket.id}
+                                className={styles.ticketCard}
+                                onClick={() => navigate("landlordMaintenanceDetail", { ticketId: ticket.id })}
+                            >
+                                <div className={styles.ticketTop}>
+                                    <div className={styles.categoryInfo}>
+                                        <div className={`${styles.iconBox} ${styles[ticket.category ?? "other"]}`}>
+                                            <Wrench size={18} />
+                                        </div>
+                                        <div>
+                                            <div className={styles.subject}>{ticket.title}</div>
+                                            <div className={styles.unitInfo}>{propertyName}{unitName ? ` - ${unitName}` : ""}</div>
+                                        </div>
+                                    </div>
+                                    <div className={`${styles.statusBadge} ${styles[ticket.status]}`}>
+                                        {ticket.status === "in_progress" ? "In Progress" : ticket.status}
+                                    </div>
+                                </div>
+
+                                <div className={styles.ticketBody}>
+                                    <p className={styles.description}>{ticket.description}</p>
+                                </div>
+
+                                <div className={styles.ticketFooter}>
+                                    <div className={styles.timestamp}>
+                                        <Clock size={12} />
+                                        {new Date(ticket.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                                    </div>
+                                    <div className={styles.assignment} style={{ color: ticket.priority === "urgent" ? '#ef4444' : '#a3a3a3' }}>
+                                        {ticket.priority === "urgent" ? <AlertCircle size={12} /> : <User size={12} />}
+                                        {ticket.priority === "urgent" ? "Urgent" : ticket.priority}
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })
+                )}
             </div>
         </div>
     );

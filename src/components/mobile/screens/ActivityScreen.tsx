@@ -3,6 +3,9 @@
 import { useState, useEffect } from "react";
 import { ClipboardList, Wrench, FileText } from "lucide-react";
 import { useNavigation } from "../navigation";
+import { useApplications } from "@/lib/hooks/useApplications";
+import { useMaintenanceRequests } from "@/lib/hooks/useMaintenanceRequests";
+import { usePayments } from "@/lib/hooks/usePayments";
 import LandlordApplicationsScreen from "./LandlordApplicationsScreen";
 import LandlordMaintenanceScreen from "./LandlordMaintenanceScreen";
 import LandlordInvoicesScreen from "./LandlordInvoicesScreen";
@@ -12,6 +15,9 @@ type ActivityTab = "applications" | "maintenance" | "invoices";
 
 export default function ActivityScreen() {
     const { screenParams } = useNavigation();
+    const { applications } = useApplications("landlord");
+    const { requests } = useMaintenanceRequests("landlord");
+    const { upcoming } = usePayments("landlord");
     const [activeTab, setActiveTab] = useState<ActivityTab>("applications");
 
     useEffect(() => {
@@ -20,10 +26,9 @@ export default function ActivityScreen() {
         }
     }, [screenParams.tab]);
 
-    // Mock unread/alert counts
-    const pendingApplications = 2;
-    const pendingMaintenance = 2;
-    const overdueInvoices = 1;
+    const pendingApplications = applications.filter(a => a.status === "pending" || a.status === "reviewing").length;
+    const pendingMaintenance = requests.filter(r => r.status === "open" || r.status === "in_progress").length;
+    const overdueInvoices = upcoming.filter(p => p.status === "failed").length;
 
     return (
         <div className={styles.container}>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { MessageSquare, Users, Edit3, Bell } from "lucide-react";
 import { useNavigation } from "../navigation";
+import { useNotifications } from "@/lib/hooks/useNotifications";
 import TenantChatScreen from "./TenantChatScreen";
 import LandlordChatScreen from "./LandlordChatScreen";
 import CommunityFeedScreen from "./CommunityFeedScreen";
@@ -13,6 +14,7 @@ type InboxTab = "messages" | "community" | "notifications";
 
 export default function InboxScreen() {
     const { role, screenParams } = useNavigation();
+    const { unreadCount } = useNotifications();
     const [activeTab, setActiveTab] = useState<InboxTab>("messages");
 
     useEffect(() => {
@@ -20,10 +22,6 @@ export default function InboxScreen() {
             setActiveTab(screenParams.tab as InboxTab);
         }
     }, [screenParams.tab]);
-
-    // Unread counts (mock)
-    const messageUnread = role === "landlord" ? 1 : 2;
-    const communityUnread = 1;
 
     return (
         <div className={styles.container}>
@@ -44,9 +42,6 @@ export default function InboxScreen() {
                     >
                         <MessageSquare size={14} />
                         Messages
-                        {messageUnread > 0 && (
-                            <span className={styles.segmentBadge}>{messageUnread}</span>
-                        )}
                     </button>
                     <button
                         className={`${styles.segmentButton} ${activeTab === "community" ? styles.segmentButtonActive : ""}`}
@@ -54,9 +49,6 @@ export default function InboxScreen() {
                     >
                         <Users size={14} />
                         Community
-                        {communityUnread > 0 && (
-                            <span className={styles.segmentBadge}>{communityUnread}</span>
-                        )}
                     </button>
                     <button
                         className={`${styles.segmentButton} ${activeTab === "notifications" ? styles.segmentButtonActive : ""}`}
@@ -64,6 +56,9 @@ export default function InboxScreen() {
                     >
                         <Bell size={14} />
                         Alerts
+                        {unreadCount > 0 && (
+                            <span className={styles.segmentBadge}>{unreadCount}</span>
+                        )}
                     </button>
                 </div>
             </div>

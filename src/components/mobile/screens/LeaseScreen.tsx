@@ -2,109 +2,35 @@
 
 import { useState } from "react";
 import {
-    ArrowLeft,
-    FileText,
-    Calendar,
-    Wallet,
-    Building2,
-    MapPin,
-    MessageSquare,
-    Phone,
-    Download,
+    ArrowLeft, FileText, Building2, MapPin, Calendar, Wallet,
 } from "lucide-react";
 import { useNavigation } from "../navigation";
+import { useLeases } from "@/lib/hooks/useLeases";
 import styles from "./LeaseScreen.module.css";
-import LeaseSigningScreen from "./LeaseSigningScreen";
 
-// ─── Types and Data ─────────────────────────────────────────
-type LeaseStatus = "active" | "pending" | "expired";
-
-interface Lease {
-    id: string;
-    propertyName: string;
-    unitName: string;
-    address: string;
-    status: LeaseStatus;
-    startDate: string;
-    endDate: string;
-    rentAmount: string;
-    deposit: string;
-    landlord: {
-        name: string;
-        phone: string;
-    };
-}
-
-const MOCK_LEASES: Lease[] = [
-    {
-        id: "lease1",
-        propertyName: "Skyline Lofts",
-        unitName: "Unit 12A",
-        address: "Maysan, Valenzuela",
-        status: "active",
-        startDate: "Jan 1, 2026",
-        endDate: "Dec 31, 2026",
-        rentAmount: "₱15,000",
-        deposit: "₱30,000",
-        landlord: {
-            name: "Mr. Santos",
-            phone: "+63 917 123 4567",
-        },
-    },
-    {
-        id: "lease2",
-        propertyName: "Dalandanan Residences",
-        unitName: "Suite 4B",
-        address: "Dalandanan, Valenzuela",
-        status: "expired",
-        startDate: "Jan 1, 2024",
-        endDate: "Dec 31, 2024",
-        rentAmount: "₱12,000",
-        deposit: "₱24,000",
-        landlord: {
-            name: "Maria Reyes",
-            phone: "+63 918 888 7777",
-        },
-    },
-    {
-        id: "lease3",
-        propertyName: "Metro Studio B",
-        unitName: "Unit 205",
-        address: "Quezon City, Manila",
-        status: "pending",
-        startDate: "May 1, 2026",
-        endDate: "Apr 30, 2027",
-        rentAmount: "₱18,500",
-        deposit: "₱37,000",
-        landlord: {
-            name: "Roberto Santos",
-            phone: "+63 915 222 3333",
-        },
-    },
-];
-
-const getStatusBadgeClass = (status: LeaseStatus) => {
-    switch (status) {
-        case "active":
-            return styles.statusActive;
-        case "pending":
-            return styles.statusPending;
-        case "expired":
-            return styles.statusExpired;
-    }
+const STATUS_CLASSES: Record<string, string> = {
+    active: "statusActive",
+    pending_signature: "statusPending",
+    pending_tenant_signature: "statusPending",
+    pending_landlord_signature: "statusPending",
+    expired: "statusExpired",
+    terminated: "statusExpired",
+    draft: "statusPending",
 };
 
-const getStatusLabel = (status: LeaseStatus) => {
-    return status.charAt(0).toUpperCase() + status.slice(1);
+const STATUS_LABELS: Record<string, string> = {
+    active: "Active",
+    pending_signature: "Pending",
+    pending_tenant_signature: "Awaiting Your Signature",
+    pending_landlord_signature: "Awaiting Landlord",
+    expired: "Expired",
+    terminated: "Terminated",
+    draft: "Draft",
 };
 
-// ─── Sub-Component: Lease List ─────────────────────────────
-function LeaseListScreen({
-    onSelectLease,
-}: {
-    onSelectLease: (id: string) => void;
-}) {
+function LeaseListScreen({ onSelectLease }: { onSelectLease: (id: string) => void }) {
     const { switchTab } = useNavigation();
+    const { leases, loading } = useLeases();
 
     return (
         <div className={styles.container}>
@@ -117,124 +43,119 @@ function LeaseListScreen({
 
             <div className={styles.header} style={{ paddingTop: 0 }}>
                 <h1 className={styles.headerTitle}>My Leases</h1>
-                <p className={styles.headerSub}>
-                    View your active and past lease agreements.
-                </p>
+                <p className={styles.headerSub}>View your active and past lease agreements.</p>
             </div>
 
-            {MOCK_LEASES.length === 0 ? (
+            {loading ? (
+                <div style={{ textAlign: "center", paddingTop: "40px", color: "#737373" }}>
+                    <p>Loading leases...</p>
+                </div>
+            ) : leases.length === 0 ? (
                 <div className={styles.emptyState}>
-                    <div className={styles.emptyIcon}>
-                        <FileText />
-                    </div>
+                    <div className={styles.emptyIcon}><FileText /></div>
                     <h2 className={styles.emptyTitle}>No Leases Found</h2>
-                    <p className={styles.emptySub}>
-                        You don't have any formal lease agreements yet.
-                    </p>
+                    <p className={styles.emptySub}>You don't have any formal lease agreements yet.</p>
                 </div>
             ) : (
                 <div className={styles.scrollArea}>
-                    {MOCK_LEASES.map((lease) => (
-                        <div
-                            key={lease.id}
-                            className={styles.leaseCard}
-                            onClick={() => onSelectLease(lease.id)}
-                        >
-                            {/* Header */}
-                            <div className={styles.cardHeader}>
-                                <div>
-                                    <h3 className={styles.propertyName}>{lease.propertyName}</h3>
-                                    <div className={styles.unitName}>
-                                        <Building2 />
-                                        {lease.unitName}
+                    {leases.map((lease) => {
+                        const statusClass = styles[STATUS_CLASSES[lease.status] ?? "statusPending"];
+                        const statusLabel = STATUS_LABELS[lease.status] ?? lease.status;
+                        const unitName = (lease.unit as any)?.name ?? "";
+                        const propertyName = (lease.unit as any)?.property?.name ?? "";
+                        return (
+                            <div key={lease.id} className={styles.leaseCard} onClick={() => onSelectLease(lease.id)}>
+                                <div className={styles.cardHeader}>
+                                    <div>
+                                        <h3 className={styles.propertyName}>{propertyName || "Lease Agreement"}</h3>
+                                        {unitName && (
+                                            <div className={styles.unitName}><Building2 />{unitName}</div>
+                                        )}
+                                    </div>
+                                    <div className={`${styles.statusBadge} ${statusClass}`}>{statusLabel}</div>
+                                </div>
+                                <div className={styles.cardBody}>
+                                    <div className={styles.detailRow}>
+                                        <span className={styles.detailLabel}>Term</span>
+                                        <span className={styles.detailValue}>
+                                            {new Date(lease.start_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} - {new Date(lease.end_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                                        </span>
+                                    </div>
+                                    <div className={styles.detailRow}>
+                                        <span className={styles.detailLabel}>Monthly Rent</span>
+                                        <span className={`${styles.detailValue} ${styles.priceValue}`}>₱{lease.monthly_rent.toLocaleString()}</span>
                                     </div>
                                 </div>
-                                <div
-                                    className={`${styles.statusBadge} ${getStatusBadgeClass(
-                                        lease.status
-                                    )}`}
-                                >
-                                    {getStatusLabel(lease.status)}
-                                </div>
                             </div>
-
-                            {/* Body */}
-                            <div className={styles.cardBody}>
-                                <div className={styles.detailRow}>
-                                    <span className={styles.detailLabel}>Term</span>
-                                    <span className={styles.detailValue}>
-                                        {lease.startDate} - {lease.endDate}
-                                    </span>
-                                </div>
-                                <div className={styles.detailRow}>
-                                    <span className={styles.detailLabel}>Monthly Rent</span>
-                                    <span className={`${styles.detailValue} ${styles.priceValue}`}>
-                                        {lease.rentAmount}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
         </div>
     );
 }
 
-// ─── Sub-Component: Lease Details ──────────────────────────
-function LeaseDetailsScreen({
-    lease,
-    onBack,
-}: {
-    lease: Lease;
-    onBack: () => void;
-}) {
+function LeaseDetailsScreen({ leaseId, onBack }: { leaseId: string; onBack: () => void }) {
     const { navigate } = useNavigation();
+    const { leases } = useLeases();
+    const lease = leases.find((l) => l.id === leaseId);
+
+    if (!lease) {
+        return (
+            <div className={styles.container}>
+                <div className={styles.topBar}>
+                    <button className={styles.backButton} onClick={onBack}>
+                        <ArrowLeft />
+                    </button>
+                    <span className={styles.topBarTitle}>Lease Agreement</span>
+                    <div className={styles.actionButton}></div>
+                </div>
+                <div style={{ textAlign: "center", paddingTop: "40px", color: "#737373" }}>
+                    <p>Lease not found.</p>
+                </div>
+            </div>
+        );
+    }
+
+    const statusClass = styles[STATUS_CLASSES[lease.status] ?? "statusPending"];
+    const statusLabel = STATUS_LABELS[lease.status] ?? lease.status;
+    const propertyName = (lease.unit as any)?.property?.name ?? "";
+    const propertyAddress = (lease.unit as any)?.property?.address ?? "";
+    const unitName = (lease.unit as any)?.name ?? "";
+    const isPending = lease.status === "pending_signature" || lease.status === "pending_tenant_signature";
+    const isActive = lease.status === "active";
 
     return (
         <div className={styles.container}>
-            {/* Top Bar */}
             <div className={styles.topBar}>
                 <button className={styles.backButton} onClick={onBack}>
                     <ArrowLeft />
                 </button>
                 <span className={styles.topBarTitle}>Lease Agreement</span>
-                <div className={styles.actionButton}></div> {/* Empty space for centering */}
+                <div className={styles.actionButton}></div>
             </div>
 
             <div className={styles.scrollArea}>
-                {/* Header Info */}
                 <div className={styles.detailHeader}>
-                    <div
-                        className={`${styles.statusBadge} ${getStatusBadgeClass(
-                            lease.status
-                        )}`}
-                        style={{ display: "inline-block", marginBottom: "12px" }}
-                    >
-                        {getStatusLabel(lease.status)}
+                    <div className={`${styles.statusBadge} ${statusClass}`} style={{ display: "inline-block", marginBottom: "12px" }}>
+                        {statusLabel}
                     </div>
-                    <h2 className={styles.detailPropertyName}>{lease.propertyName}</h2>
+                    <h2 className={styles.detailPropertyName}>{propertyName || "Lease Agreement"}</h2>
                     <div className={styles.detailAddress}>
-                        <MapPin />
-                        {lease.address} — {lease.unitName}
+                        <MapPin />{propertyAddress || unitName}
                     </div>
                 </div>
 
-                {/* Financial Terms */}
                 <div className={styles.section}>
-                    <div className={styles.sectionTitle}>
-                        <Wallet /> Financial Terms
-                    </div>
+                    <div className={styles.sectionTitle}><Wallet /> Financial Terms</div>
                     <div className={styles.detailRow}>
                         <span className={styles.detailLabel}>Monthly Rent</span>
-                        <span className={`${styles.detailValue} ${styles.priceValue}`}>
-                            {lease.rentAmount}
-                        </span>
+                        <span className={`${styles.detailValue} ${styles.priceValue}`}>₱{lease.monthly_rent.toLocaleString()}</span>
                     </div>
                     <div className={styles.divider} />
                     <div className={styles.detailRow}>
                         <span className={styles.detailLabel}>Security Deposit</span>
-                        <span className={styles.detailValue}>{lease.deposit}</span>
+                        <span className={styles.detailValue}>₱{lease.security_deposit?.toLocaleString() ?? "N/A"}</span>
                     </div>
                     <div className={styles.divider} />
                     <div className={styles.detailRow}>
@@ -243,87 +164,31 @@ function LeaseDetailsScreen({
                     </div>
                 </div>
 
-                {/* Dates */}
                 <div className={styles.section}>
-                    <div className={styles.sectionTitle}>
-                        <Calendar /> Lease Period
-                    </div>
+                    <div className={styles.sectionTitle}><Calendar /> Lease Period</div>
                     <div className={styles.detailRow}>
                         <span className={styles.detailLabel}>Start Date</span>
-                        <span className={styles.detailValue}>{lease.startDate}</span>
+                        <span className={styles.detailValue}>
+                            {new Date(lease.start_date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                        </span>
                     </div>
                     <div className={styles.divider} />
                     <div className={styles.detailRow}>
                         <span className={styles.detailLabel}>End Date</span>
-                        <span className={styles.detailValue}>{lease.endDate}</span>
-                    </div>
-                    <div className={styles.divider} />
-                    <div className={styles.detailRow}>
-                        <span className={styles.detailLabel}>Duration</span>
-                        <span className={styles.detailValue}>12 Months</span>
+                        <span className={styles.detailValue}>
+                            {new Date(lease.end_date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                        </span>
                     </div>
                 </div>
 
-                {/* Landlord Info */}
-                <div className={styles.section}>
-                    <div className={styles.sectionTitle}>
-                        <Building2 /> Landlord / Property Manager
-                    </div>
-                    <div className={styles.landlordCard}>
-                        <div className={styles.landlordAvatar}>
-                            {lease.landlord.name.charAt(0)}
-                        </div>
-                        <div className={styles.landlordDetails}>
-                            <div className={styles.landlordName}>{lease.landlord.name}</div>
-                            <div className={styles.landlordRole}>Owner & Manager</div>
-                        </div>
-                        <div className={styles.contactButtons}>
-                            <button
-                                className={styles.contactBtn}
-                                onClick={() =>
-                                    navigate("chatConversation", {
-                                        conversationId: "landlord1",
-                                        conversationName: lease.landlord.name,
-                                    })
-                                }
-                            >
-                                <MessageSquare size={16} />
-                            </button>
-                            <button className={styles.contactBtn}>
-                                <Phone size={16} />
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Download PDF Button */}
-                <button className={styles.docButton}>
-                    <div className={styles.docIcon}>
-                        <FileText />
-                    </div>
-                    <div className={styles.docText}>
-                        <div>Full Lease Agreement</div>
-                        <div className={styles.docDownload}>PDF Document (2.4MB)</div>
-                    </div>
-                    <Download size={20} className={styles.docDownload} />
-                </button>
-
-                {/* Sign Lease Button (Conditional) */}
-                {lease.status === "pending" && (
-                    <button 
-                        className={styles.signCTA}
-                        onClick={() => navigate("leaseSigning", { leaseId: lease.id })}
-                    >
+                {isPending && (
+                    <button className={styles.signCTA} onClick={() => navigate("leaseSigning", { leaseId: lease.id })}>
                         Sign Lease Agreement
                     </button>
                 )}
 
-                {/* Move-in Checklist Button (Conditional) */}
-                {lease.status === "active" && (
-                    <button 
-                        className={styles.moveInCTA}
-                        onClick={() => navigate("moveInChecklist", { leaseId: lease.id })}
-                    >
+                {isActive && (
+                    <button className={styles.moveInCTA} onClick={() => navigate("moveInChecklist", { leaseId: lease.id })}>
                         Perform Move-in Checklist
                     </button>
                 )}
@@ -332,19 +197,12 @@ function LeaseDetailsScreen({
     );
 }
 
-// ─── Main Controller Component ─────────────────────────────
 export default function LeaseScreen() {
     const [selectedLeaseId, setSelectedLeaseId] = useState<string | null>(null);
-
     if (selectedLeaseId) {
-        const activeLease = MOCK_LEASES.find((l) => l.id === selectedLeaseId)!;
-        return (
-            <LeaseDetailsScreen
-                lease={activeLease}
-                onBack={() => setSelectedLeaseId(null)}
-            />
-        );
+        return <LeaseDetailsScreen leaseId={selectedLeaseId} onBack={() => setSelectedLeaseId(null)} />;
     }
-
     return <LeaseListScreen onSelectLease={setSelectedLeaseId} />;
 }
+
+
