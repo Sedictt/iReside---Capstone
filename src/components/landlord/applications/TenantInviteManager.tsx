@@ -417,7 +417,7 @@ export function TenantInviteManager({
                     <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
                         <div className="space-y-3">
                             <p id="scope-group-label" className="text-xs font-black uppercase tracking-wider text-muted-foreground">1. Select Scope</p>
-                            <div role="radiogroup" aria-labelledby="scope-group-label" className="grid grid-cols-1 xs:grid-cols-2 gap-3">
+                            <div role="radiogroup" aria-labelledby="scope-group-label" className="grid grid-cols-2 gap-2 sm:gap-3">
                                 {scopeControls.map((control) => {
                                     const Icon = control.icon;
                                     const active = mode === control.key;
@@ -429,7 +429,7 @@ export function TenantInviteManager({
                                             role="radio"
                                             aria-checked={active}
                                             className={cn(
-                                                "flex items-center gap-3 rounded-2xl border p-3 sm:p-3.5 transition-all text-left group w-full xs:flex-col xs:items-center xs:text-center xs:gap-2 sm:xs:gap-3",
+                                                "flex flex-col items-center justify-center gap-2 sm:gap-3 rounded-2xl border p-3 sm:p-3.5 transition-all text-center group w-full",
                                                 active
                                                     ? "border-primary bg-primary/5 text-primary shadow-[0_0_20px_rgba(var(--primary-rgb),0.1)]"
                                                     : "border-border bg-card/40 text-muted-foreground hover:border-primary/30 hover:bg-muted/30"
@@ -441,9 +441,9 @@ export function TenantInviteManager({
                                             )}>
                                                 <Icon className="size-5" />
                                             </div>
-                                            <div className="space-y-0.5 xs:space-y-1">
-                                                <p className="text-xs font-black uppercase tracking-wider">{control.label}</p>
-                                                <p className="text-[10px] leading-snug opacity-70 font-medium">
+                                            <div className="space-y-0.5 sm:space-y-1">
+                                                <p className="text-[10px] sm:text-xs font-black uppercase tracking-wider">{control.label}</p>
+                                                <p className="text-[9px] sm:text-[10px] leading-snug opacity-70 font-medium">
                                                     {control.description}
                                                 </p>
                                             </div>
@@ -455,7 +455,7 @@ export function TenantInviteManager({
 
                         <div className="space-y-3">
                             <p id="mode-group-label" className="text-xs font-black uppercase tracking-wider text-muted-foreground">2. Application Mode</p>
-                            <div role="radiogroup" aria-labelledby="mode-group-label" className="grid grid-cols-1 xs:grid-cols-2 gap-3">
+                            <div role="radiogroup" aria-labelledby="mode-group-label" className="grid grid-cols-2 gap-2 sm:gap-3">
                                 {applicationTypeControls.map((control) => {
                                     const Icon = control.icon;
                                     const active = applicationType === control.key;
@@ -467,7 +467,7 @@ export function TenantInviteManager({
                                             role="radio"
                                             aria-checked={active}
                                             className={cn(
-                                                "flex items-center gap-3 rounded-2xl border p-3 sm:p-3.5 transition-all text-left group w-full xs:flex-col xs:items-center xs:text-center xs:gap-2 sm:xs:gap-3",
+                                                "flex flex-col items-center justify-center gap-2 sm:gap-3 rounded-2xl border p-3 sm:p-3.5 transition-all text-center group w-full",
                                                 active
                                                     ? "border-primary bg-primary/5 text-primary shadow-[0_0_20px_rgba(var(--primary-rgb),0.1)]"
                                                     : "border-border bg-card/40 text-muted-foreground hover:border-primary/30 hover:bg-muted/30"
@@ -479,9 +479,9 @@ export function TenantInviteManager({
                                             )}>
                                                 <Icon className="size-5" />
                                             </div>
-                                            <div className="space-y-0.5 xs:space-y-1">
-                                                <p className="text-xs font-black uppercase tracking-wider">{control.label}</p>
-                                                <p className="text-[10px] leading-snug opacity-70 font-medium">
+                                            <div className="space-y-0.5 sm:space-y-1">
+                                                <p className="text-[10px] sm:text-xs font-black uppercase tracking-wider">{control.label}</p>
+                                                <p className="text-[9px] sm:text-[10px] leading-snug opacity-70 font-medium">
                                                     {control.description}
                                                 </p>
                                             </div>
