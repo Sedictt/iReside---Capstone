@@ -74,7 +74,7 @@ export default function TermsPage() {
             </p>
             <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
               <li><strong>Landlord Provisioning:</strong> Landlord accounts are provisioned exclusively through authorized backend workflows after uploading valid business permits and government identification for verification.</li>
-              <li><strong>Tenant Provisioning:</strong> Tenant accounts cannot be created publicly. Tenants are invited and provisioned strictly by their landlords through the "Walk-in Application" workflow following offline verification.</li>
+              <li><strong>Tenant Provisioning:</strong> Tenant accounts cannot be created publicly. Tenants are invited and provisioned strictly by their landlords through authorized digital onboarding links ("Online Invite" workflow) or manual offline verification registrations ("Walk-in Application" workflow).</li>
               <li><strong>Isolated Property Ecosystems:</strong> Each property operates as a separate, logically partitioned space. Landlords cannot view other landlords' operations, and tenants can only access the portal of their approved property.</li>
             </ul>
           </section>
