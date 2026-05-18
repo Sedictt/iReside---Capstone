@@ -29,7 +29,7 @@ const ensureBucket = async () => {
             if (!hasWebp) {
                 // Bucket exists but doesn't allow webp - try to update it
                 const { error: updateError } = await admin.storage.updateBucket(BUCKET_NAME, {
-                    // @ts-expect-error - allowedMimeTypes may not be in type definition
+                    public: true,
                     allowedMimeTypes: [...allowedMimeTypes, "image/webp"],
                 });
                 if (updateError) {
