@@ -264,7 +264,10 @@ export default function TenantCommunityHubPage() {
                     const formData = new FormData()
                     data.photos.forEach(file => formData.append("files", file))
                     const res = await fetch("/api/community/media", { method: "POST", body: formData })
-                    if (!res.ok) throw new Error("Upload failed")
+                    if (!res.ok) {
+                        const json = await res.json().catch(() => ({}))
+                        throw new Error(json.error || `Upload failed (${res.status})`)
+                    }
                     const json = await res.json()
                     imageUrls = json.imageUrls
                 }
@@ -286,7 +289,7 @@ export default function TenantCommunityHubPage() {
                 if (isManagementUser) loadModerationPosts()
                 else loadPendingPosts()
             } catch (err) {
-                setError("Failed to create post.")
+                setError(err instanceof Error ? err.message : "Failed to create post.")
             } finally {
                 setUploadingPhotos(false)
             }

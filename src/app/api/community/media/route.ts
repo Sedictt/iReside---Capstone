@@ -19,6 +19,24 @@ const ensureBucket = async () => {
     const { data: bucket, error } = await admin.storage.getBucket(BUCKET_NAME);
 
     if (!error && bucket) {
+        // Check if bucket has restrictive MIME types that don't include webp
+        // @ts-expect-error - allowedMimeTypes may not be in type definition but exists at runtime
+        const allowedMimeTypes = bucket.allowedMimeTypes;
+        if (allowedMimeTypes && allowedMimeTypes.length > 0) {
+            const hasWebp = allowedMimeTypes.some(
+                (type: string) => type === "image/webp" || type === "image/*"
+            );
+            if (!hasWebp) {
+                // Bucket exists but doesn't allow webp - try to update it
+                const { error: updateError } = await admin.storage.updateBucket(BUCKET_NAME, {
+                    // @ts-expect-error - allowedMimeTypes may not be in type definition
+                    allowedMimeTypes: [...allowedMimeTypes, "image/webp"],
+                });
+                if (updateError) {
+                    console.error("Failed to update bucket MIME types:", updateError);
+                }
+            }
+        }
         return;
     }
 
@@ -64,7 +82,10 @@ export async function POST(request: Request) {
         }
 
         if (!file.type || !file.type.startsWith(ALLOWED_IMAGE_PREFIX)) {
-            return NextResponse.json({ error: "Only image uploads are allowed." }, { status: 400 });
+            return NextResponse.json(
+                { error: "Only image uploads are allowed. Please use JPEG, PNG, GIF, or WebP." },
+                { status: 400 }
+            );
         }
     }
 
@@ -89,7 +110,22 @@ export async function POST(request: Request) {
             });
 
             if (uploadError) {
-                return NextResponse.json({ error: "Failed to upload one or more images." }, { status: 500 });
+                const errorMessage = uploadError.message.toLowerCase();
+                const isMimeTypeIssue =
+                    errorMessage.includes("mime") ||
+                    errorMessage.includes("type") ||
+                    errorMessage.includes("invalid") ||
+                    errorMessage.includes("not allowed");
+
+                const userMessage = isMimeTypeIssue
+                    ? `Image type "${file.type}" is not supported. Please try converting to JPEG or PNG.`
+                    : "Failed to upload one or more images.";
+
+                console.error("Supabase upload error:", uploadError);
+                return NextResponse.json(
+                    { error: userMessage, details: uploadError.message },
+                    { status: 500 }
+                );
             }
 
             const {
