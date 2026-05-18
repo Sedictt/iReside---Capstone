@@ -1197,7 +1197,7 @@ if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation
     }, [searchQuery]);
 
     return (
-        <div className="flex h-full w-full gap-6 overflow-hidden bg-surface-0 p-6 text-high animate-in fade-in duration-700">
+        <div className="relative flex h-full w-full gap-0 sm:gap-6 overflow-hidden bg-surface-0 p-0 sm:p-6 text-high animate-in fade-in duration-700">
             {isGlobalFileDrag && (
                 <div className="pointer-events-none fixed inset-0 z-[70] flex items-center justify-center bg-zinc-950/35 backdrop-blur-sm dark:bg-black/60">
                     <div className="rounded-3xl border border-primary/30 bg-card/95 px-10 py-8 text-center shadow-[0_24px_60px_-30px_rgba(15,23,42,0.28)] dark:border-primary/40 dark:bg-neutral-900/90 dark:shadow-2xl dark:shadow-primary/20">
@@ -1227,7 +1227,11 @@ if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation
                 setConversationsError={setConversationsError}
             />
 
-            <div className="flex h-full min-w-0 flex-1 flex-col overflow-hidden rounded-[2.5rem] border border-border bg-surface-1 shadow-sm">
+            <div className={cn(
+                "h-full flex-col overflow-hidden bg-surface-1 shadow-sm transition-all duration-300",
+                "sm:flex sm:rounded-[2.5rem] sm:border sm:border-border sm:min-w-0 sm:flex-1",
+                activeConversationId ? "flex w-full" : "hidden sm:flex"
+            )}>
                 <ChatHeader 
                     contact={displayContact}
                     showFilesSidebar={showFilesSidebar}
@@ -1235,6 +1239,7 @@ if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation
                     showInfoSidebar={showInfoSidebar}
                     setShowInfoSidebar={setShowInfoSidebar}
                     openReportWizard={openReportWizard}
+                    onBack={() => setActiveConversationId(null)}
                 />
 
                 <MessageList 
@@ -1273,7 +1278,16 @@ if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation
 
             <AnimatePresence>
                 {(showInfoSidebar || showFilesSidebar) && (
-                    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="w-80 shrink-0 overflow-hidden rounded-[2rem] border border-border bg-surface-1 shadow-sm lg:w-96">
+                    <motion.div 
+                        initial={{ opacity: 0, x: 20 }} 
+                        animate={{ opacity: 1, x: 0 }} 
+                        exit={{ opacity: 0, x: 20 }} 
+                        className={cn(
+                            "h-full shrink-0 overflow-hidden bg-surface-1 shadow-sm transition-all duration-300",
+                            "sm:w-80 sm:rounded-[2rem] sm:border sm:border-border lg:w-96",
+                            "absolute inset-y-0 right-0 z-30 w-full sm:relative sm:inset-auto"
+                        )}
+                    >
                         {showInfoSidebar ? (
                             <div className="flex h-full flex-col">
                                 <div className="flex items-center justify-between border-b border-divider p-6">

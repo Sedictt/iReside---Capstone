@@ -6,7 +6,8 @@ import {
     MoreVertical, 
     Folder, 
     AlertTriangle,
-    ChevronRight
+    ChevronRight,
+    ArrowLeft
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ContactItem, QuickAction } from "./types";
@@ -19,6 +20,7 @@ interface ChatHeaderProps {
     showInfoSidebar: boolean;
     setShowInfoSidebar: (val: boolean) => void;
     openReportWizard: () => void;
+    onBack?: () => void;
 }
 
 export function ChatHeader({
@@ -27,13 +29,23 @@ export function ChatHeader({
     setShowFilesSidebar,
     showInfoSidebar,
     setShowInfoSidebar,
-    openReportWizard
+    openReportWizard,
+    onBack
 }: ChatHeaderProps) {
     const isPlaceholder = !contact.id;
 
     return (
         <div className="z-20 flex h-20 shrink-0 items-center justify-between border-b border-divider bg-surface-1/80 px-6 backdrop-blur-md">
             <div className="flex items-center gap-4">
+                {onBack && (
+                    <button
+                        onClick={onBack}
+                        className="flex sm:hidden items-center justify-center p-2 rounded-xl border border-border bg-surface-2 text-high hover:bg-surface-3 transition-all active:scale-95"
+                        title="Back to List"
+                    >
+                        <ArrowLeft className="size-4" />
+                    </button>
+                )}
                 <div 
                     className={cn(
                         "relative size-12 rounded-full border border-border overflow-hidden flex items-center justify-center transition-all",

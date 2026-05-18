@@ -41,7 +41,11 @@ export function ContactList({
     dashboardHref = "/landlord/dashboard"
 }: ContactListProps) {
     return (
-        <div className="flex h-full w-80 shrink-0 flex-col overflow-hidden rounded-[2rem] border border-border bg-surface-1 shadow-sm lg:w-96">
+        <div className={cn(
+            "flex h-full flex-col overflow-hidden bg-surface-1 shadow-sm transition-all duration-300",
+            "sm:w-80 sm:shrink-0 sm:rounded-[2rem] sm:border sm:border-border lg:w-96",
+            activeConversationId ? "hidden sm:flex" : "w-full flex"
+        )}>
             {/* Header */}
             <div className="flex shrink-0 flex-col gap-5 p-6 pb-4">
                 <div className="flex items-center justify-between">
