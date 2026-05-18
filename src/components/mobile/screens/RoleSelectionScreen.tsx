@@ -43,7 +43,7 @@ export default function RoleSelectionScreen() {
                             )}
                         </button>
                         <div className={styles.roleDetails}>
-                            <h2 className={styles.roleName}>Tenant Login</h2>
+                            <h2 className={`${styles.roleName} ${selectedRole === "tenant" ? styles.activeTenantName : ""}`}>Tenant</h2>
                             <p className={styles.roleDesc}>Find and manage your next home</p>
                         </div>
                     </div>
@@ -51,20 +51,20 @@ export default function RoleSelectionScreen() {
                     {/* Landlord Layout */}
                     <div className={styles.roleWrapper}>
                         <button 
-                            className={`${styles.roleBox} ${selectedRole === "landlord" ? styles.selectedLandlordBox : ""}`}
+                            className={`${styles.roleBox} ${selectedRole === "landlord" ? styles.selectedTenantBox : ""}`}
                             onClick={() => setSelectedRole("landlord")}
                         >
-                            <div className={`${styles.iconContainer} ${selectedRole === "landlord" ? styles.activeLandlordIcon : styles.inactiveIcon}`}>
+                            <div className={`${styles.iconContainer} ${selectedRole === "landlord" ? styles.activeTenantIcon : styles.inactiveIcon}`}>
                                 <Building2 size={48} />
                             </div>
                             {selectedRole === "landlord" && (
                                 <div className={styles.checkBadge}>
-                                    <CheckCircle2 size={24} color="#3b82f6" fill="#141414" />
+                                    <CheckCircle2 size={24} color="#84cc16" fill="#141414" />
                                 </div>
                             )}
                         </button>
                         <div className={styles.roleDetails}>
-                            <h2 className={styles.roleName}>Landlord Login</h2>
+                            <h2 className={`${styles.roleName} ${selectedRole === "landlord" ? styles.activeTenantName : ""}`}>Landlord</h2>
                             <p className={styles.roleDesc}>Manage properties and tenants</p>
                         </div>
                     </div>

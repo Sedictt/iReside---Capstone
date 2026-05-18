@@ -195,6 +195,15 @@
     margin-bottom: 0.5rem;
     color: #ffffff;
     letter-spacing: -0.3px;
+    transition: color 0.3s ease;
+}
+
+.activeTenantName {
+    color: #84cc16;
+}
+
+.activeLandlordName {
+    color: #3b82f6;
 }
 
 .roleDesc {
