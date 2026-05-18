@@ -75,112 +75,132 @@
 }
 
 .roleGrid {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 1.5rem;
     width: 100%;
     perspective: 1000px;
 }
 
-.roleCard {
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 24px;
-    padding: 1.75rem;
+.roleWrapper {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 1.5rem;
-    text-align: left;
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    cursor: pointer;
-    width: 100%;
+    gap: 1.25rem;
     opacity: 0;
     animation: fadeUp 0.6s ease-out forwards;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
-.roleCard:nth-child(1) {
+.roleWrapper:nth-child(1) {
     animation-delay: 0.1s;
 }
-.roleCard:nth-child(2) {
+.roleWrapper:nth-child(2) {
     animation-delay: 0.2s;
 }
 
-.roleCard:hover {
+.roleBox {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(12px);
+    border: 2px solid rgba(255, 255, 255, 0.08);
+    border-radius: 28px;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    position: relative;
+    padding: 0;
+}
+
+.roleBox:hover {
     background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(255, 255, 255, 0.15);
     transform: translateY(-4px);
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
 }
 
-.roleCard:active {
+.roleBox:active {
     transform: translateY(2px) scale(0.98);
 }
 
-.iconBox {
-    width: 72px;
-    height: 72px;
-    border-radius: 20px;
+.selectedTenantBox {
+    background: rgba(132, 204, 22, 0.08);
+    border-color: #84cc16;
+    box-shadow: 0 8px 25px rgba(132, 204, 22, 0.2);
+}
+
+.selectedLandlordBox {
+    background: rgba(59, 130, 246, 0.08);
+    border-color: #3b82f6;
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.2);
+}
+
+.iconContainer {
+    width: 80px;
+    height: 80px;
+    border-radius: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
     transition: all 0.3s ease;
 }
 
-.tenantIcon {
-    background: linear-gradient(135deg, rgba(132, 204, 22, 0.15) 0%, rgba(34, 197, 94, 0.15) 100%);
+.inactiveIcon {
+    background: rgba(255, 255, 255, 0.05);
+    color: #a3a3a3;
+}
+
+.roleBox:hover .inactiveIcon {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+.activeTenantIcon {
+    background: linear-gradient(135deg, rgba(132, 204, 22, 0.2) 0%, rgba(34, 197, 94, 0.2) 100%);
     color: #84cc16;
-    border: 1px solid rgba(132, 204, 22, 0.3);
-    box-shadow: inset 0 0 15px rgba(132, 204, 22, 0.1);
+    box-shadow: inset 0 0 20px rgba(132, 204, 22, 0.2);
 }
 
-.roleCard:hover .tenantIcon {
-    background: linear-gradient(135deg, rgba(132, 204, 22, 0.25) 0%, rgba(34, 197, 94, 0.25) 100%);
-    box-shadow: 0 0 20px rgba(132, 204, 22, 0.2), inset 0 0 15px rgba(132, 204, 22, 0.1);
-}
-
-.landlordIcon {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.15) 100%);
+.activeLandlordIcon {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.2) 100%);
     color: #3b82f6;
-    border: 1px solid rgba(59, 130, 246, 0.3);
-    box-shadow: inset 0 0 15px rgba(59, 130, 246, 0.1);
+    box-shadow: inset 0 0 20px rgba(59, 130, 246, 0.2);
 }
 
-.roleCard:hover .landlordIcon {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.25) 0%, rgba(37, 99, 235, 0.25) 100%);
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.2), inset 0 0 15px rgba(59, 130, 246, 0.1);
+.checkBadge {
+    position: absolute;
+    top: -12px;
+    right: -12px;
+    background: #0a0a0a;
+    border-radius: 50%;
+    padding: 2px;
+    animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
-.cardText {
-    flex: 1;
+@keyframes scaleIn {
+    from { transform: scale(0); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.roleDetails {
+    text-align: center;
+    padding: 0 0.5rem;
 }
 
 .roleName {
-    font-size: 1.25rem;
+    font-size: 1.2rem;
     font-weight: 700;
-    margin-bottom: 0.35rem;
+    margin-bottom: 0.5rem;
     color: #ffffff;
     letter-spacing: -0.3px;
 }
 
 .roleDesc {
-    font-size: 0.95rem;
+    font-size: 0.85rem;
     color: #a3a3a3;
-    line-height: 1.5;
-}
-
-.arrow {
-    color: #525252;
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    opacity: 0.5;
-}
-
-.roleCard:hover .arrow {
-    color: #ffffff;
-    transform: translateX(6px);
-    opacity: 1;
+    line-height: 1.4;
 }
 
 @keyframes fadeUp {
@@ -196,14 +216,39 @@
 
 .footer {
     margin-top: auto;
-    padding-top: 2rem;
-    text-align: center;
+    padding-top: 3rem;
+    width: 100%;
 }
 
-.footerText {
+.confirmButton {
+    width: 100%;
+    padding: 1.1rem;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #a3e635 0%, #22c55e 100%);
+    color: #000000;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+}
+
+.confirmButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+}
+
+.disabledButton {
+    background: rgba(255, 255, 255, 0.1);
     color: #525252;
-    font-size: 0.9rem;
-    font-weight: 500;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+.disabledButton:hover {
+    transform: none;
+    box-shadow: none;
 }
 
 .link {
