@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Building2, Calendar, CircleHelp, Copy, DoorClosed, DoorOpen, History, Link2, MapPin, QrCode, RefreshCw, ShieldCheck, Globe, Handshake, XCircle, AlertTriangle, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppToast } from "@/hooks/useAppToast";
@@ -164,6 +164,14 @@ export function TenantInviteManager({
     const [showHelpTooltip, setShowHelpTooltip] = useState(false);
     const [showValidIdTooltip, setShowValidIdTooltip] = useState(false);
     const [activePreset, setActivePreset] = useState<number | null>(7);
+
+    const qrCodeRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (freshInvite && qrCodeRef.current) {
+            qrCodeRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
+    }, [freshInvite]);
 
     const properties = useMemo(() => {
         const map = new Map<string, { id: string; name: string }>();
@@ -332,7 +340,7 @@ export function TenantInviteManager({
     ];
 
     return (
-        <section className="mb-10 relative overflow-hidden rounded-[2.5rem] border border-border bg-card/60 p-6 shadow-sm backdrop-blur-3xl xl:p-8">
+        <section className="mb-10 relative overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] border border-border bg-card/60 p-4 sm:p-6 shadow-sm backdrop-blur-3xl xl:p-8">
             <div className="absolute inset-x-0 -top-40 -z-10 h-72 rounded-[100%] bg-primary/5 blur-3xl pointer-events-none" />
 
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
@@ -348,11 +356,11 @@ export function TenantInviteManager({
                         Generate exclusive invite links or scannable QR codes. Allow future tenants to apply for your properties without opening public registration.
                     </p>
                 </div>
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center w-full sm:w-auto">
                     <button
                         type="button"
                         onClick={() => setShowHistory(!showHistory)}
-                        className={`inline-flex h-12 items-center gap-2 rounded-2xl border px-5 text-xs font-black uppercase tracking-[0.2em] transition-all hover:bg-muted active:scale-95 ${
+                        className={`inline-flex h-12 items-center justify-center gap-2 rounded-2xl border px-5 text-xs font-black uppercase tracking-[0.2em] transition-all hover:bg-muted active:scale-95 w-full sm:w-auto ${
                             showHistory 
                                 ? "border-primary bg-primary/5 text-primary" 
                                 : "border-border bg-background text-foreground"
@@ -364,7 +372,7 @@ export function TenantInviteManager({
                     <button
                         type="button"
                         onClick={onRefresh}
-                        className="inline-flex h-12 items-center gap-2 rounded-2xl border border-border bg-background px-5 text-xs font-black uppercase tracking-[0.2em] text-foreground transition-all hover:bg-muted active:scale-95"
+                        className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-border bg-background px-5 text-xs font-black uppercase tracking-[0.2em] text-foreground transition-all hover:bg-muted active:scale-95 w-full sm:w-auto"
                     >
                         <RefreshCw className="size-4" />
                         Refresh
@@ -379,7 +387,7 @@ export function TenantInviteManager({
             )}
 
             <div className="mt-8 grid gap-6 xl:grid-cols-[1fr_400px]">
-                <div className="flex flex-col rounded-[2rem] border border-border bg-background/50 p-6 shadow-sm xl:p-8">
+                <div className="flex flex-col rounded-[1.75rem] border border-border bg-background/50 p-4 sm:p-6 shadow-sm xl:p-8">
                     <div className="mb-6 flex flex-col items-start justify-between gap-4 border-b border-border/50 pb-5 xl:flex-row xl:items-center">
                         <div>
                             <h3 className="text-xl font-black text-foreground">Generator Settings</h3>
@@ -409,7 +417,7 @@ export function TenantInviteManager({
                     <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
                         <div className="space-y-3">
                             <p id="scope-group-label" className="text-xs font-black uppercase tracking-wider text-muted-foreground">1. Select Scope</p>
-                            <div role="radiogroup" aria-labelledby="scope-group-label" className="grid grid-cols-2 gap-3">
+                            <div role="radiogroup" aria-labelledby="scope-group-label" className="grid grid-cols-1 xs:grid-cols-2 gap-3">
                                 {scopeControls.map((control) => {
                                     const Icon = control.icon;
                                     const active = mode === control.key;
@@ -421,21 +429,21 @@ export function TenantInviteManager({
                                             role="radio"
                                             aria-checked={active}
                                             className={cn(
-                                                "flex flex-col items-center gap-3 rounded-[1.5rem] border p-4 transition-all text-center group",
+                                                "flex items-center gap-3.5 rounded-2xl border p-3.5 transition-all text-left group w-full xs:flex-col xs:items-center xs:text-center xs:p-4 xs:gap-3",
                                                 active
                                                     ? "border-primary bg-primary/5 text-primary shadow-[0_0_20px_rgba(var(--primary-rgb),0.1)]"
                                                     : "border-border bg-card/40 text-muted-foreground hover:border-primary/30 hover:bg-muted/30"
                                             )}
                                         >
                                             <div className={cn(
-                                                "flex size-10 items-center justify-center rounded-xl transition-colors",
+                                                "flex size-10 shrink-0 items-center justify-center rounded-xl transition-colors",
                                                 active ? "bg-primary text-primary-foreground" : "bg-muted group-hover:bg-muted/80"
                                             )}>
                                                 <Icon className="size-5" />
                                             </div>
-                                            <div className="space-y-1">
+                                            <div className="space-y-0.5 xs:space-y-1">
                                                 <p className="text-xs font-black uppercase tracking-wider">{control.label}</p>
-                                                <p className="text-[10px] leading-tight opacity-70 font-medium">
+                                                <p className="text-[10px] leading-snug opacity-70 font-medium">
                                                     {control.description}
                                                 </p>
                                             </div>
@@ -447,7 +455,7 @@ export function TenantInviteManager({
 
                         <div className="space-y-3">
                             <p id="mode-group-label" className="text-xs font-black uppercase tracking-wider text-muted-foreground">2. Application Mode</p>
-                            <div role="radiogroup" aria-labelledby="mode-group-label" className="grid grid-cols-2 gap-3">
+                            <div role="radiogroup" aria-labelledby="mode-group-label" className="grid grid-cols-1 xs:grid-cols-2 gap-3">
                                 {applicationTypeControls.map((control) => {
                                     const Icon = control.icon;
                                     const active = applicationType === control.key;
@@ -459,21 +467,21 @@ export function TenantInviteManager({
                                             role="radio"
                                             aria-checked={active}
                                             className={cn(
-                                                "flex flex-col items-center gap-3 rounded-[1.5rem] border p-4 transition-all text-center group",
+                                                "flex items-center gap-3.5 rounded-2xl border p-3.5 transition-all text-left group w-full xs:flex-col xs:items-center xs:text-center xs:p-4 xs:gap-3",
                                                 active
                                                     ? "border-primary bg-primary/5 text-primary shadow-[0_0_20px_rgba(var(--primary-rgb),0.1)]"
                                                     : "border-border bg-card/40 text-muted-foreground hover:border-primary/30 hover:bg-muted/30"
                                             )}
                                         >
                                             <div className={cn(
-                                                "flex size-10 items-center justify-center rounded-xl transition-colors",
+                                                "flex size-10 shrink-0 items-center justify-center rounded-xl transition-colors",
                                                 active ? "bg-primary text-primary-foreground" : "bg-muted group-hover:bg-muted/80"
                                             )}>
                                                 <Icon className="size-5" />
                                             </div>
-                                            <div className="space-y-1">
+                                            <div className="space-y-0.5 xs:space-y-1">
                                                 <p className="text-xs font-black uppercase tracking-wider">{control.label}</p>
-                                                <p className="text-[10px] leading-tight opacity-70 font-medium">
+                                                <p className="text-[10px] leading-snug opacity-70 font-medium">
                                                     {control.description}
                                                 </p>
                                             </div>
@@ -485,7 +493,7 @@ export function TenantInviteManager({
                     </div>
 
                     {applicationType === "online" && (
-                        <div className="mb-8 rounded-[2rem] border border-primary/20 bg-primary/5 p-5 animate-in fade-in zoom-in duration-300">
+                        <div className="mb-8 rounded-[1.75rem] border border-primary/20 bg-primary/5 p-4 sm:p-5 animate-in fade-in zoom-in duration-300">
                             <p id="docs-group-label" className="text-xs font-black uppercase tracking-wider text-primary">3. Required Documents</p>
                             <p className="mt-1 text-xs text-muted-foreground font-medium">Tenant must upload these to complete their application.</p>
                             <div role="group" aria-labelledby="docs-group-label" className="mt-3 grid gap-2 sm:grid-cols-2">
@@ -513,8 +521,8 @@ export function TenantInviteManager({
                                                     : "border-border bg-background text-muted-foreground hover:bg-muted"
                                             }`}
                                         >
-                                            <span className="inline-flex items-center gap-1.5">
-                                                {option.label}
+                                            <span className="inline-flex items-center gap-1.5 w-full justify-between">
+                                                <span>{option.label}</span>
                                                 {option.key === "valid_id" && (
                                                     <span className="relative inline-flex items-center ml-1.5">
                                                         <button
@@ -534,7 +542,7 @@ export function TenantInviteManager({
                                                             />
                                                         </button>
                                                         {showValidIdTooltip && (
-                                                            <span id="valid-id-tooltip-desc" role="tooltip" className="absolute left-0 top-6 z-30 w-64 rounded-xl border border-border bg-background p-2.5 text-xs font-medium normal-case tracking-normal text-foreground shadow-xl animate-in fade-in slide-in-from-top-2 duration-200">
+                                                            <span id="valid-id-tooltip-desc" role="tooltip" className="absolute left-1/2 -translate-x-1/2 top-6 z-30 w-64 max-w-[85vw] rounded-xl border border-border bg-background p-2.5 text-xs font-medium normal-case tracking-normal text-foreground shadow-xl animate-in fade-in slide-in-from-top-2 duration-200">
                                                                 {VALID_ID_TOOLTIP}
                                                             </span>
                                                         )}
@@ -699,7 +707,7 @@ export function TenantInviteManager({
                                     [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0"
                                 />
                             </div>
-                            <div className="flex items-center gap-2 pt-1">
+                            <div className="flex flex-wrap items-center gap-2 pt-1">
                                 {[
                                     { label: "+1 Day", days: 1 },
                                     { label: "+7 Days", days: 7 },
@@ -738,7 +746,7 @@ export function TenantInviteManager({
                             type="button"
                             onClick={createInvite}
                             disabled={submitting}
-                            className="inline-flex h-12 items-center gap-2 rounded-xl bg-primary px-6 text-sm font-black text-primary-foreground shadow-[0_8px_16px_-6px_rgba(var(--primary-rgb),0.4)] transition-all hover:scale-[1.02] hover:bg-primary/90 active:scale-95 disabled:pointer-events-none disabled:opacity-50"
+                            className="inline-flex h-12 w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-primary px-6 text-sm font-black text-primary-foreground shadow-[0_8px_16px_-6px_rgba(var(--primary-rgb),0.4)] transition-all hover:scale-[1.02] hover:bg-primary/90 active:scale-95 disabled:pointer-events-none disabled:opacity-50"
                         >
                             <Link2 className="size-5" />
                             {submitting ? "Generating..." : "Generate Invite"}
@@ -746,7 +754,13 @@ export function TenantInviteManager({
                     </div>
                 </div>
 
-                <div className="relative flex flex-col items-center justify-center overflow-hidden rounded-[2rem] border border-primary/20 bg-primary/5 p-6 text-center xl:p-8">
+                <div 
+                    ref={qrCodeRef}
+                    className={cn(
+                        "relative flex-col items-center justify-center overflow-hidden rounded-[2rem] border border-primary/20 bg-primary/5 p-6 text-center xl:p-8 transition-all duration-300",
+                        freshInvite ? "hidden md:flex" : "hidden xl:flex"
+                    )}
+                >
                     {freshInvite ? (
                         <div className="flex w-full flex-col items-center animate-in fade-in zoom-in duration-500">
                             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1">
@@ -847,86 +861,177 @@ export function TenantInviteManager({
                                             </p>
                                         </div>
                                     </div>
-                                    <div className="flex flex-wrap items-center gap-2">
-                                        <a
-                                            href={invite.qrUrl}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="inline-flex h-10 items-center gap-2 rounded-xl border border-border bg-card px-4 text-xs font-black uppercase tracking-wider text-foreground transition-colors hover:bg-muted"
-                                        >
-                                            <QrCode className="size-4" />
-                                            View QR
-                                        </a>
-                                        <button
-                                            type="button"
-                                            onClick={() => void copyLink(invite.shareUrl, invite.id)}
-                                            className={cn(
-                                                "inline-flex h-10 items-center gap-2 rounded-xl border px-4 text-xs font-black uppercase tracking-wider transition-all active:scale-95",
-                                                copiedId === invite.id
-                                                    ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 animate-pulse"
-                                                    : "border-border bg-card text-foreground hover:bg-muted"
-                                            )}
-                                        >
-                                            {copiedId === invite.id ? (
-                                                <>
-                                                    <Check className="size-4" />
-                                                    Copied!
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Copy className="size-4" />
-                                                    Copy URL
-                                                </>
-                                            )}
-                                        </button>
-                                        {invite.status === "active" && (
-                                            revokingId === invite.id ? (
-                                                <div className="flex items-center gap-1.5 animate-in fade-in zoom-in-95 duration-200">
-                                                    <button
-                                                        type="button"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            void revokeInvite(invite.id);
-                                                            setRevokingId(null);
-                                                        }}
-                                                        className="inline-flex h-10 items-center gap-2 rounded-xl bg-red-600 px-4 text-xs font-black uppercase tracking-wider text-white transition-colors hover:bg-red-700 active:scale-95 shadow-[0_4px_12px_rgba(220,38,38,0.3)]"
-                                                    >
-                                                        <AlertTriangle className="size-4 animate-pulse" />
-                                                        Confirm Revoke
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setRevokingId(null);
-                                                        }}
-                                                        className="inline-flex h-10 items-center justify-center rounded-xl border border-border bg-card px-3 text-xs font-black uppercase tracking-wider text-muted-foreground hover:bg-muted active:scale-95"
-                                                    >
-                                                        Cancel
-                                                    </button>
-                                                </div>
-                                            ) : (
+                                    <div className="w-full lg:w-auto">
+                                        {revokingId === invite.id ? (
+                                            <div className="grid grid-cols-2 gap-2 w-full lg:flex lg:w-auto lg:items-center animate-in fade-in zoom-in-95 duration-200">
                                                 <button
                                                     type="button"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        setRevokingId(invite.id);
-                                                        // Automatically reset back to "Revoke" state if not clicked after 4 seconds
-                                                        setTimeout(() => {
-                                                            setRevokingId((current) => current === invite.id ? null : current);
-                                                        }, 4000);
+                                                        void revokeInvite(invite.id);
+                                                        setRevokingId(null);
                                                     }}
-                                                    className="inline-flex h-10 items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/5 px-4 text-xs font-black uppercase tracking-wider text-red-600 transition-colors hover:bg-red-500/10 active:scale-95"
+                                                    className="inline-flex h-10 w-full lg:w-auto items-center justify-center gap-1.5 rounded-xl bg-red-600 px-3 text-xs font-black uppercase tracking-wider text-white transition-colors hover:bg-red-700 active:scale-95 shadow-[0_4px_12px_rgba(220,38,38,0.3)]"
                                                 >
-                                                    <XCircle className="size-4" />
-                                                    Revoke
+                                                    <AlertTriangle className="size-4 animate-pulse" />
+                                                    Confirm
                                                 </button>
-                                            )
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setRevokingId(null);
+                                                    }}
+                                                    className="inline-flex h-10 w-full lg:w-auto items-center justify-center rounded-xl border border-border bg-card px-3 text-xs font-black uppercase tracking-wider text-muted-foreground hover:bg-muted active:scale-95"
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className={cn(
+                                                "grid gap-2 w-full lg:flex lg:w-auto lg:items-center",
+                                                invite.status === "active" ? "grid-cols-3" : "grid-cols-2"
+                                            )}>
+                                                <a
+                                                    href={invite.qrUrl}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="inline-flex h-10 w-full lg:w-auto items-center justify-center gap-1.5 rounded-xl border border-border bg-card px-2 text-[10px] sm:text-xs font-black uppercase tracking-wider text-foreground transition-colors hover:bg-muted"
+                                                >
+                                                    <QrCode className="size-4" />
+                                                    View QR
+                                                </a>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => void copyLink(invite.shareUrl, invite.id)}
+                                                    className={cn(
+                                                        "inline-flex h-10 w-full lg:w-auto items-center justify-center gap-1.5 rounded-xl border px-2 text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all active:scale-95",
+                                                        copiedId === invite.id
+                                                            ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 animate-pulse"
+                                                            : "border-border bg-card text-foreground hover:bg-muted"
+                                                    )}
+                                                >
+                                                    {copiedId === invite.id ? (
+                                                        <>
+                                                            <Check className="size-4" />
+                                                            Copied!
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Copy className="size-4" />
+                                                            Copy Link
+                                                        </>
+                                                    )}
+                                                </button>
+                                                {invite.status === "active" && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setRevokingId(invite.id);
+                                                            // Automatically reset back to "Revoke" state if not clicked after 4 seconds
+                                                            setTimeout(() => {
+                                                                setRevokingId((current) => current === invite.id ? null : current);
+                                                            }, 4000);
+                                                        }}
+                                                        className="inline-flex h-10 w-full lg:w-auto items-center justify-center gap-1.5 rounded-xl border border-red-500/20 bg-red-500/5 px-2 text-[10px] sm:text-xs font-black uppercase tracking-wider text-red-600 transition-colors hover:bg-red-500/10 active:scale-95"
+                                                    >
+                                                        <XCircle className="size-4" />
+                                                        Revoke
+                                                    </button>
+                                                )}
+                                            </div>
                                         )}
                                     </div>
                                 </div>
                             ))
                         )}
+                    </div>
+                </div>
+            )}
+
+            {/* Mobile generated invite modal */}
+            {freshInvite && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm md:hidden animate-in fade-in duration-300">
+                    <div className="relative w-full max-w-sm rounded-[2rem] border border-white/10 bg-background/95 p-6 shadow-2xl backdrop-blur-2xl animate-in zoom-in-95 slide-in-from-bottom-10 duration-300">
+                        {/* Header */}
+                        <div className="mb-4 flex items-center justify-between">
+                            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1">
+                                <ShieldCheck className="size-4 text-primary animate-pulse" />
+                                <span className="text-[10px] font-black uppercase tracking-wider text-primary">Generated Invite</span>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setFreshInvite(null)}
+                                className="flex size-8 items-center justify-center rounded-full border border-border bg-card text-muted-foreground hover:text-foreground active:scale-90 transition-all font-black text-lg"
+                            >
+                                ×
+                            </button>
+                        </div>
+
+                        {/* QR Code */}
+                        <div className="flex flex-col items-center">
+                            <div className="relative mb-4 rounded-3xl border border-border bg-white p-3 shadow-xl">
+                                <Image src={freshInvite.qrUrl} alt="Invite QR code" width={160} height={160} className="rounded-xl" />
+                            </div>
+                            <p className="text-xs font-semibold text-muted-foreground mb-4">Scan QR code or copy the link below</p>
+                        </div>
+
+                        {/* Share URL */}
+                        <div className="mb-4 w-full rounded-2xl border border-border bg-card/50 p-3 text-left">
+                            <p className="mb-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground">Share URL</p>
+                            <p className="text-xs font-medium text-foreground break-all">{freshInvite.shareUrl}</p>
+                        </div>
+
+                        {/* Payment Preview */}
+                        {freshInvite.paymentPreview && (
+                            <div className="mb-5 w-full rounded-2xl border border-amber-500/20 bg-amber-500/5 dark:bg-amber-500/10 p-3.5 text-left text-xs">
+                                <p className="mb-1.5 text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">Estimated Move-in Payment</p>
+                                <div className="space-y-1 font-semibold text-amber-900 dark:text-amber-100">
+                                    <div className="flex justify-between">
+                                        <span>Advance Rent:</span>
+                                        <span>PHP {freshInvite.paymentPreview.advanceAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span>Security Deposit:</span>
+                                        <span>PHP {freshInvite.paymentPreview.securityDepositAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Action buttons */}
+                        <div className="flex gap-2">
+                            <button
+                                type="button"
+                                onClick={() => void copyLink(freshInvite.shareUrl, "fresh")}
+                                className={cn(
+                                    "flex-1 inline-flex h-11 items-center justify-center gap-2 rounded-xl px-4 text-xs font-black uppercase tracking-wider transition-all active:scale-95",
+                                    copiedId === "fresh"
+                                        ? "bg-emerald-600 text-white shadow-[0_4px_12px_rgba(16,185,129,0.3)] hover:bg-emerald-700"
+                                        : "bg-primary text-primary-foreground hover:bg-primary/90"
+                                )}
+                            >
+                                {copiedId === "fresh" ? (
+                                    <>
+                                        <Check className="size-4" />
+                                        Copied!
+                                    </>
+                                ) : (
+                                    <>
+                                        <Copy className="size-4" />
+                                        Copy Link
+                                    </>
+                                )}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setFreshInvite(null)}
+                                className="inline-flex h-11 items-center justify-center rounded-xl border border-border bg-card px-4 text-xs font-black uppercase tracking-wider text-foreground hover:bg-muted active:scale-95"
+                            >
+                                Done
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
