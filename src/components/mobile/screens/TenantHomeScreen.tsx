@@ -17,66 +17,12 @@ import {
 } from "lucide-react";
 import { useNavigation } from "../navigation";
 import styles from "./TenantHomeScreen.module.css";
-import { MOCK_NOTIFICATIONS } from "./NotificationsScreen";
+import { EmptyState } from "../../shared/EmptyState";
 import AnimatedCounter from "../ui/AnimatedCounter";
 import Skeleton from "../ui/Skeleton";
 import { useState, useEffect } from "react";
 
-// ─── Mock Data ─────────────────────────────────────────────
-const RENT_DATA = {
-    amount: "18,500",
-    dueDate: "March 15, 2026",
-    status: "due" as "due" | "paid" | "overdue",
-};
-
-const LEASE_DATA = {
-    property: "Green Residences",
-    unit: "Unit 4B · 2nd Floor",
-    startDate: "Jan 1, 2026",
-    endDate: "Dec 31, 2026",
-    daysRemaining: 303,
-    monthsLeft: 10,
-};
-
-const QUICK_ACTIONS = [
-    { id: "pay", label: "Pay Rent", icon: CreditCard, color: "Green", screen: "payments" as const },
-    { id: "lease", label: "View Lease", icon: FileText, color: "Blue", screen: "leaseList" as const },
-    { id: "saved", label: "Saved", icon: Heart, color: "Amber", screen: "savedProperties" as const },
-    { id: "maintenance", label: "Request Fix", icon: Wrench, color: "Purple", screen: "tenantMaintenance" as const },
-];
-
-const NOTIFICATIONS = [
-    {
-        id: 1,
-        title: "Rent Due Soon",
-        desc: "Your rent of ₱18,500 is due in 12 days",
-        time: "2h ago",
-        icon: Clock,
-        color: "Amber",
-    },
-    {
-        id: 2,
-        title: "Payment Confirmed",
-        desc: "February rent payment has been confirmed",
-        time: "3d ago",
-        icon: CheckCircle2,
-        color: "Green",
-    },
-    {
-        id: 3,
-        title: "Maintenance Update",
-        desc: "Your plumbing request has been resolved",
-        time: "5d ago",
-        icon: Wrench,
-        color: "Blue",
-    },
-];
-
-const ANNOUNCEMENT = {
-    text: "Building maintenance scheduled for March 10, 2026. Water supply will be temporarily interrupted from 8AM to 12PM.",
-    from: "Property Management",
-    date: "March 1, 2026",
-};
+// ─── Component ─────────────────────────────────────────────
 
 // ─── Component ─────────────────────────────────────────────
 export default function TenantHomeScreen() {

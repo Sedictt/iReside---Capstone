@@ -6,7 +6,7 @@ import { useGlobalNotification } from "../NotificationContext";
 import { useNavigation } from "../navigation";
 import styles from "./NotificationsScreen.module.css";
 
-// ─── Mock Data ──────────────────────────────────────────────
+// ─── Types ──────────────────────────────────────────────────
 interface Notification {
     id: string;
     type: "payment" | "maintenance" | "message" | "application" | "system";
@@ -16,54 +16,11 @@ interface Notification {
     read: boolean;
 }
 
-export let MOCK_NOTIFICATIONS: Notification[] = [
-    {
-        id: "n1",
-        type: "payment",
-        title: "Payment Received",
-        message: "Your rent payment of ₱15,000 for Unit 101 has been confirmed.",
-        time: "15 min ago",
-        read: false,
-    },
-    {
-        id: "n2",
-        type: "message",
-        title: "New Message",
-        message: "Juan Dela Cruz sent you a message regarding the sink repair.",
-        time: "1 hour ago",
-        read: false,
-    },
-    {
-        id: "n3",
-        type: "maintenance",
-        title: "Maintenance Scheduled",
-        message: "A technician is scheduled to visit Unit 201 tomorrow at 10:00 AM.",
-        time: "3 hours ago",
-        read: true,
-    },
-    {
-        id: "n4",
-        type: "application",
-        title: "Application Updated",
-        message: "Maria Santos's application for Metro Studio B has been approved.",
-        time: "5 hours ago",
-        read: true,
-    },
-    {
-        id: "n5",
-        type: "system",
-        title: "System Update",
-        message: "iReside has been updated to version 1.2.0. Check out the new features!",
-        time: "Yesterday",
-        read: true,
-    }
-];
-
 export default function NotificationsScreen({ isSubView = false }: { isSubView?: boolean }) {
     const { goBack, navigate, role } = useNavigation();
     const { showNotification } = useGlobalNotification();
     const [activeTab, setActiveTab] = useState<"all" | "unread">("all");
-    const [notifications, setNotifications] = useState<Notification[]>(MOCK_NOTIFICATIONS);
+    const [notifications, setNotifications] = useState<Notification[]>([]);
 
     const filteredNotifications = notifications.filter(n => {
         if (activeTab === "all") return true;
@@ -71,16 +28,12 @@ export default function NotificationsScreen({ isSubView = false }: { isSubView?:
     });
 
     const markAllRead = () => {
-        MOCK_NOTIFICATIONS.forEach(n => n.read = true);
-        setNotifications([...MOCK_NOTIFICATIONS]);
+        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     };
 
     const handleNotificationClick = (n: Notification) => {
-        // Mark as read globally so it persists
         if (!n.read) {
-            const index = MOCK_NOTIFICATIONS.findIndex(x => x.id === n.id);
-            if (index !== -1) MOCK_NOTIFICATIONS[index].read = true;
-            setNotifications([...MOCK_NOTIFICATIONS]);
+            setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x));
         }
 
         // Route to specific areas based on role and notification type

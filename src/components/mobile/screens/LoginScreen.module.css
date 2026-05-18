@@ -381,7 +381,8 @@
 
 /* ─── Full-width Google Button (Landlord only, no Facebook) ─ */
 .socialFullWidth {
-    flex: 1;
+    flex: none;
+    width: 100%;
     height: 54px;
     border-radius: 14px;
     border: 1.5px solid #262626;
