@@ -97,7 +97,7 @@ export function useNotifications() {
         await supabase
             .from("notifications")
             .update({ read: true })
-            .eq("user_id", userId)
+            .eq("user_id", userId!)
             .eq("read", false);
         setState((prev) => ({
             ...prev,
