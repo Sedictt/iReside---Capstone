@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, ShieldAlert, Scale, Building, Coins, Brain, MessageSquare, AlertTriangle, ShieldCheck, MapPin } from "lucide-react"
+import { ArrowLeft, ShieldCheck, Scale, Building, Coins, Brain, MessageSquare, AlertTriangle, MapPin } from "lucide-react"
 
 export default function TermsPage() {
   return (
@@ -27,25 +27,22 @@ export default function TermsPage() {
               Terms of Service
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Academic Research & Capstone Prototype License · Last updated: May 18, 2026
+              Standard User & Licensing Agreement · Last updated: May 18, 2026
             </p>
           </div>
         </div>
 
-        {/* Academic Prototype Callout (WOW factor, fully transparent) */}
-        <div className="mb-12 p-6 rounded-2xl border border-warning/30 bg-warning/5 backdrop-blur-md shadow-lg relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-warning/10 rounded-full blur-xl pointer-events-none" />
+        {/* Professional Gated Platform Notice */}
+        <div className="mb-12 p-6 rounded-2xl border border-primary/20 bg-primary/5 backdrop-blur-md shadow-lg relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-primary/10 rounded-full blur-xl pointer-events-none" />
           <div className="flex gap-4 items-start">
-            <ShieldAlert className="size-8 text-warning shrink-0 mt-0.5 animate-pulse" />
+            <ShieldCheck className="size-8 text-primary shrink-0 mt-0.5" />
             <div>
               <h3 className="font-extrabold text-lg text-foreground flex items-center gap-2">
-                Important Capstone Academic Disclaimer
+                Platform License & Gated Service Terms
               </h3>
               <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-                iReside is an exclusive, private property and tenant management platform developed strictly as an <strong>academic Capstone research prototype</strong>. 
-                All operations within this platform—including landlord registrations, tenant onboarding, visual unit plans, dynamic invoicing, 
-                supportive AI analysis, and digital signature workflows—are developed for demonstration, evaluation, and UX/UI research purposes. 
-                <strong>There are no legally binding contracts, real-world utility billings, or actual financial transactions executed through this system.</strong>
+                iReside provides a private, landlord-centric property and tenant management ecosystem designed exclusively for multi-unit rental property operations in Valenzuela City. Access is gated and strictly provisioned via official landlord invitations. Please read these Terms of Service carefully before utilizing our portals, interfaces, or integrated operational services.
               </p>
             </div>
           </div>
@@ -58,10 +55,10 @@ export default function TermsPage() {
           <section className="p-6 rounded-2xl border border-border/50 bg-card/40 backdrop-blur-sm shadow-sm space-y-4 hover:border-border transition-all">
             <h2 className="text-2xl font-bold text-foreground flex items-center gap-3">
               <Scale className="size-6 text-primary shrink-0" />
-              1. Acceptance of Terms & Research Participation
+              1. Acceptance of Terms & Gated Access
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              By accessing, registering, or using the iReside platform as either an administrator, landlord, or tenant, you acknowledge that you are participating in a controlled Capstone evaluation study. You agree to use the platform in accordance with these Terms of Service. If you do not agree to these terms or cannot fulfill the participation requirements, please discontinue use immediately.
+              By accessing, registering, or using the iReside platform (including the Landlord Portal, Tenant Portal, or System Administration Portal), you agree to be bound by these Terms of Service. These terms constitute a legally binding agreement between you and iReside. If you do not agree to these terms, you must not access or use the platform.
             </p>
           </section>
 
@@ -72,7 +69,7 @@ export default function TermsPage() {
               2. Geographic & Property Scope Boundaries
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              iReside is customized and optimized exclusively for the multi-unit rental market (apartments, dormitories, and boarding houses) situated within the geographic boundaries of the following barangays in <strong>Valenzuela City, Philippines</strong>:
+              iReside is customized and optimized exclusively for residential multi-unit properties (apartments, dormitories, and boarding houses) situated within the geographic boundaries of the following barangays in <strong>Valenzuela City, Philippines</strong>:
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2">
               {["Barangay Marulas", "Barangay Canumay", "Barangay Malinta", "Barangay Maysan"].map((barangay) => (
@@ -82,7 +79,7 @@ export default function TermsPage() {
               ))}
             </div>
             <p className="text-muted-foreground leading-relaxed text-sm pt-2">
-              Single-family homes, transient hotels, commercial leasing ecosystems, and properties outside these four specified barangays are explicitly outside the system's operational scope and limits.
+              Single-family residential homes, transient hotels, commercial leasing spaces, and properties situated outside these four specified barangays are explicitly outside the system's operational scope and licensing rules.
             </p>
           </section>
 
@@ -93,12 +90,12 @@ export default function TermsPage() {
               3. Private Onboarding & Gated Access Model
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              iReside functions as an exclusive, private property-management ecosystem. 
+              iReside operates as an exclusive, private ecosystem. 
               <strong> There is no public listing marketplace, unit discovery portal, or self-service tenant registration.</strong>
             </p>
             <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
-              <li><strong>Landlord Provisioning:</strong> Landlord accounts are provisioned exclusively through authorized backend administrator workflows after uploading valid business permits and government identification for visual inspection.</li>
-              <li><strong>Tenant Provisioning:</strong> Tenant accounts cannot be created publicly. Tenants are invited and provisioned strictly by their landlords through the "Walk-in Application" workflow following offline vetting.</li>
+              <li><strong>Landlord Provisioning:</strong> Landlord accounts are provisioned exclusively through authorized backend administrator workflows after uploading valid business permits and government identification for verification.</li>
+              <li><strong>Tenant Provisioning:</strong> Tenant accounts cannot be created publicly. Tenants are invited and provisioned strictly by their landlords through the "Walk-in Application" workflow following offline verification.</li>
               <li><strong>Isolated Property Ecosystems:</strong> Each property operates as a separate, logically partitioned space. Landlords cannot view other landlords' operations, and tenants can only access the portal of their approved property.</li>
             </ul>
           </section>
@@ -107,15 +104,15 @@ export default function TermsPage() {
           <section className="p-6 rounded-2xl border border-border/50 bg-card/40 backdrop-blur-sm shadow-sm space-y-4 hover:border-border transition-all">
             <h2 className="text-2xl font-bold text-foreground flex items-center gap-3">
               <AlertTriangle className="size-6 text-primary shrink-0" />
-              4. Visual Unit Map Constraints
+              4. Visual Unit Map Constraints & Disclaimers
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              The 2D Unit Map canvas is purely a digital visualization and organizational tool designed to represent unit locations, occupancy states, and active maintenance statuses in real-time.
+              The 2D Unit Map canvas is a digital visualization and spatial planning tool designed to represent unit locations, occupancy states, and active maintenance statuses in real-time.
             </p>
             <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
-              <li>It does <strong>not</strong> generate engineering-grade floor measurements, structural load metrics, or architectural plan certifications.</li>
+              <li>It does <strong>not</strong> produce engineering-grade floor measurements, structural load metrics, or architectural plan certifications.</li>
               <li>Unit status overlays are strictly informational and do not automate contractor dispatches, penalizations, or legal processes.</li>
-              <li>The system does not issue automated eviction notices, as eviction is a strictly judicial process under Philippine tenancy laws (including Batas Pambansa Blg. 25).</li>
+              <li>The system does not issue automated eviction notices. Legal eviction is a strictly judicial process under Philippine tenancy laws (including Batas Pambansa Blg. 25).</li>
             </ul>
           </section>
 
@@ -123,20 +120,20 @@ export default function TermsPage() {
           <section className="p-6 rounded-2xl border border-border/50 bg-card/40 backdrop-blur-sm shadow-sm space-y-4 hover:border-border transition-all">
             <h2 className="text-2xl font-bold text-foreground flex items-center gap-3">
               <Coins className="size-6 text-primary shrink-0" />
-              5. Financial Tracking & Payment Delimitations
+              5. Financial Tracking & Manual Payment Audit Boundaries
             </h2>
             <p className="text-muted-foreground leading-relaxed">
               The Real-Time Financial Ledger manages digital statements, billing schedules, and invoices for Base Rent, Water, and Electricity.
             </p>
-            <div className="p-4 rounded-xl border border-destructive/20 bg-destructive/5 text-sm text-muted-foreground space-y-2">
+            <div className="p-4 rounded-xl border border-border bg-muted/40 text-sm text-muted-foreground space-y-2">
               <p className="font-extrabold text-foreground flex items-center gap-2">
-                <ShieldAlert className="size-4 text-destructive" /> Crucial Payment Gateway Exclusion
+                <ShieldCheck className="size-4 text-primary" /> Out-of-Band Payment & Manual Validation
               </p>
               <p>
-                iReside **does not execute or process actual fund transfers**, nor does it integrate directly with payment gateways, banking APIs, or the GCash API. Operating as a licensed payment intermediary would require BSP circular 649 compliance, AMLA audits, and PCI-DSS certification which are outside the scope of this Capstone research project.
+                iReside is a record-keeping and operational tracking platform. <strong>It does not execute or process actual fund transfers directly, nor does it integrate with payment gateways or banking/GCash APIs.</strong>
               </p>
               <p>
-                Payment verification is done <strong>manually</strong> by landlords auditing uploaded transaction screenshots (e.g., GCash receipts). The ledger is strictly for record-keeping and is not a substitute for formal BIR accounting logs.
+                All financial transfers must occur out-of-band. Payment verification is done <strong>manually</strong> by landlords auditing uploaded transaction screenshots (such as GCash receipts). The ledger is strictly for operational record-keeping and does not serve as a substitute for formal corporate accounting or BIR-compliant tax computation.
               </p>
             </div>
           </section>
@@ -145,15 +142,15 @@ export default function TermsPage() {
           <section className="p-6 rounded-2xl border border-border/50 bg-card/40 backdrop-blur-sm shadow-sm space-y-4 hover:border-border transition-all">
             <h2 className="text-2xl font-bold text-foreground flex items-center gap-3">
               <Brain className="size-6 text-primary shrink-0" />
-              6. Advisory Supportive AI & Groq Llama 3.1 8B Utilities
+              6. Advisory AI & Context Intelligence
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              The platform integrates local AI services powered by <strong>Groq Llama 3.1 8B</strong> using RAG architecture for context intelligence (building rules, maintenance severity categorizations, analytics overlays, and communication moderation).
+              The platform integrates smart operational features powered by a local <strong>Groq Llama 3.1 8B</strong> RAG (Retrieval-Augmented Generation) pipeline for building rule queries, maintenance severity categorization, analytics support, and message moderation.
             </p>
             <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
-              <li><strong>Strictly Advisory:</strong> All AI outputs are informational. Landlords and tenants must visually verify and manually approve any recommendation before action is taken.</li>
-              <li><strong>Zero Autonomy:</strong> The AI does not autonomously approve budgets, draft legally binding clauses, make automated tenant denial decisions, or process credit scoring.</li>
-              <li><strong>Background Vetting Limitations:</strong> To avoid discrimination, algorithmic bias, and to comply with the Data Privacy Act (RA 10173), the AI does not perform credit ratings or automated tenant background screening.</li>
+              <li><strong>Strictly Advisory:</strong> All AI outputs and analytics recommendations are purely supportive. Landlords and tenants must visually verify and manually approve any recommendation before taking actions.</li>
+              <li><strong>No Automated Decisions:</strong> The AI does not autonomously approve budgets, draft legally binding clauses, make automated tenant denial decisions, or process credit scoring.</li>
+              <li><strong>Background Vetting Limitations:</strong> To ensure compliance with the Data Privacy Act (RA 10173), the AI does not perform credit ratings or automated tenant background screening.</li>
             </ul>
           </section>
 
@@ -181,8 +178,8 @@ export default function TermsPage() {
             </h2>
             <p className="text-muted-foreground leading-relaxed">
               iReside operates as a <strong>semi-managed, isolated deployment model</strong>. 
-              The development team acts solely as the technical supplier responsible for initial provisioning, server setup, and database initialization. After handover, the landlord assumes full independent management of their respective ecosystem. 
-              Continuous operational support, live helpline assistance, and post-deployment custom feature additions are treated as optional service engagements outside the core system boundaries.
+              The technical support team is responsible solely for provisioning, server setup, and system initialization. Post-onboarding, the landlord assumes independent management of their respective property ecosystem. 
+              Continuous operational support, live helpline assistance, and post-deployment custom feature additions are treated as separate service engagements.
             </p>
           </section>
 
@@ -190,10 +187,10 @@ export default function TermsPage() {
           <section className="p-6 rounded-2xl border border-border/50 bg-card/40 backdrop-blur-sm shadow-sm space-y-4 hover:border-border transition-all">
             <h2 className="text-2xl font-bold text-foreground flex items-center gap-3">
               <Scale className="size-6 text-primary shrink-0" />
-              9. Document & Lease Signing Exclusions
+              9. Document & Lease Signing Boundaries
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              The digital lease signing workflow supports canvas-based electronic signatures for operational convenience only. 
+              The digital lease signing workflow supports canvas-based electronic signatures under the Philippine Electronic Commerce Act of 2000 (R.A. 8792) for operational convenience. 
               It does <strong>not</strong> provide remote or automated third-party notarization, which requires physical appearance before a licensed notary public under the Philippine 2004 Rules on Notarial Practice. 
               Landlords are strongly advised to consult legal counsel to ensure that their custom contract templates comply with Batas Pambansa Blg. 25 and local regulations.
             </p>
@@ -203,11 +200,11 @@ export default function TermsPage() {
         {/* Footer Contact Details */}
         <div className="mt-16 pt-8 border-t border-border/40 text-center space-y-3">
           <p className="text-sm text-muted-foreground">
-            For academic queries, feedback, or verification regarding this Capstone study, please contact the development team:
+            For operational queries, license verification, or technical support, please contact:
           </p>
           <div className="flex justify-center gap-6 text-sm text-foreground font-bold">
             <a href="mailto:support@ireside.com" className="hover:text-primary hover:underline transition-all">
-              academic-board@ireside.com
+              support@ireside.com
             </a>
             <span>·</span>
             <span>Valenzuela City, Metro Manila</span>
