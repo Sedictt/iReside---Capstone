@@ -18,7 +18,7 @@ export default function LandlordInvoicesScreen({ isSubView = false }: { isSubVie
             <EmptyState
                 icon={FileText}
                 title="No invoices yet"
-                subtitle="When tenants are assigned and rent is due, invoices will appear here."
+                description="When tenants are assigned and rent is due, invoices will appear here."
             />
         </div>
     );

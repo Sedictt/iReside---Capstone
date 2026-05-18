@@ -25,7 +25,7 @@ export default function LandlordPropertiesScreen({ isSubView = false }: { isSubV
       <EmptyState
         icon={Search}
         title="No properties yet"
-        subtitle="Add your first property to start managing tenants, invoices, and maintenance."
+        description="Add your first property to start managing tenants, invoices, and maintenance."
       />
     </div>
   );

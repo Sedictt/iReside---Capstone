@@ -64,7 +64,7 @@ export default function LandlordApplicationsScreen({ isSubView = false }: { isSu
         <EmptyState
           icon={Building2}
           title="No applications yet"
-          subtitle="When prospective tenants apply to your properties, their applications will show up here."
+          description="When prospective tenants apply to your properties, their applications will show up here."
         />
       </div>
     </div>

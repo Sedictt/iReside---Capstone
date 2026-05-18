@@ -17,7 +17,7 @@ export default function LandlordWalkInAppScreen() {
             <EmptyState
                 icon={Building2}
                 title="No properties available"
-                subtitle="Add properties first to be able to submit walk-in applications for prospective tenants."
+                description="Add properties first to be able to submit walk-in applications for prospective tenants."
             />
         </div>
     );

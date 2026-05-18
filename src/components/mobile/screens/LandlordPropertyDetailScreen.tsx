@@ -21,7 +21,7 @@ export default function LandlordPropertyDetailScreen() {
       <EmptyState
         icon={Building2}
         title="No property selected"
-        subtitle="Select a property to view its details, units, and performance."
+        description="Select a property to view its details, units, and performance."
       />
     </div>
   );

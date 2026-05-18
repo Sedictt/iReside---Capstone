@@ -58,7 +58,7 @@ export default function LandlordMaintenanceScreen({ isSubView = false }: { isSub
                 <EmptyState
                     icon={Wrench}
                     title="No maintenance requests"
-                    subtitle="When tenants submit maintenance tickets, they will show up here."
+                    description="When tenants submit maintenance tickets, they will show up here."
                 />
             </div>
         </div>
