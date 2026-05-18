@@ -408,8 +408,8 @@ export function TenantInviteManager({
 
                     <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
                         <div className="space-y-3">
-                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">1. Select Scope</label>
-                            <div className="grid grid-cols-2 gap-3">
+                            <p id="scope-group-label" className="text-xs font-black uppercase tracking-wider text-muted-foreground">1. Select Scope</p>
+                            <div role="radiogroup" aria-labelledby="scope-group-label" className="grid grid-cols-2 gap-3">
                                 {scopeControls.map((control) => {
                                     const Icon = control.icon;
                                     const active = mode === control.key;
@@ -418,6 +418,8 @@ export function TenantInviteManager({
                                             key={control.key}
                                             type="button"
                                             onClick={control.onClick}
+                                            role="radio"
+                                            aria-checked={active}
                                             className={cn(
                                                 "flex flex-col items-center gap-3 rounded-[1.5rem] border p-4 transition-all text-center group",
                                                 active
@@ -444,8 +446,8 @@ export function TenantInviteManager({
                         </div>
 
                         <div className="space-y-3">
-                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">2. Application Mode</label>
-                            <div className="grid grid-cols-2 gap-3">
+                            <p id="mode-group-label" className="text-xs font-black uppercase tracking-wider text-muted-foreground">2. Application Mode</p>
+                            <div role="radiogroup" aria-labelledby="mode-group-label" className="grid grid-cols-2 gap-3">
                                 {applicationTypeControls.map((control) => {
                                     const Icon = control.icon;
                                     const active = applicationType === control.key;
@@ -454,6 +456,8 @@ export function TenantInviteManager({
                                             key={control.key}
                                             type="button"
                                             onClick={() => setApplicationType(control.key)}
+                                            role="radio"
+                                            aria-checked={active}
                                             className={cn(
                                                 "flex flex-col items-center gap-3 rounded-[1.5rem] border p-4 transition-all text-center group",
                                                 active
@@ -482,9 +486,9 @@ export function TenantInviteManager({
 
                     {applicationType === "online" && (
                         <div className="mb-8 rounded-[2rem] border border-primary/20 bg-primary/5 p-5 animate-in fade-in zoom-in duration-300">
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">3. Required Documents</p>
-                            <p className="mt-1 text-[11px] text-muted-foreground font-medium">Tenant must upload these to complete their application.</p>
-                            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                            <p id="docs-group-label" className="text-xs font-black uppercase tracking-wider text-primary">3. Required Documents</p>
+                            <p className="mt-1 text-xs text-muted-foreground font-medium">Tenant must upload these to complete their application.</p>
+                            <div role="group" aria-labelledby="docs-group-label" className="mt-3 grid gap-2 sm:grid-cols-2">
                                 {REQUIREMENT_OPTIONS.map((option) => {
                                     const checked = requiredRequirements.includes(option.key);
                                     return (
@@ -501,6 +505,8 @@ export function TenantInviteManager({
                                                     return [...prev, option.key];
                                                 });
                                             }}
+                                            role="checkbox"
+                                            aria-checked={checked}
                                             className={`rounded-xl border px-3 py-2 text-left text-xs font-black uppercase tracking-wider transition-colors ${
                                                 checked
                                                     ? "border-primary/40 bg-primary/10 text-primary"
@@ -511,29 +517,24 @@ export function TenantInviteManager({
                                                 {option.label}
                                                 {option.key === "valid_id" && (
                                                     <span className="relative inline-flex items-center ml-1.5">
-                                                        <span
-                                                            role="button"
-                                                            tabIndex={0}
+                                                        <button
+                                                            type="button"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 setShowValidIdTooltip(!showValidIdTooltip);
                                                             }}
-                                                            onKeyDown={(e) => {
-                                                                if (e.key === "Enter" || e.key === " ") {
-                                                                    e.stopPropagation();
-                                                                    setShowValidIdTooltip(!showValidIdTooltip);
-                                                                }
-                                                            }}
                                                             onBlur={() => setTimeout(() => setShowValidIdTooltip(false), 200)}
-                                                            className="focus:outline-none cursor-pointer"
+                                                            aria-haspopup="true"
+                                                            aria-expanded={showValidIdTooltip}
+                                                            aria-label="Valid ID Information"
+                                                            className="focus:outline-none cursor-pointer focus-visible:ring-2 focus-visible:ring-primary rounded-full"
                                                         >
                                                             <CircleHelp
                                                                 className="size-4 rounded-full border border-amber-400/40 bg-amber-400/15 p-0.5 text-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.35)] animate-pulse"
-                                                                aria-label={VALID_ID_TOOLTIP}
                                                             />
-                                                        </span>
+                                                        </button>
                                                         {showValidIdTooltip && (
-                                                            <span className="absolute left-0 top-6 z-30 w-64 rounded-xl border border-border bg-background p-2.5 text-[10px] font-black normal-case tracking-normal text-foreground shadow-xl animate-in fade-in slide-in-from-top-2 duration-200">
+                                                            <span id="valid-id-tooltip-desc" role="tooltip" className="absolute left-0 top-6 z-30 w-64 rounded-xl border border-border bg-background p-2.5 text-xs font-medium normal-case tracking-normal text-foreground shadow-xl animate-in fade-in slide-in-from-top-2 duration-200">
                                                                 {VALID_ID_TOOLTIP}
                                                             </span>
                                                         )}
@@ -549,31 +550,31 @@ export function TenantInviteManager({
 
                     {showPaymentPreview && (
                         <div className="mb-5 rounded-2xl border border-amber-500/20 bg-amber-500/5 dark:bg-amber-500/10 p-4">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">
+                            <p className="text-xs font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">
                                 Estimated Move-in Payment Preview
                             </p>
                             <div className="mt-3 grid gap-3 sm:grid-cols-2">
                                 <div className="rounded-xl border border-amber-200/50 bg-amber-50/50 dark:border-white/5 dark:bg-black/20 p-3">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-amber-700/60 dark:text-amber-100/50">Advance Rent</p>
-                                    <p className="mt-1 text-lg font-black text-amber-700 dark:text-amber-50">
+                                    <p className="text-xs font-black uppercase tracking-wider text-amber-900/70 dark:text-amber-200">Advance Rent</p>
+                                    <p className="mt-1 text-lg font-black text-amber-900 dark:text-amber-50">
                                         PHP {currentPaymentPreview.advanceAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </p>
                                 </div>
                                 <div className="rounded-xl border border-amber-200/50 bg-amber-50/50 dark:border-white/5 dark:bg-black/20 p-3">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-amber-700/60 dark:text-amber-100/50">Security Deposit</p>
-                                    <p className="mt-1 text-lg font-black text-amber-700 dark:text-amber-50">
+                                    <p className="text-xs font-black uppercase tracking-wider text-amber-900/70 dark:text-amber-200">Security Deposit</p>
+                                    <p className="mt-1 text-lg font-black text-amber-900 dark:text-amber-50">
                                         PHP {currentPaymentPreview.securityDepositAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </p>
                                 </div>
                             </div>
-                            <p className="mt-3 text-[11px] font-medium text-amber-800/70 dark:text-amber-100/60 leading-relaxed">{currentPaymentPreview.disclaimer}</p>
+                            <p className="mt-3 text-xs font-semibold text-amber-950 dark:text-amber-200 leading-relaxed">{currentPaymentPreview.disclaimer}</p>
                         </div>
                     )}
 
                     <div className="space-y-6">
                         <div className="flex items-center gap-3">
                             <div className="h-px flex-1 bg-border/50" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground whitespace-nowrap">
+                            <span className="text-xs font-black uppercase tracking-wider text-muted-foreground whitespace-nowrap">
                                 {applicationType === "online" ? "4. Details & Expiration" : "3. Details & Expiration"}
                             </span>
                             <div className="h-px flex-1 bg-border/50" />
@@ -581,7 +582,7 @@ export function TenantInviteManager({
 
                         <div className="grid gap-6 md:grid-cols-2">
                             <div className="group space-y-2">
-                                <label htmlFor="select-property" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground transition-colors group-focus-within:text-primary">
+                                <label htmlFor="select-property" className="text-xs font-black uppercase tracking-wider text-muted-foreground transition-colors group-focus-within:text-primary">
                                     Select Property
                                 </label>
                             <div className="relative">
@@ -596,7 +597,7 @@ export function TenantInviteManager({
                                         setUnitId("");
                                         setPreviewUnitId("");
                                     }}
-                                    className="h-12 w-full appearance-none rounded-xl border border-border bg-card pl-10 pr-10 text-sm font-black text-foreground shadow-sm outline-none transition-all hover:border-primary/50 focus:border-primary focus:ring-1 focus:ring-primary"
+                                    className="h-12 w-full appearance-none rounded-xl border border-border bg-card pl-10 pr-10 text-sm font-black text-foreground shadow-sm outline-none transition-all hover:border-primary/50 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-background"
                                 >
                                     <option value="" disabled>Choose a property...</option>
                                     {properties.map((property) => (
@@ -613,7 +614,7 @@ export function TenantInviteManager({
 
                             {mode === "unit" && (
                                 <div className="group space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                                    <label htmlFor="select-unit" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground transition-colors group-focus-within:text-primary">
+                                    <label htmlFor="select-unit" className="text-xs font-black uppercase tracking-wider text-muted-foreground transition-colors group-focus-within:text-primary">
                                         Select Vacant Unit
                                     </label>
                                 <div className="relative">
@@ -624,7 +625,7 @@ export function TenantInviteManager({
                                         id="select-unit"
                                         value={unitId}
                                         onChange={(event) => setUnitId(event.target.value)}
-                                        className="h-12 w-full appearance-none rounded-xl border border-border bg-card pl-10 pr-10 text-sm font-black text-foreground shadow-sm outline-none transition-all hover:border-primary/50 focus:border-primary focus:ring-1 focus:ring-primary disabled:opacity-50"
+                                        className="h-12 w-full appearance-none rounded-xl border border-border bg-card pl-10 pr-10 text-sm font-black text-foreground shadow-sm outline-none transition-all hover:border-primary/50 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-background disabled:opacity-50"
                                         disabled={!propertyId}
                                     >
                                         <option value="" disabled>
@@ -645,7 +646,7 @@ export function TenantInviteManager({
 
                             {mode === "property" && (
                                 <div className="group space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                                    <label htmlFor="preview-unit" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground transition-colors group-focus-within:text-primary">
+                                    <label htmlFor="preview-unit" className="text-xs font-black uppercase tracking-wider text-muted-foreground transition-colors group-focus-within:text-primary">
                                         Rent Preview Unit
                                     </label>
                                 <div className="relative">
@@ -656,7 +657,7 @@ export function TenantInviteManager({
                                         id="preview-unit"
                                         value={previewUnitId}
                                         onChange={(event) => setPreviewUnitId(event.target.value)}
-                                        className="h-12 w-full appearance-none rounded-xl border border-border bg-card pl-10 pr-10 text-sm font-black text-foreground shadow-sm outline-none transition-all hover:border-primary/50 focus:border-primary focus:ring-1 focus:ring-primary disabled:opacity-50"
+                                        className="h-12 w-full appearance-none rounded-xl border border-border bg-card pl-10 pr-10 text-sm font-black text-foreground shadow-sm outline-none transition-all hover:border-primary/50 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-background disabled:opacity-50"
                                         disabled={!propertyId}
                                     >
                                         <option value="">
@@ -677,11 +678,11 @@ export function TenantInviteManager({
 
                             <div className="group space-y-2">
                                 <div className="flex items-center justify-between">
-                                    <label htmlFor="expires-at" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground transition-colors group-focus-within:text-primary">
+                                    <label htmlFor="expires-at" className="text-xs font-black uppercase tracking-wider text-muted-foreground transition-colors group-focus-within:text-primary">
                                         Link Expiration
                                     </label>
                                 </div>
-                            <div className="relative overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all hover:border-primary/50 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
+                            <div className="relative overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all hover:border-primary/50 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 dark:focus-within:ring-offset-background">
                                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
                                     <Calendar className="size-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
                                 </div>
@@ -717,7 +718,7 @@ export function TenantInviteManager({
                                                 setActivePreset(preset.days);
                                             }}
                                             className={cn(
-                                                "rounded-lg border px-3 py-1.5 text-[10px] font-black uppercase tracking-widest transition-colors active:scale-95",
+                                                "rounded-lg border px-3 py-1.5 text-xs font-black uppercase tracking-wider transition-colors active:scale-95",
                                                 isActive
                                                     ? "border-primary bg-primary/10 text-primary shadow-[0_0_12px_rgba(var(--primary-rgb),0.15)]"
                                                     : "border-border bg-background text-muted-foreground hover:border-primary/30 hover:bg-primary/5 hover:text-foreground"
@@ -750,32 +751,32 @@ export function TenantInviteManager({
                         <div className="flex w-full flex-col items-center animate-in fade-in zoom-in duration-500">
                             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1">
                                 <ShieldCheck className="size-4 text-primary" />
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Generated Invite</span>
+                                <span className="text-xs font-black uppercase tracking-wider text-primary">Generated Invite</span>
                             </div>
                             <div className="relative mb-6 rounded-3xl border-2 border-border bg-white p-3 shadow-xl">
                                 <Image src={freshInvite.qrUrl} alt="Invite QR code" width={176} height={176} className="rounded-xl" />
                             </div>
                             <div className="mb-6 w-full rounded-2xl border border-border bg-background p-4 text-left">
-                                <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Share URL</p>
+                                <p className="mb-2 text-xs font-black uppercase tracking-wider text-muted-foreground">Share URL</p>
                                 <p className="text-sm font-medium text-foreground break-all">{freshInvite.shareUrl}</p>
                             </div>
                             {freshInvite.paymentPreview && (
-                                <div className="mb-6 w-full rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-left">
-                                    <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-amber-200">Estimated Payment Preview</p>
-                                    <p className="text-xs text-amber-50">
+                                <div className="mb-6 w-full rounded-2xl border border-amber-500/20 bg-amber-500/5 dark:bg-amber-500/10 p-4 text-left">
+                                    <p className="mb-2 text-xs font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">Estimated Payment Preview</p>
+                                    <p className="text-xs font-semibold text-amber-900 dark:text-amber-50">
                                         Advance: PHP {freshInvite.paymentPreview.advanceAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </p>
-                                    <p className="text-xs text-amber-50">
+                                    <p className="text-xs font-semibold text-amber-900 dark:text-amber-50">
                                         Security: PHP {freshInvite.paymentPreview.securityDepositAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </p>
-                                    <p className="mt-2 text-[10px] text-amber-100/80">{freshInvite.paymentPreview.disclaimer}</p>
+                                    <p className="mt-2 text-[11px] font-medium text-amber-950 dark:text-amber-200/80 leading-relaxed">{freshInvite.paymentPreview.disclaimer}</p>
                                 </div>
                             )}
                             <button
                                 type="button"
                                 onClick={() => void copyLink(freshInvite.shareUrl)}
                                 className={cn(
-                                    "inline-flex w-full h-12 items-center justify-center gap-2 rounded-xl px-6 text-xs font-black uppercase tracking-[0.2em] transition-all active:scale-95",
+                                    "inline-flex w-full h-12 items-center justify-center gap-2 rounded-xl px-6 text-xs font-black uppercase tracking-wider transition-all active:scale-95",
                                     copiedUrl
                                         ? "bg-emerald-600 text-white shadow-[0_4px_12px_rgba(16,185,129,0.3)] hover:bg-emerald-700"
                                         : "bg-foreground text-background hover:scale-[1.02]"

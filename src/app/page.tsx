@@ -745,7 +745,7 @@ export default function ScrollyTellingLandingPage() {
                                     <Link href="/privacy" role="menuitem" className="block px-4 py-2 text-sm hover:bg-muted transition-colors">Privacy Policy</Link>
                                     <Link href="/terms" role="menuitem" className="block px-4 py-2 text-sm hover:bg-muted transition-colors">Terms of Service</Link>
                                     <div className="border-t border-border my-2" />
-                                    <a href="mailto:support@ireside.ai" role="menuitem" className="block px-4 py-2 text-sm hover:bg-muted transition-colors">Contact Support</a>
+                                    <a href="mailto:ireside.official.mail@gmail.com" role="menuitem" className="block px-4 py-2 text-sm hover:bg-muted transition-colors">Contact Support</a>
                                 </div>
                             )}
                         </div>
@@ -1080,7 +1080,7 @@ export default function ScrollyTellingLandingPage() {
                         FAQs
                       </Link>
                       <a
-                        href="mailto:support@ireside.ai"
+                        href="mailto:ireside.official.mail@gmail.com"
                         className="text-sm hover:text-primary transition-colors"
                       >
                         Contact Support
@@ -1112,7 +1112,7 @@ export default function ScrollyTellingLandingPage() {
                         <Github className="size-5" />
                       </a>
                       <a
-                        href="mailto:hello@ireside.com"
+                        href="mailto:ireside.official.mail@gmail.com"
                         className="text-muted-foreground hover:text-primary transition-colors"
                         aria-label="Email"
                       >
