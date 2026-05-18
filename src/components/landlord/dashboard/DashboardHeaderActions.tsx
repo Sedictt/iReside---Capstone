@@ -250,7 +250,7 @@ export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActi
 
     return (
         <>
-            <div className="absolute top-8 right-8 z-20 flex items-center gap-4">
+            <div className="absolute top-3 right-3 sm:top-4 sm:right-4 md:top-8 md:right-8 z-20 flex items-center gap-1.5 sm:gap-2 md:gap-4">
                 {/* Mission Control Trigger */}
                 <button
                     onClick={onQuestPanelOpen}
@@ -413,7 +413,7 @@ export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActi
                 </div>
 
                 {/* Profile Widget */}
-                <div className="flex items-center gap-3 border-l border-white/10 pl-4">
+                <div className="hidden md:flex items-center gap-3 border-l border-white/10 pl-4">
                     <ProfileWidget />
                 </div>
             </div>

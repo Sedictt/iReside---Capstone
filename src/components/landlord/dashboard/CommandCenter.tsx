@@ -125,7 +125,7 @@ export function CommandCenter({
     ];
 
     return (
-        <section className="relative group/section overflow-hidden rounded-[2.5rem] border border-white/10 bg-card/60 p-8 shadow-2xl shadow-black/30 backdrop-blur-xl">
+        <section className="relative group/section overflow-hidden rounded-[2.5rem] border border-white/10 bg-card/60 p-4 sm:p-6 md:p-8 shadow-2xl shadow-black/30 backdrop-blur-xl">
             {/* Background decorative elements */}
             <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 size-64 rounded-full bg-white/5 blur-[80px] pointer-events-none" />
             
@@ -143,20 +143,20 @@ export function CommandCenter({
                 </div>
 
                 {/* Real-time stats pills */}
-                <div className="flex flex-wrap gap-2 sm:gap-3">
+                <div className="flex gap-2 overflow-x-auto pb-1 pr-1 w-full sm:w-auto">
                     {statCards.map((stat) => (
                         <Link
                             key={stat.label}
                             href={stat.href}
                             className={cn(
-                                "group relative flex items-center gap-3 rounded-2xl border px-4 py-2.5 transition-all duration-300 active:scale-95",
+                                "group relative flex shrink-0 w-auto items-center gap-2 sm:gap-3 rounded-2xl border px-3 sm:px-4 py-2 sm:py-2.5 transition-all duration-300 active:scale-95",
                                 stat.toneClass
                             )}
                         >
                             <stat.icon className="size-4 opacity-80 transition-opacity group-hover:opacity-100" />
                             <div className="flex flex-col">
                                 <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{stat.label}</span>
-                                <span className="text-base font-black leading-none text-foreground">{stat.value}</span>
+                                <span className="text-sm sm:text-base font-black leading-none text-foreground">{stat.value}</span>
                             </div>
                         </Link>
                     ))}
@@ -165,13 +165,13 @@ export function CommandCenter({
 
             <div className="grid gap-6 lg:grid-cols-[1fr_380px] relative z-10">
                 {/* Operations Center */}
-                <div className="rounded-[2rem] border border-white/10 bg-card/70 p-6 backdrop-blur-sm">
+                <div className="rounded-[2rem] border border-white/10 bg-card/70 p-4 sm:p-5 md:p-6 backdrop-blur-sm">
                     <h3 className="mb-6 flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/80">
                         <span className="h-1 w-4 rounded-full bg-primary" />
                         Operations Center
                     </h3>
                     
-                    <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+                    <div className="grid grid-cols-3 gap-2 sm:gap-3">
                         {[
                             { label: "Invoice Ledger", icon: ReceiptText, href: "/landlord/invoices", color: "text-blue-400", bgColor: "bg-blue-400/15" },
                             { label: "Tenant Records", icon: FileText, href: "/landlord/tenants", color: "text-emerald-400", bgColor: "bg-emerald-400/15" },
@@ -186,16 +186,16 @@ export function CommandCenter({
                             const Content = (
                                 <>
                                     <div className={cn(
-                                        "flex size-10 items-center justify-center rounded-xl transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-black/20",
+                                        "flex size-8 sm:size-9 items-center justify-center rounded-xl transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-black/20",
                                         action.bgColor,
                                         action.color
                                     )}>
-                                        <action.icon className="size-5" />
+                                        <action.icon className="size-4 sm:size-5" />
                                     </div>
-                                    <div className="flex flex-col gap-0.5">
+                                    <div className="flex flex-col gap-0.5 text-center">
                                         <span className={cn(
-                                            "text-sm font-black tracking-tight transition-colors",
-                                            "text-foreground/90 group-hover:text-foreground"
+                                            "text-[10px] sm:text-xs font-black tracking-tight transition-colors text-foreground/90 group-hover:text-foreground max-w-full",
+                                            "overflow-hidden text-ellipsis whitespace-nowrap"
                                         )}>
                                             {action.label}
                                         </span>
@@ -207,7 +207,7 @@ export function CommandCenter({
                                 <Link 
                                     key={action.href}
                                     href={action.href}
-                                    className="group flex items-center gap-4 rounded-[1.25rem] border border-white/5 bg-card/40 p-3.5 transition-all hover:bg-card hover:border-white/10 hover:shadow-xl hover:shadow-black/20"
+                                    className="group flex flex-col items-center text-center gap-1.5 sm:gap-2 rounded-[1.25rem] border border-white/5 bg-card/40 p-2 sm:p-2.5 transition-all hover:bg-card hover:border-white/10 hover:shadow-xl hover:shadow-black/20"
                                 >
                                     {Content}
                                 </Link>
@@ -217,7 +217,7 @@ export function CommandCenter({
                 </div>
 
                 {/* Insights Hub */}
-                <div className="rounded-[2rem] border border-white/10 bg-card/70 p-6 backdrop-blur-sm">
+                <div className="rounded-[2rem] border border-white/10 bg-card/70 p-4 sm:p-5 md:p-6 backdrop-blur-sm">
                     <h3 className="mb-6 flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/80">
                         <span className="h-1 w-4 rounded-full bg-amber-500" />
                         Next Priorities

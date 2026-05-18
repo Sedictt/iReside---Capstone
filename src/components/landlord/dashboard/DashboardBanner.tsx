@@ -66,7 +66,7 @@ export function DashboardBanner({
     return (
         <div
             className={cn(
-                "group relative min-h-[480px] w-full shrink-0 overflow-visible rounded-[2.5rem] border border-white/10 bg-surface-1 shadow-2xl shadow-black/30 transition-all duration-500",
+                "group relative min-h-[200px] xs:min-h-[220px] sm:min-h-[240px] md:min-h-[320px] w-full shrink-0 overflow-visible rounded-[2.5rem] border border-white/10 bg-surface-1 shadow-2xl shadow-black/30 transition-all duration-500",
                 className
             )}>
             {/* Background Layer */}
@@ -76,17 +76,22 @@ export function DashboardBanner({
             <DashboardHeaderActions onQuestPanelOpen={handleQuestPanelOpen} />
 
             {/* Main Content Area */}
-            <div className="absolute inset-0 z-10 flex items-center justify-between px-8 md:px-14">
-                <DashboardMainContent
-                    title={displayTitle}
-                    subtitle={displaySubtitle}
-                    time={time}
-                    onNewWalkIn={onNewWalkIn}
-                    onCreateInvite={onCreateInvite}
-                />
+            <div className="relative z-10 w-full px-4 py-5 sm:px-6 sm:py-8 md:px-10 md:py-10">
+                {/* Banner uses lg:grid to put content on left, clock on right on large screens */}
+                <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] items-center gap-6 lg:gap-8">
+                    <DashboardMainContent
+                        title={displayTitle}
+                        subtitle={displaySubtitle}
+                        time={time}
+                        onNewWalkIn={onNewWalkIn}
+                        onCreateInvite={onCreateInvite}
+                    />
 
-                {/* Right Side - Digital Clock */}
-                <DashboardDigitalClock time={time} />
+                    {/* Digital Clock - only visible on large screens */}
+                    <div className="hidden lg:block shrink-0">
+                        <DashboardDigitalClock time={time} />
+                    </div>
+                </div>
             </div>
 
             {/* Side Quest Panel */}

@@ -27,10 +27,12 @@ export function Sidebar({
     isCollapsed = false,
     onToggleCollapse,
     showCollapseToggle = false,
+    className,
 }: {
     isCollapsed?: boolean;
     onToggleCollapse?: () => void;
     showCollapseToggle?: boolean;
+    className?: string;
 }) {
     const { counts, importantNotifications } = useNotifications();
     
@@ -95,6 +97,7 @@ export function Sidebar({
             isCollapsed={isCollapsed}
             onToggleCollapse={onToggleCollapse}
             showCollapseToggle={showCollapseToggle}
+            className={className}
         />
     );
 }

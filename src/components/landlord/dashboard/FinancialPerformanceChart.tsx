@@ -211,13 +211,13 @@ export function FinancialPerformanceChart({ dataByWindow }: FinancialPerformance
         <motion.div 
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="group relative flex h-full w-full flex-col overflow-hidden rounded-[2.5rem] border border-white/10 bg-card/60 p-8 shadow-2xl shadow-black/[0.06] dark:shadow-black/20 backdrop-blur-xl transition-all duration-300"
+            className="group relative flex h-full w-full flex-col overflow-hidden rounded-[2.5rem] border border-white/10 bg-card/60 p-4 sm:p-6 md:p-8 shadow-2xl shadow-black/[0.06] dark:shadow-black/20 backdrop-blur-xl transition-all duration-300"
         >
             <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
             
             {/* Header / Tabs */}
             <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
-                <div className="flex items-center gap-10">
+                <div className="flex flex-wrap items-center gap-4 sm:gap-10">
                     <button
                         onClick={() => setActiveTab("earnings")}
                         className={cn(

@@ -94,9 +94,9 @@ function ActionSummaryBar({ summaries }: { summaries: ActionSummary[] }) {
             {summaries.map((summary) => (
                 <div 
                     key={summary.label} 
-                    className="group flex shrink-0 items-center gap-2 rounded-2xl border border-white/10 bg-card/70 px-4 py-2 text-xs font-black transition-all hover:bg-card"
+                    className="group flex shrink-0 items-center gap-2 rounded-2xl border border-white/10 bg-card/70 px-3 sm:px-4 py-2 text-[10px] sm:text-xs font-black transition-all hover:bg-card whitespace-nowrap"
                 >
-                    <summary.icon className="size-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
+                    <summary.icon className="size-3 sm:size-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
                     <span className="text-muted-foreground">{summary.label}:</span>
                     <span className="text-foreground">{summary.value}</span>
                 </div>
@@ -114,32 +114,32 @@ function ActionItemCard({ action }: { action: ActionItem }) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="group relative overflow-hidden rounded-[1.5rem] border border-white/10 bg-card/70 p-5 transition-all hover:bg-card"
+            className="group relative overflow-hidden rounded-[1.5rem] border border-white/10 bg-card/70 p-4 sm:p-5 transition-all hover:bg-card"
         >
-            <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between relative z-10">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between relative z-10">
                 <div className="flex items-start gap-4">
                     <div className={cn(
-                        "flex size-12 items-center justify-center rounded-2xl border transition-transform group-hover:scale-110", 
+                        "flex size-11 sm:size-12 items-center justify-center rounded-2xl border transition-transform group-hover:scale-110", 
                         toneClasses[action.tone]
                     )}>
                         <Icon className="size-5" />
                     </div>
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                         <div className="mb-1.5 flex flex-wrap items-center gap-3">
-                            <h3 className="text-base font-black tracking-tight text-foreground transition-colors group-hover:text-primary">
+                            <h3 className="text-sm sm:text-base font-black tracking-tight text-foreground transition-colors group-hover:text-primary">
                                 {action.title}
                             </h3>
                             <span className={cn(
-                                "rounded-full border px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest", 
+                                "rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-widest", 
                                 toneClasses[action.tone]
                             )}>
                                 {action.tone}
                             </span>
                         </div>
-                        <p className="text-sm font-medium text-muted-foreground leading-relaxed">
+                        <p className="text-xs sm:text-sm font-medium text-muted-foreground leading-relaxed">
                             {action.detail}
                         </p>
-                        <div className="mt-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+                        <div className="mt-2 sm:mt-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
                             <Clock className="size-3" />
                             {action.meta}
                         </div>
@@ -148,10 +148,10 @@ function ActionItemCard({ action }: { action: ActionItem }) {
 
                 <Link
                     href={action.href}
-                    className="group/btn inline-flex items-center gap-3 self-start rounded-xl bg-foreground px-6 py-3 text-sm font-black tracking-tight text-background transition-all hover:brightness-110 active:scale-95 sm:self-center"
+                    className="group/btn inline-flex items-center justify-center gap-3 w-full sm:w-auto rounded-xl bg-foreground px-4 py-2.5 sm:px-6 sm:py-3 text-xs sm:text-sm font-black tracking-tight text-background transition-all hover:brightness-110 active:scale-[0.98] sm:self-center"
                 >
                     {action.cta}
-                    <ArrowRight className="size-4 transition-transform group-hover/btn:translate-x-1" />
+                    <ArrowRight className="size-3.5 sm:size-4 transition-transform group-hover/btn:translate-x-1" />
                 </Link>
             </div>
             {/* Subtle decorative streak */}
@@ -405,7 +405,7 @@ export function ActionRequired() {
 
     return (
         <LazyMotion features={domAnimation}>
-            <section className="rounded-[2.5rem] border border-white/10 bg-card/60 p-8 shadow-2xl shadow-black/30 backdrop-blur-xl">
+            <section className="rounded-[2.5rem] border border-white/10 bg-card/60 p-4 sm:p-6 md:p-8 shadow-2xl shadow-black/30 backdrop-blur-xl">
                 <div className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-4">
                         <div className="flex size-14 items-center justify-center rounded-[1.25rem] border border-primary/20 bg-primary/12 text-primary">

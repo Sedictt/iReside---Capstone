@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { Settings, User, LogOut, CreditCard, Pencil } from "lucide-react";
 import { signOut } from "@/lib/supabase/client-auth";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { AnimatePresence, m as motion } from "framer-motion";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
@@ -39,8 +39,19 @@ function readProviderAvatar(user: ReturnType<typeof useAuth>["user"]) {
 export function ProfileWidget() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
     const [avatarFailed, setAvatarFailed] = useState(false);
     const { user, profile } = useAuth();
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+                setIsMenuOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     const displayName = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Landlord";
     const avatarCandidates = [
@@ -78,12 +89,14 @@ export function ProfileWidget() {
 
     return (
         <div
+            ref={containerRef}
             className="relative"
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
         >
             {/* Profile Avatar Button */}
             <button
+                onClick={() => setIsMenuOpen((prev) => !prev)}
                 className="group relative flex size-10 items-center justify-center overflow-hidden rounded-full border border-border transition-all hover:ring-2 hover:ring-primary/50 dark:border-white/10"
                 style={{ backgroundColor: profile?.avatar_bg_color || '#171717' }}
             >

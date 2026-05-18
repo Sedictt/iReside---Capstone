@@ -27,6 +27,7 @@ import { WalkInApplicationModal } from "@/components/landlord/applications/WalkI
 import { TenantInviteManager } from "@/components/landlord/applications/TenantInviteManager";
 import { CommandCenter } from "@/components/landlord/dashboard/CommandCenter";
 import { LandlordWelcomeLightbox } from "@/components/landlord/dashboard/LandlordWelcomeLightbox";
+import { MobileMessagesSheet } from "@/components/landlord/dashboard/MobileMessagesSheet";
 
 type PaymentCategory = "Overdue" | "Near Due" | "Paid";
 
@@ -349,7 +350,8 @@ export default function LandlordDashboard() {
 
     return (
         <>
-            <div className="custom-scrollbar-premium flex h-full w-full flex-col gap-10 overflow-y-auto bg-background p-6 text-foreground animate-in fade-in slide-in-from-bottom-4 duration-1000 md:p-10">
+            <MobileMessagesSheet />
+            <div className="custom-scrollbar-premium flex h-full w-full flex-col gap-10 overflow-y-auto bg-background p-4 sm:p-6 text-foreground animate-in fade-in slide-in-from-bottom-4 duration-1000 md:p-10">
                 {/* Hero Section */}
                 <DashboardBanner
                     onNewWalkIn={() => setIsWalkInModalOpen(true)}
@@ -391,7 +393,7 @@ export default function LandlordDashboard() {
                 </div>
 
                 {/* Payments Section */}
-                <section className="relative z-0 h-auto w-full rounded-[2.5rem] border border-white/10 bg-card/60 p-8 shadow-2xl shadow-black/30 backdrop-blur-xl">
+                <section className="relative z-0 h-auto w-full rounded-[2.5rem] border border-white/10 bg-card/60 p-4 sm:p-6 md:p-8 shadow-2xl shadow-black/30 backdrop-blur-xl">
                     <div className="mb-10 flex flex-wrap items-center justify-between gap-4 px-2">
                         <div className="flex min-w-0 items-center gap-4">
                             <div className="flex size-12 items-center justify-center rounded-[1rem] border border-primary/20 bg-primary/12 text-primary">
@@ -409,7 +411,7 @@ export default function LandlordDashboard() {
                     </div>
 
                     {/* Renewals Card */}
-                    <div className="relative z-0 h-auto w-full rounded-[2.5rem] border border-white/10 bg-card/60 p-8 shadow-2xl shadow-black/30 backdrop-blur-xl mb-8">
+                    <div className="relative z-0 h-auto w-full rounded-[2.5rem] border border-white/10 bg-card/60 p-4 sm:p-6 md:p-8 shadow-2xl shadow-black/30 backdrop-blur-xl mb-8">
                         <div className="flex flex-wrap items-center justify-between gap-4 px-2">
                             <div className="flex min-w-0 items-center gap-4">
                                 <div className="flex size-12 items-center justify-center rounded-[1rem] border border-primary/20 bg-primary/12 text-primary">
@@ -427,19 +429,19 @@ export default function LandlordDashboard() {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 relative z-10">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 relative z-10">
                         {PAYMENT_CATEGORIES.map(({ key, label, hint, emptyState, dot, tone }) => {
                             const items = paymentsState.paymentsByCategory[key] ?? [];
                             const topItem = items[0] ?? null;
 
                             return (
                                 <div key={key} className="flex flex-col gap-4">
-                                    <div className="flex items-center justify-between px-4">
-                                        <div className="flex items-start gap-3">
+                                    <div className="flex items-center justify-between px-2 sm:px-4">
+                                        <div className="flex items-start gap-2 sm:gap-3">
                                             <div className={cn("size-1.5 rounded-full", dot)} />
                                             <div className="space-y-1">
-                                                <h3 className={cn("text-[10px] font-black uppercase tracking-[0.2em]", tone)}>{label}</h3>
-                                                <p className="text-[10px] font-black text-muted-foreground/60">{hint}</p>
+                                                <h3 className={cn("text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em]", tone)}>{label}</h3>
+                                                <p className="text-[9px] sm:text-[10px] font-black text-muted-foreground/60">{hint}</p>
                                             </div>
                                         </div>
                                         <button 
@@ -450,20 +452,20 @@ export default function LandlordDashboard() {
                                         </button>
                                     </div>
                                     
-                                    <div className="flex min-h-[140px] flex-1 flex-col justify-center rounded-[1.75rem] border border-white/10 bg-card/70 p-4 transition-all hover:bg-card">
+                                    <div className="flex min-h-[130px] sm:min-h-[140px] flex-1 flex-col justify-center rounded-[1.75rem] border border-white/10 bg-card/70 p-3 sm:p-4 transition-all hover:bg-card">
                                         {paymentsState.loading ? (
                                             <div className="space-y-4 animate-pulse px-2">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="size-12 rounded-full bg-muted/40" />
+                                                <div className="flex items-center gap-3 sm:gap-4">
+                                                    <div className="size-10 sm:size-12 rounded-full bg-muted/40" />
                                                     <div className="flex-1 space-y-2">
-                                                        <div className="h-4 w-3/4 rounded bg-muted/40" />
-                                                        <div className="h-3 w-1/2 rounded bg-muted/40" />
+                                                        <div className="h-3 sm:h-4 w-3/4 rounded bg-muted/40" />
+                                                        <div className="h-2 sm:h-3 w-1/2 rounded bg-muted/40" />
                                                     </div>
                                                 </div>
                                             </div>
                                         ) : paymentsState.error ? (
-                                            <div className="p-4 text-center">
-                                                <p className="text-xs text-red-500/80 font-black">{paymentsState.error}</p>
+                                            <div className="p-3 sm:p-4 text-center">
+                                                <p className="text-[10px] sm:text-xs text-red-500/80 font-black">{paymentsState.error}</p>
                                             </div>
                                         ) : topItem ? (
                                             <PaymentCard
@@ -475,9 +477,9 @@ export default function LandlordDashboard() {
                                                 }}
                                             />
                                         ) : (
-                                            <div className="flex flex-col items-center justify-center py-6 text-muted-foreground/40">
-                                                <CheckCircle2 className="size-6 mb-2" />
-                                                <p className="text-[9px] font-black uppercase tracking-widest">{emptyState}</p>
+                                            <div className="flex flex-col items-center justify-center py-5 sm:py-6 text-muted-foreground/40">
+                                                <CheckCircle2 className="size-5 sm:size-6 mb-1.5 sm:mb-2" />
+                                                <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest">{emptyState}</p>
                                             </div>
                                         )}
                                     </div>
@@ -741,7 +743,7 @@ function PaymentCard({ payment, fallbackAvatar, onClick }: { payment: PaymentLis
                         isPaid ? "bg-emerald-500" : isNearDue ? "bg-amber-500" : "bg-red-500"
                     )} />
                 </div>
-                <div className="min-w-0 max-w-[120px] sm:max-w-[160px]">
+                <div className="min-w-0 max-w-[100px] sm:max-w-none">
                     <h4 className="truncate text-sm font-black text-foreground group-hover:text-primary transition-colors">{tenant}</h4>
                     <p className="text-[11px] font-black text-muted-foreground uppercase tracking-tight">{unit}</p>
                 </div>

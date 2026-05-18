@@ -855,7 +855,7 @@ export function ContactsSidebar() {
             {/* Sidebar */}
             <div
                 className={cn(
-                    "fixed top-0 right-0 z-50 flex h-full flex-col overflow-hidden border-l border-border bg-card text-foreground shadow-2xl transition-all duration-500 ease-in-out dark:border-white/5 dark:bg-neutral-900",
+                    "fixed top-0 right-0 z-50 hidden md:flex h-full flex-col overflow-hidden border-l border-border bg-card text-foreground shadow-2xl transition-all duration-500 ease-in-out dark:border-white/5 dark:bg-neutral-900",
                     isHovered ? "w-80" : "w-[88px]"
                 )}
                 onMouseEnter={() => setIsHovered(true)}
@@ -1026,7 +1026,7 @@ export function ContactsSidebar() {
 
             {/* Render Multiple Chatboxes Horizontally (Anchored next to Sidebar) */}
             <div className={cn(
-                "fixed bottom-0 flex items-end gap-4 z-[55] pointer-events-none transition-all duration-500 ease-in-out",
+                "fixed bottom-0 hidden md:flex items-end gap-4 z-[55] pointer-events-none transition-all duration-500 ease-in-out",
                 isHovered ? "right-[340px]" : "right-[110px]"
             )}
                 style={{ bottom: "max(0px, env(safe-area-inset-bottom))" }}
