@@ -344,7 +344,7 @@ export function TenantInviteManager({
             <div className="absolute inset-x-0 -top-40 -z-10 h-72 rounded-[100%] bg-primary/5 blur-3xl pointer-events-none hidden sm:block" />
 
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-                <div className="max-w-2xl">
+                <div className="max-w-2xl pr-20 sm:pr-0">
                     <div className="mb-2 sm:mb-3 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 sm:px-3 sm:py-1">
                         <Link2 className="size-3 sm:size-3.5 text-primary" />
                         <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-primary">Private Share Links</span>
@@ -356,26 +356,28 @@ export function TenantInviteManager({
                         Generate exclusive invite links or scannable QR codes. Allow future tenants to apply for your properties without opening public registration.
                     </p>
                 </div>
-                <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-row sm:items-center w-full sm:w-auto">
+                <div className="absolute top-4 right-4 flex items-center gap-2 sm:static sm:flex-row sm:w-auto">
                     <button
                         type="button"
                         onClick={() => setShowHistory(!showHistory)}
-                        className={`inline-flex h-10 sm:h-12 items-center justify-center gap-1.5 sm:gap-2 rounded-xl sm:rounded-2xl border px-2 sm:px-5 text-[10px] sm:text-xs font-black uppercase tracking-wider sm:tracking-[0.2em] transition-all hover:bg-muted active:scale-95 w-full sm:w-auto ${
+                        className={`inline-flex size-10 sm:h-12 sm:w-auto items-center justify-center sm:gap-2 rounded-[14px] sm:rounded-2xl border sm:px-5 text-xs font-black uppercase tracking-[0.2em] transition-all hover:bg-muted active:scale-95 ${
                             showHistory 
                                 ? "border-primary bg-primary/5 text-primary" 
                                 : "border-border bg-background text-foreground"
                         }`}
+                        title="Toggle History"
                     >
-                        <History className="size-3.5 sm:size-4" />
-                        {showHistory ? "Hide" : `History (${invites.length})`}
+                        <History className="size-4" />
+                        <span className="hidden sm:inline">{showHistory ? "Hide" : `History (${invites.length})`}</span>
                     </button>
                     <button
                         type="button"
                         onClick={onRefresh}
-                        className="inline-flex h-10 sm:h-12 items-center justify-center gap-1.5 sm:gap-2 rounded-xl sm:rounded-2xl border border-border bg-background px-2 sm:px-5 text-[10px] sm:text-xs font-black uppercase tracking-wider sm:tracking-[0.2em] text-foreground transition-all hover:bg-muted active:scale-95 w-full sm:w-auto"
+                        className="inline-flex size-10 sm:h-12 sm:w-auto items-center justify-center sm:gap-2 rounded-[14px] sm:rounded-2xl border border-border bg-background sm:px-5 text-xs font-black uppercase tracking-[0.2em] text-foreground transition-all hover:bg-muted active:scale-95"
+                        title="Refresh"
                     >
-                        <RefreshCw className="size-3.5 sm:size-4" />
-                        Refresh
+                        <RefreshCw className="size-4" />
+                        <span className="hidden sm:inline">Refresh</span>
                     </button>
                 </div>
             </div>
@@ -386,7 +388,7 @@ export function TenantInviteManager({
                 </div>
             )}
 
-            <div className="mt-6 sm:mt-8 grid gap-4 sm:gap-6 xl:grid-cols-[1fr_400px]">
+            <div className={cn("mt-6 sm:mt-8 grid gap-4 sm:gap-6 xl:grid-cols-[1fr_400px]", showHistory && "hidden md:grid")}>
                 <div className="flex flex-col sm:rounded-[1.75rem] sm:border sm:border-border sm:bg-background/50 sm:p-6 sm:shadow-sm xl:p-8">
                     <div className="mb-4 sm:mb-6 flex flex-row items-center justify-between gap-4 border-b border-border/50 pb-4 sm:pb-5">
                         <div>
@@ -823,7 +825,7 @@ export function TenantInviteManager({
             </div>
 
             {showHistory && (
-                <div className="mt-8 animate-in slide-in-from-top-4 fade-in duration-300">
+                <div className="mt-4 md:mt-8 animate-in slide-in-from-top-4 fade-in duration-300">
                     <div className="mb-4 flex items-center justify-between border-b border-border/50 pb-4">
                         <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                             <History className="size-4" />
