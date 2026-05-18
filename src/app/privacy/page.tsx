@@ -61,7 +61,7 @@ export default function PrivacyPage() {
               We collect only the minimum necessary data to maintain a secure property ecosystem and ensure reliable role-based portal access:
             </p>
             <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
-              <li><strong>Account Credentials:</strong> Full name, verified email addresses, contact details, hashed passwords, and system roles (Landlord, Tenant, Admin) managed securely through Supabase Auth.</li>
+              <li><strong>Account Credentials:</strong> Full name, verified email addresses, contact details, hashed passwords, and system roles (Landlord, Tenant) managed securely through Supabase Auth.</li>
               <li><strong>Residency Profiles:</strong> Tenant leasing data, active contract timelines, designated unit specifications, base rent, and utility rules.</li>
               <li><strong>Landlord Verification Assets:</strong> Uploaded business permits and government identification submitted solely for visual onboarding verification. **(See Section 3 for strict deletion rules).**</li>
               <li><strong>Manual Payment Assets:</strong> Uploaded transaction screenshot receipts (e.g. GCash receipts) supplied voluntarily to verify monthly billing statements in the ledger.</li>
@@ -99,7 +99,7 @@ export default function PrivacyPage() {
                 <UserCheck className="size-4 text-warning" /> Immediate Onboarding ID Deletion
               </p>
               <p>
-                All physical business permits, corporate registration assets, and government IDs uploaded during the Landlord verification/onboarding phase are checked manually by System Administrators. 
+                All physical business permits, corporate registration assets, and government IDs uploaded during the Landlord verification/onboarding phase are checked manually by the platform technical team. 
                 <strong> Once a landlord's registration request is formally approved or denied, these uploaded document files are immediately and permanently deleted from the Supabase Storage Buckets.</strong> No local backups, copies, or database images of these verification assets are retained.
               </p>
             </div>

@@ -58,7 +58,7 @@ export default function TermsPage() {
               1. Acceptance of Terms & Gated Access
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              By accessing, registering, or using the iReside platform (including the Landlord Portal, Tenant Portal, or System Administration Portal), you agree to be bound by these Terms of Service. These terms constitute a legally binding agreement between you and iReside. If you do not agree to these terms, you must not access or use the platform.
+              By accessing, registering, or using the iReside platform (including the Landlord Portal or Tenant Portal), you agree to be bound by these Terms of Service. These terms constitute a legally binding agreement between you and iReside. If you do not agree to these terms, you must not access or use the platform.
             </p>
           </section>
 
@@ -94,7 +94,7 @@ export default function TermsPage() {
               <strong> There is no public listing marketplace, unit discovery portal, or self-service tenant registration.</strong>
             </p>
             <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
-              <li><strong>Landlord Provisioning:</strong> Landlord accounts are provisioned exclusively through authorized backend administrator workflows after uploading valid business permits and government identification for verification.</li>
+              <li><strong>Landlord Provisioning:</strong> Landlord accounts are provisioned exclusively through authorized backend workflows after uploading valid business permits and government identification for verification.</li>
               <li><strong>Tenant Provisioning:</strong> Tenant accounts cannot be created publicly. Tenants are invited and provisioned strictly by their landlords through the "Walk-in Application" workflow following offline verification.</li>
               <li><strong>Isolated Property Ecosystems:</strong> Each property operates as a separate, logically partitioned space. Landlords cannot view other landlords' operations, and tenants can only access the portal of their approved property.</li>
             </ul>
