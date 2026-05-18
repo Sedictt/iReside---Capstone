@@ -345,36 +345,36 @@ export function TenantInviteManager({
 
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                 <div className="max-w-2xl">
-                    <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1">
-                        <Link2 className="size-3.5 text-primary" />
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Private Share Links</span>
+                    <div className="mb-2 sm:mb-3 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 sm:px-3 sm:py-1">
+                        <Link2 className="size-3 sm:size-3.5 text-primary" />
+                        <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-primary">Private Share Links</span>
                     </div>
-                    <h2 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl text-balance">
+                    <h2 className="text-2xl font-black tracking-tight text-foreground sm:text-4xl text-balance">
                         Private Links & QR Codes
                     </h2>
-                    <p className="mt-3 text-base leading-relaxed text-muted-foreground">
+                    <p className="mt-2 sm:mt-3 text-sm sm:text-base leading-relaxed text-muted-foreground hidden sm:block">
                         Generate exclusive invite links or scannable QR codes. Allow future tenants to apply for your properties without opening public registration.
                     </p>
                 </div>
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center w-full sm:w-auto">
+                <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-row sm:items-center w-full sm:w-auto">
                     <button
                         type="button"
                         onClick={() => setShowHistory(!showHistory)}
-                        className={`inline-flex h-12 items-center justify-center gap-2 rounded-2xl border px-5 text-xs font-black uppercase tracking-[0.2em] transition-all hover:bg-muted active:scale-95 w-full sm:w-auto ${
+                        className={`inline-flex h-10 sm:h-12 items-center justify-center gap-1.5 sm:gap-2 rounded-xl sm:rounded-2xl border px-2 sm:px-5 text-[10px] sm:text-xs font-black uppercase tracking-wider sm:tracking-[0.2em] transition-all hover:bg-muted active:scale-95 w-full sm:w-auto ${
                             showHistory 
                                 ? "border-primary bg-primary/5 text-primary" 
                                 : "border-border bg-background text-foreground"
                         }`}
                     >
-                        <History className="size-4" />
-                        {showHistory ? "Hide History" : `History (${invites.length})`}
+                        <History className="size-3.5 sm:size-4" />
+                        {showHistory ? "Hide" : `History (${invites.length})`}
                     </button>
                     <button
                         type="button"
                         onClick={onRefresh}
-                        className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-border bg-background px-5 text-xs font-black uppercase tracking-[0.2em] text-foreground transition-all hover:bg-muted active:scale-95 w-full sm:w-auto"
+                        className="inline-flex h-10 sm:h-12 items-center justify-center gap-1.5 sm:gap-2 rounded-xl sm:rounded-2xl border border-border bg-background px-2 sm:px-5 text-[10px] sm:text-xs font-black uppercase tracking-wider sm:tracking-[0.2em] text-foreground transition-all hover:bg-muted active:scale-95 w-full sm:w-auto"
                     >
-                        <RefreshCw className="size-4" />
+                        <RefreshCw className="size-3.5 sm:size-4" />
                         Refresh
                     </button>
                 </div>
@@ -386,12 +386,12 @@ export function TenantInviteManager({
                 </div>
             )}
 
-            <div className="mt-8 grid gap-6 xl:grid-cols-[1fr_400px]">
-                <div className="flex flex-col rounded-[1.75rem] border border-border bg-background/50 p-4 sm:p-6 shadow-sm xl:p-8">
-                    <div className="mb-6 flex flex-col items-start justify-between gap-4 border-b border-border/50 pb-5 xl:flex-row xl:items-center">
+            <div className="mt-6 sm:mt-8 grid gap-4 sm:gap-6 xl:grid-cols-[1fr_400px]">
+                <div className="flex flex-col rounded-[1.75rem] border border-border bg-background/50 p-3 xs:p-4 sm:p-6 shadow-sm xl:p-8">
+                    <div className="mb-4 sm:mb-6 flex flex-row items-center justify-between gap-4 border-b border-border/50 pb-4 sm:pb-5">
                         <div>
-                            <h3 className="text-xl font-black text-foreground">Generator Settings</h3>
-                            <p className="mt-1 text-sm text-muted-foreground">Customize how your future tenants will receive and interact with the invite.</p>
+                            <h3 className="text-lg sm:text-xl font-black text-foreground">Generator Settings</h3>
+                            <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-muted-foreground hidden sm:block">Customize how your future tenants will receive and interact with the invite.</p>
                         </div>
                         <div className="relative">
                             <button
@@ -429,7 +429,7 @@ export function TenantInviteManager({
                                             role="radio"
                                             aria-checked={active}
                                             className={cn(
-                                                "flex items-center gap-3.5 rounded-2xl border p-3.5 transition-all text-left group w-full xs:flex-col xs:items-center xs:text-center xs:p-4 xs:gap-3",
+                                                "flex items-center gap-3 rounded-2xl border p-3 sm:p-3.5 transition-all text-left group w-full xs:flex-col xs:items-center xs:text-center xs:gap-2 sm:xs:gap-3",
                                                 active
                                                     ? "border-primary bg-primary/5 text-primary shadow-[0_0_20px_rgba(var(--primary-rgb),0.1)]"
                                                     : "border-border bg-card/40 text-muted-foreground hover:border-primary/30 hover:bg-muted/30"
@@ -467,7 +467,7 @@ export function TenantInviteManager({
                                             role="radio"
                                             aria-checked={active}
                                             className={cn(
-                                                "flex items-center gap-3.5 rounded-2xl border p-3.5 transition-all text-left group w-full xs:flex-col xs:items-center xs:text-center xs:p-4 xs:gap-3",
+                                                "flex items-center gap-3 rounded-2xl border p-3 sm:p-3.5 transition-all text-left group w-full xs:flex-col xs:items-center xs:text-center xs:gap-2 sm:xs:gap-3",
                                                 active
                                                     ? "border-primary bg-primary/5 text-primary shadow-[0_0_20px_rgba(var(--primary-rgb),0.1)]"
                                                     : "border-border bg-card/40 text-muted-foreground hover:border-primary/30 hover:bg-muted/30"
@@ -741,7 +741,7 @@ export function TenantInviteManager({
                         </div>
                     </div>
 
-                    <div className="mt-8 flex justify-end">
+                    <div className="mt-6 sm:mt-8 flex justify-end">
                         <button
                             type="button"
                             onClick={createInvite}
