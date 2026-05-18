@@ -87,7 +87,7 @@ function LoginContent() {
     if (!mounted) return null;
 
     return (
-        <div className="h-svh w-full flex items-center justify-center bg-background relative overflow-hidden selection:bg-primary/30 font-sans">
+        <div className="min-h-svh w-full flex items-center justify-center bg-background relative overflow-y-auto selection:bg-primary/30 font-sans py-20 lg:py-0">
             {/* Background Layer */}
             <div className="absolute inset-0 z-0">
                 <Image 
@@ -102,7 +102,7 @@ function LoginContent() {
             </div>
 
             {/* Utility Header */}
-            <header className="absolute top-0 left-0 right-0 p-8 flex items-center justify-between z-50">
+            <header className="absolute top-0 left-0 right-0 p-4 sm:p-6 md:p-8 flex items-center justify-between z-50">
                 <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
                     <Logo className="h-10 w-36 drop-shadow-2xl" />
                 </motion.div>
@@ -116,7 +116,7 @@ function LoginContent() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
-                className="relative z-10 w-full max-w-[1200px] grid grid-cols-1 lg:grid-cols-2 gap-12 px-6 items-center"
+                className="relative z-10 w-full max-w-[1200px] grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 px-4 sm:px-6 items-center"
             >
                 {/* Left Side: Brand Narrative */}
                 <div className="hidden lg:flex flex-col space-y-8">
@@ -152,8 +152,8 @@ function LoginContent() {
                 </div>
 
                 {/* Right Side: Auth Card */}
-                <div className="relative">
-                    <section className="relative rounded-[2rem] border border-border bg-card shadow-xl p-10 lg:p-12 space-y-6">
+                <div className="relative w-full">
+                    <section className="relative rounded-3xl sm:rounded-[2rem] border border-border bg-card shadow-xl p-6 sm:p-10 lg:p-12 space-y-6">
                         <div className="space-y-2">
                             <h2 className="text-4xl font-black tracking-tight leading-none">Sign In</h2>
                             <p className="text-base text-muted-foreground font-medium">Access your personalized portal.</p>
@@ -245,7 +245,7 @@ function LoginContent() {
                                 <div className="h-[1px] flex-1 bg-border/50" />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <Link 
                                     href="/signup" 
                                     className="flex items-center justify-between p-4 rounded-2xl bg-surface-1/50 border border-border hover:border-primary/50 hover:bg-primary/5 transition-all group"
@@ -300,7 +300,7 @@ function LoginContent() {
             </motion.main>
 
             {/* Footer */}
-            <footer className="absolute bottom-0 left-0 right-0 p-8 text-center opacity-30 select-none pointer-events-none">
+            <footer className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 md:p-8 text-center opacity-30 select-none pointer-events-none">
                 <p className="text-[10px] font-black uppercase tracking-[0.4em]">© 2026 iReside Technologies. Global Operations.</p>
             </footer>
         </div>

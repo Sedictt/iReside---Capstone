@@ -39,8 +39,14 @@ export default function SignUpPage() {
     const [permitCardPreview, setPermitCardPreview] = useState<string | null>(null);
     const [ownershipPreview, setOwnershipPreview] = useState<string | null>(null);
 
+    // Track if we've already shown the restore toast to prevent duplicate toasts
+    const toastShown = useRef(false);
+
     // Initialization: Load from localStorage
     useEffect(() => {
+        if (toastShown.current) return;
+        toastShown.current = true;
+
         const savedState = loadWizardState();
         if (savedState) {
             if (savedState.currentStep) setCurrentStep(savedState.currentStep as number);
