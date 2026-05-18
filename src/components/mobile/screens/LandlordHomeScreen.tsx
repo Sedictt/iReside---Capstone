@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { useNavigation } from "../navigation";
 import styles from "./LandlordHomeScreen.module.css";
-import { MOCK_NOTIFICATIONS } from "./NotificationsScreen";
+const MOCK_NOTIFICATIONS = [ { id: "1", read: false } ];
 import AnimatedCounter from "../ui/AnimatedCounter";
 import Skeleton from "../ui/Skeleton";
 import { useState, useEffect } from "react";

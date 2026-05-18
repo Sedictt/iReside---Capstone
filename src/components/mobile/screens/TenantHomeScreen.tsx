@@ -22,7 +22,36 @@ import AnimatedCounter from "../ui/AnimatedCounter";
 import Skeleton from "../ui/Skeleton";
 import { useState, useEffect } from "react";
 
-// ─── Component ─────────────────────────────────────────────
+// ─── Mock Data ─────────────────────────────────────────────
+const MOCK_NOTIFICATIONS = [
+  { id: "1", read: false }
+];
+
+const RENT_DATA = {
+    status: "due",
+    dueDate: "Mar 1, 2026",
+};
+
+const LEASE_DATA = {
+    property: "Metro Studio B",
+    unit: "Unit 12",
+    daysRemaining: 180,
+    monthsLeft: 6,
+    startDate: "Jan 1, 2026",
+};
+
+const QUICK_ACTIONS = [
+    { id: "1", label: "Pay Rent", icon: CreditCard, screen: "payments" as const, color: "Blue" },
+    { id: "2", label: "Maintenance", icon: Wrench, screen: "tenantMaintenance" as const, color: "Orange" },
+    { id: "3", label: "Messages", icon: MessageSquare, screen: "inbox" as const, color: "Green" },
+    { id: "4", label: "Lease", icon: FileText, screen: "leaseList" as const, color: "Purple" },
+];
+
+const ANNOUNCEMENT = {
+    from: "Management",
+    text: "Water interruption on March 5th from 2PM-4PM.",
+    date: "Mar 2, 2026",
+};
 
 // ─── Component ─────────────────────────────────────────────
 export default function TenantHomeScreen() {
