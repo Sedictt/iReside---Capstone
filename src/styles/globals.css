@@ -11,7 +11,7 @@
 :root {
   --background: #0a0a0a;
   --foreground: #fafafa;
-  --primary: #6d9838;
+  --primary: #c4b0ff;
   --card: #171717;
   --input: #262626;
   --border: #262626;
@@ -23,3 +23,167 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), sans-serif;
 }
+
+/* ============================================
+   Neumorphism Design System
+   Soft, extruded UI elements for tactile feel
+   ============================================ */
+
+/* Neumorphic Shadows - Light Theme (on light gray bg) */
+.neu-flat {
+  background: #e0e5ec;
+  box-shadow: 
+    6px 6px 12px rgba(163, 177, 198, 0.6),
+    -6px -6px 12px rgba(255, 255, 255, 0.8);
+}
+
+.neu-raised {
+  background: #e0e5ec;
+  box-shadow: 
+    8px 8px 16px rgba(163, 177, 198, 0.6),
+    -8px -8px 16px rgba(255, 255, 255, 0.8);
+}
+
+.neu-pressed {
+  background: #e0e5ec;
+  box-shadow: 
+    inset 4px 4px 8px rgba(163, 177, 198, 0.6),
+    inset -4px -4px 8px rgba(255, 255, 255, 0.8);
+}
+
+/* Neumorphic Shadows - Dark Theme */
+.neu-flat-dark {
+  background: #1a1a2e;
+  box-shadow: 
+    6px 6px 12px rgba(0, 0, 0, 0.5),
+    -6px -6px 12px rgba(40, 40, 60, 0.4);
+}
+
+.neu-raised-dark {
+  background: #1a1a2e;
+  box-shadow: 
+    8px 8px 16px rgba(0, 0, 0, 0.5),
+    -8px -8px 16px rgba(40, 40, 60, 0.4);
+}
+
+.neu-pressed-dark {
+  background: #1a1a2e;
+  box-shadow: 
+    inset 4px 4px 8px rgba(0, 0, 0, 0.5),
+    inset -4px -4px 8px rgba(40, 40, 60, 0.4);
+}
+
+/* Neumorphic Button States */
+.neu-btn {
+  background: #e0e5ec;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 
+    4px 4px 8px rgba(163, 177, 198, 0.6),
+    -4px -4px 8px rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.neu-btn:hover {
+  box-shadow: 
+    6px 6px 12px rgba(163, 177, 198, 0.6),
+    -6px -6px 12px rgba(255, 255, 255, 0.8);
+}
+
+.neu-btn:active {
+  box-shadow: 
+    inset 2px 2px 4px rgba(163, 177, 198, 0.6),
+    inset -2px -2px 4px rgba(255, 255, 255, 0.8);
+}
+
+/* Neumorphic Button States - Dark Theme */
+.neu-btn-dark {
+  background: #1a1a2e;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 
+    4px 4px 8px rgba(0, 0, 0, 0.5),
+    -4px -4px 8px rgba(40, 40, 60, 0.4);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.neu-btn-dark:hover {
+  box-shadow: 
+    6px 6px 12px rgba(0, 0, 0, 0.5),
+    -6px -6px 12px rgba(40, 40, 60, 0.4);
+}
+
+.neu-btn-dark:active {
+  box-shadow: 
+    inset 2px 2px 4px rgba(0, 0, 0, 0.5),
+    inset -2px -2px 4px rgba(40, 40, 60, 0.4);
+}
+
+/* Sidebar Neumorphic Container */
+.neu-sidebar {
+  background: linear-gradient(145deg, #1e1e32, #16162a);
+  box-shadow: 
+    8px 8px 20px rgba(0, 0, 0, 0.5),
+    -8px -8px 20px rgba(50, 50, 80, 0.3);
+  border-radius: 24px;
+}
+
+/* Sidebar Nav Items - Raised State */
+.neu-nav-item {
+  background: transparent;
+  border-radius: 12px;
+  box-shadow: none;
+  transition: all 0.3s ease;
+}
+
+.neu-nav-item:hover {
+  background: linear-gradient(145deg, #1e1e32, #16162a);
+  box-shadow: 
+    4px 4px 8px rgba(0, 0, 0, 0.4),
+    -4px -4px 8px rgba(40, 40, 70, 0.2);
+}
+
+.neu-nav-item:active,
+.neu-nav-item.active {
+  background: linear-gradient(145deg, #16162a, #1e1e32);
+  box-shadow: 
+    inset 3px 3px 6px rgba(0, 0, 0, 0.4),
+    inset -3px -3px 6px rgba(40, 40, 70, 0.2);
+}
+
+/* Sidebar Toggle Button - Neumorphic */
+.neu-toggle {
+  background: linear-gradient(145deg, #1e1e32, #16162a);
+  border-radius: 10px;
+  box-shadow: 
+    3px 3px 6px rgba(0, 0, 0, 0.4),
+    -3px -3px 6px rgba(40, 40, 70, 0.3);
+}
+
+.neu-toggle:active {
+  box-shadow: 
+    inset 2px 2px 4px rgba(0, 0, 0, 0.4),
+    inset -2px -2px 4px rgba(40, 40, 70, 0.3);
+}
+
+/* Sidebar Section Headers */
+.neu-section-header {
+  color: #8888aa;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* Active Nav Indicator - Soft Pill */
+.neu-active-indicator {
+  background: linear-gradient(145deg, #c4b0ff, #9b77ff);
+  border-radius: 8px;
+  box-shadow:
+    2px 2px 4px rgba(0, 0, 0, 0.3),
+    -1px -1px 3px rgba(196, 176, 255, 0.2);
+}
+
+/* active/pressed state handled in specific components */

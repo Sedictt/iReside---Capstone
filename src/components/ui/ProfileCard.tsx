@@ -234,7 +234,7 @@ export function ProfileCard() {
                                 <div className="flex items-center gap-6">
                                     <div 
                                         className="relative size-20 shrink-0 rounded-full flex items-center justify-center overflow-hidden"
-                                        style={{ backgroundColor: profile?.avatar_bg_color || '#10b981' }}
+                                        style={{ backgroundColor: profile?.avatar_bg_color || '#8B5CF6' }}
                                     >
                                         {profile?.avatar_url ? (
                                             <Image src={profile.avatar_url} alt={profile.full_name || "User"} fill sizes="80px" className="object-cover" unoptimized />

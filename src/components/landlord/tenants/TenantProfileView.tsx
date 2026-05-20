@@ -121,7 +121,7 @@ export function TenantProfileView({ tenantId, onClose }: TenantProfileViewProps)
         return (
             <div className="min-h-screen bg-[#0a0a0a] text-neutral-200 p-6 md:p-12">
                 <div className="mx-auto max-w-5xl flex items-center justify-center py-20">
-                    <div className="size-8 animate-spin rounded-full border-2 border-[#6d9838]/20 border-t-[#6d9838]" />
+                    <div className="size-8 animate-spin rounded-full border-2 border-[#c4b0ff]/20 border-t-[#c4b0ff]" />
                 </div>
             </div>
         )
@@ -202,29 +202,29 @@ export function TenantProfileView({ tenantId, onClose }: TenantProfileViewProps)
                                 </div>
                                 <div className="flex items-center justify-center gap-3">
                                     <RoleBadge role={profile.role as 'tenant' | 'landlord' | 'admin'} className="scale-110" showTenant={true} />
-                                    <span className="text-[10px] font-black tracking-widest uppercase text-[#6d9838]">Verified Tenant</span>
+                                    <span className="text-[10px] font-black tracking-widest uppercase text-[#c4b0ff]">Verified Tenant</span>
                                 </div>
                             </div>
 
                             {/* Contact Info Row */}
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-16 pt-10 border-t border-white/5 w-full max-w-4xl">
                                 <div className="flex flex-col items-center gap-2 group/item transition-all text-center">
-                                    <div className="size-10 rounded-full bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20 group-hover/item:scale-110 transition-transform">
-                                        <Mail size={18} className="text-[#6d9838]" />
+                                    <div className="size-10 rounded-full bg-[#c4b0ff]/10 flex items-center justify-center border border-[#c4b0ff]/20 group-hover/item:scale-110 transition-transform">
+                                        <Mail size={18} className="text-[#c4b0ff]" />
                                     </div>
                                     <p className="text-[10px] font-black tracking-widest text-neutral-500 uppercase">Email Address</p>
-                                    <a href={`mailto:${profile.email}`} className="text-sm text-white/90 font-medium hover:text-[#6d9838] transition-colors">{profile.email}</a>
+                                    <a href={`mailto:${profile.email}`} className="text-sm text-white/90 font-medium hover:text-[#c4b0ff] transition-colors">{profile.email}</a>
                                 </div>
                                 <div className="flex flex-col items-center gap-2 group/item transition-all text-center">
-                                    <div className="size-10 rounded-full bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20 group-hover/item:scale-110 transition-transform">
-                                        <Phone size={18} className="text-[#6d9838]" />
+                                    <div className="size-10 rounded-full bg-[#c4b0ff]/10 flex items-center justify-center border border-[#c4b0ff]/20 group-hover/item:scale-110 transition-transform">
+                                        <Phone size={18} className="text-[#c4b0ff]" />
                                     </div>
                                     <p className="text-[10px] font-black tracking-widest text-neutral-500 uppercase">Phone Number</p>
-                                    <a href={`tel:${profile.phone}`} className="text-sm text-white/90 font-medium hover:text-[#6d9838] transition-colors">{profile.phone || '+63 (---) --- ----'}</a>
+                                    <a href={`tel:${profile.phone}`} className="text-sm text-white/90 font-medium hover:text-[#c4b0ff] transition-colors">{profile.phone || '+63 (---) --- ----'}</a>
                                 </div>
                                 <div className="flex flex-col items-center gap-2 group/item transition-all text-center">
-                                    <div className="size-10 rounded-full bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20 group-hover/item:scale-110 transition-transform">
-                                        <MapPin size={18} className="text-[#6d9838]" />
+                                    <div className="size-10 rounded-full bg-[#c4b0ff]/10 flex items-center justify-center border border-[#c4b0ff]/20 group-hover/item:scale-110 transition-transform">
+                                        <MapPin size={18} className="text-[#c4b0ff]" />
                                     </div>
                                     <p className="text-[10px] font-black tracking-widest text-neutral-500 uppercase">Primary Location</p>
                                     <p className="text-sm text-white/90 font-medium">{profile.address || 'Metro Manila, PH'}</p>
@@ -239,8 +239,8 @@ export function TenantProfileView({ tenantId, onClose }: TenantProfileViewProps)
                     {/* Bio Section */}
                     <div className="bg-[#171717]/80 border border-neutral-800 rounded-[3rem] p-12 backdrop-blur-xl shadow-xl">
                         <div className="flex items-center gap-4 mb-8">
-                            <div className="size-12 rounded-2xl bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20">
-                                <User size={20} className="text-[#6d9838]" />
+                            <div className="size-12 rounded-2xl bg-[#c4b0ff]/10 flex items-center justify-center border border-[#c4b0ff]/20">
+                                <User size={20} className="text-[#c4b0ff]" />
                             </div>
                             <h2 className="text-2xl font-display font-black text-white tracking-tight">Biography</h2>
                         </div>
@@ -257,8 +257,8 @@ export function TenantProfileView({ tenantId, onClose }: TenantProfileViewProps)
                             </div>
 
                             <div className="flex items-center gap-4 mb-10 relative z-10">
-                                <div className="size-12 rounded-2xl bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20">
-                                    <Home size={20} className="text-[#6d9838]" />
+                                <div className="size-12 rounded-2xl bg-[#c4b0ff]/10 flex items-center justify-center border border-[#c4b0ff]/20">
+                                    <Home size={20} className="text-[#c4b0ff]" />
                                 </div>
                                 <h2 className="text-2xl font-display font-black text-white tracking-tight">Current Residency</h2>
                             </div>
@@ -269,7 +269,7 @@ export function TenantProfileView({ tenantId, onClose }: TenantProfileViewProps)
                                         <p className="text-[10px] font-black tracking-widest text-neutral-500 uppercase mb-2">Property & Unit</p>
                                         <h3 className="text-3xl font-display font-black text-white">
                                             {activeLease.unit?.property?.name}
-                                            <span className="block text-xl text-[#6d9838] mt-1">
+                                            <span className="block text-xl text-[#c4b0ff] mt-1">
                                                 {activeLease.unit?.name}
                                             </span>
                                         </h3>
@@ -282,7 +282,7 @@ export function TenantProfileView({ tenantId, onClose }: TenantProfileViewProps)
                                         <div className="bg-white/5 border border-white/5 p-4 rounded-2xl flex-1">
                                             <p className="text-[9px] font-black tracking-widest text-neutral-500 uppercase mb-1">Status</p>
                                             <div className="flex items-center gap-2">
-                                                <div className="size-2 rounded-full bg-[#6d9838] animate-pulse" />
+                                                <div className="size-2 rounded-full bg-[#c4b0ff] animate-pulse" />
                                                 <p className="text-xl font-black text-white uppercase tracking-tighter">Active</p>
                                             </div>
                                         </div>
@@ -293,7 +293,7 @@ export function TenantProfileView({ tenantId, onClose }: TenantProfileViewProps)
                                     <div className="space-y-4">
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-3">
-                                                <Calendar size={16} className="text-[#6d9838]" />
+                                                <Calendar size={16} className="text-[#c4b0ff]" />
                                                 <p className="text-sm text-neutral-400">Lease Period</p>
                                             </div>
                                             <div>
@@ -304,7 +304,7 @@ export function TenantProfileView({ tenantId, onClose }: TenantProfileViewProps)
                                         </div>
                                         <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
                                             <div
-                                                className="h-full bg-[#6d9838] rounded-full transition-all duration-500"
+                                                className="h-full bg-[#c4b0ff] rounded-full transition-all duration-500"
                                                 style={{ width: `${leaseProgress}%` }}
                                             />
                                         </div>
@@ -318,8 +318,8 @@ export function TenantProfileView({ tenantId, onClose }: TenantProfileViewProps)
                     ) : (
                         <div className="bg-[#171717]/80 border border-neutral-800 rounded-[3rem] p-10 backdrop-blur-xl shadow-xl">
                             <div className="flex items-center gap-4 mb-6">
-                                <div className="size-12 rounded-2xl bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20">
-                                    <Building2 size={20} className="text-[#6d9838]" />
+                                <div className="size-12 rounded-2xl bg-[#c4b0ff]/10 flex items-center justify-center border border-[#c4b0ff]/20">
+                                    <Building2 size={20} className="text-[#c4b0ff]" />
                                 </div>
                                 <h2 className="text-2xl font-display font-black text-white tracking-tight">Current Residency</h2>
                             </div>

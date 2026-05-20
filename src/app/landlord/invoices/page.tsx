@@ -336,47 +336,51 @@ export default function InvoicesPage() {
 
       {/* Prototype: Ledger Tab */}
       {activeTab === "ledger" && (
-        <div className="flex min-h-[50vh] flex-col rounded-[2.5rem] border border-border/50 bg-card/60 p-8 shadow-xl backdrop-blur-xl animate-in fade-in slide-in-from-bottom-4">
+        <div className="flex min-h-[50vh] flex-col rounded-[2.5rem] neumorphic-panel p-6 sm:p-8 animate-in fade-in slide-in-from-bottom-4 outline-none focus-within:ring-2 focus-within:ring-primary/20 transition-all" tabIndex={-1} aria-labelledby="ledger-overview-heading">
           <div className="mb-6 flex shrink-0 flex-col gap-4 border-b border-border/50 pb-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-primary">Overview</p>
-                <h2 className="mt-2 text-2xl font-black text-foreground lg:text-3xl">Financial Ledger</h2>
+                <p className="text-[10px] sm:text-xs font-black uppercase tracking-[0.25em] text-primary">Overview</p>
+                <h2 id="ledger-overview-heading" className="mt-2 text-2xl font-black text-foreground lg:text-3xl">Financial Ledger</h2>
               </div>
               <button 
+                type="button"
                 onClick={handleExportCSV}
-                className="group inline-flex items-center gap-2.5 rounded-full border border-border/50 bg-background/80 px-6 py-3 text-sm font-black shadow-sm transition-all hover:bg-muted active:scale-95"
+                className="group inline-flex items-center gap-2.5 rounded-full px-6 py-3 text-xs sm:text-sm font-black transition-all neumorphic-extruded active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary text-muted-foreground hover:text-foreground"
+                aria-label="Export ledger data as CSV format"
               >
-                <Download className="size-4 text-primary" />
+                <Download className="size-4 text-primary" aria-hidden="true" />
                 Export Ledger (CSV)
               </button>
             </div>
           </div>
-          <div className="rounded-[2rem] border border-border/50 bg-background/50 p-8 shadow-inner custom-scrollbar overflow-y-auto max-h-[500px] space-y-4">
+          <div className="rounded-[2.5rem] neumorphic-inset p-4 sm:p-6 md:p-8 custom-scrollbar overflow-y-auto max-h-[500px] space-y-4">
             {expenses.length === 0 && invoices.length === 0 ? (
-                <div className="p-12 text-center text-sm font-medium text-muted-foreground">
-                  <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-4">
-                    <FileText className="size-8" />
+                <div className="p-8 sm:p-12 text-center text-sm font-medium text-muted-foreground transition-transform hover:scale-105 duration-300">
+                  <div className="mx-auto flex size-16 items-center justify-center rounded-2xl neumorphic-inset-card text-primary mb-5 transition-transform hover:rotate-3">
+                    <FileText className="size-8" aria-hidden="true" />
                   </div>
                   <p className="text-lg font-black text-foreground">No entries yet.</p>
-                  <p className="mt-2 max-w-md mx-auto">Your timeline of paid invoices and recorded expenses will appear here.</p>
+                  <p className="mt-2 text-xs sm:text-sm max-w-md mx-auto">Your timeline of paid invoices and recorded expenses will appear here.</p>
                 </div>
             ) : (
-                <div className="space-y-4">
+                <div className="space-y-4 sm:space-y-5" role="feed" aria-label="Ledger entries timeline">
                     {[...expenses.map(expense => ({ id: expense.id, type: 'expense' as const, date: new Date(expense.date_incurred), amount: expense.amount, label: expense.category, desc: expense.description })), ...invoices.filter(invoice => invoice.status === 'paid' || invoice.status === 'receipted' || invoice.status === 'confirmed').map(invoice => ({ id: invoice.id, type: 'income' as const, date: new Date(invoice.issuedDate), amount: invoice.amount, label: `Rent Payment`, desc: `Invoice ${invoice.invoiceNumber}` }))]
                     .sort((a, b) => b.date.getTime() - a.date.getTime())
                     .map((ledgerEntry) => (
-                        <div key={`${ledgerEntry.type}-${ledgerEntry.id}`} className="flex items-center justify-between rounded-2xl border border-border/50 bg-card p-5">
-                            <div className="flex items-center gap-4">
-                                <div className={cn("flex size-10 items-center justify-center rounded-full", ledgerEntry.type === 'income' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500')}>
-                                    {ledgerEntry.type === 'income' ? <Plus className="size-5" /> : <Filter className="size-5" />}
+                        <div key={`${ledgerEntry.type}-${ledgerEntry.id}`} className="group flex items-center justify-between rounded-2xl neumorphic-extruded p-4 sm:p-5 transition-all hover:scale-[1.01]" role="article" aria-label={`${ledgerEntry.type === 'income' ? 'Income' : 'Expense'} entry: ${ledgerEntry.label} for PHP ${ledgerEntry.amount}`}>
+                            <div className="flex items-center gap-3 sm:gap-4 shrink-0 min-w-0 pr-4">
+                                <div className={cn("flex size-10 sm:size-12 shrink-0 items-center justify-center rounded-xl neumorphic-inset-card shadow-inner transition-transform group-hover:scale-110", ledgerEntry.type === 'income' ? 'text-emerald-500' : 'text-rose-500')} aria-hidden="true">
+                                    {ledgerEntry.type === 'income' ? <Plus className="size-5 sm:size-6" /> : <Filter className="size-5 sm:size-6" />}
                                 </div>
-                                <div>
-                                    <p className="text-sm font-black text-foreground capitalize">{ledgerEntry.label}</p>
-                                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground" suppressHydrationWarning>{ledgerEntry.desc} ? <span suppressHydrationWarning>{ledgerEntry.date.toLocaleDateString()}</span></p>
+                                <div className="min-w-0">
+                                    <p className="text-xs sm:text-sm font-black text-foreground capitalize truncate group-hover:text-primary transition-colors">{ledgerEntry.label}</p>
+                                    <p className="text-[9px] sm:text-[10px] uppercase tracking-widest text-muted-foreground mt-0.5 truncate" suppressHydrationWarning>
+                                      {ledgerEntry.desc} ? <span suppressHydrationWarning>{ledgerEntry.date.toLocaleDateString()}</span>
+                                    </p>
                                 </div>
                             </div>
-                            <p className={cn("text-base font-black", ledgerEntry.type === 'income' ? 'text-emerald-500' : 'text-rose-500')}>
+                            <p className={cn("text-sm sm:text-base font-black shrink-0 whitespace-nowrap", ledgerEntry.type === 'income' ? 'text-emerald-500' : 'text-rose-500')}>
                                 {ledgerEntry.type === 'income' ? '+' : '-'}{formatPhpCurrency(ledgerEntry.amount)}
                             </p>
                         </div>

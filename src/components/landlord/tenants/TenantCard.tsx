@@ -92,7 +92,7 @@ export function TenantCard({ tenant, idx, onViewProfile, onMessage }: TenantCard
                 <div className="flex items-center gap-4">
                     <div 
                         className="size-16 overflow-hidden rounded-2xl border-2 border-background shadow-inner flex items-center justify-center text-xl font-black text-white"
-                        style={{ backgroundColor: tenant.avatarBgColor || '#6d9838' }}
+                        style={{ backgroundColor: tenant.avatarBgColor || '#8B5CF6' }}
                     >
                         {tenant.avatarUrl ? (
                             <div className="relative h-full w-full">

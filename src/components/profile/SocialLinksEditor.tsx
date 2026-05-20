@@ -99,7 +99,7 @@ export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorP
                         value={socials.facebook || ""} 
                         onChange={(e) => updateSocial("facebook", e.target.value)}
                         placeholder="https://facebook.com/..."
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-[#6d9838]/50 transition-colors"
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-[#8B5CF6]/50 transition-colors"
                     />
                 </div>
                 <div className="space-y-1.5">
@@ -112,7 +112,7 @@ export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorP
                         value={socials.twitter || ""} 
                         onChange={(e) => updateSocial("twitter", e.target.value)}
                         placeholder="https://twitter.com/..."
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-[#6d9838]/50 transition-colors"
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-[#8B5CF6]/50 transition-colors"
                     />
                 </div>
                 <div className="space-y-1.5">
@@ -125,7 +125,7 @@ export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorP
                         value={socials.linkedin || ""} 
                         onChange={(e) => updateSocial("linkedin", e.target.value)}
                         placeholder="https://linkedin.com/in/..."
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-[#6d9838]/50 transition-colors"
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-[#8B5CF6]/50 transition-colors"
                     />
                 </div>
                 <div className="space-y-1.5">
@@ -138,7 +138,7 @@ export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorP
                         value={socials.instagram || ""} 
                         onChange={(e) => updateSocial("instagram", e.target.value)}
                         placeholder="https://instagram.com/..."
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-[#6d9838]/50 transition-colors"
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-[#8B5CF6]/50 transition-colors"
                     />
                 </div>
             </div>
@@ -146,7 +146,7 @@ export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorP
             <button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="w-full flex items-center justify-center gap-2 bg-[#6d9838] hover:bg-[#5a7d2e] text-white py-3 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all shadow-lg shadow-[#6d9838]/20 disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-2 bg-[#c4b0ff] hover:bg-[#9b77ff] text-[#1e1b4b] py-3 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all shadow-lg shadow-[#c4b0ff]/20 disabled:opacity-50"
             >
                 {isSaving ? "Saving..." : <><Save size={14} /> Save Social Links</>}
             </button>

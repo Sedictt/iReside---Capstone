@@ -97,7 +97,7 @@ export default function MyApplicationsPage() {
         switch (color) {
             case "red": return "#ef4444";
             case "yellow": return "#fbbf24";
-            default: return "#6d9838";
+            default: return "#8B5CF6";
         }
     };
 

@@ -520,7 +520,7 @@ function MaintenanceCard({ request, onClick }: { request: MaintenanceRequest, on
                     <div className="flex -space-x-2 overflow-hidden">
                         <div
                             className="inline-block relative size-8 rounded-full ring-2 ring-background flex items-center justify-center text-[10px] font-black text-white overflow-hidden shrink-0"
-                            style={{ backgroundColor: request.tenantAvatarBgColor || '#6d9838' }}
+                            style={{ backgroundColor: request.tenantAvatarBgColor || '#c4b0ff' }}
                         >
                             {request.tenantAvatar ? (
                                 <Image
@@ -568,7 +568,7 @@ function MaintenanceListRow({ request, onClick }: { request: MaintenanceRequest,
             <div className="flex items-center gap-4 shrink-0 w-[180px]">
                 <div
                     className="relative size-10 rounded-full flex items-center justify-center text-xs font-black text-white overflow-hidden shrink-0 shadow-sm border border-white/10"
-                    style={{ backgroundColor: request.tenantAvatarBgColor || '#6d9838' }}
+                    style={{ backgroundColor: request.tenantAvatarBgColor || '#c4b0ff' }}
                 >
                     {request.tenantAvatar ? (
                         <Image className="object-cover" src={request.tenantAvatar} alt={request.tenant} fill />

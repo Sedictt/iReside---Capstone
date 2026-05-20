@@ -205,7 +205,7 @@ export default function ApplicationDashboardPage() {
                                     <circle cx="50" cy="50" fill="none" r={radius} stroke="#1a1a1a" strokeWidth="4" />
                                     <motion.circle
                                         cx="50" cy="50" fill="none" r={radius}
-                                        stroke="#6d9838"
+                                        stroke="#8B5CF6"
                                         strokeDasharray={circumference}
                                         initial={{ strokeDashoffset: circumference }}
                                         animate={{ strokeDashoffset: offset }}

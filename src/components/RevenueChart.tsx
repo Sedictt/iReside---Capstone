@@ -33,7 +33,7 @@ const data = {
         {
             label: "Gross Revenue",
             data: [45000, 52000, 48000, 61000, 59000, 68000, 75000],
-            backgroundColor: '#84cc16', // Lime 500
+            backgroundColor: '#8B5CF6', // Violet 500
             borderRadius: 6,
             borderSkipped: 'bottom' as const,
             barPercentage: 0.6,
@@ -42,7 +42,7 @@ const data = {
         {
             label: "Net Income",
             data: [30000, 38000, 32000, 44000, 42000, 52000, 61000],
-            backgroundColor: '#10b981', // Emerald 500
+            backgroundColor: '#c4b0ff', // Violet 400
             borderRadius: 6,
             borderSkipped: 'bottom' as const,
             barPercentage: 0.6,

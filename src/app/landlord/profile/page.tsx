@@ -315,8 +315,8 @@ export default async function LandlordProfilePage() {
                                     {profile.full_name}
                                 </h1>
                                 {verificationStatus && (
-                                    <div className="bg-[#6d9838]/20 border border-[#6d9838]/30 p-1.5 rounded-full shadow-lg shadow-[#6d9838]/10">
-                                        <CheckCircle2 size={20} className="text-[#6d9838]" />
+                                    <div className="bg-[#c4b0ff]/20 border border-[#c4b0ff]/30 p-1.5 rounded-full shadow-lg shadow-[#c4b0ff]/10">
+                                        <CheckCircle2 size={20} className="text-[#c4b0ff]" />
                                     </div>
                                 )}
                             </div>
@@ -344,22 +344,22 @@ export default async function LandlordProfilePage() {
                         {/* Contact Info Row */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-16 pt-10 border-t border-white/5 w-full max-w-4xl">
                             <div className="flex flex-col items-center gap-2 group/item transition-all text-center">
-                                <div className="size-10 rounded-full bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20 group-hover/item:scale-110 transition-transform">
-                                    <Mail size={18} className="text-[#6d9838]" />
+                                <div className="size-10 rounded-full bg-[#c4b0ff]/10 flex items-center justify-center border border-[#c4b0ff]/20 group-hover/item:scale-110 transition-transform">
+                                    <Mail size={18} className="text-[#c4b0ff]" />
                                 </div>
                                 <p className="text-[10px] font-black tracking-widest text-neutral-500 uppercase">Email Address</p>
-                                <a href={`mailto:${profile.email}`} className="text-sm text-white/90 font-medium hover:text-[#6d9838] transition-colors">{profile.email}</a>
+                                <a href={`mailto:${profile.email}`} className="text-sm text-white/90 font-medium hover:text-[#c4b0ff] transition-colors">{profile.email}</a>
                             </div>
                             <div className="flex flex-col items-center gap-2 group/item transition-all text-center">
-                                <div className="size-10 rounded-full bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20 group-hover/item:scale-110 transition-transform">
-                                    <Phone size={18} className="text-[#6d9838]" />
+                                <div className="size-10 rounded-full bg-[#c4b0ff]/10 flex items-center justify-center border border-[#c4b0ff]/20 group-hover/item:scale-110 transition-transform">
+                                    <Phone size={18} className="text-[#c4b0ff]" />
                                 </div>
                                 <p className="text-[10px] font-black tracking-widest text-neutral-500 uppercase">Phone Number</p>
-                                <a href={`tel:${profile.phone}`} className="text-sm text-white/90 font-medium hover:text-[#6d9838] transition-colors">{profile.phone || '+63 (---) --- ----'}</a>
+                                <a href={`tel:${profile.phone}`} className="text-sm text-white/90 font-medium hover:text-[#c4b0ff] transition-colors">{profile.phone || '+63 (---) --- ----'}</a>
                             </div>
                             <div className="flex flex-col items-center gap-2 group/item transition-all text-center">
-                                <div className="size-10 rounded-full bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20 group-hover/item:scale-110 transition-transform">
-                                    <MapPin size={18} className="text-[#6d9838]" />
+                                <div className="size-10 rounded-full bg-[#c4b0ff]/10 flex items-center justify-center border border-[#c4b0ff]/20 group-hover/item:scale-110 transition-transform">
+                                    <MapPin size={18} className="text-[#c4b0ff]" />
                                 </div>
                                 <p className="text-[10px] font-black tracking-widest text-neutral-500 uppercase">Primary Location</p>
                                 <p className="text-sm text-white/90 font-medium">{properties[0]?.city || 'Valenzuela, Metro Manila'}</p>
@@ -374,8 +374,8 @@ export default async function LandlordProfilePage() {
                 {/* Bio Section */}
                 <div className="bg-[#171717]/80 border border-neutral-800 rounded-[3rem] p-12 backdrop-blur-xl shadow-xl">
                     <div className="flex items-center gap-4 mb-8">
-                        <div className="size-12 rounded-2xl bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20">
-                            <User size={20} className="text-[#6d9838]" />
+                        <div className="size-12 rounded-2xl bg-[#c4b0ff]/10 flex items-center justify-center border border-[#c4b0ff]/20">
+                            <User size={20} className="text-[#c4b0ff]" />
                         </div>
                         <h2 className="text-2xl font-display font-black text-white tracking-tight">Biography</h2>
                     </div>
@@ -394,8 +394,8 @@ export default async function LandlordProfilePage() {
                 {/* Stats & connectivity section */}
                 <div className="bg-[#171717]/80 border border-neutral-800 rounded-[3rem] p-10 backdrop-blur-xl shadow-xl">
                     <div className="flex items-center gap-4 mb-10">
-                        <div className="size-12 rounded-2xl bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20">
-                            <TrendingUp size={20} className="text-[#6d9838]" />
+                        <div className="size-12 rounded-2xl bg-[#c4b0ff]/10 flex items-center justify-center border border-[#c4b0ff]/20">
+                            <TrendingUp size={20} className="text-[#c4b0ff]" />
                         </div>
                         <h2 className="text-2xl font-display font-black text-white tracking-tight">Portfolio Stats</h2>
                     </div>

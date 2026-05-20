@@ -94,11 +94,11 @@ function ActionSummaryBar({ summaries }: { summaries: ActionSummary[] }) {
             {summaries.map((summary) => (
                 <div 
                     key={summary.label} 
-                    className="group flex shrink-0 items-center gap-2 rounded-2xl border border-white/10 bg-card/70 px-3 sm:px-4 py-2 text-[10px] sm:text-xs font-black transition-all hover:bg-card whitespace-nowrap"
+                    className="group flex shrink-0 items-center gap-2 rounded-xl neumorphic-extruded px-3 py-1.5 text-[10px] sm:text-[11px] font-black transition-all hover:scale-[1.02] whitespace-nowrap"
                 >
-                    <summary.icon className="size-3 sm:size-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
+                    <summary.icon className="size-3 text-muted-foreground group-hover:text-primary transition-colors" />
                     <span className="text-muted-foreground">{summary.label}:</span>
-                    <span className="text-foreground">{summary.value}</span>
+                    <span className="text-foreground font-black">{summary.value}</span>
                 </div>
             ))}
         </div>
@@ -114,15 +114,17 @@ function ActionItemCard({ action }: { action: ActionItem }) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="group relative overflow-hidden rounded-[1.5rem] border border-white/10 bg-card/70 p-4 sm:p-5 transition-all hover:bg-card"
+            className="group relative overflow-hidden rounded-[1.5rem] neumorphic-extruded p-4 sm:p-5 transition-all hover:scale-[1.01]"
         >
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between relative z-10">
                 <div className="flex items-start gap-4">
-                    <div className={cn(
-                        "flex size-11 sm:size-12 items-center justify-center rounded-2xl border transition-transform group-hover:scale-110", 
-                        toneClasses[action.tone]
-                    )}>
-                        <Icon className="size-5" />
+                    <div className="neumorphic-inset flex size-11 sm:size-12 items-center justify-center rounded-2xl transition-transform group-hover:scale-110">
+                        <Icon className={cn(
+                            "size-5",
+                            action.tone === "critical" && "text-red-500",
+                            action.tone === "high" && "text-amber-500",
+                            action.tone === "medium" && "text-primary"
+                        )} />
                     </div>
                     <div className="min-w-0 flex-1">
                         <div className="mb-1.5 flex flex-wrap items-center gap-3">
@@ -148,17 +150,12 @@ function ActionItemCard({ action }: { action: ActionItem }) {
 
                 <Link
                     href={action.href}
-                    className="group/btn inline-flex items-center justify-center gap-3 w-full sm:w-auto rounded-xl bg-foreground px-4 py-2.5 sm:px-6 sm:py-3 text-xs sm:text-sm font-black tracking-tight text-background transition-all hover:brightness-110 active:scale-[0.98] sm:self-center"
+                    className="group/btn inline-flex items-center justify-center gap-3 w-full sm:w-auto rounded-xl neumorphic-primary px-4 py-2.5 sm:px-6 sm:py-3 text-xs sm:text-sm font-black tracking-tight text-primary-foreground transition-all hover:brightness-110 active:scale-[0.98] sm:self-center"
                 >
                     {action.cta}
                     <ArrowRight className="size-3.5 sm:size-4 transition-transform group-hover/btn:translate-x-1" />
                 </Link>
             </div>
-            {/* Subtle decorative streak */}
-            <div className={cn(
-                "absolute bottom-0 left-6 right-6 h-[2px] opacity-0 transition-opacity group-hover:opacity-30", 
-                toneClasses[action.tone]
-            )} />
         </m.div>
     );
 }
@@ -168,9 +165,9 @@ function ActionEmptyState() {
         <m.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="rounded-[2.5rem] border border-dashed border-white/10 bg-card/70 p-12 text-center backdrop-blur-sm"
+            className="rounded-[2.5rem] neumorphic-inset p-12 text-center"
         >
-            <div className="mb-6 inline-flex size-20 items-center justify-center rounded-[1.5rem] border border-primary/20 bg-primary/12 text-primary">
+            <div className="mb-6 inline-flex size-20 items-center justify-center rounded-[1.5rem] neumorphic-extruded text-primary">
                 <ShieldCheck className="size-10" />
             </div>
             <h3 className="text-xl font-black text-foreground">All Caught Up</h3>
@@ -405,15 +402,15 @@ export function ActionRequired() {
 
     return (
         <LazyMotion features={domAnimation}>
-            <section className="rounded-[2.5rem] border border-white/10 bg-card/60 p-4 sm:p-6 md:p-8 shadow-2xl shadow-black/30 backdrop-blur-xl">
-                <div className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex items-center gap-4">
-                        <div className="flex size-14 items-center justify-center rounded-[1.25rem] border border-primary/20 bg-primary/12 text-primary">
-                            <Activity className="size-7" />
+            <section className="rounded-[2.5rem] neumorphic-panel p-4 sm:p-6 md:p-8">
+                <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="flex size-12 sm:size-14 items-center justify-center rounded-[1rem] sm:rounded-[1.25rem] neumorphic-extruded text-primary shrink-0">
+                            <Activity className="size-5 sm:size-7" />
                         </div>
                         <div>
-                            <h2 className="text-2xl font-black tracking-tight text-foreground">Needs Your Attention</h2>
-                            <p className="text-sm font-medium text-muted-foreground/80">
+                            <h2 className="text-lg sm:text-2xl font-black tracking-tight text-foreground">Needs Your Attention</h2>
+                            <p className="hidden sm:block text-sm font-medium text-muted-foreground/80">
                                 Things to follow up now: maintenance, lease renewals, and tenant messages.
                             </p>
                         </div>
@@ -426,12 +423,12 @@ export function ActionRequired() {
                     {state.loading ? (
                         <div className="grid gap-4">
                             {[1, 2, 3].map((item) => (
-                                <div key={item} className="animate-pulse rounded-[1.5rem] border border-white/10 bg-card/70 p-6">
+                                <div key={item} className="animate-pulse rounded-[1.5rem] neumorphic-inset p-6">
                                     <div className="flex gap-4">
-                                        <div className="size-12 rounded-xl bg-muted/40" />
+                                        <div className="size-12 rounded-xl neumorphic-extruded" />
                                         <div className="flex-1 space-y-3">
-                                            <div className="h-4 w-1/4 rounded bg-muted/40" />
-                                            <div className="size-3/4 rounded bg-muted/40" />
+                                            <div className="h-4 w-1/4 rounded bg-muted/30" />
+                                            <div className="size-3/4 rounded bg-muted/30" />
                                         </div>
                                     </div>
                                 </div>
@@ -441,7 +438,7 @@ export function ActionRequired() {
                         <m.div 
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            className="rounded-3xl border border-red-500/20 bg-red-500/5 p-6 text-center"
+                            className="rounded-3xl border border-red-500/30 neumorphic-inset p-6 text-center"
                         >
                             <p className="text-sm font-black text-red-500">{state.error}</p>
                         </m.div>

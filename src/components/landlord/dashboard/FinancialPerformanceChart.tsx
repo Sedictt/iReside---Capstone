@@ -94,7 +94,7 @@ export function FinancialPerformanceChart({ dataByWindow }: FinancialPerformance
                 label: "Amount",
                 data: getCurrentData(),
                 backgroundColor: (context: ScriptableContext<"bar">) => {
-                    if (!context.chart.chartArea) return activeTab === "expenses" ? "#ef4444" : activeTab === "netIncome" ? "#3b82f6" : "#6d9838";
+                    if (!context.chart.chartArea) return activeTab === "expenses" ? "#ef4444" : activeTab === "netIncome" ? "#3b82f6" : "#c4b0ff";
                     const { ctx, chartArea: { top, bottom } } = context.chart;
                     const gradient = ctx.createLinearGradient(0, bottom, 0, top);
                     if (activeTab === "expenses") {
@@ -228,10 +228,10 @@ export function FinancialPerformanceChart({ dataByWindow }: FinancialPerformance
                         {activeTab === "earnings" && (
                             <motion.span 
                                 layoutId="activeTabIndicator"
-                                className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6d9838] shadow-[0_0_12px_rgba(109,152,56,0.6)]"
+                                className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#c4b0ff] shadow-[0_0_12px_rgba(109,152,56,0.6)]"
                             />
                         )}
-                        <span className={cn("size-2 rounded-full", activeTab === "earnings" ? "bg-[#6d9838] shadow-[0_0_8px_rgba(109,152,56,0.8)]" : "bg-neutral-600")} />
+                        <span className={cn("size-2 rounded-full", activeTab === "earnings" ? "bg-[#c4b0ff] shadow-[0_0_8px_rgba(109,152,56,0.8)]" : "bg-neutral-600")} />
                         {labels.earnings}
                     </button>
                     <button

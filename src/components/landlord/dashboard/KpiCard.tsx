@@ -39,13 +39,13 @@ export function KpiCard({
             animate={{ opacity: 1, y: 0 }}
             whileHover={{ y: -5, transition: { duration: 0.2 } }}
             className={cn(
-                "group relative flex flex-col justify-between overflow-visible rounded-[2rem] border border-border bg-card p-1 shadow-lg shadow-black/[0.04] dark:shadow-black/20 transition-all duration-300 hover:shadow-primary/10 hover:ring-2 hover:ring-primary/10", 
+                "neu-card-raised group relative flex flex-col justify-between overflow-visible rounded-[2rem] p-1 transition-all duration-300", 
                 className
             )}
         >
             {/* Inner Content Container */}
-            <div className="relative h-full w-full overflow-hidden rounded-[1.75rem] bg-muted/30 p-6 flex flex-col justify-between dark:bg-surface-2/50">
-                <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent pointer-events-none dark:from-white/5" />
+            <div className="relative h-full w-full overflow-hidden rounded-[1.75rem] p-6 flex flex-col justify-between neu-pressed">
+                <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
                 
                 {/* Header Content */}
                 <div className="relative z-10 w-full">

@@ -653,7 +653,7 @@ export function MaintenanceRequestModal({
                                 <div className="flex items-center gap-4 bg-muted/30 p-5 rounded-3xl border border-border">
                                     <div
                                         className="size-14 rounded-2xl overflow-hidden border border-border shrink-0 flex items-center justify-center text-lg font-black text-white relative"
-                                        style={{ backgroundColor: request.tenantAvatarBgColor || '#6d9838' }}
+                                        style={{ backgroundColor: request.tenantAvatarBgColor || '#8B5CF6' }}
                                     >
                                         {request.tenantAvatar ? (
                                             <Image

@@ -66,7 +66,7 @@ export function DashboardBanner({
     return (
         <div
             className={cn(
-                "group relative min-h-[200px] xs:min-h-[220px] sm:min-h-[240px] md:min-h-[320px] w-full shrink-0 overflow-visible rounded-[2.5rem] border border-white/10 bg-surface-1 shadow-2xl shadow-black/30 transition-all duration-500",
+                "group relative min-h-[200px] xs:min-h-[220px] sm:min-h-[240px] md:min-h-[320px] w-full shrink-0 overflow-visible rounded-[2.5rem] neumorphic-panel transition-all duration-500",
                 className
             )}>
             {/* Background Layer */}

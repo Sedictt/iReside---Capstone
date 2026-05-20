@@ -680,7 +680,7 @@ export default function AnalyticsPage() {
                 {/* Page Header */}
             <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                    <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/80 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.25em] text-primary shadow-sm backdrop-blur-md">
+                    <div className="mb-4 inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.25em] text-primary neu-badge">
                         <BarChart className="size-3.5" />
                         Portfolio Analytics
                     </div>
@@ -693,10 +693,10 @@ export default function AnalyticsPage() {
                             type="button"
                             onClick={() => setIsIrisVisible((prev) => !prev)}
                             className={cn(
-                                "inline-flex items-center gap-2.5 rounded-full border px-5 py-3 text-[11px] font-black uppercase tracking-[0.14em] shadow-sm transition-all hover:scale-105 active:scale-95",
+                                "neu-btn-card inline-flex items-center gap-2.5 px-5 py-3 text-[11px] font-black uppercase tracking-[0.14em] transition-all hover:scale-105 active:scale-95",
                                 isIrisVisible
-                                    ? "border-primary/35 bg-card/90 text-primary hover:border-primary/45"
-                                    : "border-white/10 bg-card/80 text-muted-foreground hover:bg-card hover:text-foreground"
+                                    ? "text-primary"
+                                    : "text-muted-foreground"
                             )}
                             aria-pressed={!isIrisVisible}
                             aria-label={isIrisVisible ? "Hide iRis assistant" : "Show iRis assistant"}
@@ -716,7 +716,10 @@ export default function AnalyticsPage() {
                     </div>
                     <button
                         onClick={() => setIsExportModalOpen(true)}
-                        className="group inline-flex items-center gap-2.5 rounded-full bg-primary px-6 py-3 text-sm font-black text-primary-foreground shadow-sm transition-all hover:scale-105 hover:bg-primary/90 active:scale-95"
+                        className="group inline-flex items-center gap-2.5 rounded-full bg-primary px-6 py-3 text-sm font-black text-primary-foreground transition-all hover:scale-105 active:scale-95"
+                        style={{
+                            boxShadow: '4px 4px 12px rgba(0,0,0,0.4), -4px -4px 12px rgba(42,42,42,0.2), 0 0 20px rgba(196,176,255,0.15)'
+                        }}
                     >
                         <Download className="size-4 transition-transform group-hover:-translate-y-0.5" />
                         Export Report
@@ -725,10 +728,10 @@ export default function AnalyticsPage() {
             </div>
 
             {/* Performance Control Bar */}
-            <section className="relative z-0 w-full rounded-[2.5rem] border border-border bg-card p-8 shadow-xl shadow-black/[0.04] dark:shadow-black/20">
+            <section className="neu-section relative z-0 w-full">
                 <div className="flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
                     <div className="flex min-w-0 items-center gap-4">
-                        <div className="flex size-12 items-center justify-center rounded-[1rem] border border-primary/20 bg-primary/12 text-primary">
+                        <div className="neu-icon flex size-12 items-center justify-center rounded-[1rem] text-primary">
                             <BarChart className="size-6" />
                         </div>
                         <div>
@@ -756,10 +759,10 @@ export default function AnalyticsPage() {
                         <button
                             onClick={() => setShowMoreKpis(!showMoreKpis)}
                             className={cn(
-                                "flex items-center gap-2.5 rounded-full border px-5 py-2.5 text-[10px] font-black uppercase tracking-[0.15em] transition-all hover:scale-105 active:scale-95 shadow-sm",
+                                "neu-btn-card flex items-center gap-2.5 px-5 py-2.5 text-[10px] font-black uppercase tracking-[0.15em] transition-all hover:scale-105 active:scale-95",
                                 showMoreKpis
-                                    ? "border-primary/40 bg-primary/10 text-primary"
-                                    : "border-border bg-background text-muted-foreground hover:border-primary/40 hover:bg-card hover:text-foreground"
+                                    ? "text-primary"
+                                    : "text-muted-foreground"
                             )}
                         >
                             {showMoreKpis ? "Less Details" : "More Metrics"}
@@ -830,10 +833,10 @@ export default function AnalyticsPage() {
 
 
             {/* Main Content Grid */}
-            <section className="relative z-0 w-full rounded-[2.5rem] border border-border bg-card p-8 shadow-xl shadow-black/[0.04] dark:shadow-black/20">
+            <section className="neu-section relative z-0 w-full">
                 <div className="mb-10 flex flex-wrap items-center justify-between gap-4 px-2">
                     <div className="flex min-w-0 items-center gap-4">
-                        <div className="flex size-12 items-center justify-center rounded-[1rem] border border-emerald-500/20 bg-emerald-500/12 text-emerald-300">
+                        <div className="neu-icon flex size-12 items-center justify-center rounded-[1rem] text-emerald-300">
                             <TrendingUp className="size-6" />
                         </div>
                         <div>
@@ -870,9 +873,9 @@ export default function AnalyticsPage() {
             />
 
             {/* Export History */}
-            <section className="relative z-0 w-full rounded-[2.5rem] border border-border bg-card p-8 shadow-xl shadow-black/[0.04] dark:shadow-black/20">
+            <section className="neu-section relative z-0 w-full">
                 <div className="mb-6 flex items-center gap-4 px-2">
-                    <div className="flex size-12 items-center justify-center rounded-[1rem] border border-amber-500/20 bg-amber-500/12 text-amber-300">
+                    <div className="neu-icon flex size-12 items-center justify-center rounded-[1rem] text-amber-300">
                         <History className="size-6" />
                     </div>
                     <div>
@@ -881,7 +884,7 @@ export default function AnalyticsPage() {
                     </div>
                 </div>
                 {exportHistory.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center rounded-[1.75rem] border border-border bg-muted/20 py-12 text-muted-foreground">
+                    <div className="neu-pressed flex flex-col items-center justify-center py-12 text-muted-foreground">
                         <FileText className="size-8 mb-3 opacity-20" />
                         <p className="text-[10px] font-black uppercase tracking-widest opacity-40">No reports exported yet</p>
                     </div>
@@ -896,10 +899,10 @@ export default function AnalyticsPage() {
                                 <div
                                     key={item.id}
                                     className={cn(
-                                        "flex flex-col gap-3 rounded-[1.75rem] border p-5 transition-all duration-300",
+                                        "neu-history-card flex flex-col gap-3 p-5",
                                         isExpired
-                                            ? "border-border bg-muted/10 opacity-60"
-                                            : "border-border bg-muted/30 hover:bg-muted/50 hover:ring-1 hover:ring-primary/20 dark:bg-surface-2"
+                                            ? "opacity-60"
+                                            : ""
                                     )}
                                 >
                                     <div className="flex items-center justify-between">
@@ -923,7 +926,7 @@ export default function AnalyticsPage() {
                                     {!isExpired && (
                                         <button
                                             onClick={() => handleRedownload(item)}
-                                            className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-card py-2 text-[10px] font-black uppercase tracking-widest text-primary border border-primary/20 transition-all hover:bg-primary hover:text-primary-foreground"
+                                            className="neu-btn-card mt-2 flex w-full items-center justify-center gap-2 py-2 text-[10px] font-black uppercase tracking-widest text-primary transition-all hover:text-primary-foreground"
                                         >
                                             <Download className="size-3" />
                                             Redownload
@@ -939,7 +942,7 @@ export default function AnalyticsPage() {
                     <div className="mt-8 flex justify-center">
                         <button
                             onClick={() => fetchExportHistory(true)}
-                            className="group flex items-center gap-2 rounded-full border border-border bg-card px-8 py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground transition-all hover:border-primary/30 hover:bg-primary/5 hover:text-primary active:scale-95"
+                            className="neu-btn-card group flex items-center gap-2 px-8 py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground transition-all hover:text-primary active:scale-95"
                         >
                             Load Older Reports
                             <ChevronDown className="size-3 transition-transform group-hover:translate-y-0.5" />
@@ -956,10 +959,10 @@ export default function AnalyticsPage() {
                         className="absolute inset-0 bg-black/60 backdrop-blur-md transition-opacity animate-in fade-in duration-300"
                         onClick={() => setIsExportModalOpen(false)}
                     />
-                    <div className="relative z-10 w-full max-w-lg overflow-hidden rounded-[2.5rem] border border-border bg-card shadow-2xl animate-in zoom-in-95 duration-300">
-                        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-card/95 px-8 py-6 backdrop-blur-xl">
+                    <div className="relative z-10 w-full max-w-lg overflow-hidden neu-modal animate-in zoom-in-95 duration-300">
+                        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border/30 px-8 py-6">
                             <div className="flex items-center gap-4">
-                                <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                                <div className="neu-icon flex size-12 items-center justify-center rounded-2xl text-primary">
                                     <Download className="size-6" />
                                 </div>
                                 <div>
@@ -970,7 +973,7 @@ export default function AnalyticsPage() {
                             <button
                                 type="button"
                                 onClick={() => setIsExportModalOpen(false)}
-                                className="group flex size-10 items-center justify-center rounded-xl border border-white/10 bg-card/70 text-muted-foreground transition-all hover:bg-card hover:text-foreground hover:rotate-90 active:scale-95"
+                                className="neu-btn-card group flex size-10 items-center justify-center transition-all hover:text-foreground hover:rotate-90 active:scale-95"
                             >
                                 <X className="size-5" />
                             </button>
@@ -990,10 +993,10 @@ export default function AnalyticsPage() {
                                                 key={option.id}
                                                 onClick={() => applyPresetRange(option)}
                                                 className={cn(
-                                                    "px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-[0.1em] transition-all duration-200 border",
+                                                    "neu-btn-card px-4 py-2.5 text-xs font-black uppercase tracking-[0.1em] transition-all duration-200",
                                                     selectedRange === option.id
-                                                        ? "border-primary/30 bg-primary/10 text-primary shadow-[0_0_15px_rgba(var(--primary-rgb),0.15)]"
-                                                        : "border-white/10 bg-card/70 text-muted-foreground hover:bg-card hover:text-foreground"
+                                                        ? "text-primary active"
+                                                        : "text-muted-foreground"
                                                 )}
                                             >
                                                 {option.label}
@@ -1007,7 +1010,7 @@ export default function AnalyticsPage() {
                                                 type="date"
                                                 value={startDate}
                                                 onChange={(event) => onStartDateChange(event.target.value)}
-                                                className="w-full rounded-2xl border border-white/10 bg-card/70 px-4 py-3 text-sm font-medium text-foreground transition-all focus:border-primary/50 focus:outline-none focus:ring-4 focus:ring-primary/10 hover:bg-card"
+                                                className="neu-input w-full px-4 py-3 text-sm font-medium"
                                                 aria-label="Report start date"
                                             />
                                         </div>
@@ -1018,7 +1021,7 @@ export default function AnalyticsPage() {
                                                 type="date"
                                                 value={endDate}
                                                 onChange={(event) => onEndDateChange(event.target.value)}
-                                                className="w-full rounded-2xl border border-white/10 bg-card/70 px-4 py-3 text-sm font-medium text-foreground transition-all focus:border-primary/50 focus:outline-none focus:ring-4 focus:ring-primary/10 hover:bg-card"
+                                                className="neu-input w-full px-4 py-3 text-sm font-medium"
                                                 aria-label="Report end date"
                                             />
                                         </div>
@@ -1036,10 +1039,10 @@ export default function AnalyticsPage() {
                                     <button
                                         onClick={() => setExportFormat("pdf")}
                                         className={cn(
-                                            "flex flex-col items-center justify-center gap-3 p-5 rounded-[1.75rem] border-2 transition-all duration-200",
+                                            "neu-btn-card flex flex-col items-center justify-center gap-3 p-5 transition-all duration-200",
                                             exportFormat === "pdf"
-                                                ? "border-blue-500/30 bg-blue-500/10 text-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.15)]"
-                                                : "border-white/10 bg-card/70 text-muted-foreground hover:bg-card hover:text-foreground"
+                                                ? "text-blue-400 active"
+                                                : "text-muted-foreground"
                                         )}
                                     >
                                         <FileText className="size-8" />
@@ -1048,10 +1051,10 @@ export default function AnalyticsPage() {
                                     <button
                                         onClick={() => setExportFormat("csv")}
                                         className={cn(
-                                            "flex flex-col items-center justify-center gap-3 p-5 rounded-[1.75rem] border-2 transition-all duration-200",
+                                            "neu-btn-card flex flex-col items-center justify-center gap-3 p-5 transition-all duration-200",
                                             exportFormat === "csv"
-                                                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.15)]"
-                                                : "border-white/10 bg-card/70 text-muted-foreground hover:bg-card hover:text-foreground"
+                                                ? "text-emerald-400 active"
+                                                : "text-muted-foreground"
                                         )}
                                     >
                                         <Download className="size-8" />
@@ -1061,10 +1064,10 @@ export default function AnalyticsPage() {
                             </div>
                         </div>
 
-                        <div className="flex justify-end gap-3 border-t border-white/10 bg-card/95 px-8 py-6 backdrop-blur-xl">
+                        <div className="flex justify-end gap-3 border-t border-border/30 px-8 py-6">
                             <button
                                 onClick={() => setIsExportModalOpen(false)}
-                                className="rounded-2xl border border-white/10 bg-card/70 px-5 py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 transition-all hover:bg-card hover:text-foreground"
+                                className="neu-btn-card px-5 py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 transition-all hover:text-foreground"
                             >
                                 Cancel
                             </button>
@@ -1074,7 +1077,10 @@ export default function AnalyticsPage() {
                                     else handleExportCsv();
                                     setIsExportModalOpen(false);
                                 }}
-                                className="group rounded-2xl bg-primary px-6 py-3 text-sm font-black uppercase tracking-tight text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] hover:bg-primary/90 active:scale-95"
+                                className="rounded-2xl bg-primary px-6 py-3 text-sm font-black uppercase tracking-tight text-primary-foreground transition-all hover:scale-[1.02] hover:bg-primary/90 active:scale-95"
+                                style={{
+                                    boxShadow: '4px 4px 12px rgba(0,0,0,0.4), -4px -4px 12px rgba(42,42,42,0.2), 0 0 20px rgba(196,176,255,0.2)'
+                                }}
                             >
                                 Generate & Download
                             </button>
@@ -1084,7 +1090,7 @@ export default function AnalyticsPage() {
             )}
 
             {toastMessage && (
-                <div className="fixed bottom-6 right-6 z-50 rounded-2xl border border-emerald-500/25 bg-emerald-500/12 px-5 py-3.5 text-sm font-black text-emerald-300 shadow-[0_20px_40px_rgba(0,0,0,0.4)] backdrop-blur-xl animate-in slide-in-from-bottom-4 duration-300">
+                <div className="neu-card-pressed fixed bottom-6 right-6 z-50 rounded-2xl px-5 py-3.5 text-sm font-black text-emerald-300 animate-in slide-in-from-bottom-4 duration-300">
                     {toastMessage}
                 </div>
             )}

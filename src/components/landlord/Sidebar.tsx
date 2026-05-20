@@ -22,6 +22,7 @@ import { signOut } from "@/lib/supabase/client-auth";
 import { RoleSidebar, type SidebarNavSection } from "@/components/navigation/RoleSidebar";
 import { PropertySelector } from "@/components/landlord/PropertySelector";
 import { useNotifications } from "@/context/NotificationContext";
+import { cn } from "@/lib/utils";
 
 export function Sidebar({
     isCollapsed = false,
@@ -97,7 +98,7 @@ export function Sidebar({
             isCollapsed={isCollapsed}
             onToggleCollapse={onToggleCollapse}
             showCollapseToggle={showCollapseToggle}
-            className={className}
+            className={`neu-landlord-sidebar ${className || ''}`}
         />
     );
 }
