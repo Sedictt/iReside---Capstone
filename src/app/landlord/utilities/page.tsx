@@ -130,7 +130,7 @@ export default function LandlordUtilitiesPage() {
     return (
         <div className="flex min-h-full w-full flex-col bg-background text-foreground">
             {/* Hero Header Section - Improved Depth */}
-            <div className="relative overflow-hidden border-b border-border bg-card/20 px-6 py-10 md:px-12 md:py-16">
+            <div className="relative overflow-hidden border-b border-border neumorphic-panel px-6 py-10 md:px-12 md:py-16">
                 <div className="absolute -right-24 -top-24 size-96 rounded-full bg-primary/5 blur-[120px]" />
                 <div className="absolute -left-24 -bottom-24 size-96 rounded-full bg-primary/5 blur-[120px]" />
                 
@@ -138,7 +138,7 @@ export default function LandlordUtilitiesPage() {
                     <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
                         <section className="space-y-4">
                             <div className="flex items-center gap-3">
-                                <span className="flex h-6 items-center rounded-full bg-primary/10 px-3 text-[10px] font-black uppercase tracking-[0.2em] text-primary">
+                                <span className="flex h-6 items-center rounded-full neumorphic-inset px-3 text-[10px] font-black uppercase tracking-[0.2em] text-primary">
                                     Facilities
                                 </span>
                                 <span className="h-px w-12 bg-border" />
@@ -156,7 +156,7 @@ export default function LandlordUtilitiesPage() {
                             <button 
                                 onClick={() => setIsAddModalOpen(true)}
                                 suppressHydrationWarning
-                                className="flex items-center gap-3 rounded-2xl bg-primary px-8 py-4 text-sm font-black text-primary-foreground shadow-2xl shadow-primary/20 transition-all hover:bg-primary/90 hover:scale-[1.05] active:scale-95"
+                                className="flex items-center gap-3 rounded-2xl neumorphic-primary px-8 py-4 text-sm font-black text-primary-foreground transition-all hover:scale-[1.05] active:scale-95"
                             >
                                 <Plus className="size-5" />
                                 Add Facility
@@ -168,7 +168,7 @@ export default function LandlordUtilitiesPage() {
 
             <div className="mx-auto w-full max-w-7xl space-y-12 p-6 md:p-12">
                 <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="flex w-full items-center gap-2 rounded-3xl bg-muted/30 p-2 sm:w-fit border border-border/40 backdrop-blur-sm">
+                    <div className="flex w-full items-center gap-2 rounded-3xl neumorphic-inset p-2 sm:w-fit backdrop-blur-sm">
                         {[
                             { id: "list", label: "Inventory", icon: LayoutGrid },
                             { id: "requests", label: "Bookings", icon: ClipboardList, badge: pendingCount > 0 ? pendingCount.toString() : undefined },
@@ -181,7 +181,7 @@ export default function LandlordUtilitiesPage() {
                                 className={cn(
                                     "relative flex items-center gap-3 rounded-2xl px-6 py-3.5 text-sm font-black transition-all",
                                     activeTab === tab.id 
-                                        ? "bg-card text-foreground shadow-xl ring-1 ring-border/50" 
+                                        ? "neumorphic-panel text-foreground" 
                                         : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
                                 )}
                             >
@@ -211,12 +211,12 @@ export default function LandlordUtilitiesPage() {
                                 placeholder="Find a facility..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full rounded-[2rem] border border-border bg-card py-4 pl-14 pr-6 text-base font-medium outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-8 shadow-sm"
+                                className="w-full rounded-[2rem] neumorphic-inset bg-card py-4 pl-14 pr-6 text-base font-medium outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-8 shadow-sm"
                             />
                         </div>
                         <button 
                             suppressHydrationWarning
-                            className="flex size-14 items-center justify-center rounded-[2rem] border border-border bg-card text-muted-foreground transition-all hover:bg-muted hover:text-primary active:scale-90"
+                            className="flex size-14 items-center justify-center rounded-[2rem] neumorphic-extruded bg-card text-muted-foreground transition-all hover:text-primary active:scale-90"
                         >
                             <Filter className="size-5" />
                         </button>
@@ -231,15 +231,15 @@ export default function LandlordUtilitiesPage() {
                             initial={{ opacity: 0, y: 30 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -30 }}
-                            className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+                            className="grid gap-8 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
                         >
                             {/* Create New Card */}
                             <button 
                                 onClick={() => setIsAddModalOpen(true)}
                                 suppressHydrationWarning
-                                className="group relative flex flex-col items-center justify-center gap-5 rounded-3xl border-2 border-dashed border-border/50 bg-muted/10 p-8 transition-all hover:bg-primary/[0.03] hover:border-primary/30 hover:shadow-lg min-h-[340px]"
+                                className="group relative flex flex-col items-center justify-center gap-5 rounded-[2.5rem] border-2 border-dashed border-border/50 bg-muted/10 p-8 transition-all hover:bg-primary/[0.03] hover:border-primary/30 hover:shadow-lg min-h-[340px]"
                             >
-                                <div className="flex size-16 items-center justify-center rounded-2xl bg-muted text-muted-foreground transition-all duration-300 group-hover:bg-primary group-hover:text-primary-foreground group-hover:scale-105">
+                                <div className="flex size-16 items-center justify-center rounded-2xl neumorphic-panel text-muted-foreground transition-all duration-300 group-hover:bg-primary group-hover:text-primary-foreground group-hover:scale-105">
                                     <Plus className="size-8" />
                                 </div>
                                 <div className="text-center space-y-2">
@@ -256,11 +256,11 @@ export default function LandlordUtilitiesPage() {
                             {loading ? (
                                 // Skeleton loader
                                 Array.from({ length: 3 }).map((_, i) => (
-                                    <div key={`utility-skeleton-${i}`} className="h-[400px] w-full animate-pulse rounded-3xl bg-muted/50" />
+                                    <div key={`utility-skeleton-${i}`} className="h-[400px] w-full animate-pulse rounded-[2.5rem] neumorphic-panel" />
                                 ))
                             ) : filteredUtilities.length === 0 ? (
                                 <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">
-                                    <div className="mb-4 rounded-full bg-muted p-4">
+                                    <div className="mb-4 rounded-full neumorphic-inset-card p-4">
                                         <Search className="size-8 text-muted-foreground" />
                                     </div>
                                     <h3 className="text-xl font-black">No facilities found</h3>
@@ -275,11 +275,11 @@ export default function LandlordUtilitiesPage() {
                                             initial={{ opacity: 0, y: 20 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: idx * 0.1 }}
-                                            className="group relative flex flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition-all duration-300 hover:shadow-[0_18px_34px_-28px_rgba(15,23,42,0.2)] hover:-translate-y-1 hover:border-primary/20"
+                                            className="group relative flex flex-col overflow-hidden rounded-[2.5rem] neumorphic-panel bg-card transition-all duration-300 hover:-translate-y-1 hover:border-primary/20"
                                         >
                                             {/* Thumbnail Image */}
                                             <div className="relative h-44 w-full overflow-hidden">
-                                                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent z-10" />
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent z-10" />
                                                 {utility.image_url ? (
                                                     <Image 
                                                         src={utility.image_url} 

@@ -445,7 +445,7 @@ function NotificationPanelContent({
         <>
             <div className="flex items-center justify-between border-b border-border/50 px-6 py-4">
                 <p className="text-[10px] font-black uppercase tracking-widest text-foreground">Notifications</p>
-                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-black text-primary">{unreadCount} New</span>
+                <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-black text-primary">{unreadCount > 99 ? '99+' : unreadCount} New</span>
             </div>
 
             <div className="max-h-[400px] overflow-y-auto custom-scrollbar-premium">

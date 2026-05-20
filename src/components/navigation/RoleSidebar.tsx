@@ -154,7 +154,7 @@ export function RoleSidebar({
                         "flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-black text-foreground shadow-[inset_2px_2px_4px_rgba(255,255,255,0.4),inset_-2px_-2px_4px_rgba(0,0,0,0.2)]",
                         item.urgent && "animate-pulse shadow-lg shadow-red-500/40"
                     )}>
-                        {item.badge}
+                        {item.badge > 99 ? '99+' : item.badge}
                     </span>
                 ) : isCollapsed && item.badge ? (
                     <span className={cn(
