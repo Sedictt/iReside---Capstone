@@ -39,12 +39,12 @@ export function KpiCard({
             animate={{ opacity: 1, y: 0 }}
             whileHover={{ y: -5, transition: { duration: 0.2 } }}
             className={cn(
-                "neu-card-raised group relative flex flex-col justify-between overflow-visible rounded-[2rem] p-1 transition-all duration-300", 
+                "neumorphic-panel group relative flex flex-col justify-between overflow-visible rounded-[2rem] p-1 transition-all duration-300", 
                 className
             )}
         >
             {/* Inner Content Container */}
-            <div className="relative h-full w-full overflow-hidden rounded-[1.75rem] p-6 flex flex-col justify-between neu-pressed">
+            <div className="relative h-full w-full overflow-hidden rounded-[1.75rem] p-6 flex flex-col justify-between neumorphic-inset">
                 <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
                 
                 {/* Header Content */}

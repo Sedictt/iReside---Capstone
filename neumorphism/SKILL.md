@@ -1,88 +1,130 @@
----
-name: neumorphism
-description: Soft, extruded UI elements with inner and outer shadows on monochromatic surfaces for a tactile, embedded look.
-license: MIT
-metadata:
-  author: typeui.sh
----
+name 	description 	license
+neuphorism
+	
+Create web pages and UI components using the Neuphorism design system—a soft, tactile neumorphic aesthetic with extruded/pressed shadows, muted surface colors, and refined typography. Use when the user requests neuphorism/neumorphic styling, soft UI, or references this design system for any web page, component, dashboard, or application. Framework-agnostic (works with vanilla HTML/CSS, React, Vue, Tailwind, etc.).
+	
+MIT
+Neuphorism Design System
 
-<!-- TYPEUI_SH_MANAGED_START -->
-# Neumorphism club Design System Skill (Universal)
+A soft, tactile design system featuring extruded shadows, pressed states, and muted color palettes that create depth through light simulation rather than hard borders.
+Core Aesthetic
 
-## Mission
-You are an expert design-system guideline author for neumorphism.
-Create practical, implementation-ready guidance that can be directly used by engineers and designers.
+Neuphorism creates UI that appears carved from the surface:
 
-## Brand
-Join the private club where people are building, monetizing, and marketing products with AI.
+    Elements "extrude" with dual shadows (dark bottom-right, light top-left)
+    Interactive elements "press" into the surface on activation
+    Soft, muted backgrounds with subtle gradients
+    Clean Inter typography at light-to-medium weights
+    Generous spacing and rounded corners
 
-## Style Foundations
-- Visual style: minimal, clean, high-contrast, playful, matrix
-- Typography scale: desktop-first expressive scale | Fonts: inherit existing project typography (do not touch or modify the current fonts) | weights=inherit
-- Color palette: inherit existing project color palette | Tokens: use existing project theme/colors (do not touch or modify the current color palette)
-- Spacing scale: compact density mode
+Quick Reference
+Shadows (The Heart of Neuphorism)
 
+/* Extruded - default raised state */
+box-shadow: 12px 12px 24px #c5c8ce, -12px -12px 24px #ffffff;
 
-## Accessibility
-WCAG 2.2 AA, keyboard-first interactions, visible focus states, semantic HTML before ARIA, screen-reader tested labels
+/* Pressed - active/focused state */
+box-shadow: inset 6px 6px 12px #c5c8ce, inset -6px -6px 12px #ffffff;
 
-## Writing Tone
-concise, confident, helpful, clear, friendly
+/* Elevated - hover state */
+box-shadow: 16px 16px 32px #c5c8ce, -16px -16px 32px #ffffff;
 
-## Rules: Do
-- prefer semantic tokens over raw values
-- preserve visual hierarchy
-- keep interaction states explicit
-- design for empty/loading/error states
-- ensure responsive behavior by default
+Color Palette
+Token 	Light 	Dark 	Purpose
+bg-primary 	#e6e8ed 	#2d3748 	Main surface
+shadow-dark 	#c5c8ce 	#1a202c 	Bottom-right shadow
+shadow-light 	#ffffff 	#3d4a5c 	Top-left highlight
+text-primary 	#4a5568 	#e2e8f0 	Body text
+text-heading 	#2d3748 	#f7fafc 	Headings
+accent 	#667eea 	#667eea 	Interactive elements
+Typography
 
-## Rules: Don't
-- avoid low contrast text
-- avoid inconsistent spacing rhythm
-- avoid decorative motion without purpose
-- avoid ambiguous labels
-- avoid mixing multiple visual metaphors
-- avoid inaccessible hit areas
+font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+/* Weights: 300 (light), 400 (regular), 500 (medium) */
 
-## Expected Behavior
-- Follow the foundations first, then component consistency.
-- When uncertain, prioritize accessibility and clarity over novelty.
-- Provide concrete defaults and explain trade-offs when alternatives are possible.
-- Keep guidance opinionated, concise, and implementation-focused.
+Spacing Scale
 
-## Guideline Authoring Workflow
-1. Restate the design intent in one sentence before proposing rules.
-2. Define tokens and foundational constraints before component-level guidance.
-3. Specify component anatomy, states, variants, and interaction behavior.
-4. Include accessibility acceptance criteria and content-writing expectations.
-5. Add anti-patterns and migration notes for existing inconsistent UI.
-6. End with a QA checklist that can be executed in code review.
+4px → 8px → 12px → 16px → 24px → 32px → 48px → 64px
+Border Radius
 
-## Required Output Structure
-When generating design-system guidance, use this structure:
-- Context and goals
-- Design tokens and foundations
-- Component-level rules (anatomy, variants, states, responsive behavior)
-- Accessibility requirements and testable acceptance criteria
-- Content and tone standards with examples
-- Anti-patterns and prohibited implementations
-- QA checklist
+    Small: 8px (inputs, small buttons)
+    Medium: 12px (buttons, cards)
+    Large: 20px (containers, heroes)
 
-## Component Rule Expectations
-- Define required states: default, hover, focus-visible, active, disabled, loading, error (as relevant).
-- Describe interaction behavior for keyboard, pointer, and touch.
-- State spacing, typography, and color-token usage explicitly.
-- Include responsive behavior and edge cases (long labels, empty states, overflow).
+Implementation Patterns
+Pattern 1: CSS Variables (Vanilla/Any Framework)
 
-## Quality Gates
-- No rule should depend on ambiguous adjectives alone; anchor each rule to a token, threshold, or example.
-- Every accessibility statement must be testable in implementation.
-- Prefer system consistency over one-off local optimizations.
-- Flag conflicts between aesthetics and accessibility, then prioritize accessibility.
+Include at document root for consistent theming:
 
-## Example Constraint Language
-- Use "must" for non-negotiable rules and "should" for recommendations.
-- Pair every do-rule with at least one concrete don't-example.
-- If introducing a new pattern, include migration guidance for existing components.
+:root {
+  --neu-bg: #e6e8ed;
+  --neu-shadow-dark: #c5c8ce;
+  --neu-shadow-light: #ffffff;
+  --neu-text: #4a5568;
+  --neu-heading: #2d3748;
+  --neu-accent: #667eea;
+  --neu-radius: 12px;
+  --neu-extruded: 12px 12px 24px var(--neu-shadow-dark), -12px -12px 24px var(--neu-shadow-light);
+  --neu-pressed: inset 6px 6px 12px var(--neu-shadow-dark), inset -6px -6px 12px var(--neu-shadow-light);
+}
 
-<!-- TYPEUI_SH_MANAGED_END -->
+Pattern 2: Component States
+
+Every interactive element needs three shadow states:
+
+.neu-element {
+  box-shadow: var(--neu-extruded);
+  transition: box-shadow 250ms ease, transform 250ms ease;
+}
+.neu-element:hover {
+  box-shadow: 16px 16px 32px var(--neu-shadow-dark), -16px -16px 32px var(--neu-shadow-light);
+  transform: translateY(-2px);
+}
+.neu-element:active, .neu-element:focus {
+  box-shadow: var(--neu-pressed);
+  transform: translateY(0);
+}
+
+Pattern 3: Dark Mode
+
+Toggle via data-theme="dark" on root element:
+
+:root[data-theme="dark"] {
+  --neu-bg: #2d3748;
+  --neu-shadow-dark: #1a202c;
+  --neu-shadow-light: #3d4a5c;
+  --neu-text: #e2e8f0;
+  --neu-heading: #f7fafc;
+}
+
+Component Reference
+
+See references/components.md for complete component CSS (buttons, cards, inputs, navigation, heroes).
+
+See references/tailwind-config.md for Tailwind CSS configuration.
+Accessibility Notes
+
+    Focus visibility: Add visible ring on :focus-visible:
+
+    .neu-element:focus-visible {
+      box-shadow: var(--neu-pressed), 0 0 0 3px rgba(102, 126, 234, 0.3);
+    }
+
+    Reduced motion: Wrap animations in media query:
+
+    @media (prefers-reduced-motion: no-preference) {
+      .neu-element { transition: all 250ms ease; }
+    }
+
+    Touch targets: Ensure minimum 44×44px for mobile.
+
+    Contrast: All text colors pass WCAG AA against backgrounds.
+
+Usage Workflow
+
+    Set background to #e6e8ed (light) or #2d3748 (dark)
+    Apply CSS variables at :root
+    Import Inter font (weights 300, 400, 500)
+    Use extruded shadow for raised elements
+    Use pressed shadow for inputs and active states
+    Apply transitions for smooth state changes

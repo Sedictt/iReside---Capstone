@@ -82,7 +82,7 @@ export function MessageComposer({
     }, [messageInput]);
 
     return (
-        <div className="p-4 bg-surface-1 border-t border-divider relative">
+        <div className="p-4 relative mt-2">
             <AnimatePresence>
                 {isOtherUserTyping && (
                     <motion.div 
@@ -158,7 +158,7 @@ export function MessageComposer({
                     )}
                 </AnimatePresence>
 
-                <div className="flex items-end gap-3 bg-surface-2 border border-divider rounded-[2rem] p-2 pl-4 pr-2 focus-within:border-primary/40 focus-within:bg-surface-1 focus-within:ring-4 focus-within:ring-primary/10 transition-all relative overflow-visible group/composer">
+                <div className="flex items-end gap-3 neumorphic-inset rounded-[2rem] p-2 pl-4 pr-2 transition-all relative overflow-visible group/composer">
                     <button 
                         onClick={() => fileInputRef.current?.click()}
                         className="p-2.5 rounded-full hover:bg-surface-3 transition-colors text-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
@@ -206,7 +206,7 @@ export function MessageComposer({
                             className={cn(
                                 "p-2.5 rounded-full transition-all flex items-center justify-center min-w-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
                                 (messageInput.trim() || pendingAttachments.length > 0) && !isUploadingFile && !isSending
-                                    ? "bg-primary text-white shadow-lg shadow-primary/20 hover:scale-105 active:scale-95" 
+                                    ? "neumorphic-primary text-white hover:scale-105 active:scale-95" 
                                     : "bg-surface-3 text-disabled"
                             )}
                         >

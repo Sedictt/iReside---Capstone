@@ -35,12 +35,12 @@ export function ChatHeader({
     const isPlaceholder = !contact.id;
 
     return (
-        <div className="z-20 flex h-20 shrink-0 items-center justify-between border-b border-divider bg-surface-1/80 px-6 backdrop-blur-md">
+        <div className="z-20 flex h-20 shrink-0 items-center justify-between px-6 pt-2">
             <div className="flex items-center gap-4">
                 {onBack && (
                     <button
                         onClick={onBack}
-                        className="flex sm:hidden items-center justify-center p-2 rounded-xl border border-border bg-surface-2 text-high hover:bg-surface-3 transition-all active:scale-95"
+                        className="flex sm:hidden items-center justify-center p-2 rounded-xl neumorphic-extruded transition-all active:scale-95"
                         title="Back to List"
                     >
                         <ArrowLeft className="size-4" />
@@ -48,7 +48,7 @@ export function ChatHeader({
                 )}
                 <div 
                     className={cn(
-                        "relative size-12 rounded-full border border-border overflow-hidden flex items-center justify-center transition-all",
+                        "relative size-12 rounded-full neumorphic-inset-card overflow-hidden flex items-center justify-center transition-all",
                         isPlaceholder ? "bg-surface-2" : ""
                     )}
                     style={{ backgroundColor: contact.avatarBgColor || 'var(--surface-3)' }}
@@ -104,7 +104,7 @@ export function ChatHeader({
                         className={cn(
                             "p-2.5 rounded-xl transition-all active:scale-95",
                             showFilesSidebar 
-                                ? "bg-primary text-white shadow-lg shadow-primary/20" 
+                                ? "neumorphic-primary text-white" 
                                 : "text-medium hover:bg-surface-2"
                         )}
                         title="Shared Files"
@@ -120,7 +120,7 @@ export function ChatHeader({
                         className={cn(
                             "p-2.5 rounded-xl transition-all active:scale-95",
                             showInfoSidebar 
-                                ? "bg-primary text-white shadow-lg shadow-primary/20" 
+                                ? "neumorphic-primary text-white" 
                                 : "text-medium hover:bg-surface-2"
                         )}
                     >

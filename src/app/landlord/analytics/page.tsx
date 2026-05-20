@@ -668,7 +668,7 @@ export default function AnalyticsPage() {
     if (!mounted) return null;
 
     return (
-        <div className="relative min-h-screen w-full overflow-hidden bg-background selection:bg-primary/30">
+        <div className=" relative min-h-screen w-full overflow-hidden selection:bg-primary/30">
             {/* Decorative Background Elements */}
             <div className="pointer-events-none absolute inset-0 z-0">
                 <div className="absolute top-[-10%] left-[-10%] h-[50%] w-[50%] rounded-full bg-primary/8 blur-[120px]" />
@@ -680,7 +680,7 @@ export default function AnalyticsPage() {
                 {/* Page Header */}
             <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                    <div className="mb-4 inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.25em] text-primary neu-badge">
+                    <div className="mb-4 inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.25em] text-primary neumorphic-inset-card">
                         <BarChart className="size-3.5" />
                         Portfolio Analytics
                     </div>
@@ -693,9 +693,9 @@ export default function AnalyticsPage() {
                             type="button"
                             onClick={() => setIsIrisVisible((prev) => !prev)}
                             className={cn(
-                                "neu-btn-card inline-flex items-center gap-2.5 px-5 py-3 text-[11px] font-black uppercase tracking-[0.14em] transition-all hover:scale-105 active:scale-95",
+                                "neumorphic-extruded inline-flex items-center gap-2.5 px-5 py-3 text-[11px] font-black uppercase tracking-[0.14em] transition-all hover:scale-105 active:scale-95 sm:rounded-2xl",
                                 isIrisVisible
-                                    ? "text-primary"
+                                    ? "text-primary active"
                                     : "text-muted-foreground"
                             )}
                             aria-pressed={!isIrisVisible}
@@ -708,18 +708,15 @@ export default function AnalyticsPage() {
                         <div
                             id="iris-toggle-tooltip"
                             role="tooltip"
-                            className="pointer-events-none absolute left-1/2 top-[-0.85rem] z-20 w-max max-w-[17rem] -translate-x-1/2 -translate-y-full rounded-xl border border-white/10 bg-card/95 px-3 py-2 text-[10px] font-black tracking-wide text-foreground opacity-0 shadow-xl backdrop-blur-xl transition-all duration-200 group-hover/iris-toggle:opacity-100 group-hover/iris-toggle:translate-y-[-2.75rem] group-focus-within/iris-toggle:opacity-100 group-focus-within/iris-toggle:translate-y-[-2.75rem]"
+                            className="neumorphic-panel pointer-events-none absolute left-1/2 top-[-0.85rem] z-20 w-max max-w-[17rem] -translate-x-1/2 -translate-y-full rounded-xl px-3 py-2 text-[10px] font-black tracking-wide text-foreground opacity-0 backdrop-blur-xl transition-all duration-200 group-hover/iris-toggle:opacity-100 group-hover/iris-toggle:translate-y-[-2.75rem] group-focus-within/iris-toggle:opacity-100 group-focus-within/iris-toggle:translate-y-[-2.75rem]"
                         >
                             Toggle iRis mascot visibility on this page.
-                            <div className="absolute left-1/2 top-full size-2.5 -translate-x-1/2 -translate-y-1/2 rotate-45 border-r border-b border-border bg-card/95" />
+                            <div className="absolute left-1/2 top-full size-2.5 -translate-x-1/2 -translate-y-1/2 rotate-45 border-r border-b border-white/10 bg-[#1b1b1d]" />
                         </div>
                     </div>
                     <button
                         onClick={() => setIsExportModalOpen(true)}
-                        className="group inline-flex items-center gap-2.5 rounded-full bg-primary px-6 py-3 text-sm font-black text-primary-foreground transition-all hover:scale-105 active:scale-95"
-                        style={{
-                            boxShadow: '4px 4px 12px rgba(0,0,0,0.4), -4px -4px 12px rgba(42,42,42,0.2), 0 0 20px rgba(196,176,255,0.15)'
-                        }}
+                        className="neumorphic-primary group inline-flex items-center gap-2.5 rounded-2xl px-6 py-3 text-sm font-black transition-all hover:scale-105 active:scale-95"
                     >
                         <Download className="size-4 transition-transform group-hover:-translate-y-0.5" />
                         Export Report
@@ -728,10 +725,10 @@ export default function AnalyticsPage() {
             </div>
 
             {/* Performance Control Bar */}
-            <section className="neu-section relative z-0 w-full">
+            <section className="neumorphic-panel p-6 md:p-8 rounded-[2rem] relative z-0 w-full">
                 <div className="flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
                     <div className="flex min-w-0 items-center gap-4">
-                        <div className="neu-icon flex size-12 items-center justify-center rounded-[1rem] text-primary">
+                        <div className="neumorphic-inset-card flex size-12 items-center justify-center rounded-[1rem] text-primary">
                             <BarChart className="size-6" />
                         </div>
                         <div>
@@ -759,9 +756,9 @@ export default function AnalyticsPage() {
                         <button
                             onClick={() => setShowMoreKpis(!showMoreKpis)}
                             className={cn(
-                                "neu-btn-card flex items-center gap-2.5 px-5 py-2.5 text-[10px] font-black uppercase tracking-[0.15em] transition-all hover:scale-105 active:scale-95",
+                                "neumorphic-extruded flex items-center gap-2.5 px-5 py-2.5 text-[10px] font-black uppercase tracking-[0.15em] transition-all hover:scale-105 active:scale-95 rounded-xl",
                                 showMoreKpis
-                                    ? "text-primary"
+                                    ? "text-primary active"
                                     : "text-muted-foreground"
                             )}
                         >
@@ -833,10 +830,10 @@ export default function AnalyticsPage() {
 
 
             {/* Main Content Grid */}
-            <section className="neu-section relative z-0 w-full">
+            <section className="neumorphic-panel p-6 md:p-8 rounded-[2rem] relative z-0 w-full">
                 <div className="mb-10 flex flex-wrap items-center justify-between gap-4 px-2">
                     <div className="flex min-w-0 items-center gap-4">
-                        <div className="neu-icon flex size-12 items-center justify-center rounded-[1rem] text-emerald-300">
+                        <div className="neumorphic-inset-card flex size-12 items-center justify-center rounded-[1rem] text-emerald-300">
                             <TrendingUp className="size-6" />
                         </div>
                         <div>
@@ -873,9 +870,9 @@ export default function AnalyticsPage() {
             />
 
             {/* Export History */}
-            <section className="neu-section relative z-0 w-full">
+            <section className="neumorphic-panel p-6 md:p-8 rounded-[2rem] relative z-0 w-full">
                 <div className="mb-6 flex items-center gap-4 px-2">
-                    <div className="neu-icon flex size-12 items-center justify-center rounded-[1rem] text-amber-300">
+                    <div className="neumorphic-inset-card flex size-12 items-center justify-center rounded-[1rem] text-amber-300">
                         <History className="size-6" />
                     </div>
                     <div>
@@ -884,7 +881,7 @@ export default function AnalyticsPage() {
                     </div>
                 </div>
                 {exportHistory.length === 0 ? (
-                    <div className="neu-pressed flex flex-col items-center justify-center py-12 text-muted-foreground">
+                    <div className="neumorphic-inset rounded-2xl flex flex-col items-center justify-center py-12 text-muted-foreground">
                         <FileText className="size-8 mb-3 opacity-20" />
                         <p className="text-[10px] font-black uppercase tracking-widest opacity-40">No reports exported yet</p>
                     </div>
@@ -899,7 +896,7 @@ export default function AnalyticsPage() {
                                 <div
                                     key={item.id}
                                     className={cn(
-                                        "neu-history-card flex flex-col gap-3 p-5",
+                                        "neumorphic-panel rounded-2xl flex flex-col gap-3 p-5",
                                         isExpired
                                             ? "opacity-60"
                                             : ""
@@ -926,7 +923,7 @@ export default function AnalyticsPage() {
                                     {!isExpired && (
                                         <button
                                             onClick={() => handleRedownload(item)}
-                                            className="neu-btn-card mt-2 flex w-full items-center justify-center gap-2 py-2 text-[10px] font-black uppercase tracking-widest text-primary transition-all hover:text-primary-foreground"
+                                            className="neumorphic-extruded mt-2 flex w-full items-center justify-center gap-2 py-2 text-[10px] font-black uppercase tracking-widest text-primary transition-all hover:text-primary-foreground"
                                         >
                                             <Download className="size-3" />
                                             Redownload
@@ -942,7 +939,7 @@ export default function AnalyticsPage() {
                     <div className="mt-8 flex justify-center">
                         <button
                             onClick={() => fetchExportHistory(true)}
-                            className="neu-btn-card group flex items-center gap-2 px-8 py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground transition-all hover:text-primary active:scale-95"
+                            className="neumorphic-extruded group flex items-center gap-2 px-8 py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground transition-all hover:text-primary active:scale-95"
                         >
                             Load Older Reports
                             <ChevronDown className="size-3 transition-transform group-hover:translate-y-0.5" />
@@ -959,10 +956,10 @@ export default function AnalyticsPage() {
                         className="absolute inset-0 bg-black/60 backdrop-blur-md transition-opacity animate-in fade-in duration-300"
                         onClick={() => setIsExportModalOpen(false)}
                     />
-                    <div className="relative z-10 w-full max-w-lg overflow-hidden neu-modal animate-in zoom-in-95 duration-300">
+                    <div className="relative z-10 w-full max-w-lg overflow-hidden neumorphic-panel rounded-[2rem] animate-in zoom-in-95 duration-300">
                         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border/30 px-8 py-6">
                             <div className="flex items-center gap-4">
-                                <div className="neu-icon flex size-12 items-center justify-center rounded-2xl text-primary">
+                                <div className="neumorphic-inset-card flex size-12 items-center justify-center rounded-2xl text-primary">
                                     <Download className="size-6" />
                                 </div>
                                 <div>
@@ -973,7 +970,7 @@ export default function AnalyticsPage() {
                             <button
                                 type="button"
                                 onClick={() => setIsExportModalOpen(false)}
-                                className="neu-btn-card group flex size-10 items-center justify-center transition-all hover:text-foreground hover:rotate-90 active:scale-95"
+                                className="neumorphic-extruded group flex size-10 items-center justify-center transition-all hover:text-foreground hover:rotate-90 active:scale-95"
                             >
                                 <X className="size-5" />
                             </button>
@@ -993,7 +990,7 @@ export default function AnalyticsPage() {
                                                 key={option.id}
                                                 onClick={() => applyPresetRange(option)}
                                                 className={cn(
-                                                    "neu-btn-card px-4 py-2.5 text-xs font-black uppercase tracking-[0.1em] transition-all duration-200",
+                                                    "neumorphic-extruded px-4 py-2.5 text-xs font-black uppercase tracking-[0.1em] transition-all duration-200",
                                                     selectedRange === option.id
                                                         ? "text-primary active"
                                                         : "text-muted-foreground"
@@ -1010,7 +1007,7 @@ export default function AnalyticsPage() {
                                                 type="date"
                                                 value={startDate}
                                                 onChange={(event) => onStartDateChange(event.target.value)}
-                                                className="neu-input w-full px-4 py-3 text-sm font-medium"
+                                                className="neumorphic-inset rounded-xl w-full px-4 py-3 text-sm font-medium"
                                                 aria-label="Report start date"
                                             />
                                         </div>
@@ -1021,7 +1018,7 @@ export default function AnalyticsPage() {
                                                 type="date"
                                                 value={endDate}
                                                 onChange={(event) => onEndDateChange(event.target.value)}
-                                                className="neu-input w-full px-4 py-3 text-sm font-medium"
+                                                className="neumorphic-inset rounded-xl w-full px-4 py-3 text-sm font-medium"
                                                 aria-label="Report end date"
                                             />
                                         </div>
@@ -1039,7 +1036,7 @@ export default function AnalyticsPage() {
                                     <button
                                         onClick={() => setExportFormat("pdf")}
                                         className={cn(
-                                            "neu-btn-card flex flex-col items-center justify-center gap-3 p-5 transition-all duration-200",
+                                            "neumorphic-extruded flex flex-col items-center justify-center gap-3 p-5 transition-all duration-200",
                                             exportFormat === "pdf"
                                                 ? "text-blue-400 active"
                                                 : "text-muted-foreground"
@@ -1051,7 +1048,7 @@ export default function AnalyticsPage() {
                                     <button
                                         onClick={() => setExportFormat("csv")}
                                         className={cn(
-                                            "neu-btn-card flex flex-col items-center justify-center gap-3 p-5 transition-all duration-200",
+                                            "neumorphic-extruded flex flex-col items-center justify-center gap-3 p-5 transition-all duration-200",
                                             exportFormat === "csv"
                                                 ? "text-emerald-400 active"
                                                 : "text-muted-foreground"
@@ -1067,7 +1064,7 @@ export default function AnalyticsPage() {
                         <div className="flex justify-end gap-3 border-t border-border/30 px-8 py-6">
                             <button
                                 onClick={() => setIsExportModalOpen(false)}
-                                className="neu-btn-card px-5 py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 transition-all hover:text-foreground"
+                                className="neumorphic-extruded px-5 py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 transition-all hover:text-foreground"
                             >
                                 Cancel
                             </button>
@@ -1077,7 +1074,7 @@ export default function AnalyticsPage() {
                                     else handleExportCsv();
                                     setIsExportModalOpen(false);
                                 }}
-                                className="rounded-2xl bg-primary px-6 py-3 text-sm font-black uppercase tracking-tight text-primary-foreground transition-all hover:scale-[1.02] hover:bg-primary/90 active:scale-95"
+                                className="neumorphic-primary rounded-2xl px-6 py-3 text-sm font-black uppercase tracking-tight transition-all hover:scale-[1.02] active:scale-95"
                                 style={{
                                     boxShadow: '4px 4px 12px rgba(0,0,0,0.4), -4px -4px 12px rgba(42,42,42,0.2), 0 0 20px rgba(196,176,255,0.2)'
                                 }}
@@ -1090,7 +1087,7 @@ export default function AnalyticsPage() {
             )}
 
             {toastMessage && (
-                <div className="neu-card-pressed fixed bottom-6 right-6 z-50 rounded-2xl px-5 py-3.5 text-sm font-black text-emerald-300 animate-in slide-in-from-bottom-4 duration-300">
+                <div className="neumorphic-inset-card fixed bottom-6 right-6 z-50 rounded-2xl px-5 py-3.5 text-sm font-black text-emerald-300 animate-in slide-in-from-bottom-4 duration-300">
                     {toastMessage}
                 </div>
             )}

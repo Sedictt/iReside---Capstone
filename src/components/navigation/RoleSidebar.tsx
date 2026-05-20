@@ -117,26 +117,17 @@ export function RoleSidebar({
                 data-tour-id={item.tourId}
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
-                    "group relative flex items-center transition-all duration-300 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary active:scale-[0.98]",
+                    "group relative flex items-center transition-all duration-200 ease-out\n                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary\n                     active:scale-[0.98]",
+                    /* Soft shadows */
                     isActive
-                        ? "text-primary bg-background shadow-[inset_3px_3px_6px_rgba(163,177,198,0.35),inset_-3px_-3px_6px_rgba(255,255,255,0.9)] dark:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.5),inset_-4px_-4px_8px_rgba(255,255,255,0.05)] border border-border/20"
-                        : "text-muted-foreground hover:text-foreground bg-background shadow-[4px_4px_8px_rgba(163,177,198,0.3),-4px_-4px_8px_rgba(255,255,255,0.9)] dark:shadow-[5px_5px_10px_rgba(0,0,0,0.45),-5px_-5px_10px_rgba(255,255,255,0.04)] border border-white/20 dark:border-white/03 hover:shadow-[2px_2px_4px_rgba(163,177,198,0.2),-2px_-2px_4px_rgba(255,255,255,0.9)] dark:hover:shadow-[3px_3px_6px_rgba(0,0,0,0.4),-3px_-3px_6px_rgba(255,255,255,0.04)]",
-                    nested && !isCollapsed ? "ml-4" : "",
-                    isCollapsed ? "justify-center rounded-2xl px-0 size-11 mx-auto" : "justify-between rounded-2xl px-5 py-4 mx-1"
+                        ? "text-primary neumorphic-active"
+                        : "text-muted-foreground hover:text-foreground neumorphic-extruded neumorphic-extruded-hover",
+                    nested && !isCollapsed ? "ml-0" : "", // Reduced margin
+                    isCollapsed ? "justify-center rounded-xl px-0 size-12 mx-auto" : "justify-between px-6 py-4 mx-3 my-2 rounded-xl"
                 )}
                 title={isCollapsed ? item.label : undefined}
             >
-                {/* Active Indicator Bar */}
-                {isActive && (
-                    <motion.div
-                        layoutId="activeIndicator"
-                        className="absolute left-1 h-6 w-1 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),0.5)]"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.3 }}
-                    />
-                )}
-
+                {/* Active Indicator removed for seamless molded aesthetic */}
                 <div className="flex items-center gap-3">
                     <item.icon 
                         className={cn(
@@ -177,11 +168,11 @@ export function RoleSidebar({
 
     return (
         <aside
-            className={cn(
-                "fixed left-0 top-0 z-40 flex h-screen flex-col bg-background text-foreground transition-all duration-300 neumorphic-panel",
-                isCollapsed ? "w-[80px]" : "w-[280px]",
-                className
-            )}
+        className={cn(
+            "fixed left-0 top-0 z-40 flex h-screen flex-col bg-background text-foreground transition-all duration-300",
+            isCollapsed ? "w-[80px]" : "w-[280px]",
+            className
+        )}
         >
             {/* Header */}
             <div className={cn("flex h-20 items-center justify-between px-6 transition-all duration-300 mb-2", isCollapsed ? "justify-center" : "justify-between")}>
@@ -274,14 +265,14 @@ export function RoleSidebar({
 
                                 {/* Section items container - sunken/inset shadow for grouped differentiation */}
                                 {!section.hideHeading && !isCollapsed ? (
-                                    <div className="mx-1 my-1 rounded-2xl bg-background p-1.5 shadow-[inset_2px_2px_5px_rgba(163,177,198,0.2),inset_-2px_-2px_5px_rgba(255,255,255,0.8)] dark:shadow-[inset_3px_3px_6px_rgba(0,0,0,0.35),inset_-3px_-3px_6px_rgba(255,255,255,0.04)] border border-white/20 dark:border-white/03">
+                                    <div className="neumorphic-inset mx-3 my-2 rounded-2xl overflow-hidden p-1 bg-background/50">
                                         <AnimatePresence initial={false}>
                                             {isExpanded && (
                                                 <motion.div
                                                     initial={{ height: 0, opacity: 0 }}
                                                     animate={{ height: "auto", opacity: 1 }}
                                                     exit={{ height: 0, opacity: 0 }}
-                                                    className="space-y-1 overflow-hidden"
+                                                    className="space-y-2 overflow-visible py-2" // space-y-2 for breathing room
                                                 >
                                                     {section.items.map((item) => renderNavItem(item, true))}
                                                 </motion.div>
@@ -324,9 +315,9 @@ export function RoleSidebar({
                     suppressHydrationWarning
                     onClick={onLogout}
                     className={cn(
-                        "group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition-all duration-300 text-muted-foreground hover:text-red-500 bg-background shadow-[3px_3px_6px_rgba(163,177,198,0.25),-3px_-3px_6px_rgba(255,255,255,0.8)] dark:shadow-[4px_4px_8px_rgba(0,0,0,0.4),-4px_-4px_8px_rgba(255,255,255,0.04)] border border-white/20 dark:border-white/03 hover:shadow-[2px_2px_4px_rgba(163,177,198,0.15),-2px_-2px_4px_rgba(255,255,255,0.8)] dark:hover:shadow-[2px_2px_4px_rgba(0,0,0,0.3),-2px_-2px_4px_rgba(255,255,255,0.04)]",
-                        isCollapsed ? "size-10 justify-center mx-auto" : "w-full"
-                    )}
+                        "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all duration-300 text-muted-foreground hover:text-red-500 neumorphic-extruded neumorphic-extruded-hover",
+                    isCollapsed ? "size-10 justify-center mx-auto" : "w-full"
+                )}
                 >
                     <LogOut className="size-5 shrink-0" />
                     {!isCollapsed && <span className="text-sm font-black">{logoutLabel}</span>}

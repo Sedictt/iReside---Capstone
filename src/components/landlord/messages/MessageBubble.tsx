@@ -139,7 +139,7 @@ export function MessageBubble({
                             </div>
                         ) : message.fileUrl ? (
                             <div
-                                className="rounded-[2rem] overflow-hidden border border-black/10 shadow-sm max-w-[320px] bg-surface-2 cursor-pointer hover:opacity-90 transition-opacity"
+                                className="rounded-[2rem] overflow-hidden max-w-[320px] neumorphic-panel cursor-pointer hover:opacity-90 transition-opacity"
                                 onClick={() => onImageClick?.([{ url: message.fileUrl!, id: message.id }], 0)}
                                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onImageClick?.([{ url: message.fileUrl!, id: message.id }], 0); }}}
                                 tabIndex={0}
@@ -157,17 +157,17 @@ export function MessageBubble({
                         initial={{ scale: 0.95, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         className={cn(
-                            "px-4 py-3 rounded-[1.5rem] shadow-sm border",
+                            "px-4 py-3 rounded-[1.5rem]",
                             isMe 
-                                ? "bg-primary text-white border-primary/20 rounded-br-sm" 
-                                : "bg-surface-1 text-high border-border rounded-bl-sm",
+                                ? "neumorphic-primary text-white rounded-br-sm" 
+                                : "neumorphic-panel text-high rounded-bl-sm",
                             hasMedia && "mt-1"
                         )}
                     >
                         {message.messageType === "file" && message.fileUrl ? (
                             <div className={cn(
-                                "mb-2 flex items-center gap-3 p-3 rounded-xl border",
-                                isMe ? "bg-white/10 border-white/20" : "bg-surface-2 border-border"
+                                "mb-2 flex items-center gap-3 p-3 rounded-xl",
+                                isMe ? "bg-white/10 shadow-inner" : "neumorphic-inset-card"
                             )}>
                                 <div className={cn(
                                     "p-2 rounded-lg",
@@ -233,7 +233,7 @@ export function MessageBubble({
                                     animate={{ opacity: 1, scale: 1, y: 0 }}
                                     exit={{ opacity: 0, scale: 0.95, y: 5 }}
                                     className={cn(
-                                        "absolute bottom-full z-50 mb-2 min-w-[140px] rounded-2xl border border-border bg-surface-1 shadow-2xl p-1.5",
+                                        "absolute bottom-full z-50 mb-2 min-w-[140px] rounded-2xl neumorphic-panel p-1.5",
                                         isMe ? "right-0" : "left-0"
                                     )}
                                 >
@@ -295,7 +295,7 @@ function AlbumGrid({ attachments, isMe, onImageClick }: { attachments: UiMessage
     
     return (
         <div className={cn(
-            "grid gap-1 rounded-[1.5rem] overflow-hidden border border-black/5 shadow-premium",
+            "grid gap-1 rounded-[1.5rem] overflow-hidden neumorphic-panel",
             "grid-cols-2"
         )}>
             {visibleAttachments.map((att, idx) => {
@@ -306,7 +306,7 @@ function AlbumGrid({ attachments, isMe, onImageClick }: { attachments: UiMessage
                     <div
                         key={att.id}
                         className={cn(
-                            "relative overflow-hidden aspect-square bg-surface-3",
+                            "relative overflow-hidden aspect-square neumorphic-inset",
                             isLarge && "row-span-2 aspect-auto"
                         )}
                     >
@@ -389,7 +389,7 @@ function SystemMessage({
         return (
             <NotificationCard
                 message={message}
-                icon={<HandCoins className="size-6 text-white" />}
+                icon={<HandCoins className="size-6" />}
                 title={isLandlord ? "In-Person Payment" : "Payment Awaiting Collection"}
                 subtitle={isLandlord ? "Verification Required" : "Face-to-Face Transaction"}
                 variant="warning"
@@ -405,7 +405,7 @@ function SystemMessage({
         return (
             <NotificationCard
                 message={message}
-                icon={<Bell className="size-6 text-white" />}
+                icon={<Bell className="size-6" />}
                 title={isLandlord ? "Payment Reminder" : "Payment Request"}
                 subtitle={isLandlord ? "Notification Sent" : "Action Required"}
                 variant="default"
@@ -424,7 +424,7 @@ function SystemMessage({
         return (
             <NotificationCard
                 message={message}
-                icon={isOverpayment ? <TrendingUp className="size-6 text-white" /> : (isRejected ? <AlertTriangle className="size-6 text-white" /> : <CheckCircle2 className="size-6 text-white" />)}
+                icon={isOverpayment ? <TrendingUp className="size-6" /> : (isRejected ? <AlertTriangle className="size-6" /> : <CheckCircle2 className="size-6" />)}
                 title={isOverpayment 
                     ? (message.metadata?.isResolved 
                         ? "Reconciliation Complete"

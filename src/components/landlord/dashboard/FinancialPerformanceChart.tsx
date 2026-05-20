@@ -211,58 +211,40 @@ export function FinancialPerformanceChart({ dataByWindow }: FinancialPerformance
         <motion.div 
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="group relative flex h-full w-full flex-col overflow-hidden rounded-[2.5rem] border border-white/10 bg-card/60 p-4 sm:p-6 md:p-8 shadow-2xl shadow-black/[0.06] dark:shadow-black/20 backdrop-blur-xl transition-all duration-300"
+            className="neumorphic-panel group relative flex h-full w-full flex-col overflow-hidden rounded-[2.5rem] p-4 sm:p-6 md:p-8 transition-all duration-300"
         >
             <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
             
             {/* Header / Tabs */}
             <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
-                <div className="flex flex-wrap items-center gap-4 sm:gap-10">
+                <div className="flex flex-wrap items-center gap-4 sm:gap-6">
                     <button
                         onClick={() => setActiveTab("earnings")}
                         className={cn(
-                            "text-[10px] font-black uppercase tracking-[0.25em] transition-all flex items-center gap-3 pb-3 relative",
-                            activeTab === "earnings" ? "text-foreground" : "text-muted-foreground/60 hover:text-foreground"
+                            "neumorphic-extruded px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.25em] transition-all flex items-center gap-3",
+                            activeTab === "earnings" ? "text-primary active" : "text-muted-foreground/60 hover:text-foreground"
                         )}
                     >
-                        {activeTab === "earnings" && (
-                            <motion.span 
-                                layoutId="activeTabIndicator"
-                                className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#c4b0ff] shadow-[0_0_12px_rgba(109,152,56,0.6)]"
-                            />
-                        )}
-                        <span className={cn("size-2 rounded-full", activeTab === "earnings" ? "bg-[#c4b0ff] shadow-[0_0_8px_rgba(109,152,56,0.8)]" : "bg-neutral-600")} />
+                        <span className={cn("size-2 rounded-full", activeTab === "earnings" ? "bg-primary shadow-[0_0_8px_rgba(109,152,56,0.8)]" : "bg-neutral-600")} />
                         {labels.earnings}
                     </button>
                     <button
                         onClick={() => setActiveTab("expenses")}
                         className={cn(
-                            "text-[10px] font-black uppercase tracking-[0.25em] transition-all flex items-center gap-3 pb-3 relative",
-                            activeTab === "expenses" ? "text-foreground" : "text-muted-foreground/60 hover:text-foreground"
+                            "neumorphic-extruded px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.25em] transition-all flex items-center gap-3",
+                            activeTab === "expenses" ? "text-red-400 active" : "text-muted-foreground/60 hover:text-foreground"
                         )}
                     >
-                        {activeTab === "expenses" && (
-                            <motion.span 
-                                layoutId="activeTabIndicator"
-                                className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.6)]"
-                            />
-                        )}
                         <span className={cn("size-2 rounded-full", activeTab === "expenses" ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" : "bg-neutral-600")} />
                         {labels.expenses}
                     </button>
                     <button
                         onClick={() => setActiveTab("netIncome")}
                         className={cn(
-                            "text-[10px] font-black uppercase tracking-[0.25em] transition-all flex items-center gap-3 pb-3 relative",
-                            activeTab === "netIncome" ? "text-foreground" : "text-muted-foreground/60 hover:text-foreground"
+                            "neumorphic-extruded px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.25em] transition-all flex items-center gap-3",
+                            activeTab === "netIncome" ? "text-blue-400 active" : "text-muted-foreground/60 hover:text-foreground"
                         )}
                     >
-                        {activeTab === "netIncome" && (
-                            <motion.span 
-                                layoutId="activeTabIndicator"
-                                className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 shadow-[0_0_12px_rgba(59,130,246,0.6)]"
-                            />
-                        )}
                         <span className={cn("size-2 rounded-full", activeTab === "netIncome" ? "bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]" : "bg-neutral-600")} />
                         {labels.netIncome}
                     </button>
@@ -273,7 +255,7 @@ export function FinancialPerformanceChart({ dataByWindow }: FinancialPerformance
                     <select
                         value={timeWindow}
                         onChange={(e) => setTimeWindow(e.target.value as "week" | "month" | "year")}
-                        className="cursor-pointer appearance-none rounded-2xl border border-white/10 bg-card/80 py-2.5 pl-6 pr-8 text-[10px] font-black uppercase tracking-[0.15em] text-foreground transition-all hover:bg-card hover:ring-1 hover:ring-primary/20 focus:outline-none min-w-[150px]"
+                        className="neumorphic-inset cursor-pointer appearance-none rounded-xl py-2.5 pl-6 pr-8 text-[10px] font-black uppercase tracking-[0.15em] text-foreground transition-all focus:outline-none min-w-[150px]"
                     >
                         <option value="week">Weekly</option>
                         <option value="month">Monthly</option>
