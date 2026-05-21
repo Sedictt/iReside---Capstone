@@ -14,11 +14,11 @@ export function KpiCardSkeleton({ className }: { className?: string }) {
     return (
         <div 
             className={cn(
-                "relative flex flex-col justify-between overflow-hidden rounded-[2rem] border border-white/10 bg-surface-2 p-1 shadow-2xl shadow-black/20 backdrop-blur-xl", 
+                "relative flex flex-col justify-between overflow-hidden rounded-[2rem] neumorphic-panel p-1", 
                 className
             )}
         >
-            <div className="relative h-full w-full overflow-hidden rounded-[1.75rem] bg-surface-3 p-6 flex flex-col justify-between">
+            <div className="relative h-full w-full overflow-hidden rounded-[1.75rem] neumorphic-inset p-6 flex flex-col justify-between">
                 <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
                 
                 <div className="relative z-10 w-full space-y-5">

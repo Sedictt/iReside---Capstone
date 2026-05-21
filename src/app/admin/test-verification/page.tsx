@@ -26,7 +26,7 @@ interface VerificationResult {
 
 const VERIFICATION_STATUS_META: Record<string, { label: string; color: string; bg: string; border: string; icon: any }> = {
     not_verified: { label: "Not Verified", color: "#6b7280", bg: "rgba(107,114,128,0.12)", border: "rgba(107,114,128,0.24)", icon: CircleDashed },
-    verified: { label: "Verified", color: "#10b981", bg: "rgba(16,185,129,0.12)", border: "rgba(16,185,129,0.24)", icon: ShieldCheck },
+    verified: { label: "Verified", color: "#22c55e", bg: "rgba(34,197,94,0.12)", border: "rgba(34,197,94,0.24)", icon: ShieldCheck },
     not_found: { label: "Not Found", color: "#f59e0b", bg: "rgba(245,158,11,0.12)", border: "rgba(245,158,11,0.24)", icon: ShieldX },
     error: { label: "Error", color: "#ef4444", bg: "rgba(239,68,68,0.12)", border: "rgba(239,68,68,0.24)", icon: ShieldX },
 };

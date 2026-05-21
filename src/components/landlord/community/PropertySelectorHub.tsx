@@ -141,7 +141,7 @@ export function PropertySelectorHub({
                                 setActivePropertyIndex(0);
                             }}
                             placeholder="Find property..."
-                            className="h-12 w-full rounded-2xl border border-white/5 bg-white/5 pl-12 pr-4 text-sm font-black text-foreground placeholder:text-muted-foreground/40 focus:border-primary/30 focus:outline-none focus:ring-1 focus:ring-primary/30"
+                            className="h-12 w-full rounded-2xl border-none neumorphic-inset pl-12 pr-4 text-sm font-black text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/30 transition-all"
                         />
                     </div>
                 </div>
@@ -153,15 +153,15 @@ export function PropertySelectorHub({
                                 key={property.id}
                                 onClick={() => setActivePropertyIndex(idx)}
                                 className={cn(
-                                    "group relative flex w-full items-center gap-4 rounded-[1.25rem] p-4 transition-all duration-300",
+                                    "group relative flex w-full items-center gap-4 rounded-[1.25rem] p-4 transition-all duration-300 border-none mb-2",
                                     activePropertyIndex === idx 
-                                        ? "bg-primary/10 ring-1 ring-primary/20" 
-                                        : "hover:bg-white/5"
+                                        ? "neumorphic-inset text-primary" 
+                                        : "neumorphic-extruded"
                                 )}
                             >
-                                <div className="relative size-14 shrink-0 overflow-hidden rounded-xl bg-white/5">
+                                <div className="relative size-14 shrink-0 overflow-hidden rounded-xl neumorphic-inset-card">
                                     {property.image ? (
-                                        <Image src={property.image} fill className="object-cover" alt="" />
+                                        <Image src={property.image} fill className="object-cover opacity-80" alt="" />
                                     ) : (
                                         <div className="flex h-full w-full items-center justify-center text-muted-foreground/20">
                                             <Building2 className="size-6" />
@@ -214,7 +214,7 @@ export function PropertySelectorHub({
                             transition={{ duration: 0.4, ease: "easeOut" }}
                             className="relative w-full max-w-4xl"
                         >
-                            <div className="relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-card/60 p-1 shadow-2xl backdrop-blur-3xl">
+                            <div className="relative overflow-hidden rounded-[2.5rem] border-none neumorphic-panel p-1">
                                 <div className="grid lg:grid-cols-[1fr_360px]">
                                     {/* Preview Side */}
                                     <div className="relative hidden h-[500px] overflow-hidden rounded-[2.25rem] lg:block">
@@ -260,14 +260,14 @@ export function PropertySelectorHub({
                                             </p>
 
                                             <div className="mt-8 grid grid-cols-2 gap-4">
-                                                <div className="property-stage-content flex flex-col gap-1 rounded-2xl border border-white/5 bg-white/5 p-4 transition-all hover:bg-white/10">
+                                                <div className="property-stage-content flex flex-col gap-1 rounded-2xl border-none neumorphic-inset p-4 transition-all">
                                                     <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Units</span>
                                                     <div className="flex items-center gap-2">
                                                         <Home className="size-4 text-primary" />
                                                         <span className="text-lg font-black">{activeProperty.units?.length || 0}</span>
                                                     </div>
                                                 </div>
-                                                <div className="property-stage-content flex flex-col gap-1 rounded-2xl border border-white/5 bg-white/5 p-4 transition-all hover:bg-white/10">
+                                                <div className="property-stage-content flex flex-col gap-1 rounded-2xl border-none neumorphic-inset p-4 transition-all">
                                                     <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Residents</span>
                                                     <div className="flex items-center gap-2">
                                                         <Users className="size-4 text-emerald-400" />
@@ -282,10 +282,10 @@ export function PropertySelectorHub({
                                         <div className="property-stage-content mt-12">
                                             <button 
                                                 onClick={() => setSelectedPropertyId(activeProperty.id)}
-                                                className="group flex w-full items-center justify-between rounded-2xl bg-primary p-5 text-sm font-black uppercase tracking-widest text-primary-foreground shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95"
+                                                className="group flex w-full items-center justify-between rounded-2xl neumorphic-extruded p-5 text-sm font-black uppercase tracking-widest text-primary transition-all"
                                             >
                                                 {buttonText}
-                                                <div className="flex size-8 items-center justify-center rounded-xl bg-white/20 transition-transform group-hover:translate-x-1">
+                                                <div className="flex size-8 items-center justify-center rounded-xl neumorphic-inset-card transition-transform group-hover:translate-x-1">
                                                     <ArrowRight className="size-5" />
                                                 </div>
                                             </button>

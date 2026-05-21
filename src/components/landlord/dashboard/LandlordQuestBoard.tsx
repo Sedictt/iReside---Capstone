@@ -83,8 +83,6 @@ export function LandlordQuestBoard({ isOpen, onClose }: LandlordQuestBoardProps)
         }
     };
 
-    if (loading && !state) return null;
-
     return (
         <AnimatePresence>
             {isOpen && (
@@ -129,7 +127,31 @@ export function LandlordQuestBoard({ isOpen, onClose }: LandlordQuestBoardProps)
                             {/* Content */}
                             <div className="custom-scrollbar-premium flex-1 overflow-y-auto p-8">
                                 <div className="space-y-6">
-                                    {LANDLORD_QUESTS.map((quest, idx) => {
+                                    {loading && !state ? (
+                                        <>
+                                            {[1, 2, 3, 4].map((skeletonIdx) => (
+                                                <div
+                                                    key={`skeleton-${skeletonIdx}`}
+                                                    className="group relative overflow-hidden rounded-[2rem] border border-white/5 bg-white/3 p-6"
+                                                >
+                                                    <div className="flex items-start justify-between mb-4">
+                                                        <div className="flex size-10 items-center justify-center rounded-xl bg-surface-2 animate-pulse" />
+                                                        <div className="h-4 w-10 rounded-lg bg-surface-2 animate-pulse" />
+                                                    </div>
+                                                    <div className="space-y-2 mb-6">
+                                                        <div className="h-4 w-3/4 rounded bg-surface-2 animate-pulse" />
+                                                        <div className="h-3 w-full rounded bg-surface-2 animate-pulse" />
+                                                        <div className="h-3 w-2/3 rounded bg-surface-2 animate-pulse" />
+                                                    </div>
+                                                    <div className="space-y-4">
+                                                        <div className="h-1.5 w-full rounded-full bg-white/5" />
+                                                        <div className="h-9 w-full rounded-xl bg-white/5 animate-pulse" />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </>
+                                    ) : (
+                                        LANDLORD_QUESTS.map((quest, idx) => {
                                         const progress = state ? getQuestProgress(quest.id as LandlordQuestId, state) : 0;
                                         const Icon = ICON_MAP[quest.icon] || Rocket;
                                         const isDone = progress === 100;
@@ -199,7 +221,7 @@ export function LandlordQuestBoard({ isOpen, onClose }: LandlordQuestBoardProps)
                                                 </div>
                                             </motion.div>
                                         );
-                                    })}
+                                    }))}
                                 </div>
                             </div>
 

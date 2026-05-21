@@ -17,7 +17,7 @@ export function ReadOnlyCover({
         // Default gradient background
         return (
             <div
-                className={`w-full h-full bg-gradient-to-br from-[#6d9838]/20 via-[#171717] to-[#0a0a0a] ${className}`}
+                className={`w-full h-full bg-gradient-to-br from-[#8B5CF6]/20 via-[#171717] to-[#0a0a0a] ${className}`}
             />
         );
     }

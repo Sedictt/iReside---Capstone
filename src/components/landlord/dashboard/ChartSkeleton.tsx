@@ -13,7 +13,7 @@ export function ChartSkeleton({ className }: { className?: string }) {
 
     return (
         <div className={cn(
-            "relative h-full w-full overflow-hidden rounded-[2.5rem] border border-white/10 bg-surface-2 p-8 shadow-2xl shadow-black/30 backdrop-blur-xl",
+            "relative h-full w-full overflow-hidden rounded-[2.5rem] neumorphic-panel p-8",
             className
         )}>
             <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />

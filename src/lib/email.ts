@@ -40,7 +40,7 @@ export async function sendTenantCredentials({
 <head><meta charset="utf-8"></head>
 <body style="font-family:sans-serif;background:#0a0a0a;color:#e5e5e5;margin:0;padding:0;">
   <div style="max-width:560px;margin:40px auto;background:#141414;border:1px solid #2a2a2a;border-radius:16px;overflow:hidden;">
-    <div style="background:#6d9838;padding:24px 32px;">
+    <div style="background:#c4b0ff;padding:24px 32px;">
       <h1 style="margin:0;color:#000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
       <p style="margin:4px 0 0;color:#000;font-size:12px;font-weight:700;opacity:0.7;text-transform:uppercase;letter-spacing:2px;">Tenant Portal Access</p>
     </div>
@@ -52,7 +52,7 @@ export async function sendTenantCredentials({
 
       ${leaseDetails ? `
       <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:24px;">
-        <p style="margin:0 0 16px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#6d9838;">Your Lease Details</p>
+        <p style="margin:0 0 16px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#c4b0ff;">Your Lease Details</p>
         <div style="margin-bottom:12px;">
           <p style="margin:0 0 4px;font-size:11px;color:#737373;text-transform:uppercase;letter-spacing:1px;">Property</p>
           <p style="margin:0;font-size:15px;font-weight:700;color:#fff;">${leaseDetails.property_name}</p>
@@ -73,21 +73,21 @@ export async function sendTenantCredentials({
       ` : ""}
 
       ${signingLink ? `
-      <div style="background:#1a1a1a;border:1px solid #6d9838;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center;">
+      <div style="background:#1a1a1a;border:1px solid #c4b0ff;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center;">
         <p style="margin:0 0 16px;font-size:14px;font-weight:700;color:#fff;">📝 Sign Your Lease Agreement</p>
         <p style="margin:0 0 20px;font-size:13px;color:#a3a3a3;line-height:1.5;">
           Your lease is ready for your signature. Please review and sign the agreement to complete your onboarding.
         </p>
-        <a href="${signingLink}" style="display:inline-block;background:#6d9838;color:#000;font-weight:900;font-size:15px;padding:16px 32px;border-radius:10px;text-decoration:none;letter-spacing:-0.3px;">
+        <a href="${signingLink}" style="display:inline-block;background:#c4b0ff;color:#000;font-weight:900;font-size:15px;padding:16px 32px;border-radius:10px;text-decoration:none;letter-spacing:-0.3px;">
           Sign Lease Agreement →
         </a>
       </div>
       ` : ""}
 
       <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:24px;">
-        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#6d9838;">Email</p>
+        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#c4b0ff;">Email</p>
         <p style="margin:0 0 16px;font-size:15px;font-weight:700;color:#fff;font-family:monospace;">${to}</p>
-        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#6d9838;">Temporary Password</p>
+        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#c4b0ff;">Temporary Password</p>
         <p style="margin:0;font-size:18px;font-weight:900;color:#fff;font-family:monospace;letter-spacing:2px;">${tempPassword}</p>
       </div>
 
@@ -97,7 +97,7 @@ export async function sendTenantCredentials({
           Set Your Password →
         </a>
       </div>
-      <p style="margin:0 0 24px;color:#737373;font-size:12px;">Or copy this link: <a href="${inviteUrl}" style="color:#6d9838;word-break:break-all;">${inviteUrl}</a></p>
+      <p style="margin:0 0 24px;color:#737373;font-size:12px;">Or copy this link: <a href="${inviteUrl}" style="color:#c4b0ff;word-break:break-all;">${inviteUrl}</a></p>
       ` : ""}
 
       <p style="margin:0;color:#525252;font-size:12px;line-height:1.6;">
@@ -149,13 +149,13 @@ export async function sendLandlordCredentialsCopy({
       </p>
 
       <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:24px;">
-        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#6d9838;">Tenant Email</p>
+        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#c4b0ff;">Tenant Email</p>
         <p style="margin:0 0 16px;font-size:15px;font-weight:700;color:#fff;font-family:monospace;">${tenantEmail}</p>
-        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#6d9838;">Temporary Password</p>
+        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#c4b0ff;">Temporary Password</p>
         <p style="margin:0;font-size:18px;font-weight:900;color:#fff;font-family:monospace;letter-spacing:2px;">${tempPassword}</p>
       </div>
 
-      ${inviteUrl ? `<p style="margin:0 0 24px;color:#737373;font-size:12px;">Password reset link: <a href="${inviteUrl}" style="color:#6d9838;word-break:break-all;">${inviteUrl}</a></p>` : ""}
+      ${inviteUrl ? `<p style="margin:0 0 24px;color:#737373;font-size:12px;">Password reset link: <a href="${inviteUrl}" style="color:#c4b0ff;word-break:break-all;">${inviteUrl}</a></p>` : ""}
 
       <p style="margin:0;color:#525252;font-size:12px;">Share these credentials with the tenant only if they did not receive their welcome email.</p>
     </div>
@@ -199,7 +199,7 @@ export async function sendSigningLinkEmail({
 <head><meta charset="utf-8"></head>
 <body style="font-family:sans-serif;background:#0a0a0a;color:#e5e5e5;margin:0;padding:0;">
   <div style="max-width:560px;margin:40px auto;background:#141414;border:1px solid #2a2a2a;border-radius:16px;overflow:hidden;">
-    <div style="background:#6d9838;padding:24px 32px;">
+    <div style="background:#c4b0ff;padding:24px 32px;">
       <h1 style="margin:0;color:#000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
       <p style="margin:4px 0 0;color:#000;font-size:12px;font-weight:700;opacity:0.7;text-transform:uppercase;letter-spacing:2px;">Lease Agreement</p>
     </div>
@@ -210,7 +210,7 @@ export async function sendSigningLinkEmail({
       </p>
 
       <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:24px;">
-        <p style="margin:0 0 16px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#6d9838;">Property Details</p>
+        <p style="margin:0 0 16px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#c4b0ff;">Property Details</p>
         <div style="margin-bottom:12px;">
           <p style="margin:0 0 4px;font-size:11px;color:#737373;text-transform:uppercase;letter-spacing:1px;">Property</p>
           <p style="margin:0;font-size:15px;font-weight:700;color:#fff;">${propertyName}</p>
@@ -229,24 +229,24 @@ export async function sendSigningLinkEmail({
         </div>
       </div>
 
-      <div style="background:#1a1a1a;border:1px solid #6d9838;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center;">
+      <div style="background:#1a1a1a;border:1px solid #c4b0ff;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center;">
         <p style="margin:0 0 16px;font-size:14px;font-weight:700;color:#fff;">📝 Review and Sign Your Lease</p>
         <p style="margin:0 0 20px;font-size:13px;color:#a3a3a3;line-height:1.5;">
           Please review the full lease agreement and provide your electronic signature to complete the rental process.
         </p>
-        <a href="${signingUrl}" style="display:inline-block;background:#6d9838;color:#000;font-weight:900;font-size:15px;padding:16px 32px;border-radius:10px;text-decoration:none;letter-spacing:-0.3px;">
+        <a href="${signingUrl}" style="display:inline-block;background:#c4b0ff;color:#000;font-weight:900;font-size:15px;padding:16px 32px;border-radius:10px;text-decoration:none;letter-spacing:-0.3px;">
           Sign Lease Agreement →
         </a>
       </div>
 
       <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:24px;">
-        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#6d9838;">⏰ Link Expires</p>
+        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#c4b0ff;">⏰ Link Expires</p>
         <p style="margin:0;font-size:14px;color:#fff;">${expiresAt.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
         <p style="margin:4px 0 0;font-size:12px;color:#737373;">Please sign before this date to avoid expiration.</p>
       </div>
 
       <div style="padding:20px;background:#1a1a1a;border-radius:12px;margin-bottom:24px;">
-        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#6d9838;">Landlord Contact</p>
+        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#c4b0ff;">Landlord Contact</p>
         <p style="margin:0 0 4px;font-size:15px;font-weight:700;color:#fff;">${landlordName}</p>
         <p style="margin:0;font-size:13px;color:#a3a3a3;">${landlordEmail}</p>
       </div>
@@ -298,17 +298,17 @@ export async function sendTenantSignedNotification({
       </p>
 
       <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:24px;">
-        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#6d9838;">Lease ID</p>
+        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#c4b0ff;">Lease ID</p>
         <p style="margin:0;font-size:15px;font-weight:700;color:#fff;font-family:monospace;">${leaseId}</p>
       </div>
 
       ${signingUrl ? `
-      <div style="background:#1a1a1a;border:1px solid #6d9838;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center;">
+      <div style="background:#1a1a1a;border:1px solid #c4b0ff;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center;">
         <p style="margin:0 0 16px;font-size:14px;font-weight:700;color:#fff;">📝 Countersign the Lease</p>
         <p style="margin:0 0 20px;font-size:13px;color:#a3a3a3;line-height:1.5;">
           The tenant has completed their portion. Use the button below to review and provide your signature.
         </p>
-        <a href="${signingUrl}" style="display:inline-block;background:#6d9838;color:#000;font-weight:900;font-size:15px;padding:16px 32px;border-radius:10px;text-decoration:none;letter-spacing:-0.3px;">
+        <a href="${signingUrl}" style="display:inline-block;background:#c4b0ff;color:#000;font-weight:900;font-size:15px;padding:16px 32px;border-radius:10px;text-decoration:none;letter-spacing:-0.3px;">
           Countersign Lease →
         </a>
       </div>
@@ -346,7 +346,7 @@ export async function sendLeaseActivatedNotification({
 <head><meta charset="utf-8"></head>
 <body style="font-family:sans-serif;background:#0a0a0a;color:#e5e5e5;margin:0;padding:0;">
   <div style="max-width:560px;margin:40px auto;background:#141414;border:1px solid #2a2a2a;border-radius:16px;overflow:hidden;">
-    <div style="background:#6d9838;padding:24px 32px;">
+    <div style="background:#c4b0ff;padding:24px 32px;">
       <h1 style="margin:0;color:#000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
       <p style="margin:4px 0 0;color:#000;font-size:12px;font-weight:700;opacity:0.7;text-transform:uppercase;letter-spacing:2px;">Lease Activated</p>
     </div>
@@ -357,7 +357,7 @@ export async function sendLeaseActivatedNotification({
       </p>
 
       <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:24px;">
-        <p style="margin:0 0 16px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#6d9838;">Your Lease Details</p>
+        <p style="margin:0 0 16px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#c4b0ff;">Your Lease Details</p>
         <div style="margin-bottom:12px;">
           <p style="margin:0 0 4px;font-size:11px;color:#737373;text-transform:uppercase;letter-spacing:1px;">Property</p>
           <p style="margin:0;font-size:15px;font-weight:700;color:#fff;">${propertyName}</p>
@@ -406,7 +406,7 @@ export async function sendTenantOnboardingReminder({
     const credentialBlock = tempPassword
         ? `
       <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:20px;">
-        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#6d9838;">Temporary Password</p>
+        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#c4b0ff;">Temporary Password</p>
         <p style="margin:0;font-size:17px;font-weight:900;color:#fff;font-family:monospace;letter-spacing:2px;">${tempPassword}</p>
       </div>
       `
@@ -416,7 +416,7 @@ export async function sendTenantOnboardingReminder({
         ? `
       <p style="margin:12px 0 0;color:#9ca3af;font-size:12px;">
         Set or reset your password:
-        <a href="${inviteUrl}" style="color:#6d9838;word-break:break-all;">${inviteUrl}</a>
+        <a href="${inviteUrl}" style="color:#c4b0ff;word-break:break-all;">${inviteUrl}</a>
       </p>
       `
         : "";
@@ -427,7 +427,7 @@ export async function sendTenantOnboardingReminder({
 <head><meta charset="utf-8"></head>
 <body style="font-family:sans-serif;background:#0a0a0a;color:#e5e5e5;margin:0;padding:0;">
   <div style="max-width:560px;margin:40px auto;background:#141414;border:1px solid #2a2a2a;border-radius:16px;overflow:hidden;">
-    <div style="background:#6d9838;padding:24px 32px;">
+    <div style="background:#c4b0ff;padding:24px 32px;">
       <h1 style="margin:0;color:#000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
       <p style="margin:4px 0 0;color:#000;font-size:12px;font-weight:700;opacity:0.75;text-transform:uppercase;letter-spacing:2px;">Onboarding Reminder</p>
     </div>
@@ -440,7 +440,7 @@ export async function sendTenantOnboardingReminder({
       ${credentialBlock}
 
       <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:24px;text-align:center;">
-        <a href="${onboardingUrl}" style="display:inline-block;background:#6d9838;color:#000;font-weight:900;font-size:15px;padding:14px 28px;border-radius:10px;text-decoration:none;letter-spacing:-0.3px;">
+        <a href="${onboardingUrl}" style="display:inline-block;background:#c4b0ff;color:#000;font-weight:900;font-size:15px;padding:14px 28px;border-radius:10px;text-decoration:none;letter-spacing:-0.3px;">
           Continue Onboarding
         </a>
         ${inviteBlock}
@@ -494,7 +494,7 @@ export async function sendProspectPaymentRequestEmail({
 <head><meta charset="utf-8"></head>
 <body style="font-family:sans-serif;background:#0a0a0a;color:#e5e5e5;margin:0;padding:0;">
   <div style="max-width:560px;margin:40px auto;background:#141414;border:1px solid #2a2a2a;border-radius:16px;overflow:hidden;">
-    <div style="background:#6d9838;padding:24px 32px;">
+    <div style="background:#c4b0ff;padding:24px 32px;">
       <h1 style="margin:0;color:#000;font-size:22px;font-weight:900;">iReside</h1>
       <p style="margin:4px 0 0;color:#000;font-size:12px;font-weight:700;opacity:0.75;text-transform:uppercase;letter-spacing:2px;">Payment Confirmation Step</p>
     </div>
@@ -505,12 +505,12 @@ export async function sendProspectPaymentRequestEmail({
         To continue, please submit move-in payment details for verification.
       </p>
       <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:18px;margin-bottom:20px;">
-        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#6d9838;">Required Amounts</p>
+        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#c4b0ff;">Required Amounts</p>
         <p style="margin:0 0 6px;color:#fff;font-size:14px;">Advance Rent: <strong>PHP ${advanceAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></p>
         <p style="margin:0;color:#fff;font-size:14px;">Security Deposit: <strong>PHP ${securityAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></p>
       </div>
       <div style="text-align:center;margin-bottom:20px;">
-        <a href="${paymentPortalUrl}" style="display:inline-block;background:#6d9838;color:#000;font-weight:900;font-size:15px;padding:14px 28px;border-radius:10px;text-decoration:none;">
+        <a href="${paymentPortalUrl}" style="display:inline-block;background:#c4b0ff;color:#000;font-weight:900;font-size:15px;padding:14px 28px;border-radius:10px;text-decoration:none;">
           Open Payment Portal
         </a>
       </div>
@@ -557,7 +557,7 @@ export async function sendRegistrationOTP({
 <head><meta charset="utf-8"></head>
 <body style="font-family:sans-serif;background:#0a0a0a;color:#e5e5e5;margin:0;padding:0;">
   <div style="max-width:480px;margin:40px auto;background:#141414;border:1px solid #2a2a2a;border-radius:16px;overflow:hidden;">
-    <div style="background:#6d9838;padding:24px 32px;text-align:center;">
+    <div style="background:#c4b0ff;padding:24px 32px;text-align:center;">
       <h1 style="margin:0;color:#000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
     </div>
     <div style="padding:32px;text-align:center;">
@@ -603,7 +603,7 @@ export async function sendLandlordRegistrationApproved({
 <head><meta charset="utf-8"></head>
 <body style="font-family:sans-serif;background:#0a0a0a;color:#e5e5e5;margin:0;padding:0;">
   <div style="max-width:560px;margin:40px auto;background:#141414;border:1px solid #2a2a2a;border-radius:16px;overflow:hidden;">
-    <div style="background:#6d9838;padding:24px 32px;">
+    <div style="background:#c4b0ff;padding:24px 32px;">
       <h1 style="margin:0;color:#000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
       <p style="margin:4px 0 0;color:#000;font-size:12px;font-weight:700;opacity:0.7;text-transform:uppercase;letter-spacing:2px;">Landlord Access Approved</p>
     </div>
@@ -615,13 +615,13 @@ export async function sendLandlordRegistrationApproved({
 
       <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center;">
         <p style="margin:0 0 16px;font-size:14px;font-weight:700;color:#fff;">Start Managing Your Properties</p>
-        <a href="${loginUrl}" style="display:inline-block;background:#6d9838;color:#000;font-weight:900;font-size:15px;padding:16px 32px;border-radius:10px;text-decoration:none;letter-spacing:-0.3px;">
+        <a href="${loginUrl}" style="display:inline-block;background:#c4b0ff;color:#000;font-weight:900;font-size:15px;padding:16px 32px;border-radius:10px;text-decoration:none;letter-spacing:-0.3px;">
           Go to Landlord Dashboard →
         </a>
       </div>
 
       <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:24px;">
-        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#6d9838;">What you can do now</p>
+        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#c4b0ff;">What you can do now</p>
         <ul style="margin:0;padding-left:20px;color:#a3a3a3;font-size:13px;line-height:1.8;">
           <li>Add and manage your properties</li>
           <li>Create units and list them for rent</li>
@@ -682,7 +682,7 @@ export async function sendLandlordOnboardingMagicLink({
 <head><meta charset="utf-8"></head>
 <body style="font-family:sans-serif;background:#0a0a0a;color:#e5e5e5;margin:0;padding:0;">
   <div style="max-width:560px;margin:40px auto;background:#141414;border:1px solid #2a2a2a;border-radius:16px;overflow:hidden;">
-    <div style="background:#6d9838;padding:24px 32px;">
+    <div style="background:#c4b0ff;padding:24px 32px;">
       <h1 style="margin:0;color:#000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
       <p style="margin:4px 0 0;color:#000;font-size:12px;font-weight:700;opacity:0.7;text-transform:uppercase;letter-spacing:2px;">Complete Your Setup</p>
     </div>
@@ -692,21 +692,21 @@ export async function sendLandlordOnboardingMagicLink({
         Great news! Your landlord registration has been approved. To access your landlord dashboard, you need to complete a quick setup process.
       </p>
 
-      <div style="background:#1a1a1a;border:1px solid #6d9838;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center;">
+      <div style="background:#1a1a1a;border:1px solid #c4b0ff;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center;">
         <p style="margin:0 0 16px;font-size:14px;font-weight:700;color:#fff;">Set Up Your Account</p>
-        <a href="${onboardingUrl}" style="display:inline-block;background:#6d9838;color:#000;font-weight:900;font-size:15px;padding:16px 32px;border-radius:10px;text-decoration:none;letter-spacing:-0.3px;">
+        <a href="${onboardingUrl}" style="display:inline-block;background:#c4b0ff;color:#000;font-weight:900;font-size:15px;padding:16px 32px;border-radius:10px;text-decoration:none;letter-spacing:-0.3px;">
           Complete Setup →
         </a>
       </div>
 
       <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:24px;">
-        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#6d9838;">⏰ Link Expires</p>
+        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#c4b0ff;">⏰ Link Expires</p>
         <p style="margin:0;font-size:14px;color:#fff;">${expiresAt}</p>
         <p style="margin:4px 0 0;font-size:12px;color:#737373;">Please complete your setup before the link expires.</p>
       </div>
 
       <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:24px;">
-        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#6d9838;">What you'll do</p>
+        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#c4b0ff;">What you'll do</p>
         <ul style="margin:0;padding-left:20px;color:#a3a3a3;font-size:13px;line-height:1.8;">
           <li>Create your account password</li>
           <li>Verify your property details</li>

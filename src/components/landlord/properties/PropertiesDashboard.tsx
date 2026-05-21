@@ -127,13 +127,10 @@ export function PropertiesDashboard() {
     return (
         <div className="min-h-screen space-y-8 px-3 pb-12 pt-6 text-foreground sm:px-4 lg:px-5 xl:px-6">
             {/* Command Center / Header */}
-            <div className="relative overflow-hidden rounded-3xl border border-border bg-card p-8 shadow-sm">
-                {/* Top Accent Line */}
-                <div className="absolute inset-x-0 top-0 h-px bg-border" />
-
+            <div className="neumorphic-panel relative overflow-hidden rounded-3xl p-8">
                 <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div>
-                        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-background/75 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur-md">
+                        <div className="neumorphic-inset-card mb-6 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium text-muted-foreground">
                             <Building2 className="size-5" />
                             <span>Portfolio Management</span>
                         </div>
@@ -146,7 +143,7 @@ export function PropertiesDashboard() {
                     </div>
 
                     <div className="flex gap-3">
-                        <Link href="/landlord/properties/new" className="flex h-12 items-center gap-2 rounded-xl bg-primary px-6 font-black text-primary-foreground shadow-[0_14px_30px_-18px_rgba(var(--primary-rgb),0.65)] transition-all hover:bg-primary/90">
+                        <Link href="/landlord/properties/new" className="neumorphic-primary flex h-12 items-center gap-2 rounded-xl px-6 font-black text-primary-foreground transition-all hover:brightness-110">
                             <Plus className="size-4" />
                             New Asset
                         </Link>
@@ -158,7 +155,7 @@ export function PropertiesDashboard() {
 
             {/* View Controls & Filters */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex w-full rounded-xl border border-border bg-card/95 p-1 shadow-sm sm:w-auto">
+                <div className="neumorphic-inset flex w-full rounded-xl p-1 sm:w-auto">
                     {FILTER_TABS.map((tab) => (
                         <button
                             key={tab}
@@ -166,8 +163,8 @@ export function PropertiesDashboard() {
                             className={cn(
                                 "flex-1 sm:flex-none px-6 py-2.5 rounded-lg text-sm font-medium transition-all",
                                 activeTab === tab
-                                    ? "bg-background text-foreground shadow-sm"
-                                    : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                                    ? "neumorphic-extruded text-foreground"
+                                    : "text-muted-foreground hover:text-foreground"
                             )}
                         >
                             {tab}
@@ -182,7 +179,7 @@ export function PropertiesDashboard() {
                         placeholder="Filter portfolio by name or location..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="h-11 w-full rounded-xl border border-border bg-card/95 pl-11 pr-4 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus:border-primary/35 focus:outline-none"
+                        className="neumorphic-inset h-11 w-full rounded-xl pl-11 pr-4 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
                     />
                 </div>
             </div>
@@ -198,13 +195,13 @@ export function PropertiesDashboard() {
                 )}
 
                 {!isLoading && loadError && (
-                    <div className="rounded-3xl border border-red-500/20 bg-card/95 py-20 text-center shadow-sm">
+                    <div className="neumorphic-panel rounded-3xl py-20 text-center">
                         <Building2 className="mx-auto mb-4 size-12 text-red-500 dark:text-red-400" />
                         <h3 className="mb-2 text-xl font-black text-foreground">Failed to load portfolio</h3>
                         <p className="mb-6 text-sm text-red-600 dark:text-red-300">{loadError}</p>
                         <button
                             onClick={() => loadProperties()}
-                            className="h-11 rounded-xl border border-border bg-background px-5 font-medium text-foreground transition-colors hover:bg-muted"
+                            className="neumorphic-extruded h-11 rounded-xl px-5 font-medium text-foreground transition-colors"
                         >
                             Retry
                         </button>
@@ -216,7 +213,7 @@ export function PropertiesDashboard() {
                     const occupancyPercent = Math.round(occupancyRatio * 100);
 
                     return (
-                        <div key={property.id} className="group relative overflow-hidden rounded-3xl border border-border bg-card/95 shadow-sm transition-all duration-500 hover:border-primary/20 hover:shadow-[0_18px_34px_-28px_rgba(15,23,42,0.35)] dark:hover:border-white/10 dark:hover:shadow-[0_18px_34px_-28px_rgba(15,23,42,0.35)]">
+                        <div key={property.id} className="neumorphic-panel group relative overflow-hidden rounded-3xl transition-all duration-500 hover:scale-[1.01]">
                             {/* No Ambient Glow */}
 
                             <div className="flex flex-col lg:flex-row relative z-10 w-full">
@@ -239,10 +236,10 @@ export function PropertiesDashboard() {
                                             <div className="flex items-center gap-3">
                                                 <h3 className="text-2xl font-black text-foreground leading-tight">{property.name}</h3>
                                                 <div className={cn(
-                                                    "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border whitespace-nowrap",
+                                                    "neumorphic-inset-card inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider whitespace-nowrap",
                                                     property.status === "Performing" || property.status === "Stable"
-                                                        ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                                                        : "border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                                                        ? "text-emerald-600 dark:text-emerald-400"
+                                                        : "text-amber-600 dark:text-amber-400"
                                                 )}>
                                                     <span className={cn(
                                                         "size-1.5 rounded-full animate-pulse",
@@ -278,7 +275,7 @@ export function PropertiesDashboard() {
                                                         />
                                                     </svg>
                                                     <div className="absolute inset-0 flex items-center justify-center">
-                                                        <div className="flex size-10 items-center justify-center rounded-full border border-border/80 bg-background/95 text-primary shadow-sm dark:border-white/10 dark:bg-neutral-950/90">
+                                                        <div className="neumorphic-extruded flex size-10 items-center justify-center rounded-full text-primary">
                                                             <Users className="size-5 text-primary" />
                                                         </div>
                                                     </div>
@@ -301,10 +298,10 @@ export function PropertiesDashboard() {
                                             {/* Maintenance Status */}
                                             <div className="flex items-center gap-4">
                                                 <div className={cn(
-                                                    "size-14 rounded-2xl flex items-center justify-center border transition-colors",
+                                                    "neumorphic-inset-card size-14 rounded-2xl flex items-center justify-center transition-colors",
                                                     property.metrics.maintenance > 0 
-                                                        ? "border-amber-500/20 bg-amber-500/5 text-amber-500" 
-                                                        : "border-border bg-muted/30 text-muted-foreground"
+                                                        ? "text-amber-500" 
+                                                        : "text-muted-foreground"
                                                 )}>
                                                     <Wrench className="size-6" />
                                                 </div>
@@ -325,7 +322,7 @@ export function PropertiesDashboard() {
                                         <div className="flex items-center gap-3 w-full lg:w-auto">
                                             <button 
                                                 onClick={() => setHubModalId(property.id)}
-                                                className="flex-1 lg:w-40 h-12 px-6 flex items-center justify-center gap-2 rounded-xl border border-border bg-background font-black text-foreground transition-all hover:bg-muted shadow-sm"
+                                                className="neumorphic-extruded flex-1 lg:w-40 h-12 px-6 flex items-center justify-center gap-2 rounded-xl font-black text-foreground transition-all"
                                             >
                                                 <Settings className="size-4" />
                                                 <span>Manage</span>
@@ -341,7 +338,7 @@ export function PropertiesDashboard() {
                 })}
 
                 {!isLoading && !loadError && filteredProperties.length === 0 && (
-                    <div className="rounded-3xl border border-border bg-card/95 py-20 text-center shadow-sm">
+                    <div className="neumorphic-panel rounded-3xl py-20 text-center">
                         <Building2 className="mx-auto mb-4 size-12 text-muted-foreground" />
                         <h3 className="mb-2 text-xl font-black text-foreground">No matching assets</h3>
                         <p className="text-muted-foreground">Try adjusting your filters or search query.</p>
@@ -368,11 +365,11 @@ export function PropertiesDashboard() {
                                 initial={{ opacity: 0, scale: 0.95, y: 10 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                                className="relative z-10 w-full max-w-lg overflow-hidden rounded-3xl border border-border bg-card/98 p-6 shadow-2xl lg:p-8"
+                                className="neumorphic-panel relative z-10 w-full max-w-lg overflow-hidden rounded-3xl p-6 lg:p-8"
                             >
                                 <button 
                                     onClick={() => setHubModalId(null)}
-                                    className="absolute right-6 top-6 rounded-full bg-background p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                    className="neumorphic-extruded absolute right-6 top-6 rounded-full p-2 text-muted-foreground transition-colors hover:text-foreground"
                                 >
                                     <X className="size-5" />
                                 </button>
@@ -390,30 +387,30 @@ export function PropertiesDashboard() {
                                 <PropertyEnvironmentBanner environmentMode={activeProperty.type} needsReview={activeProperty.needsReview} propertyId={activeProperty.id} className="mb-6" />
 
                                 <div className="grid grid-cols-2 gap-3">
-                                    <Link href={`/landlord/properties/new?id=${activeProperty.id}&mode=edit`} className="group flex flex-col items-center justify-center rounded-2xl border border-border bg-background/75 p-4 transition-all hover:bg-muted">
-                                        <div className="size-12 bg-primary/20 text-primary rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                    <Link href={`/landlord/properties/new?id=${activeProperty.id}&mode=edit`} className="neumorphic-extruded group flex flex-col items-center justify-center rounded-2xl p-4 transition-all">
+                                        <div className="neumorphic-inset-card size-12 text-primary rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                                             <Edit3 className="size-5" />
                                         </div>
                                         <span className="text-sm font-medium text-foreground">Manage Property</span>
                                     </Link>
                                     
-                                    <Link href={`/landlord/unit-map?property=${activeProperty.id}`} className="group flex flex-col items-center justify-center rounded-2xl border border-border bg-background/75 p-4 transition-all hover:bg-muted">
-                                        <div className="size-12 bg-primary/20 text-primary rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                    <Link href={`/landlord/unit-map?property=${activeProperty.id}`} className="neumorphic-extruded group flex flex-col items-center justify-center rounded-2xl p-4 transition-all">
+                                        <div className="neumorphic-inset-card size-12 text-primary rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                                             <Map className="size-5" />
                                         </div>
                                         <span className="text-sm font-medium text-foreground">View Floor Plan</span>
                                     </Link>
 
 
-                                    <Link href="/landlord/tenants" className="group flex flex-col items-center justify-center rounded-2xl border border-border bg-background/75 p-4 transition-all hover:bg-muted">
-                                        <div className="size-12 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                    <Link href="/landlord/tenants" className="neumorphic-extruded group flex flex-col items-center justify-center rounded-2xl p-4 transition-all">
+                                        <div className="neumorphic-inset-card size-12 text-emerald-400 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                                             <Users className="size-5" />
                                         </div>
                                         <span className="text-sm font-medium text-foreground">View Tenants</span>
                                     </Link>
 
-                                    <Link href="/landlord/maintenance" className="group flex flex-col items-center justify-center rounded-2xl border border-border bg-background/75 p-4 transition-all hover:bg-muted">
-                                        <div className="size-12 bg-amber-500/20 text-amber-400 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                    <Link href="/landlord/maintenance" className="neumorphic-extruded group flex flex-col items-center justify-center rounded-2xl p-4 transition-all">
+                                        <div className="neumorphic-inset-card size-12 text-amber-400 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                                             <Wrench className="size-5" />
                                         </div>
                                         <span className="text-sm font-medium text-foreground">Maintenance</span>
@@ -430,7 +427,7 @@ export function PropertiesDashboard() {
 
 function PropertySkeleton() {
     return (
-        <div className="relative overflow-hidden rounded-3xl border border-border bg-card/95 shadow-sm flex flex-col lg:flex-row group">
+        <div className="neumorphic-panel relative overflow-hidden rounded-3xl flex flex-col lg:flex-row group">
             {/* Shimmer Effect */}
             <div className="absolute inset-0 z-0 pointer-events-none">
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-muted/30 to-transparent -translate-x-full animate-shimmer" style={{ animationDuration: '2.5s' }} />

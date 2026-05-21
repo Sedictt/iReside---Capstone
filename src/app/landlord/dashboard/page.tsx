@@ -393,79 +393,66 @@ export default function LandlordDashboard() {
                 </div>
 
                 {/* Payments Section */}
-                <section className="relative z-0 h-auto w-full rounded-[2.5rem] border border-white/10 bg-card/60 p-4 sm:p-6 md:p-8 shadow-2xl shadow-black/30 backdrop-blur-xl">
+                <section className="relative z-0 h-auto w-full rounded-[2.5rem] p-4 sm:p-6 md:p-8 neumorphic-panel focus-within:ring-2 focus-within:ring-primary/20 transition-all outline-none" tabIndex={-1} aria-labelledby="cash-flow-heading">
                     <div className="mb-10 flex flex-wrap items-center justify-between gap-4 px-2">
                         <div className="flex min-w-0 items-center gap-4">
-                            <div className="flex size-12 items-center justify-center rounded-[1rem] border border-primary/20 bg-primary/12 text-primary">
-                                <CreditCard className="size-6" />
+                            <div className="flex size-14 items-center justify-center rounded-[1.25rem] neumorphic-inset-card text-primary shrink-0 transition-transform hover:scale-105">
+                                <CreditCard className="size-6" aria-hidden="true" />
                             </div>
                             <div>
-                                <h2 className="text-2xl font-black tracking-tight text-foreground">Cash Flow Ledger</h2>
-                                <p className="text-sm font-medium text-muted-foreground/80">Track what is overdue, due this week, and already paid.</p>
+                                <h2 id="cash-flow-heading" className="text-2xl font-black tracking-tight text-foreground">Cash Flow Ledger</h2>
+                                <p className="text-xs sm:text-sm font-medium text-muted-foreground/80 mt-1">Track what is overdue, due this week, and already paid.</p>
                             </div>
                         </div>
-                        <Link href="/landlord/invoices" className="group shrink-0 flex items-center gap-2 rounded-xl border border-white/10 bg-card/70 px-4 py-2 text-xs font-black uppercase tracking-widest transition-all hover:bg-card">
+                        <Link 
+                            href="/landlord/invoices" 
+                            className="group shrink-0 flex items-center gap-2 rounded-xl px-4 py-2 sm:px-5 sm:py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-widest neumorphic-extruded active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all text-muted-foreground hover:text-primary"
+                            aria-label="View all invoices in the financial hub"
+                        >
                             View Invoices
-                            <ArrowUpRight className="size-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                            <ArrowUpRight className="size-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
                         </Link>
                     </div>
 
-                    {/* Renewals Card */}
-                    <div className="relative z-0 h-auto w-full rounded-[2.5rem] border border-white/10 bg-card/60 p-4 sm:p-6 md:p-8 shadow-2xl shadow-black/30 backdrop-blur-xl mb-8">
-                        <div className="flex flex-wrap items-center justify-between gap-4 px-2">
-                            <div className="flex min-w-0 items-center gap-4">
-                                <div className="flex size-12 items-center justify-center rounded-[1rem] border border-primary/20 bg-primary/12 text-primary">
-                                    <RefreshCw className="size-6" />
-                                </div>
-                                <div>
-                                    <h2 className="text-2xl font-black tracking-tight text-foreground">Lease Renewals</h2>
-                                    <p className="text-sm font-medium text-muted-foreground/80">Review and manage tenant renewal requests.</p>
-                                </div>
-                            </div>
-                            <Link href="/landlord/tenants?tab=renewals" className="group shrink-0 flex items-center gap-2 rounded-xl border border-white/10 bg-card/70 px-4 py-2 text-xs font-black uppercase tracking-widest transition-all hover:bg-card">
-                                View All
-                                <ArrowUpRight className="size-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-                            </Link>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 relative z-10">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 relative z-10" role="list" aria-label="Payment categories">
                         {PAYMENT_CATEGORIES.map(({ key, label, hint, emptyState, dot, tone }) => {
                             const items = paymentsState.paymentsByCategory[key] ?? [];
                             const topItem = items[0] ?? null;
 
                             return (
-                                <div key={key} className="flex flex-col gap-4">
+                                <div key={key} className="flex flex-col gap-4" role="listitem">
                                     <div className="flex items-center justify-between px-2 sm:px-4">
                                         <div className="flex items-start gap-2 sm:gap-3">
-                                            <div className={cn("size-1.5 rounded-full", dot)} />
+                                            <div className={cn("size-2 rounded-full mt-1 sm:mt-0.5 shadow-inner", dot)} aria-hidden="true" />
                                             <div className="space-y-1">
-                                                <h3 className={cn("text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em]", tone)}>{label}</h3>
+                                                <h3 className={cn("text-[10px] sm:text-xs font-black uppercase tracking-[0.2em]", tone)}>{label}</h3>
                                                 <p className="text-[9px] sm:text-[10px] font-black text-muted-foreground/60">{hint}</p>
                                             </div>
                                         </div>
                                         <button 
                                             onClick={() => setOpenPaymentModal(key)} 
-                                            className="text-[10px] font-black text-muted-foreground/60 transition-colors hover:text-primary uppercase tracking-tighter"
+                                            className="px-2.5 py-1 rounded-lg text-[9px] sm:text-[10px] font-black text-muted-foreground/80 uppercase tracking-tighter neumorphic-extruded active:scale-95 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all"
+                                            aria-label={`See more details for ${label}`}
                                         >
                                             See more
                                         </button>
                                     </div>
                                     
-                                    <div className="flex min-h-[130px] sm:min-h-[140px] flex-1 flex-col justify-center rounded-[1.75rem] border border-white/10 bg-card/70 p-3 sm:p-4 transition-all hover:bg-card">
+                                    <div className="flex min-h-[130px] sm:min-h-[140px] flex-1 flex-col justify-center rounded-[1.75rem] p-3 sm:p-4 neumorphic-inset transition-colors duration-300 focus-within:bg-background/40">
                                         {paymentsState.loading ? (
-                                            <div className="space-y-4 animate-pulse px-2">
+                                            <div className="space-y-4 animate-pulse px-2" aria-busy="true" aria-label="Loading latest payments">
                                                 <div className="flex items-center gap-3 sm:gap-4">
-                                                    <div className="size-10 sm:size-12 rounded-full bg-muted/40" />
-                                                    <div className="flex-1 space-y-2">
-                                                        <div className="h-3 sm:h-4 w-3/4 rounded bg-muted/40" />
-                                                        <div className="h-2 sm:h-3 w-1/2 rounded bg-muted/40" />
+                                                    <div className="size-10 sm:size-12 rounded-full neumorphic-inset" />
+                                                    <div className="flex-1 space-y-3">
+                                                        <div className="h-3 sm:h-4 w-3/4 rounded-lg neumorphic-inset" />
+                                                        <div className="h-2 sm:h-3 w-1/2 rounded-lg neumorphic-inset" />
                                                     </div>
                                                 </div>
                                             </div>
                                         ) : paymentsState.error ? (
-                                            <div className="p-3 sm:p-4 text-center">
-                                                <p className="text-[10px] sm:text-xs text-red-500/80 font-black">{paymentsState.error}</p>
+                                            <div className="p-3 sm:p-4 text-center rounded-2xl border border-red-500/20 bg-red-500/5">
+                                                <AlertTriangle className="size-5 mx-auto mb-2 text-red-500/70" aria-hidden="true" />
+                                                <p className="text-[10px] sm:text-xs text-red-500/80 font-black" role="alert">{paymentsState.error}</p>
                                             </div>
                                         ) : topItem ? (
                                             <PaymentCard
@@ -477,15 +464,38 @@ export default function LandlordDashboard() {
                                                 }}
                                             />
                                         ) : (
-                                            <div className="flex flex-col items-center justify-center py-5 sm:py-6 text-muted-foreground/40">
-                                                <CheckCircle2 className="size-5 sm:size-6 mb-1.5 sm:mb-2" />
-                                                <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest">{emptyState}</p>
+                                            <div className="flex flex-col items-center justify-center py-5 sm:py-6 text-muted-foreground/40 transition-transform hover:scale-105 duration-300">
+                                                <CheckCircle2 className="size-5 sm:size-6 mb-2 opacity-50" aria-hidden="true" />
+                                                <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest">{emptyState}</p>
                                             </div>
                                         )}
                                     </div>
                                 </div>
                             );
                         })}
+                    </div>
+                </section>
+
+                {/* Lease Renewals Section */}
+                <section className="relative z-0 h-auto w-full rounded-[2.5rem] p-4 sm:p-6 md:p-8 neumorphic-panel outline-none focus-within:ring-2 focus-within:ring-primary/20 transition-all" tabIndex={-1} aria-labelledby="renewals-heading">
+                    <div className="flex flex-wrap items-center justify-between gap-4 px-2">
+                        <div className="flex min-w-0 items-center gap-4">
+                            <div className="flex size-14 items-center justify-center rounded-[1.25rem] neumorphic-inset-card text-primary shrink-0 transition-transform hover:scale-105">
+                                <RefreshCw className="size-6" aria-hidden="true" />
+                            </div>
+                            <div>
+                                <h2 id="renewals-heading" className="text-2xl font-black tracking-tight text-foreground">Lease Renewals</h2>
+                                <p className="text-xs sm:text-sm font-medium text-muted-foreground/80 mt-1">Review and manage tenant renewal requests.</p>
+                            </div>
+                        </div>
+                        <Link 
+                            href="/landlord/tenants?tab=renewals" 
+                            className="group shrink-0 flex items-center gap-2 rounded-xl px-4 py-2 sm:px-5 sm:py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-widest neumorphic-extruded active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all text-muted-foreground hover:text-primary"
+                            aria-label="View all lease renewals"
+                        >
+                            View All
+                            <ArrowUpRight className="size-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
+                        </Link>
                     </div>
                 </section>
 
@@ -589,7 +599,7 @@ export default function LandlordDashboard() {
                                                 {/* Avatar with status indicator */}
                                                 <div 
                                                     className="relative size-20 shrink-0 rounded-full flex items-center justify-center overflow-hidden shadow-sm"
-                                                    style={{ backgroundColor: (selectedActionPayment as any).avatarBgColor || '#10b981' }}
+                                                    style={{ backgroundColor: (selectedActionPayment as any).avatarBgColor || '#8B5CF6' }}
                                                 >
                                                     {selectedActionPayment.avatar ? (
                                                         <Image
@@ -726,30 +736,32 @@ function PaymentCard({ payment, fallbackAvatar, onClick }: { payment: PaymentLis
     const isNearDue = status === 'Near Due';
 
     return (
-        <div 
+        <button 
+            type="button"
             onClick={onClick}
-            className="group relative flex cursor-pointer items-center justify-between overflow-hidden rounded-2xl border border-white/10 bg-card/70 p-4 transition-all hover:bg-card hover:ring-1 hover:ring-primary/20 active:scale-[0.98]"
+            aria-label={`View payment details for ${tenant}, Unit ${unit}. Amount: PHP ${amount}.`}
+            className="group relative flex w-full cursor-pointer items-center justify-between overflow-hidden rounded-2xl p-4 neumorphic-extruded active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all text-left"
         >
-            <div className="flex items-center gap-4 relative z-10">
-                <div className="relative">
+            <div className="flex items-center gap-4 relative z-10 w-full">
+                <div className="relative shrink-0">
                     <div
-                        className="relative size-12 rounded-full border-2 border-background overflow-hidden transition-all duration-500 group-hover:scale-110"
+                        className="relative size-12 rounded-full border-2 border-background/50 overflow-hidden transition-all duration-500 group-hover:scale-110 shadow-sm"
                         style={{ backgroundColor: (payment as any).avatarBgColor || '#171717' }}
                     >
-                        <Image src={avatar || fallbackAvatar} alt={tenant} fill sizes="48px" className="object-cover" />
+                        <Image src={avatar || fallbackAvatar} alt="" fill sizes="48px" className="object-cover" aria-hidden="true" />
                     </div>
                     <div className={cn(
                         "absolute -bottom-0.5 -right-0.5 size-4 rounded-full border-2 border-background",
-                        isPaid ? "bg-emerald-500" : isNearDue ? "bg-amber-500" : "bg-red-500"
-                    )} />
+                        isPaid ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : isNearDue ? "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]"
+                    )} aria-hidden="true" />
                 </div>
-                <div className="min-w-0 max-w-[100px] sm:max-w-none">
+                <div className="min-w-0 flex-1">
                     <h4 className="truncate text-sm font-black text-foreground group-hover:text-primary transition-colors">{tenant}</h4>
-                    <p className="text-[11px] font-black text-muted-foreground uppercase tracking-tight">{unit}</p>
+                    <p className="text-[11px] font-black text-muted-foreground uppercase tracking-tight">Unit {unit}</p>
                 </div>
             </div>
 
-            <div className="text-right relative z-10 flex flex-col items-end">
+            <div className="text-right relative z-10 flex flex-col items-end shrink-0 pl-4">
                 <h4 className="mb-0.5 text-sm font-black text-foreground">PHP {amount.toLocaleString()}</h4>
                 <div className="flex items-center justify-end gap-1.5 mt-1">
                     <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60">{date}</span>
@@ -757,7 +769,7 @@ function PaymentCard({ payment, fallbackAvatar, onClick }: { payment: PaymentLis
             </div>
 
             {/* Clickable indicator overlay */}
-            <div className="absolute inset-0 bg-primary/0 transition-colors group-hover:bg-primary/[0.02] pointer-events-none" />
-        </div>
+            <div className="absolute inset-0 bg-primary/0 transition-colors group-hover:bg-primary/[0.03] group-focus-visible:bg-primary/[0.03] pointer-events-none" aria-hidden="true" />
+        </button>
     );
 }

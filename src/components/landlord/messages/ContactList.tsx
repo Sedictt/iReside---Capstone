@@ -42,8 +42,8 @@ export function ContactList({
 }: ContactListProps) {
     return (
         <div className={cn(
-            "flex h-full flex-col overflow-hidden bg-surface-1 shadow-sm transition-all duration-300",
-            "sm:w-80 sm:shrink-0 sm:rounded-[2rem] sm:border sm:border-border lg:w-96",
+            "flex h-full flex-col overflow-hidden neumorphic-panel transition-all duration-300",
+            "sm:w-80 sm:shrink-0 sm:rounded-[2rem] lg:w-96",
             activeConversationId ? "hidden sm:flex" : "w-full flex"
         )}>
             {/* Header */}
@@ -52,7 +52,7 @@ export function ContactList({
                     <div className="flex items-center gap-3">
                         <Link
                             href={dashboardHref}
-                            className="rounded-xl border border-border bg-surface-2 p-2 transition-all hover:bg-surface-3 hover:scale-105 active:scale-95"
+                            className="rounded-xl neumorphic-extruded p-2 transition-all hover:scale-105 active:scale-95"
                             title="Back to Dashboard"
                         >
                             <ArrowLeft className="size-4 text-high" />
@@ -72,7 +72,7 @@ export function ContactList({
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search people..."
-                        className="w-full rounded-2xl border border-border bg-surface-2 py-2.5 pl-10 pr-4 text-sm text-high placeholder:text-disabled transition-all focus:border-primary focus:bg-surface-1 focus:ring-4 focus:ring-primary/5"
+                        className="w-full rounded-2xl neumorphic-inset py-2.5 pl-10 pr-4 text-sm text-high placeholder:text-disabled transition-all focus:ring-4 focus:ring-primary/5"
                     />
 
                     {searchQuery.trim().length >= 2 && (

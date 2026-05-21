@@ -255,7 +255,7 @@ export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActi
                 <button
                     onClick={onQuestPanelOpen}
                     data-tour-id="tour-quest-trigger"
-                    className="relative group flex size-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/5 backdrop-blur-xl transition-all hover:bg-primary/10 active:scale-95"
+                    className="relative group flex size-11 items-center justify-center rounded-2xl neumorphic-extruded active:scale-95 text-primary"
                 >
                     <div className="absolute inset-0 rounded-2xl bg-primary/20 animate-pulse blur-md pointer-events-none" />
                     <AlertCircle className="size-5 text-primary transition-transform group-hover:scale-110" />
@@ -278,11 +278,11 @@ export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActi
                             setIsSearchOpen(true);
                         }}
                         onFocus={() => setIsSearchOpen(true)}
-                        className="w-64 rounded-2xl border border-white/10 bg-surface-2 py-2.5 pl-11 pr-4 text-sm text-foreground backdrop-blur-xl transition-all placeholder:text-muted-foreground/60 hover:bg-surface-3 focus:outline-none focus:ring-2 focus:ring-primary/40"
+                        className="w-64 rounded-2xl neumorphic-inset bg-background/50 py-2.5 pl-11 pr-4 text-sm text-foreground transition-all placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/40"
                     />
                     
                     {isSearchOpen && searchQuery.trim() && (
-                        <div className="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-white/10 bg-surface-4 shadow-[0_20px_50px_rgba(0,0,0,0.35)] backdrop-blur-3xl animate-in fade-in zoom-in-95 duration-200">
+                        <div className="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-2xl neumorphic-panel animate-in fade-in zoom-in-95 duration-200">
                             <div className="max-h-80 overflow-y-auto custom-scrollbar-premium">
                                 {searchLoading ? (
                                     <div className="px-4 py-4 space-y-3">
@@ -329,7 +329,7 @@ export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActi
                 <div className="relative">
                     <button
                         onClick={() => setIsNotificationsOpen((current) => !current)}
-                        className="group relative flex size-11 items-center justify-center rounded-2xl border border-white/10 bg-surface-2 backdrop-blur-xl transition-all hover:bg-surface-3 active:scale-95"
+                        className="group relative flex size-11 items-center justify-center rounded-2xl neumorphic-extruded active:scale-95"
                     >
                         <Bell className="size-5 text-muted-foreground transition-colors group-hover:text-foreground" />
                         {unreadCount > 0 && (
@@ -340,13 +340,13 @@ export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActi
                     </button>
 
                     {isNotificationsOpen && (
-                        <div className="absolute right-0 z-50 mt-4 w-[340px] overflow-hidden rounded-[2rem] border border-white/10 bg-surface-4 shadow-[0_20px_50px_rgba(0,0,0,0.35)] backdrop-blur-3xl animate-in fade-in zoom-in-95 duration-200">
+                        <div className="absolute right-0 z-50 mt-4 w-[340px] overflow-hidden rounded-[2rem] neumorphic-panel animate-in fade-in zoom-in-95 duration-200">
                             <div className="flex items-center justify-between border-b border-white/5 px-6 py-4">
                                 <p className="text-sm font-black uppercase tracking-widest text-foreground">Notifications</p>
-                                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-black text-primary">{unreadCount} New</span>
+                                <span className="rounded-full neumorphic-inset-card border border-primary/10 bg-primary/5 px-2.5 py-0.5 text-[10px] font-black text-primary">{unreadCount} New</span>
                             </div>
 
-                            <div className="max-h-[360px] overflow-y-auto custom-scrollbar-premium">
+                            <div className="max-h-[360px] overflow-y-auto custom-scrollbar-premium py-2">
                                 {notificationsLoading ? (
                                     <div className="px-6 py-4 space-y-4">
                                         {['skeleton-1', 'skeleton-2', 'skeleton-3'].map((skeletonKey) => (
@@ -371,12 +371,23 @@ export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActi
                                         <div 
                                             key={notification.id} 
                                             onClick={() => handleNotificationClick(notification)}
-                                            className="group/item relative px-6 py-4 transition-all hover:bg-white/3 cursor-pointer"
+                                            className={cn(
+                                                "group/item relative mx-3 my-2 px-4 py-3.5 rounded-2xl transition-all duration-300 cursor-pointer",
+                                                !notification.read 
+                                                    ? "neumorphic-extruded border border-primary/5 hover:brightness-105 active:scale-[0.98]" 
+                                                    : "bg-surface-3/10 hover:bg-surface-3/30 border border-transparent"
+                                            )}
                                         >
                                             <div className="flex items-start justify-between gap-4">
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-black text-foreground group-hover/item:text-primary transition-colors truncate">{notification.title}</p>
-                                                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground line-clamp-2">{notification.message}</p>
+                                                    <p className={cn(
+                                                        "text-sm font-black transition-colors truncate",
+                                                        !notification.read ? "text-foreground group-hover/item:text-primary" : "text-muted-foreground group-hover/item:text-foreground"
+                                                    )}>{notification.title}</p>
+                                                    <p className={cn(
+                                                        "mt-1 text-xs leading-relaxed line-clamp-2",
+                                                        !notification.read ? "text-muted-foreground" : "text-muted-foreground/60"
+                                                    )}>{notification.message}</p>
                                                     <p className="mt-2 text-[10px] font-medium uppercase tracking-tight text-muted-foreground/60">{formatTimeAgo(notification.created_at)}</p>
                                                 </div>
                                                 <div className="flex items-center justify-center size-8 shrink-0">
@@ -403,7 +414,7 @@ export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActi
                             <div className="border-t border-white/5 p-3">
                                 <button 
                                     onClick={handleClearAll}
-                                    className="w-full rounded-xl py-2 text-[11px] font-black uppercase tracking-widest text-muted-foreground transition-all hover:bg-card hover:text-foreground"
+                                    className="w-full rounded-xl py-2.5 text-[11px] font-black uppercase tracking-widest text-muted-foreground transition-all neumorphic-extruded active:scale-95 hover:text-foreground"
                                 >
                                     Mark all as read
                                 </button>

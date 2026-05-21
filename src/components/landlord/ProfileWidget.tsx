@@ -9,6 +9,7 @@ import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { RoleBadge } from "@/components/profile/RoleBadge";
 import { ProfileCardTrigger } from "@/components/ui/ProfileCardTrigger";
+import { cn } from "@/lib/utils";
 
 function readProviderAvatar(user: ReturnType<typeof useAuth>["user"]) {
     const identities = user?.identities;
@@ -97,7 +98,7 @@ export function ProfileWidget() {
             {/* Profile Avatar Button */}
             <button
                 onClick={() => setIsMenuOpen((prev) => !prev)}
-                className="group relative flex size-10 items-center justify-center overflow-hidden rounded-full border border-border transition-all hover:ring-2 hover:ring-primary/50 dark:border-white/10"
+                className="group relative flex size-10 items-center justify-center overflow-hidden rounded-full neumorphic-extruded active:scale-95 shrink-0 border border-white/5 transition-all"
                 style={{ backgroundColor: profile?.avatar_bg_color || '#171717' }}
             >
                 {shouldShowAvatar ? (
@@ -127,11 +128,11 @@ export function ProfileWidget() {
                             damping: 25,
                             mass: 0.5
                         }}
-                        className="absolute right-0 top-12 z-50 w-64 origin-top overflow-hidden rounded-xl border border-border bg-card/95 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-neutral-900/95"
+                        className="absolute right-0 top-12 z-50 w-64 origin-top overflow-hidden rounded-[2rem] neumorphic-panel"
                         style={{ transformStyle: "preserve-3d" }}
                     >
                         {/* User Info Header */}
-                        <div className="border-b border-border bg-gradient-to-br from-surface-0 to-surface-1 p-4 dark:border-white/10 dark:from-neutral-800/50 dark:to-neutral-900/50">
+                        <div className="border-b border-white/5 bg-gradient-to-br from-surface-0 to-surface-1 p-4 dark:from-neutral-800/50 dark:to-neutral-900/50">
                             <div className="flex items-center gap-3">
                                 <ProfileCardTrigger 
                                     userId={user?.id || ""} 
@@ -139,8 +140,8 @@ export function ProfileWidget() {
                                     asChild
                                 >
                                     <div
-                                        className="relative flex size-16 items-center justify-center overflow-hidden rounded-full border-2 border-border dark:border-white/10 shadow-sm cursor-pointer hover:ring-2 hover:ring-primary transition-all shrink-0"
-                                        style={{ backgroundColor: profile?.avatar_bg_color || '#10b981' }}
+                                        className="relative flex size-16 items-center justify-center overflow-hidden rounded-full neumorphic-inset-card border border-white/5 cursor-pointer shrink-0"
+                                        style={{ backgroundColor: profile?.avatar_bg_color || '#8B5CF6' }}
                                     >
                                         {shouldShowAvatar ? (
                                             <Image
@@ -163,12 +164,16 @@ export function ProfileWidget() {
                                                 userId={user?.id || ""} 
                                                 initialData={{ full_name: displayName, avatar_url: displayAvatar as string, role: profile?.role as any }}
                                             >
-                                                <p className="truncate text-lg font-black text-foreground dark:text-white hover:text-primary transition-colors cursor-pointer leading-tight">{displayName}</p>
+                                                <p className="truncate text-base font-black text-foreground dark:text-white hover:text-primary transition-colors cursor-pointer leading-tight">{displayName}</p>
                                             </ProfileCardTrigger>
                                             <p className="truncate text-xs text-muted-foreground">{profile?.email || user?.email || "Account"}</p>
                                         </div>
-                                        <Link href="/landlord/profile" className="p-2 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors shrink-0">
-                                            <Pencil className="size-4" />
+                                        <Link 
+                                            href="/landlord/profile" 
+                                            title="Edit Profile"
+                                            className="flex size-8 items-center justify-center rounded-full neumorphic-extruded text-muted-foreground hover:text-primary active:scale-95 transition-all shrink-0"
+                                        >
+                                            <Pencil className="size-3.5" />
                                         </Link>
                                     </div>
                                 </div>
@@ -176,40 +181,39 @@ export function ProfileWidget() {
                         </div>
 
                         {/* Menu Items */}
-                        <div className="p-2">
+                        <div className="p-3 space-y-1">
                             <Link
                                 href="/landlord/profile"
-                                className="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:text-neutral-300 dark:hover:bg-white/10 dark:hover:text-white"
+                                className="group flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-black transition-all hover:neumorphic-inset-card active:scale-[0.98] text-muted-foreground hover:text-primary border border-transparent"
                             >
-                                <User className="size-5" />
+                                <User className="size-4 group-hover:text-primary transition-colors" />
                                 <span>My Profile</span>
                             </Link>
                             <Link
                                 href="/landlord/settings"
-                                className="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:text-neutral-300 dark:hover:bg-white/10 dark:hover:text-white"
+                                className="group flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-black transition-all hover:neumorphic-inset-card active:scale-[0.98] text-muted-foreground hover:text-primary border border-transparent"
                             >
-                                <Settings className="size-5" />
                                 <Settings className="size-4 group-hover:text-primary transition-colors" />
                                 <span>Settings</span>
                             </Link>
                             <Link
                                 href="/landlord/billing"
-                                className="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:text-neutral-300 dark:hover:bg-white/10 dark:hover:text-white"
+                                className="group flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-black transition-all hover:neumorphic-inset-card active:scale-[0.98] text-muted-foreground hover:text-primary border border-transparent"
                             >
                                 <CreditCard className="size-4 group-hover:text-primary transition-colors" />
                                 <span>Billing & Plans</span>
                             </Link>
 
-                            <div className="my-1.5 h-px bg-border dark:bg-white/10"></div>
+                            <div className="my-1.5 h-px bg-white/5"></div>
 
                             <button
                                 type="button"
                                 onClick={() => {
                                     void signOut();
                                 }}
-                                className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors group text-left"
+                                className="flex w-full items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-black transition-all hover:neumorphic-inset-card active:scale-[0.98] text-red-400 hover:text-red-300 group text-left border border-transparent"
                             >
-                                <LogOut className="size-4" />
+                                <LogOut className="size-4 text-red-400 group-hover:text-red-300 transition-colors" />
                                 <span>Log Out</span>
                             </button>
                         </div>

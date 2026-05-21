@@ -4,16 +4,16 @@
 
 :root {
   color-scheme: light;
-  --background: #f3f5f9;
+--background: #fcfcf7;
   --foreground: #0f172a;
-  --surface-0: #f3f5f9;
-  --surface-1: #ffffff;
+  --surface-0: #fcfcf7;
+  --surface-1: #fcfcf7;
   --surface-2: #eef2f7;
   --surface-3: #e5ebf3;
   --surface-4: #dce4ee;
-  --card: #ffffff;
+  --card: #fcfcf7;
   --card-foreground: #0f172a;
-  --input: #ffffff;
+  --input: #fcfcf7;
   --border: #d9e2ec;
   --divider: rgba(15, 23, 42, 0.12);
   --muted: #e8edf5;
@@ -23,9 +23,9 @@
   --text-disabled: rgba(15, 23, 42, 0.42);
   --secondary: #dfe7f1;
   --secondary-foreground: #0f172a;
-  --primary: #6d9838;
-  --primary-foreground: #f8fafc;
-  --primary-rgb: 109, 152, 56;
+  --primary: #c4b0ff;
+  --primary-foreground: #1e1b4b;
+  --primary-rgb: 196, 176, 255;
 }
 
 @theme inline {
@@ -53,18 +53,18 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
-  /* Sage Green */
-  --color-primary-dark: #5a7e2f;
-  /* Darker Sage */
-  --color-primary-200: #89b84f;
-  /* Lighter Sage */
+  /* Lavender Purple v2 */
+  --color-primary-dark: #9b77ff;
+  /* Action Purple */
+  --color-primary-200: #c4b0ff;
+  /* Signature Lavender */
   --color-background-light: #f5f5f5;
   --color-background-dark: #0a0a0a;
   /* Neutral Black */
   --color-surface-dark: #171717;
   /* Neutral Dark Grey */
-  --color-status-vacant: #3E7B39;
-  /* Fern for Vacant (Available/Good) */
+  --color-status-vacant: #c4b0ff;
+  /* Purple for Vacant (Available/Good) */
   --color-status-occupied: #3b82f6;
   /* Blue for Occupied */
   --color-status-due: #F59E0B;
@@ -86,8 +86,8 @@
   --text-medium: rgba(255, 255, 255, 0.6);
   --text-disabled: rgba(255, 255, 255, 0.38);
   --divider: rgba(255, 255, 255, 0.12);
-  --primary: #6d9838;
-  --primary-rgb: 109, 152, 56;
+  --primary: #c4b0ff;
+  --primary-rgb: 196, 176, 255;
   --card: var(--surface-1);
   --card-foreground: var(--text-high);
   --input: var(--surface-2);
@@ -96,7 +96,7 @@
   --muted-foreground: var(--text-medium);
   --secondary: var(--surface-2);
   --secondary-foreground: var(--text-high);
-  --primary-foreground: #0a0a0a;
+  --primary-foreground: #1e1b4b;
 }
 
 .light {
@@ -125,7 +125,7 @@ body {
 .text-disabled { color: var(--text-disabled); }
 
 /* Dark-mode consistency: remove expensive blur glass effects globally, but exclude premium components like toasts and fixed headers/navbars */
-.dark :where(.backdrop-blur, .backdrop-blur-sm, .backdrop-blur-md, .backdrop-blur-lg, .backdrop-blur-xl, .backdrop-blur-2xl):not([data-sonner-toast]):not(nav):not(header) {
+.dark :where(.backdrop-blur, .backdrop-blur-sm, .backdrop-blur-md, .backdrop-blur-lg, .backdrop-blur-xl, .backdrop-blur-2xl):not([data-sonner-toast]):not(nav):not(header):not(.glass-premium) {
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
 }
@@ -478,3 +478,755 @@ input[type="number"] {
   /* Font overrides */
 }
 
+/* Neumorphism design system styles */
+.neumorphic-panel {
+  background-color: var(--background);
+  box-shadow: 12px 12px 24px rgba(163, 177, 198, 0.45), -12px -12px 24px rgba(255, 255, 255, 1);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.dark .neumorphic-panel {
+  background-color: var(--background);
+  box-shadow: 14px 14px 28px rgba(0, 0, 0, 0.7), -14px -14px 28px rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.neumorphic-extruded {
+  background-color: var(--background);
+  box-shadow: 5px 5px 10px rgba(163, 177, 198, 0.35), -5px -5px 10px rgba(255, 255, 255, 1);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.dark .neumorphic-extruded {
+  background-color: var(--background);
+  box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.55), -6px -6px 12px rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.neumorphic-extruded:hover {
+  box-shadow: 2px 2px 5px rgba(163, 177, 198, 0.25), -2px -2px 5px rgba(255, 255, 255, 1);
+  transform: translateY(1px);
+}
+.dark .neumorphic-extruded:hover {
+  box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.55), -3px -3px 6px rgba(255, 255, 255, 0.06);
+  transform: translateY(1px);
+}
+
+.neumorphic-extruded:active,
+.neumorphic-extruded.active {
+  box-shadow: inset 3px 3px 6px rgba(163, 177, 198, 0.4), inset -3px -3px 6px rgba(255, 255, 255, 1);
+  transform: translateY(1.5px);
+}
+.dark .neumorphic-extruded:active,
+.dark .neumorphic-extruded.active {
+  box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.6), inset -4px -4px 8px rgba(255, 255, 255, 0.06);
+  transform: translateY(1.5px);
+}
+
+.neumorphic-inset {
+  background-color: var(--background);
+  box-shadow: inset 5px 5px 10px rgba(163, 177, 198, 0.35), inset -5px -5px 10px rgba(255, 255, 255, 1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+.dark .neumorphic-inset {
+  background-color: var(--background);
+  box-shadow: inset 6px 6px 12px rgba(0, 0, 0, 0.55), inset -6px -6px 12px rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.neumorphic-inset-card {
+  background-color: var(--background);
+  box-shadow: inset 3px 3px 6px rgba(163, 177, 198, 0.25), inset -3px -3px 6px rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.20);
+}
+.dark .neumorphic-inset-card {
+  background-color: var(--background);
+  box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.45), inset -4px -4px 8px rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.neumorphic-primary {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  box-shadow: 5px 5px 12px rgba(15, 23, 42, 0.18), -5px -5px 12px rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.dark .neumorphic-primary {
+  background-color: var(--primary);
+  box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.35), -3px -3px 8px rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.neumorphic-primary:hover {
+  box-shadow: 2px 2px 6px rgba(15, 23, 42, 0.14), -2px -2px 6px rgba(255, 255, 255, 0.1);
+  transform: translateY(0.5px);
+}
+.dark .neumorphic-primary:hover {
+  background-color: color-mix(in srgb, var(--primary) 85%, white);
+  box-shadow: 3px 3px 7px rgba(0, 0, 0, 0.5), -3px -3px 7px rgba(255, 255, 255, 0.06);
+  transform: translateY(0.5px);
+}
+.neumorphic-primary:active {
+  box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.25), inset -4px -4px 8px rgba(255, 255, 255, 0.08);
+  transform: translateY(1px);
+}
+.dark .neumorphic-primary:active {
+  background-color: color-mix(in srgb, var(--primary) 75%, black);
+  box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.55), inset -4px -4px 8px rgba(255, 255, 255, 0.06);
+  transform: translateY(1px);
+}
+
+.landlord-applications-cta {
+  box-shadow: 5px 5px 12px rgba(168, 85, 247, 0.34), -5px -5px 12px rgba(255, 255, 255, 0.12);
+}
+
+.landlord-applications-cta:hover {
+  box-shadow: 2px 2px 6px rgba(168, 85, 247, 0.26), -2px -2px 6px rgba(255, 255, 255, 0.1);
+}
+
+.landlord-applications-cta:active {
+  box-shadow: inset 4px 4px 8px rgba(109, 40, 217, 0.28), inset -4px -4px 8px rgba(255, 255, 255, 0.08);
+}
+
+/* Glass-Bento Hybrid Utilities */
+.glass-premium {
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+}
+
+.bento-glass-card {
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.2);
+}
+
+.bento-glass-inset {
+  background-color: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), sans-serif;
+}
+
+/* ============================================
+   Neumorphism Utility System â€” Dark Theme
+   All components share the same base so shadows
+   look physically consistent across the UI.
+   ============================================ */
+
+/* â”€â”€ Flat (no perceived depth) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.neu-flat {
+  background: var(--neu-base);
+  box-shadow:
+    6px  6px  12px var(--neu-shadow-dark),
+   -6px -6px  12px var(--neu-shadow-light);
+}
+
+/* â”€â”€ Raised (elevated above surface) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.neu-raised {
+  background: var(--neu-base);
+  box-shadow:
+    8px  8px  16px var(--neu-shadow-dark),
+   -8px -8px  16px var(--neu-shadow-light);
+}
+
+/* â”€â”€ Pressed / inset â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.neu-pressed {
+  background: var(--neu-base);
+  box-shadow:
+    inset  4px  4px  8px var(--neu-inset-dark),
+    inset -4px -4px  8px var(--neu-inset-light);
+}
+
+/* â”€â”€ Card â€” raised â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.neu-card-raised {
+  background: linear-gradient(145deg, #111111, #0d0d0d);
+  box-shadow:
+     8px  8px 16px var(--neu-shadow-dark),
+    -8px -8px 16px var(--neu-shadow-light);
+  border-radius: 1.5rem;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.neu-card-raised:hover {
+  box-shadow:
+    10px  10px 22px var(--neu-shadow-dark),
+   -10px -10px 22px var(--neu-shadow-light);
+  transform: translateY(-2px);
+}
+
+/* â”€â”€ Card â€” pressed â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.neu-card-pressed {
+  background: linear-gradient(145deg, #0d0d0d, #111111);
+  box-shadow:
+    inset  4px  4px  8px var(--neu-inset-dark),
+    inset -4px -4px  8px var(--neu-inset-light);
+  border-radius: 1rem;
+}
+
+/* â”€â”€ Button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.neu-btn {
+  background: linear-gradient(145deg, #111111, #0d0d0d);
+  border: none;
+  border-radius: 12px;
+  box-shadow:
+     4px  4px  8px var(--neu-shadow-dark),
+    -4px -4px  8px var(--neu-shadow-light);
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, transform 0.1s ease;
+}
+
+.neu-btn:hover {
+  box-shadow:
+     6px  6px 12px var(--neu-shadow-dark),
+    -6px -6px 12px var(--neu-shadow-light);
+}
+
+.neu-btn:active {
+  box-shadow:
+    inset  2px  2px  4px var(--neu-inset-dark),
+    inset -2px -2px  4px var(--neu-inset-light);
+  transform: scale(0.98);
+}
+
+/* â”€â”€ Button-Card hybrid â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.neu-btn-card {
+  background: linear-gradient(145deg, #111111, #0d0d0d);
+  border: none;
+  border-radius: 1rem;
+  box-shadow:
+     4px  4px  8px var(--neu-shadow-dark),
+    -4px -4px  8px var(--neu-shadow-light);
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.neu-btn-card:hover {
+  box-shadow:
+     6px  6px 12px var(--neu-shadow-dark),
+    -6px -6px 12px var(--neu-shadow-light);
+  transform: scale(1.02);
+}
+
+.neu-btn-card:active,
+.neu-btn-card.active {
+  box-shadow:
+    inset  2px  2px  4px var(--neu-inset-dark),
+    inset -2px -2px  4px var(--neu-inset-light);
+  transform: scale(0.98);
+}
+
+/* â”€â”€ Input fields â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.neu-input {
+  background: linear-gradient(145deg, #0d0d0d, #111111);
+  border: none;
+  border-radius: 0.75rem;
+  color: var(--foreground);
+  box-shadow:
+    inset  3px  3px  6px var(--neu-inset-dark),
+    inset -3px -3px  6px var(--neu-inset-light);
+  transition: box-shadow 0.2s ease;
+}
+
+.neu-input:focus {
+  outline: none;
+  box-shadow:
+    inset  3px  3px  6px var(--neu-inset-dark),
+    inset -3px -3px  6px var(--neu-inset-light),
+    0 0 0 2px var(--neu-focus-ring);
+}
+
+/* â”€â”€ Badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.neu-badge {
+  background: linear-gradient(145deg, #0d0d0d, #111111);
+  box-shadow:
+    inset  2px  2px  4px var(--neu-inset-dark),
+    inset -2px -2px  4px var(--neu-inset-light);
+  border-radius: 9999px;
+}
+
+/* â”€â”€ Section container â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.neu-section {
+  background: linear-gradient(145deg, #111111, #0d0d0d);
+  box-shadow:
+     6px  6px 12px var(--neu-shadow-dark),
+    -6px -6px 12px var(--neu-shadow-light);
+  border-radius: 1.5rem;
+  padding: 1.5rem;
+}
+
+/* â”€â”€ Icon container â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.neu-icon {
+  background: linear-gradient(145deg, #111111, #0d0d0d);
+  box-shadow:
+     3px  3px  6px var(--neu-shadow-dark),
+    -3px -3px  6px var(--neu-shadow-light);
+  transition: box-shadow 0.2s ease;
+}
+
+.neu-icon:hover {
+  box-shadow:
+     4px  4px  8px var(--neu-shadow-dark),
+    -4px -4px  8px var(--neu-shadow-light);
+}
+
+/* â”€â”€ History card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.neu-history-card {
+  background: linear-gradient(145deg, #111111, #0d0d0d);
+  box-shadow:
+     4px  4px  8px var(--neu-shadow-dark),
+    -4px -4px  8px var(--neu-shadow-light);
+  border-radius: 1rem;
+  transition: box-shadow 0.2s ease;
+}
+
+.neu-history-card:hover {
+  box-shadow:
+     6px  6px 12px var(--neu-shadow-dark),
+    -6px -6px 12px var(--neu-shadow-light);
+}
+
+/* â”€â”€ Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.neu-modal {
+  background: linear-gradient(145deg, #111111, #0d0d0d);
+  box-shadow:
+    12px  12px 24px var(--neu-shadow-dark),
+   -12px -12px 24px var(--neu-shadow-light);
+  border-radius: 1.5rem;
+}
+
+/* â”€â”€ Toast â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.neu-toast {
+  background: linear-gradient(145deg, #111111, #0d0d0d);
+  box-shadow:
+     6px  6px 12px var(--neu-shadow-dark),
+    -6px -6px 12px var(--neu-shadow-light);
+  border-radius: 1rem;
+}
+
+/* â”€â”€ Tooltip â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.neu-tooltip {
+  background: linear-gradient(145deg, #111111, #0d0d0d);
+  box-shadow:
+     6px  6px 14px var(--neu-shadow-dark),
+    -6px -6px 14px var(--neu-shadow-light);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0.5rem;
+}
+
+/* â”€â”€ Skeleton loading â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.neu-skeleton {
+  background: linear-gradient(145deg, #0d0d0d, #111111);
+  box-shadow:
+    inset  2px  2px  4px var(--neu-inset-dark),
+    inset -2px -2px  4px var(--neu-inset-light);
+  border-radius: 0.75rem;
+  animation: neu-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes neu-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
+}
+
+/* ============================================
+   Sidebar
+   Uses a slightly elevated surface (#0f0f0f)
+   so sidebar nav items can extrude/press
+   relative to it â€” NOT relative to the page bg.
+   ============================================ */
+
+.neu-sidebar {
+  /* Sidebar has its own surface layer */
+  --neu-sidebar-base:  #0f0f0f;
+  --neu-sidebar-dark:  rgba(0, 0, 0, 0.6);
+  --neu-sidebar-light: rgba(32, 32, 32, 0.5);
+
+  background: linear-gradient(145deg, #101010, #0d0d0d);
+  box-shadow:
+     8px  8px 20px var(--neu-sidebar-dark),
+    -8px -8px 20px var(--neu-sidebar-light);
+  border-radius: 24px;
+}
+
+.neu-nav-item {
+  border-radius: 12px;
+  transition: box-shadow 0.3s ease, background 0.3s ease;
+}
+
+.neu-nav-item:hover {
+  background: linear-gradient(145deg, #111111, #0e0e0e);
+  box-shadow:
+     4px  4px  8px rgba(0, 0, 0, 0.55),
+    -4px -4px  8px rgba(30, 30, 30, 0.45);
+}
+
+.neu-nav-item:active,
+.neu-nav-item.active {
+  background: linear-gradient(145deg, #0d0d0d, #111111);
+  box-shadow:
+    inset  3px  3px  6px rgba(0, 0, 0, 0.6),
+    inset -3px -3px  6px rgba(30, 30, 30, 0.4);
+}
+
+/* Sidebar toggle button */
+.neu-toggle {
+  background: linear-gradient(145deg, #111111, #0d0d0d);
+  border-radius: 10px;
+  box-shadow:
+     3px  3px  6px rgba(0, 0, 0, 0.55),
+    -3px -3px  6px rgba(30, 30, 30, 0.4);
+  transition: box-shadow 0.2s ease;
+}
+
+.neu-toggle:active {
+  box-shadow:
+    inset  2px  2px  4px rgba(0, 0, 0, 0.6),
+    inset -2px -2px  4px rgba(30, 30, 30, 0.4);
+}
+
+/* Active nav indicator pill */
+.neu-active-indicator {
+  background: linear-gradient(145deg, #c4b0ff, #9b77ff);
+  border-radius: 8px;
+  box-shadow:
+    2px  2px 4px rgba(0, 0, 0, 0.4),
+   -1px -1px 3px rgba(196, 176, 255, 0.25);
+}
+
+/* Sidebar section headers */
+.neu-section-header {
+  color: #666680;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* ============================================
+   Analytics page surface
+   Background for landlord analytics page.
+   Matches --neu-base so cards extrude correctly.
+   ============================================ */
+
+.neu-page {
+  background: var(--background);
+  background-image:
+    radial-gradient(circle at 20%  0%, rgba(196, 176, 255, 0.10), transparent 45%),
+    radial-gradient(circle at 85% 15%, rgba(99, 102, 241, 0.07), transparent 40%);
+  min-height: 100vh;
+}
+
+/* ============================================
+   Neumorphism Utility System — Dark Theme
+   All components share the same base so shadows
+   look physically consistent across the UI.
+   ============================================ */
+
+/* ── Flat (no perceived depth) ─────────────── */
+.neu-flat {
+  background: var(--neu-base);
+  box-shadow:
+    6px  6px  12px var(--neu-shadow-dark),
+   -6px -6px  12px var(--neu-shadow-light);
+}
+
+/* ── Raised (elevated above surface) ────────── */
+.neu-raised {
+  background: var(--neu-base);
+  box-shadow:
+    8px  8px  16px var(--neu-shadow-dark),
+   -8px -8px  16px var(--neu-shadow-light);
+}
+
+/* ── Pressed / inset ─────────────────────────── */
+.neu-pressed {
+  background: var(--neu-base);
+  box-shadow:
+    inset  4px  4px  8px var(--neu-inset-dark),
+    inset -4px -4px  8px var(--neu-inset-light);
+}
+
+/* ── Card — raised ───────────────────────────── */
+.neu-card-raised {
+  background: linear-gradient(145deg, #111111, #0d0d0d);
+  box-shadow:
+     8px  8px 16px var(--neu-shadow-dark),
+    -8px -8px 16px var(--neu-shadow-light);
+  border-radius: 1.5rem;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.neu-card-raised:hover {
+  box-shadow:
+    10px  10px 22px var(--neu-shadow-dark),
+   -10px -10px 22px var(--neu-shadow-light);
+  transform: translateY(-2px);
+}
+
+/* ── Card — pressed ──────────────────────────── */
+.neu-card-pressed {
+  background: linear-gradient(145deg, #0d0d0d, #111111);
+  box-shadow:
+    inset  4px  4px  8px var(--neu-inset-dark),
+    inset -4px -4px  8px var(--neu-inset-light);
+  border-radius: 1rem;
+}
+
+/* ── Button ──────────────────────────────────── */
+.neu-btn {
+  background: linear-gradient(145deg, #111111, #0d0d0d);
+  border: none;
+  border-radius: 12px;
+  box-shadow:
+     4px  4px  8px var(--neu-shadow-dark),
+    -4px -4px  8px var(--neu-shadow-light);
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, transform 0.1s ease;
+}
+
+.neu-btn:hover {
+  box-shadow:
+     6px  6px 12px var(--neu-shadow-dark),
+    -6px -6px 12px var(--neu-shadow-light);
+}
+
+.neu-btn:active {
+  box-shadow:
+    inset  2px  2px  4px var(--neu-inset-dark),
+    inset -2px -2px  4px var(--neu-inset-light);
+  transform: scale(0.98);
+}
+
+/* ── Button-Card hybrid ──────────────────────── */
+.neu-btn-card {
+  background: linear-gradient(145deg, #111111, #0d0d0d);
+  border: none;
+  border-radius: 1rem;
+  box-shadow:
+     4px  4px  8px var(--neu-shadow-dark),
+    -4px -4px  8px var(--neu-shadow-light);
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.neu-btn-card:hover {
+  box-shadow:
+     6px  6px 12px var(--neu-shadow-dark),
+    -6px -6px 12px var(--neu-shadow-light);
+  transform: scale(1.02);
+}
+
+.neu-btn-card:active,
+.neu-btn-card.active {
+  box-shadow:
+    inset  2px  2px  4px var(--neu-inset-dark),
+    inset -2px -2px  4px var(--neu-inset-light);
+  transform: scale(0.98);
+}
+
+/* ── Input fields ────────────────────────────── */
+.neu-input {
+  background: linear-gradient(145deg, #0d0d0d, #111111);
+  border: none;
+  border-radius: 0.75rem;
+  color: var(--foreground);
+  box-shadow:
+    inset  3px  3px  6px var(--neu-inset-dark),
+    inset -3px -3px  6px var(--neu-inset-light);
+  transition: box-shadow 0.2s ease;
+}
+
+.neu-input:focus {
+  outline: none;
+  box-shadow:
+    inset  3px  3px  6px var(--neu-inset-dark),
+    inset -3px -3px  6px var(--neu-inset-light),
+    0 0 0 2px var(--neu-focus-ring);
+}
+
+/* ── Badge ───────────────────────────────────── */
+.neu-badge {
+  background: linear-gradient(145deg, #0d0d0d, #111111);
+  box-shadow:
+    inset  2px  2px  4px var(--neu-inset-dark),
+    inset -2px -2px  4px var(--neu-inset-light);
+  border-radius: 9999px;
+}
+
+/* ── Section container ───────────────────────── */
+.neu-section {
+  background: linear-gradient(145deg, #111111, #0d0d0d);
+  box-shadow:
+     6px  6px 12px var(--neu-shadow-dark),
+    -6px -6px 12px var(--neu-shadow-light);
+  border-radius: 1.5rem;
+  padding: 1.5rem;
+}
+
+/* ── Icon container ──────────────────────────── */
+.neu-icon {
+  background: linear-gradient(145deg, #111111, #0d0d0d);
+  box-shadow:
+     3px  3px  6px var(--neu-shadow-dark),
+    -3px -3px  6px var(--neu-shadow-light);
+  transition: box-shadow 0.2s ease;
+}
+
+.neu-icon:hover {
+  box-shadow:
+     4px  4px  8px var(--neu-shadow-dark),
+    -4px -4px  8px var(--neu-shadow-light);
+}
+
+/* ── History card ────────────────────────────── */
+.neu-history-card {
+  background: linear-gradient(145deg, #111111, #0d0d0d);
+  box-shadow:
+     4px  4px  8px var(--neu-shadow-dark),
+    -4px -4px  8px var(--neu-shadow-light);
+  border-radius: 1rem;
+  transition: box-shadow 0.2s ease;
+}
+
+.neu-history-card:hover {
+  box-shadow:
+     6px  6px 12px var(--neu-shadow-dark),
+    -6px -6px 12px var(--neu-shadow-light);
+}
+
+/* ── Modal ───────────────────────────────────── */
+.neu-modal {
+  background: linear-gradient(145deg, #111111, #0d0d0d);
+  box-shadow:
+    12px  12px 24px var(--neu-shadow-dark),
+   -12px -12px 24px var(--neu-shadow-light);
+  border-radius: 1.5rem;
+}
+
+/* ── Toast ───────────────────────────────────── */
+.neu-toast {
+  background: linear-gradient(145deg, #111111, #0d0d0d);
+  box-shadow:
+     6px  6px 12px var(--neu-shadow-dark),
+    -6px -6px 12px var(--neu-shadow-light);
+  border-radius: 1rem;
+}
+
+/* ── Tooltip ─────────────────────────────────── */
+.neu-tooltip {
+  background: linear-gradient(145deg, #111111, #0d0d0d);
+  box-shadow:
+     6px  6px 14px var(--neu-shadow-dark),
+    -6px -6px 14px var(--neu-shadow-light);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0.5rem;
+}
+
+/* ── Skeleton loading ────────────────────────── */
+.neu-skeleton {
+  background: linear-gradient(145deg, #0d0d0d, #111111);
+  box-shadow:
+    inset  2px  2px  4px var(--neu-inset-dark),
+    inset -2px -2px  4px var(--neu-inset-light);
+  border-radius: 0.75rem;
+  animation: neu-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes neu-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
+}
+
+/* ============================================
+   Sidebar
+   Uses a slightly elevated surface (#0f0f0f)
+   so sidebar nav items can extrude/press
+   relative to it — NOT relative to the page bg.
+   ============================================ */
+
+.neu-sidebar {
+  /* Sidebar has its own surface layer */
+  --neu-sidebar-base:  #0f0f0f;
+  --neu-sidebar-dark:  rgba(0, 0, 0, 0.6);
+  --neu-sidebar-light: rgba(32, 32, 32, 0.5);
+
+  background: linear-gradient(145deg, #101010, #0d0d0d);
+  box-shadow:
+     8px  8px 20px var(--neu-sidebar-dark),
+    -8px -8px 20px var(--neu-sidebar-light);
+  border-radius: 24px;
+}
+
+.neu-nav-item {
+  border-radius: 12px;
+  transition: box-shadow 0.3s ease, background 0.3s ease;
+}
+
+.neu-nav-item:hover {
+  background: linear-gradient(145deg, #111111, #0e0e0e);
+  box-shadow:
+     4px  4px  8px rgba(0, 0, 0, 0.55),
+    -4px -4px  8px rgba(30, 30, 30, 0.45);
+}
+
+.neu-nav-item:active,
+.neu-nav-item.active {
+  background: linear-gradient(145deg, #0d0d0d, #111111);
+  box-shadow:
+    inset  3px  3px  6px rgba(0, 0, 0, 0.6),
+    inset -3px -3px  6px rgba(30, 30, 30, 0.4);
+}
+
+/* Sidebar toggle button */
+.neu-toggle {
+  background: linear-gradient(145deg, #111111, #0d0d0d);
+  border-radius: 10px;
+  box-shadow:
+     3px  3px  6px rgba(0, 0, 0, 0.55),
+    -3px -3px  6px rgba(30, 30, 30, 0.4);
+  transition: box-shadow 0.2s ease;
+}
+
+.neu-toggle:active {
+  box-shadow:
+    inset  2px  2px  4px rgba(0, 0, 0, 0.6),
+    inset -2px -2px  4px rgba(30, 30, 30, 0.4);
+}
+
+/* Active nav indicator pill */
+.neu-active-indicator {
+  background: linear-gradient(145deg, #c4b0ff, #9b77ff);
+  border-radius: 8px;
+  box-shadow:
+    2px  2px 4px rgba(0, 0, 0, 0.4),
+   -1px -1px 3px rgba(196, 176, 255, 0.25);
+}
+
+/* Sidebar section headers */
+.neu-section-header {
+  color: #666680;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* ============================================
+   Analytics page surface
+   Background for landlord analytics page.
+   Matches --neu-base so cards extrude correctly.
+   ============================================ */
+
+.neu-page {
+  background: var(--background);
+  background-image:
+    radial-gradient(circle at 20%  0%, rgba(196, 176, 255, 0.10), transparent 45%),
+    radial-gradient(circle at 85% 15%, rgba(99, 102, 241, 0.07), transparent 40%);
+  min-height: 100vh;
+}

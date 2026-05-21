@@ -176,16 +176,16 @@ export function TenantSidebar() {
                         {section.items.map((item) => {
                             const active = pathname === item.href || pathname?.startsWith(`${item.href}/`);
 
-                            return (
+return (
                                 <Link
                                     key={item.href}
                                     href={item.href}
                                     onClick={() => setIsMobileOpen(false)}
                                     className={cn(
-                                        "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all hover:bg-muted/80",
+                                        "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
                                         active
-                                            ? "bg-primary/10 text-foreground hover:bg-primary/15"
-                                            : "text-muted-foreground hover:text-foreground"
+                                            ? "neumorphic-extruded active text-foreground"
+                                            : "text-muted-foreground hover:text-foreground hover:neumorphic-extruded"
                                     )}
                                 >
                                     <item.icon className={cn("size-5", active ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
@@ -266,7 +266,7 @@ export function TenantSidebar() {
                 </div>
             </header>
 
-            <aside className="hidden md:flex fixed left-0 top-0 z-40 h-screen w-64 border-r border-border/70 bg-card flex-col text-foreground" data-tour-id="tour-tenant-navigation">
+            <aside className="hidden md:flex fixed left-0 top-0 z-40 h-screen w-64 border-r border-border/70 bg-card flex-col text-foreground neumorphic-panel" data-tour-id="tour-tenant-navigation">
                 <div className="h-20 px-6 border-b border-border/70 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
                         <Logo className="h-30 w-36" />
@@ -302,13 +302,13 @@ export function TenantSidebar() {
                             <p className="truncate text-xs text-muted-foreground">{profile?.email || user?.email || "Tenant Account"}</p>
                         </div>
                         <div className="relative" ref={notificationsRef}>
-                            <button 
-                                type="button" 
+                            <button
+                                type="button"
                                 onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
                                 className={cn(
-                                    "relative rounded-full p-2 transition-all active:scale-95",
-                                    isNotificationsOpen ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "bg-muted text-muted-foreground hover:bg-secondary hover:text-foreground"
-                                )} 
+                                    "relative rounded-xl p-2 transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+                                    isNotificationsOpen ? "neumorphic-extruded active text-primary-foreground" : "neumorphic-extruded text-muted-foreground hover:text-foreground"
+                                )}
                                 aria-label="Notifications"
                             >
                                 <Bell className="size-4" />
@@ -345,11 +345,11 @@ export function TenantSidebar() {
                     </div>
 
                     <div className="space-y-1">
-                        <Link href="/tenant/profile" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-all hover:bg-muted/80 hover:text-foreground">
+                        <Link href="/tenant/profile" className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground transition-all hover:text-foreground hover:neumorphic-extruded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
                             <User className="size-4" />
                             Profile
                         </Link>
-                        <Link href="/tenant/settings" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-all hover:bg-muted/80 hover:text-foreground">
+                        <Link href="/tenant/settings" className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground transition-all hover:text-foreground hover:neumorphic-extruded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
                             <Settings className="size-4" />
                             Settings
                         </Link>
@@ -358,7 +358,7 @@ export function TenantSidebar() {
                             onClick={() => {
                                 void signOut()
                             }}
-                            className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-all hover:bg-red-500/10 hover:text-red-500 text-left"
+                            className="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground transition-all hover:text-red-500 hover:neumorphic-extruded text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                         >
                             <LogOut className="size-5" />
                             Log Out
@@ -445,7 +445,7 @@ function NotificationPanelContent({
         <>
             <div className="flex items-center justify-between border-b border-border/50 px-6 py-4">
                 <p className="text-[10px] font-black uppercase tracking-widest text-foreground">Notifications</p>
-                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-black text-primary">{unreadCount} New</span>
+                <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-black text-primary">{unreadCount > 99 ? '99+' : unreadCount} New</span>
             </div>
 
             <div className="max-h-[400px] overflow-y-auto custom-scrollbar-premium">

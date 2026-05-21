@@ -30,7 +30,7 @@ export function ReadOnlyAvatar({
             style={{
                 width: size,
                 height: size,
-                backgroundColor: avatarBgColor || '#6d9838'
+                backgroundColor: avatarBgColor || '#8B5CF6'
             }}
         >
             {avatarUrl ? (

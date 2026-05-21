@@ -50,7 +50,7 @@ export default function EditableBio({
                 <textarea
                     value={tempBio}
                     onChange={(e) => setTempBio(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-[1.5rem] p-4 text-sm text-white focus:outline-none focus:border-[#6d9838]/50 transition-colors resize-none"
+                    className="w-full bg-white/5 border border-white/10 rounded-[1.5rem] p-4 text-sm text-white focus:outline-none focus:border-[#8B5CF6]/50 transition-colors resize-none"
                     rows={4}
                     placeholder="Tell potential tenants about yourself and your property management style..."
                 />
@@ -58,7 +58,7 @@ export default function EditableBio({
                     <button
                         onClick={handleSave}
                         disabled={saving}
-                        className="flex items-center gap-2 bg-[#6d9838] hover:bg-[#5a7d2e] text-white px-5 py-2 rounded-xl text-[10px] font-black tracking-widest uppercase transition shadow-lg shadow-[#6d9838]/20 disabled:opacity-50"
+                        className="flex items-center gap-2 bg-[#c4b0ff] hover:bg-[#9b77ff] text-[#1e1b4b] px-5 py-2 rounded-xl text-[10px] font-black tracking-widest uppercase transition shadow-lg shadow-[#c4b0ff]/20 disabled:opacity-50"
                     >
                         {saving ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
                         Save Bio

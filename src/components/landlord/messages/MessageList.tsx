@@ -66,11 +66,11 @@ export function MessageList({
         <div
             ref={messagesScrollRef}
             onScroll={updateShouldStickToBottom}
-            className="flex-1 overflow-y-auto custom-scrollbar-premium relative flex justify-center w-full"
+            className="flex-1 overflow-y-auto custom-scrollbar-premium relative flex justify-center neumorphic-inset rounded-[2.5rem] mx-2 my-2"
         >
             <div className="w-full max-w-4xl p-6 pb-12">
                 <div className="text-center py-8">
-                    <span className="rounded-full border border-divider bg-surface-1 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-disabled shadow-sm">
+                    <span className="rounded-full neumorphic-inset-card px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-disabled">
                         Conversation History
                     </span>
                 </div>
@@ -82,8 +82,8 @@ export function MessageList({
                             return (
                                 <div key={`msg-skeleton-${index}`} className={cn("flex w-full", isMe ? "justify-end" : "justify-start")}>
                                     <div className={cn(
-                                        "animate-pulse rounded-3xl h-16",
-                                        isMe ? "w-1/3 bg-primary/20" : "w-1/2 bg-surface-2"
+                                        "animate-pulse rounded-3xl h-16 neumorphic-panel",
+                                        isMe ? "w-1/3" : "w-1/2"
                                     )} />
                                 </div>
                             );

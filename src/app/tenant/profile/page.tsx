@@ -177,7 +177,7 @@ export default async function TenantProfilePage() {
                             </div>
                             <div className="flex items-center justify-center gap-3">
                                 <RoleBadge role={profile.role} className="scale-110" showTenant={true} />
-                                <span className="text-[10px] font-black tracking-widest uppercase text-[#6d9838]">Verified Tenant</span>
+                                <span className="text-[10px] font-black tracking-widest uppercase text-[#c4b0ff]">Verified Tenant</span>
                             </div>
                         </div>
 
@@ -200,22 +200,22 @@ export default async function TenantProfilePage() {
                         {/* Contact Info Row */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-16 pt-10 border-t border-white/5 w-full max-w-4xl">
                             <div className="flex flex-col items-center gap-2 group/item transition-all text-center">
-                                <div className="size-10 rounded-full bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20 group-hover/item:scale-110 transition-transform">
-                                    <Mail size={18} className="text-[#6d9838]" />
+                                <div className="size-10 rounded-full bg-[#c4b0ff]/10 flex items-center justify-center border border-[#c4b0ff]/20 group-hover/item:scale-110 transition-transform">
+                                    <Mail size={18} className="text-[#c4b0ff]" />
                                 </div>
                                 <p className="text-[10px] font-black tracking-widest text-neutral-500 uppercase">Email Address</p>
-                                <a href={`mailto:${profile.email}`} className="text-sm text-white/90 font-medium hover:text-[#6d9838] transition-colors">{profile.email}</a>
+                                <a href={`mailto:${profile.email}`} className="text-sm text-white/90 font-medium hover:text-[#c4b0ff] transition-colors">{profile.email}</a>
                             </div>
                             <div className="flex flex-col items-center gap-2 group/item transition-all text-center">
-                                <div className="size-10 rounded-full bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20 group-hover/item:scale-110 transition-transform">
-                                    <Phone size={18} className="text-[#6d9838]" />
+                                <div className="size-10 rounded-full bg-[#c4b0ff]/10 flex items-center justify-center border border-[#c4b0ff]/20 group-hover/item:scale-110 transition-transform">
+                                    <Phone size={18} className="text-[#c4b0ff]" />
                                 </div>
                                 <p className="text-[10px] font-black tracking-widest text-neutral-500 uppercase">Phone Number</p>
-                                <a href={`tel:${profile.phone}`} className="text-sm text-white/90 font-medium hover:text-[#6d9838] transition-colors">{profile.phone || '+63 (---) --- ----'}</a>
+                                <a href={`tel:${profile.phone}`} className="text-sm text-white/90 font-medium hover:text-[#c4b0ff] transition-colors">{profile.phone || '+63 (---) --- ----'}</a>
                             </div>
                             <div className="flex flex-col items-center gap-2 group/item transition-all text-center">
-                                <div className="size-10 rounded-full bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20 group-hover/item:scale-110 transition-transform">
-                                    <MapPin size={18} className="text-[#6d9838]" />
+                                <div className="size-10 rounded-full bg-[#c4b0ff]/10 flex items-center justify-center border border-[#c4b0ff]/20 group-hover/item:scale-110 transition-transform">
+                                    <MapPin size={18} className="text-[#c4b0ff]" />
                                 </div>
                                 <p className="text-[10px] font-black tracking-widest text-neutral-500 uppercase">Primary Location</p>
                                 <p className="text-sm text-white/90 font-medium">{profile.address || 'Metro Manila, PH'}</p>
@@ -230,8 +230,8 @@ export default async function TenantProfilePage() {
                 {/* Bio Section */}
                 <div className="bg-[#171717]/80 border border-neutral-800 rounded-[3rem] p-12 backdrop-blur-xl shadow-xl">
                     <div className="flex items-center gap-4 mb-8">
-                        <div className="size-12 rounded-2xl bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20">
-                            <User size={20} className="text-[#6d9838]" />
+                        <div className="size-12 rounded-2xl bg-[#c4b0ff]/10 flex items-center justify-center border border-[#c4b0ff]/20">
+                            <User size={20} className="text-[#c4b0ff]" />
                         </div>
                         <h2 className="text-2xl font-display font-black text-white tracking-tight">Biography</h2>
                     </div>
@@ -248,8 +248,8 @@ export default async function TenantProfilePage() {
                         </div>
                         
                         <div className="flex items-center gap-4 mb-10 relative z-10">
-                            <div className="size-12 rounded-2xl bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20">
-                                <Home size={20} className="text-[#6d9838]" />
+                            <div className="size-12 rounded-2xl bg-[#c4b0ff]/10 flex items-center justify-center border border-[#c4b0ff]/20">
+                                <Home size={20} className="text-[#c4b0ff]" />
                             </div>
                             <h2 className="text-2xl font-display font-black text-white tracking-tight">Current Residency</h2>
                         </div>
@@ -260,7 +260,7 @@ export default async function TenantProfilePage() {
                                     <p className="text-[10px] font-black tracking-widest text-neutral-500 uppercase mb-2">Property & Unit</p>
                                     <h3 className="text-3xl font-display font-black text-white">
                                         {activeLease.units?.properties?.name}
-                                        <span className="block text-xl text-[#6d9838] mt-1">
+                                        <span className="block text-xl text-[#c4b0ff] mt-1">
                                             {activeLease.units?.name}
                                         </span>
                                     </h3>
@@ -273,7 +273,7 @@ export default async function TenantProfilePage() {
                                     <div className="bg-white/5 border border-white/5 p-4 rounded-2xl flex-1">
                                         <p className="text-[9px] font-black tracking-widest text-neutral-500 uppercase mb-1">Status</p>
                                         <div className="flex items-center gap-2">
-                                            <div className="size-2 rounded-full bg-[#6d9838] animate-pulse" />
+                                            <div className="size-2 rounded-full bg-[#c4b0ff] animate-pulse" />
                                             <p className="text-xl font-black text-white uppercase tracking-tighter">Active</p>
                                         </div>
                                     </div>
@@ -284,7 +284,7 @@ export default async function TenantProfilePage() {
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
-                                            <Calendar size={16} className="text-[#6d9838]" />
+                                            <Calendar size={16} className="text-[#c4b0ff]" />
                                             <p className="text-sm text-neutral-400">Lease Period</p>
                                         </div>
                                         <div>
@@ -295,7 +295,7 @@ export default async function TenantProfilePage() {
                                     </div>
                                     <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
                                         <div
-                                            className="h-full bg-[#6d9838] rounded-full transition-all duration-500"
+                                            className="h-full bg-[#c4b0ff] rounded-full transition-all duration-500"
                                             style={{ width: `${calculateLeaseProgress(activeLease.start_date, activeLease.end_date)}%` }}
                                         />
                                     </div>
@@ -318,7 +318,7 @@ export default async function TenantProfilePage() {
                         <p className="text-neutral-500 max-w-sm mb-8">You don&apos;t have any active leases at the moment. Start exploring properties to find your next home.</p>
                         <Link 
                             href="/tenant/explore"
-                            className="px-8 py-3 rounded-xl bg-[#6d9838] text-white font-black text-[11px] tracking-widest uppercase transition-all hover:scale-105 active:scale-95 shadow-lg shadow-[#6d9838]/20"
+                            className="px-8 py-3 rounded-xl bg-[#c4b0ff] text-white font-black text-[11px] tracking-widest uppercase transition-all hover:scale-105 active:scale-95 shadow-lg shadow-[#c4b0ff]/20"
                         >
                             Explore Properties
                         </Link>
@@ -329,8 +329,8 @@ export default async function TenantProfilePage() {
                 <div className="space-y-6">
                     <div className="flex items-center justify-between px-4">
                         <div className="flex items-center gap-4">
-                            <div className="size-12 rounded-2xl bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20">
-                                <Clock size={20} className="text-[#6d9838]" />
+                            <div className="size-12 rounded-2xl bg-[#c4b0ff]/10 flex items-center justify-center border border-[#c4b0ff]/20">
+                                <Clock size={20} className="text-[#c4b0ff]" />
                             </div>
                             <h2 className="text-2xl font-display font-black text-white tracking-tight">Tenancy Journey</h2>
                         </div>
@@ -339,7 +339,7 @@ export default async function TenantProfilePage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {pastLeases.length > 0 ? (
                             pastLeases.map((lease) => (
-                                <div key={lease.id} className="group bg-[#171717]/80 border border-neutral-800 rounded-[2.5rem] overflow-hidden backdrop-blur-xl transition-all duration-500 hover:border-[#6d9838]/50 hover:shadow-2xl hover:shadow-[#6d9838]/5">
+                                <div key={lease.id} className="group bg-[#171717]/80 border border-neutral-800 rounded-[2.5rem] overflow-hidden backdrop-blur-xl transition-all duration-500 hover:border-[#c4b0ff]/50 hover:shadow-2xl hover:shadow-[#c4b0ff]/5">
                                     <div className="relative h-48 w-full overflow-hidden">
                                         <Image
                                             src={lease.units?.properties?.images?.[0] || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=800&auto=format&fit=crop'}
@@ -357,7 +357,7 @@ export default async function TenantProfilePage() {
                                     </div>
                                     <div className="p-6 space-y-4">
                                         <div>
-                                            <h4 className="text-xl font-display font-black text-white group-hover:text-[#6d9838] transition-colors">{lease.units?.properties?.name}</h4>
+                                            <h4 className="text-xl font-display font-black text-white group-hover:text-[#c4b0ff] transition-colors">{lease.units?.properties?.name}</h4>
                                             <p className="text-sm text-neutral-500 flex items-center gap-2 mt-1">
                                                 <MapIcon size={12} /> {lease.units?.properties?.city}
                                             </p>
@@ -369,7 +369,7 @@ export default async function TenantProfilePage() {
                                             </div>
                                             <Link 
                                                 href={`/tenant/leases/${lease.id}`}
-                                                className="size-10 rounded-full bg-white/5 flex items-center justify-center text-white hover:bg-[#6d9838] hover:text-white transition-all"
+                                                className="size-10 rounded-full bg-white/5 flex items-center justify-center text-white hover:bg-[#c4b0ff] hover:text-white transition-all"
                                             >
                                                 <ArrowRight size={16} />
                                             </Link>

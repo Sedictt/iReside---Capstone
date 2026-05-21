@@ -173,22 +173,22 @@ export default async function LandlordProfilePage() {
 
     if (!profile) {
         return (
-            <div className="min-h-screen bg-[#0a0a0a] text-neutral-200 p-6 md:p-12">
-                <div className="mx-auto max-w-3xl rounded-[2.5rem] border border-neutral-800 bg-[#171717]/80 p-10 shadow-2xl">
-                    <h1 className="text-2xl font-display font-black text-white">Profile unavailable</h1>
-                    <p className="mt-3 text-sm text-neutral-400">
+            <div className="min-h-screen bg-background text-foreground p-6 md:p-12">
+                <div className="mx-auto max-w-3xl rounded-[2.5rem] neumorphic-panel p-10">
+                    <h1 className="text-2xl font-display font-black">Profile unavailable</h1>
+                    <p className="mt-3 text-sm opacity-70">
                         We couldn&apos;t load your landlord profile yet. Please complete your account details or try again.
                     </p>
                     <div className="mt-6 flex flex-wrap gap-3">
                         <Link
                             href="/landlord/settings?category=Identity"
-                            className="rounded-2xl bg-white px-6 py-3 text-[11px] font-black uppercase tracking-widest text-black transition-all hover:scale-105"
+                            className="rounded-2xl neumorphic-primary px-6 py-3 text-[11px] font-black uppercase tracking-widest transition-all hover:scale-105"
                         >
                             Complete Profile
                         </Link>
                         <Link
                             href="/landlord/dashboard"
-                            className="rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-[11px] font-black uppercase tracking-widest text-white transition-all hover:bg-white/10"
+                            className="rounded-2xl neumorphic-extruded px-6 py-3 text-[11px] font-black uppercase tracking-widest transition-all"
                         >
                             Back to Dashboard
                         </Link>
@@ -284,10 +284,10 @@ export default async function LandlordProfilePage() {
     const socials = (profile.socials as Record<string, string>) || {};
 
     return (
-        <div className="min-h-screen bg-[#0a0a0a] text-neutral-200 p-6 md:p-12">
+        <div className="min-h-screen bg-background text-foreground p-6 md:p-12">
             <div className="mx-auto max-w-5xl space-y-8">
                 {/* Centered Profile Header Card */}
-                <div className="relative bg-[#171717]/80 border border-neutral-800 rounded-[3rem] overflow-hidden backdrop-blur-xl shadow-2xl flex flex-col items-center">
+                <div className="relative neumorphic-panel rounded-[3rem] overflow-hidden flex flex-col items-center">
                     {/* Cover Image Container */}
                     <div className="relative h-64 md:h-80 w-full group">
                         <ProfileCoverUploader 
@@ -299,24 +299,24 @@ export default async function LandlordProfilePage() {
                     {/* Profile Content Section */}
                     <div className="relative w-full px-8 pb-12 -mt-16 md:-mt-24 flex flex-col items-center text-center">
                         {/* Overlapping Avatar */}
-                        <div className="relative size-32 md:w-44 md:h-44 mb-6 z-20">
+                        <div className="relative size-32 md:w-44 md:h-44 mb-6 z-20 neumorphic-inset-card rounded-full p-2">
                             <ProfileAvatarUploader 
                                 initialAvatarUrl={profileAvatarUrl} 
                                 avatarBgColor={profile.avatar_bg_color} 
                                 fullName={profile.full_name} 
-                                className="w-full h-full shadow-2xl"
+                                className="w-full h-full rounded-full"
                             />
                         </div>
 
                         {/* Name & Badge Area */}
                         <div className="space-y-3 mb-8">
                             <div className="flex items-center justify-center gap-4">
-                                <h1 className="text-4xl md:text-5xl font-display font-black text-white tracking-tight">
+                                <h1 className="text-4xl md:text-5xl font-display font-black tracking-tight">
                                     {profile.full_name}
                                 </h1>
                                 {verificationStatus && (
-                                    <div className="bg-[#6d9838]/20 border border-[#6d9838]/30 p-1.5 rounded-full shadow-lg shadow-[#6d9838]/10">
-                                        <CheckCircle2 size={20} className="text-[#6d9838]" />
+                                    <div className="neumorphic-inset-card p-2 rounded-full">
+                                        <CheckCircle2 size={20} className="text-[#c4b0ff]" />
                                     </div>
                                 )}
                             </div>
@@ -329,40 +329,40 @@ export default async function LandlordProfilePage() {
                         <div className="flex items-center gap-4 mb-12">
                             <Link
                                 href="/landlord/settings"
-                                className="px-10 py-3 rounded-2xl bg-white text-black font-black text-[11px] tracking-widest uppercase transition-all duration-300 hover:scale-105 active:scale-95 shadow-xl shadow-white/5"
+                                className="px-10 py-3 rounded-2xl neumorphic-primary font-black text-[11px] tracking-widest uppercase transition-all duration-300 hover:scale-105 active:scale-95"
                             >
                                 Edit Profile
                             </Link>
                             <Link
                                 href="/landlord/messages"
-                                className="size-14 rounded-2xl bg-white/5 hover:bg-white/10 text-white border border-white/10 backdrop-blur-md flex items-center justify-center transition-all duration-300"
+                                className="size-14 rounded-2xl neumorphic-extruded flex items-center justify-center transition-all duration-300"
                             >
                                 <MessageSquare size={20} />
                             </Link>
                         </div>
 
                         {/* Contact Info Row */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-16 pt-10 border-t border-white/5 w-full max-w-4xl">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-16 pt-10 border-t border-black/10 dark:border-white/5 w-full max-w-4xl">
                             <div className="flex flex-col items-center gap-2 group/item transition-all text-center">
-                                <div className="size-10 rounded-full bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20 group-hover/item:scale-110 transition-transform">
-                                    <Mail size={18} className="text-[#6d9838]" />
+                                <div className="size-12 rounded-full neumorphic-inset-card flex items-center justify-center group-hover/item:scale-110 transition-transform">
+                                    <Mail size={18} className="text-[#c4b0ff]" />
                                 </div>
-                                <p className="text-[10px] font-black tracking-widest text-neutral-500 uppercase">Email Address</p>
-                                <a href={`mailto:${profile.email}`} className="text-sm text-white/90 font-medium hover:text-[#6d9838] transition-colors">{profile.email}</a>
+                                <p className="text-[10px] font-black tracking-widest opacity-50 uppercase mt-2">Email Address</p>
+                                <a href={`mailto:${profile.email}`} className="text-sm font-medium hover:text-[#c4b0ff] transition-colors">{profile.email}</a>
                             </div>
                             <div className="flex flex-col items-center gap-2 group/item transition-all text-center">
-                                <div className="size-10 rounded-full bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20 group-hover/item:scale-110 transition-transform">
-                                    <Phone size={18} className="text-[#6d9838]" />
+                                <div className="size-12 rounded-full neumorphic-inset-card flex items-center justify-center group-hover/item:scale-110 transition-transform">
+                                    <Phone size={18} className="text-[#c4b0ff]" />
                                 </div>
-                                <p className="text-[10px] font-black tracking-widest text-neutral-500 uppercase">Phone Number</p>
-                                <a href={`tel:${profile.phone}`} className="text-sm text-white/90 font-medium hover:text-[#6d9838] transition-colors">{profile.phone || '+63 (---) --- ----'}</a>
+                                <p className="text-[10px] font-black tracking-widest opacity-50 uppercase mt-2">Phone Number</p>
+                                <a href={`tel:${profile.phone}`} className="text-sm font-medium hover:text-[#c4b0ff] transition-colors">{profile.phone || '+63 (---) --- ----'}</a>
                             </div>
                             <div className="flex flex-col items-center gap-2 group/item transition-all text-center">
-                                <div className="size-10 rounded-full bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20 group-hover/item:scale-110 transition-transform">
-                                    <MapPin size={18} className="text-[#6d9838]" />
+                                <div className="size-12 rounded-full neumorphic-inset-card flex items-center justify-center group-hover/item:scale-110 transition-transform">
+                                    <MapPin size={18} className="text-[#c4b0ff]" />
                                 </div>
-                                <p className="text-[10px] font-black tracking-widest text-neutral-500 uppercase">Primary Location</p>
-                                <p className="text-sm text-white/90 font-medium">{properties[0]?.city || 'Valenzuela, Metro Manila'}</p>
+                                <p className="text-[10px] font-black tracking-widest opacity-50 uppercase mt-2">Primary Location</p>
+                                <p className="text-sm font-medium">{properties[0]?.city || 'Valenzuela, Metro Manila'}</p>
                             </div>
                         </div>
 
@@ -372,12 +372,12 @@ export default async function LandlordProfilePage() {
                 </div>
 
                 {/* Bio Section */}
-                <div className="bg-[#171717]/80 border border-neutral-800 rounded-[3rem] p-12 backdrop-blur-xl shadow-xl">
+                <div className="neumorphic-panel rounded-[3rem] p-12">
                     <div className="flex items-center gap-4 mb-8">
-                        <div className="size-12 rounded-2xl bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20">
-                            <User size={20} className="text-[#6d9838]" />
+                        <div className="size-12 rounded-2xl neumorphic-inset-card flex items-center justify-center">
+                            <User size={20} className="text-[#c4b0ff]" />
                         </div>
-                        <h2 className="text-2xl font-display font-black text-white tracking-tight">Biography</h2>
+                        <h2 className="text-2xl font-display font-black tracking-tight">Biography</h2>
                     </div>
                     <div className="max-w-4xl">
                         <EditableBio initialBio={profile.bio || ''} />
@@ -388,25 +388,25 @@ export default async function LandlordProfilePage() {
                 <BusinessPermitCard 
                     businessName={profile.business_name || null}
                     permitUrl={profile.business_permit_url || null}
-                    className="rounded-[3rem] shadow-xl"
+                    className="neumorphic-panel rounded-[3rem]"
                 />
 
                 {/* Stats & connectivity section */}
-                <div className="bg-[#171717]/80 border border-neutral-800 rounded-[3rem] p-10 backdrop-blur-xl shadow-xl">
+                <div className="neumorphic-panel rounded-[3rem] p-10">
                     <div className="flex items-center gap-4 mb-10">
-                        <div className="size-12 rounded-2xl bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20">
-                            <TrendingUp size={20} className="text-[#6d9838]" />
+                        <div className="size-12 rounded-2xl neumorphic-inset-card flex items-center justify-center">
+                            <TrendingUp size={20} className="text-[#c4b0ff]" />
                         </div>
-                        <h2 className="text-2xl font-display font-black text-white tracking-tight">Portfolio Stats</h2>
+                        <h2 className="text-2xl font-display font-black tracking-tight">Portfolio Stats</h2>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-                        <div className="bg-white/5 border border-white/5 p-6 rounded-[2rem]">
-                            <p className="text-[10px] font-black tracking-widest text-neutral-500 uppercase mb-2">Total Units</p>
-                            <p className="text-4xl font-display font-black text-white">{units.length}</p>
+                        <div className="neumorphic-inset p-6 rounded-[2rem]">
+                            <p className="text-[10px] font-black tracking-widest opacity-50 uppercase mb-2">Total Units</p>
+                            <p className="text-4xl font-display font-black">{units.length}</p>
                         </div>
-                        <div className="bg-white/5 border border-white/5 p-6 rounded-[2rem]">
-                            <p className="text-[10px] font-black tracking-widest text-neutral-500 uppercase mb-2">Occupancy</p>
-                            <p className="text-4xl font-display font-black text-white">{occupancyRate}%</p>
+                        <div className="neumorphic-inset p-6 rounded-[2rem]">
+                            <p className="text-[10px] font-black tracking-widest opacity-50 uppercase mb-2">Occupancy</p>
+                            <p className="text-4xl font-display font-black">{occupancyRate}%</p>
                         </div>
                     </div>
                 </div>

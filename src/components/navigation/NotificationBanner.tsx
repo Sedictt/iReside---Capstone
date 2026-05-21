@@ -131,8 +131,8 @@ export function NotificationBanner() {
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
                 className={cn(
-                    "pointer-events-auto overflow-hidden border-x border-b bg-card/95 backdrop-blur-xl rounded-b-3xl relative",
-                    isExpanded ? "max-w-4xl shadow-2xl" : "border-t-0 shadow-lg"
+                    "pointer-events-auto overflow-hidden rounded-b-3xl relative transition-all duration-300",
+                    isExpanded ? "max-w-4xl neumorphic-panel" : "border-t-0 neumorphic-panel"
                 )}
             >
                 {/* Auto-rotation progress bar (only when expanded and multiple notifs) */}
@@ -171,10 +171,10 @@ export function NotificationBanner() {
                                 layoutId="bell-icon"
                                 className={cn(
                                     "flex size-7 items-center justify-center rounded-full transition-all duration-500",
-                                    hasNewNotif ? "bg-primary animate-pulse" : "bg-primary/10"
+                                    hasNewNotif ? "neumorphic-primary animate-pulse" : "neumorphic-inset"
                                 )}
                             >
-                                <Bell className={cn("size-3.5", hasNewNotif ? "text-white" : "text-primary")} />
+                                <Bell className={cn("size-3.5", hasNewNotif ? "text-black" : "text-primary")} />
                             </motion.div>
                             
                             <span className="font-black text-xs tracking-tighter text-foreground">
@@ -200,7 +200,7 @@ export function NotificationBanner() {
                             <div className="flex items-center gap-4 shrink-0">
                                 <motion.div 
                                     layoutId="bell-icon"
-                                    className="flex size-10 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20"
+                                    className="flex size-10 items-center justify-center rounded-2xl neumorphic-inset"
                                 >
                                     <Bell className="size-5 text-primary" />
                                 </motion.div>
@@ -237,13 +237,13 @@ export function NotificationBanner() {
                             </div>
 
                             {totalCount > 1 && (
-                                <div className="flex items-center gap-1 shrink-0 bg-muted/30 p-1 rounded-xl">
+                                <div className="flex items-center gap-1 shrink-0 bg-transparent p-1 rounded-xl">
                                     <button 
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             handleManualNav('prev');
                                         }} 
-                                        className="p-1.5 hover:bg-card rounded-lg transition-all text-muted-foreground hover:text-foreground"
+                                        className="p-1.5 neumorphic-extruded rounded-lg transition-all opacity-70 hover:opacity-100"
                                     >
                                         <ChevronLeft className="size-4" />
                                     </button>
@@ -252,7 +252,7 @@ export function NotificationBanner() {
                                             e.stopPropagation();
                                             handleManualNav('next');
                                         }} 
-                                        className="p-1.5 hover:bg-card rounded-lg transition-all text-muted-foreground hover:text-foreground"
+                                        className="p-1.5 neumorphic-extruded rounded-lg transition-all opacity-70 hover:opacity-100"
                                     >
                                         <ChevronRight className="size-4" />
                                     </button>
@@ -271,7 +271,7 @@ export function NotificationBanner() {
                                             // Progress reset removed — progress tracking no longer implemented
                                         }
                                     }}
-                                    className="hidden lg:flex items-center gap-2 px-3 py-2 rounded-xl text-[11px] font-black text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+                                    className="hidden lg:flex items-center gap-2 px-3 py-2 rounded-xl text-[11px] font-black opacity-70 hover:opacity-100 transition-all neumorphic-extruded"
                                 >
                                     Dismiss
                                 </button>
@@ -284,14 +284,14 @@ export function NotificationBanner() {
                                             window.location.href = `/tenant/lease/${data.leaseId}`;
                                         }
                                     }}
-                                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-[11px] font-black shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all active:scale-95"
+                                    className="flex items-center gap-2 px-4 py-2 rounded-xl neumorphic-primary text-[11px] font-black transition-all active:scale-95"
                                 >
                                     Take Action
                                     <ArrowRight className="size-3.5" />
                                 </button>
                                 <button 
                                     onClick={() => setIsExpanded(false)}
-                                    className="size-10 flex items-center justify-center rounded-xl hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                                    className="size-10 flex items-center justify-center rounded-xl transition-colors opacity-70 hover:opacity-100 neumorphic-extruded"
                                 >
                                     <ChevronUp className="size-5" />
                                 </button>

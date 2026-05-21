@@ -61,28 +61,28 @@ export function CommandCenter({
             label: "Overdue",
             value: overdueCount,
             href: "/landlord/invoices",
-            toneClass: "bg-card/70 border-white/10 text-red-400 hover:bg-card",
+            toneClass: "text-red-400",
             icon: Zap
         },
         {
             label: "Near Due",
             value: nearDueCount,
             href: "/landlord/invoices",
-            toneClass: "bg-card/70 border-white/10 text-amber-400 hover:bg-card",
+            toneClass: "text-amber-400",
             icon: TrendingUp
         },
         {
             label: "Vacant",
             value: vacantUnitsCount,
             href: "/landlord/properties",
-            toneClass: "bg-card/70 border-white/10 text-sky-400 hover:bg-card",
+            toneClass: "text-sky-400",
             icon: Building2
         },
         {
             label: "Invites",
             value: activeInviteCount,
             href: "/landlord/applications",
-            toneClass: "bg-card/70 border-white/10 text-primary hover:bg-card",
+            toneClass: "text-primary",
             icon: QrCode
         },
     ];
@@ -125,13 +125,16 @@ export function CommandCenter({
     ];
 
     return (
-        <section className="relative group/section overflow-hidden rounded-[2.5rem] border border-white/10 bg-card/60 p-4 sm:p-6 md:p-8 shadow-2xl shadow-black/30 backdrop-blur-xl">
+        <section className={cn(
+            "neumorphic-panel relative group/section overflow-hidden rounded-[2.5rem] p-4 sm:p-6 md:p-8",
+            "dark:glass-premium dark:bg-card/40 dark:border-white/10 dark:shadow-2xl"
+        )}>
             {/* Background decorative elements */}
-            <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 size-64 rounded-full bg-white/5 blur-[80px] pointer-events-none" />
+            <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 size-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none opacity-0 dark:opacity-100 transition-opacity duration-500" />
             
             <div className="mb-8 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between relative z-10">
                 <div className="flex items-start gap-4">
-                    <div className="flex size-14 items-center justify-center rounded-[1.25rem] border border-primary/20 bg-primary/15 text-primary">
+                    <div className="neumorphic-inset-card flex size-14 items-center justify-center rounded-[1.25rem] text-primary dark:bg-primary/10 dark:border-primary/20 dark:shadow-none">
                         <ShieldCheck className="size-7" />
                     </div>
                     <div>
@@ -143,13 +146,14 @@ export function CommandCenter({
                 </div>
 
                 {/* Real-time stats pills */}
-                <div className="flex gap-2 overflow-x-auto pb-1 pr-1 w-full sm:w-auto">
+                <div className="flex gap-2 overflow-x-auto pb-2 pr-1 w-full sm:w-auto scrollbar-hide">
                     {statCards.map((stat) => (
                         <Link
                             key={stat.label}
                             href={stat.href}
                             className={cn(
-                                "group relative flex shrink-0 w-auto items-center gap-2 sm:gap-3 rounded-2xl border px-3 sm:px-4 py-2 sm:py-2.5 transition-all duration-300 active:scale-95",
+                                "neumorphic-extruded group relative flex shrink-0 w-auto items-center gap-2 sm:gap-3 rounded-2xl px-3 sm:px-4 py-2 sm:py-2.5 active:scale-95",
+                                "dark:bento-glass-card dark:hover:bg-white/[0.05] transition-all",
                                 stat.toneClass
                             )}
                         >
@@ -165,29 +169,32 @@ export function CommandCenter({
 
             <div className="grid gap-6 lg:grid-cols-[1fr_380px] relative z-10">
                 {/* Operations Center */}
-                <div className="rounded-[2rem] border border-white/10 bg-card/70 p-4 sm:p-5 md:p-6 backdrop-blur-sm">
+                <div className={cn(
+                    "neumorphic-inset rounded-[2rem] p-4 sm:p-5 md:p-6",
+                    "dark:bento-glass-inset"
+                )}>
                     <h3 className="mb-6 flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/80">
                         <span className="h-1 w-4 rounded-full bg-primary" />
                         Operations Center
                     </h3>
                     
-                    <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                    <div className="grid grid-cols-3 gap-3 sm:gap-4">
                         {[
-                            { label: "Invoice Ledger", icon: ReceiptText, href: "/landlord/invoices", color: "text-blue-400", bgColor: "bg-blue-400/15" },
-                            { label: "Tenant Records", icon: FileText, href: "/landlord/tenants", color: "text-emerald-400", bgColor: "bg-emerald-400/15" },
-                            { label: "Property Portfolio", icon: Building2, href: "/landlord/properties", color: "text-violet-400", bgColor: "bg-violet-400/15" },
-                            { label: "Application Review", icon: ClipboardList, href: "/landlord/applications", color: "text-amber-400", bgColor: "bg-amber-400/15" },
-                            { label: "Utility Billing", icon: Zap, href: "/landlord/utility-billing", color: "text-sky-400", bgColor: "bg-sky-400/15" },
-                            { label: "Maintenance Logs", icon: Hammer, href: "/landlord/maintenance", color: "text-rose-400", bgColor: "bg-rose-400/15" },
-                            { label: "Lease Renewals", icon: RefreshCw, href: "/landlord/tenants?tab=renewals", color: "text-cyan-400", bgColor: "bg-cyan-400/15" },
-                            { label: "Document Vault", icon: FolderSearch2, href: "/landlord/documents", color: "text-primary", bgColor: "bg-primary/15" },
-                            { label: "Account Settings", icon: Settings2, href: "/landlord/settings", color: "text-zinc-400", bgColor: "bg-zinc-400/15" },
+                            { label: "Invoice Ledger", icon: ReceiptText, href: "/landlord/invoices", color: "text-blue-400" },
+                            { label: "Tenant Records", icon: FileText, href: "/landlord/tenants", color: "text-emerald-400" },
+                            { label: "Property Portfolio", icon: Building2, href: "/landlord/properties", color: "text-violet-400" },
+                            { label: "Application Review", icon: ClipboardList, href: "/landlord/applications", color: "text-amber-400" },
+                            { label: "Utility Billing", icon: Zap, href: "/landlord/utility-billing", color: "text-sky-400" },
+                            { label: "Maintenance Logs", icon: Hammer, href: "/landlord/maintenance", color: "text-rose-400" },
+                            { label: "Lease Renewals", icon: RefreshCw, href: "/landlord/tenants?tab=renewals", color: "text-cyan-400" },
+                            { label: "Document Vault", icon: FolderSearch2, href: "/landlord/documents", color: "text-primary" },
+                            { label: "Account Settings", icon: Settings2, href: "/landlord/settings", color: "text-zinc-400" },
                         ].map((action, i) => {
                             const Content = (
                                 <>
                                     <div className={cn(
-                                        "flex size-8 sm:size-9 items-center justify-center rounded-xl transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-black/20",
-                                        action.bgColor,
+                                        "neumorphic-inset-card flex size-8 sm:size-10 items-center justify-center rounded-xl transition-all duration-300 group-hover:scale-110",
+                                        "dark:bg-white/[0.05] dark:border-white/10 dark:shadow-none",
                                         action.color
                                     )}>
                                         <action.icon className="size-4 sm:size-5" />
@@ -207,7 +214,10 @@ export function CommandCenter({
                                 <Link 
                                     key={action.href}
                                     href={action.href}
-                                    className="group flex flex-col items-center text-center gap-1.5 sm:gap-2 rounded-[1.25rem] border border-white/5 bg-card/40 p-2 sm:p-2.5 transition-all hover:bg-card hover:border-white/10 hover:shadow-xl hover:shadow-black/20"
+                                    className={cn(
+                                        "neumorphic-extruded group flex flex-col items-center text-center gap-1.5 sm:gap-2 rounded-[1.25rem] p-2 sm:p-3",
+                                        "dark:bento-glass-card dark:hover:bg-primary/5 dark:hover:border-primary/20 dark:hover:shadow-[0_0_20px_rgba(196,176,255,0.1)] transition-all"
+                                    )}
                                 >
                                     {Content}
                                 </Link>
@@ -217,7 +227,10 @@ export function CommandCenter({
                 </div>
 
                 {/* Insights Hub */}
-                <div className="rounded-[2rem] border border-white/10 bg-card/70 p-4 sm:p-5 md:p-6 backdrop-blur-sm">
+                <div className={cn(
+                    "neumorphic-inset rounded-[2rem] p-4 sm:p-5 md:p-6",
+                    "dark:bento-glass-inset"
+                )}>
                     <h3 className="mb-6 flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/80">
                         <span className="h-1 w-4 rounded-full bg-amber-500" />
                         Next Priorities
@@ -225,7 +238,10 @@ export function CommandCenter({
                     
                     <div className="flex flex-col gap-4">
                         {nextMoves.map((move) => (
-                            <div key={move.id} className="group/item relative overflow-hidden rounded-2xl border border-white/10 bg-card/70 p-4 transition-all hover:bg-card">
+                            <div key={move.id} className={cn(
+                                "neumorphic-extruded group/item relative overflow-hidden rounded-2xl p-4",
+                                "dark:bento-glass-card dark:hover:bg-white/[0.05] transition-all"
+                            )}>
                                 <div className="absolute top-0 right-0 p-2 opacity-0 -translate-y-1 translate-x-1 group-hover/item:opacity-20 transition-all">
                                     <Zap className="size-12" />
                                 </div>
@@ -235,7 +251,7 @@ export function CommandCenter({
                                     </span>
                                 </div>
                                 <h4 className="text-sm font-black text-foreground relative z-10">{move.title}</h4>
-                                <p className="mt-1 text-xs font-medium text-muted-foreground leading-relaxed relative z-10">{move.detail}</p>
+                                <p className="mt-1 text-xs font-medium text-muted-foreground/70 dark:text-white/60 leading-relaxed relative z-10">{move.detail}</p>
                                 <Link
                                     href={move.href}
                                     className="mt-4 inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary transition-all hover:gap-3 group/link"

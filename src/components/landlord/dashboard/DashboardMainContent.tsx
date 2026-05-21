@@ -20,12 +20,14 @@ export function DashboardMainContent({
     onNewWalkIn,
     onCreateInvite
 }: DashboardMainContentProps) {
+    const applicationsCtaClassName = "group relative flex items-center justify-center gap-3 overflow-hidden rounded-2xl neumorphic-primary landlord-applications-cta px-8 py-4 w-auto";
+
     return (
         <>
             {/* Desktop and Tablet Layout */}
             <div data-tour-id="tour-welcome-area" className="hidden sm:flex flex-col justify-center max-w-2xl w-full">
                 {/* Badge */}
-                <div className="mb-4 sm:mb-6 flex items-center gap-2 w-fit rounded-full border border-white/10 bg-card/60 px-4 py-2 backdrop-blur-xl">
+                <div className="mb-4 sm:mb-6 flex items-center gap-2 w-fit rounded-full neumorphic-inset-card px-4 py-2">
                     <div className="relative">
                         <div className="size-2 rounded-full bg-primary animate-ping" />
                         <div className="absolute inset-0 size-2 rounded-full bg-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.8)]" />
@@ -49,15 +51,15 @@ export function DashboardMainContent({
                     {onNewWalkIn ? (
                         <button 
                             onClick={onNewWalkIn}
-                            className="group relative flex items-center justify-center gap-3 overflow-hidden rounded-2xl bg-primary px-8 py-4 text-primary-foreground shadow-[0_8px_18px_rgba(var(--primary-rgb),0.28)] transition-all hover:brightness-105 active:scale-95 w-auto"
+                            className={applicationsCtaClassName}
                         >
-                            <div className="absolute inset-0 bg-white/15 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                            <div className="absolute inset-0 bg-white/15 opacity-0 transition-opacity duration-300 group-hover:opacity-100 dark:bg-primary-foreground/10" />
                             <UserPlus className="size-4 font-black relative z-10" />
                             <span className="text-sm font-black uppercase tracking-tight relative z-10">New Application</span>
                         </button>
                     ) : (
-                        <Link href="/landlord/applications?action=tenant-application" className="group relative flex items-center justify-center gap-3 overflow-hidden rounded-2xl bg-primary px-8 py-4 text-primary-foreground shadow-[0_8px_18px_rgba(var(--primary-rgb),0.28)] transition-all hover:brightness-105 active:scale-95 w-auto">
-                            <div className="absolute inset-0 bg-white/15 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                        <Link href="/landlord/α4?action=tenant-application" className={applicationsCtaClassName}>
+                            <div className="absolute inset-0 bg-white/15 opacity-0 transition-opacity duration-300 group-hover:opacity-100 dark:bg-primary-foreground/10" />
                             <UserPlus className="size-4 font-black relative z-10" />
                             <span className="text-sm font-black uppercase tracking-tight relative z-10">New Application</span>
                         </Link>
@@ -68,7 +70,7 @@ export function DashboardMainContent({
                             <button
                                 onClick={onCreateInvite}
                                 title="Create Invite link"
-                                className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-card/60 backdrop-blur-xl transition-all hover:bg-card shrink-0"
+                                className="flex h-14 w-14 items-center justify-center rounded-2xl neumorphic-extruded active:scale-95 shrink-0"
                             >
                                 <QrCode className="size-5 text-primary" />
                             </button>
@@ -76,14 +78,14 @@ export function DashboardMainContent({
                         <Link 
                             href="/landlord/maintenance" 
                             title="Maintenance Queue"
-                            className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-card/60 backdrop-blur-xl transition-all hover:bg-card shrink-0"
+                            className="flex h-14 w-14 items-center justify-center rounded-2xl neumorphic-extruded active:scale-95 shrink-0"
                         >
                             <Wrench className="size-5 text-amber-500" />
                         </Link>
                         <Link 
                             href="/landlord/unit-map" 
                             title="Unit Map"
-                            className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-card/60 backdrop-blur-xl transition-all hover:bg-card shrink-0"
+                            className="flex h-14 w-14 items-center justify-center rounded-2xl neumorphic-extruded active:scale-95 shrink-0"
                         >
                             <Map className="size-5 text-rose-500" />
                         </Link>
@@ -94,7 +96,7 @@ export function DashboardMainContent({
             {/* Mobile Dedicated Layout (Clean, non-cluttered, unified single row) */}
             <div className="flex sm:hidden flex-col w-full text-left gap-3 pr-14">
                 {/* Date Badge */}
-                <div className="flex items-center gap-2 w-fit rounded-full border border-white/10 bg-card/60 px-2.5 py-1 backdrop-blur-xl">
+                <div className="flex items-center gap-2 w-fit rounded-full neumorphic-inset-card px-2.5 py-1">
                     <div className="relative">
                         <div className="size-1 rounded-full bg-primary animate-ping" />
                         <div className="absolute inset-0 size-1 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),0.8)]" />
@@ -120,7 +122,7 @@ export function DashboardMainContent({
                     {onNewWalkIn ? (
                         <button 
                             onClick={onNewWalkIn}
-                            className="group relative flex flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl bg-primary py-2.5 text-primary-foreground shadow-md transition-all active:scale-[0.98]"
+                            className="group relative flex flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl neumorphic-primary py-2.5"
                         >
                             <UserPlus className="size-3.5 font-black" />
                             <span className="text-[10px] font-black uppercase tracking-wider">New App</span>
@@ -128,7 +130,7 @@ export function DashboardMainContent({
                     ) : (
                         <Link 
                             href="/landlord/applications?action=tenant-application"
-                            className="group relative flex flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl bg-primary py-2.5 text-primary-foreground shadow-md transition-all active:scale-[0.98]"
+                            className="group relative flex flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl neumorphic-primary py-2.5"
                         >
                             <UserPlus className="size-3.5 font-black" />
                             <span className="text-[10px] font-black uppercase tracking-wider">New App</span>
@@ -140,7 +142,7 @@ export function DashboardMainContent({
                             <button
                                 onClick={onCreateInvite}
                                 title="Create Invite link"
-                                className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-card/60 backdrop-blur-xl transition-all active:scale-95"
+                                className="flex h-9 w-9 items-center justify-center rounded-xl neumorphic-extruded active:scale-95"
                             >
                                 <QrCode className="size-4 text-primary" />
                             </button>
@@ -148,14 +150,14 @@ export function DashboardMainContent({
                         <Link 
                             href="/landlord/maintenance" 
                             title="Maintenance Queue"
-                            className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-card/60 backdrop-blur-xl transition-all active:scale-95"
+                            className="flex h-9 w-9 items-center justify-center rounded-xl neumorphic-extruded active:scale-95"
                         >
                             <Wrench className="size-4 text-amber-500" />
                         </Link>
                         <Link 
                             href="/landlord/unit-map" 
                             title="Unit Map"
-                            className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-card/60 backdrop-blur-xl transition-all active:scale-95"
+                            className="flex h-9 w-9 items-center justify-center rounded-xl neumorphic-extruded active:scale-95"
                         >
                             <Map className="size-4 text-rose-500" />
                         </Link>
