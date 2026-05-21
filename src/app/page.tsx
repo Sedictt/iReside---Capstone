@@ -756,7 +756,7 @@ export default function ScrollyTellingLandingPage() {
                         <ThemeToggle />
                         <TransitionLink
                             href={user ? dashboardHref : "/login"}
-                            className="relative flex items-center gap-2 overflow-hidden group px-5 py-2.5 rounded-full border border-zinc-200 dark:border-zinc-700 bg-muted/50 hover:bg-muted transition-all"
+                            className="relative flex items-center gap-2 overflow-hidden group px-5 py-2.5 rounded-full neumorphic-extruded transition-all"
                         >
                             <span className="relative z-10 hidden md:block text-[13px] font-semibold">
                                 {user ? "Dashboard" : "Log in"}
@@ -779,11 +779,11 @@ export default function ScrollyTellingLandingPage() {
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-200 via-primary to-primary-dark">For Rental Ops.</span>
                         </h1>
                     <p className="text-lg md:text-2xl text-muted-foreground max-w-2xl mx-auto font-medium mb-8">Run your rentals with less friction, stronger security, and predictable cash flow.</p>
-                    <TransitionLink href="/signup" className="group relative inline-flex items-center justify-center h-16 px-10 rounded-full bg-primary text-primary-foreground font-black text-lg transition-all hover:scale-105 shadow-[0_0_40px_rgba(109,152,56,0.3)]">
+                    <TransitionLink href="/signup" className="group relative inline-flex items-center justify-center h-16 px-10 rounded-full neumorphic-primary font-black text-lg transition-all hover:scale-105 shadow-[0_0_40px_rgba(109,152,56,0.3)]">
                         Request Access <ArrowRight className="ml-2 size-5 group-hover:translate-x-1.5 transition-transform" />
                     </TransitionLink>
                 </motion.div>
-                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
+                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-bounce">
                     <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">Scroll to Explore</span>
                     <div className="w-[1px] h-10 bg-gradient-to-b from-primary/50 to-transparent" />
                 </div>
@@ -803,7 +803,7 @@ export default function ScrollyTellingLandingPage() {
                     </div>
                     {HOW_IT_WORKS.map((feature, i) => (
                         <div key={feature.id} className="howit-panel lg:w-[60vw] md:w-[70vw] w-full shrink-0 lg:h-[68vh] h-auto flex items-center lg:px-6 px-0">
-                            <div className="relative w-full h-full rounded-[2.5rem] lg:rounded-[3rem] border border-border bg-card p-8 lg:p-10 flex flex-col justify-between overflow-hidden group shadow-lg min-h-[420px] lg:min-h-0">
+                            <div className="relative w-full h-full rounded-[2.5rem] lg:rounded-[3rem] neumorphic-panel p-8 lg:p-10 flex flex-col justify-between overflow-hidden group shadow-lg min-h-[420px] lg:min-h-0">
                                 <div className="absolute -top-40 -right-40 w-[400px] h-[400px] rounded-full blur-[80px] opacity-20 bg-gradient-to-br from-primary/20 to-transparent" />
                                 <div>
                                     <div className="flex justify-between mb-8">
@@ -815,7 +815,7 @@ export default function ScrollyTellingLandingPage() {
                                 </div>
                                 <div className="mt-8 pt-8 border-t border-border/50 grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
                                     <ul className="space-y-3">{feature.highlights.map(h => <li key={h} className="flex items-center gap-2 text-[15px]"><span className="size-1.5 rounded-full bg-primary" />{h}</li>)}</ul>
-                                    <div className="rounded-2xl border border-primary/30 bg-primary/10 p-4 text-center">
+                                    <div className="rounded-2xl neumorphic-inset p-4 text-center">
                                         <p className="text-3xl font-black text-primary">{feature.metric}</p>
                                         <p className="text-xs text-muted-foreground mt-1">{feature.metricLabel}</p>
                                     </div>
@@ -872,7 +872,7 @@ export default function ScrollyTellingLandingPage() {
                 </div>
                 <div className="max-w-7xl mx-auto px-6 flex flex-col lg:block w-full">
                     {SHOWCASE_MODULES.map((mod, i) => (
-                        <div key={mod.id} className="showcase-card lg:absolute relative inset-0 flex items-center justify-center p-6 lg:p-12 bg-background border border-border lg:border-t lg:border-x-0 lg:border-b-0 shadow-2xl rounded-3xl lg:rounded-none mb-12 lg:mb-0 lg:h-full min-h-[380px]" style={{ zIndex: i + 1 }}>
+                        <div key={mod.id} className="showcase-card lg:absolute relative inset-0 flex items-center justify-center p-6 lg:p-12 neumorphic-panel lg:rounded-none lg:shadow-none shadow-2xl rounded-3xl mb-12 lg:mb-0 lg:h-full min-h-[380px]" style={{ zIndex: i + 1 }}>
                             <div className="max-w-3xl w-full flex flex-col items-center text-center">
                                 <div className="module-body flex flex-col items-center">
                                     <div className={cn("size-16 rounded-2xl flex items-center justify-center mb-6 lg:mb-8 shadow-xl", mod.color)}>
@@ -882,7 +882,7 @@ export default function ScrollyTellingLandingPage() {
                                     <p className="text-xl md:text-2xl text-muted-foreground font-medium mb-6 lg:mb-8 leading-relaxed max-w-2xl">
                                         {mod.desc}
                                     </p>
-                                    <TransitionLink href={mod.href} className="module-cta inline-flex items-center gap-2 rounded-full border border-primary bg-primary/10 px-8 py-4 font-black text-primary uppercase text-sm hover:bg-primary/20 transition-all">
+                                    <TransitionLink href={mod.href} className="module-cta inline-flex items-center gap-2 rounded-full neumorphic-extruded px-8 py-4 font-black text-primary uppercase text-sm transition-all">
                                         Explore Module <ChevronRight className="size-4" />
                                     </TransitionLink>
                                 </div>
@@ -934,7 +934,7 @@ export default function ScrollyTellingLandingPage() {
                             <p className="iris-header-anim text-lg md:text-xl text-muted-foreground font-medium max-w-xl mb-10">Your dedicated AI operations assistant. iRis bridges the gap between raw property signals and meaningful execution.</p>
                             <div className="grid grid-cols-1 gap-4 max-w-lg">
                                 {IRIS_WORKFLOWS.map((item) => (
-                                    <article key={item.title} className="iris-card rounded-2xl border border-primary/20 bg-background/50 p-5 flex items-center gap-4">
+                                    <article key={item.title} className="iris-card rounded-2xl neumorphic-panel p-5 flex items-center gap-4">
                                         <div className="size-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center"><item.icon className="size-5 text-primary" /></div>
                                         <div><h3 className="text-lg font-black">{item.title}</h3><p className="text-sm text-muted-foreground mt-1">{item.detail}</p></div>
                                     </article>
@@ -969,7 +969,7 @@ export default function ScrollyTellingLandingPage() {
                     <div className="outcomes-right lg:w-1/2 lg:overflow-hidden overflow-visible lg:h-[min(70vh,36rem)] h-auto relative outcomes-right-viewport">
                         <div className="grid gap-12 outcomes-right-track lg:absolute relative lg:inset-x-0 lg:top-0">
                             {OUTCOMES.map(o => (
-                                <article key={o.label} className="outcome-item p-8 border-l-4 border-primary/30 bg-muted/20 rounded-r-3xl">
+                                <article key={o.label} className="outcome-item p-8 border-l-4 border-primary/30 neumorphic-panel rounded-r-3xl">
                                     <div className="flex items-center gap-4 mb-4"><span className="outcome-metric-value text-6xl font-black">{o.metric}</span><CheckCircle2 className="size-8 text-primary" /></div>
                                     <h3 className="text-2xl font-black text-primary">{o.label}</h3><p className="text-lg text-muted-foreground mt-2">{o.detail}</p>
                                 </article>
@@ -985,10 +985,10 @@ export default function ScrollyTellingLandingPage() {
                 <div className="max-w-4xl mx-auto">
                     <p className="cta-reveal text-sm font-black uppercase text-primary mb-6 tracking-widest">Your Pipeline Awaits</p>
                     <h2 className="cta-reveal text-5xl md:text-8xl font-black leading-[0.9]">Build your next<span className="block text-primary mt-4">growth cycle.</span></h2>
-                    <div className="cta-reveal mt-20 cta-panel-wrapper border border-border bg-card p-12 rounded-[3rem] shadow-2xl relative overflow-hidden">
+                    <div className="cta-reveal mt-20 cta-panel-wrapper neumorphic-panel p-12 rounded-[3rem] shadow-2xl relative overflow-hidden">
                         <p className="text-xl text-muted-foreground mb-10">Application review usually completes within two business days.</p>
                         <div className="flex flex-col sm:flex-row gap-6 justify-center">
-                            <TransitionLink href="/signup" className="h-20 px-12 rounded-full bg-primary text-white font-black text-xl flex items-center justify-center hover:scale-105 transition-transform">Request Access <ArrowRight className="ml-3 size-6" /></TransitionLink>
+                            <TransitionLink href="/signup" className="h-20 px-12 rounded-full neumorphic-primary font-black text-xl flex items-center justify-center hover:scale-105 transition-transform">Request Access <ArrowRight className="ml-3 size-6" /></TransitionLink>
                         </div>
                     </div>
                 </div>
@@ -1010,7 +1010,7 @@ export default function ScrollyTellingLandingPage() {
                     }
                     gsap.to(window, { scrollTo: 0, duration: 1.5, ease: "power4.inOut" });
                 }}
-                className="fixed bottom-10 right-10 z-[100] group flex items-center justify-center size-16 rounded-full bg-background/40 backdrop-blur-md border border-primary/20 shadow-2xl transition-transform hover:scale-110 active:scale-95 overflow-visible"
+                className="fixed bottom-10 right-10 z-[100] group flex items-center justify-center size-16 rounded-full neumorphic-extruded backdrop-blur-md shadow-2xl transition-transform hover:scale-110 active:scale-95 overflow-visible"
                 aria-label="Scroll to top"
             >
                 {/* Ripple Effect */}

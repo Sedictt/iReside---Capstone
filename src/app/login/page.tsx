@@ -138,12 +138,12 @@ function LoginContent() {
                     </div>
 
                     <div className="grid grid-cols-2 gap-4 max-w-lg pt-4">
-                        <div className="p-6 rounded-2xl border border-border bg-card">
+                        <div className="p-6 rounded-2xl neumorphic-panel">
                             <ShieldCheck className="size-8 text-primary mb-4" />
                             <h3 className="font-black text-foreground">Secure Access</h3>
                             <p className="text-xs text-muted-foreground mt-1">Reliable and secure digital protection.</p>
                         </div>
-                        <div className="p-6 rounded-2xl border border-border bg-card">
+                        <div className="p-6 rounded-2xl neumorphic-panel">
                             <ArrowRight className="size-8 text-primary mb-4" />
                             <h3 className="font-black text-foreground">Smart Flows</h3>
                             <p className="text-xs text-muted-foreground mt-1">Operational excellence at your fingertips.</p>
@@ -153,7 +153,7 @@ function LoginContent() {
 
                 {/* Right Side: Auth Card */}
                 <div className="relative w-full">
-                    <section className="relative rounded-3xl sm:rounded-[2rem] border border-border bg-card shadow-xl p-6 sm:p-10 lg:p-12 space-y-6">
+                    <section className="relative rounded-3xl sm:rounded-[2rem] neumorphic-panel p-6 sm:p-10 lg:p-12 space-y-6">
                         <div className="space-y-2">
                             <h2 className="text-4xl font-black tracking-tight leading-none">Sign In</h2>
                             <p className="text-base text-muted-foreground font-medium">Access your personalized portal.</p>
@@ -184,7 +184,7 @@ function LoginContent() {
                                         type="email"
                                         required
                                         placeholder="name@example.com"
-                                        className="h-14 w-full rounded-2xl border border-border bg-background/50 px-5 text-sm focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none font-medium"
+                                        className="h-14 w-full rounded-2xl neumorphic-inset px-5 text-sm focus:ring-2 focus:ring-primary/30 transition-all outline-none font-medium"
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -199,7 +199,7 @@ function LoginContent() {
                                             type={isPasswordVisible ? "text" : "password"}
                                             required
                                             placeholder="••••••••"
-                                            className="h-14 w-full rounded-2xl border border-border bg-background/50 px-5 pr-12 text-sm focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none font-medium"
+                                            className="h-14 w-full rounded-2xl neumorphic-inset px-5 pr-12 text-sm focus:ring-2 focus:ring-primary/30 transition-all outline-none font-medium"
                                         />
                                         <button 
                                             type="button"
@@ -215,7 +215,7 @@ function LoginContent() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="h-14 w-full rounded-2xl bg-primary font-black text-primary-foreground text-base shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                                className="h-14 w-full rounded-2xl neumorphic-primary font-black text-base transition-all flex items-center justify-center gap-3 disabled:opacity-50 active:scale-95"
                             >
                                 {loading ? "Authenticating..." : "Sign into Account"}
                                 {!loading && <ArrowRight className="size-5" />}
@@ -231,7 +231,7 @@ function LoginContent() {
                         <button
                             type="button"
                             onClick={handleGoogleLogin}
-                            className="h-14 w-full flex items-center justify-center gap-4 rounded-2xl border border-border bg-background/50 hover:bg-surface-1 transition-all font-black text-sm active:scale-[0.98]"
+                            className="h-14 w-full flex items-center justify-center gap-4 rounded-2xl neumorphic-extruded opacity-80 hover:opacity-100 transition-all font-black text-sm active:scale-95"
                         >
                             <Image src="https://www.svgrepo.com/show/475656/google-color.svg" width={24} height={24} alt="Google" />
                             Google Account
@@ -248,7 +248,7 @@ function LoginContent() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <Link 
                                     href="/signup" 
-                                    className="flex items-center justify-between p-4 rounded-2xl bg-surface-1/50 border border-border hover:border-primary/50 hover:bg-primary/5 transition-all group"
+                                    className="flex items-center justify-between p-4 rounded-2xl neumorphic-extruded opacity-80 hover:opacity-100 transition-all group"
                                 >
                                     <div className="flex items-center gap-3">
                                         <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
@@ -265,7 +265,7 @@ function LoginContent() {
                                 <div className="relative group/hint">
                                     <Link 
                                         href="/signup/tenant" 
-                                        className="flex items-center justify-between p-4 rounded-2xl bg-surface-1/50 border border-border hover:border-primary/50 hover:bg-primary/5 transition-all group overflow-hidden"
+                                        className="flex items-center justify-between p-4 rounded-2xl neumorphic-extruded opacity-80 hover:opacity-100 transition-all group overflow-hidden"
                                     >
                                         <div className="flex items-center gap-3">
                                             <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
@@ -286,7 +286,7 @@ function LoginContent() {
                                     </Link>
                                     
                                     {/* Hint Tooltip */}
-                                    <div className="absolute bottom-full left-0 mb-2 w-48 p-3 rounded-xl bg-surface-2 border border-border shadow-2xl opacity-0 translate-y-2 pointer-events-none group-hover/hint:opacity-100 group-hover/hint:translate-y-0 transition-all z-[60]">
+                                    <div className="absolute bottom-full left-0 mb-2 w-48 p-3 rounded-xl neumorphic-panel opacity-0 translate-y-2 pointer-events-none group-hover/hint:opacity-100 group-hover/hint:translate-y-0 transition-all z-[60]">
                                         <p className="text-[10px] font-medium leading-relaxed text-muted-foreground">
                                             <span className="text-blue-600 dark:text-blue-400 font-black">Invite Only:</span> Access requires a private link or QR code provided by your landlord.
                                         </p>
