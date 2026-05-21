@@ -855,7 +855,7 @@ export function ContactsSidebar() {
             {/* Sidebar */}
             <div
                 className={cn(
-                    "fixed top-0 right-0 z-50 hidden md:flex h-full flex-col overflow-hidden border-l border-border bg-card text-foreground shadow-2xl transition-all duration-500 ease-in-out dark:border-white/5 dark:bg-neutral-900",
+                    "fixed top-0 right-0 z-50 hidden md:flex h-full flex-col overflow-hidden border-l border-border bg-card text-foreground transition-all duration-500 ease-in-out dark:border-white/5 dark:bg-neutral-900 neumorphic-panel !rounded-none",
                     isHovered ? "w-80" : "w-[88px]"
                 )}
                 onMouseEnter={() => setIsHovered(true)}
@@ -865,7 +865,7 @@ export function ContactsSidebar() {
                 <div className="flex min-h-[88px] shrink-0 flex-col justify-center border-b border-border p-6 dark:border-white/5">
                     {!isHovered && (
                         <div className="flex flex-col items-center gap-4">
-                            <div className="relative cursor-default rounded-xl bg-muted p-2.5 dark:bg-white/5">
+                            <div className="relative cursor-default rounded-xl neumorphic-inset-card p-2.5">
                                 <MessageSquare className="size-5 text-primary" />
                                 {hasUnreadConversations && (
                                     <span className="absolute -right-1 -top-1 size-3 animate-pulse rounded-full bg-red-500 ring-2 ring-card dark:ring-neutral-900"></span>
@@ -875,7 +875,7 @@ export function ContactsSidebar() {
                     )}
 
                     {isHovered && (
-                        <div className="relative flex w-full rounded-xl bg-muted p-1 animate-in fade-in duration-500 dark:bg-black/40">
+                        <div className="relative flex w-full rounded-xl neumorphic-inset p-1 animate-in fade-in duration-500">
                             <button
                                 onClick={() => setActiveTab("messages")}
                                 className={cn(
@@ -899,7 +899,7 @@ export function ContactsSidebar() {
 
                             {/* Sliding Active Background */}
                             <div
-                                className="absolute top-1 bottom-1 z-0 w-[calc(50%-4px)] rounded-lg bg-card shadow-sm transition-transform duration-300 ease-out dark:bg-neutral-800"
+                                className="absolute top-1 bottom-1 z-0 w-[calc(50%-4px)] rounded-lg neumorphic-panel transition-transform duration-300 ease-out"
                                 style={{ transform: activeTab === "contacts" ? "translateX(100%)" : "translateX(0)" }}
                             />
                         </div>
@@ -923,8 +923,8 @@ export function ContactsSidebar() {
                                         key={msg.id}
                                         onClick={() => openChat(msg)}
                                         className={cn(
-                                            "flex items-center gap-3 transition-colors text-left group rounded-2xl",
-                                            isHovered ? "p-3 hover:bg-muted/80 dark:hover:bg-white/[0.04]" : "p-1 justify-center hover:scale-110"
+                                            "flex items-center gap-3 transition-all text-left group rounded-2xl",
+                                            isHovered ? "p-3 hover:neumorphic-extruded" : "p-1 justify-center hover:scale-110"
                                         )}
                                     >
                                         <ProfileCardTrigger 
@@ -1017,7 +1017,7 @@ export function ContactsSidebar() {
                 {/* Footer View All */}
                 {isHovered && (
                     <div className="shrink-0 border-t border-border bg-card p-4 animate-in fade-in duration-500 dark:border-white/5 dark:bg-neutral-900">
-                        <Link href="/landlord/tenants" className="flex w-full items-center justify-center rounded-xl border border-border bg-muted py-3 text-sm font-black text-foreground transition-colors hover:bg-muted/80 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10">
+                        <Link href="/landlord/tenants" className="flex w-full items-center justify-center rounded-xl neumorphic-extruded py-3 text-sm font-black text-foreground transition-all">
                             {activeTab === "messages" ? "View All Messages" : "View All Tenants"}
                         </Link>
                     </div>
@@ -1047,19 +1047,19 @@ export function ContactsSidebar() {
                                 }
                             }}
                             className={cn(
-                                "pointer-events-auto flex h-[400px] w-[320px] flex-col rounded-t-2xl border border-b-0 shadow-[0_-18px_40px_rgba(0,0,0,0.18)] transition-all",
+                                "pointer-events-auto flex h-[410px] w-[320px] flex-col rounded-t-[2rem] border-b-0 transition-all neumorphic-panel !shadow-2xl",
                                 chat.isActive
-                                    ? "border-border bg-card dark:border-white/10 dark:bg-neutral-900"
-                                    : "border-border/80 bg-card/95 opacity-90 dark:border-white/20 dark:bg-neutral-900/90"
+                                    ? "opacity-100"
+                                    : "opacity-90 grayscale-[0.2]"
                             )}
                         >
                             {/* Chatbox Header */}
                             <div
                                 className={cn(
-                                    "flex items-center justify-between p-3 border-b rounded-t-2xl cursor-pointer transition-colors",
+                                    "flex items-center justify-between p-3 border-b rounded-t-[2rem] cursor-pointer transition-colors",
                                     chat.isActive
-                                        ? "border-emerald-400/25 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-500/12 dark:hover:bg-emerald-500/20"
-                                        : "border-amber-400/20 bg-amber-50 hover:bg-amber-100 dark:bg-amber-500/10 dark:hover:bg-amber-500/15"
+                                        ? "border-emerald-400/25 bg-emerald-500/5 hover:bg-emerald-500/10"
+                                        : "border-amber-400/20 bg-amber-500/5 hover:bg-amber-500/10"
                                 )}
                             >
                                 <div className="flex items-center gap-2 overflow-hidden">
@@ -1178,13 +1178,13 @@ export function ContactsSidebar() {
                                 ref={(node) => {
                                     chatScrollRef.current[chat.id] = node;
                                 }}
-                                className="custom-scrollbar flex flex-1 flex-col gap-3 overflow-y-auto bg-background/80 p-4 dark:bg-[#0a0a0a]/50"
+                                className="custom-scrollbar flex flex-1 flex-col gap-3 overflow-y-auto neumorphic-inset m-2 p-4"
                             >
                                 {chatState.isLoading && (
-                                    <p className="text-center text-xs text-muted-foreground">Loading conversation…</p>
+                                    <p className="text-center text-xs text-muted-foreground font-medium animate-pulse">Loading conversation…</p>
                                 )}
                                 {!chatState.isLoading && chatState.messages.length === 0 && (
-                                    <p className="text-center text-xs text-muted-foreground">No messages yet</p>
+                                    <p className="text-center text-xs text-muted-foreground font-medium">No messages yet</p>
                                 )}
                                 {chatState.messages.map((message) => {
                                     if (message.messageType === "system") {
@@ -1203,8 +1203,8 @@ export function ContactsSidebar() {
                                         <div className={cn(
                                             "text-sm px-4 py-2.5 rounded-2xl max-w-[85%] border break-words [overflow-wrap:anywhere]",
                                             message.isOwn
-                                                ? "bg-primary text-primary-foreground border-primary/30 rounded-br-sm font-medium shadow-sm transition-all"
-                                                : "rounded-bl-sm border-border bg-muted text-foreground dark:border-white/5 dark:bg-neutral-800 dark:text-neutral-200",
+                                                ? "neumorphic-primary text-primary-foreground border-none rounded-br-sm font-black shadow-lg"
+                                                : "rounded-bl-sm neumorphic-panel !shadow-sm text-foreground",
                                             hasFile && "mr-0 border-none bg-transparent px-0 py-0 text-foreground shadow-none dark:text-white",
                                             hasImage && "border-border bg-white/70 p-1 dark:border-white/10 dark:bg-black/40"
                                         )}>
@@ -1219,13 +1219,13 @@ export function ContactsSidebar() {
                                                     href={message.fileUrl}
                                                     target="_blank"
                                                     rel="noreferrer"
-                                                    className="flex items-center gap-3 rounded-2xl border border-border bg-card/90 p-3 dark:border-white/10 dark:bg-neutral-900/80"
+                                                    className="flex items-center gap-3 rounded-2xl neumorphic-panel p-3"
                                                 >
-                                                    <div className="shrink-0 rounded-lg bg-muted p-2 dark:bg-white/10">
-                                                        <File className="size-4 text-foreground dark:text-neutral-100" />
+                                                    <div className="shrink-0 rounded-lg neumorphic-inset-card p-2">
+                                                        <File className="size-4 text-primary" />
                                                     </div>
                                                     <div className="min-w-0">
-                                                        <p className="truncate text-xs font-black text-foreground dark:text-neutral-100">{message.content || "Attachment"}</p>
+                                                        <p className="truncate text-xs font-black text-foreground">{message.content || "Attachment"}</p>
                                                     </div>
                                                 </a>
                                             )}
@@ -1259,9 +1259,9 @@ export function ContactsSidebar() {
                             </div>
 
                             {/* Chatbox Input */}
-                            <div className="flex flex-col gap-2 border-t border-border bg-card p-3 dark:border-white/10 dark:bg-neutral-900">
+                            <div className="flex flex-col gap-2 p-3">
                                 <div className="flex items-center gap-2">
-                                    <label className={cn("p-1.5 transition-colors", chat.isActive ? "cursor-pointer text-muted-foreground hover:text-foreground dark:hover:text-white" : "cursor-not-allowed text-muted-foreground/60")}>
+                                    <label className={cn("p-1.5 transition-colors neumorphic-inset-card flex items-center justify-center", chat.isActive ? "cursor-pointer text-muted-foreground hover:text-primary" : "cursor-not-allowed text-muted-foreground/40")}>
                                         <MoreHorizontal className="size-4" />
                                         <input
                                             type="file"
@@ -1276,10 +1276,10 @@ export function ContactsSidebar() {
                                             }}
                                         />
                                     </label>
-                                    <div className="flex flex-1 items-center rounded-full border border-border bg-background px-3 py-1.5 transition-all focus-within:border-primary focus-within:ring-1 focus-within:ring-primary dark:border-white/10 dark:bg-white/5">
+                                    <div className="flex flex-1 items-center rounded-full neumorphic-inset px-4 py-2 transition-all">
                                         <input
                                             type="text"
-                                            placeholder={chat.isActive ? "Aa" : "Click header to activate"}
+                                            placeholder={chat.isActive ? "Write something..." : "Select to chat"}
                                             disabled={!chat.isActive}
                                             value={chatState.draft}
                                             onChange={(event) => updateDraft(chat.id, event.target.value)}
@@ -1289,21 +1289,23 @@ export function ContactsSidebar() {
                                                     void sendMiniMessage(chat.id);
                                                 }
                                             }}
-                                            className="w-full border-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none dark:text-white dark:placeholder:text-neutral-500"
+                                            className="w-full border-none bg-transparent text-sm font-medium text-foreground placeholder:text-muted-foreground focus:outline-none"
                                         />
                                     </div>
                                     <button
                                         disabled={!chat.isActive || chatState.isSending || chatState.isUploading}
                                         onClick={() => void sendMiniMessage(chat.id)}
                                         className={cn(
-                                            "p-1.5 transition-colors",
-                                            chat.isActive && !chatState.isSending && !chatState.isUploading ? "text-primary hover:text-primary/80" : "cursor-not-allowed text-muted-foreground/60"
+                                            "p-1.5 transition-all neumorphic-inset-card flex items-center justify-center",
+                                            chat.isActive && !chatState.isSending && !chatState.isUploading 
+                                                ? "text-primary hover:scale-110 active:scale-95" 
+                                                : "cursor-not-allowed text-muted-foreground/40 opacity-50"
                                         )}
                                     >
                                         <Send className="size-4" />
                                     </button>
                                 </div>
-                                {chatState.isUploading && <p className="text-[10px] text-muted-foreground">Uploading attachment…</p>}
+                                {chatState.isUploading && <p className="text-[10px] text-primary font-black animate-pulse text-center">Uploading file...</p>}
                             </div>
                         </motion.div>
                             );
@@ -1327,25 +1329,25 @@ export function ContactsSidebar() {
                             initial={{ opacity: 0, y: 24, scale: 0.98 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: 16, scale: 0.98 }}
-                            className="fixed bottom-6 right-6 z-[80] max-h-[70vh] w-[360px] overflow-hidden rounded-2xl border border-border bg-card shadow-2xl dark:border-white/10 dark:bg-neutral-900"
+                            className="fixed bottom-6 right-6 z-[80] max-h-[70vh] w-[360px] overflow-hidden rounded-[2rem] neumorphic-panel"
                         >
-                            <div className="flex items-center justify-between border-b border-border bg-card/90 px-4 py-3 dark:border-white/10 dark:bg-neutral-900/90">
+                            <div className="flex items-center justify-between border-b border-border bg-card/10 px-6 py-4">
                                 <div className="min-w-0">
-                                    <p className="truncate text-sm font-black text-foreground dark:text-white">Shared Files</p>
+                                    <p className="truncate text-sm font-black text-foreground">Shared Files</p>
                                     <p className="truncate text-[11px] text-muted-foreground">
                                         {openChats.find((chat) => chat.id === sharedFilesChatId)?.name ?? "Conversation"}
                                     </p>
                                 </div>
                                 <button
                                     onClick={() => setSharedFilesChatId(null)}
-                                    className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:hover:bg-white/10 dark:hover:text-white"
+                                    className="rounded-lg neumorphic-inset-card p-2 text-muted-foreground transition-all hover:text-foreground"
                                 >
                                     <X className="size-4" />
                                 </button>
                             </div>
-                            <div className="max-h-[calc(70vh-62px)] overflow-y-auto custom-scrollbar p-3 space-y-2">
+                            <div className="max-h-[calc(70vh-62px)] overflow-y-auto custom-scrollbar p-6 space-y-4">
                                 {sharedFiles.length === 0 && (
-                                    <p className="py-5 text-center text-xs text-muted-foreground">No shared files in this chat yet.</p>
+                                    <p className="py-10 text-center text-xs text-muted-foreground font-medium">No files have been shared here yet.</p>
                                 )}
                                 {sharedFiles.map((message) => {
                                     const isImage = Boolean(message.fileMimeType?.startsWith("image/"));
@@ -1355,7 +1357,7 @@ export function ContactsSidebar() {
                                             href={message.fileUrl ?? "#"}
                                             target="_blank"
                                             rel="noreferrer"
-                                            className="block rounded-xl border border-border bg-muted/40 p-2 transition-colors hover:bg-muted dark:border-white/10 dark:bg-black/30 dark:hover:bg-black/50"
+                                            className="block rounded-2xl neumorphic-panel p-3 transition-all hover:-translate-y-1"
                                         >
                                             {isImage && message.fileUrl ? (
                                                 <Image
@@ -1363,15 +1365,15 @@ export function ContactsSidebar() {
                                                     alt="Shared file"
                                                     width={400}
                                                     height={36}
-                                                    className="object-contain rounded-lg bg-white/80 dark:bg-black/60"
+                                                    className="object-contain rounded-lg bg-white/5"
                                                 />
                                             ) : (
-                                                <div className="flex items-center gap-2 text-foreground dark:text-neutral-100">
-                                                    <span className="rounded-lg bg-card p-2 dark:bg-white/10"><File className="size-4" /></span>
-                                                    <span className="text-xs font-medium truncate">{message.content || "Attachment"}</span>
+                                                <div className="flex items-center gap-3 text-foreground">
+                                                    <span className="rounded-lg neumorphic-inset-card p-2 text-primary font-bold"><File className="size-4" /></span>
+                                                    <span className="text-xs font-black truncate">{message.content || "Attachment"}</span>
                                                 </div>
                                             )}
-                                            <p className="mt-2 text-[10px] text-muted-foreground">{formatMiniTimestamp(message.createdAt)}</p>
+                                            <p className="mt-2 text-[10px] text-muted-foreground/60 px-1">{formatMiniTimestamp(message.createdAt)}</p>
                                         </a>
                                     );
                                 })}

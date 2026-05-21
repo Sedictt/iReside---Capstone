@@ -154,9 +154,9 @@ export default function DocumentsPage() {
             <div className="mx-auto max-w-6xl space-y-12">
                 
 
-                <header className="relative overflow-hidden rounded-[3rem] border border-white/5 bg-gradient-to-br from-neutral-900 to-neutral-950 p-12 shadow-2xl">
+                <header className="relative overflow-hidden rounded-[3rem] neumorphic-panel p-12">
                     <div className="absolute top-0 right-0 p-8">
-                        <div className="flex size-24 items-center justify-center rounded-3xl border border-primary/20 bg-primary/5 backdrop-blur-xl">
+                        <div className="flex size-24 items-center justify-center rounded-3xl neumorphic-inset-card">
                             <ShieldCheck className="size-12 text-primary" strokeWidth={1} />
                         </div>
                     </div>
@@ -171,10 +171,10 @@ export default function DocumentsPage() {
                         </div>
                         
                         <div className="space-y-2">
-                            <h1 className="text-5xl font-black tracking-tighter text-white md:text-6xl">
+                            <h1 className="text-5xl font-black tracking-tighter md:text-6xl">
                             Professional <span className="text-primary">Documents.</span>
                             </h1>
-                            <p className="max-w-xl text-lg font-medium leading-relaxed text-neutral-400">
+                            <p className="max-w-xl text-lg font-medium leading-relaxed opacity-70">
                                 Access your lease agreements, contract templates, and identity records in one secure location.
                             </p>
                         </div>
@@ -223,11 +223,11 @@ export default function DocumentsPage() {
                                 >
                                     <div className="space-y-6">
                                         <div className="flex items-center justify-between px-2">
-                                            <h2 className="text-xl font-black text-white tracking-tight flex items-center gap-3">
+                                            <h2 className="text-xl font-black tracking-tight flex items-center gap-3">
                                                 <Fingerprint className="size-5 text-primary" />
                                                 Identity & Compliance
                                             </h2>
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500">{registrationDocuments.length} Records</span>
+                                            <span className="text-[10px] font-black uppercase tracking-widest opacity-50">{registrationDocuments.length} Records</span>
                                         </div>
 
                                         <div className="grid gap-4">
@@ -236,22 +236,22 @@ export default function DocumentsPage() {
                                                 return (
                                                     <div 
                                                         key={docRecord.id}
-                                                        className="group relative flex items-center gap-6 rounded-[2rem] border border-white/5 bg-neutral-900/40 p-6 transition-all duration-300 hover:border-primary/20 hover:bg-neutral-900/60"
+                                                        className="group relative flex items-center gap-6 rounded-[2rem] neumorphic-panel p-6 transition-all duration-300"
                                                     >
-                                                        <div className="flex size-16 shrink-0 items-center justify-center rounded-2xl border border-white/5 bg-white/[0.03] transition-colors group-hover:border-primary/20 group-hover:bg-primary/5">
-                                                            <CategoryIcon className="size-7 text-neutral-500 transition-colors group-hover:text-primary" strokeWidth={1.5} />
+                                                        <div className="flex size-16 shrink-0 items-center justify-center rounded-2xl neumorphic-inset-card transition-colors">
+                                                            <CategoryIcon className="size-7 opacity-50 transition-colors group-hover:text-primary group-hover:opacity-100" strokeWidth={1.5} />
                                                         </div>
                                                         
                                                         <div className="flex-1 min-w-0 space-y-1">
                                                             <div className="flex items-center gap-2">
-                                                                <h3 className="text-base font-black text-white truncate">{docRecord.name}</h3>
-                                                                <span className="rounded-full bg-neutral-800 px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter text-neutral-400">
+                                                                <h3 className="text-base font-black truncate">{docRecord.name}</h3>
+                                                                <span className="rounded-full neumorphic-inset px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter">
                                                                     {docRecord.category}
                                                                 </span>
                                                             </div>
-                                                            <p className="text-sm text-neutral-500 truncate">{docRecord.description}</p>
+                                                            <p className="text-sm opacity-50 truncate">{docRecord.description}</p>
                                                             <div className="flex items-center gap-4 pt-1">
-                                                                <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-neutral-600" suppressHydrationWarning>
+                                                                <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest opacity-40" suppressHydrationWarning>
                                                                     <Clock className="size-3" />
                                                                     Uploaded {new Date(docRecord.updatedAt).toLocaleDateString()}
                                                                 </div>
@@ -263,7 +263,7 @@ export default function DocumentsPage() {
                                                                 href={docRecord.url} 
                                                                 target="_blank" 
                                                                 rel="noreferrer"
-                                                                className="flex size-10 items-center justify-center rounded-xl border border-white/5 bg-white/[0.03] text-neutral-400 transition-all hover:border-primary/20 hover:bg-primary/5 hover:text-primary"
+                                                                className="flex size-10 items-center justify-center rounded-xl neumorphic-extruded transition-all hover:text-primary"
                                                             >
                                                                 <Eye className="size-4" />
                                                             </a>
@@ -285,11 +285,11 @@ export default function DocumentsPage() {
                                     <div className="space-y-6">
                                         <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between px-2">
                                             <div className="space-y-1">
-                                                <h2 className="text-xl font-black text-white tracking-tight flex items-center gap-3">
+                                                <h2 className="text-xl font-black tracking-tight flex items-center gap-3">
                                                     <FileText className="size-5 text-primary" />
                                                     Lease Contracts
                                                 </h2>
-                                                <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500">
+                                                <p className="text-[10px] font-black uppercase tracking-widest opacity-50">
                                                     {filteredLeaseDocuments.length} Total Documents Found
                                                 </p>
                                             </div>
@@ -297,14 +297,14 @@ export default function DocumentsPage() {
                                             <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
                                                 <div className="relative group w-full sm:w-64">
                                                     <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                                                        <SearchIcon className="size-4 text-neutral-500 transition-colors group-focus-within:text-primary" />
+                                                        <SearchIcon className="size-4 opacity-50 transition-colors group-focus-within:text-primary group-focus-within:opacity-100" />
                                                     </div>
                                                     <input 
                                                         type="text"
                                                         placeholder="Search records..."
                                                         value={searchQuery}
                                                         onChange={(event) => setSearchQuery(event.target.value)}
-                                                        className="w-full h-12 bg-neutral-900/40 border border-white/5 rounded-2xl pl-11 pr-4 text-sm text-white placeholder:text-neutral-600 focus:outline-none focus:border-primary/20 focus:bg-neutral-900/60 transition-all"
+                                                        className="w-full h-12 neumorphic-inset rounded-2xl pl-11 pr-4 text-sm focus:outline-none transition-all"
                                                     />
                                                 </div>
 
@@ -312,27 +312,27 @@ export default function DocumentsPage() {
                                                     <select 
                                                         value={statusFilter}
                                                         onChange={(event) => setStatusFilter(event.target.value)}
-                                                        className="h-12 bg-neutral-900/40 border border-white/5 rounded-2xl px-4 text-xs font-black text-neutral-400 focus:outline-none focus:border-primary/20 transition-all appearance-none pr-10 cursor-pointer hover:bg-neutral-900/60"
+                                                        className="h-12 neumorphic-inset rounded-2xl px-4 text-xs font-black focus:outline-none transition-all appearance-none pr-10 cursor-pointer"
                                                     >
                                                         <option value="all">ALL STATUS</option>
                                                         <option value="active">ACTIVE ONLY</option>
                                                         <option value="pending">PENDING SIGN</option>
                                                         <option value="terminated">ARCHIVED</option>
                                                     </select>
-                                                    <Filter className="absolute right-4 top-1/2 -translate-y-1/2 size-3 text-neutral-500 pointer-events-none" />
+                                                    <Filter className="absolute right-4 top-1/2 -translate-y-1/2 size-3 opacity-50 pointer-events-none" />
                                                 </div>
 
                                                 <div className="relative">
                                                     <select 
                                                         value={typeFilter}
                                                         onChange={(event) => setTypeFilter(event.target.value)}
-                                                        className="h-12 bg-neutral-900/40 border border-white/5 rounded-2xl px-4 text-xs font-black text-neutral-400 focus:outline-none focus:border-primary/20 transition-all appearance-none pr-10 cursor-pointer hover:bg-neutral-900/60"
+                                                        className="h-12 neumorphic-inset rounded-2xl px-4 text-xs font-black focus:outline-none transition-all appearance-none pr-10 cursor-pointer"
                                                     >
                                                         <option value="all">ALL TYPES</option>
                                                         <option value="lease">EXECUTED</option>
                                                         <option value="template">TEMPLATES</option>
                                                     </select>
-                                                    <ArrowUpDown className="absolute right-4 top-1/2 -translate-y-1/2 size-3 text-neutral-500 pointer-events-none" />
+                                                    <ArrowUpDown className="absolute right-4 top-1/2 -translate-y-1/2 size-3 opacity-50 pointer-events-none" />
                                                 </div>
                                             </div>
                                         </div>
@@ -349,25 +349,25 @@ export default function DocumentsPage() {
                                                                 initial={{ opacity: 0, scale: 0.95 }}
                                                                 animate={{ opacity: 1, scale: 1 }}
                                                                 exit={{ opacity: 0, scale: 0.95 }}
-                                                                className="group relative flex items-center gap-6 rounded-[2rem] border border-white/5 bg-neutral-900/40 p-6 transition-all duration-300 hover:border-primary/20 hover:bg-neutral-900/60"
+                                                                className="group relative flex items-center gap-6 rounded-[2rem] neumorphic-panel p-6 transition-all duration-300"
                                                             >
-                                                                <div className="flex size-16 shrink-0 items-center justify-center rounded-2xl border border-white/5 bg-white/[0.03] transition-colors group-hover:border-primary/20 group-hover:bg-primary/5">
-                                                                    <CategoryIcon className="size-7 text-neutral-500 transition-colors group-hover:text-primary" strokeWidth={1.5} />
+                                                                <div className="flex size-16 shrink-0 items-center justify-center rounded-2xl neumorphic-inset-card transition-colors">
+                                                                    <CategoryIcon className="size-7 opacity-50 transition-colors group-hover:text-primary group-hover:opacity-100" strokeWidth={1.5} />
                                                                 </div>
                                                                 
                                                                 <div className="flex-1 min-w-0 space-y-1">
                                                                     <div className="flex items-center gap-2">
-                                                                        <h3 className="text-base font-black text-white truncate">{docRecord.name}</h3>
+                                                                        <h3 className="text-base font-black truncate">{docRecord.name}</h3>
                                                                         <span className={cn(
                                                                             "rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter",
-                                                                            docRecord.isTemplate ? "bg-amber-500/10 text-amber-400" : "bg-primary/10 text-primary"
+                                                                            docRecord.isTemplate ? "bg-amber-500/10 text-amber-500" : "bg-primary/10 text-primary"
                                                                         )}>
                                                                             {docRecord.isTemplate ? "TEMPLATE" : "EXECUTED"}
                                                                         </span>
                                                                     </div>
-                                                                    <p className="text-sm text-neutral-500 truncate">{docRecord.description}</p>
+                                                                    <p className="text-sm opacity-50 truncate">{docRecord.description}</p>
                                                                     <div className="flex items-center gap-4 pt-1">
-                                                                        <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-neutral-600">
+                                                                        <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest opacity-40">
                                                                             <Clock className="size-3" />
                                                                             <span suppressHydrationWarning>Ref: {docRecord.id.slice(0, 8)} • <span suppressHydrationWarning>{new Date(docRecord.updatedAt).toLocaleDateString()}</span></span>
                                                                         </div>
@@ -381,7 +381,7 @@ export default function DocumentsPage() {
                                                                                 setSelectedTemplate(docRecord);
                                                                                 setShowPreview(true);
                                                                             }}
-                                                                            className="flex size-10 items-center justify-center rounded-xl border border-white/5 bg-white/[0.03] text-neutral-400 transition-all hover:border-primary/20 hover:bg-primary/5 hover:text-primary"
+                                                                            className="flex size-10 items-center justify-center rounded-xl neumorphic-extruded transition-all hover:text-primary"
                                                                         >
                                                                             <Maximize2 className="size-4" />
                                                                         </button>
@@ -391,14 +391,14 @@ export default function DocumentsPage() {
                                                                                 href={docRecord.url}
                                                                                 target="_blank"
                                                                                 rel="noreferrer"
-                                                                                className="flex size-10 items-center justify-center rounded-xl border border-white/5 bg-white/[0.03] text-neutral-400 transition-all hover:border-primary/20 hover:bg-primary/5 hover:text-primary"
+                                                                                className="flex size-10 items-center justify-center rounded-xl neumorphic-extruded transition-all hover:text-primary"
                                                                             >
                                                                                 <Eye className="size-4" />
                                                                             </a>
                                                                             <a 
                                                                                 href={docRecord.url}
                                                                                 download={`${docRecord.name.replace(/\s+/g, '_')}.pdf`}
-                                                                                className="flex size-10 items-center justify-center rounded-xl border border-white/5 bg-white/[0.03] text-neutral-400 transition-all hover:border-primary/20 hover:bg-primary/5 hover:text-primary"
+                                                                                className="flex size-10 items-center justify-center rounded-xl neumorphic-extruded transition-all hover:text-primary"
                                                                             >
                                                                                 <Download className="size-4" />
                                                                             </a>
@@ -410,10 +410,10 @@ export default function DocumentsPage() {
                                                     })}
                                                 </AnimatePresence>
                                             ) : (
-                                                <div className="rounded-[2rem] border border-dashed border-white/10 bg-neutral-900/20 p-12 text-center h-[400px] flex flex-col items-center justify-center">
-                                                    <FileText className="size-10 text-neutral-700 mx-auto mb-4" />
-                                                    <p className="text-sm font-black text-neutral-500 uppercase tracking-widest">No Documents Found</p>
-                                                    <p className="text-xs text-neutral-600 mt-1">Select a different property or try a different search term.</p>
+                                                <div className="rounded-[2rem] neumorphic-inset p-12 text-center h-[400px] flex flex-col items-center justify-center">
+                                                    <FileText className="size-10 opacity-30 mx-auto mb-4" />
+                                                    <p className="text-sm font-black opacity-50 uppercase tracking-widest">No Documents Found</p>
+                                                    <p className="text-xs opacity-40 mt-1">Select a different property or try a different search term.</p>
                                                 </div>
                                             )}
                                         </div>
@@ -424,7 +424,7 @@ export default function DocumentsPage() {
                                                 <button 
                                                     onClick={() => setCurrentPage(previousPage => Math.max(1, previousPage - 1))}
                                                     disabled={currentPage === 1}
-                                                    className="flex size-12 items-center justify-center rounded-2xl border border-white/5 bg-neutral-900/40 text-neutral-400 transition-all hover:border-primary/20 hover:text-primary disabled:opacity-20 disabled:hover:border-white/5 disabled:hover:text-neutral-400"
+                                                    className="flex size-12 items-center justify-center rounded-2xl neumorphic-extruded transition-all hover:text-primary disabled:opacity-50"
                                                 >
                                                     <ChevronLeft className="size-5" />
                                                 </button>
@@ -437,8 +437,8 @@ export default function DocumentsPage() {
                                                             className={cn(
                                                                 "size-12 rounded-2xl text-[11px] font-black transition-all",
                                                                 currentPage === pageIndex + 1 
-                                                                    ? "bg-primary text-black shadow-lg shadow-primary/20" 
-                                                                    : "border border-white/5 bg-neutral-900/40 text-neutral-500 hover:border-primary/20 hover:text-white"
+                                                                    ? "neumorphic-primary" 
+                                                                    : "neumorphic-extruded"
                                                             )}
                                                         >
                                                             {pageIndex + 1}
@@ -449,7 +449,7 @@ export default function DocumentsPage() {
                                                 <button 
                                                     onClick={() => setCurrentPage(previousPage => Math.min(totalPages, previousPage + 1))}
                                                     disabled={currentPage === totalPages}
-                                                    className="flex size-12 items-center justify-center rounded-2xl border border-white/5 bg-neutral-900/40 text-neutral-400 transition-all hover:border-primary/20 hover:text-primary disabled:opacity-20 disabled:hover:border-white/5 disabled:hover:text-neutral-400"
+                                                    className="flex size-12 items-center justify-center rounded-2xl neumorphic-extruded transition-all hover:text-primary disabled:opacity-50"
                                                 >
                                                     <ChevronRight className="size-5" />
                                                 </button>
@@ -466,28 +466,28 @@ export default function DocumentsPage() {
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8">
                     <div className="absolute inset-0 bg-black/95 backdrop-blur-xl" onClick={() => setShowPreview(false)} />
                     
-                    <div className="relative w-full max-w-4xl max-h-full bg-neutral-900 rounded-[3rem] border border-white/10 overflow-hidden flex flex-col shadow-2xl animate-in fade-in zoom-in duration-300">
-                        <div className="flex items-center justify-between px-10 py-8 border-b border-white/5 bg-neutral-900/50 backdrop-blur-md">
+                    <div className="relative w-full max-w-4xl max-h-full neumorphic-panel rounded-[3rem] overflow-hidden flex flex-col animate-in fade-in zoom-in duration-300">
+                        <div className="flex items-center justify-between px-10 py-8 border-b border-black/10 dark:border-white/5">
                             <div className="flex items-center gap-4">
-                                <div className="size-12 bg-primary/10 rounded-2xl flex items-center justify-center">
+                                <div className="size-12 neumorphic-inset-card rounded-2xl flex items-center justify-center">
                                     <ShieldCheck className="size-6 text-primary" />
                                 </div>
                                 <div>
-                                    <h4 className="text-lg font-black text-white uppercase tracking-widest">Document Preview</h4>
-                                    <p className="text-[10px] text-neutral-500 font-black uppercase tracking-widest">Standard Template</p>
+                                    <h4 className="text-lg font-black uppercase tracking-widest">Document Preview</h4>
+                                    <p className="text-[10px] opacity-50 font-black uppercase tracking-widest">Standard Template</p>
                                 </div>
                             </div>
 
                             <button 
                                 onClick={() => setShowPreview(false)}
-                                className="size-12 bg-white/5 hover:bg-white/10 rounded-full flex items-center justify-center text-neutral-400 hover:text-white transition-all"
+                                className="size-12 neumorphic-extruded rounded-full flex items-center justify-center transition-all"
                             >
                                 <X className="size-6" />
                             </button>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto p-12 bg-neutral-950/50 custom-scrollbar">
-                            <div className="max-w-3xl mx-auto shadow-2xl rounded-2xl overflow-hidden bg-white">
+                        <div className="flex-1 overflow-y-auto p-12 custom-scrollbar">
+                            <div className="max-w-3xl mx-auto rounded-2xl overflow-hidden bg-white shadow-2xl">
 <LeaseDocument 
                                     id="PREVIEW-MODE"
                                     start_date={previewStartDate}

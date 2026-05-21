@@ -99,11 +99,11 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
 
 function GlassCard({ children, className, title, description }: { children: React.ReactNode; className?: string; title?: string; description?: string }) {
     return (
-        <div className={cn("relative overflow-hidden rounded-[2rem] border border-white/5 bg-white/[0.03] backdrop-blur-xl transition-all duration-500 hover:bg-white/[0.05]", className)}>
+        <div className={cn("relative overflow-hidden rounded-[2rem] neumorphic-panel transition-all duration-500", className)}>
             {(title || description) && (
-                <div className="border-b border-white/5 px-8 py-6">
-                    {title && <h3 className="text-lg font-black text-white">{title}</h3>}
-                    {description && <p className="text-sm text-neutral-400">{description}</p>}
+                <div className="border-b border-black/10 dark:border-white/5 px-8 py-6">
+                    {title && <h3 className="text-lg font-black">{title}</h3>}
+                    {description && <p className="text-sm opacity-60">{description}</p>}
                 </div>
             )}
             <div className="p-8">{children}</div>
@@ -115,11 +115,11 @@ function SettingField({ label, children, description, icon: Icon }: { label: str
     return (
         <div className="space-y-2">
             <div className="flex items-center gap-2 px-1">
-                {Icon && <Icon className="size-3.5 text-neutral-500" />}
-                <label className="text-xs font-black uppercase tracking-wider text-neutral-400">{label}</label>
+                {Icon && <Icon className="size-3.5 opacity-50" />}
+                <label className="text-xs font-black uppercase tracking-wider opacity-60">{label}</label>
             </div>
             {children}
-            {description && <p className="px-1 text-xs text-neutral-500">{description}</p>}
+            {description && <p className="px-1 text-xs opacity-50">{description}</p>}
         </div>
     );
 }
@@ -130,13 +130,13 @@ function ToggleSwitch({ enabled, onToggle }: { enabled: boolean; onToggle: () =>
             onClick={onToggle}
             className={cn(
                 "relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300",
-                enabled ? "bg-primary shadow-[0_0_12px_rgba(var(--primary-rgb),0.3)]" : "bg-white/10"
+                enabled ? "neumorphic-primary" : "neumorphic-inset"
             )}
         >
             <span
                 className={cn(
-                    "inline-block size-4 transform rounded-full bg-white transition-all duration-300",
-                    enabled ? "translate-x-6" : "translate-x-1"
+                    "inline-block size-4 transform rounded-full transition-all duration-300",
+                    enabled ? "translate-x-6 bg-white" : "translate-x-1 bg-neutral-400"
                 )}
             />
         </button>
@@ -153,8 +153,8 @@ function SubNav({ tabs, activeTab, onTabChange }: { tabs: string[]; activeTab: s
                     className={cn(
                         "whitespace-nowrap rounded-xl px-5 py-2.5 text-xs font-black transition-all",
                         activeTab === tab
-                            ? "bg-white/10 text-white shadow-xl shadow-white/5 border border-white/10"
-                            : "text-neutral-500 hover:text-neutral-300 hover:bg-white/5"
+                            ? "neumorphic-primary text-black"
+                            : "neumorphic-extruded opacity-70 hover:opacity-100"
                     )}
                 >
                     {tab}
@@ -562,7 +562,7 @@ export function LandlordSettings() {
                                         type="text"
                                         value={profile?.full_name || ""}
                                         disabled
-                                        className="w-full cursor-not-allowed rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3 text-sm text-neutral-500"
+                                        className="w-full cursor-not-allowed rounded-xl neumorphic-inset px-4 py-3 text-sm opacity-50"
                                     />
                                 </SettingField>
                                 <SettingField label="Business Name" icon={Building2} description="Verified by admin. Contact support to change.">
@@ -570,7 +570,7 @@ export function LandlordSettings() {
                                         type="text"
                                         value={profile?.business_name || ""}
                                         disabled
-                                        className="w-full cursor-not-allowed rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3 text-sm text-neutral-500"
+                                        className="w-full cursor-not-allowed rounded-xl neumorphic-inset px-4 py-3 text-sm opacity-50"
                                     />
                                 </SettingField>
                                 <SettingField label="Contact Email" icon={Mail} description="This email is used for inquiries.">
@@ -578,7 +578,7 @@ export function LandlordSettings() {
                                         type="email"
                                         value={profile?.email || ""}
                                         disabled
-                                        className="w-full cursor-not-allowed rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3 text-sm text-neutral-500"
+                                        className="w-full cursor-not-allowed rounded-xl neumorphic-inset px-4 py-3 text-sm opacity-50"
                                     />
                                 </SettingField>
                                 <SettingField label="Phone Number" icon={Phone}>
@@ -586,7 +586,7 @@ export function LandlordSettings() {
                                         type="tel"
                                         value={formData.phone}
                                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                        className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
                                     />
                                 </SettingField>
                                 <SettingField label="Website" icon={Globe}>
@@ -594,7 +594,7 @@ export function LandlordSettings() {
                                         type="url"
                                         value={formData.website}
                                         onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                        className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
                                     />
                                 </SettingField>
                                 <div className="md:col-span-2">
@@ -603,7 +603,7 @@ export function LandlordSettings() {
                                             type="text"
                                             value={formData.address}
                                             onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                                            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                            className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
                                         />
                                     </SettingField>
                                 </div>
@@ -613,7 +613,7 @@ export function LandlordSettings() {
                                             rows={4}
                                             value={formData.bio}
                                             onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                                            className="w-full resize-none rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                            className="w-full resize-none rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
                                         />
                                     </SettingField>
                                 </div>
@@ -624,7 +624,7 @@ export function LandlordSettings() {
                     return (
                         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
                             <GlassCard title="Cover Photo" description="A cinematic background for your public page.">
-                                <div className="relative h-64 w-full overflow-hidden rounded-[1.5rem] border border-white/5 bg-white/5">
+                                <div className="relative h-64 w-full overflow-hidden rounded-[1.5rem] neumorphic-inset">
                                     <ProfileCoverUploader 
                                         initialCoverUrl={profile?.cover_url || null} 
                                         fullName={profile?.full_name || "Landlord"} 
@@ -646,7 +646,7 @@ export function LandlordSettings() {
                                         )}
                                         <button 
                                             onClick={() => setIsAvatarPickerOpen(true)}
-                                            className="absolute -bottom-2 -right-2 flex size-12 items-center justify-center rounded-2xl bg-primary text-white shadow-lg transition-all hover:scale-110 active:scale-95"
+                                            className="absolute -bottom-2 -right-2 flex size-12 items-center justify-center rounded-2xl neumorphic-primary transition-all hover:scale-110 active:scale-95"
                                         >
                                             <Camera className="size-6" />
                                         </button>
@@ -667,7 +667,7 @@ export function LandlordSettings() {
                                         placeholder="https://facebook.com/your-page"
                                         value={formData.socials.facebook}
                                         onChange={(e) => setFormData({ ...formData, socials: { ...formData.socials, facebook: e.target.value } })}
-                                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                        className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
                                     />
                                 </SettingField>
                                 <SettingField label="Instagram" icon={Instagram}>
@@ -676,7 +676,7 @@ export function LandlordSettings() {
                                         placeholder="https://instagram.com/your-profile"
                                         value={formData.socials.instagram}
                                         onChange={(e) => setFormData({ ...formData, socials: { ...formData.socials, instagram: e.target.value } })}
-                                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                        className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
                                     />
                                 </SettingField>
                                 <SettingField label="Twitter / X" icon={Twitter}>
@@ -685,7 +685,7 @@ export function LandlordSettings() {
                                         placeholder="https://twitter.com/your-handle"
                                         value={formData.socials.twitter}
                                         onChange={(e) => setFormData({ ...formData, socials: { ...formData.socials, twitter: e.target.value } })}
-                                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                        className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
                                     />
                                 </SettingField>
                                 <SettingField label="LinkedIn" icon={Linkedin}>
@@ -694,7 +694,7 @@ export function LandlordSettings() {
                                         placeholder="https://linkedin.com/in/your-profile"
                                         value={formData.socials.linkedin}
                                         onChange={(e) => setFormData({ ...formData, socials: { ...formData.socials, linkedin: e.target.value } })}
-                                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                        className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
                                     />
                                 </SettingField>
                             </div>
@@ -709,14 +709,14 @@ export function LandlordSettings() {
                                         type="text"
                                         value={formData.business_permit_number}
                                         onChange={(e) => setFormData({ ...formData, business_permit_number: e.target.value })}
-                                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                        className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
                                     />
                                 </SettingField>
                                 
                                 <div className="space-y-2">
                                     <label className="text-xs font-black uppercase tracking-wider text-neutral-400">Permit Document (Photo)</label>
                                     <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-                                        <div className="relative h-48 w-full md:w-80 overflow-hidden rounded-2xl border border-dashed border-white/10 bg-white/5 transition-all hover:bg-white/[0.08]">
+                                        <div className="relative h-48 w-full md:w-80 overflow-hidden rounded-2xl neumorphic-inset border-dashed border-white/10 transition-all hover:opacity-80">
                                             {profile?.business_permit_url ? (
                                                 <Image src={profile.business_permit_url} alt="Business Permit" fill sizes="(max-width: 768px) 100vw, 320px" className="object-cover" />
                                             ) : (
@@ -771,7 +771,7 @@ export function LandlordSettings() {
                     <button
                         onClick={handleSave}
                         disabled={isSaving}
-                        className="flex items-center gap-2 rounded-2xl bg-primary px-8 py-4 text-sm font-black text-white shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+                        className="flex items-center gap-2 rounded-2xl neumorphic-primary px-8 py-4 text-sm font-black transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
                     >
                         {isSaving ? "Saving…" : <><Save className="size-5" /> Save Changes</>}
                     </button>
@@ -812,10 +812,10 @@ export function LandlordSettings() {
                                     <button
                                         key={tab}
                                         className={cn(
-                                            "flex items-center gap-3 rounded-2xl border px-6 py-4 text-sm font-black transition-all",
+                                            "flex items-center gap-3 rounded-2xl px-6 py-4 text-sm font-black transition-all",
                                             activeFinanceTab === tab 
-                                                ? "border-primary/20 bg-primary/10 text-primary shadow-lg shadow-primary/5" 
-                                                : "border-white/5 bg-white/5 text-neutral-400 hover:bg-white/[0.08]"
+                                                ? "neumorphic-panel text-primary" 
+                                                : "neumorphic-extruded opacity-70 hover:opacity-100"
                                         )}
                                         onClick={() => setActiveFinanceTab(tab as any)}
                                     >
@@ -854,7 +854,7 @@ export function LandlordSettings() {
                     
                     {/* Property Selector */}
                     {activeSubTab !== "GCash" && (
-                        <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-1">
+                        <div className="flex items-center gap-3 rounded-2xl neumorphic-panel p-1">
                             <div className="flex items-center gap-2 px-3 py-1">
                                 <Building2 className="size-4 text-primary" />
                                 <span className="text-xs font-black text-white whitespace-nowrap">Property:</span>
@@ -897,10 +897,10 @@ export function LandlordSettings() {
                         <GlassCard title="Change Password" description="Ensure your account is using a long, random password to stay secure.">
                             <div className="space-y-6 max-w-lg">
                                 <SettingField label="Current Password" icon={Key}>
-                                    <input type="password" placeholder="••••••••" className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary" />
+                                    <input type="password" placeholder="••••••••" className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none" />
                                 </SettingField>
                                 <SettingField label="New Password" icon={Key}>
-                                    <input type="password" placeholder="••••••••" className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary" />
+                                    <input type="password" placeholder="••••••••" className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none" />
                                 </SettingField>
                                 
                                 {otpEnabled && (
@@ -910,12 +910,12 @@ export function LandlordSettings() {
                                         className="space-y-2 overflow-hidden"
                                     >
                                         <SettingField label="OTP Verification" icon={Smartphone} description="Check your mobile for the 6-digit code.">
-                                            <input type="text" maxLength={6} placeholder="000000" className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white tracking-[0.5em] text-center focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary font-mono" />
+                                            <input type="text" maxLength={6} placeholder="000000" className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm tracking-[0.5em] text-center focus:outline-none font-mono" />
                                         </SettingField>
                                     </motion.div>
                                 )}
 
-                                <button className="w-full rounded-2xl bg-white/10 py-3 text-sm font-black text-white transition-all hover:bg-white/20">
+                                <button className="w-full rounded-2xl neumorphic-extruded py-3 text-sm font-black transition-all hover:text-primary">
                                     {otpEnabled ? "Verify & Update" : "Update Password"}
                                 </button>
                             </div>
@@ -1034,7 +1034,7 @@ export function LandlordSettings() {
                 </div>
                 <button 
                     onClick={handleConnectGmail}
-                    className="group relative w-full overflow-hidden rounded-2xl bg-primary py-4 text-sm font-black text-black transition-all hover:scale-[1.02] active:scale-95"
+                    className="group relative w-full overflow-hidden rounded-2xl neumorphic-primary py-4 text-sm font-black transition-all hover:scale-[1.02] active:scale-95"
                 >
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                     <span className="relative flex items-center justify-center gap-2">
@@ -1061,7 +1061,7 @@ export function LandlordSettings() {
                         <div className="pt-4">
                             <button 
                                 onClick={handleSendOTP}
-                                className="w-full rounded-2xl bg-primary py-4 text-sm font-black text-black transition-all hover:bg-primary/90 shadow-lg shadow-primary/20"
+                                className="w-full rounded-2xl neumorphic-primary py-4 text-sm font-black transition-all hover:scale-[1.02] active:scale-95"
                             >
                                 Send Verification Code
                             </button>
@@ -1085,13 +1085,13 @@ export function LandlordSettings() {
                                 value={otpInput}
                                 onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, ''))}
                                 placeholder="000000" 
-                                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-2xl text-white tracking-[0.7em] text-center focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary font-mono transition-all placeholder:text-neutral-700 placeholder:tracking-normal"
+                                className="w-full rounded-2xl neumorphic-inset px-4 py-4 text-2xl tracking-[0.7em] text-center focus:outline-none font-mono transition-all placeholder:opacity-50 placeholder:tracking-normal"
                             />
                         </div>
                         <button 
                             onClick={handleVerifyOTP}
                             disabled={isVerifyingOTP || otpInput.length !== 6}
-                            className="w-full rounded-2xl bg-primary py-4 text-sm font-black text-black transition-all hover:bg-primary/90 disabled:opacity-50 shadow-lg shadow-primary/20"
+                            className="w-full rounded-2xl neumorphic-primary py-4 text-sm font-black transition-all disabled:opacity-50 hover:scale-[1.02] active:scale-95"
                         >
                             {isVerifyingOTP ? "Verifying…" : "Verify & Enable 2FA"}
                         </button>
@@ -1107,7 +1107,7 @@ export function LandlordSettings() {
                     </div>
                     <div className="space-y-4">
                         <p className="text-sm text-neutral-400 leading-relaxed">Your account is now protected with high-security email authentication.</p>
-                        <div className="flex items-center gap-3 text-sm font-mono text-neutral-300 bg-white/5 rounded-xl px-4 py-3 border border-white/5 w-fit">
+                        <div className="flex items-center gap-3 text-sm font-mono rounded-xl neumorphic-panel px-4 py-3 w-fit">
                             <Mail className="size-4 text-primary" />
                             {twoFAEmail?.replace(/(.{2})(.*)(@.*)/, "$1***$3")}
                         </div>
@@ -1126,7 +1126,7 @@ export function LandlordSettings() {
                                 value={disablePassword}
                                 onChange={(e) => setDisablePassword(e.target.value)}
                                 placeholder="Your password"
-                                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all"
+                                className="w-full rounded-2xl neumorphic-inset px-4 py-4 text-sm focus:outline-none transition-all"
                             />
                             <button 
                                 onClick={handleDisable2FA}
@@ -1165,10 +1165,10 @@ export function LandlordSettings() {
                                         
                                         return (
                                             <div key={sess.id} className={cn(
-                                                "flex items-center justify-between rounded-2xl border p-4 transition-colors",
+                                                "flex items-center justify-between rounded-2xl p-4 transition-colors",
                                                 isCurrent 
-                                                    ? "border-primary/20 bg-primary/5" 
-                                                    : "border-white/5 bg-white/5 hover:bg-white/10"
+                                                    ? "neumorphic-inset" 
+                                                    : "neumorphic-panel opacity-70"
                                             )}>
                                                 <div className="flex items-center gap-4">
                                                     <Icon className={cn("size-5", isCurrent ? "text-primary" : "text-neutral-400")} />
@@ -1277,7 +1277,7 @@ export function LandlordSettings() {
                     </table>
                     <div className="flex items-center justify-end gap-3 border-t border-white/5 p-6 bg-white/[0.02]">
                         <button className="text-xs font-black text-neutral-400 hover:text-white transition-colors">Reset to Defaults</button>
-                        <button className="rounded-xl bg-white/10 px-4 py-2 text-xs font-black text-white hover:bg-white/20 transition-all">Save Preferences</button>
+                        <button className="rounded-xl neumorphic-extruded px-4 py-2 text-xs font-black transition-all hover:text-primary">Save Preferences</button>
                     </div>
                 </GlassCard>
             </div>
@@ -1292,7 +1292,7 @@ export function LandlordSettings() {
                         <GlassCard title="Data Export" description="Download a copy of your records in JSON or CSV format.">
                             <div className="space-y-4 max-w-lg">
                                 <p className="text-xs text-neutral-400">This includes your properties, tenant history, and financial ledgers.</p>
-                                <button className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-sm font-black text-white transition-all hover:bg-white/10">
+                                <button className="flex items-center gap-2 rounded-2xl neumorphic-extruded px-6 py-3 text-sm font-black transition-all hover:text-primary">
                                     <Download className="size-4" /> Request Data Export
                                 </button>
                             </div>
@@ -1401,10 +1401,10 @@ export function LandlordSettings() {
                                 key={item.id}
                                 onClick={() => setActiveTab(item.id)}
                                 className={cn(
-                                    "group relative flex w-full flex-col items-start rounded-[1.5rem] border px-6 py-5 transition-all duration-500",
+                                    "group relative flex w-full flex-col items-start rounded-[1.5rem] px-6 py-5 transition-all duration-500",
                                     isActive 
-                                        ? "border-primary/20 bg-primary/10 text-primary shadow-2xl shadow-primary/10" 
-                                        : "border-transparent text-neutral-500 hover:bg-white/5 hover:text-neutral-300"
+                                        ? "neumorphic-panel text-primary" 
+                                        : "neumorphic-extruded opacity-70 hover:opacity-100 hover:text-primary"
                                 )}
                             >
                                 <div className="flex w-full items-center justify-between">
@@ -1412,7 +1412,7 @@ export function LandlordSettings() {
                                     {isActive && (
                                         <motion.div 
                                             layoutId="active-indicator"
-                                            className="size-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),1)]" 
+                                            className="size-1.5 rounded-full bg-primary" 
                                         />
                                     )}
                                 </div>
