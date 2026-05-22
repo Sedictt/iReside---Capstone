@@ -12,7 +12,7 @@ import { ReactNode } from "react";
 export default function GlobalClickSpark({ children }: { children: ReactNode }) {
   return (
     <ClickSpark
-      sparkColor="#6D9738"
+      sparkColor="hsl(var(--primary))"
       sparkSize={12}
       sparkRadius={22}
       sparkCount={10}

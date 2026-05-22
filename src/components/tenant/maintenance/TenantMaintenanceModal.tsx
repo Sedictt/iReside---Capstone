@@ -83,9 +83,9 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                 aria-label="Close maintenance detail"
             />
 
-            <div className="relative w-full max-w-5xl bg-background rounded-3xl shadow-2xl flex flex-col md:flex-row overflow-hidden max-h-[90vh] border border-border animate-in zoom-in-95 duration-300">
+            <div className="relative w-full max-w-5xl rounded-3xl flex flex-col md:flex-row overflow-hidden max-h-[90vh] animate-in zoom-in-95 duration-300 neumorphic-panel">
                 {/* Left Panel: Images & Info */}
-                <div className="w-full md:w-1/2 flex flex-col bg-muted/30 border-r border-border/50 relative">
+                <div className="w-full md:w-1/2 flex flex-col relative">
                     {/* Images */}
                     <div className="relative h-64 md:h-full bg-black/5 shrink-0 flex items-center justify-center overflow-hidden">
                         {request.images && request.images.length > 0 ? (
@@ -145,7 +145,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                             )}>
                                 {request.priority} Priority
                             </span>
-                            <div className="bg-background/80 backdrop-blur-md px-3 py-2 rounded-xl border border-border/50 shadow-sm flex flex-col gap-1 w-fit">
+                            <div className="px-3 py-2 rounded-xl flex flex-col gap-1 w-fit neumorphic-panel">
                                 <div className="flex items-center gap-1.5 text-muted-foreground">
                                     <MapPin className="size-3 shrink-0" />
                                     <span className="text-[10px] font-black uppercase tracking-widest truncate max-w-[150px]">
@@ -165,10 +165,10 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                 {/* Right Panel: Content & Tracker */}
                 <div className="w-full md:w-1/2 flex flex-col h-[50vh] md:h-auto">
                     {/* Header */}
-                    <div className="p-6 md:p-8 flex items-start justify-between gap-4 border-b border-border/50 shrink-0">
+                    <div className="p-6 md:p-8 flex items-start justify-between gap-4 shrink-0">
                         <div>
                             <div className="flex items-center gap-2 mb-2">
-                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground bg-muted px-2 py-1 rounded-md border border-border/50">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2 py-1 rounded-md neumorphic-inset">
                                     ID: {request.id.split('-')[0]}
                                 </span>
                                 <span className="flex items-center gap-1 text-[10px] font-black text-muted-foreground uppercase">
@@ -185,7 +185,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                         </div>
                         <button
                             onClick={onClose}
-                            className="p-2 bg-muted hover:bg-muted-foreground/10 rounded-full transition-colors shrink-0"
+                            className="p-2 rounded-full transition-colors shrink-0 neumorphic-extruded text-muted-foreground hover:text-foreground hover:-translate-y-1"
                             aria-label="Close Modal"
                         >
                             <X className="size-5 text-muted-foreground" />
@@ -193,7 +193,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                     </div>
 
                     {/* Status Tracker */}
-                    <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-muted/10 relative custom-scrollbar">
+                    <div className="flex-1 overflow-y-auto p-6 md:p-8 relative custom-scrollbar">
                         <div className="absolute top-0 inset-x-0 h-12 bg-gradient-to-b from-background to-transparent pointer-events-none z-10" />
                         
                         <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-6 pl-2">
@@ -211,9 +211,8 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                     {currentStep >= 1 && <CheckCircle2 className="size-3 text-primary-foreground" />}
                                 </div>
                                 <div className={cn(
-                                    "p-4 rounded-2xl border transition-all duration-500",
-                                    currentStep === 1 ? "bg-card border-border shadow-sm ring-1 ring-primary/10" : "bg-transparent border-transparent hover:bg-muted/50",
-                                    currentStep > 1 ? "opacity-70" : "opacity-100"
+                                    "p-4 rounded-2xl transition-all duration-500",
+                                    currentStep === 1 ? "neumorphic-panel" : "neumorphic-inset opacity-70"
                                 )}>
                                     <h4 className={cn("text-sm font-black tracking-tight", currentStep === 1 ? "text-primary" : "text-foreground")}>Request Submitted</h4>
                                     <p className="text-xs font-medium text-muted-foreground mt-1 leading-relaxed">Your request was successfully sent to your landlord.</p>
@@ -232,8 +231,8 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                         )}
                                     </div>
                                     <div className={cn(
-                                        "p-4 rounded-2xl border transition-all duration-500",
-                                        currentStep >= 2 ? "bg-card border-border shadow-sm ring-1 ring-border" : "bg-transparent border-transparent hover:bg-muted/50",
+                                        "p-4 rounded-2xl transition-all duration-500",
+                                        currentStep >= 2 ? "neumorphic-panel" : "neumorphic-inset",
                                         currentStep > 2 || (request.selfRepairDecision === "rejected" && request.repairMethod) ? "opacity-70" : "opacity-100"
                                     )}>
                                         <h4 className={cn("text-sm font-black tracking-tight", currentStep >= 2 ? "text-primary" : "text-foreground")}>
@@ -254,12 +253,12 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                         {request.selfRepairDecision === "approved" && currentStep === 2 && (
                                             <>
                                                 {/* Update Repair Progress */}
-                                                <div className="mt-5 bg-muted/50 border border-border/60 rounded-2xl p-4 shadow-sm animate-in fade-in slide-in-from-top-2">
+                                                <div className="mt-5 rounded-2xl p-4 animate-in fade-in slide-in-from-top-2 neumorphic-inset">
                                                     <h5 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-3">
                                                         Update Repair Progress
                                                     </h5>
                                                     
-                                                    <div className="mt-6 bg-muted/20 p-1.5 rounded-[24px] border border-border/50 grid grid-cols-2 gap-2 animate-in fade-in slide-in-from-top-4 duration-500">
+                                                    <div className="mt-6 p-1.5 rounded-[24px] grid grid-cols-2 gap-2 animate-in fade-in slide-in-from-top-4 duration-500 neumorphic-panel">
                                                         <button 
                                                             onClick={() => onUpdateRequest?.({ ...request, tenantRepairStatus: "repairing" })}
                                                             className={cn(
@@ -391,8 +390,8 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                         )}
                                     </div>
                                     <div className={cn(
-                                        "p-4 rounded-2xl border transition-all duration-500",
-                                        currentStep >= 2 && request.repairMethod ? "bg-card border-border shadow-sm ring-1 ring-border" : "bg-transparent border-transparent hover:bg-muted/50",
+                                        "p-4 rounded-2xl transition-all duration-500",
+                                        currentStep >= 2 && request.repairMethod ? "neumorphic-panel" : "neumorphic-inset",
                                         currentStep < 2 || !request.repairMethod || currentStep === 3 ? "opacity-70" : "opacity-100"
                                     )}>
                                         <h4 className={cn("text-sm font-black tracking-tight", currentStep >= 2 && request.repairMethod ? "text-cyan-600 dark:text-cyan-500" : "text-foreground")}>
@@ -413,24 +412,24 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                         {request.repairMethod === "third_party" && currentStep === 2 && (
                                             <>
                                                 {/* Update Repair Progress for Third-Party */}
-                                                <div className="mt-5 bg-muted/50 border border-border/60 rounded-2xl p-4 shadow-sm animate-in fade-in slide-in-from-top-2">
+                                                <div className="mt-5 rounded-2xl p-4 animate-in fade-in slide-in-from-top-2 neumorphic-inset">
                                                     <h5 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-3">
                                                         Update Repair Progress
                                                     </h5>
                                                     
-                                                    <div className="mt-6 bg-muted/20 p-1.5 rounded-[24px] border border-border/50 grid grid-cols-1 sm:grid-cols-3 gap-2 animate-in fade-in slide-in-from-top-4 duration-500">
+                                                    <div className="mt-6 p-1.5 rounded-[24px] grid grid-cols-1 sm:grid-cols-3 gap-2 animate-in fade-in slide-in-from-top-4 duration-500 neumorphic-panel">
                                                         <button 
                                                             onClick={() => onUpdateRequest?.({ ...request, tenantRepairStatus: "personnel_arrived" })}
                                                             className={cn(
                                                                 "flex flex-col items-center justify-center gap-3 py-6 rounded-[20px] transition-all duration-300 group relative",
                                                                 request.tenantRepairStatus === "personnel_arrived" 
-                                                                    ? "bg-background shadow-xl shadow-black/5 text-primary scale-[1.02] ring-1 ring-border" 
-                                                                    : "bg-transparent text-muted-foreground hover:bg-background/50 hover:text-foreground"
+                                                                    ? "neumorphic-primary" 
+                                                                    : "neumorphic-extruded text-muted-foreground hover:text-foreground"
                                                             )}
                                                         >
                                                             <div className={cn(
                                                                 "size-10 rounded-full flex items-center justify-center transition-all duration-300",
-                                                                request.tenantRepairStatus === "personnel_arrived" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground group-hover:bg-background"
+                                                                request.tenantRepairStatus === "personnel_arrived" ? "neumorphic-inset" : "neumorphic-inset text-muted-foreground"
                                                             )}>
                                                                 <UserRound className="size-5" />
                                                             </div>
@@ -446,13 +445,13 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                             className={cn(
                                                                 "flex flex-col items-center justify-center gap-3 py-6 rounded-[20px] transition-all duration-300 group relative",
                                                                 request.tenantRepairStatus === "repairing" 
-                                                                    ? "bg-background shadow-xl shadow-black/5 text-primary scale-[1.02] ring-1 ring-border" 
-                                                                    : "bg-transparent text-muted-foreground hover:bg-background/50 hover:text-foreground"
+                                                                    ? "neumorphic-primary" 
+                                                                    : "neumorphic-extruded text-muted-foreground hover:text-foreground"
                                                             )}
                                                         >
                                                             <div className={cn(
                                                                 "size-10 rounded-full flex items-center justify-center transition-all duration-300",
-                                                                request.tenantRepairStatus === "repairing" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground group-hover:bg-background"
+                                                                request.tenantRepairStatus === "repairing" ? "neumorphic-inset" : "neumorphic-inset text-muted-foreground"
                                                             )}>
                                                                 <Wrench className="size-5" />
                                                             </div>
@@ -468,13 +467,13 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                             className={cn(
                                                                 "flex flex-col items-center justify-center gap-3 py-6 rounded-[20px] transition-all duration-300 group relative",
                                                                 request.tenantRepairStatus === "done" 
-                                                                    ? "bg-background shadow-xl shadow-black/5 text-primary scale-[1.02] ring-1 ring-border" 
-                                                                    : "bg-transparent text-muted-foreground hover:bg-background/50 hover:text-foreground"
+                                                                    ? "neumorphic-primary" 
+                                                                    : "neumorphic-extruded text-muted-foreground hover:text-foreground"
                                                             )}
                                                         >
                                                             <div className={cn(
                                                                 "size-10 rounded-full flex items-center justify-center transition-all duration-300",
-                                                                request.tenantRepairStatus === "done" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground group-hover:bg-background"
+                                                                request.tenantRepairStatus === "done" ? "neumorphic-inset" : "neumorphic-inset text-muted-foreground"
                                                             )}>
                                                                 <CheckCircle2 className="size-5" />
                                                             </div>

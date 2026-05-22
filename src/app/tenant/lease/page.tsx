@@ -135,7 +135,7 @@ function LeaseHubContent() {
                         We couldn&apos;t find an active lease associated with your profile. This usually happens if your move-in is still pending approval.
                     </p>
                 </div>
-                <Link href="/search" className="px-8 py-4 bg-primary hover:bg-primary-dark text-white font-black uppercase tracking-widest text-[10px] rounded-2xl shadow-lg shadow-primary/20 transition-all">
+                <Link href="/search" className="px-8 py-4 text-[10px] rounded-2xl font-black uppercase tracking-widest transition-all neumorphic-primary">
                     Discover Properties
                 </Link>
             </div>
@@ -172,7 +172,7 @@ function LeaseHubContent() {
                     </p>
                 </div>
 
-                <div className="bg-card border border-border rounded-[1.5rem] p-3 shadow-sm flex items-center gap-6 ring-1 ring-primary/5">
+                <div className="rounded-[1.5rem] p-3 flex items-center gap-6 neumorphic-panel">
                     <div className="px-1 border-r border-border/50">
                         <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Contract Status</p>
                         <div className="flex items-center gap-2">
@@ -187,7 +187,7 @@ function LeaseHubContent() {
                 </div>
             </div>
 
-            <div className="flex items-center gap-1 p-1 bg-muted/30 border border-border rounded-2xl w-full md:w-fit overflow-x-auto no-scrollbar">
+            <div className="flex items-center gap-1 p-1 rounded-2xl w-full md:w-fit overflow-x-auto no-scrollbar neumorphic-inset">
                 {tabs.map((tabItem) => (
                     <button
                         key={tabItem.id}
@@ -195,8 +195,8 @@ function LeaseHubContent() {
                         className={cn(
                             "flex items-center gap-2 px-7 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all shrink-0",
                             activeTab === tabItem.id 
-                                ? "bg-card text-primary shadow-sm border border-border" 
-                                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                ? "text-primary neumorphic-extruded" 
+                                : "text-muted-foreground hover:text-foreground"
                         )}
                     >
                         <tabItem.icon className="size-4" />
@@ -210,7 +210,7 @@ function LeaseHubContent() {
                     <div className="lg:col-span-3 space-y-8">
                         {activeTab === "agreement" && (
                             <div className="space-y-8">
-                                <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm relative overflow-hidden ring-1 ring-border min-h-[300px] flex flex-col justify-between">
+                                <div className="rounded-[2.5rem] p-8 relative overflow-hidden min-h-[300px] flex flex-col justify-between neumorphic-panel">
                                     <div className="absolute inset-0 z-0">
                                         <Image
                                             src={propertyThumbnailUrl}
@@ -230,12 +230,12 @@ function LeaseHubContent() {
                                                 <p className="text-muted-foreground font-medium text-sm mt-1">{lease.unit.property.name} • Unit {lease.unit.name}</p>
                                             </div>
                                             <div className="flex gap-2">
-                                                <button className="h-10 px-4 rounded-xl border border-border bg-background text-[10px] font-black uppercase tracking-widest hover:bg-muted transition-all flex items-center gap-2 shadow-sm">
+                                                <button className="h-10 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 neumorphic-extruded">
                                                     <Download className="size-3" /> Download PDF
                                                 </button>
                                                 <button 
                                                     onClick={() => setIsModalOpen(true)}
-                                                    className="h-10 px-4 rounded-xl bg-primary text-white text-[10px] font-black uppercase tracking-widest hover:bg-primary-dark transition-all flex items-center gap-2 shadow-lg shadow-primary/10"
+                                                    className="h-10 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 neumorphic-primary"
                                                 >
                                                     <FileText className="size-3" /> View Lease
                                                 </button>
@@ -264,7 +264,7 @@ function LeaseHubContent() {
                                     
                                     <div className="relative z-10 mt-8 pt-6 border-t border-border/50 flex items-center justify-between">
                                         <div className="flex items-center gap-3">
-                                            <div className="size-10 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600">
+                                            <div className="size-10 rounded-full flex items-center justify-center text-emerald-600 neumorphic-inset-card">
                                                 <CheckCircle2 className="size-5" />
                                             </div>
                                             <div>
@@ -281,16 +281,13 @@ function LeaseHubContent() {
 
                                 {renewalRequest && (
                                     <div className={cn(
-                                        "border rounded-[2rem] p-6 shadow-sm flex items-center gap-4",
-                                        renewalRequest.status === "pending" && "bg-amber-500/5 border-amber-500/20",
-                                        renewalRequest.status === "approved" && "bg-emerald-500/5 border-emerald-500/20",
-                                        renewalRequest.status === "rejected" && "bg-red-500/5 border-red-500/20"
+                                        "rounded-[2rem] p-6 flex items-center gap-4 neumorphic-panel"
                                     )}>
                                         <div className={cn(
-                                            "size-10 rounded-xl flex items-center justify-center",
-                                            renewalRequest.status === "pending" && "bg-amber-500/10 text-amber-600",
-                                            renewalRequest.status === "approved" && "bg-emerald-500/10 text-emerald-600",
-                                            renewalRequest.status === "rejected" && "bg-red-500/10 text-red-600"
+                                            "size-10 rounded-xl flex items-center justify-center neumorphic-inset-card",
+                                            renewalRequest.status === "pending" && "text-amber-600",
+                                            renewalRequest.status === "approved" && "text-emerald-600",
+                                            renewalRequest.status === "rejected" && "text-red-600"
                                         )}>
                                             {renewalRequest.status === "pending" && <Clock className="size-5" />}
                                             {renewalRequest.status === "approved" && <CheckCircle2 className="size-5" />}
@@ -312,7 +309,7 @@ function LeaseHubContent() {
                                 )}
 
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                                    <div className="md:col-span-2 bg-card border border-border rounded-[2.5rem] p-8 shadow-sm ring-1 ring-border relative overflow-hidden flex flex-col justify-center">
+                                    <div className="md:col-span-2 rounded-[2.5rem] p-8 relative overflow-hidden flex flex-col justify-center neumorphic-panel">
                                         <div className="absolute top-0 right-0 p-6 opacity-[0.02] select-none pointer-events-none">
                                             <Clock className="size-24" />
                                         </div>
@@ -337,7 +334,7 @@ function LeaseHubContent() {
 
                                             <div className="flex flex-wrap gap-8 items-center pt-4 border-t border-border/50">
                                                 <div className="flex items-center gap-4">
-                                                    <div className="size-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+                                                    <div className="size-10 rounded-xl flex items-center justify-center text-primary shrink-0 neumorphic-inset-card">
                                                         <CheckCircle className="size-5" />
                                                     </div>
                                                     <div>
@@ -346,7 +343,7 @@ function LeaseHubContent() {
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-4">
-                                                    <div className="size-10 rounded-xl bg-muted border border-border flex items-center justify-center text-muted-foreground shrink-0">
+                                                    <div className="size-10 rounded-xl flex items-center justify-center text-muted-foreground shrink-0 neumorphic-inset-card">
                                                         <History className="size-5" />
                                                     </div>
                                                     <div>
@@ -372,14 +369,14 @@ function LeaseHubContent() {
                         {activeTab === "property" && (
                             <div className="space-y-8">
                                 {/* Unit Specifications */}
-                                <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm relative overflow-hidden ring-1 ring-border">
+                                <div className="rounded-[2.5rem] p-8 relative overflow-hidden neumorphic-panel">
                                     <div className="absolute top-0 right-0 p-8 opacity-[0.02] select-none pointer-events-none">
                                         <Maximize className="size-64 -mt-16 -mr-16" />
                                     </div>
                                     
                                     <div className="flex items-center justify-between mb-8 relative z-10">
                                         <div className="flex items-center gap-4">
-                                            <div className="size-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shadow-sm">
+                                            <div className="size-12 rounded-2xl flex items-center justify-center text-primary neumorphic-inset-card">
                                                 <Layers className="size-6" />
                                             </div>
                                             <div>
@@ -390,8 +387,8 @@ function LeaseHubContent() {
                                     </div>
                                     
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6 relative z-10">
-                                        <div className="flex flex-col gap-3 p-5 rounded-3xl bg-muted/30 border border-border/50 hover:bg-muted/50 transition-colors">
-                                            <div className="size-10 rounded-xl bg-background border border-border flex items-center justify-center text-muted-foreground shadow-sm">
+                                        <div className="flex flex-col gap-3 p-5 rounded-3xl transition-colors neumorphic-extruded hover:scale-[1.02]">
+                                            <div className="size-10 rounded-xl flex items-center justify-center text-muted-foreground neumorphic-inset-card">
                                                 <Maximize className="size-5" />
                                             </div>
                                             <div className="mt-2">
@@ -400,8 +397,8 @@ function LeaseHubContent() {
                                             </div>
                                         </div>
                                         
-                                        <div className="flex flex-col gap-3 p-5 rounded-3xl bg-muted/30 border border-border/50 hover:bg-muted/50 transition-colors">
-                                            <div className="size-10 rounded-xl bg-background border border-border flex items-center justify-center text-muted-foreground shadow-sm">
+                                        <div className="flex flex-col gap-3 p-5 rounded-3xl transition-colors neumorphic-extruded hover:scale-[1.02]">
+                                            <div className="size-10 rounded-xl flex items-center justify-center text-muted-foreground neumorphic-inset-card">
                                                 <Layers className="size-5" />
                                             </div>
                                             <div className="mt-2">
@@ -410,8 +407,8 @@ function LeaseHubContent() {
                                             </div>
                                         </div>
                                         
-                                        <div className="flex flex-col gap-3 p-5 rounded-3xl bg-muted/30 border border-border/50 hover:bg-muted/50 transition-colors">
-                                            <div className="size-10 rounded-xl bg-background border border-border flex items-center justify-center text-muted-foreground shadow-sm">
+                                        <div className="flex flex-col gap-3 p-5 rounded-3xl transition-colors neumorphic-extruded hover:scale-[1.02]">
+                                            <div className="size-10 rounded-xl flex items-center justify-center text-muted-foreground neumorphic-inset-card">
                                                 <Bed className="size-5" />
                                             </div>
                                             <div className="mt-2">
@@ -420,8 +417,8 @@ function LeaseHubContent() {
                                             </div>
                                         </div>
                                         
-                                        <div className="flex flex-col gap-3 p-5 rounded-3xl bg-muted/30 border border-border/50 hover:bg-muted/50 transition-colors">
-                                            <div className="size-10 rounded-xl bg-background border border-border flex items-center justify-center text-muted-foreground shadow-sm">
+                                        <div className="flex flex-col gap-3 p-5 rounded-3xl transition-colors neumorphic-extruded hover:scale-[1.02]">
+                                            <div className="size-10 rounded-xl flex items-center justify-center text-muted-foreground neumorphic-inset-card">
                                                 <Bath className="size-5" />
                                             </div>
                                             <div className="mt-2">
@@ -436,7 +433,7 @@ function LeaseHubContent() {
                                 <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
                                     <div className="md:col-span-3 space-y-6">
                                         <div className="flex items-center gap-4 px-2">
-                                            <div className="size-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shadow-sm shadow-primary/5">
+                                            <div className="size-12 rounded-2xl flex items-center justify-center text-primary neumorphic-inset-card">
                                                 <Building2 className="size-6" />
                                             </div>
                                             <div>
@@ -449,7 +446,7 @@ function LeaseHubContent() {
                                     
                                     <div className="md:col-span-2 space-y-6">
                                         <div className="flex items-center gap-4 px-2">
-                                            <div className="size-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-600 border border-amber-500/20 shadow-sm shadow-amber-500/5">
+                                            <div className="size-12 rounded-2xl flex items-center justify-center text-amber-600 neumorphic-inset-card">
                                                 <ShieldCheck className="size-6" />
                                             </div>
                                             <div>
@@ -458,12 +455,12 @@ function LeaseHubContent() {
                                             </div>
                                         </div>
                                         
-                                        <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm ring-1 ring-border h-fit">
+                                        <div className="rounded-[2.5rem] p-8 h-fit neumorphic-panel">
                                             <div className="space-y-4">
                                                 {lease.unit.property.house_rules.length > 0 ? (
                                                     lease.unit.property.house_rules.map((ruleText, ruleIndex) => (
-                                                        <div key={ruleText} className="flex items-start gap-4 p-4 rounded-2xl bg-muted/30 border border-border/50 group hover:bg-muted/50 transition-colors">
-                                                            <div className="size-7 rounded-xl bg-background border border-border flex items-center justify-center text-muted-foreground shrink-0 shadow-sm mt-0.5 group-hover:text-foreground transition-colors">
+                                                        <div key={ruleText} className="flex items-start gap-4 p-4 rounded-2xl group transition-colors neumorphic-extruded hover:scale-[1.01]">
+                                                            <div className="size-7 rounded-xl flex items-center justify-center text-muted-foreground shrink-0 mt-0.5 group-hover:text-foreground transition-colors neumorphic-inset-card">
                                                                 <p className="text-[11px] font-black">{ruleIndex + 1}</p>
                                                             </div>
                                                             <p className="text-sm font-medium text-foreground leading-relaxed">{ruleText}</p>
@@ -506,13 +503,13 @@ function LeaseHubContent() {
                                      </div>
                                 </div>
 
-                                <div className="bg-card border border-border rounded-[3rem] p-12 shadow-sm ring-1 ring-border relative overflow-hidden group">
+                                <div className="rounded-[3rem] p-12 relative overflow-hidden group neumorphic-panel">
                                     <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] via-transparent to-transparent opacity-80" />
                                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary/40 via-primary/60 to-primary/40" />
                                     
                                     <div className="relative z-10 max-w-2xl mx-auto flex flex-col items-center text-center">
                                         <div 
-                                            className="size-28 rounded-full border-4 border-card mx-auto overflow-hidden shadow-2xl ring-4 ring-primary/5 mb-8"
+                                            className="size-28 rounded-full mx-auto overflow-hidden mb-8 neumorphic-inset-card"
                                             style={{ backgroundColor: lease.landlord?.avatar_bg_color || '#171717' }}
                                         >
                                             <Image
@@ -537,7 +534,7 @@ function LeaseHubContent() {
                                         </div>
 
                                         <div className="w-full max-w-sm mx-auto">
-                                            <Link href="/tenant/messages" className="w-full py-5 rounded-2xl bg-primary text-white text-[11px] font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:bg-primary-dark hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3">
+                                            <Link href="/tenant/messages" className="w-full py-5 rounded-2xl text-[11px] font-black uppercase tracking-widest hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 neumorphic-primary">
                                                 <MessageSquare className="size-5" /> Send a Message
                                             </Link>
                                         </div>
@@ -548,13 +545,13 @@ function LeaseHubContent() {
                     </div>
 
                     <div className="lg:col-span-1">
-                        <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm ring-1 ring-border relative overflow-hidden group transition-all hover:shadow-lg">
+                        <div className="rounded-[2.5rem] p-8 relative overflow-hidden group transition-all hover:scale-[1.02] neumorphic-panel">
                             <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity select-none pointer-events-none">
                                 <Building2 className="size-24" />
                             </div>
                             
                             <div className="flex flex-col items-center text-center space-y-6 relative z-10">
-                                <div className="size-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-sm">
+                                <div className="size-16 rounded-2xl flex items-center justify-center text-primary neumorphic-inset-card">
                                     <Building2 className="size-8" />
                                 </div>
                                 

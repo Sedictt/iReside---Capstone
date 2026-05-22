@@ -95,10 +95,8 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
             {variant === "sidebar" ? (
                 /* Sidebar Card Trigger */
                 <div className={cn(
-                    "rounded-[2rem] border p-8 relative overflow-hidden group flex-shrink-0 shadow-sm backdrop-blur-sm transition-all",
-                    isEligible 
-                        ? "border-primary/40 bg-primary/5 ring-1 ring-primary/20" 
-                        : "border-border/60 bg-card grayscale opacity-80"
+                    "rounded-[2rem] p-8 relative overflow-hidden group flex-shrink-0 backdrop-blur-sm transition-all neumorphic-panel",
+                    !isEligible && "grayscale opacity-80"
                 )}>
                     {isEligible && (
                         <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.08] via-transparent to-transparent opacity-80" />
@@ -106,8 +104,8 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                     <div className="relative z-10">
                         <div className="flex items-center gap-3 mb-4">
                             <div className={cn(
-                                "flex size-10 items-center justify-center rounded-xl border",
-                                isEligible ? "bg-primary/10 text-primary border-primary/20" : "bg-muted text-muted-foreground border-border"
+                                "flex size-10 items-center justify-center rounded-xl neumorphic-inset-card",
+                                isEligible ? "text-primary" : "text-muted-foreground"
                             )}>
                                 <RefreshCw className={cn("size-5", isEligible && "animate-spin-slow")} />
                             </div>
@@ -122,10 +120,10 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                             onClick={() => setIsOpen(true)}
                             disabled={!isEligible}
                             className={cn(
-                                "w-full py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all border shadow-sm",
+                                "w-full py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all",
                                 isEligible 
-                                    ? "bg-primary text-white hover:bg-primary-dark border-primary shadow-lg shadow-primary/20" 
-                                    : "bg-muted text-muted-foreground border-border cursor-not-allowed"
+                                    ? "neumorphic-primary" 
+                                    : "neumorphic-extruded text-muted-foreground cursor-not-allowed opacity-50"
                             )}
                         >
                             {isEligible ? "Request Renewal" : "Locked"}
@@ -136,12 +134,11 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                 /* Quick Action Trigger */
                 <button
                     onClick={() => setIsOpen(true)}
-                    disabled={!isEligible}
-                    className="bg-card/50 border border-border hover:border-primary/40 rounded-[2rem] p-6 flex flex-col items-center justify-center gap-4 transition-all hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 group backdrop-blur-sm disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
+                    className="rounded-[2rem] p-6 flex flex-col items-center justify-center gap-4 transition-all hover:-translate-y-1 group backdrop-blur-sm disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed neumorphic-extruded"
                 >
                     <div className={cn(
-                        "size-14 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110",
-                        isEligible ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                        "size-14 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 neumorphic-inset-card",
+                        isEligible ? "text-primary" : "text-muted-foreground"
                     )}>
                         <RefreshCw className="size-7" />
                     </div>
@@ -152,12 +149,12 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
             {/* Modal */}
             {mounted && isOpen ? createPortal(
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-                    <div className="relative w-full max-w-lg bg-card rounded-2xl overflow-hidden border border-border shadow-2xl flex flex-col">
+                    <div className="relative w-full max-w-lg rounded-[2.5rem] overflow-hidden flex flex-col neumorphic-panel">
 
                         {/* Header */}
-                        <div className="p-6 border-b border-border flex justify-between items-center bg-card/80 backdrop-blur-md z-10">
+                        <div className="p-6 flex justify-between items-center backdrop-blur-md z-10">
                             <div className="flex items-center gap-3">
-                                <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
+                                <div className="p-2.5 rounded-xl text-primary neumorphic-inset-card">
                                     <RefreshCw className="size-5" />
                                 </div>
                                 <div>
@@ -168,7 +165,7 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                             </div>
                             <button
                                 onClick={() => setIsOpen(false)}
-                                className="p-2 rounded-xl hover:bg-muted transition-colors text-muted-foreground hover:text-foreground border border-transparent hover:border-border"
+                                className="p-2 rounded-xl transition-colors text-muted-foreground hover:text-foreground neumorphic-extruded"
                             >
                                 <X className="size-5" />
                             </button>
@@ -178,7 +175,7 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                         <div className="p-8 flex flex-col items-center justify-center min-h-[400px]">
                             {submitted ? (
                                 <div className="text-center space-y-6 animate-in zoom-in-95 duration-500">
-                                    <div className="size-20 mx-auto rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500">
+                                    <div className="size-20 mx-auto rounded-full flex items-center justify-center text-emerald-500 neumorphic-inset-card">
                                         <CheckCircle2 className="size-10" />
                                     </div>
                                     <div className="space-y-2">
@@ -187,13 +184,13 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                             Your request to renew for **{selectedTerm} months** has been sent to your landlord for review.
                                         </p>
                                     </div>
-                                    <div className="inline-flex items-center gap-2 text-[10px] font-black text-primary uppercase tracking-widest bg-primary/5 px-4 py-2 rounded-full border border-primary/10">
+                                    <div className="inline-flex items-center gap-2 text-[10px] font-black text-primary uppercase tracking-widest px-4 py-2 rounded-full neumorphic-inset">
                                         <Clock className="size-3" /> Awaiting Landlord Response
                                     </div>
                                 </div>
                             ) : step === "disclosure" ? (
                                 <div className="w-full animate-in slide-in-from-right-4 duration-500 space-y-6">
-                                    <div className="bg-primary/5 rounded-[2rem] p-6 border border-primary/10 relative overflow-hidden">
+                                    <div className="rounded-[2rem] p-6 relative overflow-hidden neumorphic-inset">
                                         <div className="absolute top-0 right-0 p-4 opacity-[0.05]">
                                             <ShieldCheck className="size-16" />
                                         </div>
@@ -206,9 +203,9 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                     <div className="space-y-4">
                                         <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground border-b border-border pb-2">Updated Terms</h4>
                                         <div className="grid grid-cols-1 gap-3">
-                                            <div className="flex items-center justify-between p-4 bg-muted/30 rounded-2xl border border-border">
+                                            <div className="flex items-center justify-between p-4 rounded-2xl neumorphic-inset">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="size-8 rounded-lg bg-background flex items-center justify-center text-primary">
+                                                    <div className="size-8 rounded-lg flex items-center justify-center text-primary neumorphic-inset-card">
                                                         <ArrowRight className="size-4" />
                                                     </div>
                                                     <span className="text-xs font-black text-foreground uppercase tracking-widest">Expected Rent Adjustment</span>
@@ -226,7 +223,7 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                                 <div className="space-y-3 pt-2">
                                                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">New Rules & Clauses</p>
                                                     {renewalSettings.new_rules.map((rule, i) => (
-                                                        <div key={rule} className="flex items-start gap-3 p-3 bg-muted/20 rounded-xl border border-dashed border-border">
+                                                        <div key={rule} className="flex items-start gap-3 p-3 rounded-xl neumorphic-inset">
                                                             <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />
                                                             <p className="text-[11px] font-medium text-foreground">{rule}</p>
                                                         </div>
@@ -242,7 +239,7 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                             id="acknowledge"
                                             checked={acknowledged}
                                             onChange={(e) => setAcknowledged(e.target.checked)}
-                                            className="size-5 rounded-lg border-border text-primary focus:ring-primary/20"
+                                            className="size-5 rounded-lg text-primary focus:ring-primary/20 neumorphic-inset-card"
                                         />
                                         <label htmlFor="acknowledge" className="text-[11px] font-black text-muted-foreground cursor-pointer select-none">
                                             I have reviewed the latest property terms and rules.
@@ -262,16 +259,16 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                                 key={opt.months}
                                                 onClick={() => setSelectedTerm(opt.months)}
                                                 className={cn(
-                                                    "p-5 rounded-2xl border text-left transition-all flex items-center justify-between group",
+                                                    "p-5 rounded-2xl text-left transition-all flex items-center justify-between group neumorphic-extruded",
                                                     selectedTerm === opt.months 
-                                                        ? "bg-primary/5 border-primary shadow-sm" 
-                                                        : "bg-background border-border hover:border-primary/30"
+                                                        ? "ring-2 ring-primary/50 text-primary" 
+                                                        : ""
                                                 )}
                                             >
                                                 <div className="flex items-center gap-4">
                                                     <div className={cn(
                                                         "size-10 rounded-xl flex items-center justify-center transition-colors",
-                                                        selectedTerm === opt.months ? "bg-primary text-white" : "bg-muted text-muted-foreground group-hover:bg-primary/10"
+                                                        selectedTerm === opt.months ? "neumorphic-primary" : "neumorphic-inset-card text-muted-foreground"
                                                     )}>
                                                         <Calendar className="size-5" />
                                                     </div>
@@ -291,7 +288,7 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                         ))}
                                     </div>
 
-                                    <div className="flex items-start gap-3 p-4 bg-muted/30 rounded-xl border border-border">
+                                    <div className="flex items-start gap-3 p-4 rounded-xl neumorphic-inset">
                                         <Info className="size-4 text-muted-foreground shrink-0 mt-0.5" />
                                         <p className="text-[10px] text-muted-foreground leading-relaxed italic">
                                             Terms are based on the renewal policy disclosed in the previous step. Final approval is subject to landlord signature.
@@ -303,12 +300,12 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
 
                         {/* Footer */}
                         {!submitted && (
-                            <div className="p-6 border-t border-border bg-background/50 flex gap-3">
+                            <div className="p-6 flex gap-3">
                                 {step === "disclosure" ? (
                                     <button
                                         onClick={() => setStep("request")}
                                         disabled={!acknowledged}
-                                        className="w-full py-4 rounded-2xl bg-primary text-white font-black uppercase tracking-widest text-[10px] hover:bg-primary-dark transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-50"
+                                        className="w-full py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all flex items-center justify-center gap-2 disabled:opacity-50 neumorphic-primary"
                                     >
                                         Accept & Proceed <ArrowRight className="size-4" />
                                     </button>
@@ -316,14 +313,14 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                     <>
                                         <button
                                             onClick={() => setStep("disclosure")}
-                                            className="px-6 py-4 rounded-2xl border border-border text-muted-foreground font-black uppercase tracking-widest text-[10px] hover:bg-muted transition-all flex-1"
+                                            className="px-6 py-4 rounded-2xl text-muted-foreground font-black uppercase tracking-widest text-[10px] transition-all flex-1 neumorphic-extruded"
                                         >
                                             Back
                                         </button>
                                         <button
                                             onClick={handleSubmit}
                                             disabled={submitting}
-                                            className="px-6 py-4 rounded-2xl bg-primary text-white font-black uppercase tracking-widest text-[10px] hover:bg-primary-dark transition-all flex-[2] items-center justify-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-50"
+                                            className="px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all flex-[2] items-center justify-center gap-2 disabled:opacity-50 neumorphic-primary"
                                         >
                                             {submitting ? "Submitting..." : "Submit Request"} <ArrowRight className="size-4" />
                                         </button>

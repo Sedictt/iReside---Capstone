@@ -67,7 +67,7 @@ export default function LeaseRenewalReminder({ daysRemaining, leaseId, teamMembe
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.9, opacity: 0, y: 20 }}
                             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                            className="relative w-full max-w-lg bg-card border border-border/50 rounded-[2.5rem] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)] overflow-hidden pointer-events-auto ring-1 ring-white/10"
+                            className="relative w-full max-w-lg rounded-[2.5rem] overflow-hidden pointer-events-auto neumorphic-panel"
                         >
                             {/* Premium Background Elements */}
                             <div className="absolute top-0 right-0 size-64 bg-primary/10 rounded-full blur-[80px] -mr-32 -mt-32 animate-pulse" />
@@ -75,12 +75,12 @@ export default function LeaseRenewalReminder({ daysRemaining, leaseId, teamMembe
                             
                             <div className="relative z-10 p-8 md:p-10">
                                 <div className="flex justify-between items-start mb-8">
-                                    <div className="size-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-inner">
+                                    <div className="size-16 rounded-2xl flex items-center justify-center text-primary neumorphic-inset-card">
                                         <RefreshCw className="size-8 animate-spin-slow" />
                                     </div>
                                     <button 
                                         onClick={() => setIsVisible(false)}
-                                        className="p-2 rounded-xl hover:bg-muted transition-colors text-muted-foreground hover:text-foreground border border-transparent hover:border-border"
+                                        className="p-2 rounded-xl transition-colors text-muted-foreground hover:text-foreground neumorphic-extruded"
                                     >
                                         <X className="size-5" />
                                     </button>
@@ -88,7 +88,7 @@ export default function LeaseRenewalReminder({ daysRemaining, leaseId, teamMembe
 
                                 <div className="space-y-4 mb-10">
                                     <div className="flex items-center gap-2">
-                                        <div className="px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-[10px] font-black text-amber-600 uppercase tracking-widest flex items-center gap-1.5">
+                                        <div className="px-2.5 py-1 rounded-full text-[10px] font-black text-amber-600 uppercase tracking-widest flex items-center gap-1.5 neumorphic-inset">
                                             <Clock className="size-3" /> {daysRemaining} Days Left
                                         </div>
                                     </div>
@@ -105,7 +105,7 @@ export default function LeaseRenewalReminder({ daysRemaining, leaseId, teamMembe
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <button
                                         onClick={() => setIsVisible(false)}
-                                        className="w-full py-4 rounded-2xl border border-border bg-muted/50 text-muted-foreground text-[11px] font-black uppercase tracking-widest hover:bg-muted hover:text-foreground transition-all"
+                                        className="w-full py-4 rounded-2xl text-muted-foreground text-[11px] font-black uppercase tracking-widest hover:text-foreground transition-all neumorphic-extruded"
                                     >
                                         Maybe Later
                                     </button>
@@ -114,7 +114,7 @@ export default function LeaseRenewalReminder({ daysRemaining, leaseId, teamMembe
                                             setIsVisible(false);
                                             setShowRenewalRequest(true);
                                         }}
-                                        className="w-full py-4 rounded-2xl bg-primary text-white text-[11px] font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:bg-primary-dark hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
+                                        className="w-full py-4 rounded-2xl text-[11px] font-black uppercase tracking-widest hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 neumorphic-primary"
                                     >
                                         Renew Now <ArrowRight className="size-4" />
                                     </button>

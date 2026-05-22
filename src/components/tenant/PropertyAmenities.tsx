@@ -28,7 +28,7 @@ const getIconByName = (name: string | null) => {
 export function PropertyAmenities({ amenities }: { amenities: Amenity[] }) {
     if (!amenities || amenities.length === 0) {
         return (
-            <div className="py-12 flex flex-col items-center justify-center border-2 border-dashed border-border rounded-[2.5rem] bg-muted/5 gap-3">
+            <div className="py-12 flex flex-col items-center justify-center rounded-[2.5rem] gap-3 neumorphic-inset">
                 <LucideIcons.Sparkle className="size-8 text-muted-foreground/20" />
                 <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">No active amenities listed</p>
             </div>
@@ -45,10 +45,10 @@ export function PropertyAmenities({ amenities }: { amenities: Amenity[] }) {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: idx * 0.05 }}
-                        className="group flex flex-col xl:flex-row gap-5 p-4 rounded-[1.5rem] border border-border bg-card shadow-sm hover:shadow-md transition-all duration-300 hover:border-primary/30"
+                        className="group flex flex-col xl:flex-row gap-5 p-4 rounded-[1.5rem] transition-all duration-300 neumorphic-extruded"
                     >
                         {/* Image/Icon Area */}
-                        <div className="relative h-48 xl:h-auto xl:w-48 rounded-xl overflow-hidden bg-muted/50 shrink-0 border border-border/50">
+                        <div className="relative h-48 xl:h-auto xl:w-48 rounded-xl overflow-hidden shrink-0 neumorphic-inset">
                             {amenity.image_url ? (
                                 <Image 
                                     src={amenity.image_url} 
@@ -69,7 +69,7 @@ export function PropertyAmenities({ amenities }: { amenities: Amenity[] }) {
                                 </span>
                             </div>
                             
-                            <div className="absolute bottom-3 right-3 z-10 size-8 rounded-lg bg-card/90 backdrop-blur-sm flex items-center justify-center text-primary shadow-sm border border-white/10 group-hover:scale-110 transition-transform">
+                            <div className="absolute bottom-3 right-3 z-10 size-8 rounded-lg flex items-center justify-center text-primary group-hover:scale-110 transition-transform neumorphic-inset-card">
                                 <IconComponent className="size-4" />
                             </div>
                         </div>

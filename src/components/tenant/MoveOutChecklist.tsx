@@ -73,15 +73,13 @@ export function MoveOutChecklist({ requestId, initialData }: MoveOutChecklistPro
             onClick={() => toggleItem(item.id)}
             disabled={saving}
             className={cn(
-              "flex items-center gap-3 p-4 rounded-2xl border transition-all text-left",
-              item.completed 
-                ? "bg-primary/5 border-primary/20 text-foreground" 
-                : "bg-muted/30 border-border/50 text-muted-foreground hover:bg-muted/50"
+              "flex items-center gap-3 p-4 rounded-2xl transition-all text-left neumorphic-extruded",
+              item.completed && "neumorphic-inset text-primary"
             )}
           >
             <div className={cn(
-              "size-5 rounded-lg border-2 flex items-center justify-center shrink-0 transition-all",
-              item.completed ? "bg-primary border-primary text-white" : "border-primary/30"
+              "size-5 rounded-lg flex items-center justify-center shrink-0 transition-all neumorphic-inset-card",
+              item.completed ? "text-primary" : ""
             )}>
               {item.completed && <Check className="size-3" />}
             </div>

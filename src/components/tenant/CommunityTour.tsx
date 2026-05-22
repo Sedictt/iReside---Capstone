@@ -124,7 +124,7 @@ export function CommunityTour() {
 
             <div 
                 className={cn(
-                    "fixed z-[101] w-[340px] rounded-3xl border border-border bg-card p-6 shadow-[0_20px_50px_rgba(15,23,42,0.18)] pointer-events-auto transition-all duration-300 ease-in-out backdrop-blur-xl dark:border-white/10 dark:bg-[#121212] dark:shadow-[0_20px_50px_rgba(0,0,0,0.6)]",
+                    "fixed z-[101] w-[340px] rounded-3xl p-6 pointer-events-auto transition-all duration-300 ease-in-out neumorphic-panel",
                     !hasHighlight && "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
                 )}
                 style={hasHighlight ? {
@@ -167,14 +167,14 @@ export function CommunityTour() {
                         {stepIndex > 0 && (
                             <button
                                 onClick={prevStep}
-                                className="flex size-10 items-center justify-center rounded-xl border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:border-white/10 dark:text-white/60 dark:hover:bg-white/5 dark:hover:text-white"
+                                className="flex size-10 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:text-foreground neumorphic-extruded"
                             >
                                 <ArrowLeft className="size-5" />
                             </button>
                         )}
                         <button
                             onClick={nextStep}
-                            className="flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-black text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:brightness-110"
+                            className="flex h-10 items-center justify-center gap-2 rounded-xl px-5 text-sm font-black transition-all neumorphic-primary"
                         >
                             {isLastStep ? "Finish" : "Next"}
                             {isLastStep ? <CheckCircle2 className="size-4" /> : <ArrowRight className="size-4" />}

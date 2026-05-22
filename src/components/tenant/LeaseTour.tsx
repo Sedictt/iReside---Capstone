@@ -125,10 +125,9 @@ export function LeaseTour() {
                 <div className="absolute inset-0 bg-black/65 transition-opacity duration-300 pointer-events-auto" />
             )}
 
-            {/* Tour Tooltip */}
             <div 
                 className={cn(
-                    "fixed z-[101] w-[320px] bg-card border border-border/60 rounded-2xl shadow-2xl p-5 pointer-events-auto transition-all duration-300 ease-in-out",
+                    "fixed z-[101] w-[320px] rounded-2xl p-5 pointer-events-auto transition-all duration-300 ease-in-out neumorphic-panel",
                     !hasHighlight && "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
                 )}
                 style={hasHighlight ? (() => {
@@ -194,14 +193,14 @@ export function LeaseTour() {
                         {stepIndex > 0 && (
                             <button
                                 onClick={prevStep}
-                                className="size-8 flex items-center justify-center rounded-lg border border-border/60 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                                className="size-8 flex items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground neumorphic-extruded"
                             >
                                 <ArrowLeft className="size-4" />
                             </button>
                         )}
                         <button
                             onClick={nextStep}
-                            className="h-8 px-4 flex items-center justify-center gap-2 rounded-lg bg-primary text-black font-black text-xs hover:bg-primary/90 transition-colors"
+                            className="h-8 px-4 flex items-center justify-center gap-2 rounded-lg text-xs font-black transition-colors neumorphic-primary"
                         >
                             {isLastStep ? "Finish" : "Next"}
                             {isLastStep ? <CheckCircle2 className="size-3.5" /> : <ArrowRight className="size-3.5" />}

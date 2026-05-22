@@ -316,7 +316,7 @@ export default function TenantUtilitiesPage() {
             <div className="mx-auto w-full max-w-7xl space-y-12 p-6 md:p-12">
                 {/* Error State */}
                 {error && (
-                    <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-red-600">
+                    <div className="rounded-2xl p-4 text-red-600 neumorphic-inset text-center">
                         <p className="font-medium">{error}</p>
                         <button 
                             onClick={() => setError(null)}
@@ -340,8 +340,8 @@ export default function TenantUtilitiesPage() {
                                         className={cn(
                                             "rounded-full px-4 py-1.5 text-xs font-black transition-all",
                                             selectedCategory === cat 
-                                                ? "bg-primary text-primary-foreground shadow-md" 
-                                                : "bg-muted text-muted-foreground hover:bg-muted-foreground/10 hover:text-foreground"
+                                                ? "neumorphic-primary" 
+                                                : "neumorphic-extruded text-muted-foreground hover:text-foreground"
                                         )}
                                     >
                                         {cat}
@@ -370,7 +370,7 @@ export default function TenantUtilitiesPage() {
                                         initial={{ opacity: 0, scale: 0.95 }}
                                         animate={{ opacity: 1, scale: 1 }}
                                         transition={{ delay: i * 0.1 }}
-                                        className="group relative flex flex-col overflow-hidden rounded-[2rem] border border-border bg-card shadow-sm transition-all hover:shadow-xl hover:-translate-y-1"
+                                        className="group relative flex flex-col overflow-hidden rounded-[2rem] transition-all hover:-translate-y-1 neumorphic-panel"
                                     >
                                         <div className="relative h-48 w-full overflow-hidden">
                                             <Image 
@@ -381,7 +381,7 @@ export default function TenantUtilitiesPage() {
                                             />
                                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                                             <div className="absolute bottom-4 left-4 flex items-center gap-2">
-                                                <div className={cn("flex size-8 items-center justify-center rounded-lg text-white shadow-lg", getColorByType(amenity.type))}>
+                                                <div className={cn("flex size-8 items-center justify-center rounded-lg neumorphic-extruded text-white", getColorByType(amenity.type))}>
                                                     {(() => {
                                                         const Icon = getIconByName(amenity.icon_name);
                                                         return <Icon className="size-4" />;
@@ -418,7 +418,7 @@ export default function TenantUtilitiesPage() {
                                                 </div>
                                                 <button 
                                                     onClick={() => openBookingModal(amenity)}
-                                                    className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-black text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95"
+                                                    className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-black transition-all active:scale-95 neumorphic-primary"
                                                 >
                                                     {amenity.price_per_unit === 0 ? "Borrow" : "Rent Now"}
                                                     <ArrowRight className="size-4" />
@@ -434,7 +434,7 @@ export default function TenantUtilitiesPage() {
                     {/* Sidebar Content: My Bookings & History */}
                     <div className="flex flex-col gap-8">
                         {/* Current Reservations */}
-                        <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+                        <section className="rounded-3xl p-6 neumorphic-panel">
                             <div className="flex items-center justify-between mb-6">
                                 <h3 className="font-black tracking-tight flex items-center gap-2">
                                     <Calendar className="size-5 text-primary" />
@@ -458,7 +458,7 @@ export default function TenantUtilitiesPage() {
                                         .map(booking => {
                                             const statusConfig = STATUS_CONFIG[booking.status] || STATUS_CONFIG['pending'];
                                             return (
-                                                <div key={booking.id} className="group relative rounded-2xl bg-muted/30 p-4 transition-all hover:bg-muted/50 border border-transparent hover:border-border">
+                                                <div key={booking.id} className="group relative rounded-2xl p-4 transition-all hover:-translate-y-1 neumorphic-extruded">
                                                     <div className="flex items-start justify-between">
                                                         <div className="flex flex-col">
                                                             <span className="text-sm font-black text-foreground">{booking.amenity.name}</span>
@@ -494,7 +494,7 @@ export default function TenantUtilitiesPage() {
                         </section>
 
                         {/* Usage History Mini */}
-                        <div className="flex items-center gap-4 rounded-2xl border border-dashed border-border p-4 text-muted-foreground hover:text-foreground transition-colors cursor-pointer group">
+                        <div className="flex items-center gap-4 rounded-2xl p-4 text-muted-foreground hover:text-foreground transition-colors cursor-pointer group neumorphic-extruded">
                             <div className="flex size-10 items-center justify-center rounded-full bg-muted group-hover:bg-primary/10 transition-colors">
                                 <LucideIcons.History className="size-5" />
                             </div>
@@ -523,16 +523,16 @@ export default function TenantUtilitiesPage() {
                             initial={{ opacity: 0, scale: 0.9, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="relative w-full max-w-lg rounded-[2.5rem] border border-border bg-card p-8 shadow-2xl"
+                            className="relative w-full max-w-lg rounded-[2.5rem] p-8 neumorphic-panel"
                         >
                             <div className="flex items-center justify-between mb-6">
                                 <h3 className="text-2xl font-black">Request Access</h3>
-                                <button onClick={() => setBookingModal(null)} className="rounded-full bg-muted p-2 hover:bg-muted-foreground/10">
+                                <button onClick={() => setBookingModal(null)} className="rounded-full p-2 transition-colors neumorphic-extruded hover:text-foreground text-muted-foreground">
                                     <AlertCircle className="size-5 rotate-45" />
                                 </button>
                             </div>
 
-                            <div className="mb-6 flex items-center gap-4 rounded-2xl bg-muted/30 p-4">
+                            <div className="mb-6 flex items-center gap-4 rounded-2xl p-4 neumorphic-inset">
                                 <div className={cn("flex size-12 items-center justify-center rounded-xl text-white", bookingModal.color)}>
                                     {(() => {
                                         const Icon = getIconByName(bookingModal.icon_name);
@@ -549,7 +549,7 @@ export default function TenantUtilitiesPage() {
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="flex flex-col gap-1.5">
                                         <label htmlFor="booking-date" className="text-xs font-black uppercase tracking-wider text-muted-foreground">Date</label>
-                                        <div className="flex items-center gap-2 rounded-xl border border-border bg-background p-3">
+                                        <div className="flex items-center gap-2 rounded-xl p-3 neumorphic-inset">
                                             <Calendar className="size-4 text-primary" />
                                             <input 
                                                 id="booking-date"
@@ -563,7 +563,7 @@ export default function TenantUtilitiesPage() {
                                     </div>
                                     <div className="flex flex-col gap-1.5">
                                         <label htmlFor="booking-duration" className="text-xs font-black uppercase tracking-wider text-muted-foreground">Duration</label>
-                                        <div className="flex items-center gap-2 rounded-xl border border-border bg-background p-3">
+                                        <div className="flex items-center gap-2 rounded-xl p-3 neumorphic-inset">
                                             <Clock className="size-4 text-primary" />
                                             <select 
                                                 id="booking-duration"
@@ -586,7 +586,7 @@ export default function TenantUtilitiesPage() {
                                         placeholder="Tell us about your event..."
                                         value={bookingNotes}
                                         onChange={(e) => setBookingNotes(e.target.value)}
-                                        className="min-h-[100px] w-full rounded-xl border border-border bg-background p-3 text-sm outline-none ring-primary/20 focus:ring-2"
+                                        className="min-h-[100px] w-full rounded-xl p-3 text-sm outline-none neumorphic-inset"
                                     />
                                 </div>
                             </div>
@@ -601,7 +601,7 @@ export default function TenantUtilitiesPage() {
                                 <button 
                                     onClick={handleSubmitBooking}
                                     disabled={!bookingDate || submitting}
-                                    className="flex items-center gap-2 rounded-2xl bg-primary px-8 py-3 text-sm font-black text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="flex items-center gap-2 rounded-2xl px-8 py-3 text-sm font-black transition-all disabled:opacity-50 disabled:cursor-not-allowed neumorphic-primary"
                                 >
                                     {submitting ? (
                                         <>

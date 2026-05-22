@@ -26,7 +26,7 @@ export function CommunityAnnouncement({
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 onClick={() => onToggle(false)}
-                className="fixed right-6 top-24 z-[95] flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/20 bg-card shadow-2xl transition-all hover:scale-110 dark:border-white/10"
+                className="fixed right-6 top-24 z-[95] flex h-14 w-14 items-center justify-center rounded-2xl transition-all neumorphic-extruded hover:scale-110"
             >
                 <div className="relative">
                     <Megaphone className="h-6 w-6 text-primary" />
@@ -45,11 +45,11 @@ export function CommunityAnnouncement({
             animate={{ opacity: 1, y: 0 }}
             className="mb-8"
         >
-            <div className={`relative overflow-hidden rounded-[2rem] border-2 ${config.cardBorder} ${config.cardBg} shadow-lg`}>
+            <div className={`relative overflow-hidden rounded-[2rem] neumorphic-panel`}>
                 <div className="absolute right-0 top-0 p-4">
                     <button
                         onClick={() => onToggle(true)}
-                        className="flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+                        className="flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground transition-colors neumorphic-extruded"
                         title="Minimize announcement"
                     >
                         <ChevronUp className="size-4" />

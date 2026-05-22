@@ -149,7 +149,7 @@ export default function NewMaintenanceRequest() {
                 <div className="lg:col-span-2 space-y-6">
                     <form onSubmit={handleSubmit} className="space-y-8">
                         {/* Issue Details */}
-                        <div className="bg-card border border-border rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+                        <div className="rounded-3xl p-6 sm:p-8 space-y-6 neumorphic-panel">
                             <h2 className="text-xl font-black flex items-center gap-2">
                                 <Info className="size-5 text-primary" />
                                 Issue Details
@@ -166,7 +166,7 @@ export default function NewMaintenanceRequest() {
                                         placeholder="e.g., Leaking faucet in the bathroom"
                                         value={title}
                                         onChange={(e) => setTitle(e.target.value)}
-                                        className="w-full bg-background border border-border rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium"
+                                        className="w-full rounded-2xl px-4 py-3 text-sm focus:outline-none transition-all font-medium neumorphic-inset"
                                         required
                                     />
                                 </div>
@@ -181,7 +181,7 @@ export default function NewMaintenanceRequest() {
                                         value={description}
                                         onChange={(e) => setDescription(e.target.value)}
                                         rows={4}
-                                        className="w-full bg-background border border-border rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium resize-none"
+                                        className="w-full rounded-2xl px-4 py-3 text-sm focus:outline-none transition-all font-medium resize-none neumorphic-inset"
                                         required
                                     />
                                 </div>
@@ -199,10 +199,10 @@ export default function NewMaintenanceRequest() {
                                             type="button"
                                             onClick={() => setCategory(cat.id)}
                                             className={cn(
-                                                "flex flex-col items-center justify-center p-4 rounded-2xl border transition-all gap-2 group",
+                                                "flex flex-col items-center justify-center p-4 rounded-2xl transition-all gap-2 group",
                                                 category === cat.id
-                                                    ? "bg-primary/5 border-primary shadow-sm ring-1 ring-primary"
-                                                    : "bg-card border-border hover:border-primary/30"
+                                                    ? "neumorphic-inset ring-2 ring-primary"
+                                                    : "neumorphic-extruded hover:-translate-y-1"
                                             )}
                                         >
                                             <div className={cn("p-2 rounded-xl transition-colors", cat.bg, cat.color)}>
@@ -216,7 +216,7 @@ export default function NewMaintenanceRequest() {
                         </div>
 
                         {/* Media Upload */}
-                        <div className="bg-card border border-border rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+                        <div className="rounded-3xl p-6 sm:p-8 space-y-6 neumorphic-panel">
                             <h2 className="text-xl font-black flex items-center gap-2">
                                 <Camera className="size-5 text-primary" />
                                 Photos (Optional)
@@ -233,7 +233,7 @@ export default function NewMaintenanceRequest() {
                                             initial={{ opacity: 0, scale: 0.8 }}
                                             animate={{ opacity: 1, scale: 1 }}
                                             exit={{ opacity: 0, scale: 0.8 }}
-                                            className="relative aspect-square rounded-2xl overflow-hidden border border-border"
+                                            className="relative aspect-square rounded-2xl overflow-hidden neumorphic-inset"
                                         >
                                             <Image src={preview} alt="Preview" fill sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 150px" className="object-cover" />
                                             <button
@@ -251,7 +251,7 @@ export default function NewMaintenanceRequest() {
                                     <button
                                         type="button"
                                         onClick={() => fileInputRef.current?.click()}
-                                        className="aspect-square rounded-2xl border-2 border-dashed border-border hover:border-primary/50 hover:bg-primary/5 transition-all flex flex-col items-center justify-center gap-2 group"
+                                        className="aspect-square rounded-2xl transition-all flex flex-col items-center justify-center gap-2 group neumorphic-extruded hover:-translate-y-1"
                                     >
                                         <Upload className="size-6 text-muted-foreground group-hover:text-primary transition-colors" />
                                         <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground group-hover:text-primary">
@@ -274,7 +274,7 @@ export default function NewMaintenanceRequest() {
                             <motion.div
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-500 text-sm font-medium flex items-center gap-3"
+                                className="p-4 rounded-2xl text-red-500 text-sm font-medium flex items-center gap-3 neumorphic-inset text-center"
                             >
                                 <AlertTriangle className="size-5 shrink-0" />
                                 {error}
@@ -284,7 +284,7 @@ export default function NewMaintenanceRequest() {
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="w-full bg-primary hover:bg-primary/90 disabled:opacity-50 text-primary-foreground py-4 rounded-2xl font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-3 active:scale-[0.98]"
+                            className="w-full disabled:opacity-50 py-4 rounded-2xl font-black uppercase tracking-widest transition-all flex items-center justify-center gap-3 active:scale-[0.98] neumorphic-primary"
                         >
                             {isSubmitting ? (
                                 <>
@@ -304,7 +304,7 @@ export default function NewMaintenanceRequest() {
                 {/* Sidebar Info */}
                 <div className="space-y-6">
                     {/* Pro Tips */}
-                    <div className="bg-primary/10 border border-primary/20 rounded-3xl p-6 space-y-4">
+                    <div className="rounded-3xl p-6 space-y-4 neumorphic-inset">
                         <div className="flex items-center gap-3 text-primary">
                             <Clock className="size-5" />
                             <h3 className="font-black">What to expect?</h3>
@@ -338,7 +338,7 @@ export default function NewMaintenanceRequest() {
                     </div>
 
                     {/* Self-Repair Toggle */}
-                    <div className="bg-card border border-border rounded-3xl p-6 shadow-sm space-y-4">
+                    <div className="rounded-3xl p-6 space-y-4 neumorphic-panel">
                         <div className="flex items-center justify-between gap-4">
                             <div className="space-y-1">
                                 <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground">
@@ -367,7 +367,7 @@ export default function NewMaintenanceRequest() {
                     </div>
 
                     {/* Emergency Contact */}
-                    <div className="bg-red-500/5 border border-red-500/10 rounded-3xl p-6">
+                    <div className="rounded-3xl p-6 neumorphic-inset">
                         <div className="flex items-center gap-3 text-red-500 mb-3">
                             <AlertTriangle className="size-5" />
                             <h3 className="font-black uppercase tracking-tight">Emergency Hotlines</h3>

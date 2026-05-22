@@ -56,7 +56,7 @@ export function CommunityHeader({
 }: CommunityHeaderProps) {
     return (
         <div className="space-y-8">
-            <header className="relative overflow-hidden rounded-[2.5rem] border border-border bg-card p-8 shadow-sm dark:border-white/10 dark:bg-[#0a0a0a]/80 dark:shadow-2xl md:p-12">
+            <header className="relative overflow-hidden rounded-[2.5rem] p-8 md:p-12 neumorphic-panel">
                 <div className="absolute inset-0 pointer-events-none">
                     <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-50" />
                 </div>
@@ -75,7 +75,7 @@ export function CommunityHeader({
                                 <button 
                                     type="button"
                                     onClick={() => setIsPropertyDropdownOpen(!isPropertyDropdownOpen)}
-                                    className="group flex w-full items-center justify-between gap-2 rounded-2xl border border-border bg-background/50 px-4 py-3 text-sm font-medium text-foreground backdrop-blur-xl transition-all hover:bg-muted dark:border-white/10 dark:bg-white/5 dark:text-white"
+                                    className="group flex w-full items-center justify-between gap-2 px-4 py-3 text-sm font-medium transition-all neumorphic-extruded rounded-2xl"
                                 >
                                     <div className="flex items-center gap-2 overflow-hidden">
                                         <Building2 className="size-4 shrink-0 text-primary" />
@@ -135,26 +135,26 @@ export function CommunityHeader({
                                     placeholder="Search discussions..."
                                     value={searchQuery}
                                     onChange={(e) => onSearchChange(e.target.value)}
-                                    className="w-full rounded-full border border-border bg-background/50 py-3 pl-10 pr-4 text-sm text-foreground outline-none transition-all focus:border-primary/50 focus:ring-4 focus:ring-primary/5 dark:border-white/10 dark:bg-white/5 dark:text-white"
+                                    className="w-full py-3 pl-10 pr-4 text-sm outline-none transition-all neumorphic-inset rounded-full"
                                 />
                             </div>
                             <div className="flex items-center justify-end gap-3">
                                 <button 
                                     onClick={onToggleRules}
-                                    className={`flex size-12 items-center justify-center rounded-full border transition-all ${
+                                    className={`flex size-12 items-center justify-center rounded-full transition-all ${
                                         showRules 
-                                        ? 'border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/20' 
-                                        : 'border-border bg-background/50 text-muted-foreground hover:bg-muted hover:text-foreground dark:border-white/10 dark:bg-white/5'
+                                        ? 'neumorphic-primary text-primary-foreground' 
+                                        : 'neumorphic-extruded text-muted-foreground'
                                     }`}
                                     title="Community Rules"
                                 >
                                     <Flag className="size-5" />
                                 </button>
-                                <button className="flex size-12 items-center justify-center rounded-full border border-border bg-background/50 text-muted-foreground transition-all hover:bg-muted hover:text-foreground dark:border-white/10 dark:bg-white/5">
+                                <button className="flex size-12 items-center justify-center rounded-full transition-all neumorphic-extruded text-muted-foreground">
                                     <Bell className="size-5" />
                                 </button>
                                 <div
-                                    className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border shadow-sm dark:border-white/20 relative"
+                                    className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-full relative neumorphic-inset-card"
                                     style={{ backgroundColor: profile?.avatar_bg_color || undefined }}
                                 >
                                     {profile?.avatar_url ? (
@@ -206,9 +206,9 @@ function TabButton({ active, onClick, icon: Icon, label, badge }: TabButtonProps
     return (
         <button
             onClick={onClick}
-            className={`group relative flex items-center gap-2 whitespace-nowrap px-4 py-3 text-sm font-medium transition-all duration-200 ${
+            className={`group relative flex items-center gap-2 whitespace-nowrap px-4 py-3 text-sm font-medium transition-all duration-200 rounded-2xl ${
                 active
-                    ? 'text-primary'
+                    ? 'neumorphic-extruded text-primary'
                     : 'text-muted-foreground hover:text-foreground dark:hover:text-white'
             }`}
         >

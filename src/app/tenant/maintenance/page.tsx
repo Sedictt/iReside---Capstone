@@ -252,7 +252,7 @@ export default function TenantMaintenancePage() {
     return (
         <div className="flex-1 w-full max-w-6xl mx-auto">
             {previewMode && (
-                <div className="mb-6 p-4 bg-primary/10 border border-primary/20 rounded-2xl flex flex-wrap items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
+                <div className="mb-6 p-4 rounded-2xl flex flex-wrap items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-500 neumorphic-inset">
                     <span className="text-sm font-black text-primary uppercase tracking-widest flex items-center gap-2">
                         <Zap className="size-4" />
                         Preview Mode Active
@@ -295,7 +295,7 @@ export default function TenantMaintenancePage() {
                 </div>
                 <Link
                     href="/tenant/maintenance/new"
-                    className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-2xl font-black hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all active:scale-95 w-fit"
+                    className="flex items-center gap-2 px-6 py-3 rounded-2xl font-black transition-all active:scale-95 w-fit neumorphic-primary"
                 >
                     <Plus className="size-5" />
                     New Request
@@ -312,10 +312,10 @@ export default function TenantMaintenancePage() {
                             key={t}
                             onClick={() => setFilter(t)}
                             className={cn(
-                                "px-4 py-2 rounded-xl text-xs font-black transition-all whitespace-nowrap border uppercase tracking-widest",
+                                "px-4 py-2 rounded-xl text-xs font-black transition-all whitespace-nowrap uppercase tracking-widest",
                                 filter === t
-                                    ? "bg-primary text-primary-foreground border-primary shadow-md"
-                                    : "bg-card border-border text-muted-foreground hover:border-primary/30"
+                                    ? "neumorphic-primary"
+                                    : "neumorphic-extruded text-muted-foreground hover:text-foreground"
                             )}
                         >
                             {t}
@@ -341,13 +341,13 @@ export default function TenantMaintenancePage() {
                     ))}
                 </div>
             ) : error ? (
-                <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-8 text-center">
+                <div className="rounded-2xl p-8 text-center neumorphic-inset">
                     <AlertTriangle className="size-10 text-red-500 mx-auto mb-4" />
                     <p className="text-red-500 font-black">{error}</p>
                 </div>
             ) : filteredRequests.length === 0 ? (
-                <div className="bg-card border border-border border-dashed rounded-3xl p-12 text-center">
-                    <div className="size-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
+                <div className="rounded-3xl p-12 text-center neumorphic-panel">
+                    <div className="size-20 rounded-full flex items-center justify-center mx-auto mb-6 neumorphic-inset-card">
                         <CheckCircle2 className="size-10 text-muted-foreground" />
                     </div>
                     <h3 className="text-xl font-black mb-2">No requests found</h3>
@@ -408,10 +408,10 @@ function TenantMaintenanceCard({ request, onClick }: { request: MaintenanceReque
     return (
         <div
             onClick={onClick}
-            className="group relative flex flex-col bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/20 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-lg h-full"
+            className="group relative flex flex-col rounded-2xl overflow-hidden transition-all duration-300 cursor-pointer h-full neumorphic-panel hover:-translate-y-1"
         >
             {/* Top Image Preview Area */}
-            <div className="relative h-44 w-full bg-muted border-b border-border overflow-hidden shrink-0">
+            <div className="relative h-44 w-full overflow-hidden shrink-0 neumorphic-inset">
                 {request.images && request.images.length > 0 ? (
                     <>
                             <Image
@@ -454,7 +454,7 @@ function TenantMaintenanceCard({ request, onClick }: { request: MaintenanceReque
             )}
 
             {/* Content Area */}
-            <div className="p-4 flex flex-col flex-1 bg-gradient-to-b from-card via-card to-muted/5">
+            <div className="p-4 flex flex-col flex-1">
                 {/* Header & Meta */}
                 <div className="flex items-center justify-between mb-2 text-[10px] font-black text-muted-foreground/60 tracking-wider uppercase shrink-0">
                     <span className="truncate max-w-[120px]">ID: {request.id.split('-')[0]}...</span>
@@ -508,7 +508,7 @@ function TenantMaintenanceCard({ request, onClick }: { request: MaintenanceReque
                             e.stopPropagation();
                             onClick?.();
                         }}
-                        className="text-[10px] font-black uppercase tracking-widest text-primary hover:text-white hover:bg-primary bg-primary/10 border border-primary/20 px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 whitespace-nowrap shadow-sm group/btn active:scale-95"
+                        className="text-[10px] font-black uppercase tracking-widest px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 whitespace-nowrap group/btn active:scale-95 neumorphic-primary"
                     >
                         Details
                         <ArrowRight className="size-3.5 transition-transform group-hover/btn:translate-x-0.5" />
@@ -531,10 +531,10 @@ function TenantMaintenanceListRow({ request, onClick }: { request: MaintenanceRe
     return (
         <div
             onClick={onClick}
-            className="group relative flex items-center bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/20 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md p-3 gap-4"
+            className="group relative flex items-center rounded-2xl overflow-hidden transition-all duration-300 cursor-pointer p-3 gap-4 hover:-translate-y-1 neumorphic-panel"
         >
             {/* Thumbnail */}
-            <div className="relative size-20 rounded-xl bg-muted border border-border overflow-hidden shrink-0">
+            <div className="relative size-20 rounded-xl overflow-hidden shrink-0 neumorphic-inset">
                 {request.images && request.images.length > 0 ? (
                     <Image
                         src={request.images[0]}

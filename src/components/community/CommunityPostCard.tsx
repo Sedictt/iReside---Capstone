@@ -222,12 +222,12 @@ export function CommunityPostCard({
             layout
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`flex flex-col gap-5 rounded-3xl border border-border/50 bg-card shadow-sm transition-all hover:shadow-md dark:border-white/10 dark:bg-[#151515] ${isPending ? 'opacity-75' : ''}`}
+            className={`flex flex-col gap-5 rounded-3xl transition-all neumorphic-panel ${isPending ? 'opacity-75' : ''}`}
         >
             <header className="flex items-start justify-between gap-4 px-5 pt-5 md:px-6 md:pt-6">
                 <div className="flex items-center gap-3">
                     <div
-                        className="relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border/50 shadow-sm dark:border-white/20"
+                        className="relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full neumorphic-inset-card"
                         style={{ backgroundColor: post.author_avatar_bg_color || '#f3f4f6' }}
                     >
                         {post.author_avatar ? (
@@ -260,7 +260,7 @@ export function CommunityPostCard({
                     <div className="relative" ref={kebabRef}>
                         <button
                             onClick={(e) => { e.stopPropagation(); setKebabOpen(!kebabOpen) }}
-                            className="flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-muted/50 dark:hover:bg-white/10 transition-colors"
+                            className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors neumorphic-extruded"
                             aria-label="Post options"
                         >
                             <MoreHorizontal className="size-[18px]" />
@@ -305,26 +305,26 @@ export function CommunityPostCard({
                         type="text"
                         value={editPostTitle}
                         onChange={(e) => setEditPostTitle(e.target.value)}
-                        className="w-full rounded-xl border border-border bg-background/50 px-4 py-2.5 text-sm font-black outline-none transition-all focus:border-primary/50 dark:border-white/10 dark:bg-white/5 dark:text-white"
+                        className="w-full rounded-xl px-4 py-2.5 text-sm font-black outline-none transition-all neumorphic-inset"
                         placeholder="Post title..."
                     />
                     <textarea
                         value={editPostContent}
                         onChange={(e) => setEditPostContent(e.target.value)}
-                        className="w-full rounded-xl border border-border bg-background/50 px-4 py-2.5 text-sm outline-none transition-all focus:border-primary/50 dark:border-white/10 dark:bg-white/5 dark:text-white min-h-[80px] resize-none"
+                        className="w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-all neumorphic-inset min-h-[80px] resize-none"
                         placeholder="Post content..."
                     />
                     <div className="flex gap-2">
                         <button
                             onClick={handleEditPost}
                             disabled={isMutating}
-                            className="flex-1 rounded-xl bg-primary py-2 text-sm font-black text-primary-foreground hover:opacity-90 disabled:opacity-50 transition-opacity"
+                            className="flex-1 rounded-xl py-2 text-sm font-black transition-opacity neumorphic-primary disabled:opacity-50"
                         >
                             Save Changes
                         </button>
                         <button
                             onClick={() => { setIsEditingPost(false); setEditPostTitle(post.title); setEditPostContent(post.content || "") }}
-                            className="flex-1 rounded-xl border border-border py-2 text-sm font-black hover:bg-muted/50 disabled:opacity-50 transition-colors"
+                            className="flex-1 rounded-xl py-2 text-sm font-black transition-colors neumorphic-extruded disabled:opacity-50"
                         >
                             Cancel
                         </button>
@@ -380,10 +380,10 @@ export function CommunityPostCard({
                                         key={option}
                                         onClick={() => onVote(post, idx)}
                                         disabled={isMutating}
-                                        className={`group relative w-full overflow-hidden rounded-xl border p-3.5 text-left transition-all ${
+                                        className={`group relative w-full overflow-hidden rounded-xl p-3.5 text-left transition-all neumorphic-extruded ${
                                             selected
-                                                ? 'border-primary/50 bg-primary/5'
-                                                : 'border-border/50 hover:border-primary/30'
+                                                ? 'ring-2 ring-primary/50 text-primary'
+                                                : ''
                                         }`}
                                     >
                                         {hasVoted && (
@@ -448,8 +448,8 @@ export function CommunityPostCard({
                         disabled={isMutating}
                         className={`flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium transition-all active:scale-95 disabled:opacity-50 ${
                             hasReacted
-                                ? 'bg-primary/10 text-primary'
-                                : 'text-muted-foreground hover:bg-muted/50 dark:hover:bg-white/10'
+                                ? 'neumorphic-inset text-primary'
+                                : 'neumorphic-extruded text-muted-foreground'
                         }`}
                     >
                         <ThumbsUp className={`size-4 ${hasReacted ? 'fill-current' : ''}`} />
@@ -460,8 +460,8 @@ export function CommunityPostCard({
                         onClick={() => onToggleComments(post.id)}
                         className={`flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium transition-all active:scale-95 ${
                             isOpen
-                                ? 'bg-primary/10 text-primary'
-                                : 'text-muted-foreground hover:bg-muted/50 dark:hover:bg-white/10'
+                                ? 'neumorphic-inset text-primary'
+                                : 'neumorphic-extruded text-muted-foreground'
                         }`}
                     >
                         <MessageCircle className="size-4" />
@@ -472,8 +472,8 @@ export function CommunityPostCard({
                         onClick={() => onToggleSave(post.id)}
                         className={`flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium transition-all active:scale-95 disabled:opacity-50 ${
                             isSaved
-                                ? 'bg-primary/10 text-primary'
-                                : 'text-muted-foreground hover:bg-muted/50 dark:hover:bg-white/10'
+                                ? 'neumorphic-inset text-primary'
+                                : 'neumorphic-extruded text-muted-foreground'
                         }`}
                     >
                         <Bookmark className={`size-4 ${isSaved ? 'fill-current' : ''}`} />
@@ -484,7 +484,7 @@ export function CommunityPostCard({
 
                     <button
                         onClick={handleShare}
-                        className="flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium text-muted-foreground transition-all hover:bg-muted/50 dark:hover:bg-white/10 active:scale-95"
+                        className="flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium text-muted-foreground transition-all neumorphic-extruded active:scale-95"
                         title="Copy link"
                     >
                         <Share2 className="size-4" />
@@ -523,7 +523,7 @@ export function CommunityPostCard({
                                             className="flex gap-3 group"
                                         >
                                             <div
-                                                className="relative flex size-8 shrink-0 items-center justify-center rounded-full border border-border/50 dark:border-white/10"
+                                                className="relative flex size-8 shrink-0 items-center justify-center rounded-full neumorphic-inset-card"
                                                 style={{ backgroundColor: comment.authorAvatarBgColor || '#f3f4f6' }}
                                             >
                                                 {comment.authorAvatar ? (
@@ -598,7 +598,7 @@ export function CommunityPostCard({
 
                             <form onSubmit={handleCommentSubmit} className="flex gap-2.5 items-start pt-2">
                                 <div
-                                    className="flex size-8 shrink-0 items-center justify-center rounded-full border border-border/50 dark:border-white/10 bg-background"
+                                    className="flex size-8 shrink-0 items-center justify-center rounded-full neumorphic-inset-card"
                                 >
                                     <User className="size-4 text-muted-foreground/50" />
                                 </div>
@@ -618,7 +618,7 @@ export function CommunityPostCard({
                                             }
                                         }}
                                         placeholder="Write a comment..."
-                                        className="w-full rounded-xl border border-border/50 bg-background/80 px-3.5 py-2.5 pr-10 text-sm outline-none transition-all focus:border-primary/50 focus:bg-background dark:border-white/10 dark:bg-white/5 min-h-[44px] max-h-[120px] resize-none"
+                                        className="w-full rounded-xl px-3.5 py-2.5 pr-10 text-sm outline-none transition-all neumorphic-inset min-h-[44px] max-h-[120px] resize-none"
                                         rows={1}
                                     />
                                     <button

@@ -97,7 +97,7 @@ export function CommunityComposer({
     }
 
     return (
-        <section className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm dark:border-white/10 dark:bg-[#151515]">
+        <section className="overflow-hidden rounded-3xl neumorphic-panel">
             <form onSubmit={handleSubmit}>
                 <div className="p-6">
                     {isManagementUser && (
@@ -125,7 +125,7 @@ export function CommunityComposer({
 
                     <div className="flex gap-4">
                         <div
-                            className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border shadow-inner dark:border-white/10 relative"
+                            className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-full relative neumorphic-inset-card"
                             style={{ backgroundColor: profile?.avatar_bg_color || undefined }}
                         >
                             {profile?.avatar_url ? (
@@ -164,7 +164,7 @@ export function CommunityComposer({
                                                     dispatch({ type: "SET_POLL_OPTIONS", payload: next })
                                                 }}
                                                 placeholder={`Option ${index + 1}`}
-                                                className="w-full rounded-xl border border-border bg-background/50 px-4 py-2.5 text-sm outline-none transition-all focus:border-primary/50 focus:ring-4 focus:ring-primary/5 dark:border-white/10 dark:bg-white/5"
+                                                className="w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-all neumorphic-inset"
                                             />
                                         </div>
                                     ))}
@@ -202,7 +202,7 @@ export function CommunityComposer({
                                     animate={{ opacity: 1, scale: 1 }}
                                     exit={{ opacity: 0, scale: 0.8 }}
                                     key={`photo-${index}-${photo.name}`} 
-                                    className="group relative size-20 overflow-hidden rounded-xl border border-border dark:border-white/10"
+                                    className="group relative size-20 overflow-hidden rounded-xl neumorphic-inset-card"
                                 >
                                     <Image src={URL.createObjectURL(photo)} alt="Preview" fill className="object-cover" />
                                     <button 
@@ -231,7 +231,7 @@ export function CommunityComposer({
                                 type="button" 
                                 onClick={() => fileInputRef.current?.click()}
                                 disabled={state.selectedPhotos.length >= 4}
-                                className="flex items-center gap-2 rounded-xl px-3 py-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-30 dark:hover:bg-white/5 dark:hover:text-white"
+                                className="flex items-center gap-2 rounded-xl px-3 py-2 text-muted-foreground transition-colors neumorphic-extruded disabled:opacity-30"
                             >
                                 <ImageIcon className="size-5" />
                                 <span className="text-sm font-black">Photo</span>
@@ -240,7 +240,7 @@ export function CommunityComposer({
                         <button 
                             type="submit" 
                             disabled={isSubmitting || uploadingPhotos || (!state.body.trim() && state.selectedPhotos.length === 0)} 
-                            className="flex items-center gap-2 rounded-2xl bg-primary px-8 py-2.5 text-sm font-black text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+                            className="flex items-center gap-2 rounded-2xl px-8 py-2.5 text-sm font-black transition-all neumorphic-primary disabled:opacity-50"
                         >
                             {uploadingPhotos ? "Uploading..." : isSubmitting ? "Publishing..." : "Publish"}
                             <Send className="size-5" />
@@ -259,8 +259,8 @@ function TypeButton({ active, onClick, icon: Icon, label }: { active: boolean, o
             onClick={onClick}
             className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-black transition-all ${
                 active 
-                ? 'bg-primary/10 text-primary' 
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-white/5'
+                ? 'neumorphic-primary text-primary-foreground' 
+                : 'neumorphic-extruded text-muted-foreground'
             }`}
         >
             <Icon className="size-4" />

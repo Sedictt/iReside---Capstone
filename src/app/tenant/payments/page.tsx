@@ -290,7 +290,7 @@ export default function FinanceHubPage() {
                 </div>
 
                 {nextPayment ? (
-                    <div className="bg-card border border-border rounded-[1.5rem] p-3 shadow-sm flex items-center gap-6 ring-1 ring-primary/5 animate-in fade-in zoom-in duration-500">
+                    <div className="neumorphic-inset rounded-[1.5rem] p-3 flex items-center gap-6 animate-in fade-in zoom-in duration-500">
                         <div className="px-1 border-r border-border/50">
                             <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Balance Due</p>
                             <p className="text-lg font-black text-foreground tracking-tight">
@@ -299,13 +299,13 @@ export default function FinanceHubPage() {
                         </div>
                         <Link 
                             href={`/tenant/payments/${nextPayment.id}/checkout`}
-                            className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary/10 transition-all hover:-translate-y-0.5 flex items-center gap-2 shrink-0"
+                            className="px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all hover:-translate-y-0.5 flex items-center gap-2 shrink-0 neumorphic-primary"
                         >
                             Pay Now <ArrowRight className="size-4" />
                         </Link>
                     </div>
                 ) : (
-                    <div className="bg-primary/[0.03] border border-primary/20 rounded-[1.5rem] p-3 flex items-center gap-6 animate-in fade-in slide-in-from-right-4 duration-700">
+                    <div className="neumorphic-inset rounded-[1.5rem] p-3 flex items-center gap-6 animate-in fade-in slide-in-from-right-4 duration-700">
                         <div className="px-1 border-r border-primary/10">
                             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-0.5">Next Cycle Early</p>
                             <p className="text-lg font-black text-foreground tracking-tight">
@@ -315,7 +315,7 @@ export default function FinanceHubPage() {
                         <button 
                             onClick={handlePayInAdvance}
                             disabled={creatingAdvance}
-                            className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-primary/20 transition-all hover:-translate-y-0.5 flex items-center gap-2 shrink-0 disabled:opacity-50"
+                            className="px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all hover:-translate-y-0.5 flex items-center gap-2 shrink-0 disabled:opacity-50 neumorphic-primary"
                         >
                             {creatingAdvance ? <Loader2 className="size-4 animate-spin" /> : <>Pay Next Cycle Now <ArrowRight className="size-4" /></>}
                         </button>
@@ -330,10 +330,10 @@ export default function FinanceHubPage() {
                         <div 
                             key={month.month}
                             className={cn(
-                                "rounded-2xl p-4 border",
+                                "rounded-2xl p-4",
                                 month.isForecast 
-                                    ? "bg-muted/30 border-border/50" 
-                                    : "bg-primary/5 border-primary/20"
+                                    ? "neumorphic-inset" 
+                                    : "neumorphic-inset-card text-primary"
                             )}
                         >
                             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">
@@ -363,7 +363,7 @@ export default function FinanceHubPage() {
                         className={cn(
                             "flex items-center gap-2 px-7 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all shrink-0",
                             activeTab === tab.id 
-                                ? "bg-card text-primary shadow-sm border border-border" 
+                                ? "neumorphic-inset-card text-primary" 
                                 : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                         )}
                     >
@@ -380,7 +380,7 @@ export default function FinanceHubPage() {
                     {/* Main Content Column (Left) */}
                     <div className="lg:col-span-3 space-y-8">
                         {activeTab === "bill" && (
-                            <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm relative overflow-hidden ring-1 ring-border">
+                            <div className="neumorphic-panel rounded-[2.5rem] p-8 relative overflow-hidden">
                                 <div className="absolute top-0 right-0 p-10 opacity-[0.03] select-none pointer-events-none">
                                     <Receipt className="size-48" />
                                 </div>
@@ -497,7 +497,7 @@ export default function FinanceHubPage() {
                         )}
 
                         {activeTab === "consumption" && (
-                            <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm relative overflow-hidden ring-1 ring-border min-h-[400px]">
+                            <div className="neumorphic-panel rounded-[2.5rem] p-8 relative overflow-hidden min-h-[400px]">
                                 <div className="absolute top-0 right-0 p-10 opacity-[0.03] select-none pointer-events-none">
                                     <TrendingUp className="size-48" />
                                 </div>
@@ -563,7 +563,7 @@ export default function FinanceHubPage() {
                         )}
 
                         {activeTab === "history" && (
-                            <div className="bg-card border border-border rounded-[2.5rem] p-0 shadow-sm relative overflow-hidden ring-1 ring-border min-h-[400px]">
+                            <div className="neumorphic-panel rounded-[2.5rem] p-0 relative overflow-hidden min-h-[400px]">
                                 <div className="p-8 border-b border-border bg-muted/5 flex items-center justify-between">
                                     <div>
                                         <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mb-0.5">Audit Trail</p>
@@ -657,7 +657,7 @@ export default function FinanceHubPage() {
                     {/* Uniform Sidebar Column (Right) */}
                     <div className="lg:col-span-1 space-y-6">
                         {/* Contextual Action/Info Card */}
-                        <div className="bg-card border border-border rounded-[2rem] p-10 flex flex-col gap-8 shadow-sm ring-1 ring-border">
+                        <div className="neumorphic-panel rounded-[2rem] p-10 flex flex-col gap-8">
                             {activeTab === 'bill' && (
                                 <>
                                     <div>

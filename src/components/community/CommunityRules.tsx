@@ -15,7 +15,7 @@ export function CommunityRules({ onClose }: CommunityRulesProps) {
             exit={{ opacity: 0, y: -20 }}
             className="absolute inset-x-0 top-0 z-50 px-1"
         >
-            <div className="overflow-hidden rounded-3xl border border-border bg-card/95 shadow-[0_20px_50px_rgba(0,0,0,0.1)] backdrop-blur-2xl dark:border-white/10 dark:bg-[#121212]/95 dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+            <div className="overflow-hidden rounded-3xl backdrop-blur-2xl neumorphic-panel">
                 <div className="flex items-center justify-between border-b border-border p-6 dark:border-white/10">
                     <div className="flex items-center gap-3">
                         <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -28,7 +28,7 @@ export function CommunityRules({ onClose }: CommunityRulesProps) {
                     </div>
                     <button 
                         onClick={onClose}
-                        className="flex size-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:text-white/40 dark:hover:bg-white/5 dark:hover:text-white"
+                        className="flex size-10 items-center justify-center rounded-full text-muted-foreground transition-colors neumorphic-extruded"
                     >
                         <X className="size-5" />
                     </button>

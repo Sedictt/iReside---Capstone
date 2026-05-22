@@ -14,7 +14,7 @@ interface ClickSparkProps {
 }
 
 const ClickSpark: React.FC<ClickSparkProps> = ({
-  sparkColor = "#fff",
+  sparkColor = "hsl(var(--primary))",
   sparkSize = 10,
   sparkRadius = 15,
   sparkCount = 8,
@@ -82,6 +82,16 @@ const ClickSpark: React.FC<ClickSparkProps> = ({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    let resolvedColor = sparkColor;
+    if (sparkColor.includes("var(")) {
+      const tempEl = document.createElement("div");
+      tempEl.style.color = sparkColor;
+      tempEl.style.display = "none";
+      document.body.appendChild(tempEl);
+      resolvedColor = window.getComputedStyle(tempEl).color;
+      document.body.removeChild(tempEl);
+    }
+
     let animationId: number;
 
     const draw = (timestamp: number) => {
@@ -107,7 +117,7 @@ const ClickSpark: React.FC<ClickSparkProps> = ({
         const x2 = spark.x + (distance + lineLength) * Math.cos(spark.angle);
         const y2 = spark.y + (distance + lineLength) * Math.sin(spark.angle);
 
-        ctx.strokeStyle = sparkColor;
+        ctx.strokeStyle = resolvedColor;
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(x1, y1);

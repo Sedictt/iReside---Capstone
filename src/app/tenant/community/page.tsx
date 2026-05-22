@@ -488,7 +488,7 @@ export default function TenantCommunityHubPage() {
                         <motion.div 
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: "auto" }}
-                            className="rounded-2xl border border-red-500/20 bg-red-500/5 p-4 text-sm font-black text-red-600"
+                            className="rounded-2xl p-4 text-sm font-black text-red-600 neumorphic-inset"
                         >
                             {error}
                         </motion.div>
@@ -522,7 +522,7 @@ export default function TenantCommunityHubPage() {
                                 ))}
                             </div>
                             {(activeTab === "approvals" ? moderationPosts : pendingPosts).length === 0 && (
-                                <div className="rounded-3xl border border-dashed border-border p-12 text-center text-muted-foreground">
+                                <div className="rounded-3xl p-12 text-center text-muted-foreground neumorphic-inset">
                                     No pending posts to show.
                                 </div>
                             )}
@@ -557,7 +557,7 @@ export default function TenantCommunityHubPage() {
                             ))}
                             
                             {visiblePosts.length === 0 && !loadingFeed && (
-                                <div className="rounded-[2.5rem] border border-dashed border-border bg-muted/20 p-20 text-center">
+                                <div className="rounded-[2.5rem] p-20 text-center neumorphic-inset">
                                     <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-muted">
                                         <MessageCircle className="size-5" />
                                     </div>
@@ -571,7 +571,7 @@ export default function TenantCommunityHubPage() {
                                     <button 
                                         onClick={() => loadPosts("append")}
                                         disabled={loadingFeed}
-                                        className="rounded-full border border-border px-10 py-3 text-sm font-black transition-all hover:bg-muted"
+                                        className="rounded-full px-10 py-3 text-sm font-black transition-all neumorphic-extruded"
                                     >
                                         {loadingFeed ? "Loading..." : "Load More"}
                                     </button>
@@ -589,7 +589,7 @@ export default function TenantCommunityHubPage() {
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.95 }}
-                            className="w-full max-w-md rounded-3xl border border-border bg-card p-8 shadow-2xl"
+                            className="w-full max-w-md rounded-3xl p-8 neumorphic-panel"
                         >
                             <h3 className="text-xl font-black text-foreground">Report Content</h3>
                             <p className="mt-2 text-sm text-muted-foreground">Help us understand what's wrong with this post. Your report is confidential.</p>
@@ -598,20 +598,20 @@ export default function TenantCommunityHubPage() {
                                 value={reportReason}
                                 onChange={(e) => setReportReason(e.target.value)}
                                 placeholder="Why are you reporting this?..."
-                                className="mt-6 min-h-[120px] w-full rounded-2xl border border-border bg-background/50 p-4 text-sm outline-none focus:border-primary/50"
+                                className="mt-6 min-h-[120px] w-full rounded-2xl p-4 text-sm outline-none transition-all neumorphic-inset"
                             />
 
                             <div className="mt-8 flex gap-3">
                                 <button 
                                     onClick={() => setReportModalPostId(null)}
-                                    className="flex-1 rounded-xl border border-border py-2.5 text-sm font-black text-muted-foreground hover:bg-muted"
+                                    className="flex-1 rounded-xl py-2.5 text-sm font-black text-muted-foreground neumorphic-extruded"
                                 >
                                     Cancel
                                 </button>
                                 <button 
                                     onClick={handleReportSubmit}
                                     disabled={!reportReason.trim()}
-                                    className="flex-1 rounded-xl bg-red-500 py-2.5 text-sm font-black text-white hover:brightness-110 disabled:opacity-50"
+                                    className="flex-1 rounded-xl py-2.5 text-sm font-black text-red-500 neumorphic-extruded disabled:opacity-50"
                                 >
                                     Submit Report
                                 </button>

@@ -423,7 +423,7 @@ export default function TenantDashboard() {
                     </div>
                 </div>
 
-                <div className="relative overflow-hidden rounded-[2.5rem] border border-border/50 bg-card/50 p-8 shadow-xl backdrop-blur-md dark:bg-white/[0.02]">
+                <div className="relative overflow-hidden neumorphic-panel rounded-[2.5rem] p-8">
                     <div className="absolute top-0 right-0 p-8 opacity-[0.03]">
                         <Home className="size-48" />
                     </div>
@@ -452,7 +452,7 @@ export default function TenantDashboard() {
                                 {nextPayment && (
                                     <Link
                                         href={`/tenant/payments/${nextPayment.id}/checkout`}
-                                        className="bg-primary hover:bg-primary-dark text-white px-8 py-4 rounded-2xl font-black text-sm flex items-center gap-2 shadow-lg shadow-primary/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                        className="neumorphic-primary px-8 py-4 rounded-2xl font-black text-sm flex items-center gap-2"
                                     >
                                         <CreditCard className="size-4" />
                                         Pay Rent Now
@@ -460,14 +460,14 @@ export default function TenantDashboard() {
                                 )}
                                 <Link
                                     href="/tenant/payments"
-                                    className="bg-secondary/50 hover:bg-secondary text-secondary-foreground px-8 py-4 rounded-2xl font-black text-sm transition-all hover:scale-[1.02] active:scale-[0.98] border border-border/50"
+                                    className="neumorphic-extruded text-secondary-foreground px-8 py-4 rounded-2xl font-black text-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
                                 >
                                     Billing Details
                                 </Link>
                             </div>
                         </div>
 
-                        <div className="bg-muted/30 rounded-3xl p-6 border border-border/50 space-y-4">
+                        <div className="neumorphic-inset rounded-3xl p-6 space-y-4">
                             <div className="flex items-center justify-between">
                                 <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Lease Progress</p>
                                 <span className="text-xs font-black text-primary">{leaseProgress.progressPercent}%</span>
@@ -502,10 +502,10 @@ export default function TenantDashboard() {
                             <div 
                                 key={monthForecast.month}
                                 className={cn(
-                                    "rounded-2xl p-4 border",
+                                    "rounded-2xl p-4",
                                     monthForecast.isForecast 
-                                        ? "bg-muted/30 border-border/50" 
-                                        : "bg-primary/5 border-primary/20"
+                                        ? "neumorphic-inset" 
+                                        : "neumorphic-panel"
                                 )}
                             >
                                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">
@@ -537,7 +537,7 @@ export default function TenantDashboard() {
                         <motion.div 
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="bg-primary/5 border border-primary/20 rounded-2xl p-4 flex items-center justify-between gap-4 shadow-sm"
+                            className="neumorphic-panel rounded-2xl p-4 flex items-center justify-between gap-4"
                         >
                             <div className="flex items-center gap-4">
                                 <div className="p-2.5 rounded-xl bg-primary text-white">
@@ -562,7 +562,7 @@ export default function TenantDashboard() {
                         <motion.div 
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="bg-red-500/5 border border-red-500/20 rounded-2xl p-4 flex items-center justify-between gap-4 shadow-sm"
+                            className="neumorphic-panel rounded-2xl p-4 flex items-center justify-between gap-4"
                         >
                             <div className="flex items-center gap-4">
                                 <div className="p-2.5 rounded-xl bg-red-500 text-white">
@@ -576,7 +576,7 @@ export default function TenantDashboard() {
                             </div>
                             <Link
                                 href={`/tenant/payments/${overduePayments[0]?.id}/checkout`}
-                                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-red-500/20 transition-all"
+                                className="neumorphic-primary bg-red-500 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
                             >
                                 Pay Now
                             </Link>
@@ -597,9 +597,9 @@ export default function TenantDashboard() {
                                         <Link
                                             key={quickActionItem.id}
                                             href={quickActionItem.href}
-                                            className="bg-card/50 border border-border hover:border-primary/40 rounded-3xl p-6 flex flex-col items-center justify-center gap-4 transition-all hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 group backdrop-blur-sm"
+                                            className="neumorphic-extruded rounded-3xl p-6 flex flex-col items-center justify-center gap-4 transition-all hover:-translate-y-1 group"
                                         >
-                                            <div className={cn("size-14 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110", quickActionItem.bgClass, quickActionItem.colorClass)}>
+                                            <div className={cn("size-14 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 neumorphic-inset-card", quickActionItem.colorClass)}>
                                                 {IconComponent && <IconComponent className="size-7" />}
                                             </div>
                                             <span className="text-xs font-black text-center group-hover:text-primary transition-colors uppercase tracking-widest">{quickActionItem.label}</span>
@@ -610,7 +610,7 @@ export default function TenantDashboard() {
                             </div>
                         </div>
 
-                        <div className="bg-card/50 border border-border rounded-[2rem] p-8 shadow-sm backdrop-blur-sm">
+                        <div className="neumorphic-panel rounded-[2.5rem] p-8">
                             <div className="flex items-center justify-between mb-8">
                                 <div>
                                     <h3 className="text-xl font-black text-foreground tracking-tight">Recent Activity</h3>
@@ -628,7 +628,7 @@ export default function TenantDashboard() {
                                         const isSecurityDeposit = paymentRecord.category?.toLowerCase() === 'security_deposit';
                                         
                                         return (
-                                            <div key={paymentRecord.id} className="group flex items-center justify-between p-4 rounded-2xl border border-border/40 hover:border-primary/20 hover:bg-primary/[0.02] transition-all">
+                                            <div key={paymentRecord.id} className="group flex items-center justify-between p-4 rounded-2xl neumorphic-extruded transition-all">
                                                 <div className="flex items-center gap-4">
                                                     <div className={cn(
                                                         "size-10 rounded-xl flex items-center justify-center shrink-0",
@@ -674,7 +674,7 @@ export default function TenantDashboard() {
                     </div>
 
                     <div className="space-y-8">
-                        <div className="bg-card/90 border border-border/60 rounded-[2rem] p-8 shadow-sm backdrop-blur-xl relative overflow-hidden" data-tour-id="tour-lease-details">
+                        <div className="neumorphic-panel rounded-[2.5rem] p-8 relative overflow-hidden" data-tour-id="tour-lease-details">
                             <div className="absolute top-0 right-0 size-32 bg-primary/5 blur-3xl -mr-8 -mt-8" />
                             <div className="relative z-10 space-y-6">
                                 <div>
@@ -686,8 +686,8 @@ export default function TenantDashboard() {
                                 </div>
 
                                 <div className="space-y-4 pt-2">
-                                    <div className="flex items-center gap-4 p-4 rounded-2xl bg-muted/40 border border-border/50">
-                                        <div className="p-2.5 rounded-xl bg-background border border-border">
+                                    <div className="flex items-center gap-4 p-4 rounded-2xl neumorphic-inset">
+                                        <div className="p-2.5 rounded-xl neumorphic-extruded">
                                             <Zap className="size-5 text-amber-500" />
                                         </div>
                                         <div className="flex-1">
@@ -695,8 +695,8 @@ export default function TenantDashboard() {
                                             <p className="font-black text-sm text-foreground">₱{formatCurrency(electricityAmount ?? 0)}</p>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-4 p-4 rounded-2xl bg-muted/40 border border-border/50">
-                                        <div className="p-2.5 rounded-xl bg-background border border-border">
+                                    <div className="flex items-center gap-4 p-4 rounded-2xl neumorphic-inset">
+                                        <div className="p-2.5 rounded-xl neumorphic-extruded">
                                             <Droplets className="size-5 text-blue-500" />
                                         </div>
                                         <div className="flex-1">

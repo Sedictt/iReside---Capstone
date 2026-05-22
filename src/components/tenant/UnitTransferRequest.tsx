@@ -111,12 +111,12 @@ export default function UnitTransferRequest({ currentUnitId }: UnitTransferReque
 
     return (
         <>
-            <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm flex flex-col justify-between ring-1 ring-border group hover:border-primary/30 transition-all relative overflow-hidden h-full">
+            <div className="rounded-[2.5rem] p-8 flex flex-col justify-between group transition-all relative overflow-hidden h-full neumorphic-panel">
                 <div className="absolute top-0 right-0 p-6 opacity-[0.02] select-none pointer-events-none">
                     <ArrowRightLeft className="size-16" />
                 </div>
                 <div className="space-y-6">
-                    <div className="size-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-600">
+                    <div className="size-12 rounded-2xl flex items-center justify-center text-blue-600 neumorphic-inset-card">
                         <ArrowRightLeft className="size-6" />
                     </div>
                     <div>
@@ -128,7 +128,7 @@ export default function UnitTransferRequest({ currentUnitId }: UnitTransferReque
                 </div>
                 <button 
                     onClick={handleOpen}
-                    className="w-full mt-8 py-4 rounded-xl bg-muted text-[10px] font-black uppercase tracking-widest border border-border hover:bg-secondary transition-all flex items-center justify-center gap-2"
+                    className="w-full mt-8 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 neumorphic-extruded"
                 >
                     Check Availability <ArrowUpRight className="size-4" />
                 </button>
@@ -136,12 +136,12 @@ export default function UnitTransferRequest({ currentUnitId }: UnitTransferReque
 
             {mounted && isOpen ? createPortal(
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-                    <div className="relative w-full max-w-4xl bg-card rounded-[2.5rem] overflow-hidden border border-border shadow-2xl flex flex-col max-h-[90vh]">
+                    <div className="relative w-full max-w-4xl rounded-[2.5rem] overflow-hidden flex flex-col max-h-[90vh] neumorphic-panel">
 
                         {/* Header */}
-                        <div className="p-8 border-b border-border flex justify-between items-center bg-card/80 backdrop-blur-md z-10">
+                        <div className="p-8 flex justify-between items-center backdrop-blur-md z-10">
                             <div className="flex items-center gap-4">
-                                <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/20">
+                                <div className="p-3 rounded-2xl text-primary neumorphic-inset-card">
                                     <ArrowRightLeft className="size-6" />
                                 </div>
                                 <div>
@@ -151,7 +151,7 @@ export default function UnitTransferRequest({ currentUnitId }: UnitTransferReque
                             </div>
                             <button
                                 onClick={() => setIsOpen(false)}
-                                className="p-2 rounded-xl hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                                className="p-2 rounded-xl transition-colors text-muted-foreground hover:text-foreground neumorphic-extruded"
                             >
                                 <X className="size-5" />
                             </button>
@@ -168,7 +168,7 @@ export default function UnitTransferRequest({ currentUnitId }: UnitTransferReque
                                             placeholder="Search by unit number or floor..."
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
-                                            className="w-full bg-muted/50 border border-border rounded-xl pl-11 pr-4 py-3 text-sm font-black focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                                            className="w-full rounded-xl pl-11 pr-4 py-3 text-sm font-black outline-none transition-all neumorphic-inset"
                                         />
                                     </div>
                                     <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-2">
@@ -200,10 +200,8 @@ export default function UnitTransferRequest({ currentUnitId }: UnitTransferReque
                                                 key={unit.id}
                                                 onClick={() => setSelectedUnitId(unit.id)}
                                                 className={cn(
-                                                    "text-left p-6 rounded-[2rem] border-2 transition-all group relative overflow-hidden",
-                                                    selectedUnitId === unit.id 
-                                                        ? "border-primary bg-primary/5 shadow-lg shadow-primary/5" 
-                                                        : "border-border hover:border-primary/30 hover:bg-muted/30"
+                                                    "text-left p-6 rounded-[2rem] transition-all group relative overflow-hidden neumorphic-extruded",
+                                                    selectedUnitId === unit.id && "ring-2 ring-primary/50 text-primary"
                                                 )}
                                             >
                                                 {selectedUnitId === unit.id && (
@@ -241,7 +239,7 @@ export default function UnitTransferRequest({ currentUnitId }: UnitTransferReque
                                     </div>
                                 )}
 
-                                <div className="space-y-4 pt-4 border-t border-border">
+                                <div className="space-y-4 pt-4">
                                     <div className="space-y-2">
                                         <label htmlFor="transferReason" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-1">Reason for Transfer (Optional)</label>
                                         <textarea 
@@ -250,10 +248,10 @@ export default function UnitTransferRequest({ currentUnitId }: UnitTransferReque
                                             value={reason}
                                             onChange={(e) => setReason(e.target.value)}
                                             placeholder="Explain why you'd like to transfer to this unit..."
-                                            className="w-full bg-muted/50 border border-border rounded-2xl px-4 py-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none"
+                                            className="w-full rounded-2xl px-4 py-4 text-sm font-medium outline-none transition-all resize-none neumorphic-inset"
                                         />
                                     </div>
-                                    <div className="bg-blue-500/5 border border-blue-500/10 rounded-2xl p-6 flex gap-4">
+                                    <div className="rounded-2xl p-6 flex gap-4 neumorphic-inset">
                                         <AlertCircle className="size-5 text-blue-500 shrink-0" />
                                         <p className="text-[11px] font-medium text-blue-600/80 leading-relaxed uppercase tracking-wider">
                                             Transfer requests are subject to approval. Moving to a unit with different pricing will require a lease addendum or a new agreement.
@@ -264,18 +262,18 @@ export default function UnitTransferRequest({ currentUnitId }: UnitTransferReque
                         </div>
 
                         {/* Footer */}
-                        <div className="p-8 border-t border-border bg-muted/20 flex gap-4">
+                        <div className="p-8 flex gap-4">
                             <button
                                 type="button"
                                 onClick={() => setIsOpen(false)}
-                                className="px-8 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:bg-muted transition-all"
+                                className="px-8 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest text-muted-foreground transition-all neumorphic-extruded"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleSubmit}
                                 disabled={isSubmitting || !selectedUnitId}
-                                className="flex-1 py-4 rounded-xl bg-primary text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:bg-primary-dark transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                                className="flex-1 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-3 disabled:opacity-50 neumorphic-primary"
                             >
                                 {isSubmitting ? (
                                     <Loader2 className="size-4 animate-spin" />

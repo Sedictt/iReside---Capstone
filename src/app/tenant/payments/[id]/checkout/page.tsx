@@ -586,7 +586,7 @@ export default function CheckoutPage() {
     }
 
     if (!invoice) {
-        return <div className="rounded-3xl border border-border bg-card p-8 text-center text-muted-foreground">Invoice unavailable.</div>;
+        return <div className="neumorphic-panel rounded-3xl p-8 text-center text-muted-foreground">Invoice unavailable.</div>;
     }
 
     if (submitted || ["paid", "under_review", "awaiting_in_person", "confirmed", "receipted"].includes(invoice.status)) {
@@ -594,7 +594,7 @@ export default function CheckoutPage() {
         const isProcessing = ["under_review", "awaiting_in_person", "confirmed"].includes(invoice.status);
 
         return (
-            <div className="mx-auto max-w-3xl rounded-[2rem] border border-emerald-500/20 bg-card p-10 text-center shadow-sm relative overflow-hidden">
+            <div className="mx-auto max-w-3xl rounded-[2rem] border border-emerald-500/20 neumorphic-panel p-10 text-center relative overflow-hidden">
                 <div className="absolute -top-24 -right-24 size-48 bg-emerald-500/10 blur-3xl rounded-full" />
                 <CheckCircle2 className={cn("mx-auto mb-5 size-12", isSettled ? "text-emerald-400" : "text-amber-400")} />
                 <h1 className="text-3xl font-black text-foreground">
@@ -609,7 +609,7 @@ export default function CheckoutPage() {
                 </p>
                 <div className="mt-6 flex justify-center gap-3">
                     <Link href="/tenant/payments" className="rounded-2xl border border-border px-5 py-3 text-sm font-black text-foreground transition hover:bg-muted">Back to payments</Link>
-                    <Link href="/tenant/dashboard" className="rounded-2xl bg-primary px-5 py-3 text-sm font-black text-primary-foreground transition hover:bg-primary/90">Go to dashboard</Link>
+                    <Link href="/tenant/dashboard" className="rounded-2xl px-5 py-3 text-sm font-black transition hover:bg-primary/90 neumorphic-primary">Go to dashboard</Link>
                 </div>
             </div>
         );
@@ -630,7 +630,7 @@ export default function CheckoutPage() {
                         <div className="flex items-center gap-4">
                             <button 
                                 onClick={() => back()} 
-                                className="group flex size-10 items-center justify-center rounded-full border border-border/50 bg-card/50 text-foreground transition-all hover:bg-muted hover:scale-105 active:scale-95"
+                                className="group flex size-10 items-center justify-center rounded-full text-foreground transition-all hover:bg-muted hover:scale-105 active:scale-95 neumorphic-inset-card"
                             >
                                 <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5" />
                             </button>
@@ -646,7 +646,7 @@ export default function CheckoutPage() {
                     </header>
 
                     {/* Step 1: Payment Method */}
-                    <section className="rounded-[2rem] border border-border/40 bg-card/40 p-1 backdrop-blur-xl shadow-sm">
+                    <section className="rounded-[2rem] p-1 backdrop-blur-xl neumorphic-inset">
                         <div className="grid grid-cols-2 gap-1">
                             <button
                                 onClick={() => setMethod("gcash")}
@@ -704,7 +704,7 @@ export default function CheckoutPage() {
                                     className="space-y-6"
                                 >
                                     <div className="grid gap-6 md:grid-cols-[1fr_280px]">
-                                        <div className="space-y-6 rounded-[2rem] border border-border/40 bg-card/60 p-8 shadow-xl backdrop-blur-3xl">
+                                        <div className="space-y-6 rounded-[2rem] p-8 backdrop-blur-3xl neumorphic-panel">
                                             <div className="space-y-5">
                                                 <Field label="Reference number">
                                                     <input 
@@ -737,7 +737,7 @@ export default function CheckoutPage() {
                                             </div>
                                         </div>
 
-                                        <div className="rounded-[2rem] border border-border/40 bg-card/60 p-6 shadow-xl backdrop-blur-3xl text-center flex flex-col justify-center">
+                                        <div className="rounded-[2rem] p-6 backdrop-blur-3xl text-center flex flex-col justify-center neumorphic-panel">
                                             <p className="mb-4 text-[10px] font-black uppercase tracking-[0.2em] text-primary">Destination QR</p>
                                             <div className="group relative mx-auto mb-6 aspect-square w-full max-w-[200px] overflow-hidden rounded-3xl border border-border/50 bg-white p-3 shadow-md transition-all hover:scale-[1.02]">
                                                 {invoice.paymentDestination?.qr_image_url ? (
@@ -816,7 +816,7 @@ export default function CheckoutPage() {
                                     </div>
 
                                     {/* Optional Note moved inside for better density */}
-                                    <div className="mt-6 rounded-[2rem] border border-border/40 bg-card/60 p-8 shadow-sm backdrop-blur-md">
+                                    <div className="mt-6 rounded-[2rem] p-8 backdrop-blur-md neumorphic-panel">
                                         <Field label="Optional Note">
                                             <textarea 
                                                 rows={2} 
@@ -836,7 +836,7 @@ export default function CheckoutPage() {
 
                 {/* Right Column: Sticky Summary & Breakdown */}
                 <aside className="lg:sticky lg:top-24 space-y-6">
-                    <section className="rounded-[2.5rem] border border-border/50 bg-card/80 p-8 shadow-2xl backdrop-blur-2xl ring-1 ring-border/50">
+                    <section className="rounded-[2.5rem] p-8 backdrop-blur-2xl neumorphic-panel">
                         <div className="flex items-center gap-3 mb-6">
                             <Receipt className="size-5 text-primary" />
                             <h2 className="text-lg font-black text-foreground tracking-tight">Invoice Summary</h2>
@@ -897,7 +897,7 @@ export default function CheckoutPage() {
                                         {!isMandatory && (
                                             <div className={cn(
                                                 "size-5 rounded-md border flex items-center justify-center transition-all cursor-pointer",
-                                                isSelected ? "bg-primary border-primary text-white shadow-sm shadow-primary/20" : "bg-card border-border group-hover:border-primary/50"
+                                                isSelected ? "neumorphic-primary text-white" : "neumorphic-inset-card"
                                             )}>
                                                 {isSelected && <CheckCircle2 className="size-3.5" />}
                                             </div>
@@ -967,7 +967,7 @@ export default function CheckoutPage() {
                                         {!isMandatory && (
                                             <div className={cn(
                                                 "size-5 rounded-md border flex items-center justify-center transition-all cursor-pointer",
-                                                isSelected ? "bg-primary border-primary text-white shadow-sm shadow-primary/20" : "bg-card border-border group-hover:border-primary/50"
+                                                isSelected ? "neumorphic-primary text-white" : "neumorphic-inset-card"
                                             )}>
                                                 {isSelected && <CheckCircle2 className="size-3.5" />}
                                             </div>
@@ -1050,7 +1050,7 @@ export default function CheckoutPage() {
                     </section>
 
                     {/* Support Link */}
-                    <div className="rounded-[2rem] border border-border/40 bg-card/40 p-6 text-center">
+                    <div className="rounded-[2rem] p-6 text-center neumorphic-inset">
                         <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3">Having Trouble?</p>
                         <Link href="/tenant/messages" className="text-xs font-black text-primary hover:underline flex items-center justify-center gap-1.5">
                             <HelpCircle className="size-3.5" />

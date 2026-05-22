@@ -103,7 +103,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
             {existingRequest ? (
                 /* Existing Request State */
                 variant === "hub" ? (
-                    <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm flex flex-col justify-between ring-1 ring-border transition-all relative overflow-hidden h-full">
+                    <div className="neumorphic-panel rounded-[2.5rem] p-8 flex flex-col justify-between transition-all relative overflow-hidden h-full">
                         <div className="absolute top-0 right-0 p-6 opacity-[0.02] select-none pointer-events-none">
                             <Clock className="size-16" />
                         </div>
@@ -138,14 +138,14 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                         </div>
                         <button 
                             onClick={() => setIsOpen(true)}
-                            className="w-full mt-8 py-4 rounded-xl bg-muted text-[10px] font-black uppercase tracking-widest border border-border hover:bg-muted/80 transition-all flex items-center justify-center gap-2"
+                            className="w-full mt-8 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 neumorphic-extruded"
                         >
                             View Timeline & Checklist
                         </button>
                     </div>
                 ) : (
                     /* Sidebar/QuickAction Variant for Existing Request */
-                    <div className="rounded-[2rem] border border-border/60 bg-card p-8 relative overflow-hidden group flex-shrink-0 shadow-sm backdrop-blur-sm">
+                    <div className="neumorphic-panel rounded-[2rem] p-8 relative overflow-hidden group flex-shrink-0">
                         <div className="flex items-center gap-3 mb-4">
                             <div className={cn(
                                 "flex size-10 items-center justify-center rounded-xl border",
@@ -161,7 +161,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                         </p>
                         <button
                             onClick={() => setIsOpen(true)}
-                            className="w-full py-4 rounded-2xl bg-muted text-[10px] font-black uppercase tracking-widest hover:bg-muted/80 transition-all border border-border shadow-sm"
+                            className="w-full py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all neumorphic-extruded"
                         >
                             View Progress
                         </button>
@@ -169,7 +169,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                 )
             ) : variant === "hub" ? (
                 /* Hub Section Variant - Matches the new grid style */
-                <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm flex flex-col justify-between ring-1 ring-border group hover:border-red-500/30 transition-all relative overflow-hidden h-full">
+                <div className="neumorphic-panel rounded-[2.5rem] p-8 flex flex-col justify-between group transition-all relative overflow-hidden h-full">
                     <div className="absolute top-0 right-0 p-6 opacity-[0.02] select-none pointer-events-none">
                         <LogOut className="size-16" />
                     </div>
@@ -186,14 +186,14 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                     </div>
                     <button 
                         onClick={() => setIsOpen(true)}
-                        className="w-full mt-8 py-4 rounded-xl bg-muted text-[10px] font-black uppercase tracking-widest border border-border hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/20 transition-all flex items-center justify-center gap-2"
+                        className="w-full mt-8 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest hover:text-red-500 transition-all flex items-center justify-center gap-2 neumorphic-extruded"
                     >
                         Request Move-Out
                     </button>
                 </div>
             ) : variant === "sidebar" ? (
                 /* Sidebar Card Trigger */
-                <div className="rounded-[2rem] border border-border/60 bg-card p-8 relative overflow-hidden group flex-shrink-0 shadow-sm backdrop-blur-sm">
+                <div className="neumorphic-panel rounded-[2rem] p-8 relative overflow-hidden group flex-shrink-0">
                     <div className="absolute inset-0 bg-gradient-to-br from-red-500/[0.03] via-transparent to-transparent opacity-80" />
                     <div className="relative z-10">
                         <div className="flex items-center gap-3 mb-4">
@@ -207,7 +207,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                         </p>
                         <button
                             onClick={() => setIsOpen(true)}
-                            className="w-full py-4 rounded-2xl bg-red-500/10 text-red-600 font-black uppercase tracking-widest text-[10px] hover:bg-red-500/15 transition-all border border-red-500/20 shadow-sm"
+                            className="w-full py-4 rounded-2xl text-red-600 font-black uppercase tracking-widest text-[10px] transition-all neumorphic-extruded"
                         >
                             Request Move-Out
                         </button>
@@ -217,9 +217,9 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                 /* Quick Action Trigger */
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="bg-card/50 border border-border hover:border-red-500/40 rounded-[2rem] p-6 flex flex-col items-center justify-center gap-4 transition-all hover:shadow-xl hover:shadow-red-500/5 hover:-translate-y-1 group backdrop-blur-sm"
+                    className="neumorphic-extruded rounded-[2rem] p-6 flex flex-col items-center justify-center gap-4 transition-all hover:-translate-y-1 group"
                 >
-                    <div className="size-14 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 bg-red-500/10 text-red-500">
+                    <div className="size-14 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 text-red-500 neumorphic-inset-card">
                         <LogOut className="size-7" />
                     </div>
                     <span className="text-[10px] font-black text-center group-hover:text-red-500 transition-colors uppercase tracking-widest">Move Out</span>
@@ -229,12 +229,12 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
             {/* Modal */}
             {mounted && isOpen ? createPortal(
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-                    <div className="relative w-full max-w-lg bg-card rounded-[2.5rem] overflow-hidden border border-border shadow-2xl flex flex-col">
+                    <div className="relative w-full max-w-lg neumorphic-panel rounded-[2.5rem] overflow-hidden flex flex-col">
 
                         {/* Header */}
-                        <div className="p-8 border-b border-border flex justify-between items-center bg-card/80 backdrop-blur-md z-10">
+                        <div className="p-8 border-b border-border flex justify-between items-center z-10">
                             <div className="flex items-center gap-4">
-                                <div className="p-3 rounded-2xl bg-red-500/10 text-red-500 border border-red-500/20">
+                                <div className="p-3 rounded-2xl text-red-500 neumorphic-inset-card">
                                     <LogOut className="size-6" />
                                 </div>
                                 <div>
@@ -244,7 +244,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                             </div>
                             <button
                                 onClick={() => setIsOpen(false)}
-                                className="p-2 rounded-xl hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                                className="p-2 rounded-xl transition-colors text-muted-foreground hover:text-foreground neumorphic-extruded"
                             >
                                 <X className="size-5" />
                             </button>
@@ -262,7 +262,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
 
                                         {/* Step 1: Submission */}
                                         <div className="relative flex items-start gap-6">
-                                            <div className="z-10 flex size-8 items-center justify-center rounded-xl bg-primary text-white shadow-lg shadow-primary/20">
+                                            <div className="z-10 flex size-8 items-center justify-center rounded-xl neumorphic-primary">
                                                 <Clock className="size-4" />
                                             </div>
                                             <div className="flex flex-col">
@@ -275,8 +275,8 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                         <div className="relative flex items-start gap-6">
                                             <div className={cn(
                                                 "z-10 flex size-8 items-center justify-center rounded-xl transition-all",
-                                                existingRequest.status !== "pending" && existingRequest.status !== "denied" ? "bg-primary text-white shadow-lg shadow-primary/20" : 
-                                                existingRequest.status === "denied" ? "bg-red-500 text-white" : "bg-muted text-muted-foreground"
+                                                existingRequest.status !== "pending" && existingRequest.status !== "denied" ? "neumorphic-primary" : 
+                                                existingRequest.status === "denied" ? "bg-red-500 text-white neumorphic-extruded" : "text-muted-foreground neumorphic-inset-card"
                                             )}>
                                                 {existingRequest.status === "denied" ? <XCircle className="size-4" /> : <CheckCircle2 className="size-4" />}
                                             </div>
@@ -300,7 +300,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                         <div className="relative flex items-start gap-6">
                                             <div className={cn(
                                                 "z-10 flex size-8 items-center justify-center rounded-xl transition-all",
-                                                existingRequest.inspection_date ? "bg-primary text-white shadow-lg shadow-primary/20" : "bg-muted text-muted-foreground"
+                                                existingRequest.inspection_date ? "neumorphic-primary" : "text-muted-foreground neumorphic-inset-card"
                                             )}>
                                                 <ShieldCheck className="size-4" />
                                             </div>
@@ -316,7 +316,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                         <div className="relative flex items-start gap-6">
                                             <div className={cn(
                                                 "z-10 flex size-8 items-center justify-center rounded-xl transition-all",
-                                                existingRequest.status === "completed" ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "bg-muted text-muted-foreground"
+                                                existingRequest.status === "completed" ? "bg-emerald-500 text-white neumorphic-extruded" : "text-muted-foreground neumorphic-inset-card"
                                             )}>
                                                 <LogOut className="size-4" />
                                             </div>
@@ -333,7 +333,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                 {existingRequest.inspection_date && (
                                     <div className="pt-6 border-t border-border space-y-4">
                                         <h4 className="text-sm font-black uppercase tracking-widest text-muted-foreground">Security Deposit Summary</h4>
-                                        <div className="rounded-2xl border border-border bg-muted/20 p-4 space-y-3">
+                                        <div className="rounded-2xl p-4 space-y-3 neumorphic-inset">
                                             {existingRequest.deposit_deductions && Array.isArray(existingRequest.deposit_deductions) && existingRequest.deposit_deductions.map((d: any) => (
                                                 <div key={d.description} className="flex justify-between text-xs font-medium">
                                                     <span className="text-muted-foreground">{d.description}</span>
@@ -357,7 +357,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                             </div>
                         ) : (
                             <form onSubmit={handleRequest} className="p-8 space-y-6">
-                                <div className="bg-red-500/5 border border-red-500/10 rounded-2xl p-6 flex gap-4">
+                                <div className="neumorphic-inset rounded-2xl p-6 flex gap-4">
                                     <AlertOctagon className="size-5 text-red-500 shrink-0" />
                                     <p className="text-[11px] font-medium text-red-600/80 leading-relaxed uppercase tracking-wider">
                                         Submitting this request initiates the digital clearance process. Your landlord will review your account for any pending balances and inspect the unit condition.
@@ -373,7 +373,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                             required
                                             value={requestedDate}
                                             onChange={(e) => setRequestedDate(e.target.value)}
-                                            className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 text-sm font-black focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                                            className="w-full rounded-xl px-4 py-3 text-sm font-black outline-none transition-all neumorphic-inset"
                                         />
                                     </div>
 
@@ -385,7 +385,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                             value={reason}
                                             onChange={(e) => setReason(e.target.value)}
                                             placeholder="Briefly explain your reason for moving out..."
-                                            className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none"
+                                            className="w-full rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all resize-none neumorphic-inset"
                                         />
                                     </div>
                                 </div>
@@ -394,14 +394,14 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                     <button
                                         type="button"
                                         onClick={() => setIsOpen(false)}
-                                        className="flex-1 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:bg-muted transition-all border border-transparent hover:border-border"
+                                        className="flex-1 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest text-muted-foreground transition-all neumorphic-extruded"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         type="submit"
                                         disabled={isSubmitting}
-                                        className="flex-1 py-4 rounded-xl bg-red-500 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-red-500/20 hover:bg-red-600 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                                        className="flex-1 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 disabled:opacity-50 neumorphic-extruded text-red-500"
                                     >
                                         {isSubmitting ? (
                                             <Loader2 className="size-4 animate-spin" />

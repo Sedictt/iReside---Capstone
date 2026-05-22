@@ -113,7 +113,7 @@ export default async function LeaseDetailsPage({ params }: { params: Promise<{ i
                         <Link
                             href={lease.signed_document_url}
                             target="_blank"
-                            className="flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white px-5 py-2.5 rounded-xl font-black transition-all shadow-lg shadow-primary/20 text-sm"
+                            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-black transition-all text-sm neumorphic-primary"
                         >
                             <Download className="size-4" />
                             Download PDF
@@ -126,11 +126,11 @@ export default async function LeaseDetailsPage({ params }: { params: Promise<{ i
                 {/* Main Content */}
                 <div className="lg:col-span-2 space-y-8">
                     {/* Lease Terms Summary */}
-                    <div className="rounded-2xl border border-border bg-card p-6 backdrop-blur-sm">
+                    <div className="rounded-2xl p-6 backdrop-blur-sm neumorphic-panel">
                         <h3 className="text-lg font-black text-foreground mb-6">Lease Summary</h3>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                            <div className="p-4 rounded-xl bg-muted/30 border border-border">
+                            <div className="p-4 rounded-xl neumorphic-inset">
                                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Property</p>
                                 <div className="flex items-start gap-3">
                                     <MapPin className="size-5 text-primary mt-0.5 shrink-0" />
@@ -144,7 +144,7 @@ export default async function LeaseDetailsPage({ params }: { params: Promise<{ i
                                 </div>
                             </div>
 
-                            <div className="p-4 rounded-xl bg-muted/30 border border-border">
+                            <div className="p-4 rounded-xl neumorphic-inset">
                                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Occupants</p>
                                 <div className="flex items-start gap-3">
                                     <Users className="size-5 text-primary mt-0.5 shrink-0" />
@@ -155,7 +155,7 @@ export default async function LeaseDetailsPage({ params }: { params: Promise<{ i
                                 </div>
                             </div>
 
-                            <div className="p-4 rounded-xl bg-muted/30 border border-border">
+                            <div className="p-4 rounded-xl neumorphic-inset">
                                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Term</p>
                                 <div className="flex items-start gap-3">
                                     <Calendar className="size-5 text-primary mt-0.5 shrink-0" />
@@ -172,10 +172,10 @@ export default async function LeaseDetailsPage({ params }: { params: Promise<{ i
                                 </div>
                             </div>
 
-                            <div className="p-4 rounded-xl bg-muted/30 border border-border">
+                            <div className="p-4 rounded-xl neumorphic-inset">
                                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Rent</p>
                                 <div className="flex items-start gap-3">
-                                    <div className="size-5 flex items-center justify-center rounded-full bg-primary/20 text-primary font-black text-xs shrink-0">₱</div>
+                                    <div className="size-5 flex items-center justify-center rounded-full text-primary font-black text-xs shrink-0 neumorphic-inset-card">₱</div>
                                     <div>
                                         <p className="font-black text-foreground">₱{formatCurrency(lease.monthly_rent)} / month</p>
                                         <p className="text-sm text-muted-foreground">Due on the {rentDueDay}{rentDueDay === 1 ? "st" : rentDueDay === 2 ? "nd" : rentDueDay === 3 ? "rd" : "th"}{gracePeriodDays > 0 ? ` (${gracePeriodDays}-day grace period)` : ""}</p>
@@ -186,22 +186,22 @@ export default async function LeaseDetailsPage({ params }: { params: Promise<{ i
                     </div>
 
                     {/* Key Terms */}
-                    <div className="rounded-2xl border border-border bg-card p-6 backdrop-blur-sm">
+                    <div className="rounded-2xl p-6 backdrop-blur-sm neumorphic-panel">
                         <h3 className="text-lg font-black text-foreground mb-6">Key Terms</h3>
                         <div className="space-y-4">
-                            <div className="flex items-center gap-3 text-foreground text-sm p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                            <div className="flex items-center gap-3 text-foreground text-sm p-3 rounded-lg transition-colors neumorphic-extruded">
                                 <CheckCircle2 className="size-4 text-emerald-500 flex-shrink-0" />
                                 Security Deposit: ₱{formatCurrency(lease.security_deposit)}
                             </div>
-                            <div className="flex items-center gap-3 text-foreground text-sm p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                            <div className="flex items-center gap-3 text-foreground text-sm p-3 rounded-lg transition-colors neumorphic-extruded">
                                 <CheckCircle2 className="size-4 text-emerald-500 flex-shrink-0" />
                                 Monthly Rent: ₱{formatCurrency(lease.monthly_rent)} due on the {rentDueDay}{rentDueDay === 1 ? "st" : rentDueDay === 2 ? "nd" : rentDueDay === 3 ? "rd" : "th"}
                             </div>
-                            <div className="flex items-center gap-3 text-foreground text-sm p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                            <div className="flex items-center gap-3 text-foreground text-sm p-3 rounded-lg transition-colors neumorphic-extruded">
                                 <CheckCircle2 className="size-4 text-emerald-500 flex-shrink-0" />
                                 {lease.unit.beds} Bedroom &middot; {lease.unit.baths} Bathroom &middot; {lease.unit.sqft ? `${lease.unit.sqft} sqft` : "Size not specified"}
                             </div>
-                            <div className="flex items-center gap-3 text-foreground text-sm p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                            <div className="flex items-center gap-3 text-foreground text-sm p-3 rounded-lg transition-colors neumorphic-extruded">
                                 <CheckCircle2 className="size-4 text-emerald-500 flex-shrink-0" />
                                 Lease period: {formatDate(lease.start_date)} &ndash; {formatDate(lease.end_date)}
                             </div>
@@ -220,7 +220,7 @@ export default async function LeaseDetailsPage({ params }: { params: Promise<{ i
 
                 {/* Sidebar - Timeline/Status */}
                 <div className="space-y-6">
-                    <div className="rounded-2xl border border-border bg-card p-6 backdrop-blur-sm">
+                    <div className="rounded-2xl p-6 backdrop-blur-sm neumorphic-panel">
                         <h3 className="text-lg font-black text-foreground mb-6">Timeline</h3>
                         <div className="relative border-l-2 border-border ml-3 space-y-8 pl-6 pb-2">
                             {lease.status === "active" && lease.start_date && (
@@ -245,10 +245,10 @@ export default async function LeaseDetailsPage({ params }: { params: Promise<{ i
                         </div>
                     </div>
 
-                    <div className="rounded-2xl border border-border bg-card p-6 backdrop-blur-sm">
+                    <div className="rounded-2xl p-6 backdrop-blur-sm neumorphic-panel">
                         <h3 className="text-sm font-black text-foreground mb-4">Landlord</h3>
                         <div className="flex items-center gap-3">
-                            <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black">
+                            <div className="size-10 rounded-full flex items-center justify-center text-primary font-black neumorphic-inset-card">
                                 {lease.landlord?.full_name?.charAt(0) || "?"}
                             </div>
                             <div>

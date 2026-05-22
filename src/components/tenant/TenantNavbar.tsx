@@ -217,8 +217,8 @@ return (
                                 type="button"
                                 onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
                                 className={cn(
-                                    "relative flex size-9 items-center justify-center rounded-lg border border-border transition-all",
-                                    isNotificationsOpen ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground"
+                                    "relative flex size-9 items-center justify-center rounded-lg transition-all",
+                                    isNotificationsOpen ? "neumorphic-primary" : "neumorphic-extruded text-muted-foreground hover:text-foreground"
                                 )}
                                 aria-label="Notifications"
                             >
@@ -239,7 +239,7 @@ return (
                                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                        className="absolute right-0 top-full z-50 mt-2 w-[calc(100vw-2rem)] max-w-sm overflow-hidden rounded-2xl border border-border bg-card shadow-[0_20px_50px_rgba(0,0,0,0.15)] backdrop-blur-xl"
+                                        className="absolute right-0 top-full z-50 mt-2 w-[calc(100vw-2rem)] max-w-sm overflow-hidden rounded-2xl backdrop-blur-xl neumorphic-panel"
                                     >
                                         <NotificationPanelContent 
                                             notifications={notifications}
@@ -257,7 +257,7 @@ return (
                         <button
                             type="button"
                             onClick={() => setIsMobileOpen((prev) => !prev)}
-                            className="inline-flex size-9 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground"
+                            className="inline-flex size-9 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground neumorphic-extruded"
                             aria-label="Toggle tenant navigation"
                         >
                             {isMobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
@@ -266,7 +266,7 @@ return (
                 </div>
             </header>
 
-            <aside className="hidden md:flex fixed left-0 top-0 z-40 h-screen w-64 border-r border-border/70 bg-card flex-col text-foreground neumorphic-panel" data-tour-id="tour-tenant-navigation">
+            <aside className="hidden md:flex fixed left-0 top-0 z-40 h-screen w-64 flex-col text-foreground neumorphic-panel" data-tour-id="tour-tenant-navigation">
                 <div className="h-20 px-6 border-b border-border/70 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
                         <Logo className="h-30 w-36" />
@@ -328,7 +328,7 @@ return (
                                         initial={{ opacity: 0, x: -10, scale: 0.95 }}
                                         animate={{ opacity: 1, x: 0, scale: 1 }}
                                         exit={{ opacity: 0, x: -10, scale: 0.95 }}
-                                        className="absolute left-full bottom-0 z-50 mb-0 ml-4 w-80 overflow-hidden rounded-[2rem] border border-border bg-card shadow-[0_20px_50px_rgba(0,0,0,0.15)] backdrop-blur-xl"
+                                        className="absolute left-full bottom-0 z-50 mb-0 ml-4 w-80 overflow-hidden rounded-[2rem] backdrop-blur-xl neumorphic-panel"
                                     >
                                         <NotificationPanelContent 
                                             notifications={notifications}
@@ -378,7 +378,7 @@ return (
 
                 <aside
                     className={cn(
-                        "absolute left-0 top-0 h-full w-72 border-r border-border bg-background p-4 transition-transform duration-200",
+                        "absolute left-0 top-0 h-full w-72 p-4 transition-transform duration-200 neumorphic-panel",
                         isMobileOpen ? "translate-x-0" : "-translate-x-full"
                     )}
                 >
@@ -389,7 +389,7 @@ return (
                         <button
                             type="button"
                             onClick={() => setIsMobileOpen(false)}
-                            className="inline-flex size-8 items-center justify-center rounded-md border border-border bg-card"
+                            className="inline-flex size-8 items-center justify-center rounded-md neumorphic-extruded"
                             aria-label="Close tenant navigation"
                         >
                             <X className="size-4" />

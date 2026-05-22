@@ -829,7 +829,7 @@ function NewAssetContent() {
 
 export default function NewAssetPage() {
     return (
-        <ClickSpark sparkColor="#7CA34D" sparkSize={10} sparkRadius={15} sparkCount={8} duration={400}>
+        <ClickSpark sparkColor="hsl(var(--primary))" sparkSize={10} sparkRadius={15} sparkCount={8} duration={400}>
             <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="size-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" /></div>}>
                 <NewAssetContent />
             </Suspense>
