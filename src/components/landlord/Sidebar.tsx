@@ -16,7 +16,8 @@ import {
     BarChart2,
     Zap,
     ShieldCheck,
-    FileText
+    FileText,
+    Calendar
 } from "lucide-react";
 import { signOut } from "@/lib/supabase/client-auth";
 import { RoleSidebar, type SidebarNavSection } from "@/components/navigation/RoleSidebar";
@@ -48,6 +49,7 @@ export function Sidebar({
                 { label: "Dashboard", href: "/landlord/dashboard", icon: LayoutDashboard },
                 { label: "Analytics", href: "/landlord/analytics", icon: BarChart2 },
                 { label: "Messaging", href: "/landlord/messages", icon: MessageSquare, badge: counts.messages || undefined },
+                { label: "Calendar", href: "/landlord/calendar", icon: Calendar },
                 { label: "Community Hub", href: "/landlord/community", icon: Megaphone },
             ]
         },
