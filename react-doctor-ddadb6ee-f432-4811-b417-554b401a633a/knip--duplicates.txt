@@ -1,9 +1,0 @@
-Rule: knip/duplicates
-Severity: warning
-Category: Dead Code
-Count: 1
-
-Duplicate export: TenantSidebar|TenantNavbar
-
-Files:
-  src\components\tenant\TenantNavbar.tsx
