@@ -28,7 +28,8 @@
       "Bash(supabase status:*)",
       "Bash(node:*)",
       "Bash(pip install:*)",
-      "Bash(python generate_questionnaire.py)"
+      "Bash(python generate_questionnaire.py)",
+      "mcp__filesystem__directory_tree"
     ]
   }
 }

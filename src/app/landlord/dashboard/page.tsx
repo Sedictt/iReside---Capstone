@@ -121,6 +121,8 @@ export default function LandlordDashboard() {
 
     const [isWalkInModalOpen, setIsWalkInModalOpen] = useState(false);
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+    const [loadingUnits, setLoadingUnits] = useState(true);
+    const [loadingInvites, setLoadingInvites] = useState(true);
     const [availableUnits, setAvailableUnits] = useState<{
         id: string;
         name: string;
@@ -172,6 +174,31 @@ export default function LandlordDashboard() {
 
     useEffect(() => {
         setMounted(true);
+    }, []);
+
+    // Operational Power Tool Keyboard Accelerators
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                setSelectedActionPayment(null);
+                setIsConfirmingAction(false);
+                setOpenPaymentModal(null);
+                setIsWalkInModalOpen(false);
+                setIsInviteModalOpen(false);
+            }
+            // Ctrl+K/Cmd+K triggers Walk-in Application modal instantly
+            if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+                e.preventDefault();
+                setIsWalkInModalOpen(prev => !prev);
+            }
+            // Ctrl+I/Cmd+I triggers Tenant Referral Link manager modal
+            if ((e.ctrlKey || e.metaKey) && e.key === "i") {
+                e.preventDefault();
+                setIsInviteModalOpen(prev => !prev);
+            }
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
     }, []);
 
     useEffect(() => {
@@ -254,6 +281,7 @@ export default function LandlordDashboard() {
   
     useEffect(() => {
         const loadUnits = async () => {
+            setLoadingUnits(true);
             try {
                 const res = await fetch("/api/landlord/property-units");
                 if (!res.ok) return;
@@ -285,7 +313,9 @@ export default function LandlordDashboard() {
                 });
 
                 setAvailableUnits(unitsList);
-            } catch { /* fail silently */ }
+            } catch { /* fail silently */ } finally {
+                setLoadingUnits(false);
+            }
         };
         void loadUnits();
     }, []);
@@ -294,6 +324,7 @@ export default function LandlordDashboard() {
         const controller = new AbortController();
 
         const loadInvites = async () => {
+            setLoadingInvites(true);
             try {
                 const response = await fetch("/api/landlord/invites", {
                     method: "GET",
@@ -315,6 +346,8 @@ export default function LandlordDashboard() {
                 }
 
                 setTenantInvites([]);
+            } finally {
+                setLoadingInvites(false);
             }
         };
 
@@ -389,6 +422,9 @@ export default function LandlordDashboard() {
                         nearDueCount={nearDueCount}
                         vacantUnitsCount={openUnitsCount}
                         activeInviteCount={activeInviteCount}
+                        loadingPayments={paymentsState.loading}
+                        loadingUnits={loadingUnits}
+                        loadingInvites={loadingInvites}
                     />
                 </div>
 
@@ -406,7 +442,7 @@ export default function LandlordDashboard() {
                         </div>
                         <Link 
                             href="/landlord/invoices" 
-                            className="group shrink-0 flex items-center gap-2 rounded-xl px-4 py-2 sm:px-5 sm:py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-widest neumorphic-extruded active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all text-muted-foreground hover:text-primary"
+                            className="group shrink-0 flex items-center gap-2 rounded-xl px-4 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-semibold neumorphic-extruded active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all text-muted-foreground hover:text-primary"
                             aria-label="View all invoices in the financial hub"
                         >
                             View Invoices
@@ -423,15 +459,15 @@ export default function LandlordDashboard() {
                                 <div key={key} className="flex flex-col gap-4" role="listitem">
                                     <div className="flex items-center justify-between px-2 sm:px-4">
                                         <div className="flex items-start gap-2 sm:gap-3">
-                                            <div className={cn("size-2 rounded-full mt-1 sm:mt-0.5 shadow-inner", dot)} aria-hidden="true" />
-                                            <div className="space-y-1">
-                                                <h3 className={cn("text-[10px] sm:text-xs font-black uppercase tracking-[0.2em]", tone)}>{label}</h3>
-                                                <p className="text-[9px] sm:text-[10px] font-black text-muted-foreground/60">{hint}</p>
+                                            <div className={cn("size-2 rounded-full mt-1.5 sm:mt-1 shadow-inner", dot)} aria-hidden="true" />
+                                            <div className="space-y-0.5">
+                                                <h3 className={cn("text-xs sm:text-sm font-bold tracking-wide", tone)}>{label}</h3>
+                                                <p className="text-[11px] sm:text-xs font-medium text-muted-foreground">{hint}</p>
                                             </div>
                                         </div>
                                         <button 
                                             onClick={() => setOpenPaymentModal(key)} 
-                                            className="px-2.5 py-1 rounded-lg text-[9px] sm:text-[10px] font-black text-muted-foreground/80 uppercase tracking-tighter neumorphic-extruded active:scale-95 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all"
+                                            className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-muted-foreground hover:text-primary neumorphic-extruded active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all"
                                             aria-label={`See more details for ${label}`}
                                         >
                                             See more
@@ -464,9 +500,9 @@ export default function LandlordDashboard() {
                                                 }}
                                             />
                                         ) : (
-                                            <div className="flex flex-col items-center justify-center py-5 sm:py-6 text-muted-foreground/40 transition-transform hover:scale-105 duration-300">
+                                            <div className="flex flex-col items-center justify-center py-5 sm:py-6 text-muted-foreground/50 transition-transform hover:scale-105 duration-300">
                                                 <CheckCircle2 className="size-5 sm:size-6 mb-2 opacity-50" aria-hidden="true" />
-                                                <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest">{emptyState}</p>
+                                                <p className="text-xs font-semibold tracking-wide text-muted-foreground">{emptyState}</p>
                                             </div>
                                         )}
                                     </div>
@@ -490,7 +526,7 @@ export default function LandlordDashboard() {
                         </div>
                         <Link 
                             href="/landlord/tenants?tab=renewals" 
-                            className="group shrink-0 flex items-center gap-2 rounded-xl px-4 py-2 sm:px-5 sm:py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-widest neumorphic-extruded active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all text-muted-foreground hover:text-primary"
+                            className="group shrink-0 flex items-center gap-2 rounded-xl px-4 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-semibold neumorphic-extruded active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all text-muted-foreground hover:text-primary"
                             aria-label="View all lease renewals"
                         >
                             View All
@@ -757,14 +793,14 @@ function PaymentCard({ payment, fallbackAvatar, onClick }: { payment: PaymentLis
                 </div>
                 <div className="min-w-0 flex-1">
                     <h4 className="truncate text-sm font-black text-foreground group-hover:text-primary transition-colors">{tenant}</h4>
-                    <p className="text-[11px] font-black text-muted-foreground uppercase tracking-tight">Unit {unit}</p>
+                    <p className="text-xs font-semibold text-muted-foreground">Unit {unit}</p>
                 </div>
             </div>
 
             <div className="text-right relative z-10 flex flex-col items-end shrink-0 pl-4">
                 <h4 className="mb-0.5 text-sm font-black text-foreground">PHP {amount.toLocaleString()}</h4>
                 <div className="flex items-center justify-end gap-1.5 mt-1">
-                    <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60">{date}</span>
+                    <span className="text-xs font-semibold text-muted-foreground">{date}</span>
                 </div>
             </div>
 

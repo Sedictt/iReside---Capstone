@@ -1,17 +1,15 @@
 {
-  "people": [
-    "Status"
-  ],
+  "people": [],
   "projects": [
     "Design",
+    "Framework",
     "Motion",
+    "Tailwind",
+    "Information",
+    "Systems",
     "Role",
     "Color",
-    "Primary",
-    "Llama",
-    "Web",
-    "High",
-    "Surface",
-    "Frontend"
+    "Success",
+    "Objectives"
   ]
 }
