@@ -1,0 +1,613 @@
+@startuml
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam class {
+  BorderColor #333333
+  BackgroundColor #FFFFFF
+  FontSize 11
+}
+
+title <size:18><b>iReside — Class Diagram</b></size>
+caption <i>Excluding Iris AI</i>
+
+' ========== STEREOTYPES ==========
+skinparam stereotypeCBackgroundColor #EEEEEE
+
+' ========== ENUMS ==========
+enum UserRole {
+  tenant
+  landlord
+  admin
+}
+
+enum PropertyType {
+  apartment
+  dormitory
+}
+
+enum UnitStatus {
+  vacant
+  occupied
+  maintenance
+}
+
+enum LeaseStatus {
+  draft
+  active
+  expired
+  terminated
+}
+
+enum PaymentStatus {
+  pending
+  processing
+  completed
+  failed
+  refunded
+}
+
+enum PaymentMethod {
+  credit_card
+  debit_card
+  gcash
+  maya
+  cash
+}
+
+enum PaymentWorkflowStatus {
+  pending
+  confirmed
+  rejected
+  receipted
+}
+
+enum PaymentAmountTag {
+  exact
+  partial
+  overpaid
+  short_paid
+}
+
+enum UtilityType {
+  water
+  electricity
+}
+
+enum UtilityBillingMode {
+  landlord_paid
+  tenant_paid
+}
+
+enum ApplicationStatus {
+  pending
+  reviewing
+  approved
+  rejected
+  withdrawn
+}
+
+enum MaintenanceStatus {
+  pending
+  open
+  assigned
+  in_progress
+  resolved
+  closed
+  cancelled
+}
+
+enum MaintenancePriority {
+  low
+  medium
+  high
+  urgent
+}
+
+enum MaintenanceSentiment {
+  distressed
+  negative
+  neutral
+  positive
+}
+
+enum MoveOutStatus {
+  pending
+  approved
+  denied
+  completed
+}
+
+enum MessageType {
+  text
+  system
+  image
+  file
+}
+
+enum NotificationType {
+  payment
+  lease
+  maintenance
+  message
+  application
+}
+
+enum RenewalStatus {
+  pending
+  approved
+  rejected
+  signed
+}
+
+enum CommunityPostType {
+  announcement
+  poll
+  photo_album
+  discussion
+}
+
+enum CommunityPostStatus {
+  draft
+  published
+  archived
+}
+
+' ========== ENTITIES ==========
+
+entity Profile {
+  *id: string
+  *email: string
+  *full_name: string
+  *role: UserRole
+  avatar_url: string?
+  phone: string?
+  bio: string?
+  cover_url: string?
+  socials: Json?
+  address: string?
+  business_name: string?
+  is_verified: boolean
+  --
+  created_at: datetime
+  updated_at: datetime
+}
+
+entity Property {
+  *id: string
+  *landlord_id: string [FK]
+  *name: string
+  *address: string
+  city: string
+  type: PropertyType
+  description: string?
+  amenities: string[]
+  house_rules: string[]
+  images: string[]
+  is_featured: boolean
+  total_units: number?
+  --
+  created_at: datetime
+  updated_at: datetime
+}
+
+entity Unit {
+  *id: string
+  *property_id: string [FK]
+  *name: string
+  floor: number
+  status: UnitStatus
+  *rent_amount: number
+  sqft: number?
+  beds: number
+  baths: number
+  --
+  created_at: datetime
+  updated_at: datetime
+}
+
+entity Lease {
+  *id: string
+  *unit_id: string [FK]
+  *tenant_id: string [FK]
+  *landlord_id: string [FK]
+  status: LeaseStatus
+  *start_date: date
+  *end_date: date
+  monthly_rent: number
+  security_deposit: number
+  terms: Json?
+  signed_at: datetime?
+  signed_document_url: string?
+  --
+  created_at: datetime
+  updated_at: datetime
+}
+
+entity LeaseRenewal {
+  *id: string
+  *lease_id: string [FK]
+  *tenant_id: string [FK]
+  *landlord_id: string [FK]
+  status: RenewalStatus
+  proposed_rent: number?
+  proposed_security_deposit: number?
+  terms_json: Json?
+  --
+  created_at: datetime
+  updated_at: datetime
+}
+
+entity Payment {
+  *id: string
+  *lease_id: string [FK]
+  *tenant_id: string [FK]
+  *landlord_id: string [FK]
+  *amount: number
+  status: PaymentStatus
+  method: PaymentMethod?
+  *due_date: date
+  paid_at: datetime?
+  subtotal: number
+  paid_amount: number
+  receipt_number: string?
+  metadata: Json
+  workflow_status: PaymentWorkflowStatus
+  amount_tag: PaymentAmountTag?
+  --
+  created_at: datetime
+  updated_at: datetime
+}
+
+entity PaymentItem {
+  *id: string
+  *payment_id: string [FK]
+  *label: string
+  *amount: number
+  category: string
+  utility_type: UtilityType?
+  billing_mode: UtilityBillingMode?
+  reading_id: string? [FK]
+}
+
+entity PaymentReceipt {
+  *id: string
+  *payment_id: string [FK]
+  *landlord_id: string [FK]
+  *tenant_id: string [FK]
+  *receipt_number: string
+  *amount: number
+  receipt_url: string?
+  issued_at: datetime
+  issued_by: string
+}
+
+entity LandlordPaymentDestination {
+  *id: string
+  *landlord_id: string [FK]
+  *provider: string
+  *account_number: string
+  *account_name: string
+  is_enabled: boolean
+  --
+  created_at: datetime
+  updated_at: datetime
+}
+
+entity UtilityConfig {
+  *id: string
+  *landlord_id: string [FK]
+  *property_id: string [FK]
+  unit_id: string? [FK]
+  utility_type: UtilityType
+  billing_mode: UtilityBillingMode
+  rate: number
+  *unit_label: string
+  is_active: boolean
+  --
+  created_at: datetime
+}
+
+entity UtilityReading {
+  *id: string
+  *landlord_id: string [FK]
+  *lease_id: string [FK]
+  *property_id: string [FK]
+  *unit_id: string [FK]
+  utility_type: UtilityType
+  billing_mode: UtilityBillingMode
+  previous_reading: number
+  current_reading: number
+  usage: number
+  billed_rate: number
+  entered_at: datetime
+  status: string
+}
+
+entity MaintenanceRequest {
+  *id: string
+  *unit_id: string [FK]
+  *tenant_id: string [FK]
+  *landlord_id: string [FK]
+  *title: string
+  *description: string
+  status: MaintenanceStatus
+  priority: MaintenancePriority
+  category: string?
+  images: string[]
+  sentiment: MaintenanceSentiment?
+  resolved_at: datetime?
+  --
+  created_at: datetime
+  updated_at: datetime
+}
+
+entity Amenity {
+  *id: string
+  *property_id: string [FK]
+  *landlord_id: string [FK]
+  *name: string
+  type: string
+  description: string?
+  capacity: number?
+  price_per_unit: number?
+  status: string
+  icon_name: string?
+  --
+  created_at: datetime
+}
+
+entity AmenityBooking {
+  *id: string
+  *amenity_id: string [FK]
+  *tenant_id: string [FK]
+  *landlord_id: string [FK]
+  *booking_date: date
+  *start_time: time
+  *end_time: time
+  total_price: number
+  status: string
+  --
+  created_at: datetime
+}
+
+entity Application {
+  *id: string
+  *unit_id: string [FK]
+  *applicant_id: string [FK]
+  *landlord_id: string [FK]
+  status: ApplicationStatus
+  message: string?
+  documents: string[]
+  reviewed_at: datetime?
+  invite_id: string?
+  --
+  created_at: datetime
+  updated_at: datetime
+}
+
+entity MoveOutRequest {
+  *id: string
+  *lease_id: string [FK]
+  *unit_id: string [FK]
+  *tenant_id: string [FK]
+  status: MoveOutStatus
+  requested_date: date
+  reason: string?
+  --
+  created_at: datetime
+}
+
+entity Conversation {
+  *id: string
+  --
+  created_at: datetime
+}
+
+entity ConversationParticipant {
+  *id: string
+  *conversation_id: string [FK]
+  *user_id: string [FK]
+  archived: boolean
+  blocked: boolean
+  --
+  created_at: datetime
+}
+
+entity Message {
+  *id: string
+  *conversation_id: string [FK]
+  *sender_id: string [FK]
+  *content: string
+  type: MessageType
+  metadata: Json?
+  read_at: datetime?
+  --
+  created_at: datetime
+}
+
+entity Notification {
+  *id: string
+  *user_id: string [FK]
+  *type: NotificationType
+  *title: string
+  *message: string
+  data: Json?
+  read: boolean
+  --
+  created_at: datetime
+}
+
+entity CommunityPost {
+  *id: string
+  *property_id: string [FK]
+  *author_id: string [FK]
+  author_role: string
+  type: CommunityPostType
+  *title: string
+  content: string?
+  is_pinned: boolean
+  is_moderated: boolean
+  status: CommunityPostStatus
+  view_count: number
+  --
+  created_at: datetime
+  updated_at: datetime
+}
+
+entity Expense {
+  *id: string
+  *landlord_id: string [FK]
+  property_id: string? [FK]
+  unit_id: string? [FK]
+  category: string
+  *amount: number
+  *description: string
+  --
+  created_at: datetime
+}
+
+entity LandlordReview {
+  *id: string
+  *lease_id: string [FK]
+  *landlord_id: string [FK]
+  *tenant_id: string [FK]
+  *rating: number
+  comment: string?
+  --
+  created_at: datetime
+}
+
+entity UserSession {
+  *id: string
+  *user_id: string [FK]
+  ip: string
+  user_agent: string
+  not_after: datetime
+  --
+  created_at: datetime
+}
+
+' ========== PACKAGES / DOMAIN BOUNDARIES ==========
+
+package "Auth & User" {
+  Profile
+  UserRole
+}
+
+package "Property" {
+  Property
+  Unit
+  UnitStatus
+  PropertyType
+}
+
+package "Lease" {
+  Lease
+  LeaseRenewal
+  LeaseStatus
+  RenewalStatus
+}
+
+package "Payment & Billing" {
+  Payment
+  PaymentItem
+  PaymentReceipt
+  LandlordPaymentDestination
+  PaymentStatus
+  PaymentMethod
+  PaymentWorkflowStatus
+  PaymentAmountTag
+}
+
+package "Utility" {
+  UtilityConfig
+  UtilityReading
+  UtilityType
+  UtilityBillingMode
+}
+
+package "Maintenance" {
+  MaintenanceRequest
+  MaintenanceStatus
+  MaintenancePriority
+  MaintenanceSentiment
+}
+
+package "Amenity" {
+  Amenity
+  AmenityBooking
+}
+
+package "Application & Move" {
+  Application
+  MoveOutRequest
+  ApplicationStatus
+  MoveOutStatus
+}
+
+package "Messaging" {
+  Conversation
+  ConversationParticipant
+  Message
+  MessageType
+}
+
+package "Community" {
+  CommunityPost
+  CommunityPostType
+  CommunityPostStatus
+}
+
+package "Notification & Admin" {
+  Notification
+  Expense
+  LandlordReview
+  UserSession
+  NotificationType
+}
+
+' ========== RELATIONSHIPS ==========
+
+' Auth
+Profile "1" -- "0..*" Property : "owns (as landlord)"
+Profile "1" -- "0..*" Lease : "as landlord"
+Profile "1" -- "0..*" Lease : "as tenant"
+
+' Property → Unit
+Property "1" -- "0..*" Unit : "contains"
+Property "1" -- "0..*" Amenity : "offers"
+Property "1" -- "0..*" UtilityConfig : "configures"
+Property "1" -- "0..*" CommunityPost : "hosts"
+
+' Unit → Lease
+Unit "1" -- "0..*" Lease : "has"
+Unit "1" -- "0..*" MaintenanceRequest : "has requests"
+Unit "1" -- "0..*" Application : "receives applications"
+
+' Lease → Payments
+Lease "1" -- "0..*" Payment : "has"
+Lease "1" -- "0..*" LeaseRenewal : "generates"
+Lease "1" -- "0..*" MoveOutRequest : "has"
+Lease "1" -- "0..*" LandlordReview : "reviewed"
+
+' Payment → Items
+Payment "1" -- "0..*" PaymentItem : "breaks down into"
+Payment "1" -- "0..*" PaymentReceipt : "has"
+
+' Utility
+UtilityConfig "1" -- "0..*" UtilityReading : "generates"
+UtilityReading "0..*" --> "0..1" PaymentItem : "referenced by"
+
+' Conversation
+Conversation "1" -- "0..*" ConversationParticipant : "has"
+Conversation "1" -- "0..*" Message : "contains"
+
+' Notification
+Profile "1" -- "0..*" Notification : "receives"
+
+' Expense
+Profile "1" -- "0..*" Expense : "records"
+Profile "1" -- "0..*" LandlordReview : "reviews"
+Profile "1" -- "0..*" UserSession : "has sessions"
+
+@enduml

@@ -1,42 +1,42 @@
 {
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\apply_neumorphism.py": {
-    "mtime": 1779464686.599328,
+    "mtime": 1779466057.8340943,
     "hash": "41b70191ff4d3dee58eaf16ac1349dc7"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\apply_neumorphism_billing_panel.py": {
-    "mtime": 1779464686.618831,
+    "mtime": 1779466057.8340943,
     "hash": "1d9af08e5eabc72036a9c552a05d168f"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\apply_neumorphism_bulk.py": {
-    "mtime": 1779464686.639763,
+    "mtime": 1779466057.8340943,
     "hash": "cadc1423d43d44389cf18a70dd6d49e5"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\apply_neumorphism_leases.py": {
-    "mtime": 1779464686.6576993,
+    "mtime": 1779466057.8356185,
     "hash": "d86119cef86248bd3d70cc5e6774708e"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\apply_neumorphism_maintenance.py": {
-    "mtime": 1779464686.677665,
+    "mtime": 1779466057.8366413,
     "hash": "08075ecfe8c9bf47285e3a0876186fc2"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\apply_neumorphism_move_out.py": {
-    "mtime": 1779464686.696725,
+    "mtime": 1779466057.8401544,
     "hash": "fdd5d5ac91cc47d03a205de5d8cd78d7"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\apply_neumorphism_tenants.py": {
-    "mtime": 1779464686.7173066,
+    "mtime": 1779466057.841148,
     "hash": "2b1ecb08ae256b8d53df3c17751d64a0"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\apply_neumorphism_utility.py": {
-    "mtime": 1779464686.7409537,
+    "mtime": 1779466057.842156,
     "hash": "1e14272d104d79b0abe2b1739e019d95"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\convert_neumorphism.py": {
-    "mtime": 1779464686.766436,
+    "mtime": 1779466057.8431506,
     "hash": "f49c25919772c7567cc8928618bdd69c"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\dump.sql": {
-    "mtime": 1779464687.0368772,
+    "mtime": 1779466057.975804,
     "hash": "87eeace281521fd3a18351e4db1c23e4"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\eslint.config.mjs": {
@@ -44,23 +44,23 @@
     "hash": "f3023d0cc22d1fff344737c8351e3c97"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\generate_questionnaire.py": {
-    "mtime": 1779464687.0389242,
+    "mtime": 1779466057.9774072,
     "hash": "9a2a45e93b51b404feefa55b9bcbe861"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\my_backup.sql": {
-    "mtime": 1779464687.9180918,
+    "mtime": 1779466058.8890545,
     "hash": "f86d01c59c6a78b2abc5fc4a00e7944c"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\next-env.d.ts": {
-    "mtime": 1779463764.3901994,
-    "hash": "2a74d3909800ca5467fa83b0ab4a4890"
+    "mtime": 1779752031.3920412,
+    "hash": "d0f8375ae1199dc7acd3977fc33b78b8"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\next.config.ts": {
     "mtime": 1779000365.0065112,
     "hash": "04122cbc3777b9e9e5fcbe3aec6e65cd"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\playwright.config.js": {
-    "mtime": 1779464687.9467216,
+    "mtime": 1779466058.9032683,
     "hash": "9d0f9b6a895cec767a44225f32ff8681"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\postcss.config.mjs": {
@@ -68,31 +68,31 @@
     "hash": "239f3ebf717465dc636818a1a619398d"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\replace_render.py": {
-    "mtime": 1779464688.0176344,
+    "mtime": 1779466058.9969754,
     "hash": "3a842c8b707c2e34b19c879d4f935899"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\replace_render3.py": {
-    "mtime": 1779464688.0182295,
+    "mtime": 1779466058.99751,
     "hash": "7b7c3e2151f1874d99eb77040c9fc7f0"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\replace_render4.py": {
-    "mtime": 1779464688.0187426,
+    "mtime": 1779466058.99751,
     "hash": "bea07e6d2b8dce396fe21baa61b34956"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\replace_ui.py": {
-    "mtime": 1779464688.0187426,
+    "mtime": 1779466058.9985304,
     "hash": "afd9e04e85322554814cd6f15a7e45ca"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\rewrite_gsap.py": {
-    "mtime": 1779464688.0187426,
+    "mtime": 1779466058.9985304,
     "hash": "bea07e6d2b8dce396fe21baa61b34956"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\run_scrolly.py": {
-    "mtime": 1779464688.0187426,
+    "mtime": 1779466058.9998004,
     "hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\source-of-truth-db-cleaned.sql": {
-    "mtime": 1779464688.0314133,
+    "mtime": 1779466059.0073886,
     "hash": "b9721ebb9459309f33d815fcdbd3b821"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\source-of-truth-db.sql": {
@@ -100,67 +100,67 @@
     "hash": "41cb1c012b3b7b87c47dc28ff50eb50a"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\update_scrolly.py": {
-    "mtime": 1779464688.088214,
+    "mtime": 1779466059.094273,
     "hash": "aab1870dcc0d17d251b8ef7cee4391d2"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\vitest.config.ts": {
-    "mtime": 1779464688.088214,
+    "mtime": 1779466059.0957866,
     "hash": "b8d802f1d02b4c029548637f2072a3c9"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\vitest.setup.ts": {
-    "mtime": 1779464688.0903163,
+    "mtime": 1779466059.0968022,
     "hash": "157d94daf424522fc9abc3d38ab74e5c"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\write_page.py": {
-    "mtime": 1779464688.0903163,
+    "mtime": 1779466059.097312,
     "hash": "36b680f483d402ff4eb31fef0ad4b92a"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\write_scrolly.py": {
-    "mtime": 1779464688.0903163,
+    "mtime": 1779466059.097312,
     "hash": "32e5c865d5b2fe6e853146d9cde7b3c1"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\write_scrolly2.py": {
-    "mtime": 1779464688.0903163,
+    "mtime": 1779466059.0982351,
     "hash": "9443eabb7509e6766852156f1ce81462"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\write_scrolly_gsap.py": {
-    "mtime": 1779464688.0903163,
+    "mtime": 1779466059.0991917,
     "hash": "ef8a547350acceaa175ef21297c32b96"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\erd\\generate-clean-erd.ps1": {
-    "mtime": 1779464686.8363192,
+    "mtime": 1779466057.8881695,
     "hash": "fb3f0942b2b9fff99d86230d6d385b42"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\latest-documentations after major refactor\\databse-context.sql": {
-    "mtime": 1779464686.8876183,
+    "mtime": 1779466057.9277258,
     "hash": "7474b91020c525267fb81f47ab7c8eb4"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\scratch\\apply_migration.js": {
-    "mtime": 1779464688.0208569,
+    "mtime": 1779466059.000811,
     "hash": "9300ca0b4cce96b55cbe21122cbeb057"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\scratch\\check_buckets.js": {
-    "mtime": 1779464688.0208569,
+    "mtime": 1779466059.0018096,
     "hash": "0b9111f5779d7526fa37a2514b230801"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\scratch\\check_buckets_full.js": {
-    "mtime": 1779464688.0208569,
+    "mtime": 1779466059.0018096,
     "hash": "c8f3208eaa8f624becb860253a7ec08c"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\scratch\\check_storage_policies.js": {
-    "mtime": 1779464688.0208569,
+    "mtime": 1779466059.0028062,
     "hash": "4244bf849a2b0d50d62c776052598568"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\scratch\\cleanup_initial_schema.ps1": {
-    "mtime": 1779464688.0208569,
+    "mtime": 1779466059.0038052,
     "hash": "88c5f3975f1487bf4ab39e762170e4bd"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\scratch\\cleanup_sql.ps1": {
-    "mtime": 1779464688.0208569,
+    "mtime": 1779466059.0038052,
     "hash": "dc0c3274aa9e42eb0f521e7fc5863756"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\scratch\\cleanup_types.ps1": {
-    "mtime": 1779464688.0208569,
+    "mtime": 1779466059.0048006,
     "hash": "851a9688fadd583a7b57ead4bf1c2733"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\middleware.ts": {
@@ -428,8 +428,8 @@
     "hash": "6e4972a1ebba8c8f50a1dcbc8b92dfbf"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\api\\landlord\\calendar\\events\\route.ts": {
-    "mtime": 1779465392.1049385,
-    "hash": "5edd1b8758c8d8fd3cbefb5677e546c2"
+    "mtime": 1779466045.8686142,
+    "hash": "fefc38a26a2003e8a9b9dabf85ac549b"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\api\\landlord\\documents\\route.ts": {
     "mtime": 1778889455.586634,
@@ -904,8 +904,8 @@
     "hash": "421c05fe2921383f9df8285db1905221"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\landlord\\calendar\\page.tsx": {
-    "mtime": 1779465414.1948438,
-    "hash": "a4c916db020766468b2e6e729c38bdb0"
+    "mtime": 1779466045.8700562,
+    "hash": "e12df9aedd215c6a309ba3e8390fbfc1"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\app\\landlord\\community\\page.tsx": {
     "mtime": 1778573171.8905742,
@@ -1236,7 +1236,7 @@
     "hash": "c39868cc8ff0a1d5292b8a3d6810c5c9"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\Sidebar.tsx": {
-    "mtime": 1779465399.1194088,
+    "mtime": 1779466045.871054,
     "hash": "5656a4ff76fd9eaa820b8d53442274bf"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\components\\landlord\\UnitShowcaseModal.tsx": {
@@ -2300,1135 +2300,1151 @@
     "hash": "c999946fc0e30efff3ba6c708183b8bb"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\dump.sql": {
-    "mtime": 1779464688.0392172,
+    "mtime": 1779466059.0122201,
     "hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\latest-dump.sql": {
-    "mtime": 1779464688.0417361,
+    "mtime": 1779466059.014859,
     "hash": "199ad93179743916958cffafcf4eb824"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\patch-embedded-receipts.sql": {
-    "mtime": 1779464688.0694256,
+    "mtime": 1779466059.0547054,
     "hash": "3b5193b11ac891741438295a66259385"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\patch-landlord3-sample-pop-attachments.sql": {
-    "mtime": 1779464688.0694256,
+    "mtime": 1779466059.0547054,
     "hash": "a6effaade33ef518522deb5c95d9026d"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\patch-seed-landlord-11111111-dashboard.sql": {
-    "mtime": 1779464688.0694256,
+    "mtime": 1779466059.05725,
     "hash": "552e93c26ca107eeb085f0bcdf396725"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\patch-seed-landlord-11111111-lease-hub.sql": {
-    "mtime": 1779464688.073371,
+    "mtime": 1779466059.0605848,
     "hash": "c9ccd7d54fbb1b9c6dbe96e45a536821"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\patch-seed-landlord-11111111-maintenance-details.sql": {
-    "mtime": 1779464688.073371,
+    "mtime": 1779466059.0615869,
     "hash": "eac4b86d753c37b0c316d0ee153966f5"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\patch-seed-landlord-11111111-unit-map-walkthrough-v2.sql": {
-    "mtime": 1779464688.073371,
+    "mtime": 1779466059.0625784,
     "hash": "bbedcfb20979f0022443dae5d4108637"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\patch-seed-landlord-11111111-unit-map-walkthrough.sql": {
-    "mtime": 1779464688.073371,
+    "mtime": 1779466059.0625784,
     "hash": "8297d10ae232d01b568e12fbbe505e1b"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\patch-seed-tenant-avatars.sql": {
-    "mtime": 1779464688.073371,
+    "mtime": 1779466059.0625784,
     "hash": "6dc16c81c1b1693cda0914bdc91e6287"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\patch-skyline-lofts-maintenance-leases.sql": {
-    "mtime": 1779464688.07602,
+    "mtime": 1779466059.064097,
     "hash": "13d1ad30c47cb345c0f7bc5542fd0df2"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\patch-skyline-lofts-maintenance.sql": {
-    "mtime": 1779464688.0764358,
+    "mtime": 1779466059.065653,
     "hash": "2361ec26bc68000fccd9d3cd56b10084"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\seed-landlord3-payment-scenarios.sql": {
-    "mtime": 1779464688.0777013,
+    "mtime": 1779466059.066679,
     "hash": "e61c079d2d92a6ea889e9b7732084691"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\seed-new-tenant-l3.sql": {
-    "mtime": 1779464688.0777013,
+    "mtime": 1779466059.067198,
     "hash": "87834d1389c4c13097d4eceb36ac6559"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\seed-nina-lucia.sql": {
-    "mtime": 1779464688.0777013,
+    "mtime": 1779466059.0682836,
     "hash": "8e0eb31eea5acb7eab91bd044cdaed4e"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\seed.community.sql": {
-    "mtime": 1779464688.0777013,
+    "mtime": 1779466059.0682836,
     "hash": "211b188db826de17f6c9f7fbdfe3b3c9"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\seed.landlord3-payment-scenarios.sql": {
-    "mtime": 1779464688.0777013,
+    "mtime": 1779466059.0698578,
     "hash": "2ab35e45357ec202b0ac78d89b1129d4"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260309_initial_schema.sql": {
-    "mtime": 1779464688.0446532,
+    "mtime": 1779466059.0168777,
     "hash": "9a3c88831f317984dfe148e0b5fc3ba3"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260312_landlord_registration.sql": {
-    "mtime": 1779464688.0446532,
+    "mtime": 1779466059.0180333,
     "hash": "f75e6ebd10f2208e09c5d0cf7e053194"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260313_statistics_exports.sql": {
-    "mtime": 1779464688.0462234,
+    "mtime": 1779466059.0185611,
     "hash": "6bd1bc83595c3ae57bff19f52e4e1594"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260315_iris_chat_history.sql": {
-    "mtime": 1779464688.0467741,
+    "mtime": 1779466059.0185611,
     "hash": "67642d05b0ccf5ab2954a073fe8e092d"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260315_landlord_inquiry_actions.sql": {
-    "mtime": 1779464688.0472827,
+    "mtime": 1779466059.0185611,
     "hash": "ee8c78dbbcf18bf7395dbed213d13b5d"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260315_landlord_reviews.sql": {
-    "mtime": 1779464688.047795,
+    "mtime": 1779466059.0198548,
     "hash": "85c853313ef7a280170d69af85b5cb16"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260315_message_user_actions_and_reports.sql": {
-    "mtime": 1779464688.0485983,
+    "mtime": 1779466059.0198548,
     "hash": "371292dfab4859ef7499ccc0b27a341b"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260317_property_contract_template.sql": {
-    "mtime": 1779464688.0485983,
+    "mtime": 1779466059.0208495,
     "hash": "8a2bc165e9d956ebfb6440b5078a7238"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260317_property_search_indexes.sql": {
-    "mtime": 1779464688.0485983,
+    "mtime": 1779466059.0223608,
     "hash": "b5329053e597431a1a81221fa5aa770d"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260317_published_listings_public_access.sql": {
-    "mtime": 1779464688.0485983,
+    "mtime": 1779466059.0239131,
     "hash": "75028b3df6f4d9d0768691d82de5b717"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260320_admin_policies.sql": {
-    "mtime": 1779464688.0485983,
+    "mtime": 1779466059.0239131,
     "hash": "952be21fb9669c16a6b2d48d809f9721"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260320_admin_role.sql": {
-    "mtime": 1779464688.0485983,
+    "mtime": 1779466059.0249355,
     "hash": "c9d308c85cc612e1b513f333c0ebaa06"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260323_landlord_centric_refactor.sql": {
-    "mtime": 1779464688.0485983,
+    "mtime": 1779466059.0249355,
     "hash": "a52cb42f1e6c06b0212d2dcc7243578f"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260324_community_enums.sql": {
-    "mtime": 1779464688.0485983,
+    "mtime": 1779466059.0264418,
     "hash": "2bd951f060dd2d4a382378e3bfbb5080"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260324_community_rls.sql": {
-    "mtime": 1779464688.0485983,
+    "mtime": 1779466059.0269513,
     "hash": "aaabc4d5fc09ece3daafdbb6cfbf53a6"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260324_community_tables.sql": {
-    "mtime": 1779464688.0485983,
+    "mtime": 1779466059.0275044,
     "hash": "2a8bd02614dd2d61d51019110b0adeb1"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260325_community_role_permissions_matrix.sql": {
-    "mtime": 1779464688.0485983,
+    "mtime": 1779466059.0275044,
     "hash": "5cce7ad3886d7a9fe40ce06d04659e55"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260325_community_tenant_post_insert_policy.sql": {
-    "mtime": 1779464688.0527165,
+    "mtime": 1779466059.0287964,
     "hash": "6b96b56aa45160dc6ae7faf7bcdb0f17"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260326084500_community_write_policies.sql": {
-    "mtime": 1779464688.0527165,
+    "mtime": 1779466059.0287964,
     "hash": "54075e9d7dbddfa8106eb87f67b59d81"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260327120000_fix_missing_rls_policies.sql": {
-    "mtime": 1779464688.0527165,
+    "mtime": 1779466059.0300639,
     "hash": "e76f4a3206282bf6ab07407e7f55def7"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260327130000_restore_permissive_property_unit_policies.sql": {
-    "mtime": 1779464688.0527165,
+    "mtime": 1779466059.0310657,
     "hash": "9a2b3404ae0cdced5b2cc8c58b53e17b"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260328_lease_signing_workflow.sql": {
-    "mtime": 1779464688.0527165,
+    "mtime": 1779466059.0310657,
     "hash": "2d32993cabccdd9a923c6b5a9ade2a2c"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260330120000_tenant_onboarding_workflow.sql": {
-    "mtime": 1779464688.0527165,
+    "mtime": 1779466059.0325737,
     "hash": "069b929d05f3c8d56ab7a35735c93191"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260331143000_tenant_product_tour.sql": {
-    "mtime": 1779464688.0527165,
+    "mtime": 1779466059.0335824,
     "hash": "e371b3ed71c9f71c57a44808dbdead6c"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260331190000_unit_transfer_requests.sql": {
-    "mtime": 1779464688.0555668,
+    "mtime": 1779466059.0335824,
     "hash": "0ff0268020027dd9ea23024b00c7e549"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260405000000_overhaul_tenant_onboarding.sql": {
-    "mtime": 1779464688.0562663,
+    "mtime": 1779466059.0335824,
     "hash": "fd31e24f4ce7f8dbaf230d60427813e3"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260408_business_verification.sql": {
-    "mtime": 1779464688.0567942,
+    "mtime": 1779466059.0345924,
     "hash": "0efb5a7dbadad20622fdb266824beee8"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260409120000_tenant_intake_invites.sql": {
-    "mtime": 1779464688.0573177,
+    "mtime": 1779466059.0345924,
     "hash": "12ae2005dbc7b980b132a59f231fe6cc"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260409_payment_flow_upgrade.sql": {
-    "mtime": 1779464688.0573177,
+    "mtime": 1779466059.0355904,
     "hash": "880722e666f44fe9c806337e622beacf"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260410190000_tenant_invite_application_type.sql": {
-    "mtime": 1779464688.05883,
+    "mtime": 1779466059.0355904,
     "hash": "ab87b6d899314f558d53d6a8b4e1b184"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260411120000_application_payment_pending.sql": {
-    "mtime": 1779464688.05883,
+    "mtime": 1779466059.036109,
     "hash": "9b853553d37b05969ddb23a65ba5a6d7"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260415150000_dorm_boarding_environment.sql": {
-    "mtime": 1779464688.0598495,
+    "mtime": 1779466059.0366223,
     "hash": "af4bdbad2c783577aaa22ad1e65e6815"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260417000000_property_type_utility_split.sql": {
-    "mtime": 1779464688.0598495,
+    "mtime": 1779466059.0376384,
     "hash": "64cff0cbb3c2f87c454644e214814cf8"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260422120000_chat_moderation_historical_terms.sql": {
-    "mtime": 1779464688.0598495,
+    "mtime": 1779466059.0387104,
     "hash": "ea7bf6756b153ae04570986b3ead262e"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260422183000_maintenance_flow_sync.sql": {
-    "mtime": 1779464688.0598495,
+    "mtime": 1779466059.039225,
     "hash": "2fb097fb8566659a442173d91bf190c4"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260423093000_add_maintenance_ai_triage_cache.sql": {
-    "mtime": 1779464688.0598495,
+    "mtime": 1779466059.0402422,
     "hash": "79f2bde159bf014c7dd975dc764defd2"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260423153000_payment_workflow_compliance.sql": {
-    "mtime": 1779464688.062524,
+    "mtime": 1779466059.0402422,
     "hash": "25b6d88561d3b2b4bd97cce9453607db"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260424051122_add_avatar_bg_to_profiles.sql": {
-    "mtime": 1779464688.062524,
+    "mtime": 1779466059.0412445,
     "hash": "835a508a06b1bcee48ae52c2fe6b32d6"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260424051200_add_profile_extended_info.sql": {
-    "mtime": 1779464688.062524,
+    "mtime": 1779466059.042242,
     "hash": "2c57e2e322f6a0662ff5d90cb1b3331c"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260424051300_add_assigned_to_maintenance_status.sql": {
-    "mtime": 1779464688.062524,
+    "mtime": 1779466059.042242,
     "hash": "e3a14a8f4db3196455921fd1b430bbf5"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260424052000_create_consultation_documents.sql": {
-    "mtime": 1779464688.062524,
+    "mtime": 1779466059.043239,
     "hash": "7e26a17d92e10d1bdcad8edc5447ae14"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260426000000_unit_map_tables.sql": {
-    "mtime": 1779464688.062524,
+    "mtime": 1779466059.043239,
     "hash": "fef51240d4b003d0c1f7c83f7e5bdc7e"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260427_purge_legacy_discovery.sql": {
-    "mtime": 1779464688.062524,
+    "mtime": 1779466059.044246,
     "hash": "49f824c1982330e8a8d3339230d38813"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260428120000_amenity_management.sql": {
-    "mtime": 1779464688.062524,
+    "mtime": 1779466059.044246,
     "hash": "52ed600336e66157f50dce32bddb509d"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260429000000_add_signed_lease_storage.sql": {
-    "mtime": 1779464688.066377,
+    "mtime": 1779466059.044246,
     "hash": "679d1c174a634959557554c1882787cf"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260429120000_existing_tenant_invites.sql": {
-    "mtime": 1779464688.066915,
+    "mtime": 1779466059.0457582,
     "hash": "31e1944ba311919f630c87557c395f42"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260430120000_financial_ledger.sql": {
-    "mtime": 1779464688.066915,
+    "mtime": 1779466059.0478528,
     "hash": "88b23d8ed4ce9c93b4ae17cb931d7eee"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260430130000_add_landlord_public_profile_fields.sql": {
-    "mtime": 1779464688.067444,
+    "mtime": 1779466059.0478528,
     "hash": "0a3a4ee2384b3f8cb5435d7120479745"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260502120000_landlord_product_tour.sql": {
-    "mtime": 1779464688.0682452,
+    "mtime": 1779466059.0491896,
     "hash": "6cabda2d63c7301f76d0f8f1d10585fc"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260502_add_business_permit_columns.sql": {
-    "mtime": 1779464688.0682452,
+    "mtime": 1779466059.0491896,
     "hash": "a0139b6b02e02d7ffbdbd5c518ba6027"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260502_add_property_onboarding_fields.sql": {
-    "mtime": 1779464688.0694256,
+    "mtime": 1779466059.0511818,
     "hash": "0a012fd82d71984867c8659d35fea220"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\20260502_create_landlord_documents_bucket.sql": {
-    "mtime": 1779464688.0694256,
+    "mtime": 1779466059.0521784,
     "hash": "c833a45b9766d887f5321dfc3ab90d7c"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\supabase_backup\\migrations\\primary-schema.sql": {
-    "mtime": 1779464688.0694256,
+    "mtime": 1779466059.0531807,
     "hash": "92349ab4f49c7e8f816b1ec4e21374ad"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\tests\\example.spec.js": {
-    "mtime": 1779464688.0804594,
+    "mtime": 1779466059.079254,
     "hash": "3e0dfe4c4be2126dbc26c657a5299221"
   },
+  "C:\\Users\\JV\\Documents\\GitHub\\iReside\\tests\\screenshot-gallery.spec.js": {
+    "mtime": 1779752230.2046907,
+    "hash": "d0050cbabe41fc6f10af253af0f0f146"
+  },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\tests\\tenant-onboarding.spec.js": {
-    "mtime": 1779464688.0804594,
+    "mtime": 1779466059.0822763,
     "hash": "fb4e39df2750d42df8c4f2f3abcde70b"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\tests\\tenant-product-tour.spec.js": {
-    "mtime": 1779464688.0833972,
+    "mtime": 1779466059.0827987,
     "hash": "882f98d34aec286ac7ce085bd1cbabd0"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\tests\\walkin-wizard.spec.js": {
-    "mtime": 1779464688.0833972,
+    "mtime": 1779466059.0838215,
     "hash": "e39a6f84cda5d7894050cd3d1d821951"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\tmp\\docs\\generate_feature_spec_docx.py": {
-    "mtime": 1779464688.0833972,
+    "mtime": 1779466059.0858364,
     "hash": "971e8c290a09b76ed2b11a18e68d04ae"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\agent-orchestrator.yaml": {
-    "mtime": 1779464686.5811474,
+    "mtime": 1779466057.8330965,
     "hash": "50f8ba7a6214c502007c418e3ab3029f"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\AGENTS.md": {
-    "mtime": 1779464686.422814,
+    "mtime": 1779466057.792436,
     "hash": "9cb930653dc67493eb6664cf43cb413b"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\AGENT_DESIGN_GUIDE.md": {
-    "mtime": 1779464686.4239876,
+    "mtime": 1779466057.7944272,
     "hash": "d989ecd62f61e453f3e8e5d3b32956c3"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\APT_APT.docx.md": {
-    "mtime": 1779464686.4978738,
+    "mtime": 1779466057.8220725,
     "hash": "c3049e94e3071d136e6f42dbdec9dfba"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\CHANGELOG.md": {
-    "mtime": 1779464686.5006893,
+    "mtime": 1779466057.8220725,
     "hash": "6655df60736c74490f1520f41acd15bd"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\component_diff.txt": {
-    "mtime": 1779464686.7441099,
+    "mtime": 1779466057.8431506,
     "hash": "ea6e5ff823a2ef8416a87aa66c123569"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\dark-design.md": {
-    "mtime": 1779464686.7671084,
+    "mtime": 1779466057.8441572,
     "hash": "c374e951c578a887b90887c8b4c80a1e"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\dashboard_diff.txt": {
-    "mtime": 1779464686.7676322,
+    "mtime": 1779466057.8441572,
     "hash": "fb785f195c30b75b0a790bc63d313312"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\DEFENSE_QUESTIONS.md": {
-    "mtime": 1779464686.5190609,
+    "mtime": 1779466057.8245692,
     "hash": "5e6d3274cd99b696bd6267ad31a5fcf2"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\Definition_of_Terms.md": {
-    "mtime": 1779464686.5217466,
+    "mtime": 1779466057.8256016,
     "hash": "3d3df13fe129c561bea5de702bf67de7"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\DESIGN.md": {
-    "mtime": 1779464686.5190609,
+    "mtime": 1779466057.82509,
     "hash": "991c403dabb692077c0a98640367bc94"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\dfd-level1.html": {
-    "mtime": 1779464686.7886555,
+    "mtime": 1779466057.8570037,
     "hash": "7e007ad669d10eaf54047b4dbfd18dcc"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\diff.txt": {
-    "mtime": 1779464686.7886555,
+    "mtime": 1779466057.8570037,
     "hash": "3a740df78ca9d798e96a9010d17268f9"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\graph.html": {
-    "mtime": 1779464687.0389242,
+    "mtime": 1779466057.9774072,
     "hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
+  "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iReside-class-diagram.mermaid.md": {
+    "mtime": 1779854061.9806924,
+    "hash": "c86417cb3692c98252b5828ac72f1279"
+  },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\IRIS_INTEGRATION.md": {
-    "mtime": 1779464686.5217466,
+    "mtime": 1779466057.826619,
     "hash": "4b708b1dd630233fa4d3abdf8bc51903"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\KPI_DEFENSE_JUSTIFICATION.md": {
-    "mtime": 1779464686.5470355,
+    "mtime": 1779466057.8276553,
     "hash": "3020db9ec1d238b4e0e28dd5a3c2140f"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\LEAN-CTX.md": {
-    "mtime": 1779464686.5768824,
+    "mtime": 1779466057.8276553,
     "hash": "a9e2c8d8d72b749ae063d56ef99cb181"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\legacy_lines.txt": {
-    "mtime": 1779464687.8481545,
+    "mtime": 1779466058.8123844,
     "hash": "3579197d1916b42b81016d3b22dc8ec4"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\lint-out.txt": {
-    "mtime": 1779464687.8481545,
+    "mtime": 1779466058.8149235,
     "hash": "6fcd34c33cef718d294d5c9421e2db91"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\mempalace.yaml": {
-    "mtime": 1779464687.9166102,
+    "mtime": 1779466058.8881817,
     "hash": "2099d557929a99030fc8fe0141230e50"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\PAYMENT_PROCESSING_SUMMARY.md": {
-    "mtime": 1779464686.577637,
+    "mtime": 1779466057.8286705,
     "hash": "e9c9714225280f222906a08caa6b4c20"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\PLAN.md": {
-    "mtime": 1779464686.5785077,
+    "mtime": 1779466057.8286705,
     "hash": "24f095502065f311732497d9e61e21af"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\profiles_schema.txt": {
-    "mtime": 1779464687.9482958,
+    "mtime": 1779466058.9068234,
     "hash": "a9e7ab59782c7cc2fe10210d775f9e78"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\property-management-dfd.html": {
-    "mtime": 1779464687.9482958,
+    "mtime": 1779466058.9073594,
     "hash": "27644f154b3a93230c3fcee087aa8a00"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-output.txt": {
-    "mtime": 1779464688.0096965,
+    "mtime": 1779466058.98807,
     "hash": "f936b27fe770342de486667450a4edf9"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-progress.md": {
-    "mtime": 1779464688.0096965,
+    "mtime": 1779466058.9885445,
     "hash": "12438ae62f2c4e00371b7fe03759b4cb"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-report-utf8.txt": {
-    "mtime": 1779464688.0117128,
+    "mtime": 1779466058.989423,
     "hash": "203f9adc79e61b415c95f654f128decc"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-report.txt": {
-    "mtime": 1779464688.0117128,
+    "mtime": 1779466058.991933,
     "hash": "4049af1487c62ce301b9aa7cecd0453d"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-verbose.txt": {
-    "mtime": 1779464688.0139132,
+    "mtime": 1779466058.9949536,
     "hash": "69ea4663b030db42b2b1e52744b48dd2"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\README.md": {
-    "mtime": 1779464686.5811474,
+    "mtime": 1779466057.8320696,
     "hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\staged_files_final.txt": {
-    "mtime": 1779464688.0376844,
+    "mtime": 1779466059.0083663,
     "hash": "59a5ff5186d1daceaa4fc4ee4520090f"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\tenant-application-to-payment-flowchart.md": {
-    "mtime": 1779464688.0804594,
+    "mtime": 1779466059.0721424,
     "hash": "abf283e0e6a4ab6bd63f67feab16a8b1"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\test.html": {
-    "mtime": 1779464688.0804594,
+    "mtime": 1779466059.0736659,
     "hash": "2006357731c42db6803654d7c996e44e"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\tsc_output.txt": {
-    "mtime": 1779464688.0872767,
+    "mtime": 1779466059.0894606,
     "hash": "38b089cae257b14d55fe1598f5be3910"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\ts_errors.txt": {
-    "mtime": 1779464688.0833972,
+    "mtime": 1779466059.087423,
     "hash": "7f9b2ee5afdeb8edd5545936994a01fd"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\universal_web_design_principles_design.md": {
-    "mtime": 1779464688.0872767,
+    "mtime": 1779466059.0907507,
     "hash": "23def5d95c85f6e0b9c7a9cb69ef8772"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\unstaged_diff.txt": {
-    "mtime": 1779464688.088214,
+    "mtime": 1779466059.0932617,
     "hash": "ae473a351249fc1c8474f078a2088f60"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\variable-naming-issues.md": {
-    "mtime": 1779464688.088214,
+    "mtime": 1779466059.094273,
     "hash": "12f568d66841cac7b2a833fca5e365c3"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\WALKTHROUGH_SCRIPT.md": {
-    "mtime": 1779464686.5811474,
+    "mtime": 1779466057.8320696,
     "hash": "58e1e0ffd3ec5f9cfa6e8690ed1c821c"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\BUSINESS_VERIFICATION.md": {
-    "mtime": 1779464686.7906673,
+    "mtime": 1779466057.8584256,
     "hash": "564bba66e9b01dfafec2c15541bf9773"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\BUSINESS_VERIFICATION_COMPLETE.md": {
-    "mtime": 1779464686.7924843,
+    "mtime": 1779466057.8587453,
     "hash": "f9376a6b638de5d376b5c6b319849287"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\database-erd.md": {
-    "mtime": 1779464686.8102171,
+    "mtime": 1779466057.880378,
     "hash": "f17965954d4d2d884a9e8cbe745fe4f8"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\demo-script.md": {
-    "mtime": 1779464686.8286893,
+    "mtime": 1779466057.8845892,
     "hash": "41c8ac007c9e42e42aa61fbb66e6a63e"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\DFD-Level-1.md": {
-    "mtime": 1779464686.8066688,
+    "mtime": 1779466057.8737345,
     "hash": "b3835ae6607344e568958f6aefc6ac27"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\IMPLEMENTATION_COMPLETE_REAL.md": {
-    "mtime": 1779464686.8077557,
+    "mtime": 1779466057.8737345,
     "hash": "c2c312b194083ff15faa59ab3883b0cf"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\iReside-User-Manual.md": {
-    "mtime": 1779464686.840811,
+    "mtime": 1779466057.8915915,
     "hash": "bd27b5aca6d58a48c4514810a6454a31"
   },
+  "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\list-of-features.md": {
+    "mtime": 1779808758.4422054,
+    "hash": "1af081b2326ec3845abd0f2e5dd2440a"
+  },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\payment-algorithm-spec.md": {
-    "mtime": 1779464686.9144084,
+    "mtime": 1779466057.9575522,
     "hash": "5b8eddd9ea4825ad7d906ceae91544ec"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\REAL_SCRAPER_SETUP.md": {
-    "mtime": 1779464686.8077557,
+    "mtime": 1779466057.8747602,
     "hash": "84597981961fb363cbb6c1ca282a1ef5"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\system-data-dictionary.md": {
-    "mtime": 1779464687.0324745,
+    "mtime": 1779466057.9737804,
     "hash": "4131b1255ebbc2b67dd6ae3e589fd177"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\SYSTEM_DESIGN_AND_API_DOCUMENTATION.md": {
-    "mtime": 1779464942.1682577,
-    "hash": "2271145c387e920a59f79e6cbc4eb02d"
+    "mtime": 1779466057.8773496,
+    "hash": "c6a5393b134d86c32570b6fb321afe63"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\TECHNICAL_DOCUMENTATION.md": {
-    "mtime": 1779464686.8086963,
+    "mtime": 1779466057.8783667,
     "hash": "5cd5404d477f7e81a35ba0c36fcb2333"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\TEST_VERIFICATION_PAGE.md": {
-    "mtime": 1779464686.8086963,
+    "mtime": 1779466057.8790472,
     "hash": "25d661f999072936f9064c1053520d01"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\WBS_DICTIONARY.md": {
-    "mtime": 1779464686.8086963,
+    "mtime": 1779466057.8793664,
     "hash": "bc7644083950773e4bca5a61439ad7b0"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\Chapter 3 Docs\\output 3.1.md": {
-    "mtime": 1779464686.8029902,
+    "mtime": 1779466057.8696725,
     "hash": "d2122c4af51932579d3a776d37f5128b"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\Chapter 3 Docs\\output 3.5.1.md": {
-    "mtime": 1779464686.8029902,
+    "mtime": 1779466057.8696725,
     "hash": "d7fd46202b6d8a54c9e228e6848f0f04"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\Chapter 3 Docs\\sample 3.1.txt": {
-    "mtime": 1779464686.8029902,
+    "mtime": 1779466057.8706653,
     "hash": "f391cb369fd50bc52b05d6fd27959637"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\Chapter 3 Docs\\sample 3.5.1.txt": {
-    "mtime": 1779464686.8029902,
+    "mtime": 1779466057.871183,
     "hash": "4dd5a4fee5935ac95fc12259347b3b7a"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\Chapter 3 Docs\\sample 3.5.2.md": {
-    "mtime": 1779464686.8058903,
+    "mtime": 1779466057.871183,
     "hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\Chapter 3 Docs\\sample 3.5.2.txt": {
-    "mtime": 1779464686.8058903,
+    "mtime": 1779466057.8722095,
     "hash": "0ac8592744530c89b332d9a068ff52e8"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\graphify-out\\converted\\iReside-Feature-Based-Questionnaire-v2_06792d12.md": {
-    "mtime": 1779465753.2669544,
+    "mtime": 1779859530.055675,
     "hash": "c6ec95431135e464cc465c878314bcad"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\graphify-out\\converted\\iReside-Feature-Based-Questionnaire_3e984299.md": {
-    "mtime": 1779465753.3614824,
+    "mtime": 1779859530.1173847,
     "hash": "f3b9f63d91e85ed4a98cab4a27ee9274"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\Chapter 3 Docs\\FEATURE-BASED-QUESTIONNAIRE\\iReside-Feature-Based-Questionnaire.md": {
-    "mtime": 1779464686.799158,
+    "mtime": 1779466057.8642797,
     "hash": "258caefb166f35d9f211e9a9c560d883"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\graphify-out\\converted\\iReside-Feature-Based-Questionnaire_old_42ba5e5b.md": {
-    "mtime": 1779465753.4489706,
+    "mtime": 1779859530.1745193,
     "hash": "70e47e911dc0e3507100a51bb59412ab"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\graphify-out\\converted\\iReside-ISO-Based-Questionnaire-updated_c604d84c.md": {
-    "mtime": 1779465753.5066364,
+    "mtime": 1779859530.2277935,
     "hash": "4efb1a55142cf110da5b8330a5e93d17"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\graphify-out\\converted\\iReside-ISO-Based-Questionnaire_d70a262b.md": {
-    "mtime": 1779465753.6440804,
+    "mtime": 1779859530.2968833,
     "hash": "bced790dde9156e154af90a43c236493"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\Chapter 3 Docs\\FEATURE-BASED-QUESTIONNAIRE\\iReside-ISO-Based-Questionnaire.md": {
-    "mtime": 1779464686.8029902,
+    "mtime": 1779466057.8692632,
     "hash": "736a5253dcb9db0de8bbfcc9cbdf8c8f"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\Chapter 3 Docs\\FEATURE-BASED-QUESTIONNAIRE\\SAMPLE.txt": {
-    "mtime": 1779464686.7924843,
+    "mtime": 1779466057.8607652,
     "hash": "5bdb5b1522fd1e792603eaef83671209"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\Chapter 3 Docs\\FEATURE-BASED-QUESTIONNAIRE\\ISO BASED QUESTIONNAIRE.txt\\sample.txt": {
-    "mtime": 1779464686.7924843,
+    "mtime": 1779466057.8607652,
     "hash": "3110d9247205fed2ef260c98318c75c5"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\erd\\erd.context.md": {
-    "mtime": 1779464686.833824,
+    "mtime": 1779466057.8876586,
     "hash": "4c2b7ce135a6afe0cbe7d3395ad03dbd"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\erd\\ireside-system-erd-clean.html": {
-    "mtime": 1779464686.8375177,
+    "mtime": 1779466057.889591,
     "hash": "985581c386f153ed2263f5ff048fe3f2"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\graphify-out\\converted\\3.5.5 Use Case Scenario_1215615e.md": {
-    "mtime": 1779465754.2198296,
+    "mtime": 1779859530.4067533,
     "hash": "72d40ffa5d2773b63fcc1ed3be1ab9ba"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\latest-documentations after major refactor\\activity-diagram-documentation.md": {
-    "mtime": 1779464686.8587859,
+    "mtime": 1779466057.904472,
     "hash": "aefda880aa4bfaefb22f4ddf82441c0d"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\latest-documentations after major refactor\\activity-diagram.html": {
-    "mtime": 1779464686.8587859,
+    "mtime": 1779466057.904472,
     "hash": "28aa031a363055a6929fe89536fe4ae6"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\latest-documentations after major refactor\\consideration.txt": {
-    "mtime": 1779464686.8831546,
+    "mtime": 1779466057.9256725,
     "hash": "c821bbea69cc0d325c475a3f9d49eb29"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\latest-documentations after major refactor\\considerations.md": {
-    "mtime": 1779464686.8869936,
+    "mtime": 1779466057.9266946,
     "hash": "d91cff4dc33f591d0e7cfd14bb8a310c"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\latest-documentations after major refactor\\functional-requirements.md": {
-    "mtime": 1779464686.897338,
+    "mtime": 1779466057.9341702,
     "hash": "7ea3974bda5329f5e523248148bf449f"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\latest-documentations after major refactor\\ireside-component-diagram.html": {
-    "mtime": 1779464686.8987854,
+    "mtime": 1779466057.9367208,
     "hash": "af7c5eca08a187ffaad4a4c9a68622b0"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\latest-documentations after major refactor\\iReside-CPM.html": {
-    "mtime": 1779464686.8987854,
+    "mtime": 1779466057.9341702,
     "hash": "3566ffc1280ac683299f8f913e005e9f"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\latest-documentations after major refactor\\ireside-deployment-diagram.html": {
-    "mtime": 1779464686.9003851,
+    "mtime": 1779466057.9377499,
     "hash": "2055c943de7e870ed5423cc712e7d052"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\latest-documentations after major refactor\\ireside-package-diagram.html": {
-    "mtime": 1779464686.9003851,
+    "mtime": 1779466057.9377499,
     "hash": "7a1c85abbe1b3182eb64db66bdb620e4"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\latest-documentations after major refactor\\ireside-use-case-view.html": {
-    "mtime": 1779464686.903189,
+    "mtime": 1779466057.9400592,
     "hash": "3975b75f0c242e093ec46f231ce568d8"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\latest-documentations after major refactor\\ireside_system_overview.md": {
-    "mtime": 1779464686.9035637,
+    "mtime": 1779466057.941065,
     "hash": "b0a296c306a376b94e975f2941de2a31"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\latest-documentations after major refactor\\output-conceptual-framework.md": {
-    "mtime": 1779464686.9035637,
+    "mtime": 1779466057.9420671,
     "hash": "88c6cd1e85fc67c2af378254a2b5fde2"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\latest-documentations after major refactor\\output-scope&delims.md": {
-    "mtime": 1779464686.9063427,
+    "mtime": 1779466057.9430697,
     "hash": "6e840070534439fcacd66a86bb067999"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\latest-documentations after major refactor\\output-specific-obj.md": {
-    "mtime": 1779464686.9069452,
+    "mtime": 1779466057.9430697,
     "hash": "1d203f93b3b5b2b029bf6a1bedb7f5f8"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\latest-documentations after major refactor\\output-system-features-specification.md": {
-    "mtime": 1779464686.908039,
+    "mtime": 1779466057.9440725,
     "hash": "05c1c344cd0ae78ba0603b20e53ce821"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\latest-documentations after major refactor\\output-system-features-specification.txt": {
-    "mtime": 1779464686.908039,
+    "mtime": 1779466057.9440725,
     "hash": "ed840c062e1f417ddce3a453de7f154e"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\latest-documentations after major refactor\\output-use-case-scenarios-3.5.5.md": {
-    "mtime": 1779464686.908039,
+    "mtime": 1779466057.9455948,
     "hash": "b3f50b9a9496413904b10386b471a487"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\latest-documentations after major refactor\\sample-conceptual-framework.txt": {
-    "mtime": 1779464686.908039,
+    "mtime": 1779466057.9463532,
     "hash": "e6cf77ae241a11a073a7572c50d60810"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\latest-documentations after major refactor\\sample-scope&delims.txt": {
-    "mtime": 1779464686.910576,
+    "mtime": 1779466057.9480317,
     "hash": "f328cfc7e7a2141e992779ae5330f46c"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\latest-documentations after major refactor\\sample-specific-obj.txt": {
-    "mtime": 1779464686.910576,
+    "mtime": 1779466057.9483905,
     "hash": "7ab11094a57b691fd91cbd234a712a58"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\latest-documentations after major refactor\\sample-system-feature-specification.txt": {
-    "mtime": 1779464686.910576,
+    "mtime": 1779466057.9549572,
     "hash": "2eebc3f7dacc93c54380925ea8cfe46a"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\latest-documentations after major refactor\\work-breakdown-structure.md": {
-    "mtime": 1779464686.9144084,
+    "mtime": 1779466057.955953,
     "hash": "90e4db3b58a6812cea7826e3ef33fdcc"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\superpowers\\plans\\2026-03-24-community-hub-implementation.md": {
-    "mtime": 1779464686.9193966,
+    "mtime": 1779466057.9589384,
     "hash": "566239773309ca301455c3ab8bbe96cd"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\superpowers\\plans\\2026-05-10-react-doctor-fix-strategy.md": {
-    "mtime": 1779464686.9193966,
+    "mtime": 1779466057.9599404,
     "hash": "eff9d56ac2db510614146a471ae380ef"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\superpowers\\plans\\2026-05-12-landlord-log-repair-plan.md": {
-    "mtime": 1779464686.9193966,
+    "mtime": 1779466057.9615655,
     "hash": "5b8f5703181a90c32c6dcb3d0449e21e"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\superpowers\\plans\\2026-05-13-activity-diagram-refactoring-plan.md": {
-    "mtime": 1779464686.9193966,
+    "mtime": 1779466057.9615655,
     "hash": "1e975b3a4c5f3edbe523c58ab17f7edf"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\superpowers\\plans\\2026-05-13-stakeholder-diagram-plan.md": {
-    "mtime": 1779464686.9193966,
+    "mtime": 1779466057.962591,
     "hash": "4796fba4d5b26fe45530e4350ceb6d5b"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\superpowers\\plans\\2026-05-16-maintenance-list-grid-toggle.md": {
-    "mtime": 1779464686.9219937,
+    "mtime": 1779466057.962591,
     "hash": "318a23bcbbe9df8081d88b1ad48bc4ff"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\superpowers\\plans\\2026-05-19-landlord-dashboard-mobile-implementation.md": {
-    "mtime": 1779464686.9399543,
+    "mtime": 1779466057.9641113,
     "hash": "d24beda7c8169f1a038cc4d1ff02b5c4"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\superpowers\\plans\\2026-05-20-command-center-dark-ui-refactor.md": {
-    "mtime": 1779464686.9604082,
+    "mtime": 1779466057.9666905,
     "hash": "bcfe18cfcc7faa4d3b63e1ec346ecfa3"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\superpowers\\specs\\2026-03-24-community-hub-design.md": {
-    "mtime": 1779464686.9619749,
+    "mtime": 1779466057.967209,
     "hash": "e6f144106b8b8c8ed23ec73a466b7b6a"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\superpowers\\specs\\2026-05-10-tenant-utilities-data-driven.md": {
-    "mtime": 1779464686.9641445,
+    "mtime": 1779466057.9682865,
     "hash": "a13b7076179a1688969dccb28400efe4"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\superpowers\\specs\\2026-05-12-landlord-log-repair-design.md": {
-    "mtime": 1779464686.9657478,
+    "mtime": 1779466057.968881,
     "hash": "9346d57eb1e2c1af1e9cceab6fcb62c9"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\superpowers\\specs\\2026-05-12-landlord-maintenance-request-creation-design.md": {
-    "mtime": 1779464686.967039,
+    "mtime": 1779466057.969307,
     "hash": "d07274164549c29c36d95227808ecb09"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\superpowers\\specs\\2026-05-13-activity-diagram-refactoring-design.md": {
-    "mtime": 1779464686.9675558,
+    "mtime": 1779466057.969307,
     "hash": "a1f3a31b05c4e498c49ec7cece3e53ab"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\superpowers\\specs\\2026-05-16-facilities-naming-unification-design.md": {
-    "mtime": 1779464686.9675558,
+    "mtime": 1779466057.9703076,
     "hash": "9357e35c33318b892b819cb824ce7e5d"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\superpowers\\specs\\2026-05-16-maintenance-list-grid-toggle-design.md": {
-    "mtime": 1779464686.9686904,
+    "mtime": 1779466057.9707584,
     "hash": "a5e4588f2b7b953e2a989d0c8fbe4b5a"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\superpowers\\specs\\2026-05-19-landlord-dashboard-mobile-design.md": {
-    "mtime": 1779464686.9889076,
+    "mtime": 1779466057.971749,
     "hash": "64db7cce869037db675db225f7514bf5"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\superpowers\\specs\\2026-05-20-command-center-dark-ui-design.md": {
-    "mtime": 1779464687.0080004,
+    "mtime": 1779466057.9722638,
     "hash": "9510a8085b23dfbf286ac352cc946afa"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\superpowers\\specs\\2026-05-20-lavender-purple-v2-design.md": {
-    "mtime": 1779464687.0295227,
+    "mtime": 1779466057.9737804,
     "hash": "30d0be463d17bac473a40f0dd09764ba"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\lowpoly_apartment\\license.txt": {
-    "mtime": 1779464687.8774512,
+    "mtime": 1779466058.843731,
     "hash": "13edcf83c6cae640f5d8f7f3346bdb85"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\neumorphism\\SKILL.md": {
-    "mtime": 1779464687.9319146,
+    "mtime": 1779466058.89056,
     "hash": "e07ac6d2542e4c3163ed0430cb24c893"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\graphify-out\\converted\\iReside-3.4-Project-Description_d0a13cc3.md": {
-    "mtime": 1779465761.1621368,
+    "mtime": 1779859532.5833964,
     "hash": "a6bcbadabc3235a48dfafa7a1c9d20c6"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\output\\doc\\ireside-component-diagram.html": {
-    "mtime": 1779464687.938358,
+    "mtime": 1779466058.8945832,
     "hash": "bf868b35fbc51123067e1837aa7127dc"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\graphify-out\\converted\\iReside_System_Feature_Specification_4ef0ea60.md": {
-    "mtime": 1779465761.4030411,
+    "mtime": 1779859533.149072,
     "hash": "b601185920d056e54a9239275c86079e"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\graphify-out\\converted\\output-use-case-scenarios-3.5.5_3d2cce7a.md": {
-    "mtime": 1779465761.590718,
+    "mtime": 1779859533.8937376,
     "hash": "dfb344aacd6a06eec6977e9dc137585c"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\graphify-out\\converted\\system-data-dictionary_4191ba2a.md": {
-    "mtime": 1779465761.8805473,
+    "mtime": 1779859535.256265,
     "hash": "0567838c4784a622fb115ad01e790243"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\graphify-out\\converted\\iReside_UAT_Test_Cases_38867334.md": {
-    "mtime": 1779465762.6807017,
+    "mtime": 1779859537.3557365,
     "hash": "afbfb5d9f910f2e962c4028c7e7ce7f9"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\graphify-out\\converted\\iReside_UAT_Test_Cases_v2_8638991d.md": {
-    "mtime": 1779465762.759105,
+    "mtime": 1779859537.5046065,
     "hash": "ec80f5c2bf3a8e7be3e8d3d9cd5413cc"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\graphify-out\\converted\\iReside_UAT_Test_Cases_v3_8f976840.md": {
-    "mtime": 1779465762.8417106,
+    "mtime": 1779859537.6284826,
     "hash": "cf9930985ade91d615828b152264e784"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\Plans\\unit_map_plan.md": {
-    "mtime": 1779464686.5785077,
+    "mtime": 1779466057.8315508,
     "hash": "c397a488bd78178290f850fd2b8df20e"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\Plans\\Dormitory vs Boarding House Environmrnt\\PLAN.md": {
-    "mtime": 1779464686.5785077,
+    "mtime": 1779466057.8300412,
     "hash": "892f7431f6b7362a3cfb6b06bd9ed350"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\Plans\\Property Type + Utility Split Personalization Plan\\PLAN.md": {
-    "mtime": 1779464686.5785077,
+    "mtime": 1779466057.8310323,
     "hash": "eaf46c5d82cea51297fe6403a760cc9e"
+  },
+  "C:\\Users\\JV\\Documents\\GitHub\\iReside\\playwright-report\\index.html": {
+    "mtime": 1779752274.803448,
+    "hash": "86561aca57c3536b8a503c7295c96ccc"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\public\\models\\lowpoly_apartment\\license.txt": {
     "mtime": 1778518378.5719278,
     "hash": "13edcf83c6cae640f5d8f7f3346bdb85"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\jsx-a11y--alt-text.txt": {
-    "mtime": 1779464687.9586847,
+    "mtime": 1779466058.919342,
     "hash": "6c932b9e7a9b0197d209f593a6e739b8"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\jsx-a11y--anchor-is-valid.txt": {
-    "mtime": 1779464687.9586847,
+    "mtime": 1779466058.919342,
     "hash": "c14434dd43fc59b7dbfee0edc0fac383"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\jsx-a11y--click-events-have-key-events.txt": {
-    "mtime": 1779464687.9586847,
+    "mtime": 1779466058.9206178,
     "hash": "581c64f397023da47b6fbcecc48db69d"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\jsx-a11y--label-has-associated-control.txt": {
-    "mtime": 1779464687.9586847,
+    "mtime": 1779466058.9216151,
     "hash": "a42733b25b679af4268e919390d3c5cf"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\jsx-a11y--no-autofocus.txt": {
-    "mtime": 1779464687.9586847,
+    "mtime": 1779466058.9226184,
     "hash": "330eff198f22b15adc95dfa8998f508c"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\jsx-a11y--no-static-element-interactions.txt": {
-    "mtime": 1779464687.9617393,
+    "mtime": 1779466058.9226184,
     "hash": "7588985c30b5a2b31b66bcf94df402ff"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\knip--duplicates.txt": {
-    "mtime": 1779464687.9627528,
+    "mtime": 1779466058.9241278,
     "hash": "1ef5d90104b5bdef23a709ea297bc60a"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\knip--exports.txt": {
-    "mtime": 1779464687.9627528,
+    "mtime": 1779466058.9241278,
     "hash": "68fcc5ef3df57a3b83d155b55d1bee2b"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\knip--files.txt": {
-    "mtime": 1779464687.9632704,
+    "mtime": 1779466058.9256556,
     "hash": "2a1af952373218d0cb6baab0beb54b9e"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\knip--types.txt": {
-    "mtime": 1779464687.9632704,
+    "mtime": 1779466058.9256556,
     "hash": "1812c9b4f5299ef54501246ff02ec50c"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react--no-danger.txt": {
-    "mtime": 1779464687.9632704,
+    "mtime": 1779466058.926663,
     "hash": "cc745cfe03f1f876f3c2f2ee187ecf71"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react--no-unknown-property.txt": {
-    "mtime": 1779464687.9632704,
+    "mtime": 1779466058.9271684,
     "hash": "64b3f10408f50cbcf52984f166e887e8"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--async-await-in-loop.txt": {
-    "mtime": 1779464687.965312,
+    "mtime": 1779466058.9276788,
     "hash": "eb375f04b0329253d8d831a2044ad451"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--async-defer-await.txt": {
-    "mtime": 1779464687.965312,
+    "mtime": 1779466058.9276788,
     "hash": "bbe25e48cbc08f0e662a428b9b19db80"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--async-parallel.txt": {
-    "mtime": 1779464687.9665263,
+    "mtime": 1779466058.9312282,
     "hash": "31a8e86cad386db798729de262f01a80"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--client-localstorage-no-version.txt": {
-    "mtime": 1779464687.9665263,
+    "mtime": 1779466058.9312282,
     "hash": "2cef34ebada78e8edcc4ab4b736c36e7"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--client-passive-event-listeners.txt": {
-    "mtime": 1779464687.9675646,
+    "mtime": 1779466058.9332585,
     "hash": "6daf0b7a18f165e5779bda031c345e1f"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--design-no-bold-heading.txt": {
-    "mtime": 1779464687.9675646,
+    "mtime": 1779466058.9342601,
     "hash": "62b3d41aa51db41baa769cec8cee9283"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--design-no-default-tailwind-palette.txt": {
-    "mtime": 1779464687.9675646,
+    "mtime": 1779466058.9342601,
     "hash": "340829f918e97cb0136c21d2a207502a"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--design-no-em-dash-in-jsx-text.txt": {
-    "mtime": 1779464687.9675646,
+    "mtime": 1779466058.9357796,
     "hash": "1e18b7c0f0659c331de16beaaf2d761e"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--design-no-redundant-padding-axes.txt": {
-    "mtime": 1779464687.9695811,
+    "mtime": 1779466058.9373193,
     "hash": "4e35d92319030466e637b712f0196a7d"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--design-no-redundant-size-axes.txt": {
-    "mtime": 1779464687.9695811,
+    "mtime": 1779466058.939357,
     "hash": "16a126c4d47651e7b061753c0a5532ad"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--design-no-space-on-flex-children.txt": {
-    "mtime": 1779464687.9695811,
+    "mtime": 1779466058.9403589,
     "hash": "e1414540b253af03436fe2db9e41182b"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--design-no-three-period-ellipsis.txt": {
-    "mtime": 1779464687.9695811,
+    "mtime": 1779466058.941366,
     "hash": "ea4fc919c4c89fb7edaeaeb408b05116"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--design-no-vague-button-label.txt": {
-    "mtime": 1779464687.9722662,
+    "mtime": 1779466058.942359,
     "hash": "d1ae1b61a573532a1fc505aaa3a41084"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--effect-needs-cleanup.txt": {
-    "mtime": 1779464687.9729548,
+    "mtime": 1779466058.9433582,
     "hash": "b96f69f19ab7a15a659a18ffb471e3c5"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--js-batch-dom-css.txt": {
-    "mtime": 1779464687.9729548,
+    "mtime": 1779466058.9448695,
     "hash": "5ef5849921936e52edfa0765cfcb2918"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--js-cache-property-access.txt": {
-    "mtime": 1779464687.9738905,
+    "mtime": 1779466058.9448695,
     "hash": "c5868a23a15ef00e13f96d2afeb2f8e4"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--js-combine-iterations.txt": {
-    "mtime": 1779464687.9743965,
+    "mtime": 1779466058.9458926,
     "hash": "4c6242400cbaa648ca9c6d8c380a7dc6"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--js-flatmap-filter.txt": {
-    "mtime": 1779464687.9743965,
+    "mtime": 1779466058.9464154,
     "hash": "0019d6280b840c28086f1701f14d1770"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--js-hoist-intl.txt": {
-    "mtime": 1779464687.9743965,
+    "mtime": 1779466058.9475024,
     "hash": "71ce5db1421c16c7bae69542f099d86e"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--js-hoist-regexp.txt": {
-    "mtime": 1779464687.9743965,
+    "mtime": 1779466058.9475024,
     "hash": "72354c46f656968c56c155a48beaea02"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--js-index-maps.txt": {
-    "mtime": 1779464687.975913,
+    "mtime": 1779466058.94852,
     "hash": "d1f116348a39f1566cf05a15607341f3"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--js-set-map-lookups.txt": {
-    "mtime": 1779464687.975913,
+    "mtime": 1779466058.9488945,
     "hash": "dd39decab929cf676e4d73536d51897a"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--js-tosorted-immutable.txt": {
-    "mtime": 1779464687.9769819,
+    "mtime": 1779466058.9488945,
     "hash": "ec43bab20bf9c8e55597d1b58ca8f561"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--nextjs-image-missing-sizes.txt": {
-    "mtime": 1779464687.9769819,
+    "mtime": 1779466058.950433,
     "hash": "ac930a732a3a69d5897206434e982a1b"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--nextjs-no-a-element.txt": {
-    "mtime": 1779464687.9775279,
+    "mtime": 1779466058.950433,
     "hash": "45cd5651c471325598024a4456a3e679"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--nextjs-no-client-side-redirect.txt": {
-    "mtime": 1779464687.9775279,
+    "mtime": 1779466058.9514546,
     "hash": "8cfa7090b287d1d89fac05677d1ffe14"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--nextjs-no-font-link.txt": {
-    "mtime": 1779464687.9775279,
+    "mtime": 1779466058.9524548,
     "hash": "a17220d543f237ceb6db13ef6b004b66"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--nextjs-no-img-element.txt": {
-    "mtime": 1779464687.9792,
+    "mtime": 1779466058.9524548,
     "hash": "589fb52ed85cffa84e921c6171493cdd"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--nextjs-no-use-search-params-without-suspense.txt": {
-    "mtime": 1779464687.9792,
+    "mtime": 1779466058.9524548,
     "hash": "fa889510771156a04e112633a1ef73d1"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--no-array-index-as-key.txt": {
-    "mtime": 1779464687.9792,
+    "mtime": 1779466058.9524548,
     "hash": "641a2c2703818739d713300f9e1da29f"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--no-cascading-set-state.txt": {
-    "mtime": 1779464687.9792,
+    "mtime": 1779466058.9539769,
     "hash": "712b468a0010cc1a8ed7e87da1d3013e"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--no-derived-state-effect.txt": {
-    "mtime": 1779464687.981891,
+    "mtime": 1779466058.9549997,
     "hash": "d6c5da5d75fd44524adc37753c8547b3"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--no-derived-useState.txt": {
-    "mtime": 1779464687.981891,
+    "mtime": 1779466058.9559927,
     "hash": "9354ea1ee4185e39f2a9a0fc86be6d44"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--no-effect-chain.txt": {
-    "mtime": 1779464687.981891,
+    "mtime": 1779466058.9559927,
     "hash": "de39ef2444131cf87a7da1862dcddc4d"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--no-effect-event-handler.txt": {
-    "mtime": 1779464687.981891,
+    "mtime": 1779466058.9565027,
     "hash": "ca98de34ea6ce56f7916c0f530614414"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--no-fetch-in-effect.txt": {
-    "mtime": 1779464687.981891,
+    "mtime": 1779466058.9565027,
     "hash": "b1e28e30b93ba9eacd89923f4339f31a"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--no-flush-sync.txt": {
-    "mtime": 1779464687.9836545,
+    "mtime": 1779466058.957517,
     "hash": "6d217c62e53a0f1fe0957d8dc78fb279"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--no-generic-handler-names.txt": {
-    "mtime": 1779464687.9836545,
+    "mtime": 1779466058.9580355,
     "hash": "e7259bb31265b6ad23f563f54b4db1ee"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--no-giant-component.txt": {
-    "mtime": 1779464687.9836545,
+    "mtime": 1779466058.9580355,
     "hash": "252ecbe9c5c983d84b03066af804c011"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--no-gradient-text.txt": {
-    "mtime": 1779464687.9836545,
+    "mtime": 1779466058.9580355,
     "hash": "34bcb4f83c040893102651452e173302"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--no-gray-on-colored-background.txt": {
-    "mtime": 1779464687.9836545,
+    "mtime": 1779466058.9580355,
     "hash": "1dbee4f882ca7af0066e8f6a1d4d7269"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--no-inline-bounce-easing.txt": {
-    "mtime": 1779464687.9836545,
+    "mtime": 1779466058.9599974,
     "hash": "bc9b9200be7265573d9cacc7dd7f64f8"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--no-inline-exhaustive-style.txt": {
-    "mtime": 1779464687.9861493,
+    "mtime": 1779466058.9605079,
     "hash": "cff17ccb9897cc7e922a665010e420e4"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--no-long-transition-duration.txt": {
-    "mtime": 1779464687.9868112,
+    "mtime": 1779466058.9605079,
     "hash": "6999d7eeda4f21660e76314ad7121a22"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--no-many-boolean-props.txt": {
-    "mtime": 1779464687.987322,
+    "mtime": 1779466058.9615176,
     "hash": "935922690bb23ed6361ee8f8de29acb8"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--no-mirror-prop-effect.txt": {
-    "mtime": 1779464687.987322,
+    "mtime": 1779466058.9615176,
     "hash": "8eaade996d2e33cce6cc3904078a2575"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--no-prevent-default.txt": {
-    "mtime": 1779464687.988232,
+    "mtime": 1779466058.9625218,
     "hash": "9550c0ae828e682c316dcd879fbd1a6c"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--no-pure-black-background.txt": {
-    "mtime": 1779464687.988232,
+    "mtime": 1779466058.9625218,
     "hash": "05f3761f72d3d0cb5568b33b2e4b3d8d"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--no-react19-deprecated-apis.txt": {
-    "mtime": 1779464687.988232,
+    "mtime": 1779466058.9625218,
     "hash": "f258afd350bae829cf2c7fa6fee03749"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--no-render-in-render.txt": {
-    "mtime": 1779464687.988232,
+    "mtime": 1779466058.9640393,
     "hash": "30ca32a44b39595bfcba7dabd5b2562c"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--no-scale-from-zero.txt": {
-    "mtime": 1779464687.988232,
+    "mtime": 1779466058.9640393,
     "hash": "deb2db0cb1c3dfe4467e2251a927c82c"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--no-side-tab-border.txt": {
-    "mtime": 1779464687.9902673,
+    "mtime": 1779466058.9650576,
     "hash": "97a9027ad31a906219a6f8c9afa44808"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--no-uncontrolled-input.txt": {
-    "mtime": 1779464687.9902673,
+    "mtime": 1779466058.9660573,
     "hash": "6952c791137d0ea0c33cb31f4bceb7b5"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--no-z-index-9999.txt": {
-    "mtime": 1779464687.9902673,
+    "mtime": 1779466058.966575,
     "hash": "648699c0983d503f7eb5e197e5462bb1"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--prefer-dynamic-import.txt": {
-    "mtime": 1779464687.9902673,
+    "mtime": 1779466058.966575,
     "hash": "2d8575a49dc951fdc5c26fa7d5134f56"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--prefer-use-effect-event.txt": {
-    "mtime": 1779464687.9930851,
+    "mtime": 1779466058.9675944,
     "hash": "a19b5e37a4bffc6e5faf870367f58675"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--prefer-useReducer.txt": {
-    "mtime": 1779464687.9930851,
+    "mtime": 1779466058.9681134,
     "hash": "7100cc2d26123463e363cdf736c5c8a1"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--react-compiler-destructure-method.txt": {
-    "mtime": 1779464687.9930851,
+    "mtime": 1779466058.968733,
     "hash": "08bb974b24a0fef58cc6679d7154ae8f"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--rendering-hydration-mismatch-time.txt": {
-    "mtime": 1779464687.9930851,
+    "mtime": 1779466058.969137,
     "hash": "bf430dcccf1adcbd597b36895a6c1c27"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--rendering-hydration-no-flicker.txt": {
-    "mtime": 1779464687.9930851,
+    "mtime": 1779466058.969137,
     "hash": "fc230fe6f94c25010f88701220439d21"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--rendering-usetransition-loading.txt": {
-    "mtime": 1779464687.9930851,
+    "mtime": 1779466058.9701326,
     "hash": "bbeec8076df52ae297c759b55fd95b48"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--rerender-defer-reads-hook.txt": {
-    "mtime": 1779464687.9930851,
+    "mtime": 1779466058.9704487,
     "hash": "3e7c2f75fb5bbcb66976f2af8f9b0fdd"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--rerender-functional-setstate.txt": {
-    "mtime": 1779464687.9961472,
+    "mtime": 1779466058.9704487,
     "hash": "830c5b9213ee57400a96be0049d1284a"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--rerender-lazy-state-init.txt": {
-    "mtime": 1779464687.9966714,
+    "mtime": 1779466058.9704487,
     "hash": "ddc3da5f4a9d393a2685f6f238e09e47"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--rerender-memo-before-early-return.txt": {
-    "mtime": 1779464687.9966714,
+    "mtime": 1779466058.9714413,
     "hash": "24385351b17cb0cd3d080fb5cd1c7a73"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--rerender-memo-with-default-value.txt": {
-    "mtime": 1779464687.9966714,
+    "mtime": 1779466058.9719527,
     "hash": "a1efb2940f3e31f26ba74cf176a97073"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--rerender-state-only-in-handlers.txt": {
-    "mtime": 1779464687.9976802,
+    "mtime": 1779466058.9719527,
     "hash": "b70638c05f73ae3ba3d4375f5e83e8f8"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--server-after-nonblocking.txt": {
-    "mtime": 1779464687.9976802,
+    "mtime": 1779466058.9719527,
     "hash": "cc87189839634c542ae1c9c9dc222282"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--server-auth-actions.txt": {
-    "mtime": 1779464687.9976802,
+    "mtime": 1779466058.9729652,
     "hash": "7876c16eaade15bdfdac627c71b9371d"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--server-sequential-independent-await.txt": {
-    "mtime": 1779464687.9976802,
+    "mtime": 1779466058.9729652,
     "hash": "08605625e887a670e4b1549dd7835650"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\react-doctor-ddadb6ee-f432-4811-b417-554b401a633a\\react-doctor--use-lazy-motion.txt": {
-    "mtime": 1779464687.9976802,
+    "mtime": 1779466058.9739668,
     "hash": "36f1bfd495857c742d4a181fa7907112"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\src\\lib\\iris\\README.md": {
@@ -3440,331 +3456,339 @@
     "hash": "bffbe2f24ff4cfb32d8d2fdccb3124c6"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\latest-documentations after major refactor\\Capstone 2 - CBDA Chapter 1-5 with Appendices-137-173.pdf": {
-    "mtime": 1779464686.8587859,
+    "mtime": 1779466057.9034708,
     "hash": "65925fa8f1a4cec41967ee2c45864f4d"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\output\\pdf\\ireside-one-page-summary.pdf": {
-    "mtime": 1779464687.9417002,
+    "mtime": 1779466058.8966124,
     "hash": "1ce06ded85ab62d7175f10eb510750b9"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\debug-after-search.png": {
-    "mtime": 1779464686.7886555,
+    "mtime": 1779466057.8544667,
     "hash": "7b52929052e94d3d974b1b2a34d66bfd"
   },
+  "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iReside-class-diagram.png": {
+    "mtime": 1779853514.7464287,
+    "hash": "374899da7501d4f059fa1e1358b42bdf"
+  },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\database-schema.png": {
-    "mtime": 1779464686.8127906,
+    "mtime": 1779466057.8835604,
     "hash": "18929490ec33093bf4f9d0b192d285b1"
   },
+  "C:\\Users\\JV\\Documents\\GitHub\\iReside\\docs\\use-case-diagram.svg": {
+    "mtime": 1779808741.6732602,
+    "hash": "9a3f1a6d8bad4bd34ac5139f639e1d9f"
+  },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0001.png": {
-    "mtime": 1779464687.43773,
+    "mtime": 1779466058.3814218,
     "hash": "df0a962bc2bf041a49fe0fb744b5736f"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0002.png": {
-    "mtime": 1779464687.4446926,
+    "mtime": 1779466058.3869994,
     "hash": "e9860657ea07e649d2599bf623767802"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0003.png": {
-    "mtime": 1779464687.4484868,
+    "mtime": 1779466058.3920712,
     "hash": "fba7db5de48e7a76974b68b65d79013f"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0004.png": {
-    "mtime": 1779464687.4515877,
+    "mtime": 1779466058.3956132,
     "hash": "3c5d5e3f530542320fa71a20f44992c0"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0005.png": {
-    "mtime": 1779464687.4584706,
+    "mtime": 1779466058.4024305,
     "hash": "7bfc06e54c39650e29082d3a51a08b07"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0006.png": {
-    "mtime": 1779464687.4627168,
+    "mtime": 1779466058.4067383,
     "hash": "632e847c40f35852d37ccc3d69ac449a"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0007.png": {
-    "mtime": 1779464687.4687078,
+    "mtime": 1779466058.4120905,
     "hash": "2802c21819f4eecec2f1d71b9516dea8"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0008.png": {
-    "mtime": 1779464687.472671,
+    "mtime": 1779466058.4167361,
     "hash": "a838b250e88cdb6b948397ec382c87a2"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0009.png": {
-    "mtime": 1779464687.4774418,
+    "mtime": 1779466058.4214349,
     "hash": "319ec03fa8a790a6d4520335aca7cbd7"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0010.png": {
-    "mtime": 1779464687.47975,
+    "mtime": 1779466058.426208,
     "hash": "3d12ae5ebb49477ca1797be9ddf57d04"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0011.png": {
-    "mtime": 1779464687.4875846,
+    "mtime": 1779466058.4322042,
     "hash": "dc555bccb4942dd79a041464fcdcf0c2"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0012.png": {
-    "mtime": 1779464687.4928176,
+    "mtime": 1779466058.4385529,
     "hash": "805c16b1285b3e50454e3e16cb7a3c22"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0013.png": {
-    "mtime": 1779464687.4973328,
+    "mtime": 1779466058.444919,
     "hash": "54a726446129c7c09418c39fe3efc1ab"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0014.png": {
-    "mtime": 1779464687.5006146,
+    "mtime": 1779466058.4502172,
     "hash": "22daca3e536a003c29292804f501fd59"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0015.png": {
-    "mtime": 1779464687.506992,
+    "mtime": 1779466058.454591,
     "hash": "d05a0a57ee6d83b6d6ea26206aeaa5b1"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0016.png": {
-    "mtime": 1779464687.5119019,
+    "mtime": 1779466058.4604058,
     "hash": "6c0fc145c454a460af6c9493419b4667"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0017.png": {
-    "mtime": 1779464687.5163114,
+    "mtime": 1779466058.464948,
     "hash": "d30c3ed556db7051bdc560c6ffc5851c"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0018.png": {
-    "mtime": 1779464687.5211897,
+    "mtime": 1779466058.4714303,
     "hash": "fecd2950b42cdc798ea9b71b693ddc25"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0019.png": {
-    "mtime": 1779464687.5261009,
+    "mtime": 1779466058.4759703,
     "hash": "baed8121f187b076143ce789a6f7ca4b"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0020.png": {
-    "mtime": 1779464687.5312567,
+    "mtime": 1779466058.4812822,
     "hash": "15bddd51cd567e82238119b7e176e53e"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0021.png": {
-    "mtime": 1779464687.536625,
+    "mtime": 1779466058.485829,
     "hash": "84082cb360cd2769af5367de118e7598"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0022.png": {
-    "mtime": 1779464687.5418594,
+    "mtime": 1779466058.4902847,
     "hash": "c1f8f410181d7a49abcaa20239a02ab9"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0023.png": {
-    "mtime": 1779464687.5463324,
+    "mtime": 1779466058.5008538,
     "hash": "6fae34cff6d6845ccdb15ad3abcb1050"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0024.png": {
-    "mtime": 1779464687.5493505,
+    "mtime": 1779466058.5058582,
     "hash": "c60f25b4b9c6029b8a0c87fa9bff3014"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0025.png": {
-    "mtime": 1779464687.5531187,
+    "mtime": 1779466058.50987,
     "hash": "7c63f0eca4164bab0462d640dc8b2b3c"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0026.png": {
-    "mtime": 1779464687.5605843,
+    "mtime": 1779466058.5146835,
     "hash": "5e69ca1119a2d56cdafa6ee30b34636c"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0027.png": {
-    "mtime": 1779464687.5643904,
+    "mtime": 1779466058.5192344,
     "hash": "d7c60035159cf9a4e4048af37d7438c7"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0028.png": {
-    "mtime": 1779464687.5696194,
+    "mtime": 1779466058.524233,
     "hash": "4a29bcae627028b5ad9b527e06e4e30f"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0029.png": {
-    "mtime": 1779464687.5737188,
+    "mtime": 1779466058.5283992,
     "hash": "ef610162385d23310a4687fbedb8fd00"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0030.png": {
-    "mtime": 1779464687.5797837,
+    "mtime": 1779466058.5336974,
     "hash": "6a4fe4b78a1b1916e4aad3ba7ecb6a91"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0031.png": {
-    "mtime": 1779464687.5836504,
+    "mtime": 1779466058.5395994,
     "hash": "ac909e9813dafbacb87624df690a1f13"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0032.png": {
-    "mtime": 1779464687.5874386,
+    "mtime": 1779466058.545415,
     "hash": "f7fa3622d30a77168c473682b83753f3"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0033.png": {
-    "mtime": 1779464687.594706,
+    "mtime": 1779466058.549622,
     "hash": "de9f7ff72006606c507000c69c26690b"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0034.png": {
-    "mtime": 1779464687.5987341,
+    "mtime": 1779466058.554744,
     "hash": "a0933648d83f994b931e1d3f4d5f7513"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0035.png": {
-    "mtime": 1779464687.6042986,
+    "mtime": 1779466058.5586622,
     "hash": "a41ef04b9d6c6feb90b538fdadf60d65"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0036.png": {
-    "mtime": 1779464687.6095986,
+    "mtime": 1779466058.5640087,
     "hash": "cc5abb2cd51705b658755d694dc37863"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0037.png": {
-    "mtime": 1779464687.616336,
+    "mtime": 1779466058.569592,
     "hash": "35e52f9b163a95eceae13977c31eb5c9"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0038.png": {
-    "mtime": 1779464687.6207073,
+    "mtime": 1779466058.5741115,
     "hash": "4646bbd4bdbcefb34524f02bea6bcf05"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0039.png": {
-    "mtime": 1779464687.6261735,
+    "mtime": 1779466058.5787947,
     "hash": "e2665639b0e9b457fcf4846904dac311"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0040.png": {
-    "mtime": 1779464687.6294694,
+    "mtime": 1779466058.5838225,
     "hash": "7ad5549b42fbc20942513a612dbe56cb"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0041.png": {
-    "mtime": 1779464687.6361127,
+    "mtime": 1779466058.5888188,
     "hash": "723e5ab7aee75a92824f9c05810bbe3c"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0042.png": {
-    "mtime": 1779464687.6432142,
+    "mtime": 1779466058.59795,
     "hash": "fa43b4e284c7488cad506473369f0b73"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0043.png": {
-    "mtime": 1779464687.648881,
+    "mtime": 1779466058.603683,
     "hash": "ba87a1384eb15769879d966ff5615458"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0044.png": {
-    "mtime": 1779464687.656688,
+    "mtime": 1779466058.608597,
     "hash": "642b12c005ce7a0a76c569ef6929b0cd"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0045.png": {
-    "mtime": 1779464687.6625571,
+    "mtime": 1779466058.6147082,
     "hash": "f1ca3b13edc7cb7397869e3e40dda96c"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0046.png": {
-    "mtime": 1779464687.668588,
+    "mtime": 1779466058.618856,
     "hash": "d5b2e62f4d93bb977065f95d6b39a78f"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0047.png": {
-    "mtime": 1779464687.6763077,
+    "mtime": 1779466058.6267402,
     "hash": "63c6bfaa13a4f884c9e986b4bc0b8094"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0048.png": {
-    "mtime": 1779464687.6806316,
+    "mtime": 1779466058.6323822,
     "hash": "2ed2aa8c9ae6cb72d91bc955601d0a35"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0049.png": {
-    "mtime": 1779464687.688865,
+    "mtime": 1779466058.6385903,
     "hash": "17448ffb9047c75e21ed60b9707fa691"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0050.png": {
-    "mtime": 1779464687.6972759,
+    "mtime": 1779466058.6430194,
     "hash": "dc49fdbcb6a4eb08777e5e74476ce3e4"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0051.png": {
-    "mtime": 1779464687.7021122,
+    "mtime": 1779466058.6490889,
     "hash": "edf5838bb0cb8a956aeec9e03f27f727"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0052.png": {
-    "mtime": 1779464687.7096095,
+    "mtime": 1779466058.6538868,
     "hash": "f2f923ca20548461929ea222889c0e6f"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0053.png": {
-    "mtime": 1779464687.7166584,
+    "mtime": 1779466058.6624935,
     "hash": "0193e12a4bb03d5406d08d9898badbc4"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0054.png": {
-    "mtime": 1779464687.7243354,
+    "mtime": 1779466058.669929,
     "hash": "0619a69af49737398d7dfd7508f2cc67"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0055.png": {
-    "mtime": 1779464687.731578,
+    "mtime": 1779466058.6761947,
     "hash": "4d619028ff6a068c5870f629a48ba635"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0056.png": {
-    "mtime": 1779464687.7377548,
+    "mtime": 1779466058.6805859,
     "hash": "39012ea0f3634360fdeb03ba4ebeb00d"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0057.png": {
-    "mtime": 1779464687.7476318,
+    "mtime": 1779466058.6856549,
     "hash": "08e652cc1a413a4106fe2fc9e8fb418a"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0058.png": {
-    "mtime": 1779464687.7501152,
+    "mtime": 1779466058.6903756,
     "hash": "b588391a389ac548f8fb4a23f2dc855c"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0059.png": {
-    "mtime": 1779464687.7582943,
+    "mtime": 1779466058.6975477,
     "hash": "d73fb7b4f5073cea4e97441e53827de5"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0060.png": {
-    "mtime": 1779464687.7639978,
+    "mtime": 1779466058.703319,
     "hash": "85d76baa01a177c081195f278a5a826c"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0061.png": {
-    "mtime": 1779464687.7687888,
+    "mtime": 1779466058.709655,
     "hash": "9cb3ea97d4222238b503702ba1b48793"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0062.png": {
-    "mtime": 1779464687.7739186,
+    "mtime": 1779466058.7167923,
     "hash": "b7a5fedc9c573dc02f16e31e661ea889"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0063.png": {
-    "mtime": 1779464687.7779434,
+    "mtime": 1779466058.7218144,
     "hash": "c52fc8b39300bcd9139276315cf7980c"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0064.png": {
-    "mtime": 1779464687.7867894,
+    "mtime": 1779466058.7285478,
     "hash": "6d2fc19642635dde7532ae3b5b2ed7f0"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0065.png": {
-    "mtime": 1779464687.7918406,
+    "mtime": 1779466058.7344372,
     "hash": "7a3d71b6b92bda2ff802997c96609e58"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0066.png": {
-    "mtime": 1779464687.7974646,
+    "mtime": 1779466058.7460082,
     "hash": "fcce48a76894fd73d574e55e3bcf1594"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0067.png": {
-    "mtime": 1779464687.8012915,
+    "mtime": 1779466058.7545078,
     "hash": "69aae625f9f0cab33920eeceb1dd6294"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0068.png": {
-    "mtime": 1779464687.8074982,
+    "mtime": 1779466058.7616844,
     "hash": "29f80243087e871721c5e59b9c1ebd61"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0069.png": {
-    "mtime": 1779464687.8109803,
+    "mtime": 1779466058.769624,
     "hash": "6115e55a9dca6679d162ed2ea6d47c36"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0070.png": {
-    "mtime": 1779464687.817385,
+    "mtime": 1779466058.7762158,
     "hash": "614f14eadd8e81dbc61ec144e15df0fe"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0071.png": {
-    "mtime": 1779464687.8195271,
+    "mtime": 1779466058.7806942,
     "hash": "55d11db9351e803d0bf4b9c6faeb1ec9"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0072.png": {
-    "mtime": 1779464687.8276553,
+    "mtime": 1779466058.7894065,
     "hash": "e5e28af5245aadc20a5199fca1fdd1f2"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\iris-3d-model\\Happy Wave\\frame_0073.png": {
-    "mtime": 1779464687.8305676,
+    "mtime": 1779466058.7942944,
     "hash": "04fc0ea6ded8d51e192b9fe5b32bf04a"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\lowpoly_apartment\\textures\\Atlas_baseColor.png": {
-    "mtime": 1779464687.9002738,
+    "mtime": 1779466058.8682864,
     "hash": "1b1d279fc2da857aa863b4681f319f1f"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\lowpoly_apartment\\textures\\material_baseColor.png": {
-    "mtime": 1779464687.9100716,
+    "mtime": 1779466058.8790996,
     "hash": "170a9f2a0fdeb65afd8ba8be456d1e18"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\lowpoly_apartment\\textures\\material_metallicRoughness.png": {
-    "mtime": 1779464687.9160678,
+    "mtime": 1779466058.8876605,
     "hash": "ccccde037a8462a55858df33cc3427f4"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\plugins\\caveman\\assets\\caveman-small.svg": {
-    "mtime": 1779464687.9482958,
+    "mtime": 1779466058.9042635,
     "hash": "6dc2ad37a1464bdacce5e1521dc24f49"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\plugins\\caveman\\assets\\caveman.svg": {
-    "mtime": 1779464687.9482958,
+    "mtime": 1779466058.9057739,
     "hash": "aa040c7fb59a5b7a3ca3be6f0b439c72"
   },
   "C:\\Users\\JV\\Documents\\GitHub\\iReside\\public\\file.svg": {
