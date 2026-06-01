@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { 
     ArrowRight, 
     CheckCircle2, 
     History, 
-    Loader2, 
     Receipt, 
     Droplets, 
     Zap, 
@@ -252,7 +252,7 @@ export default function FinanceHubPage() {
     if (loading) {
         return (
             <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-muted-foreground">
-                <Loader2 className="size-8 animate-spin text-primary" />
+                <LoadingSpinner size="md" className="text-primary" />
                 <p className="text-xs font-black uppercase tracking-widest">Synchronizing Hub...</p>
             </div>
         );
@@ -317,7 +317,7 @@ export default function FinanceHubPage() {
                             disabled={creatingAdvance}
                             className="px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all hover:-translate-y-0.5 flex items-center gap-2 shrink-0 disabled:opacity-50 neumorphic-primary"
                         >
-                            {creatingAdvance ? <Loader2 className="size-4 animate-spin" /> : <>Pay Next Cycle Now <ArrowRight className="size-4" /></>}
+                            {creatingAdvance ? <LoadingSpinner size="sm" /> : <>Pay Next Cycle Now <ArrowRight className="size-4" /></>}
                         </button>
                     </div>
                 )}

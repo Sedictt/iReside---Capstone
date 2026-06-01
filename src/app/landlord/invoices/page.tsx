@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
-import { CalendarDays, FileText, Loader2, Plus, Search, Filter, Download } from "lucide-react";
+import { CalendarDays, FileText, Plus, Search, Filter, Download } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 import { InvoiceModal } from "@/components/landlord/invoices/InvoiceModal";
 import { RecordExpenseModal } from "@/components/landlord/invoices/RecordExpenseModal";
@@ -272,7 +273,7 @@ export default function InvoicesPage() {
         </div>
 
         <div className="custom-scrollbar space-y-5 overflow-y-auto pr-2">
-          {loading && <div className="flex flex-col items-center justify-center rounded-[2rem] border border-border/50 bg-background/50 py-16 text-muted-foreground"><Loader2 className="mb-4 size-8 animate-spin text-primary" /><p className="text-sm font-black uppercase tracking-widest text-foreground">Loading invoices...</p></div>}
+          {loading && <div className="flex flex-col items-center justify-center rounded-[2rem] border border-border/50 bg-background/50 py-16 text-muted-foreground"><LoadingSpinner size="md" className="mb-4 text-primary" /><p className="text-sm font-black uppercase tracking-widest text-foreground">Loading invoices...</p></div>}
           {!loading && processedInvoices.map((invoice) => (
             <button key={invoice.id} onClick={() => setSelectedInvoiceId(invoice.id)} className="group w-full rounded-[2rem] border border-border/50 bg-background/80 p-6 shadow-sm backdrop-blur-md transition-all hover:scale-[1.01] hover:border-primary/30 hover:bg-card hover:shadow-md md:p-8">
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
