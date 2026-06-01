@@ -123,6 +123,7 @@ export default function LandlordDashboard() {
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
     const [loadingUnits, setLoadingUnits] = useState(true);
     const [loadingInvites, setLoadingInvites] = useState(true);
+    const [isAdvisoryDismissed, setIsAdvisoryDismissed] = useState(false);
     const [availableUnits, setAvailableUnits] = useState<{
         id: string;
         name: string;
@@ -174,7 +175,20 @@ export default function LandlordDashboard() {
 
     useEffect(() => {
         setMounted(true);
+        if (typeof window !== "undefined") {
+            const dismissed = sessionStorage.getItem("landlord-advisory-dismissed");
+            if (dismissed === "true") {
+                setIsAdvisoryDismissed(true);
+            }
+        }
     }, []);
+
+    const handleDismissAdvisory = () => {
+        setIsAdvisoryDismissed(true);
+        if (typeof window !== "undefined") {
+            sessionStorage.setItem("landlord-advisory-dismissed", "true");
+        }
+    };
 
     // Operational Power Tool Keyboard Accelerators
     useEffect(() => {
@@ -392,14 +406,21 @@ export default function LandlordDashboard() {
                 />
 
                 {/* System Advisory - Premium Styling */}
-                {systemAdvisory && (
+                {systemAdvisory && !isAdvisoryDismissed && (
                     <div className="group relative overflow-hidden rounded-[2rem] border border-amber-500/25 bg-amber-500/10 p-6 backdrop-blur-sm animate-in zoom-in-95 duration-500">
+                        <button
+                            onClick={handleDismissAdvisory}
+                            className="absolute top-4 right-4 z-20 text-amber-300/60 hover:text-amber-300 hover:bg-amber-500/10 p-1.5 rounded-lg active:scale-95 transition-all"
+                            aria-label="Dismiss advisory alert"
+                        >
+                            <X className="size-4" />
+                        </button>
                         <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                             <div className="flex items-center gap-5">
                                 <div className="flex size-14 items-center justify-center rounded-2xl border border-amber-500/20 bg-amber-500/12 text-amber-400">
                                     <AlertTriangle className="size-7" />
                                 </div>
-                                <div>
+                                <div className="pr-6">
                                     <h3 className="text-lg font-black text-amber-300">{systemAdvisory.title}</h3>
                                     <p className="text-sm font-medium text-muted-foreground/80">{systemAdvisory.message}</p>
                                 </div>

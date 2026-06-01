@@ -58,7 +58,7 @@ export function getTransitionErrorMessage(
 ): string {
   const allowed = getAllowedTransitions(currentStatus);
   if (allowed.length === 0) {
-    return `Cannot transition from "${currentStatus}" to any other status. This lease is in a terminal state.`;
+    return `Cannot transition from "${currentStatus}" to "${newStatus}". This lease is in a terminal state.`;
   }
   
   return `Cannot transition lease from "${currentStatus}" to "${newStatus}". Allowed transitions from "${currentStatus}" are: ${allowed.map(s => `"${s}"`).join(", ")}.`;

@@ -16,7 +16,7 @@ export async function GET(request: Request) {
 
     const { data: profile } = await supabase
         .from("profiles")
-        .select("*")
+        .select("id, full_name, avatar_url, avatar_bg_color, phone, created_at")
         .eq("id", user.id)
         .single();
 
@@ -24,6 +24,11 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
+    const { data: businessProfile } = await (supabase as any)
+        .from("landlord_business_profiles")
+        .select("business_permit_url")
+        .eq("profile_id", user.id)
+        .maybeSingle();
 
     let applicationsQuery = supabase
         .from(tenantId ? "applications" : "landlord_applications")
@@ -89,7 +94,7 @@ export async function GET(request: Request) {
     };
 
     const identityDoc = getDocument("identity_document_url");
-    const permitDoc = getDocument("business_permit_url") || (profile as any)?.business_permit_url;
+    const permitDoc = getDocument("business_permit_url") || businessProfile?.business_permit_url;
     const permitCardDoc = getDocument("business_permit_card_url");
     const ownershipDoc = getDocument("ownership_document_url");
     const livenessDoc = getDocument("liveness_document_url");

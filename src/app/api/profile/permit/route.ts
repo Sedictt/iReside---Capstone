@@ -85,14 +85,29 @@ export async function POST(request: Request) {
             data: { publicUrl },
         } = admin.storage.from(BUCKET_NAME).getPublicUrl(path);
 
-        const { error: profileError } = await admin
-            .from("profiles")
-            .update({ business_permit_url: publicUrl })
-            .eq("id", user.id);
+        const { data: existingBusinessProfile } = await (admin as any)
+            .from("landlord_business_profiles")
+            .select("business_name, business_permit_number, business_permits")
+            .eq("profile_id", user.id)
+            .maybeSingle();
+
+        const { error: profileError } = await (admin as any)
+            .from("landlord_business_profiles")
+            .upsert(
+                {
+                    profile_id: user.id,
+                    business_name: existingBusinessProfile?.business_name ?? null,
+                    business_permit_number: existingBusinessProfile?.business_permit_number ?? null,
+                    business_permit_url: publicUrl,
+                    business_permits: existingBusinessProfile?.business_permits ?? [],
+                    updated_at: new Date().toISOString(),
+                },
+                { onConflict: "profile_id" }
+            );
 
         if (profileError) {
             console.error("DB Error:", profileError);
-            return NextResponse.json({ error: "Failed to save permit URL to profile." }, { status: 500 });
+            return NextResponse.json({ error: "Failed to save permit URL to business profile." }, { status: 500 });
         }
 
         return NextResponse.json({ permitUrl: publicUrl }, { status: 200 });

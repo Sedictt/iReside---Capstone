@@ -2,11 +2,18 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { getPosts } from '../actions'
 
 vi.mock('@/lib/supabase/server')
-vi.mock('@/lib/community/queries', () => ({
-    getTenantPropertyId: vi.fn()
-}))
+vi.mock('@/lib/community/queries', () => {
+    const getTenantPropertyId = vi.fn()
+    return {
+        getTenantPropertyId,
+        getCommunityPropertyId: vi.fn().mockImplementation((userId, role) => getTenantPropertyId(userId, role))
+    }
+})
 vi.mock('next/headers', () => ({
     revalidatePath: vi.fn()
+}))
+vi.mock('@/lib/supabase/middleware', () => ({
+    auth: vi.fn().mockResolvedValue({ id: 'user-2', email: 'test@example.com' })
 }))
 
 describe('getPosts', () => {

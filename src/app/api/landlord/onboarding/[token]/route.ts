@@ -290,11 +290,8 @@ export async function POST(request: Request, context: RouteParams) {
         const profileUpsertData: any = {
             id: userId,
             full_name: parsed.fullName || fullName!,
-            phone: parsed.phone,
             email: email!,
             role: "landlord" as UserRole,
-            business_name: application.business_name,
-            business_permit_url: (application as any).business_permit_card_url || (application as any).business_permit_url,
             updated_at: new Date().toISOString(),
         };
         if (avatarUrl) profileUpsertData.avatar_url = avatarUrl;
@@ -309,6 +306,30 @@ export async function POST(request: Request, context: RouteParams) {
             console.error("[Onboarding] Failed to create profile:", profileError);
             // Continue anyway - profile might get created by trigger
         }
+
+        await (adminClient as any)
+            .from("profile_private")
+            .upsert(
+                {
+                    profile_id: userId,
+                    phone: parsed.phone,
+                    updated_at: new Date().toISOString(),
+                },
+                { onConflict: "profile_id" }
+            );
+
+        await (adminClient as any)
+            .from("landlord_business_profiles")
+            .upsert(
+                {
+                    profile_id: userId,
+                    business_name: application.business_name,
+                    business_permit_url: (application as any).business_permit_card_url || (application as any).business_permit_url,
+                    business_permits: [(application as any).business_permit_card_url || (application as any).business_permit_url].filter(Boolean),
+                    updated_at: new Date().toISOString(),
+                },
+                { onConflict: "profile_id" }
+            );
 
         // Handle property photo upload if provided
         let propertyCoverUrl = null;

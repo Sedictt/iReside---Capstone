@@ -172,7 +172,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
      */
     const fetchProfile = useCallback(async (userId: string): Promise<Profile | null> => {
         if (!supabase) return null
-        const { data, error } = await supabase
+        const { data: profile, error } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', userId)
@@ -182,7 +182,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             console.warn('[AuthProvider] Failed to fetch profile:', error.message)
             return null
         }
-        return data as Profile
+
+        const { data: privateProfile, error: privateError } = await (supabase as any)
+            .from('profile_private')
+            .select('phone, address')
+            .eq('profile_id', userId)
+            .maybeSingle()
+
+        if (privateError) {
+            console.warn('[AuthProvider] Failed to fetch private profile fields:', privateError.message)
+        }
+
+        const { data: businessProfile, error: businessError } = await (supabase as any)
+            .from('landlord_business_profiles')
+            .select('business_name, business_permit_url, business_permit_number, business_permits')
+            .eq('profile_id', userId)
+            .maybeSingle()
+
+        if (businessError) {
+            console.warn('[AuthProvider] Failed to fetch landlord business profile fields:', businessError.message)
+        }
+
+        return {
+            ...profile,
+            phone: privateProfile?.phone ?? profile.phone,
+            address: privateProfile?.address ?? profile.address,
+            business_name: businessProfile?.business_name ?? profile.business_name,
+            business_permit_url: businessProfile?.business_permit_url ?? profile.business_permit_url,
+            business_permit_number: businessProfile?.business_permit_number ?? profile.business_permit_number,
+            business_permits: businessProfile?.business_permits ?? profile.business_permits,
+        } as Profile
     }, [])
 
     /**

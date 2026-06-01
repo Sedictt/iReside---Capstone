@@ -347,8 +347,6 @@ export function TenantSettings() {
                 .from("profiles")
                 .update({
                     full_name: formData.full_name,
-                    phone: formData.phone,
-                    address: formData.address,
                     bio: formData.bio,
                     emergency_contact_name: formData.emergency_name,
                     emergency_contact_phone: formData.emergency_phone,
@@ -356,6 +354,21 @@ export function TenantSettings() {
                 .eq("id", profile.id);
 
             if (error) throw error;
+
+            const { error: privateError } = await (supabase as any)
+                .from("profile_private")
+                .upsert(
+                    {
+                        profile_id: profile.id,
+                        phone: formData.phone,
+                        address: formData.address,
+                        updated_at: new Date().toISOString(),
+                    },
+                    { onConflict: "profile_id" }
+                );
+
+            if (privateError) throw privateError;
+
             await refreshProfile();
             toast.success("Profile updated successfully");
         } catch (error: any) {

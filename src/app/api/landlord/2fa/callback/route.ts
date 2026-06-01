@@ -7,6 +7,35 @@ const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || "http://localhost:3000/api/landlord/2fa/callback";
 const APP_BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
+async function saveGmailTwoFactorState(
+    adminClient: ReturnType<typeof createAdminClient>,
+    userId: string,
+    googleEmail: string,
+    tokens: { access_token?: string; refresh_token?: string; expires_in?: number },
+) {
+    const expiresIn = typeof tokens.expires_in === "number" ? tokens.expires_in : 3600;
+
+    return Promise.all([
+        (adminClient as any)
+            .from("external_account_tokens")
+            .upsert({
+                profile_id: userId,
+                provider: "gmail",
+                access_token: tokens.access_token,
+                refresh_token: tokens.refresh_token,
+                token_expiry: new Date(Date.now() + expiresIn * 1000).toISOString(),
+                updated_at: new Date().toISOString(),
+            }, { onConflict: "profile_id,provider" }),
+        (adminClient as any)
+            .from("user_security_settings")
+            .upsert({
+                profile_id: userId,
+                two_factor_email: googleEmail,
+                updated_at: new Date().toISOString(),
+            }, { onConflict: "profile_id" }),
+    ]);
+}
+
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const code = searchParams.get("code");
@@ -68,18 +97,15 @@ export async function GET(request: Request) {
 
         const adminClient = createAdminClient();
 
-        const { error: updateError } = await adminClient
-            .from("profiles")
-            .update({
-                gmail_access_token: tokens.access_token,
-                gmail_refresh_token: tokens.refresh_token,
-                gmail_token_expiry: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
-                two_factor_email: googleEmail,
-            })
-            .eq("id", userId);
+        const [{ error: tokenError }, { error: settingsError }] = await saveGmailTwoFactorState(
+            adminClient,
+            userId,
+            googleEmail,
+            tokens,
+        );
 
-        if (updateError) {
-            console.error("[2fa-callback] Profile update error:", updateError);
+        if (tokenError || settingsError) {
+            console.error("[2fa-callback] 2FA state update error:", tokenError || settingsError);
             return NextResponse.redirect(`${APP_BASE_URL}/landlord/settings?category=Security&subtab=Protection&error=save_failed`);
         }
 

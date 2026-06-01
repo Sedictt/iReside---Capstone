@@ -67,15 +67,31 @@ export async function POST(_request: Request, context: { params: Promise<{ appli
 
     const { data: existingProfile } = await adminClient
         .from("profiles")
-        .select("id, has_changed_password")
+        .select("id")
         .eq("email", tenantEmail)
         .maybeSingle();
 
     const accountExisted = Boolean(existingProfile?.id);
     let tenantId = existingProfile?.id ?? null;
 
+    let hasChangedPassword = false;
+    if (tenantId) {
+        const { data: securitySettings, error: securityError } = await (adminClient as any)
+            .from("user_security_settings")
+            .select("has_changed_password")
+            .eq("profile_id", tenantId)
+            .maybeSingle();
+
+        if (securityError) {
+            console.error("[resend-credentials] security settings fetch error:", securityError);
+            return NextResponse.json({ error: "Failed to load tenant account state." }, { status: 500 });
+        }
+
+        hasChangedPassword = securitySettings?.has_changed_password === true;
+    }
+
     // Security check: prevent resending credentials for claimed accounts
-    if (accountExisted && existingProfile?.has_changed_password === true) {
+    if (accountExisted && hasChangedPassword) {
         return NextResponse.json(
             { error: "Cannot resend credentials for claimed accounts. The tenant has already set up their password." },
             { status: 403 }
@@ -131,12 +147,25 @@ export async function POST(_request: Request, context: { params: Promise<{ appli
                     full_name: tenantName,
                     email: tenantEmail,
                     role: "tenant" as const,
-                    has_changed_password: false,
                 },
                 { onConflict: "id" }
             )
             .then(({ error }) => {
                 if (error) console.error("[resend-credentials] profile upsert error:", error);
+            });
+
+        await (adminClient as any)
+            .from("user_security_settings")
+            .upsert(
+                {
+                    profile_id: tenantId,
+                    has_changed_password: false,
+                    updated_at: new Date().toISOString(),
+                },
+                { onConflict: "profile_id" }
+            )
+            .then(({ error }: { error: unknown }) => {
+                if (error) console.error("[resend-credentials] security settings upsert error:", error);
             });
 
         const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({

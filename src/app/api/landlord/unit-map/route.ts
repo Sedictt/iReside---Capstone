@@ -154,10 +154,10 @@ export async function GET(request: NextRequest) {
     let applicationCounts: Record<string, number> = {};
     if (unitIds.length > 0) {
         const { data: apps, error: appsError } = await (supabase
-            .from("tenant_applications" as any)
+            .from("applications")
             .select("unit_id, id")
             .in("unit_id", unitIds)
-            .in("status", ["pending", "reviewing"]) as any);
+            .in("status", ["pending", "reviewing"]));
         
         if (!appsError && apps) {
             for (const app of (apps as any[])) {

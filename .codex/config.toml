@@ -1,0 +1,30 @@
+[mcp_servers.context7]
+url = "https://mcp.context7.com/mcp"
+
+[mcp_servers.filesystem]
+command = "npx"
+args = ["@modelcontextprotocol/server-filesystem"]
+
+[mcp_servers.memory]
+command = "npx"
+args = ["@modelcontextprotocol/server-memory"]
+
+[mcp_servers.mempalace]
+command = "python"
+args = [
+    "-m",
+    "mempalace.mcp_server",
+]
+
+[mcp_servers.postman]
+url = "https://mcp.postman.com/minimal"
+
+[mcp_servers.scholar-gateway]
+url = "https://connector.scholargateway.ai/mcp"
+
+[mcp_servers.sentry]
+url = "https://mcp.sentry.dev/mcp"
+
+[mcp_servers.sequential-thinking]
+command = "npx"
+args = ["@modelcontextprotocol/server-sequential-thinking"]

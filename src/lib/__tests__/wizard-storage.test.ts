@@ -28,17 +28,16 @@ describe("Wizard Storage Utilities", () => {
     });
 
     it("should return false when localStorage is unavailable", () => {
-      // Mock localStorage to throw an error
-      const originalSetItem = localStorage.setItem;
-      localStorage.setItem = () => {
+      // Mock Storage.prototype.setItem to throw an error
+      const spy = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
         throw new Error("localStorage unavailable");
-      };
+      });
 
       const result = isLocalStorageAvailable();
       expect(result).toBe(false);
 
-      // Restore original function
-      localStorage.setItem = originalSetItem;
+      // Restore
+      spy.mockRestore();
     });
   });
 
@@ -80,29 +79,27 @@ describe("Wizard Storage Utilities", () => {
     });
 
     it("should throw error when localStorage quota exceeded", () => {
-      // Mock localStorage to throw quota exceeded error
-      const originalSetItem = localStorage.setItem;
-      localStorage.setItem = () => {
+      // Mock Storage.prototype.setItem to throw quota exceeded error
+      const spy = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
         throw new DOMException("QuotaExceededError", "QuotaExceededError");
-      };
+      });
 
       expect(() => saveWizardState({ step: 1 })).toThrow("Local storage quota exceeded");
 
-      // Restore original function
-      localStorage.setItem = originalSetItem;
+      // Restore
+      spy.mockRestore();
     });
 
     it("should throw error when localStorage is unavailable", () => {
-      // Mock localStorage to throw generic error
-      const originalSetItem = localStorage.setItem;
-      localStorage.setItem = () => {
+      // Mock Storage.prototype.setItem to throw generic error
+      const spy = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
         throw new Error("localStorage unavailable");
-      };
+      });
 
       expect(() => saveWizardState({ step: 1 })).toThrow("Failed to save wizard state");
 
-      // Restore original function
-      localStorage.setItem = originalSetItem;
+      // Restore
+      spy.mockRestore();
     });
 
     it("should overwrite existing state", () => {
@@ -202,16 +199,15 @@ describe("Wizard Storage Utilities", () => {
     });
 
     it("should not throw error when localStorage is unavailable", () => {
-      // Mock localStorage.removeItem to throw error
-      const originalRemoveItem = localStorage.removeItem;
-      localStorage.removeItem = () => {
+      // Mock Storage.prototype.removeItem to throw error
+      const spy = vi.spyOn(Storage.prototype, "removeItem").mockImplementation(() => {
         throw new Error("localStorage unavailable");
-      };
+      });
 
       expect(() => clearWizardState()).not.toThrow();
 
-      // Restore original function
-      localStorage.removeItem = originalRemoveItem;
+      // Restore
+      spy.mockRestore();
     });
   });
 

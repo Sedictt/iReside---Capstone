@@ -66,7 +66,7 @@ export async function signOut() {
  *
  * This function:
  * 1. Updates the user's password in Supabase Auth
- * 2. Sets has_changed_password = true in the user's profile
+ * 2. Marks has_changed_password = true through the tenant profile API
  *
  * Call this when a tenant changes their password for the first time.
  * This ensures the landlord can no longer resend credentials for this account.
@@ -85,17 +85,17 @@ export async function updateTenantPassword(newPassword: string): Promise<{ succe
             return { success: false, error: authError.message }
         }
 
-        // Step 2: Mark the account as claimed (has_changed_password = true)
-        const { error: profileError } = await supabase
-            .from('profiles')
-            .update({ has_changed_password: true, updated_at: new Date().toISOString() })
-            .eq('id', (await supabase.auth.getUser()).data.user?.id as string)
+        const claimResponse = await fetch('/api/tenant/profile', {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ has_changed_password: true }),
+        })
 
-        if (profileError) {
-            console.error('[updateTenantPassword] Profile update failed:', profileError)
-            // Password was changed successfully, but profile update failed
-            // This is not critical - the password change is what matters
-            // The user can still use the system, but landlord might still see them as unclaimed
+        if (!claimResponse.ok) {
+            const responseBody = await claimResponse.json().catch(() => null)
+            console.error('[updateTenantPassword] Account claim update failed:', responseBody)
             return { success: false, error: 'Password updated but failed to mark account as claimed. Please refresh the page.' }
         }
 
