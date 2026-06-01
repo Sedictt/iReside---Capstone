@@ -6,6 +6,7 @@ import GlobalClickSpark from "@/components/ui/ClickSparkWrapper";
 import { Toaster } from "sonner";
 import { CookieConsent } from "@/components/cookie-consent";
 import { FramerMotionProvider } from "@/components/providers/FramerMotionProvider";
+import "@/bones/registry";
 import "./globals.css";
 
 const geistSans = Geist({

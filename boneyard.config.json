@@ -1,0 +1,10 @@
+{
+  "breakpoints": [375, 640, 768, 1024, 1280, 1536],
+  "color": "rgba(229, 231, 235, 0.2)",
+  "darkColor": "rgba(255, 255, 255, 0.08)",
+  "animate": "shimmer",
+  "routes": [
+    "/landlord/dashboard?boneyard=true",
+    "/landlord/analytics?boneyard=true"
+  ]
+}

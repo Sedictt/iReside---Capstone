@@ -11,7 +11,7 @@ export function ChartSkeleton({ className }: { className?: string }) {
         setBarHeights(Array.from({ length: 12 }, () => Math.floor(Math.random() * 50) + 30));
     }, []);
 
-    return (
+    const chartMockup = (
         <div className={cn(
             "relative h-full w-full overflow-hidden rounded-[2.5rem] neumorphic-panel p-8",
             className
@@ -21,7 +21,7 @@ export function ChartSkeleton({ className }: { className?: string }) {
             <div className="relative z-10 flex flex-col h-full gap-8">
                 <div className="flex items-center justify-between px-2">
                     <div className="space-y-3">
-                        <Skeleton className="size-48 rounded-full" />
+                        <Skeleton className="h-6 w-48 rounded-full" />
                         <Skeleton className="h-3 w-64 rounded-full opacity-60" />
                     </div>
                     <div className="flex gap-3">
@@ -71,5 +71,15 @@ export function ChartSkeleton({ className }: { className?: string }) {
                 </div>
             </div>
         </div>
+    );
+
+    return (
+        <Skeleton 
+            name="revenue-chart" 
+            loading={true} 
+            fixture={chartMockup}
+        >
+            {chartMockup}
+        </Skeleton>
     );
 }
