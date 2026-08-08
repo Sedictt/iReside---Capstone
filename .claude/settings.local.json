@@ -29,7 +29,19 @@
       "Bash(node:*)",
       "Bash(pip install:*)",
       "Bash(python generate_questionnaire.py)",
-      "mcp__filesystem__directory_tree"
+      "mcp__filesystem__directory_tree",
+      "WebSearch",
+      "Bash(npm search *)",
+      "Bash(npx supabase *)",
+      "Bash(where pg_dump)",
+      "Bash(start \"\" \"C:\\\\Program Files\\\\Docker\\\\Docker\\\\Docker Desktop.exe\")",
+      "Bash(curl -s \"https://api.supabase.com/v1/projects/hlpgsiqyrtndqdgvttcr/database/backups\" -H \"Authorization: Bearer $\\(cd C:/Users/JV/Documents/GitHub/iReside && npx supabase status --output json)",
+      "Read(//c/Program Files/Docker/Docker/**)",
+      "Bash(tasklist)",
+      "PowerShell(Get-Command *)",
+      "Bash(chmod +x \"C:/Users/JV/Documents/GitHub/iReside/scripts/audit-identifiers.sh\")",
+      "Bash(bash -n \"C:/Users/JV/Documents/GitHub/iReside/scripts/audit-identifiers.sh\")",
+      "PowerShell(npx tsc --noEmit 2>&1 | Select-Object -First 30)"
     ]
   }
 }

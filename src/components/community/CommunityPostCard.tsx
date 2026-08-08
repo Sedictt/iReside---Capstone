@@ -53,6 +53,7 @@ interface CommunityPostCardProps {
     isMutating: boolean
     currentUserId?: string
     isManagementUser?: boolean
+    onView?: (id: string) => void
     onModerationDecision?: (id: string, approved: boolean) => void
     isPending?: boolean
 }
@@ -98,6 +99,7 @@ export function CommunityPostCard({
     isMutating,
     currentUserId,
     isManagementUser,
+    onView,
     onModerationDecision,
     isPending
 }: CommunityPostCardProps) {
@@ -112,8 +114,18 @@ export function CommunityPostCard({
     const [isExpanded, setIsExpanded] = useState(false)
     const kebabRef = useRef<HTMLDivElement>(null)
     const commentInputRef = useRef<HTMLTextAreaElement>(null)
+    const viewedPostIdRef = useRef<string | null>(null)
 
     const isAuthor = currentUserId === post.author_id
+
+    useEffect(() => {
+        if (isPending || !onView || viewedPostIdRef.current === post.id) {
+            return
+        }
+
+        viewedPostIdRef.current = post.id
+        onView(post.id)
+    }, [isPending, onView, post.id])
 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {

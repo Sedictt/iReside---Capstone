@@ -78,7 +78,12 @@ export function PaymentRecordForm({
               id="amount-due"
               type="number"
               value={amount}
-              onChange={(e) => onAmountChange?.(parseFloat(e.target.value) || 0)}
+              onChange={(e) => {
+                const val = parseFloat(e.target.value) || 0;
+                if (val >= 0) {
+                  onAmountChange?.(val);
+                }
+              }}
               disabled={!allowAmountEdit}
               placeholder="0.00"
               className={cn(
@@ -103,6 +108,7 @@ export function PaymentRecordForm({
               id="payment-method"
               value={paymentMethod || ""}
               onChange={(e) => onMethodChange(e.target.value as PaymentMethod)}
+              required
               className="h-12 w-full appearance-none bg-transparent pl-11 pr-10 text-sm font-black tracking-tight text-foreground outline-none cursor-pointer"
             >
               <option value="" disabled>Choose Method</option>
