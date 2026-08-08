@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { requireUser } from "@/lib/supabase/auth";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 
 export async function POST(request: Request) {
     try {
-        const { user } = await requireUser();
-        const supabase = await createClient();
+        const authContext = await requireAuthenticatedUser(request);
+        if (!("userId" in authContext)) return authContext as Response;
+        const { userId, supabase } = authContext;
 
         const body = await request.json();
         const { category, amount, date_incurred, description, propertyId } = body;
@@ -15,7 +15,7 @@ export async function POST(request: Request) {
         }
 
         const { error } = await supabase.from("expenses").insert({
-            landlord_id: user.id,
+            landlord_id: userId,
             property_id: propertyId || null,
             category,
             amount,
@@ -37,8 +37,9 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
     try {
-        const { user } = await requireUser();
-        const supabase = await createClient();
+        const authContext = await requireAuthenticatedUser(request);
+        if (!("userId" in authContext)) return authContext as Response;
+        const { userId, supabase } = authContext;
 
         const { searchParams } = new URL(request.url);
         const propertyId = searchParams.get("propertyId");
@@ -46,7 +47,7 @@ export async function GET(request: Request) {
         let query = supabase
             .from("expenses")
             .select("*")
-            .eq("landlord_id", user.id)
+            .eq("landlord_id", userId)
             .order("date_incurred", { ascending: false });
 
         if (propertyId && propertyId !== "all") {

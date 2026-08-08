@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { requireUser } from "@/lib/supabase/auth";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 
 type PaymentCategory = "Overdue" | "Near Due" | "Paid";
 
@@ -58,16 +57,17 @@ const getPaymentCategory = (payment: {
 };
 
 export async function GET(request: Request) {
-    const { user } = await requireUser();
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
+
     const { searchParams } = new URL(request.url);
     const propertyId = searchParams.get("propertyId");
-
-    const supabase = await createClient();
 
     let query = supabase
         .from("payments")
         .select("id, amount, status, due_date, paid_at, tenant_id, lease_id")
-        .eq("landlord_id", user.id)
+        .eq("landlord_id", userId)
         .order("due_date", { ascending: true })
         .limit(200);
 
@@ -76,7 +76,7 @@ export async function GET(request: Request) {
             .from("properties")
             .select("id")
             .eq("id", propertyId)
-            .eq("landlord_id", user.id)
+            .eq("landlord_id", userId)
             .maybeSingle();
 
         if (propertyError) {
@@ -107,7 +107,7 @@ export async function GET(request: Request) {
         const { data: propertyLeases, error: propertyLeasesError } = await supabase
             .from("leases")
             .select("id")
-            .eq("landlord_id", user.id)
+            .eq("landlord_id", userId)
             .in("unit_id", propertyUnitIds);
 
         if (propertyLeasesError) {

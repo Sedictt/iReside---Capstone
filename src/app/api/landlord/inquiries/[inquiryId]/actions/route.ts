@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 
 type InquiryAction = "read" | "unread" | "archive" | "unarchive" | "delete";
 
@@ -16,16 +16,9 @@ export async function POST(
     context: { params: Promise<{ inquiryId: string }> }
 ) {
     const { inquiryId } = await context.params;
-    const supabase = await createClient();
-
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
 
     const body = (await request.json()) as ActionBody;
 
@@ -37,7 +30,7 @@ export async function POST(
         .from("applications")
         .select("id")
         .eq("id", inquiryId)
-        .eq("landlord_id", user.id)
+        .eq("landlord_id", userId)
         .maybeSingle();
 
     if (inquiryError) {
@@ -71,7 +64,7 @@ export async function POST(
         .upsert(
             {
                 inquiry_id: inquiryId,
-                landlord_id: user.id,
+                landlord_id: userId,
                 ...updates,
             },
             { onConflict: "inquiry_id,landlord_id" }

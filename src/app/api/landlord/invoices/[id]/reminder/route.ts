@@ -7,8 +7,8 @@ import {
     sendPaymentSystemMessage,
     toWorkflowSnapshot,
 } from "@/lib/billing/workflow";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
 
 type RouteContext = {
     params: Promise<{ id: string }>;
@@ -16,25 +16,19 @@ type RouteContext = {
 
 export async function POST(_: Request, context: RouteContext) {
     const { id } = await context.params;
-    const supabase = await createClient();
     const adminClient = createAdminClient();
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authContext = await requireAuthenticatedUser(_);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
 
     try {
-        await expireInPersonIntents(adminClient, user.id, { landlordId: user.id, paymentId: id });
+        await expireInPersonIntents(adminClient, userId, { landlordId: userId, paymentId: id });
 
         const { data: payment, error: paymentError } = await adminClient
             .from("payments")
             .select("id, tenant_id, landlord_id, invoice_number, workflow_status, status, intent_method, amount_tag, review_action, paid_amount, balance_remaining, receipt_number, payment_submitted_at, rejection_reason, in_person_intent_expires_at")
             .eq("id", id)
-            .eq("landlord_id", user.id)
+            .eq("landlord_id", userId)
             .maybeSingle();
 
         if (paymentError || !payment) {
@@ -59,10 +53,10 @@ export async function POST(_: Request, context: RouteContext) {
                 workflow_status: "reminder_sent",
                 reminder_sent_at: nowIso,
                 last_action_at: nowIso,
-                last_action_by: user.id,
+                last_action_by: userId,
             })
             .eq("id", payment.id)
-            .eq("landlord_id", user.id)
+            .eq("landlord_id", userId)
             .select("id, tenant_id, landlord_id, invoice_number, workflow_status, status, intent_method, amount_tag, review_action, paid_amount, balance_remaining, receipt_number, payment_submitted_at, rejection_reason, in_person_intent_expires_at")
             .single();
 
@@ -87,7 +81,7 @@ export async function POST(_: Request, context: RouteContext) {
             adminClient,
             updatedPayment,
             {
-                actorId: user.id,
+                actorId: userId,
                 actorName: "IRIS",
                 content: "A payment reminder has been sent for this invoice. You can settle it quickly using the button below.",
                 metadata: {
@@ -100,7 +94,7 @@ export async function POST(_: Request, context: RouteContext) {
 
         await insertPaymentAuditEvent(adminClient, {
             paymentId: updatedPayment.id,
-            actorId: user.id,
+            actorId: userId,
             action: "reminder_sent",
             source: "api",
             beforeState,

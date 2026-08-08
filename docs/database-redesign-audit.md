@@ -36,14 +36,15 @@ Date: 2026-06-01
   - 0 referenced tables missing from the source-of-truth schema.
   - 1 schema table not directly referenced from code/tests: `post_views`.
   - `post_views` is indirectly referenced by the `increment_post_view` SQL function.
-  - 3 functions not referenced by code RPC or triggers: `handle_new_user`, `increment_post_view`, `rls_auto_enable`.
+  - `increment_post_view` is now called by the community feed through a server action, so `post_views` is intentionally retained for per-post analytics.
+  - 2 functions not referenced by code RPC or triggers: `handle_new_user`, `rls_auto_enable`.
   - 0 functions granted to `anon` after applying the migration overlay.
   - `profiles` direct code references have been reduced to 91 after moving 2FA, tenant account-claim state, private contact fields, and key landlord business flows.
   - `profile_private` is now directly referenced by app code for staged phone/address migration.
   - `landlord_business_profiles` is now directly referenced by app code for staged landlord business metadata migration.
   - Local RLS diagnostics after applying migration overlay:
-    - 77 policies still contain unwrapped `auth.uid()` / `auth.jwt()` calls.
-    - 8 tables still have multiple policies for the same command.
+    - 52 policies still contain unwrapped `auth.uid()` / `auth.jwt()` calls.
+    - 0 tables still have multiple policies for the same command.
 - Supabase lint export shows:
   - 154 `auth_rls_initplan` warnings.
   - 162 `multiple_permissive_policies` warnings.
@@ -76,9 +77,14 @@ Impact:
 - Dropping it without checking dependencies could break post analytics if usage is indirect.
 
 Action:
-- Check SQL functions, triggers, scheduled jobs, and Supabase analytics usage before deciding.
-- If no dependency exists, mark for removal in the cleanup migration.
-- If analytics need it, add explicit documentation and a usage path.
+- Retain `post_views` as the backing table for community post analytics.
+- Keep access routed through `increment_post_view` from trusted server code.
+- Continue hardening `post_views` RLS so author stats reads and insert paths use init-plan-safe auth checks.
+
+Progress:
+- Wired the community feed to call `recordPostView`, which verifies the post is visible to the current user before invoking `increment_post_view` through the service-role admin client.
+- Regenerated inventory now reports `increment_post_view` as a referenced RPC and removes it from the unreferenced function list.
+- Added `20260601005000_optimize_post_views_rls.sql` to wrap `post_views` auth checks in init-plan-safe forms; local inventory no longer flags `post_views` for unwrapped auth policy calls.
 
 ### 3. Sensitive Data in `profiles`
 
@@ -251,7 +257,14 @@ Progress:
 - Core workflow RLS optimization migration added.
 - Remaining straightforward access-overlap RLS optimization migration added.
 - Local inventory now reports post-overlay policy diagnostics so RLS cleanup progress is measurable without waiting for a fresh hosted Supabase lint export.
-- Remaining same-command overlap is now concentrated in community moderation/media and environment policy SELECT paths.
+- Local same-command RLS overlap diagnostics are now cleared after the migration overlay.
+- `post_views` RLS has been optimized after wiring analytics.
+- Added `20260601006000_consolidate_community_posts_rls.sql` to consolidate `community_posts` into one policy per command while preserving the existing access union for tenant, landlord, and admin community flows.
+- Local inventory no longer reports `community_posts` in the same-command overlap list, and `community_posts` is now flagged only for JSON structure rather than unwrapped auth policy calls.
+- Added `20260601007000_consolidate_environment_rls.sql` and `20260601008000_optimize_environment_write_rls.sql` to merge environment SELECT policies and wrap landlord write checks.
+- Local inventory no longer reports `property_environment_policies` or `unit_environment_overrides` in the same-command overlap list or unwrapped-auth risk list; `property_environment_policies` remains flagged only for JSON structure.
+- Added `20260601009000_consolidate_community_media_rls.sql` to consolidate community album/photo media policies while preserving published-read, landlord-manage, and owner-manage paths.
+- Local inventory now reports 0 tables with multiple policies for the same command.
 
 ### 9. Public Function Grants Are Too Broad
 
@@ -284,18 +297,18 @@ Progress:
 
 Inventory found 3 functions not referenced by app RPC calls or public-table triggers:
 - `handle_new_user`: expected to be attached to `auth.users`, but no trigger appears in `source-of-truth-db.sql`.
-- `increment_post_view`: writes `post_views`, but no app RPC call appears in `src` or tests.
+- `increment_post_view`: writes `post_views`; now called from the community feed through `recordPostView`.
 - `rls_auto_enable`: event trigger function exists, but no event trigger appears in `source-of-truth-db.sql`.
 
 Impact:
 - Signup profile creation may depend on a missing `auth.users` trigger.
-- `post_views` may be an unfinished analytics feature rather than safe-to-drop dead data.
+- `post_views` is now wired as community post analytics rather than dead data.
 - Automatic RLS enforcement may be intended but inactive.
 
 Action:
 - Check the live database for auth schema triggers and event triggers, not just public schema dumps.
 - If missing in live too, add explicit migrations or remove dead functions/tables.
-- For `post_views`, either wire the community feed to call `increment_post_view` or remove the table/function/policies together.
+- For `post_views`, continue with RLS policy hardening and hosted validation now that the community feed calls `increment_post_view`.
 
 ### 11. Structural Risk Hotspots From Inventory
 
@@ -461,7 +474,7 @@ Action:
 
 1. Verify live auth triggers and event triggers for `handle_new_user` and `rls_auto_enable`.
 2. Apply and verify `20260601000000_harden_function_execute_grants.sql` against the real Supabase database.
-3. Decide whether `post_views` + `increment_post_view` should be wired into community analytics or removed.
+3. Validate `increment_post_view` in staging now that `post_views` is wired and its local RLS policy warning is cleared.
 4. Decide whether `source-of-truth-db-cleaned.sql` should be repaired or deleted.
 5. Migrate remaining profile-related flows to the new split tables, especially tenant account-claim and landlord business profile updates.
 6. Regenerate Supabase TypeScript types after applying migrations so new tables are strongly typed instead of accessed through service-role casts.

@@ -1,16 +1,13 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("q") || "";
 
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
 
     const results: { id: string; type: string; title: string; subtitle: string; href: string }[] = [];
 
@@ -20,7 +17,7 @@ export async function GET(request: Request) {
         const { data: properties, error } = await supabase
             .from("properties")
             .select("id, name, address")
-            .eq("landlord_id", user.id)
+            .eq("landlord_id", userId)
             .or(`name.ilike.%${q}%,address.ilike.%${q}%`)
             .limit(5);
 

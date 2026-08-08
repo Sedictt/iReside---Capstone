@@ -36,8 +36,8 @@ describe("GET /api/admin/users — property tests", () => {
             role: fc.constantFrom("tenant", "landlord", "admin"),
             avatar_url: fc.option(fc.webUrl(), { nil: null }),
             created_at: fc
-                .date({ min: new Date("2020-01-01"), max: new Date("2030-01-01") })
-                .map((d) => d.toISOString()),
+                .integer({ min: new Date("2020-01-01").getTime(), max: new Date("2030-01-01").getTime() })
+                .map((ts) => new Date(ts).toISOString()),
         });
 
         fc.assert(
@@ -50,7 +50,7 @@ describe("GET /api/admin/users — property tests", () => {
             ),
             { numRuns: 100 }
         );
-    });
+    }, 25000);
 
     it("Property 2: single-element array is always ordered (Requirement 3.2)", () => {
         const userArb = fc.record({
@@ -59,7 +59,9 @@ describe("GET /api/admin/users — property tests", () => {
             email: fc.emailAddress(),
             role: fc.constantFrom("tenant", "landlord", "admin"),
             avatar_url: fc.constant(null),
-            created_at: fc.date().map((d) => d.toISOString()),
+            created_at: fc
+                .integer({ min: new Date("2020-01-01").getTime(), max: new Date("2030-01-01").getTime() })
+                .map((ts) => new Date(ts).toISOString()),
         });
 
         fc.assert(

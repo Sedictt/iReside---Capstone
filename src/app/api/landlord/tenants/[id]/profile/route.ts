@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { requireUser } from "@/lib/supabase/auth";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
@@ -13,8 +12,9 @@ export async function GET(
     context: { params: Promise<{ id: string }> }
 ) {
     const { id: tenantId } = await context.params;
-    const supabase = await createClient();
-    const { user } = await requireUser();
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
 
     // Fetch tenant profile
     const { data: profile, error: profileError } = await supabase
@@ -65,7 +65,7 @@ export async function GET(
             )
         `)
         .eq("tenant_id", tenantId)
-        .eq("landlord_id", user.id)
+        .eq("landlord_id", userId)
         .in("status", ["active", "expired"])
         .maybeSingle();
 

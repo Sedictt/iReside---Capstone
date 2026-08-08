@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { requireUser } from "@/lib/supabase/auth";
 import {
     ADVANCE_TEMPLATE_KEYS,
     DEPOSIT_TEMPLATE_KEYS,
@@ -96,14 +95,15 @@ function formatInviteError(
 }
 
 export async function GET(request: Request) {
-    const { user } = await requireUser();
-    const supabase = await createClient();
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
     const adminClient = createAdminClient();
 
     const { data: invites, error } = await adminClient
         .from("tenant_intake_invites" as any)
         .select("id, landlord_id, property_id, unit_id, mode, application_type, required_requirements, public_token, status, max_uses, use_count, expires_at, last_used_at, created_at")
-        .eq("landlord_id", user.id)
+        .eq("landlord_id", userId)
         .order("created_at", { ascending: false });
 
     if (error) {
@@ -201,8 +201,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-    const { user } = await requireUser();
-    const supabase = await createClient();
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
     const adminClient = createAdminClient();
 
     const body = (await request.json()) as {
@@ -239,7 +240,7 @@ export async function POST(request: Request) {
         .from("properties")
         .select("id, name, contract_template")
         .eq("id", propertyId)
-        .eq("landlord_id", user.id)
+        .eq("landlord_id", userId)
         .maybeSingle();
 
     if (propertyError || !property) {
@@ -291,7 +292,7 @@ export async function POST(request: Request) {
 
     const { error: insertError } = await adminClient.from("tenant_intake_invites" as any).insert({
         id: inviteId,
-        landlord_id: user.id,
+        landlord_id: userId,
         property_id: propertyId,
         unit_id: mode === "unit" ? unitId : null,
         mode,

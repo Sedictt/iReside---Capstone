@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { validateSignature, sanitizeSignatureDataURL, retryWithBackoff } from "@/lib/signature-validation";
 import { logAuditEvent, extractIpAddress, extractUserAgent } from "@/lib/audit-logging";
 import { sendLeaseActivatedNotification } from "@/lib/email";
@@ -67,15 +68,10 @@ export async function POST(
     }
     landlordId = tokenResult.payload.actorId;
   } else {
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-    landlordId = user.id;
+    // Get authenticated user via auth guard
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    landlordId = authContext.userId;
   }
 
   // Fetch lease record

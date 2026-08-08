@@ -1,23 +1,18 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ensureLandlordProductTourState } from "@/lib/landlord-product-tour";
 
 export async function PATCH(request: Request) {
-    const supabase = await createClient();
-    const adminClient = createAdminClient();
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
 
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const adminClient = createAdminClient();
 
     try {
         const metadataUpdates = await request.json();
-        const state = await ensureLandlordProductTourState(adminClient as any, user.id);
+        const state = await ensureLandlordProductTourState(adminClient as any, userId);
 
         const { data, error } = await adminClient
             .from("landlord_product_tour_states" as any)
@@ -28,7 +23,7 @@ export async function PATCH(request: Request) {
                 },
                 updated_at: new Date().toISOString(),
             })
-            .eq("landlord_id", user.id)
+            .eq("landlord_id", userId)
             .select("*")
             .single();
 

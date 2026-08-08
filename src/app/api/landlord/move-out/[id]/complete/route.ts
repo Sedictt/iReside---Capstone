@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 
 /**
  * PUT /api/landlord/move-out/[id]/complete
@@ -11,15 +11,11 @@ export async function PUT(
   context: { params: Promise<{ id: string }> }
 ) {
   const { id } = await context.params;
-  const supabase = await createClient();
+  const authContext = await requireAuthenticatedUser(request);
+  if (!("userId" in authContext)) return authContext as Response;
+  const { userId, supabase } = authContext;
 
   try {
-    // Get landlord from auth
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     // Verify ownership and inspection status
     const reqQuery = supabase
@@ -28,7 +24,7 @@ export async function PUT(
 
     const { data: moveOutRequest, error: fetchError } = await reqQuery
       .eq("id", id)
-      .eq("landlord_id", user.id)
+      .eq("landlord_id", userId)
       .single() as any;
 
     if (fetchError || !moveOutRequest) {

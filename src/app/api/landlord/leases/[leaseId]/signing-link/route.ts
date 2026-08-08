@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { generateLandlordSigningLink } from "@/lib/jwt";
 
 /**
@@ -15,18 +15,9 @@ export async function POST(
   context: { params: Promise<{ leaseId: string }> }
 ) {
   const { leaseId } = await context.params;
-  const supabase = await createClient();
-
-  // Get authenticated user
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) {
-    return NextResponse.json(
-      { error: "Unauthorized" },
-      { status: 401 }
-    );
-  }
-
-  const landlordId = user.id;
+  const authContext = await requireAuthenticatedUser(request);
+  if (!("userId" in authContext)) return authContext as Response;
+  const { userId: landlordId, supabase } = authContext;
 
   // Fetch lease record
   const { data: lease, error: leaseError } = await supabase

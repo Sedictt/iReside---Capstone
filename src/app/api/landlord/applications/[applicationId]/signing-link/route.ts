@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { generateSigningToken } from "@/lib/jwt";
 import { hashToken } from "@/lib/jwt";
@@ -20,17 +20,11 @@ export async function POST(
   context: { params: Promise<{ applicationId: string }> }
 ) {
   const { applicationId } = await context.params;
-  const supabase = await createClient();
 
   // Get authenticated user
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  
-  if (authError || !user) {
-    return NextResponse.json(
-      { error: "Unauthorized" },
-      { status: 401 }
-    );
-  }
+  const authContext = await requireAuthenticatedUser(request);
+  if (!("userId" in authContext)) return authContext as Response;
+  const { userId, supabase } = authContext;
 
   // Fetch application details first
   const { data: application, error: appError } = await supabase
@@ -275,7 +269,7 @@ export async function POST(
       .insert({
         unit_id: application.unit_id,
         tenant_id: tenantId,
-        landlord_id: user.id,
+        landlord_id: userId,
         status: "pending_signature",
         start_date: startDate,
         end_date: endDate.toISOString().split('T')[0],
@@ -329,7 +323,7 @@ export async function POST(
   }
 
   // Verify landlord owns this application
-  if (lease.landlord_id !== user.id) {
+  if (lease.landlord_id !== userId) {
     return NextResponse.json(
       { error: "Unauthorized: You are not the landlord for this application" },
       { status: 403 }
@@ -438,7 +432,7 @@ export async function POST(
     await logAuditEvent({
       leaseId: application.lease_id!,
       eventType: "signing_link_generated",
-      actorId: user.id,
+      actorId: userId,
       metadata: {
         application_id: applicationId,
         tenant_email: tenantEmail,

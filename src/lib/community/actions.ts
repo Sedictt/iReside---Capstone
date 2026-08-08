@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { getCommunityPropertyId } from './queries'
 import { revalidatePath } from 'next/cache'
 import { auth } from '@/lib/supabase/middleware'
@@ -291,6 +292,41 @@ export async function getCurrentCommunityPosts(limit = 20, cursor?: string, prop
     }
     const { userId, role } = await getAuthenticatedCommunityContext()
     return getPosts(userId, limit, cursor, role, propertyId)
+}
+
+export async function recordPostView(postId: string) {
+    const session = await auth()
+    if (!session) {
+        throw new Error("Unauthorized")
+    }
+
+    const { userId } = await getAuthenticatedCommunityContext()
+    const supabase = (await createClient()) as any
+
+    const { data: visiblePost, error: visiblePostError } = await supabase
+        .from('community_posts')
+        .select('id')
+        .eq('id', postId)
+        .eq('is_approved', true)
+        .eq('status', 'published')
+        .maybeSingle()
+
+    if (visiblePostError || !visiblePost) {
+        if (visiblePostError) {
+            console.error('recordPostView visibility error:', visiblePostError)
+        }
+        return
+    }
+
+    const { error } = await (createAdminClient() as any).rpc('increment_post_view', {
+        p_post_id: postId,
+        p_user_id: userId,
+        p_session_id: null
+    })
+
+    if (error) {
+        console.error('recordPostView error:', error)
+    }
 }
 
 export async function getCurrentTenantPendingPosts(limit = 20): Promise<CommunityPost[]> {

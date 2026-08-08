@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { applyPaymentPendingExpiry } from "@/lib/application-payment-pending";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import type { ApplicationStatus, LeaseStatus } from "@/types/database";
 
 type ApplicationResponse = {
@@ -228,17 +228,11 @@ function extractMissingColumn(error: PostgrestLikeError | null | undefined) {
 }
 
 export async function GET(request: Request) {
-    const supabase = await createClient();
     const adminClient = createAdminClient();
 
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
 
     const { searchParams } = new URL(request.url);
     const propertyId = searchParams.get("propertyId");
@@ -249,7 +243,7 @@ export async function GET(request: Request) {
             .from("properties")
             .select("id")
             .eq("id", propertyId)
-            .eq("landlord_id", user.id)
+            .eq("landlord_id", userId)
             .maybeSingle();
 
         if (propertyError) {
@@ -312,7 +306,7 @@ export async function GET(request: Request) {
         let applicationsQuery = supabase
             .from("applications")
             .select(appSelect)
-            .eq("landlord_id", user.id);
+            .eq("landlord_id", userId);
 
         if (scopedUnitIds) {
             applicationsQuery = applicationsQuery.in("unit_id", scopedUnitIds);

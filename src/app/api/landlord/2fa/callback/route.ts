@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
@@ -51,15 +51,12 @@ export async function GET(request: Request) {
     }
 
     try {
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) {
-            return NextResponse.redirect(`${APP_BASE_URL}/landlord/settings?category=Security&subtab=Protection&error=not_authenticated`);
-        }
+        const authContext = await requireAuthenticatedUser(request);
+        if (!("userId" in authContext)) return NextResponse.redirect(`${APP_BASE_URL}/landlord/settings?category=Security&subtab=Protection&error=not_authenticated`);
+        const { userId, supabase } = authContext;
 
         const decoded = state ? JSON.parse(Buffer.from(state, "base64").toString()) : {};
-        const userId = decoded.userId || user.id;
+        const callbackUserId = decoded.userId || userId;
 
         const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
             method: "POST",
@@ -99,7 +96,7 @@ export async function GET(request: Request) {
 
         const [{ error: tokenError }, { error: settingsError }] = await saveGmailTwoFactorState(
             adminClient,
-            userId,
+            callbackUserId,
             googleEmail,
             tokens,
         );

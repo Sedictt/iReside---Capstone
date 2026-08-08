@@ -3,8 +3,7 @@ import { z } from "zod";
 
 import { recordUtilityReading } from "@/lib/billing/server";
 import { BILLING_BUCKETS, uploadBillingFile } from "@/lib/billing/storage";
-import { createClient } from "@/lib/supabase/server";
-import { requireUser } from "@/lib/supabase/auth";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 
 const readingSchema = z.object({
     leaseId: z.string().uuid(),
@@ -19,8 +18,9 @@ const readingSchema = z.object({
 const bulkSchema = z.array(readingSchema);
 
 export async function POST(request: Request) {
-    const { user } = await requireUser();
-    const supabase = await createClient();
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
 
     try {
         const contentType = request.headers.get("content-type");
@@ -33,14 +33,14 @@ export async function POST(request: Request) {
                 const results = [];
                 
                 for (const payload of readings) {
-                    const reading = await recordUtilityReading(supabase, user.id, payload);
+                    const reading = await recordUtilityReading(supabase, userId, payload);
                     results.push(reading);
                 }
                 
                 return NextResponse.json({ readings: results });
             } else {
                 const payload = readingSchema.parse(body);
-                const reading = await recordUtilityReading(supabase, user.id, payload);
+                const reading = await recordUtilityReading(supabase, userId, payload);
                 return NextResponse.json({ reading });
             }
         }
@@ -61,13 +61,13 @@ export async function POST(request: Request) {
         const proofUpload = proof instanceof File && proof.size > 0
             ? await uploadBillingFile({
                 bucketName: BILLING_BUCKETS.readingProofs,
-                ownerId: user.id,
+                ownerId: userId,
                 scope: payload.leaseId,
                 file: proof,
             })
             : null;
 
-        const reading = await recordUtilityReading(supabase, user.id, {
+        const reading = await recordUtilityReading(supabase, userId, {
             ...payload,
             proofImagePath: proofUpload?.path ?? null,
             proofImageUrl: proofUpload?.publicUrl ?? null,
@@ -81,8 +81,9 @@ export async function POST(request: Request) {
 }
 
 export async function GET(request: Request) {
-    const { user } = await requireUser();
-    const supabase = await createClient();
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
 
     const { searchParams } = new URL(request.url);
     const propertyId = searchParams.get("propertyId");
@@ -93,7 +94,7 @@ export async function GET(request: Request) {
         let query = supabase
             .from("utility_readings")
             .select("*")
-            .eq("landlord_id", user.id);
+            .eq("landlord_id", userId);
 
         if (propertyId) {
             query = query.eq("property_id", propertyId);

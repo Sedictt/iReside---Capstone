@@ -1,17 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 
 export async function PATCH(
     request: NextRequest,
     context: { params: Promise<{ unitId: string }> }
 ) {
     const { unitId } = await context.params;
-    const supabase = await createClient();
-
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as any;
+    const { userId, supabase } = authContext;
 
     const body = await request.json() as { floor: number };
     const { floor } = body;
@@ -35,7 +32,7 @@ export async function PATCH(
         .from("properties")
         .select("id")
         .eq("id", unit.property_id)
-        .eq("landlord_id", user.id)
+        .eq("landlord_id", userId)
         .maybeSingle();
 
     if (propError || !property) {

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { ApplicationStatus, PaymentMethod, Json } from "@/types/database";
 import { sendTenantCredentials, sendLandlordCredentialsCopy } from "@/lib/email";
@@ -311,17 +311,11 @@ export async function POST(
     context: { params: Promise<{ applicationId: string }> }
 ) {
     const { applicationId } = await context.params;
-    const supabase = await createClient();
     const adminClient = createAdminClient();
 
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
 
     let body: ActionBody = {};
     try {
@@ -356,7 +350,7 @@ export async function POST(
             )
         `)
         .eq("id", applicationId)
-        .eq("landlord_id", user.id)
+        .eq("landlord_id", userId)
         .maybeSingle();
 
     if (applicationError) {
@@ -383,7 +377,7 @@ export async function POST(
         .from("applications")
         .update(updatePayload as any)
         .eq("id", applicationId)
-        .eq("landlord_id", user.id);
+        .eq("landlord_id", userId);
 
     if (updateError) {
         return NextResponse.json({ error: "Failed to update application status." }, { status: 500 });
@@ -482,7 +476,7 @@ export async function POST(
                 const lease = await createLeaseRecord(adminClient, {
                     unit_id: application.unit_id,
                     tenant_id: tenantId,
-                    landlord_id: user.id,
+                    landlord_id: userId,
                     start_date: body.lease_data.start_date,
                     monthly_rent: body.lease_data.monthly_rent,
                     security_deposit: body.lease_data.security_deposit,
@@ -511,7 +505,7 @@ export async function POST(
                     paymentIds = await createPaymentRecords(adminClient, {
                         lease_id: lease.id,
                         tenant_id: tenantId,
-                        landlord_id: user.id,
+                        landlord_id: userId,
                         start_date: body.lease_data.start_date,
                         advance_payment: {
                             amount: body.lease_data.monthly_rent,
@@ -547,7 +541,7 @@ export async function POST(
                     const { data: landlordProfile } = await adminClient
                         .from("profiles")
                         .select("email, full_name")
-                        .eq("id", user.id)
+                        .eq("id", userId)
                         .maybeSingle();
 
                     tenantAccountInfo = {

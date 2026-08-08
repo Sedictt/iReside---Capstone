@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Json } from "@/types/database";
 import { sendTenantCredentials, sendLandlordCredentialsCopy } from "@/lib/email";
@@ -53,19 +53,17 @@ export async function POST(
     context: { params: Promise<{ applicationId: string }> }
 ) {
     const { applicationId } = await context.params;
-    const supabase = await createClient();
     const adminClient = createAdminClient();
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
 
     const { data: app, error: appError } = await supabase
         .from("applications")
         .select("id, status, applicant_name, applicant_email, applicant_phone, unit_id, move_in_date, landlord_id")
         .eq("id", applicationId)
-        .eq("landlord_id", user.id)
+        .eq("landlord_id", userId)
         .maybeSingle();
 
     if (appError || !app) {
@@ -117,7 +115,7 @@ export async function POST(
         const lease = await createLeaseRecord(adminClient, {
             unit_id: app.unit_id,
             tenant_id: tenantId,
-            landlord_id: user.id,
+            landlord_id: userId,
             start_date: app.move_in_date || new Date().toISOString().split('T')[0],
             monthly_rent: 0,
             security_deposit: 0,
@@ -146,7 +144,7 @@ export async function POST(
         const { data: landlordProfile } = await adminClient
             .from("profiles")
             .select("email, full_name")
-            .eq("id", user.id)
+            .eq("id", userId)
             .maybeSingle();
 
         try {

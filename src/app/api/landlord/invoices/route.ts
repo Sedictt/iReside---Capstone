@@ -4,8 +4,7 @@ import { z } from "zod";
 import { expireInPersonIntents } from "@/lib/billing/workflow";
 import { generateMonthlyInvoices, listLandlordInvoices } from "@/lib/billing/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
-import { requireUser } from "@/lib/supabase/auth";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 
 const generateSchema = z.object({
     billingMonth: z.string().optional(),
@@ -13,18 +12,19 @@ const generateSchema = z.object({
 });
 
 export async function GET(request: Request) {
-    const { user } = await requireUser();
-    const supabase = await createClient();
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
     const adminClient = createAdminClient();
 
     const { searchParams } = new URL(request.url);
     const propertyId = searchParams.get("propertyId");
 
     try {
-        await expireInPersonIntents(adminClient, user.id, { landlordId: user.id });
+        await expireInPersonIntents(adminClient, userId, { landlordId: userId });
         const invoices = await listLandlordInvoices(
             supabase,
-            user.id,
+            userId,
             propertyId && propertyId !== "all" ? propertyId : undefined
         );
         return NextResponse.json(invoices);
@@ -35,8 +35,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-    const { user } = await requireUser();
-    const supabase = await createClient();
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
 
     try {
         const rawJson = await request.json();
@@ -50,7 +51,7 @@ export async function POST(request: Request) {
 
         const billingParams = parsed.data;
         const leaseIds = billingParams.leaseIds?.map((id) => id.trim()).filter((id) => id.length > 0);
-        const generationResult = await generateMonthlyInvoices(supabase, user.id, billingParams.billingMonth, leaseIds);
+        const generationResult = await generateMonthlyInvoices(supabase, userId, billingParams.billingMonth, leaseIds);
 
         return NextResponse.json(generationResult);
     } catch (error) {

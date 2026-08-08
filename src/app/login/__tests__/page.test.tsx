@@ -72,28 +72,25 @@ describe("LoginPage - UI and Form Validation", () => {
         render(<LoginPage />);
 
         // Check heading
-        expect(screen.getByText("Welcome back")).toBeInTheDocument();
+        expect(screen.getByRole("heading", { name: "Sign In" })).toBeInTheDocument();
 
         // Check form fields by label
-        expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
+        expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
         expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
 
         // Check buttons
-        expect(screen.getByRole("button", { name: /log in/i })).toBeInTheDocument();
-        expect(screen.getByText("Google")).toBeInTheDocument();
-        expect(screen.getByText("Facebook")).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: /Sign into Account/i })).toBeInTheDocument();
+        expect(screen.getByText("Google Account")).toBeInTheDocument();
 
         // Check links
-        expect(screen.getByText(/forgot password/i)).toBeInTheDocument();
-        expect(screen.getAllByText(/sign up/i).length).toBeGreaterThan(0);
-
-        // Check remember me checkbox
-        expect(screen.getByRole("checkbox", { name: /remember me/i })).toBeInTheDocument();
+        expect(screen.getByText(/Forgot\?/i)).toBeInTheDocument();
+        expect(screen.getByText(/Register/i)).toBeInTheDocument();
+        expect(screen.getByText(/Join/i)).toBeInTheDocument();
     });
 
     it("email field has correct HTML attributes", () => {
         render(<LoginPage />);
-        const emailInput = screen.getByLabelText(/email address/i);
+        const emailInput = screen.getByLabelText(/email/i);
         expect(emailInput).toHaveAttribute("type", "email");
         expect(emailInput).toHaveAttribute("name", "email");
         expect(emailInput).toHaveAttribute("required");
@@ -109,9 +106,10 @@ describe("LoginPage - UI and Form Validation", () => {
 
     it("displays brand and marketing copy", () => {
         render(<LoginPage />);
-        expect(screen.getByText("The future of modern residency.")).toBeInTheDocument();
-        expect(screen.getByText(/Join thousands of residents/i)).toBeInTheDocument();
-        expect(screen.getByText("iReside")).toBeInTheDocument();
+        expect(screen.getByText(/Welcome to/i)).toBeInTheDocument();
+        expect(screen.getByText(/next era/i)).toBeInTheDocument();
+        expect(screen.getByText(/of living/i)).toBeInTheDocument();
+        expect(screen.getByText(/Manage properties, communicate with residents/i)).toBeInTheDocument();
     });
 
     it("shows loading state on form submission", async () => {
@@ -125,16 +123,16 @@ describe("LoginPage - UI and Form Validation", () => {
 
         render(<LoginPage />);
 
-        const emailInput = screen.getByLabelText(/email address/i);
+        const emailInput = screen.getByLabelText(/email/i);
         const passwordInput = screen.getByLabelText(/password/i);
-        const submitButton = screen.getByRole("button", { name: /log in/i });
+        const submitButton = screen.getByRole("button", { name: /Sign into Account/i });
 
         fireEvent.change(emailInput, { target: { value: "test@example.com" } });
         fireEvent.change(passwordInput, { target: { value: "password123" } });
         fireEvent.click(submitButton);
 
         await waitFor(() => {
-            expect(screen.getByText(/Logging in/i)).toBeInTheDocument();
+            expect(screen.getByText(/Authenticating.../i)).toBeInTheDocument();
         });
     });
 });
@@ -162,9 +160,9 @@ describe("LoginPage - Authentication", () => {
 
         render(<LoginPage />);
 
-        const emailInput = screen.getByLabelText(/email address/i);
+        const emailInput = screen.getByLabelText(/email/i);
         const passwordInput = screen.getByLabelText(/password/i);
-        const submitButton = screen.getByRole("button", { name: /log in/i });
+        const submitButton = screen.getByRole("button", { name: /Sign into Account/i });
 
         fireEvent.change(emailInput, { target: { value: "tenant@example.com" } });
         fireEvent.change(passwordInput, { target: { value: "securepassword" } });
@@ -189,9 +187,9 @@ describe("LoginPage - Authentication", () => {
 
         render(<LoginPage />);
 
-        const emailInput = screen.getByLabelText(/email address/i);
+        const emailInput = screen.getByLabelText(/email/i);
         const passwordInput = screen.getByLabelText(/password/i);
-        const submitButton = screen.getByRole("button", { name: /log in/i });
+        const submitButton = screen.getByRole("button", { name: /Sign into Account/i });
 
         fireEvent.change(emailInput, { target: { value: "tenant@example.com" } });
         fireEvent.change(passwordInput, { target: { value: "password123" } });
@@ -216,9 +214,9 @@ describe("LoginPage - Authentication", () => {
 
         render(<LoginPage />);
 
-        const emailInput = screen.getByLabelText(/email address/i);
+        const emailInput = screen.getByLabelText(/email/i);
         const passwordInput = screen.getByLabelText(/password/i);
-        const submitButton = screen.getByRole("button", { name: /log in/i });
+        const submitButton = screen.getByRole("button", { name: /Sign into Account/i });
 
         fireEvent.change(emailInput, { target: { value: "landlord@example.com" } });
         fireEvent.change(passwordInput, { target: { value: "password123" } });
@@ -243,9 +241,9 @@ describe("LoginPage - Authentication", () => {
 
         render(<LoginPage />);
 
-        const emailInput = screen.getByLabelText(/email address/i);
+        const emailInput = screen.getByLabelText(/email/i);
         const passwordInput = screen.getByLabelText(/password/i);
-        const submitButton = screen.getByRole("button", { name: /log in/i });
+        const submitButton = screen.getByRole("button", { name: /Sign into Account/i });
 
         fireEvent.change(emailInput, { target: { value: "admin@example.com" } });
         fireEvent.change(passwordInput, { target: { value: "password123" } });
@@ -270,9 +268,9 @@ describe("LoginPage - Authentication", () => {
 
         render(<LoginPage />);
 
-        const emailInput = screen.getByLabelText(/email address/i);
+        const emailInput = screen.getByLabelText(/email/i);
         const passwordInput = screen.getByLabelText(/password/i);
-        const submitButton = screen.getByRole("button", { name: /log in/i });
+        const submitButton = screen.getByRole("button", { name: /Sign into Account/i });
 
         fireEvent.change(emailInput, { target: { value: "test@example.com" } });
         fireEvent.change(passwordInput, { target: { value: "password123" } });
@@ -303,9 +301,9 @@ describe("LoginPage - Error Handling", () => {
 
         render(<LoginPage />);
 
-        const emailInput = screen.getByLabelText(/email address/i);
+        const emailInput = screen.getByLabelText(/email/i);
         const passwordInput = screen.getByLabelText(/password/i);
-        const submitButton = screen.getByRole("button", { name: /log in/i });
+        const submitButton = screen.getByRole("button", { name: /Sign into Account/i });
 
         fireEvent.change(emailInput, { target: { value: "wrong@example.com" } });
         fireEvent.change(passwordInput, { target: { value: "wrongpassword" } });
@@ -324,9 +322,9 @@ describe("LoginPage - Error Handling", () => {
 
         render(<LoginPage />);
 
-        const emailInput = screen.getByLabelText(/email address/i);
+        const emailInput = screen.getByLabelText(/email/i);
         const passwordInput = screen.getByLabelText(/password/i);
-        const submitButton = screen.getByRole("button", { name: /log in/i });
+        const submitButton = screen.getByRole("button", { name: /Sign into Account/i });
 
         fireEvent.change(emailInput, { target: { value: "test@example.com" } });
         fireEvent.change(passwordInput, { target: { value: "password123" } });
@@ -345,9 +343,9 @@ describe("LoginPage - Error Handling", () => {
 
         render(<LoginPage />);
 
-        const emailInput = screen.getByLabelText(/email address/i);
+        const emailInput = screen.getByLabelText(/email/i);
         const passwordInput = screen.getByLabelText(/password/i);
-        const submitButton = screen.getByRole("button", { name: /log in/i });
+        const submitButton = screen.getByRole("button", { name: /Sign into Account/i });
 
         fireEvent.change(emailInput, { target: { value: "test@example.com" } });
         fireEvent.change(passwordInput, { target: { value: "password123" } });
@@ -380,7 +378,7 @@ describe("LoginPage - Google OAuth", () => {
 
         render(<LoginPage />);
 
-        const googleButton = screen.getByText("Google").closest("button")!;
+        const googleButton = screen.getByAltText("Google").closest("button")!;
         fireEvent.click(googleButton);
 
         await waitFor(() => {
@@ -402,7 +400,7 @@ describe("LoginPage - Google OAuth", () => {
 
         render(<LoginPage />);
 
-        const googleButton = screen.getByText("Google").closest("button")!;
+        const googleButton = screen.getByAltText("Google").closest("button")!;
         fireEvent.click(googleButton);
 
         await waitFor(() => {
@@ -423,7 +421,7 @@ describe("LoginPage - Google OAuth", () => {
 
         render(<LoginPage />);
 
-        const googleButton = screen.getByText("Google").closest("button")!;
+        const googleButton = screen.getByAltText("Google").closest("button")!;
         fireEvent.click(googleButton);
 
         await waitFor(() => {
@@ -447,7 +445,7 @@ describe("LoginPage - Accessibility and Navigation", () => {
     it("has proper form labels associated with inputs", () => {
         render(<LoginPage />);
 
-        const emailInput = screen.getByLabelText(/email address/i);
+        const emailInput = screen.getByLabelText(/email/i);
         const passwordInput = screen.getByLabelText(/password/i);
 
         expect(emailInput).toHaveAttribute("id", "email");
@@ -456,28 +454,20 @@ describe("LoginPage - Accessibility and Navigation", () => {
 
     it("has alt text for brand logo", () => {
         render(<LoginPage />);
-        const logo = screen.getByAltText("Modern Residence");
-        expect(logo).toBeInTheDocument();
+        const logos = screen.getAllByAltText("iReside primary logo");
+        expect(logos.length).toBeGreaterThan(0);
     });
 
     it("provides link to signup page", () => {
         render(<LoginPage />);
-        const signupLink = screen.getByText(/sign up/i).closest("a");
+        const signupLink = screen.getByText(/Register/i).closest("a");
         expect(signupLink).toHaveAttribute("href", "/signup");
     });
 
     it("provides link to forgot password page", () => {
         render(<LoginPage />);
-        const forgotPasswordLink = screen.getByText(/forgot password/i).closest("a");
+        const forgotPasswordLink = screen.getByText(/Forgot\?/i).closest("a");
         expect(forgotPasswordLink).toHaveAttribute("href", "/forgot-password");
-    });
-
-    it("remember me checkbox has associated label", () => {
-        render(<LoginPage />);
-        const checkbox = screen.getByRole("checkbox");
-        const label = screen.getByText(/remember me/i);
-        expect(checkbox).toHaveAttribute("id", "remember");
-        expect(label).toHaveAttribute("for", "remember");
     });
 });
 
@@ -506,14 +496,14 @@ describe("LoginPage - Integration", () => {
         render(<LoginPage />);
 
         // Fill form
-        const emailInput = screen.getByLabelText(/email address/i);
+        const emailInput = screen.getByLabelText(/email/i);
         const passwordInput = screen.getByLabelText(/password/i);
 
         fireEvent.change(emailInput, { target: { value: "test@example.com" } });
         fireEvent.change(passwordInput, { target: { value: "password123" } });
 
         // Submit form
-        const submitButton = screen.getByRole("button", { name: /log in/i });
+        const submitButton = screen.getByRole("button", { name: /Sign into Account/i });
         fireEvent.click(submitButton);
 
         // Verify client was called

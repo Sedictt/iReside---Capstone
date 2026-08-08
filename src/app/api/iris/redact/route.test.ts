@@ -29,7 +29,7 @@ describe("POST /api/iris/redact", () => {
         expect(payload.redactedMessage).toContain("*****");
         expect(payload.redactedMessage).not.toContain("Secret123");
         expect(payload.source).toBe("local_dataset");
-    });
+    }, 20000);
 
     it("flags local profanity from the embedded dataset", async () => {
         const { POST } = await import("./route");

@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { requireUser } from "@/lib/supabase/auth";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 
 export async function GET(
     _request: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
-    const { user } = await requireUser();
-    const supabase = await createClient();
+    const authContext = await requireAuthenticatedUser(_request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
 
     const resolvedParams = await params;
     const propertyId = resolvedParams?.id;
@@ -19,7 +19,7 @@ export async function GET(
         .from("properties")
         .select("id, name, type, address, description, amenities, house_rules, images, contract_template, total_units, total_floors, base_rent_amount")
         .eq("id", propertyId)
-        .eq("landlord_id", user.id)
+        .eq("landlord_id", userId)
         .maybeSingle();
 
     if (propertyError) {

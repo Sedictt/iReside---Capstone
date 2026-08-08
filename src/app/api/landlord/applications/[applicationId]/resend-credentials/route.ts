@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendLandlordCredentialsCopy, sendTenantOnboardingReminder } from "@/lib/email";
 import { TENANT_PRODUCT_TOUR_ROUTE } from "@/lib/product-tour";
@@ -13,16 +13,11 @@ function generateTempPassword(): string {
 
 export async function POST(_request: Request, context: { params: Promise<{ applicationId: string }> }) {
     const { applicationId } = await context.params;
-    const supabase = await createClient();
     const adminClient = createAdminClient();
 
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authContext = await requireAuthenticatedUser(_request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
 
     const { data: application, error: appError } = await supabase
         .from("applications")
@@ -45,7 +40,7 @@ export async function POST(_request: Request, context: { params: Promise<{ appli
         `
         )
         .eq("id", applicationId)
-        .eq("landlord_id", user.id)
+        .eq("landlord_id", userId)
         .maybeSingle();
 
     if (appError) {
@@ -188,7 +183,7 @@ export async function POST(_request: Request, context: { params: Promise<{ appli
     const { data: landlordProfile } = await adminClient
         .from("profiles")
         .select("email, full_name")
-        .eq("id", user.id)
+        .eq("id", userId)
         .maybeSingle();
 
     const onboardingUrl = `${APP_URL}${TENANT_PRODUCT_TOUR_ROUTE}`;

@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
-import { createClient } from "@/lib/supabase/server";
-import { requireUser } from "@/lib/supabase/auth";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import type { MaintenancePriority, MaintenanceStatus } from "@/types/database";
 import {
     buildHeuristicMaintenanceTriage,
@@ -184,18 +183,19 @@ const formatRelativeDate = (value: string) => {
 };
 
 export async function GET(request: Request) {
-    const { user } = await requireUser();
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
+
     const { searchParams } = new URL(request.url);
     const propertyId = searchParams.get("propertyId");
-
-    const supabase = await createClient();
 
     const maintenanceRequestsTable = supabase.from("maintenance_requests") as any;
     let maintenanceQuery = maintenanceRequestsTable
         .select(
             "id, unit_id, tenant_id, title, description, status, priority, category, images, self_repair_requested, self_repair_decision, photo_requested, tenant_repair_status, tenant_provided_photos, repair_method, third_party_name, resolved_at, created_at, ai_triage_priority, ai_triage_sentiment, ai_triage_reason, ai_triage_confidence, ai_triage_hash, ai_triage_version, ai_triaged_at"
         )
-        .eq("landlord_id", user.id);
+        .eq("landlord_id", userId);
 
     if (propertyId && propertyId !== "all") {
         const { data: propertyUnits } = await supabase
@@ -363,7 +363,7 @@ export async function GET(request: Request) {
                         ai_triaged_at: maintenanceUpdate.ai_triaged_at,
                     })
                     .eq("id", maintenanceUpdate.id)
-                    .eq("landlord_id", user.id)
+                    .eq("landlord_id", userId)
             )
         );
     }
@@ -506,8 +506,9 @@ type LandlordMaintenancePatchBody = {
 };
 
 export async function PATCH(request: Request) {
-    const { user } = await requireUser();
-    const supabase = await createClient();
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
 
     const patchData = (await request.json()) as LandlordMaintenancePatchBody;
     if (!isNonEmptyString(patchData.requestId)) {
@@ -544,7 +545,7 @@ export async function PATCH(request: Request) {
         .from("maintenance_requests")
         .update(maintenanceUpdates)
         .eq("id", patchData.requestId)
-        .eq("landlord_id", user.id);
+        .eq("landlord_id", userId);
 
     if (updateError) {
         return NextResponse.json({ error: "Failed to update maintenance request." }, { status: 500 });
@@ -556,7 +557,7 @@ export async function PATCH(request: Request) {
             "id, unit_id, tenant_id, title, description, status, priority, category, images, self_repair_requested, self_repair_decision, photo_requested, tenant_repair_status, tenant_provided_photos, repair_method, third_party_name, created_at, ai_triage_priority, ai_triage_sentiment, ai_triage_reason, ai_triage_confidence"
         )
         .eq("id", patchData.requestId)
-        .eq("landlord_id", user.id)
+        .eq("landlord_id", userId)
         .maybeSingle();
 
     if (refreshedError || !refreshedRequest) {
@@ -634,8 +635,9 @@ type LandlordMaintenancePostBody = {
 };
 
 export async function POST(request: Request) {
-    const { user } = await requireUser();
-    const supabase = await createClient();
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
 
     const postData = (await request.json()) as LandlordMaintenancePostBody;
 
@@ -667,7 +669,7 @@ export async function POST(request: Request) {
     const { data: newRequest, error: createError } = await supabase
         .from("maintenance_requests")
         .insert({
-            landlord_id: user.id,
+            landlord_id: userId,
             unit_id: postData.unitId,
             tenant_id: activeLease.tenant_id,
             title: postData.title.trim(),

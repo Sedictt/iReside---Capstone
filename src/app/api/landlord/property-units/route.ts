@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 
 /**
  * GET /api/landlord/property-units
@@ -8,22 +8,15 @@ import { createClient } from "@/lib/supabase/server";
  * Replaces the retired /api/landlord/listings endpoint.
  */
 export async function GET() {
-    const supabase = await createClient();
-
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authContext = await requireAuthenticatedUser();
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
 
     // 1. Fetch all properties for this landlord
     const { data: properties, error: propertiesError } = await supabase
         .from("properties")
         .select("id, name, address, images, contract_template")
-        .eq("landlord_id", user.id)
+        .eq("landlord_id", userId)
         .order("created_at", { ascending: false });
 
     if (propertiesError) {

@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import type { RenewalStatus } from "@/types/database";
 
 /**
@@ -11,7 +11,9 @@ export async function GET(
   context: { params: Promise<{ id: string }> }
 ) {
   const { id } = await context.params;
-  const supabase = await createClient();
+  const authContext = await requireAuthenticatedUser(request);
+  if (!("userId" in authContext)) return authContext as Response;
+  const { supabase } = authContext;
 
   try {
     const { data: request, error } = await supabase
@@ -58,18 +60,12 @@ export async function POST(
   context: { params: Promise<{ id: string }> }
 ) {
   const { id } = await context.params;
-  const supabase = await createClient();
 
   try {
     // Get landlord from auth
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
 
     // Get renewal request
     const { data: renewalRequest, error: fetchError } = await supabase
@@ -87,7 +83,7 @@ export async function POST(
 
     // Verify landlord owns this request
     const propertyLandlordId = (renewalRequest.current_lease as any)?.unit?.property?.landlord_id;
-    if (propertyLandlordId !== user.id) {
+    if (propertyLandlordId !== userId) {
       return NextResponse.json(
         { error: "Forbidden: You don't have access to this renewal request" },
         { status: 403 }
@@ -138,7 +134,7 @@ export async function POST(
       const newLease = {
         unit_id: currentLease.unit_id,
         tenant_id: renewalRequest.tenant_id,
-        landlord_id: user.id,
+        landlord_id: userId,
         status: "draft" as any,
         start_date: proposed_start_date || renewalRequest.proposed_start_date,
         end_date: proposed_end_date || renewalRequest.proposed_end_date,

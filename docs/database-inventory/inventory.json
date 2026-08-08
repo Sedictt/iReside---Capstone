@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-01T13:34:08.708Z",
+  "generatedAt": "2026-06-02T00:25:25.233Z",
   "schema": "source-of-truth-db.sql",
   "migrations": "supabase/migrations",
   "tableCount": 58,
@@ -249,7 +249,7 @@
     }
   ],
   "referencedTableCount": 58,
-  "referencedFunctionCount": 1,
+  "referencedFunctionCount": 2,
   "lintWarnings": {
     "auth_rls_initplan": 154,
     "multiple_permissive_policies": 162
@@ -292,89 +292,9 @@
         "command": "SELECT"
       },
       {
-        "table": "community_albums",
-        "policy": "Landlords can manage albums",
-        "command": "ALL"
-      },
-      {
-        "table": "community_albums",
-        "policy": "Tenants can manage own albums",
-        "command": "ALL"
-      },
-      {
-        "table": "community_photos",
-        "policy": "Landlords can manage photos",
-        "command": "ALL"
-      },
-      {
-        "table": "community_photos",
-        "policy": "Tenants can manage own photos",
-        "command": "ALL"
-      },
-      {
         "table": "community_poll_votes",
         "policy": "Users can manage own poll votes",
         "command": "ALL"
-      },
-      {
-        "table": "community_posts",
-        "policy": "Management can approve resident posts",
-        "command": "UPDATE"
-      },
-      {
-        "table": "community_posts",
-        "policy": "Management can create community posts",
-        "command": "INSERT"
-      },
-      {
-        "table": "community_posts",
-        "policy": "Management can view published community posts",
-        "command": "SELECT"
-      },
-      {
-        "table": "community_posts",
-        "policy": "Management can view resident moderation queue",
-        "command": "SELECT"
-      },
-      {
-        "table": "community_posts",
-        "policy": "Tenants can create discussion posts for active lease property",
-        "command": "INSERT"
-      },
-      {
-        "table": "community_posts",
-        "policy": "Tenants can create posts for their property",
-        "command": "INSERT"
-      },
-      {
-        "table": "community_posts",
-        "policy": "Tenants can delete own posts",
-        "command": "DELETE"
-      },
-      {
-        "table": "community_posts",
-        "policy": "Tenants can update own posts",
-        "command": "UPDATE"
-      },
-      {
-        "table": "community_posts",
-        "policy": "Tenants can view approved posts for their property",
-        "command": "SELECT"
-      },
-      {
-        "table": "community_posts",
-        "policy": "Tenants can view own pending posts",
-        "command": "SELECT"
-      },
-      {
-        "table": "community_posts",
-        "policy": "Users can delete own community posts",
-        "command": "DELETE"
-      },
-      {
-        "table": "community_posts",
-        "policy": "Users can update own community posts",
-        "command": "UPDATE"
       },
       {
         "table": "community_reactions",
@@ -542,11 +462,6 @@
         "command": "SELECT"
       },
       {
-        "table": "post_views",
-        "policy": "Authors can view post stats",
-        "command": "SELECT"
-      },
-      {
         "table": "properties",
         "policy": "Landlords can delete own properties",
         "command": "DELETE"
@@ -560,26 +475,6 @@
         "table": "properties",
         "policy": "Landlords can update own properties",
         "command": "UPDATE"
-      },
-      {
-        "table": "property_environment_policies",
-        "policy": "Landlords can insert their own property policies",
-        "command": "INSERT"
-      },
-      {
-        "table": "property_environment_policies",
-        "policy": "Landlords can select their own property policies",
-        "command": "SELECT"
-      },
-      {
-        "table": "property_environment_policies",
-        "policy": "Landlords can update their own property policies",
-        "command": "UPDATE"
-      },
-      {
-        "table": "property_environment_policies",
-        "policy": "Users can select policy if they have an active lease",
-        "command": "SELECT"
       },
       {
         "table": "property_floor_configs",
@@ -599,26 +494,6 @@
       {
         "table": "saved_posts",
         "policy": "Users can view own saved posts",
-        "command": "SELECT"
-      },
-      {
-        "table": "unit_environment_overrides",
-        "policy": "Landlords can insert their own unit overrides",
-        "command": "INSERT"
-      },
-      {
-        "table": "unit_environment_overrides",
-        "policy": "Landlords can select their own unit overrides",
-        "command": "SELECT"
-      },
-      {
-        "table": "unit_environment_overrides",
-        "policy": "Landlords can update their own unit overrides",
-        "command": "UPDATE"
-      },
-      {
-        "table": "unit_environment_overrides",
-        "policy": "Users can select override if they have an active lease",
         "command": "SELECT"
       },
       {
@@ -642,54 +517,12 @@
         "command": "UPDATE"
       }
     ],
-    "multiplePermissivePolicies": [
-      {
-        "table": "community_albums",
-        "command": "ALL",
-        "count": 2
-      },
-      {
-        "table": "community_photos",
-        "command": "ALL",
-        "count": 2
-      },
-      {
-        "table": "community_posts",
-        "command": "UPDATE",
-        "count": 3
-      },
-      {
-        "table": "community_posts",
-        "command": "INSERT",
-        "count": 3
-      },
-      {
-        "table": "community_posts",
-        "command": "SELECT",
-        "count": 4
-      },
-      {
-        "table": "community_posts",
-        "command": "DELETE",
-        "count": 2
-      },
-      {
-        "table": "property_environment_policies",
-        "command": "SELECT",
-        "count": 2
-      },
-      {
-        "table": "unit_environment_overrides",
-        "command": "SELECT",
-        "count": 2
-      }
-    ]
+    "multiplePermissivePolicies": []
   },
   "missingInSchema": [],
   "rpcMissingInSchema": [],
   "unreferencedFunctionsInCode": [
     "handle_new_user",
-    "increment_post_view",
     "rls_auto_enable"
   ],
   "functionsGrantedToAnon": [],
@@ -702,6 +535,9 @@
   "rpcReferences": {
     "check_renewal_windows": [
       "src/lib/__tests__/lease-renewal.integration.test.ts"
+    ],
+    "increment_post_view": [
+      "src/lib/community/actions.ts"
     ]
   },
   "storageBucketsReferenced": {
@@ -2069,25 +1905,11 @@
       },
       "policies": [
         {
-          "name": "Albums visible with published posts",
+          "name": "Community album stakeholders can access albums",
           "table": "community_albums",
-          "command": "SELECT",
-          "definition": "CREATE POLICY \"Albums visible with published posts\" ON \"public\".\"community_albums\" FOR SELECT USING ((EXISTS ( SELECT 1\r\n   FROM \"public\".\"community_posts\"\r\n  WHERE ((\"community_posts\".\"id\" = \"community_albums\".\"post_id\") AND (\"community_posts\".\"is_approved\" = true) AND (\"community_posts\".\"status\" = 'published'::\"public\".\"post_status_enum\")))));",
+          "command": "ALL",
+          "definition": "CREATE POLICY \"Community album stakeholders can access albums\"\nON public.community_albums\nTO authenticated\nUSING (\n    EXISTS (\n        SELECT 1\n        FROM public.community_posts\n        WHERE community_posts.id = community_albums.post_id\n          AND community_posts.is_approved = true\n          AND community_posts.status = 'published'::public.post_status_enum\n    )\n    OR EXISTS (\n        SELECT 1\n        FROM public.properties\n        WHERE properties.id = community_albums.property_id\n          AND properties.landlord_id = (select auth.uid())\n    )\n    OR EXISTS (\n        SELECT 1\n        FROM public.community_posts\n        WHERE community_posts.id = community_albums.post_id\n          AND community_posts.author_id = (select auth.uid())\n    )\n)\nWITH CHECK (\n    EXISTS (\n        SELECT 1\n        FROM public.properties\n        WHERE properties.id = community_albums.property_id\n          AND properties.landlord_id = (select auth.uid())\n    )\n    OR EXISTS (\n        SELECT 1\n        FROM public.community_posts\n        WHERE community_posts.id = community_albums.post_id\n          AND community_posts.author_id = (select auth.uid())\n    )\n);",
           "unwrappedAuthCalls": false
-        },
-        {
-          "name": "Landlords can manage albums",
-          "table": "community_albums",
-          "command": "ALL",
-          "definition": "CREATE POLICY \"Landlords can manage albums\" ON \"public\".\"community_albums\" USING ((\"property_id\" IN ( SELECT \"properties\".\"id\"\r\n   FROM \"public\".\"properties\"\r\n  WHERE (\"properties\".\"landlord_id\" = \"auth\".\"uid\"()))));",
-          "unwrappedAuthCalls": true
-        },
-        {
-          "name": "Tenants can manage own albums",
-          "table": "community_albums",
-          "command": "ALL",
-          "definition": "CREATE POLICY \"Tenants can manage own albums\" ON \"public\".\"community_albums\" USING ((\"post_id\" IN ( SELECT \"community_posts\".\"id\"\r\n   FROM \"public\".\"community_posts\"\r\n  WHERE (\"community_posts\".\"author_id\" = \"auth\".\"uid\"())))) WITH CHECK ((\"post_id\" IN ( SELECT \"community_posts\".\"id\"\r\n   FROM \"public\".\"community_posts\"\r\n  WHERE (\"community_posts\".\"author_id\" = \"auth\".\"uid\"()))));",
-          "unwrappedAuthCalls": true
         }
       ],
       "rlsEnabled": true,
@@ -2096,9 +1918,7 @@
         "src/lib/community/actions.ts"
       ],
       "functionReferences": [],
-      "riskSignals": [
-        "unwrapped_auth_rls_calls"
-      ]
+      "riskSignals": []
     },
     "community_comments": {
       "name": "community_comments",
@@ -2325,25 +2145,11 @@
       },
       "policies": [
         {
-          "name": "Landlords can manage photos",
+          "name": "Community photo stakeholders can access photos",
           "table": "community_photos",
           "command": "ALL",
-          "definition": "CREATE POLICY \"Landlords can manage photos\" ON \"public\".\"community_photos\" USING ((\"album_id\" IN ( SELECT \"community_albums\".\"id\"\r\n   FROM \"public\".\"community_albums\"\r\n  WHERE (\"community_albums\".\"property_id\" IN ( SELECT \"properties\".\"id\"\r\n           FROM \"public\".\"properties\"\r\n          WHERE (\"properties\".\"landlord_id\" = \"auth\".\"uid\"()))))));",
-          "unwrappedAuthCalls": true
-        },
-        {
-          "name": "Photos visible with album",
-          "table": "community_photos",
-          "command": "SELECT",
-          "definition": "CREATE POLICY \"Photos visible with album\" ON \"public\".\"community_photos\" FOR SELECT USING ((\"album_id\" IN ( SELECT \"community_albums\".\"id\"\r\n   FROM \"public\".\"community_albums\"\r\n  WHERE (EXISTS ( SELECT 1\r\n           FROM \"public\".\"community_posts\"\r\n          WHERE ((\"community_posts\".\"id\" = \"community_albums\".\"post_id\") AND (\"community_posts\".\"is_approved\" = true) AND (\"community_posts\".\"status\" = 'published'::\"public\".\"post_status_enum\")))))));",
+          "definition": "CREATE POLICY \"Community photo stakeholders can access photos\"\nON public.community_photos\nTO authenticated\nUSING (\n    EXISTS (\n        SELECT 1\n        FROM public.community_albums\n        JOIN public.community_posts ON community_posts.id = community_albums.post_id\n        WHERE community_albums.id = community_photos.album_id\n          AND community_posts.is_approved = true\n          AND community_posts.status = 'published'::public.post_status_enum\n    )\n    OR EXISTS (\n        SELECT 1\n        FROM public.community_albums\n        JOIN public.properties ON properties.id = community_albums.property_id\n        WHERE community_albums.id = community_photos.album_id\n          AND properties.landlord_id = (select auth.uid())\n    )\n    OR uploaded_by = (select auth.uid())\n)\nWITH CHECK (\n    uploaded_by = (select auth.uid())\n    OR EXISTS (\n        SELECT 1\n        FROM public.community_albums\n        JOIN public.properties ON properties.id = community_albums.property_id\n        WHERE community_albums.id = community_photos.album_id\n          AND properties.landlord_id = (select auth.uid())\n    )\n);",
           "unwrappedAuthCalls": false
-        },
-        {
-          "name": "Tenants can manage own photos",
-          "table": "community_photos",
-          "command": "ALL",
-          "definition": "CREATE POLICY \"Tenants can manage own photos\" ON \"public\".\"community_photos\" USING ((\"uploaded_by\" = \"auth\".\"uid\"())) WITH CHECK ((\"uploaded_by\" = \"auth\".\"uid\"()));",
-          "unwrappedAuthCalls": true
         }
       ],
       "rlsEnabled": true,
@@ -2352,9 +2158,7 @@
         "src/lib/community/actions.ts"
       ],
       "functionReferences": [],
-      "riskSignals": [
-        "unwrapped_auth_rls_calls"
-      ]
+      "riskSignals": []
     },
     "community_poll_votes": {
       "name": "community_poll_votes",
@@ -2647,92 +2451,36 @@
       },
       "policies": [
         {
-          "name": "Management can approve resident posts",
+          "name": "Community post stakeholders can view posts",
+          "table": "community_posts",
+          "command": "SELECT",
+          "definition": "CREATE POLICY \"Community post stakeholders can view posts\"\nON public.community_posts\nFOR SELECT\nTO authenticated\nUSING (\n    (\n        is_approved = true\n        AND status = 'published'::public.post_status_enum\n        AND (\n            (((select auth.jwt()) -> 'user_metadata'::text) ->> 'role'::text) = 'admin'\n            OR EXISTS (\n                SELECT 1\n                FROM public.properties\n                WHERE properties.id = community_posts.property_id\n                  AND properties.landlord_id = (select auth.uid())\n            )\n            OR EXISTS (\n                SELECT 1\n                FROM public.leases\n                JOIN public.units ON units.id = leases.unit_id\n                WHERE units.property_id = community_posts.property_id\n                  AND leases.tenant_id = (select auth.uid())\n                  AND leases.status = 'active'::public.lease_status\n            )\n        )\n    )\n    OR (\n        author_role = 'tenant'::public.user_role\n        AND is_approved = false\n        AND (\n            author_id = (select auth.uid())\n            OR (((select auth.jwt()) -> 'user_metadata'::text) ->> 'role'::text) = 'admin'\n            OR EXISTS (\n                SELECT 1\n                FROM public.properties\n                WHERE properties.id = community_posts.property_id\n                  AND properties.landlord_id = (select auth.uid())\n            )\n        )\n    )\n);",
+          "unwrappedAuthCalls": false
+        },
+        {
+          "name": "Community members can create posts",
+          "table": "community_posts",
+          "command": "INSERT",
+          "definition": "CREATE POLICY \"Community members can create posts\"\nON public.community_posts\nFOR INSERT\nTO authenticated\nWITH CHECK (\n    (select auth.role()) = 'authenticated'\n    AND author_id = (select auth.uid())\n    AND (\n        (\n            author_role = 'landlord'::public.user_role\n            AND is_approved = true\n            AND type = ANY (\n                ARRAY[\n                    'announcement'::public.post_type_enum,\n                    'discussion'::public.post_type_enum,\n                    'poll'::public.post_type_enum,\n                    'photo_album'::public.post_type_enum\n                ]\n            )\n            AND (\n                (((select auth.jwt()) -> 'user_metadata'::text) ->> 'role'::text) = 'admin'\n                OR EXISTS (\n                    SELECT 1\n                    FROM public.properties\n                    WHERE properties.id = community_posts.property_id\n                      AND properties.landlord_id = (select auth.uid())\n                )\n            )\n        )\n        OR (\n            author_role = 'tenant'::public.user_role\n            AND type = 'discussion'::public.post_type_enum\n            AND EXISTS (\n                SELECT 1\n                FROM public.leases\n                JOIN public.units ON units.id = leases.unit_id\n                WHERE units.property_id = community_posts.property_id\n                  AND leases.tenant_id = (select auth.uid())\n                  AND leases.status = 'active'::public.lease_status\n            )\n        )\n    )\n);",
+          "unwrappedAuthCalls": false
+        },
+        {
+          "name": "Community post stakeholders can update posts",
           "table": "community_posts",
           "command": "UPDATE",
-          "definition": "CREATE POLICY \"Management can approve resident posts\" ON \"public\".\"community_posts\" FOR UPDATE TO \"authenticated\" USING (((\"author_role\" = 'tenant'::\"public\".\"user_role\") AND ((\"property_id\" IN ( SELECT \"properties\".\"id\"\r\n   FROM \"public\".\"properties\"\r\n  WHERE (\"properties\".\"landlord_id\" = \"auth\".\"uid\"()))) OR (((\"auth\".\"jwt\"() -> 'user_metadata'::\"text\") ->> 'role'::\"text\") = 'admin'::\"text\")))) WITH CHECK (((\"author_role\" = 'tenant'::\"public\".\"user_role\") AND ((\"property_id\" IN ( SELECT \"properties\".\"id\"\r\n   FROM \"public\".\"properties\"\r\n  WHERE (\"properties\".\"landlord_id\" = \"auth\".\"uid\"()))) OR (((\"auth\".\"jwt\"() -> 'user_metadata'::\"text\") ->> 'role'::\"text\") = 'admin'::\"text\"))));",
-          "unwrappedAuthCalls": true
+          "definition": "CREATE POLICY \"Community post stakeholders can update posts\"\nON public.community_posts\nFOR UPDATE\nTO authenticated\nUSING (\n    author_id = (select auth.uid())\n    OR (\n        author_role = 'tenant'::public.user_role\n        AND (\n            (((select auth.jwt()) -> 'user_metadata'::text) ->> 'role'::text) = 'admin'\n            OR EXISTS (\n                SELECT 1\n                FROM public.properties\n                WHERE properties.id = community_posts.property_id\n                  AND properties.landlord_id = (select auth.uid())\n            )\n        )\n    )\n)\nWITH CHECK (\n    (\n        author_id = (select auth.uid())\n        AND (\n            (author_role <> 'landlord'::public.user_role OR is_approved = true)\n            AND (author_role <> 'tenant'::public.user_role OR is_approved = false)\n        )\n    )\n    OR (\n        author_role = 'tenant'::public.user_role\n        AND (\n            (((select auth.jwt()) -> 'user_metadata'::text) ->> 'role'::text) = 'admin'\n            OR EXISTS (\n                SELECT 1\n                FROM public.properties\n                WHERE properties.id = community_posts.property_id\n                  AND properties.landlord_id = (select auth.uid())\n            )\n        )\n    )\n);",
+          "unwrappedAuthCalls": false
         },
         {
-          "name": "Management can create community posts",
-          "table": "community_posts",
-          "command": "INSERT",
-          "definition": "CREATE POLICY \"Management can create community posts\" ON \"public\".\"community_posts\" FOR INSERT TO \"authenticated\" WITH CHECK (((\"auth\".\"role\"() = 'authenticated'::\"text\") AND (\"author_id\" = \"auth\".\"uid\"()) AND (\"author_role\" = 'landlord'::\"public\".\"user_role\") AND (\"is_approved\" = true) AND (\"type\" = ANY (ARRAY['announcement'::\"public\".\"post_type_enum\", 'discussion'::\"public\".\"post_type_enum\", 'poll'::\"public\".\"post_type_enum\", 'photo_album'::\"public\".\"post_type_enum\"])) AND ((\"property_id\" IN ( SELECT \"properties\".\"id\"\r\n   FROM \"public\".\"properties\"\r\n  WHERE (\"properties\".\"landlord_id\" = \"auth\".\"uid\"()))) OR (((\"auth\".\"jwt\"() -> 'user_metadata'::\"text\") ->> 'role'::\"text\") = 'admin'::\"text\"))));",
-          "unwrappedAuthCalls": true
-        },
-        {
-          "name": "Management can view published community posts",
-          "table": "community_posts",
-          "command": "SELECT",
-          "definition": "CREATE POLICY \"Management can view published community posts\" ON \"public\".\"community_posts\" FOR SELECT TO \"authenticated\" USING (((\"is_approved\" = true) AND (\"status\" = 'published'::\"public\".\"post_status_enum\") AND ((\"property_id\" IN ( SELECT \"properties\".\"id\"\r\n   FROM \"public\".\"properties\"\r\n  WHERE (\"properties\".\"landlord_id\" = \"auth\".\"uid\"()))) OR (((\"auth\".\"jwt\"() -> 'user_metadata'::\"text\") ->> 'role'::\"text\") = 'admin'::\"text\"))));",
-          "unwrappedAuthCalls": true
-        },
-        {
-          "name": "Management can view resident moderation queue",
-          "table": "community_posts",
-          "command": "SELECT",
-          "definition": "CREATE POLICY \"Management can view resident moderation queue\" ON \"public\".\"community_posts\" FOR SELECT TO \"authenticated\" USING (((\"author_role\" = 'tenant'::\"public\".\"user_role\") AND (\"is_approved\" = false) AND ((\"property_id\" IN ( SELECT \"properties\".\"id\"\r\n   FROM \"public\".\"properties\"\r\n  WHERE (\"properties\".\"landlord_id\" = \"auth\".\"uid\"()))) OR (((\"auth\".\"jwt\"() -> 'user_metadata'::\"text\") ->> 'role'::\"text\") = 'admin'::\"text\"))));",
-          "unwrappedAuthCalls": true
-        },
-        {
-          "name": "Tenants can create discussion posts for active lease property",
-          "table": "community_posts",
-          "command": "INSERT",
-          "definition": "CREATE POLICY \"Tenants can create discussion posts for active lease property\" ON \"public\".\"community_posts\" FOR INSERT TO \"authenticated\" WITH CHECK (((\"auth\".\"role\"() = 'authenticated'::\"text\") AND (\"author_id\" = \"auth\".\"uid\"()) AND (\"author_role\" = 'tenant'::\"public\".\"user_role\") AND (\"type\" = 'discussion'::\"public\".\"post_type_enum\") AND (\"is_approved\" = false) AND (\"is_moderated\" = true) AND (\"property_id\" IN ( SELECT \"units\".\"property_id\"\r\n   FROM (\"public\".\"leases\"\r\n     JOIN \"public\".\"units\" ON ((\"units\".\"id\" = \"leases\".\"unit_id\")))\r\n  WHERE ((\"leases\".\"tenant_id\" = \"auth\".\"uid\"()) AND (\"leases\".\"status\" = 'active'::\"public\".\"lease_status\"))))));",
-          "unwrappedAuthCalls": true
-        },
-        {
-          "name": "Tenants can create posts for their property",
-          "table": "community_posts",
-          "command": "INSERT",
-          "definition": "CREATE POLICY \"Tenants can create posts for their property\" ON \"public\".\"community_posts\" FOR INSERT WITH CHECK (((\"author_id\" = \"auth\".\"uid\"()) AND (\"property_id\" IN ( SELECT \"units\".\"property_id\"\r\n   FROM (\"public\".\"leases\"\r\n     JOIN \"public\".\"units\" ON ((\"units\".\"id\" = \"leases\".\"unit_id\")))\r\n  WHERE ((\"leases\".\"tenant_id\" = \"auth\".\"uid\"()) AND (\"leases\".\"status\" = 'active'::\"public\".\"lease_status\"))))));",
-          "unwrappedAuthCalls": true
-        },
-        {
-          "name": "Tenants can delete own posts",
+          "name": "Community post authors can delete posts",
           "table": "community_posts",
           "command": "DELETE",
-          "definition": "CREATE POLICY \"Tenants can delete own posts\" ON \"public\".\"community_posts\" FOR DELETE USING ((\"author_id\" = \"auth\".\"uid\"()));",
-          "unwrappedAuthCalls": true
-        },
-        {
-          "name": "Tenants can update own posts",
-          "table": "community_posts",
-          "command": "UPDATE",
-          "definition": "CREATE POLICY \"Tenants can update own posts\" ON \"public\".\"community_posts\" FOR UPDATE USING ((\"author_id\" = \"auth\".\"uid\"()));",
-          "unwrappedAuthCalls": true
-        },
-        {
-          "name": "Tenants can view approved posts for their property",
-          "table": "community_posts",
-          "command": "SELECT",
-          "definition": "CREATE POLICY \"Tenants can view approved posts for their property\" ON \"public\".\"community_posts\" FOR SELECT USING (((\"is_approved\" = true) AND (\"status\" = 'published'::\"public\".\"post_status_enum\") AND (\"property_id\" IN ( SELECT \"units\".\"property_id\"\r\n   FROM (\"public\".\"leases\"\r\n     JOIN \"public\".\"units\" ON ((\"units\".\"id\" = \"leases\".\"unit_id\")))\r\n  WHERE ((\"leases\".\"tenant_id\" = \"auth\".\"uid\"()) AND (\"leases\".\"status\" = 'active'::\"public\".\"lease_status\"))))));",
-          "unwrappedAuthCalls": true
-        },
-        {
-          "name": "Tenants can view own pending posts",
-          "table": "community_posts",
-          "command": "SELECT",
-          "definition": "CREATE POLICY \"Tenants can view own pending posts\" ON \"public\".\"community_posts\" FOR SELECT TO \"authenticated\" USING (((\"author_id\" = \"auth\".\"uid\"()) AND (\"author_role\" = 'tenant'::\"public\".\"user_role\") AND (\"is_approved\" = false) AND (\"property_id\" IN ( SELECT \"units\".\"property_id\"\r\n   FROM (\"public\".\"leases\"\r\n     JOIN \"public\".\"units\" ON ((\"units\".\"id\" = \"leases\".\"unit_id\")))\r\n  WHERE ((\"leases\".\"tenant_id\" = \"auth\".\"uid\"()) AND (\"leases\".\"status\" = 'active'::\"public\".\"lease_status\"))))));",
-          "unwrappedAuthCalls": true
-        },
-        {
-          "name": "Users can delete own community posts",
-          "table": "community_posts",
-          "command": "DELETE",
-          "definition": "CREATE POLICY \"Users can delete own community posts\" ON \"public\".\"community_posts\" FOR DELETE TO \"authenticated\" USING ((\"author_id\" = \"auth\".\"uid\"()));",
-          "unwrappedAuthCalls": true
-        },
-        {
-          "name": "Users can update own community posts",
-          "table": "community_posts",
-          "command": "UPDATE",
-          "definition": "CREATE POLICY \"Users can update own community posts\" ON \"public\".\"community_posts\" FOR UPDATE TO \"authenticated\" USING ((\"author_id\" = \"auth\".\"uid\"())) WITH CHECK (((\"author_id\" = \"auth\".\"uid\"()) AND ((\"author_role\" <> 'landlord'::\"public\".\"user_role\") OR (\"is_approved\" = true)) AND ((\"author_role\" <> 'tenant'::\"public\".\"user_role\") OR (\"is_approved\" = false))));",
-          "unwrappedAuthCalls": true
+          "definition": "CREATE POLICY \"Community post authors can delete posts\"\nON public.community_posts\nFOR DELETE\nTO authenticated\nUSING (author_id = (select auth.uid()));",
+          "unwrappedAuthCalls": false
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 13,
+      "codeReferenceCount": 14,
       "codeReferenceFiles": [
         "src/lib/community/actions.ts"
       ],
@@ -2740,8 +2488,7 @@
         "increment_post_view"
       ],
       "riskSignals": [
-        "json_columns",
-        "unwrapped_auth_rls_calls"
+        "json_columns"
       ]
     },
     "community_reactions": {
@@ -7960,14 +7707,14 @@
           "name": "Authors can view post stats",
           "table": "post_views",
           "command": "SELECT",
-          "definition": "CREATE POLICY \"Authors can view post stats\" ON \"public\".\"post_views\" FOR SELECT USING ((EXISTS ( SELECT 1\r\n   FROM \"public\".\"community_posts\"\r\n  WHERE ((\"community_posts\".\"id\" = \"post_views\".\"post_id\") AND (\"community_posts\".\"author_id\" = \"auth\".\"uid\"())))));",
-          "unwrappedAuthCalls": true
+          "definition": "CREATE POLICY \"Authors can view post stats\"\nON public.post_views\nFOR SELECT\nUSING (\n    EXISTS (\n        SELECT 1\n        FROM public.community_posts\n        WHERE community_posts.id = post_views.post_id\n          AND community_posts.author_id = (select auth.uid())\n    )\n);",
+          "unwrappedAuthCalls": false
         },
         {
           "name": "Post views insert allowed",
           "table": "post_views",
           "command": "INSERT",
-          "definition": "CREATE POLICY \"Post views insert allowed\" ON \"public\".\"post_views\" FOR INSERT WITH CHECK ((\"auth\".\"role\"() = 'authenticated'::\"text\"));",
+          "definition": "CREATE POLICY \"Post views insert allowed\"\nON public.post_views\nFOR INSERT\nWITH CHECK ((select auth.role()) = 'authenticated');",
           "unwrappedAuthCalls": false
         }
       ],
@@ -7977,9 +7724,7 @@
       "functionReferences": [
         "increment_post_view"
       ],
-      "riskSignals": [
-        "unwrapped_auth_rls_calls"
-      ]
+      "riskSignals": []
     },
     "profile_private": {
       "name": "profile_private",
@@ -8947,32 +8692,25 @@
       },
       "policies": [
         {
+          "name": "Environment policy stakeholders can select policies",
+          "table": "property_environment_policies",
+          "command": "SELECT",
+          "definition": "CREATE POLICY \"Environment policy stakeholders can select policies\"\nON public.property_environment_policies\nFOR SELECT\nTO authenticated\nUSING (\n    EXISTS (\n        SELECT 1\n        FROM public.properties p\n        WHERE p.id = property_environment_policies.property_id\n          AND p.landlord_id = (select auth.uid())\n    )\n    OR EXISTS (\n        SELECT 1\n        FROM public.leases l\n        JOIN public.units u ON u.id = l.unit_id\n        WHERE u.property_id = property_environment_policies.property_id\n          AND l.tenant_id = (select auth.uid())\n          AND l.status = 'active'::public.lease_status\n    )\n);",
+          "unwrappedAuthCalls": false
+        },
+        {
           "name": "Landlords can insert their own property policies",
           "table": "property_environment_policies",
           "command": "INSERT",
-          "definition": "CREATE POLICY \"Landlords can insert their own property policies\"\r\n    ON \"public\".\"property_environment_policies\" FOR INSERT\r\n    WITH CHECK (EXISTS (\r\n        SELECT 1 FROM \"public\".\"properties\" p WHERE p.id = property_environment_policies.property_id AND p.landlord_id = auth.uid()\r\n    ));",
-          "unwrappedAuthCalls": true
-        },
-        {
-          "name": "Landlords can select their own property policies",
-          "table": "property_environment_policies",
-          "command": "SELECT",
-          "definition": "-- RLS Policies for property_environment_policies\r\nCREATE POLICY \"Landlords can select their own property policies\"\r\n    ON \"public\".\"property_environment_policies\" FOR SELECT\r\n    USING (EXISTS (\r\n        SELECT 1 FROM \"public\".\"properties\" p WHERE p.id = property_environment_policies.property_id AND p.landlord_id = auth.uid()\r\n    ));",
-          "unwrappedAuthCalls": true
+          "definition": "CREATE POLICY \"Landlords can insert their own property policies\"\nON public.property_environment_policies\nFOR INSERT\nTO authenticated\nWITH CHECK (\n    EXISTS (\n        SELECT 1\n        FROM public.properties p\n        WHERE p.id = property_environment_policies.property_id\n          AND p.landlord_id = (select auth.uid())\n    )\n);",
+          "unwrappedAuthCalls": false
         },
         {
           "name": "Landlords can update their own property policies",
           "table": "property_environment_policies",
           "command": "UPDATE",
-          "definition": "CREATE POLICY \"Landlords can update their own property policies\"\r\n    ON \"public\".\"property_environment_policies\" FOR UPDATE\r\n    USING (EXISTS (\r\n        SELECT 1 FROM \"public\".\"properties\" p WHERE p.id = property_environment_policies.property_id AND p.landlord_id = auth.uid()\r\n    ));",
-          "unwrappedAuthCalls": true
-        },
-        {
-          "name": "Users can select policy if they have an active lease",
-          "table": "property_environment_policies",
-          "command": "SELECT",
-          "definition": "-- Tenants can read their property's policy\r\nCREATE POLICY \"Users can select policy if they have an active lease\"\r\n    ON \"public\".\"property_environment_policies\" FOR SELECT\r\n    USING (EXISTS (\r\n        SELECT 1 FROM \"public\".\"leases\" l\r\n        JOIN \"public\".\"units\" u ON l.unit_id = u.id\r\n        WHERE u.property_id = property_environment_policies.property_id\r\n          AND l.tenant_id = auth.uid()\r\n          AND l.status = 'active'\r\n    ));",
-          "unwrappedAuthCalls": true
+          "definition": "CREATE POLICY \"Landlords can update their own property policies\"\nON public.property_environment_policies\nFOR UPDATE\nTO authenticated\nUSING (\n    EXISTS (\n        SELECT 1\n        FROM public.properties p\n        WHERE p.id = property_environment_policies.property_id\n          AND p.landlord_id = (select auth.uid())\n    )\n)\nWITH CHECK (\n    EXISTS (\n        SELECT 1\n        FROM public.properties p\n        WHERE p.id = property_environment_policies.property_id\n          AND p.landlord_id = (select auth.uid())\n    )\n);",
+          "unwrappedAuthCalls": false
         }
       ],
       "rlsEnabled": true,
@@ -8988,8 +8726,7 @@
       ],
       "functionReferences": [],
       "riskSignals": [
-        "json_columns",
-        "unwrapped_auth_rls_calls"
+        "json_columns"
       ]
     },
     "property_floor_configs": {
@@ -10237,32 +9974,25 @@
       },
       "policies": [
         {
+          "name": "Environment override stakeholders can select overrides",
+          "table": "unit_environment_overrides",
+          "command": "SELECT",
+          "definition": "CREATE POLICY \"Environment override stakeholders can select overrides\"\nON public.unit_environment_overrides\nFOR SELECT\nTO authenticated\nUSING (\n    EXISTS (\n        SELECT 1\n        FROM public.units u\n        JOIN public.properties p ON p.id = u.property_id\n        WHERE u.id = unit_environment_overrides.unit_id\n          AND p.landlord_id = (select auth.uid())\n    )\n    OR EXISTS (\n        SELECT 1\n        FROM public.leases l\n        WHERE l.unit_id = unit_environment_overrides.unit_id\n          AND l.tenant_id = (select auth.uid())\n          AND l.status = 'active'::public.lease_status\n    )\n);",
+          "unwrappedAuthCalls": false
+        },
+        {
           "name": "Landlords can insert their own unit overrides",
           "table": "unit_environment_overrides",
           "command": "INSERT",
-          "definition": "CREATE POLICY \"Landlords can insert their own unit overrides\"\r\n    ON \"public\".\"unit_environment_overrides\" FOR INSERT\r\n    WITH CHECK (EXISTS (\r\n        SELECT 1 FROM \"public\".\"units\" u\r\n        JOIN \"public\".\"properties\" p ON u.property_id = p.id\r\n        WHERE u.id = unit_environment_overrides.unit_id AND p.landlord_id = auth.uid()\r\n    ));",
-          "unwrappedAuthCalls": true
-        },
-        {
-          "name": "Landlords can select their own unit overrides",
-          "table": "unit_environment_overrides",
-          "command": "SELECT",
-          "definition": "-- RLS Policies for unit_environment_overrides\r\nCREATE POLICY \"Landlords can select their own unit overrides\"\r\n    ON \"public\".\"unit_environment_overrides\" FOR SELECT\r\n    USING (EXISTS (\r\n        SELECT 1 FROM \"public\".\"units\" u\r\n        JOIN \"public\".\"properties\" p ON u.property_id = p.id\r\n        WHERE u.id = unit_environment_overrides.unit_id AND p.landlord_id = auth.uid()\r\n    ));",
-          "unwrappedAuthCalls": true
+          "definition": "CREATE POLICY \"Landlords can insert their own unit overrides\"\nON public.unit_environment_overrides\nFOR INSERT\nTO authenticated\nWITH CHECK (\n    EXISTS (\n        SELECT 1\n        FROM public.units u\n        JOIN public.properties p ON p.id = u.property_id\n        WHERE u.id = unit_environment_overrides.unit_id\n          AND p.landlord_id = (select auth.uid())\n    )\n);",
+          "unwrappedAuthCalls": false
         },
         {
           "name": "Landlords can update their own unit overrides",
           "table": "unit_environment_overrides",
           "command": "UPDATE",
-          "definition": "CREATE POLICY \"Landlords can update their own unit overrides\"\r\n    ON \"public\".\"unit_environment_overrides\" FOR UPDATE\r\n    USING (EXISTS (\r\n        SELECT 1 FROM \"public\".\"units\" u\r\n        JOIN \"public\".\"properties\" p ON u.property_id = p.id\r\n        WHERE u.id = unit_environment_overrides.unit_id AND p.landlord_id = auth.uid()\r\n    ));",
-          "unwrappedAuthCalls": true
-        },
-        {
-          "name": "Users can select override if they have an active lease",
-          "table": "unit_environment_overrides",
-          "command": "SELECT",
-          "definition": "CREATE POLICY \"Users can select override if they have an active lease\"\r\n    ON \"public\".\"unit_environment_overrides\" FOR SELECT\r\n    USING (EXISTS (\r\n        SELECT 1 FROM \"public\".\"leases\" l\r\n        WHERE l.unit_id = unit_environment_overrides.unit_id\r\n          AND l.tenant_id = auth.uid()\r\n          AND l.status = 'active'\r\n    ));",
-          "unwrappedAuthCalls": true
+          "definition": "CREATE POLICY \"Landlords can update their own unit overrides\"\nON public.unit_environment_overrides\nFOR UPDATE\nTO authenticated\nUSING (\n    EXISTS (\n        SELECT 1\n        FROM public.units u\n        JOIN public.properties p ON p.id = u.property_id\n        WHERE u.id = unit_environment_overrides.unit_id\n          AND p.landlord_id = (select auth.uid())\n    )\n)\nWITH CHECK (\n    EXISTS (\n        SELECT 1\n        FROM public.units u\n        JOIN public.properties p ON p.id = u.property_id\n        WHERE u.id = unit_environment_overrides.unit_id\n          AND p.landlord_id = (select auth.uid())\n    )\n);",
+          "unwrappedAuthCalls": false
         }
       ],
       "rlsEnabled": true,
@@ -10272,9 +10002,7 @@
         "src/app/api/landlord/lease/finalize/route.ts"
       ],
       "functionReferences": [],
-      "riskSignals": [
-        "unwrapped_auth_rls_calls"
-      ]
+      "riskSignals": []
     },
     "unit_map_positions": {
       "name": "unit_map_positions",

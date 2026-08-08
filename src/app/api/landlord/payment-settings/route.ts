@@ -2,17 +2,16 @@ import { NextResponse } from "next/server";
 
 import { getBillingWorkspace } from "@/lib/billing/server";
 import { BILLING_BUCKETS, removeBillingFile, uploadBillingFile } from "@/lib/billing/storage";
-import { requireUser } from "@/lib/supabase/auth";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 
 export async function GET() {
     try {
-        const { user, supabase } = await requireUser();
-        const workspace = await getBillingWorkspace(supabase, user.id);
+        const authContext = await requireAuthenticatedUser();
+        if (!("userId" in authContext)) return authContext as Response;
+        const { userId, supabase } = authContext;
+        const workspace = await getBillingWorkspace(supabase, userId);
         return NextResponse.json(workspace);
     } catch (error) {
-        if (error instanceof Error && error.message === "Unauthorized") {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
         console.error("Failed to load billing workspace:", error);
         return NextResponse.json({ error: "Failed to load billing settings." }, { status: 500 });
     }
@@ -20,7 +19,10 @@ export async function GET() {
 
 export async function POST(request: Request) {
     try {
-        const { user, supabase } = await requireUser();
+        const authContext = await requireAuthenticatedUser();
+        if (!("userId" in authContext)) return authContext as Response;
+        const { userId, supabase } = authContext;
+
         const formData = await request.formData();
         const accountName = String(formData.get("accountName") ?? "").trim();
         const accountNumber = String(formData.get("accountNumber") ?? "").trim();
@@ -36,7 +38,7 @@ export async function POST(request: Request) {
         const { data: existingDestination } = await supabase
             .from("landlord_payment_destinations")
             .select("*")
-            .eq("landlord_id", user.id)
+            .eq("landlord_id", userId)
             .eq("provider", "gcash")
             .maybeSingle();
 
@@ -52,7 +54,7 @@ export async function POST(request: Request) {
         if (qrFile instanceof File && qrFile.size > 0) {
             const uploaded = await uploadBillingFile({
                 bucketName: BILLING_BUCKETS.landlordQr,
-                ownerId: user.id,
+                ownerId: userId,
                 scope: "gcash",
                 file: qrFile,
             });
@@ -61,7 +63,7 @@ export async function POST(request: Request) {
         }
 
         const upsertPayload = {
-                    landlord_id: user.id,
+                    landlord_id: userId,
                     provider: "gcash",
                     account_name: accountName,
                     account_number: accountNumber,
@@ -92,7 +94,7 @@ export async function POST(request: Request) {
 
             const rows = utilityConfigs.map((item) => {
                 const row: Record<string, unknown> = {
-                    landlord_id: user.id,
+                    landlord_id: userId,
                     property_id: item.property_id,
                     unit_id: item.unit_id ?? null,
                     utility_type: item.utility_type,
@@ -118,12 +120,9 @@ export async function POST(request: Request) {
             }
         }
 
-        const workspace = await getBillingWorkspace(supabase, user.id);
+        const workspace = await getBillingWorkspace(supabase, userId);
         return NextResponse.json(workspace);
     } catch (error) {
-        if (error instanceof Error && error.message === "Unauthorized") {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
         console.error("Failed to save billing workspace:", error);
         return NextResponse.json({ error: "Failed to save billing settings." }, { status: 500 });
     }

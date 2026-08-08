@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendRegistrationOTP } from "@/lib/email";
 
@@ -70,16 +70,13 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const action = searchParams.get("action");
 
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
 
     if (action === "status") {
         const adminClient = createAdminClient();
-        const { profile, settings, gmailToken } = await getTwoFactorState(adminClient, user.id);
+        const { profile, settings, gmailToken } = await getTwoFactorState(adminClient, userId);
 
         return NextResponse.json({
             enabled: settings?.two_factor_enabled || false,
@@ -94,7 +91,7 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: "Google OAuth not configured" }, { status: 500 });
         }
 
-        const state = Buffer.from(JSON.stringify({ userId: user.id })).toString("base64");
+        const state = Buffer.from(JSON.stringify({ userId: userId })).toString("base64");
         const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
             `client_id=${GOOGLE_CLIENT_ID}` +
             `&redirect_uri=${encodeURIComponent(GOOGLE_REDIRECT_URI)}` +
@@ -122,7 +119,7 @@ export async function GET(request: Request) {
         try {
             const state = searchParams.get("state");
             const decoded = state ? JSON.parse(Buffer.from(state, "base64").toString()) : {};
-            const userId = decoded.userId || user.id;
+            const callbackUserId = decoded.userId || userId;
 
             const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
                 method: "POST",
@@ -182,15 +179,12 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
 
     const adminClient = createAdminClient();
-    const { profile, settings, gmailToken } = await getTwoFactorState(adminClient, user.id);
+    const { profile, settings, gmailToken } = await getTwoFactorState(adminClient, userId);
 
     if (!profile) {
         return NextResponse.json({ error: "Profile not found" }, { status: 404 });
@@ -207,7 +201,7 @@ export async function POST(request: Request) {
         const otp = generateOTP();
         const otpExpiry = new Date(Date.now() + 5 * 60 * 1000).toISOString();
 
-        const { error: updateError } = await upsertTwoFactorSettings(adminClient, user.id, {
+        const { error: updateError } = await upsertTwoFactorSettings(adminClient, userId, {
             otp_code: otp,
             otp_expiry: otpExpiry,
         });
@@ -259,7 +253,7 @@ export async function POST(request: Request) {
 
         const existingEmail = settings.two_factor_email || profile.email;
 
-        const { error: enableError } = await upsertTwoFactorSettings(adminClient, user.id, {
+        const { error: enableError } = await upsertTwoFactorSettings(adminClient, userId, {
             two_factor_enabled: true,
             two_factor_email: existingEmail,
             otp_code: null,
@@ -294,7 +288,7 @@ export async function POST(request: Request) {
         }
 
         const [{ error: settingsError }, { error: tokenError }] = await Promise.all([
-            upsertTwoFactorSettings(adminClient, user.id, {
+            upsertTwoFactorSettings(adminClient, userId, {
                 two_factor_enabled: false,
                 two_factor_email: null,
                 otp_code: null,
@@ -303,7 +297,7 @@ export async function POST(request: Request) {
             (adminClient as any)
                 .from("external_account_tokens")
                 .delete()
-                .eq("profile_id", user.id)
+                .eq("profile_id", userId)
                 .eq("provider", "gmail"),
         ]);
 

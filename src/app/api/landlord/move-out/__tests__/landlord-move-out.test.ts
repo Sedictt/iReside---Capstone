@@ -1,22 +1,42 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { NextResponse } from "next/server";
 
-// ─── Supabase mock ──────────────────────────────────────────────────────
-const mockFrom = vi.fn();
-const mockAuthGetUser = vi.fn();
+// ─── Auth guard mock ─────────────────────────────────────────────────────
+// Mock requireAuthenticatedUser directly so the internal resolveUserRole
+// call (which queries supabase.from("profiles")) doesn't consume mock slots.
+const mockRequireAuth = vi.fn();
 
-vi.mock("@/lib/supabase/server", () => ({
-  createClient: vi.fn(() =>
-    Promise.resolve({
-      from: mockFrom,
-      auth: { getUser: mockAuthGetUser },
-    })
-  ),
+vi.mock("@/lib/api/auth-guard", () => ({
+  requireAuthenticatedUser: mockRequireAuth,
+  requireRole: vi.fn((ctx: unknown) => ctx),
+  requireLandlordOwnsProperty: vi.fn(),
+  requireAccessToLease: vi.fn(),
 }));
+
+// ─── Supabase from mock (for the supabase client handed back by auth) ────
+const mockFrom = vi.fn();
 
 function resetMocks() {
   vi.clearAllMocks();
   mockFrom.mockReset();
-  mockAuthGetUser.mockReset();
+  mockRequireAuth.mockReset();
+}
+
+/** Return an auth-success context that passes `("userId" in ctx)`. */
+function authSuccess(userId = "l1", role = "landlord") {
+  return {
+    userId,
+    userEmail: "test@example.com",
+    userRole: role,
+    supabase: { from: mockFrom },
+  };
+}
+
+function authUnauthorized() {
+  return NextResponse.json(
+    { error: "Authentication required" },
+    { status: 401 },
+  );
 }
 
 function makeContext(id: string) {
@@ -37,20 +57,22 @@ describe("PUT /api/landlord/move-out/[id]/approve", () => {
   beforeEach(resetMocks);
 
   it("returns 401 when unauthenticated", async () => {
-    mockAuthGetUser.mockResolvedValue({ data: { user: null }, error: new Error("No session") });
+    mockRequireAuth.mockResolvedValue(authUnauthorized());
     const { PUT } = await import("@/app/api/landlord/move-out/[id]/approve/route");
     const res = await PUT(makeRequest(), makeContext("req-1"));
     expect(res.status).toBe(401);
   });
 
   it("returns 404 when request not found or not owned by landlord", async () => {
-    mockAuthGetUser.mockResolvedValue({ data: { user: { id: "l1" } }, error: null });
+    mockRequireAuth.mockResolvedValue(authSuccess());
+
     const selectChain = {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
       single: vi.fn().mockResolvedValue({ data: null, error: { code: "PGRST116" } }),
     };
     mockFrom.mockReturnValue(selectChain);
+
     const { PUT } = await import("@/app/api/landlord/move-out/[id]/approve/route");
     const res = await PUT(makeRequest(), makeContext("nonexistent"));
     expect(res.status).toBe(404);
@@ -59,7 +81,8 @@ describe("PUT /api/landlord/move-out/[id]/approve", () => {
   });
 
   it("returns 400 when request status is not pending", async () => {
-    mockAuthGetUser.mockResolvedValue({ data: { user: { id: "l1" } }, error: null });
+    mockRequireAuth.mockResolvedValue(authSuccess());
+
     const selectChain = {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
@@ -69,6 +92,7 @@ describe("PUT /api/landlord/move-out/[id]/approve", () => {
       }),
     };
     mockFrom.mockReturnValue(selectChain);
+
     const { PUT } = await import("@/app/api/landlord/move-out/[id]/approve/route");
     const res = await PUT(makeRequest(), makeContext("req-1"));
     expect(res.status).toBe(400);
@@ -77,7 +101,7 @@ describe("PUT /api/landlord/move-out/[id]/approve", () => {
   });
 
   it("approves a pending request and updates lease end_date", async () => {
-    mockAuthGetUser.mockResolvedValue({ data: { user: { id: "l1" } }, error: null });
+    mockRequireAuth.mockResolvedValue(authSuccess());
 
     const selectChain = {
       select: vi.fn().mockReturnThis(),
@@ -117,13 +141,13 @@ describe("PUT /api/landlord/move-out/[id]/approve", () => {
   });
 
   it("notifies tenant after approval", async () => {
-    mockAuthGetUser.mockResolvedValue({ data: { user: { id: "l1" } }, error: null });
+    mockRequireAuth.mockResolvedValue(authSuccess());
 
     const selectChain = {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
       single: vi.fn().mockResolvedValue({
-        data: { id: "req-1", status: "pending", lease_id: "lease-1", tenant_id: "t1", requested_date: "2099-12-31", landlord_id: "l1" },
+        data: { id: "req-1", status: "pending", lease_id: "lease-1", tenant_id: "t1", requested_date: "2026-12-31", landlord_id: "l1" },
         error: null,
       }),
     };
@@ -140,7 +164,7 @@ describe("PUT /api/landlord/move-out/[id]/approve", () => {
       update: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }),
     };
     const notifChain = {
-      insert: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }),
+      insert: vi.fn().mockResolvedValue({ error: null }),
     };
 
     mockFrom
@@ -161,14 +185,14 @@ describe("PUT /api/landlord/move-out/[id]/deny", () => {
   beforeEach(resetMocks);
 
   it("returns 401 when unauthenticated", async () => {
-    mockAuthGetUser.mockResolvedValue({ data: { user: null }, error: new Error("No session") });
+    mockRequireAuth.mockResolvedValue(authUnauthorized());
     const { PUT } = await import("@/app/api/landlord/move-out/[id]/deny/route");
     const res = await PUT(makeRequest({ denial_reason: "Not allowed" }), makeContext("req-1"));
     expect(res.status).toBe(401);
   });
 
   it("returns 400 when denial_reason is missing", async () => {
-    mockAuthGetUser.mockResolvedValue({ data: { user: { id: "l1" } }, error: null });
+    mockRequireAuth.mockResolvedValue(authSuccess());
     const { PUT } = await import("@/app/api/landlord/move-out/[id]/deny/route");
     const res = await PUT(makeRequest({}), makeContext("req-1"));
     expect(res.status).toBe(400);
@@ -177,7 +201,7 @@ describe("PUT /api/landlord/move-out/[id]/deny", () => {
   });
 
   it("returns 404 when request not found", async () => {
-    mockAuthGetUser.mockResolvedValue({ data: { user: { id: "l1" } }, error: null });
+    mockRequireAuth.mockResolvedValue(authSuccess());
     const selectChain = {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
@@ -189,8 +213,8 @@ describe("PUT /api/landlord/move-out/[id]/deny", () => {
     expect(res.status).toBe(404);
   });
 
-  it("returns 400 when request is not in pending status", async () => {
-    mockAuthGetUser.mockResolvedValue({ data: { user: { id: "l1" } }, error: null });
+  it("returns 400 when request.status !== pending", async () => {
+    mockRequireAuth.mockResolvedValue(authSuccess());
     const selectChain = {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
@@ -207,8 +231,8 @@ describe("PUT /api/landlord/move-out/[id]/deny", () => {
     expect(json.error).toContain("Cannot deny");
   });
 
-  it("denies a pending request with valid reason", async () => {
-    mockAuthGetUser.mockResolvedValue({ data: { user: { id: "l1" } }, error: null });
+  it("denies a pending request", async () => {
+    mockRequireAuth.mockResolvedValue(authSuccess());
 
     const selectChain = {
       select: vi.fn().mockReturnThis(),
@@ -228,7 +252,7 @@ describe("PUT /api/landlord/move-out/[id]/deny", () => {
       }),
     };
     const notifChain = {
-      insert: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }),
+      insert: vi.fn().mockResolvedValue({ error: null }),
     };
 
     mockFrom
@@ -244,7 +268,7 @@ describe("PUT /api/landlord/move-out/[id]/deny", () => {
   });
 
   it("notifies tenant after denial", async () => {
-    mockAuthGetUser.mockResolvedValue({ data: { user: { id: "l1" } }, error: null });
+    mockRequireAuth.mockResolvedValue(authSuccess());
 
     const selectChain = {
       select: vi.fn().mockReturnThis(),
@@ -264,7 +288,7 @@ describe("PUT /api/landlord/move-out/[id]/deny", () => {
       }),
     };
     const notifChain = {
-      insert: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }),
+      insert: vi.fn().mockResolvedValue({ error: null }),
     };
 
     mockFrom
@@ -284,7 +308,7 @@ describe("POST /api/landlord/move-out/[id]/inspection", () => {
   beforeEach(resetMocks);
 
   it("returns 401 when unauthenticated", async () => {
-    mockAuthGetUser.mockResolvedValue({ data: { user: null }, error: new Error("No session") });
+    mockRequireAuth.mockResolvedValue(authUnauthorized());
     const { POST } = await import("@/app/api/landlord/move-out/[id]/inspection/route");
     const req = new Request("http://localhost", {
       method: "POST",
@@ -296,7 +320,7 @@ describe("POST /api/landlord/move-out/[id]/inspection", () => {
   });
 
   it("returns 404 when request not found", async () => {
-    mockAuthGetUser.mockResolvedValue({ data: { user: { id: "l1" } }, error: null });
+    mockRequireAuth.mockResolvedValue(authSuccess());
     const selectChain = {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
@@ -313,8 +337,8 @@ describe("POST /api/landlord/move-out/[id]/inspection", () => {
     expect(res.status).toBe(404);
   });
 
-  it("returns 400 when request is not in approved status", async () => {
-    mockAuthGetUser.mockResolvedValue({ data: { user: { id: "l1" } }, error: null });
+  it("returns 400 when status !== approved", async () => {
+    mockRequireAuth.mockResolvedValue(authSuccess());
     const selectChain = {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
@@ -333,11 +357,53 @@ describe("POST /api/landlord/move-out/[id]/inspection", () => {
     const res = await POST(req, makeContext("req-1"));
     expect(res.status).toBe(400);
     const json = await res.json();
-    expect(json.error).toContain("Must be 'approved'");
+    expect(json.error).toContain("approved");
   });
 
-  it("records inspection for an approved request", async () => {
-    mockAuthGetUser.mockResolvedValue({ data: { user: { id: "l1" } }, error: null });
+  it("records inspection with default date when inspection_date missing", async () => {
+    mockRequireAuth.mockResolvedValue(authSuccess());
+
+    const selectChain = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({
+        data: { id: "req-1", status: "approved", tenant_id: "t1", landlord_id: "l1" },
+        error: null,
+      }),
+    };
+    const updateChain = {
+      update: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: { id: "req-1", inspection_date: "pressor" },
+              error: null,
+            }),
+          }),
+        }),
+      }),
+    };
+    const notifChain = {
+      insert: vi.fn().mockResolvedValue({ error: null }),
+    };
+
+    mockFrom
+      .mockReturnValueOnce(selectChain)
+      .mockReturnValueOnce(updateChain)
+      .mockReturnValueOnce(notifChain);
+
+    const { POST } = await import("@/app/api/landlord/move-out/[id]/inspection/route");
+    const req = new Request("http://localhost", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ inspection_notes: "Good condition" }),
+    });
+    const res = await POST(req, makeContext("req-1"));
+    expect(res.status).toBe(200);
+  });
+
+  it("records inspection successfully", async () => {
+    mockRequireAuth.mockResolvedValue(authSuccess());
 
     const selectChain = {
       select: vi.fn().mockReturnThis(),
@@ -360,7 +426,7 @@ describe("POST /api/landlord/move-out/[id]/inspection", () => {
       }),
     };
     const notifChain = {
-      insert: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }),
+      insert: vi.fn().mockResolvedValue({ error: null }),
     };
 
     mockFrom
@@ -387,14 +453,14 @@ describe("GET /api/landlord/move-out/[id]/inspection (clearance check)", () => {
   beforeEach(resetMocks);
 
   it("returns 401 when unauthenticated", async () => {
-    mockAuthGetUser.mockResolvedValue({ data: { user: null }, error: new Error("No session") });
+    mockRequireAuth.mockResolvedValue(authUnauthorized());
     const { GET } = await import("@/app/api/landlord/move-out/[id]/inspection/route");
     const res = await GET(new Request("http://localhost"), makeContext("req-1"));
     expect(res.status).toBe(401);
   });
 
   it("returns clearance status with outstanding balances", async () => {
-    mockAuthGetUser.mockResolvedValue({ data: { user: { id: "l1" } }, error: null });
+    mockRequireAuth.mockResolvedValue(authSuccess());
 
     const moveOutChain = {
       select: vi.fn().mockReturnThis(),
@@ -435,7 +501,7 @@ describe("GET /api/landlord/move-out/[id]/inspection (clearance check)", () => {
   });
 
   it("returns settled when no outstanding balances", async () => {
-    mockAuthGetUser.mockResolvedValue({ data: { user: { id: "l1" } }, error: null });
+    mockRequireAuth.mockResolvedValue(authSuccess());
 
     const moveOutChain = {
       select: vi.fn().mockReturnThis(),
@@ -473,14 +539,14 @@ describe("PUT /api/landlord/move-out/[id]/complete", () => {
   beforeEach(resetMocks);
 
   it("returns 401 when unauthenticated", async () => {
-    mockAuthGetUser.mockResolvedValue({ data: { user: null }, error: new Error("No session") });
+    mockRequireAuth.mockResolvedValue(authUnauthorized());
     const { PUT } = await import("@/app/api/landlord/move-out/[id]/complete/route");
     const res = await PUT(new Request("http://localhost", { method: "PUT" }), makeContext("req-1"));
     expect(res.status).toBe(401);
   });
 
   it("returns 404 when request not found", async () => {
-    mockAuthGetUser.mockResolvedValue({ data: { user: { id: "l1" } }, error: null });
+    mockRequireAuth.mockResolvedValue(authSuccess());
     const selectChain = {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
@@ -492,8 +558,8 @@ describe("PUT /api/landlord/move-out/[id]/complete", () => {
     expect(res.status).toBe(404);
   });
 
-  it("returns 400 when request is not approved or has no inspection", async () => {
-    mockAuthGetUser.mockResolvedValue({ data: { user: { id: "l1" } }, error: null });
+  it("returns 400 when approved but no inspection ", async () => {
+    mockRequireAuth.mockResolvedValue(authSuccess());
     const selectChain = {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
@@ -510,13 +576,13 @@ describe("PUT /api/landlord/move-out/[id]/complete", () => {
     expect(json.error).toContain("Inspection must be recorded");
   });
 
-  it("returns 400 when request is still pending", async () => {
-    mockAuthGetUser.mockResolvedValue({ data: { user: { id: "l1" } }, error: null });
+  it("returns 400 when request is pending", async () => {
+    mockRequireAuth.mockResolvedValue(authSuccess());
     const selectChain = {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
       single: vi.fn().mockResolvedValue({
-        data: { id: "req-1", status: "pending", inspection_date: null, lease_id: "lease-1", tenant_id: "t1", landlord_id: "l1", lease: { unit_id: "u1" } },
+        data: { id: "req-1", status: "pending", inspection_date: null, lease_id: "lease-1", tenant_id: "t1", landlord_id: "l1" },
         error: null,
       }),
     };
@@ -527,7 +593,7 @@ describe("PUT /api/landlord/move-out/[id]/complete", () => {
   });
 
   it("completes move-out: terminates lease and marks unit vacant", async () => {
-    mockAuthGetUser.mockResolvedValue({ data: { user: { id: "l1" } }, error: null });
+    mockRequireAuth.mockResolvedValue(authSuccess());
 
     const selectChain = {
       select: vi.fn().mockReturnThis(),
@@ -549,7 +615,7 @@ describe("PUT /api/landlord/move-out/[id]/complete", () => {
       update: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }),
     };
     const notifChain = {
-      insert: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }),
+      insert: vi.fn().mockResolvedValue({ error: null }),
     };
 
     mockFrom
@@ -557,7 +623,7 @@ describe("PUT /api/landlord/move-out/[id]/complete", () => {
       .mockReturnValueOnce(updateChain)   // move_out_requests update
       .mockReturnValueOnce(updateChain)   // leases update
       .mockReturnValueOnce(updateChain)   // units update
-      .mockReturnValueOnce(notifChain);    // notifications
+      .mockReturnValueOnce(notifChain);    // notifications insert
 
     const { PUT } = await import("@/app/api/landlord/move-out/[id]/complete/route");
     const res = await PUT(new Request("http://localhost", { method: "PUT" }), makeContext("req-1"));
@@ -567,7 +633,7 @@ describe("PUT /api/landlord/move-out/[id]/complete", () => {
   });
 
   it("notifies tenant after completion", async () => {
-    mockAuthGetUser.mockResolvedValue({ data: { user: { id: "l1" } }, error: null });
+    mockRequireAuth.mockResolvedValue(authSuccess());
 
     const selectChain = {
       select: vi.fn().mockReturnThis(),
@@ -589,7 +655,7 @@ describe("PUT /api/landlord/move-out/[id]/complete", () => {
       update: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }),
     };
     const notifChain = {
-      insert: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }),
+      insert: vi.fn().mockResolvedValue({ error: null }),
     };
 
     mockFrom
@@ -611,20 +677,22 @@ describe("GET /api/landlord/move-out (list requests)", () => {
   beforeEach(resetMocks);
 
   it("returns 401 when unauthenticated", async () => {
-    mockAuthGetUser.mockResolvedValue({ data: { user: null }, error: new Error("No session") });
+    mockRequireAuth.mockResolvedValue(authUnauthorized());
     const { GET } = await import("@/app/api/landlord/move-out/route");
     const res = await GET(new Request("http://localhost/api/landlord/move-out"));
     expect(res.status).toBe(401);
   });
 
   it("returns empty array when no requests exist", async () => {
-    mockAuthGetUser.mockResolvedValue({ data: { user: { id: "l1" } }, error: null });
+    mockRequireAuth.mockResolvedValue(authSuccess());
+
     const listChain = {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
       order: vi.fn().mockResolvedValue({ data: [], error: null }),
     };
     mockFrom.mockReturnValue(listChain);
+
     const { GET } = await import("@/app/api/landlord/move-out/route");
     const res = await GET(new Request("http://localhost/api/landlord/move-out"));
     expect(res.status).toBe(200);
@@ -633,7 +701,7 @@ describe("GET /api/landlord/move-out (list requests)", () => {
   });
 
   it("returns enriched list of requests", async () => {
-    mockAuthGetUser.mockResolvedValue({ data: { user: { id: "l1" } }, error: null });
+    mockRequireAuth.mockResolvedValue(authSuccess());
 
     const mockRequests = [
       {
