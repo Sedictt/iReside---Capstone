@@ -51,7 +51,7 @@ The following changes sit in the **working tree, not yet committed**. Do not los
 ## Verification status
 
 - ✅ `npx tsc --noEmit` → **0 errors, clean**.
-- ✅ `npx vitest run` → **398 passed / 0 failed** across all 41 test files.
+- ✅ `npx vitest run` → **411 passed / 0 failed** across all 44 test files.
 - ⚠️ Excluded from commit: `graphify-out/*`, `supabase/.temp/cli-latest`, `supabase_backup/*.sql`, and untracked scratch docs.
 
 ---
@@ -63,6 +63,9 @@ The following changes sit in the **working tree, not yet committed**. Do not los
 - **Phase 3.3:** Created `src/lib/services/application/` (`ApplicationService`, `application.types.ts`, `application.errors.ts`, `application-state-machine.ts`, `index.ts`), added 14 unit tests, and migrated tenant and landlord application API routes to `ApplicationService`, `requireAuthenticatedUser`, and `createServiceRoleSupabaseClient`.
 - **Phase 3.4:** Created `src/lib/services/user/` (`UserService`, `AuthService`, `user.types.ts`, `user.errors.ts`, `index.ts`), added 10 unit tests, and migrated `/api/admin/users`, `/api/admin/users/[id]`, `/api/profile/avatar`, `/api/profile/cover`, and `/api/profile/permit` to use `UserService`, `requireAuthenticatedUser`, and `createServiceRoleSupabaseClient`.
 - **Phase 3.5:** Extracted `src/lib/services/community/` (`PostService`, `CommentService`, `ReactionService`, `PollService`, `ModerationService`, `community.types.ts`, `community.errors.ts`, `index.ts`), migrated `src/lib/community/actions.ts` to `createServiceRoleSupabaseClient`, and added 20 unit tests across 5 test files.
+- **Phase 3.6:** Extracted `src/lib/services/messaging/` (`ConversationService`, `MessageService`, `messaging.types.ts`, `messaging.errors.ts`, `index.ts`). Migrated `messages/conversations/route.ts`, `messages/conversations/[conversationId]/route.ts`, `messages/conversations/[conversationId]/read/route.ts`, `messages/unread-count/route.ts`. Updated `[conversationId]/route.test.ts` to match new auth pattern. Added 7 unit tests.
+- **Phase 3.7:** Extracted `src/lib/services/notification/` (`NotificationService`, `notification.types.ts`, `notification.errors.ts`, `index.ts`). Migrated `landlord/notifications/recent/route.ts`. Added 6 unit tests.
+- **Phase 3.8:** Extracted `src/lib/services/property/` (`PropertyService`, `property.types.ts`, `property.errors.ts`, `index.ts`) covering `getPropertiesForLandlord`, `getPropertyIdsForLandlord`, `getPropertyDetail`, `getPropertiesWithUnits`, `getPortfolioOverview`, `getUnitForLandlord`, `updateRenewalSettings`. Added 6 unit tests.
 
 
 
