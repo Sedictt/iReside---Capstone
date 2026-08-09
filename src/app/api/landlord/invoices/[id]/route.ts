@@ -3,18 +3,19 @@ import { NextResponse } from "next/server";
 import { expireInPersonIntents } from "@/lib/billing/workflow";
 import { getInvoiceDetailForActor } from "@/lib/billing/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 
 type RouteContext = {
     params: Promise<{ id: string }>;
 };
 
-export async function GET(_: Request, context: RouteContext) {
+export async function GET(request: Request, context: RouteContext) {
     const { id } = await context.params;
-    const adminClient = createAdminClient();
-    const authContext = await requireAuthenticatedUser(_);
+    const adminClient = createServiceRoleSupabaseClient();
+    const authContext = await requireAuthenticatedUser(request);
     if (!("userId" in authContext)) return authContext as Response;
     const { userId, supabase } = authContext;
+
 
     try {
         await expireInPersonIntents(adminClient, userId, { landlordId: userId, paymentId: id });

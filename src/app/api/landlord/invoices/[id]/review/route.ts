@@ -11,8 +11,9 @@ import {
     toWorkflowSnapshot,
 } from "@/lib/billing/workflow";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import type { SupabaseClient } from "@supabase/supabase-js";
+
 import type { Database } from "@/types/database";
 
 const reviewSchema = z.object({
@@ -87,8 +88,9 @@ async function syncMoveInPaymentChecklist(supabase: SupabaseClient<Database>, le
 
 export async function POST(request: Request, context: RouteContext) {
     const { id } = await context.params;
-    const adminClient = createAdminClient();
+    const adminClient = createServiceRoleSupabaseClient();
     const authContext = await requireAuthenticatedUser(request);
+
     if (!("userId" in authContext)) return authContext as Response;
     const { userId, supabase } = authContext;
 

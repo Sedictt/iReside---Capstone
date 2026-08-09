@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { expireInPersonIntents } from "@/lib/billing/workflow";
 import { generateMonthlyInvoices, listLandlordInvoices } from "@/lib/billing/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 
 const generateSchema = z.object({
@@ -15,7 +15,8 @@ export async function GET(request: Request) {
     const authContext = await requireAuthenticatedUser(request);
     if (!("userId" in authContext)) return authContext as Response;
     const { userId, supabase } = authContext;
-    const adminClient = createAdminClient();
+    const adminClient = createServiceRoleSupabaseClient();
+
 
     const { searchParams } = new URL(request.url);
     const propertyId = searchParams.get("propertyId");
