@@ -63,10 +63,12 @@ The following changes sit in the **working tree, not yet committed**. Do not los
 - **Phase 3.8:** Extracted `src/lib/services/property/` (`PropertyService`, `property.types.ts`, `property.errors.ts`, `index.ts`) covering `getPropertiesForLandlord`, `getPropertyIdsForLandlord`, `getPropertyDetail`, `getPropertiesWithUnits`, `getPortfolioOverview`, `getUnitForLandlord`, `updateRenewalSettings`. Migrated `src/app/api/landlord/properties/[id]/route.ts`. Added 6 unit tests.
 - **Phase 3.9:** Extracted `src/lib/services/maintenance/` (`MaintenanceService`, `maintenance.types.ts`, `maintenance.errors.ts`, `index.ts`) covering `getLandlordMaintenanceRequests`, `getTenantMaintenanceRequests`, `createLandlordMaintenance`, `createTenantMaintenance`, `updateLandlordMaintenance`, `updateTenantMaintenance`. Migrated `src/app/api/landlord/maintenance/route.ts` and `src/app/api/tenant/maintenance/route.ts` to use `requireAuthenticatedUser` and `MaintenanceService`. Added 7 unit tests.
 - **Phase 3.10:** Extracted `src/lib/services/iris/` (`IrisService`, `IrisContextService`, `iris.types.ts`, `iris.errors.ts`, `index.ts`) covering tenant AI context assembly, prompt formatting, chat completions orchestration with rate limit handling, and history retrieval. Migrated `src/app/api/iris/chat/route.ts`, `src/app/api/iris/history/route.ts`, and converted `src/lib/iris/context.ts` into a backward-compatible facade. Added 5 unit tests.
+- **Phase 4.1:** Designated `source-of-truth-db.sql` as the single canonical schema, archived historical `dump.sql` to `docs/archive/dump.sql`, added `npm run db:inventory` script, refreshed `docs/database-inventory/`.
 - **Phase 5.3:** Extracted centralized `AppError` class hierarchy (`NotFoundError`, `UnauthorizedError`, `ForbiddenError`, `ValidationError`, `ConflictError`, `RateLimitError`, `InternalServerError`) in `src/lib/errors/app-error.ts` with `toApiResponseEnvelope` converter. Added 5 unit tests.
 - **Phase 6:** Built testing infrastructure:
   - `src/__tests__/helpers/mock-supabase.ts`: Fluent chain mock builder.
   - `src/__tests__/factories/`: Domain test factories (`user`, `property`, `lease`, `payment`, `maintenance`, `community`) with 9 unit tests.
+  - Upgraded `src/lib/__tests__/business-verification.test.ts` to full test coverage (6 tests).
   - Removed dead external test `tests/example.spec.js`.
 
 ---
@@ -74,12 +76,12 @@ The following changes sit in the **working tree, not yet committed**. Do not los
 ## Verification status
 
 - ✅ `npx tsc --noEmit` → **0 errors, clean**.
-- ✅ `npx vitest run` → **443 passed / 0 failed** across all 49 test files.
+- ✅ `npx vitest run` → **448 passed / 0 failed** across all 49 test files.
 - ⚠️ Excluded from commit: `graphify-out/*`, `supabase/.temp/cli-latest`, `supabase_backup/*.sql`, and untracked scratch docs.
 
 ---
 
 ## Next Steps
-- Phase 4: Database Hardening (sensitive data extraction from profiles, RLS policy consolidation).
+- Phase 4.2: Sensitive data extraction from `profiles` / dual-write audit.
 - Phase 5: API Route Standardization for remaining legacy endpoints.
 - Phase 7: Final Code Polish and Global Identifier Linting.
