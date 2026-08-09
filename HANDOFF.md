@@ -48,17 +48,19 @@ The following changes sit in the **working tree, not yet committed**. Do not los
 
 ---
 
-## Verification status (Task #5)
+## Verification status
 
 - ✅ `npx tsc --noEmit` → **0 errors, clean**.
-- ✅ `npx vitest run` → **291 passed / 0 failed** across all 29 test files (including the 4 previously flaky timeouts which passed cleanly).
+- ✅ `npx vitest run` → **306 passed / 0 failed** across all 29 test files.
 - ⚠️ Excluded from commit: `graphify-out/*`, `supabase/.temp/cli-latest`, `supabase_backup/*.sql`, and untracked scratch docs.
 
 ---
 
 ## Status
 
-Phase 3.1 first pass (LeaseService extraction, status machine migration & facade, route migration for landlord lease GET routes) is verified and committed.
+- **Phase 3.1 Pass 1 (d1ed42b):** `LeaseService` extraction, status machine migration & facade, route migration for landlord lease GET routes.
+- **Phase 3.1 Pass 2:** Refactored `src/lib/queries/leases.ts` into `LeaseService` query methods (tenant leases, active lease, landlord full leases, renewal requests) with 100% backward-compatible facade wrappers + 24 unit tests.
+
 
 ## Deferred — future Phase 3.1 passes (NOT yet requested)
 - `src/lib/queries/leases.ts` — refactor its internal `createClient()` import into a constructor-injected service.

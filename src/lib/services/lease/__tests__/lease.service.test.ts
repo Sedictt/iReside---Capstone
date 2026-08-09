@@ -125,4 +125,162 @@ describe("LeaseService", () => {
       );
     });
   });
+
+  describe("getTenantLeases", () => {
+    it("fetches tenant leases ordered by created_at desc", async () => {
+      const leases = [{ id: "lease-tenant-1", status: "active" }];
+      chain.order.mockResolvedValue({ data: leases, error: null });
+
+      const result = await service.getTenantLeases("tenant-1");
+
+      expect(mockSupabase.from).toHaveBeenCalledWith("leases");
+      expect(chain.eq).toHaveBeenCalledWith("tenant_id", "tenant-1");
+      expect(chain.order).toHaveBeenCalledWith("created_at", { ascending: false });
+      expect(result).toEqual(leases);
+    });
+
+    it("throws when tenant lease fetch fails", async () => {
+      chain.order.mockResolvedValue({ data: null, error: { message: "tenant error" } });
+
+      await expect(service.getTenantLeases("tenant-1")).rejects.toThrow(
+        "Failed to fetch tenant leases",
+      );
+    });
+  });
+
+  describe("getLandlordLeases", () => {
+    it("fetches landlord leases with full joined details", async () => {
+      const leases = [{ id: "lease-landlord-1", status: "active" }];
+      chain.order.mockResolvedValue({ data: leases, error: null });
+
+      const result = await service.getLandlordLeases("landlord-1");
+
+      expect(mockSupabase.from).toHaveBeenCalledWith("leases");
+      expect(chain.eq).toHaveBeenCalledWith("landlord_id", "landlord-1");
+      expect(result).toEqual(leases);
+    });
+
+    it("throws when landlord lease fetch fails", async () => {
+      chain.order.mockResolvedValue({ data: null, error: { message: "landlord error" } });
+
+      await expect(service.getLandlordLeases("landlord-1")).rejects.toThrow(
+        "Failed to fetch landlord leases",
+      );
+    });
+  });
+
+  describe("getLeaseById", () => {
+    it("returns joined lease by id", async () => {
+      const lease = { id: "lease-123", status: "active" };
+      chain.maybeSingle.mockResolvedValue({ data: lease, error: null });
+
+      const result = await service.getLeaseById("lease-123");
+
+      expect(mockSupabase.from).toHaveBeenCalledWith("leases");
+      expect(chain.eq).toHaveBeenCalledWith("id", "lease-123");
+      expect(result).toEqual(lease);
+    });
+
+    it("throws LeaseNotFoundError when lease does not exist", async () => {
+      chain.maybeSingle.mockResolvedValue({ data: null, error: null });
+
+      await expect(service.getLeaseById("missing-lease")).rejects.toBeInstanceOf(
+        LeaseNotFoundError,
+      );
+    });
+  });
+
+  describe("getActiveLease", () => {
+    it("returns active lease for tenant", async () => {
+      const activeLease = { id: "active-lease", status: "active" };
+      chain.maybeSingle.mockResolvedValue({ data: activeLease, error: null });
+
+      const result = await service.getActiveLease("tenant-1");
+
+      expect(mockSupabase.from).toHaveBeenCalledWith("leases");
+      expect(chain.eq).toHaveBeenCalledWith("tenant_id", "tenant-1");
+      expect(chain.eq).toHaveBeenCalledWith("status", "active");
+      expect(result).toEqual(activeLease);
+    });
+
+    it("returns null when no active lease exists", async () => {
+      chain.maybeSingle.mockResolvedValue({ data: null, error: null });
+
+      const result = await service.getActiveLease("tenant-1");
+
+      expect(result).toBeNull();
+    });
+
+    it("throws on database error", async () => {
+      chain.maybeSingle.mockResolvedValue({ data: null, error: { message: "db error" } });
+
+      await expect(service.getActiveLease("tenant-1")).rejects.toThrow(
+        "Failed to fetch active lease",
+      );
+    });
+  });
+
+  describe("getTenantRenewalRequests", () => {
+    it("fetches renewal requests for tenant", async () => {
+      const renewalRequests = [{ id: "renewal-1", status: "pending" }];
+      chain.order.mockResolvedValue({ data: renewalRequests, error: null });
+
+      const result = await service.getTenantRenewalRequests("tenant-1");
+
+      expect(mockSupabase.from).toHaveBeenCalledWith("renewal_requests");
+      expect(chain.eq).toHaveBeenCalledWith("tenant_id", "tenant-1");
+      expect(result).toEqual(renewalRequests);
+    });
+
+    it("throws on error fetching tenant renewal requests", async () => {
+      chain.order.mockResolvedValue({ data: null, error: { message: "renewal fetch error" } });
+
+      await expect(service.getTenantRenewalRequests("tenant-1")).rejects.toThrow(
+        "Failed to fetch tenant renewal requests",
+      );
+    });
+  });
+
+  describe("getLandlordRenewalRequests", () => {
+    it("fetches renewal requests for landlord without status filter", async () => {
+      const renewalRequests = [{ id: "renewal-1", status: "pending" }];
+      chain.order.mockResolvedValue({ data: renewalRequests, error: null });
+
+      const result = await service.getLandlordRenewalRequests("landlord-1");
+
+      expect(mockSupabase.from).toHaveBeenCalledWith("renewal_requests");
+      expect(chain.eq).toHaveBeenCalledWith("landlord_id", "landlord-1");
+      expect(result).toEqual(renewalRequests);
+    });
+
+    it("applies status filter when provided", async () => {
+      chain.order.mockResolvedValue({ data: [], error: null });
+
+      await service.getLandlordRenewalRequests("landlord-1", "pending");
+
+      expect(chain.eq).toHaveBeenCalledWith("landlord_id", "landlord-1");
+      expect(chain.eq).toHaveBeenCalledWith("status", "pending");
+    });
+  });
+
+  describe("getRenewalRequestById", () => {
+    it("fetches single renewal request by id", async () => {
+      const renewal = { id: "req-1", status: "approved" };
+      chain.maybeSingle.mockResolvedValue({ data: renewal, error: null });
+
+      const result = await service.getRenewalRequestById("req-1");
+
+      expect(mockSupabase.from).toHaveBeenCalledWith("renewal_requests");
+      expect(chain.eq).toHaveBeenCalledWith("id", "req-1");
+      expect(result).toEqual(renewal);
+    });
+
+    it("returns null when renewal request not found", async () => {
+      chain.maybeSingle.mockResolvedValue({ data: null, error: null });
+
+      const result = await service.getRenewalRequestById("req-missing");
+
+      expect(result).toBeNull();
+    });
+  });
 });

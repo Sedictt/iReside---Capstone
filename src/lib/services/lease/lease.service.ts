@@ -6,11 +6,15 @@
  * receives one via the constructor and scopes every query to it.
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/types/database";
+import type { Database, RenewalStatus } from "@/types/database";
 import type {
   LandlordLeaseFilters,
+  LandlordRenewalRequestItem,
   LeaseDetail,
   LeaseListItem,
+  RenewalRequestDetail,
+  TenantLeaseItem,
+  TenantRenewalRequestItem,
 } from "./lease.types";
 import { LeaseNotFoundError } from "./lease.errors";
 
@@ -76,6 +80,75 @@ const LEASE_DETAIL_QUERY = `
     full_name,
     email
   )
+`;
+
+/** Columns selected for tenant leases. */
+const TENANT_LEASES_QUERY = `
+  *,
+  unit:units (
+    *,
+    property:properties (*)
+  ),
+  landlord:profiles!leases_landlord_id_fkey (
+    id,
+    full_name,
+    avatar_url,
+    email,
+    phone
+  )
+`;
+
+/** Columns selected for landlord full joined leases. */
+const LANDLORD_FULL_LEASES_QUERY = `
+  *,
+  unit:units (
+    *,
+    property:properties (*)
+  ),
+  tenant:profiles!leases_tenant_id_fkey (
+    id,
+    full_name,
+    avatar_url,
+    email,
+    phone
+  )
+`;
+
+/** Columns selected for general lease by ID. */
+const LEASE_BY_ID_QUERY = `
+  *,
+  unit:units (
+    *,
+    property:properties (*)
+  ),
+  tenant:profiles!leases_tenant_id_fkey (*),
+  landlord:profiles!leases_landlord_id_fkey (*)
+`;
+
+/** Columns selected for tenant renewal requests. */
+const TENANT_RENEWAL_REQUESTS_QUERY = `
+  *,
+  current_lease:leases!renewal_requests_current_lease_id_fkey (
+    id, start_date, end_date, monthly_rent
+  ),
+  new_lease:leases!renewal_requests_new_lease_id_fkey (*)
+`;
+
+/** Columns selected for landlord renewal requests. */
+const LANDLORD_RENEWAL_REQUESTS_QUERY = `
+  *,
+  current_lease:leases!renewal_requests_current_lease_id_fkey (
+    *,
+    unit:units!inner (*),
+    tenant:profiles!leases_tenant_id_fkey (*)
+  )
+`;
+
+/** Columns selected for renewal request by ID. */
+const RENEWAL_REQUEST_BY_ID_QUERY = `
+  *,
+  current_lease:leases!renewal_requests_current_lease_id_fkey (*),
+  new_lease:leases!renewal_requests_new_lease_id_fkey (*)
 `;
 
 export class LeaseService {
@@ -147,5 +220,159 @@ export class LeaseService {
     }
 
     return data as unknown as LeaseDetail;
+  }
+
+  /**
+   * Fetch all leases for a tenant.
+   *
+   * @param tenantId - The tenant's user id.
+   * @returns Array of tenant leases, newest first.
+   */
+  async getTenantLeases(tenantId: string): Promise<TenantLeaseItem[]> {
+    const { data, error } = await this.supabase
+      .from("leases")
+      .select(TENANT_LEASES_QUERY)
+      .eq("tenant_id", tenantId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      throw new Error(`Failed to fetch tenant leases: ${error.message}`);
+    }
+
+    return (data ?? []) as unknown as TenantLeaseItem[];
+  }
+
+  /**
+   * Fetch all leases for a landlord with full joined data.
+   *
+   * @param landlordId - The landlord's user id.
+   * @returns Array of landlord leases, newest first.
+   */
+  async getLandlordLeases(landlordId: string): Promise<unknown[]> {
+    const { data, error } = await this.supabase
+      .from("leases")
+      .select(LANDLORD_FULL_LEASES_QUERY)
+      .eq("landlord_id", landlordId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      throw new Error(`Failed to fetch landlord leases: ${error.message}`);
+    }
+
+    return data ?? [];
+  }
+
+  /**
+   * Fetch a single lease by ID with all related data.
+   *
+   * @param leaseId - The lease id.
+   * @returns The joined lease row.
+   */
+  async getLeaseById(leaseId: string): Promise<unknown> {
+    const { data, error } = await this.supabase
+      .from("leases")
+      .select(LEASE_BY_ID_QUERY)
+      .eq("id", leaseId)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(`Failed to fetch lease: ${error.message}`);
+    }
+
+    if (!data) {
+      throw new LeaseNotFoundError(leaseId);
+    }
+
+    return data;
+  }
+
+  /**
+   * Get the active lease for a specific tenant.
+   *
+   * @param tenantId - The tenant's user id.
+   * @returns The active lease or null if none exists.
+   */
+  async getActiveLease(tenantId: string): Promise<TenantLeaseItem | null> {
+    const { data, error } = await this.supabase
+      .from("leases")
+      .select(TENANT_LEASES_QUERY)
+      .eq("tenant_id", tenantId)
+      .eq("status", "active")
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(`Failed to fetch active lease: ${error.message}`);
+    }
+
+    return (data as unknown as TenantLeaseItem) ?? null;
+  }
+
+  /**
+   * Fetch renewal requests for a tenant.
+   *
+   * @param tenantId - The tenant's user id.
+   * @returns Array of renewal requests, newest first.
+   */
+  async getTenantRenewalRequests(tenantId: string): Promise<TenantRenewalRequestItem[]> {
+    const { data, error } = await this.supabase
+      .from("renewal_requests")
+      .select(TENANT_RENEWAL_REQUESTS_QUERY)
+      .eq("tenant_id", tenantId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      throw new Error(`Failed to fetch tenant renewal requests: ${error.message}`);
+    }
+
+    return (data ?? []) as unknown as TenantRenewalRequestItem[];
+  }
+
+  /**
+   * Fetch renewal requests for a landlord.
+   *
+   * @param landlordId - The landlord's user id.
+   * @param status - Optional renewal status filter.
+   * @returns Array of renewal requests, newest first.
+   */
+  async getLandlordRenewalRequests(
+    landlordId: string,
+    status?: RenewalStatus,
+  ): Promise<LandlordRenewalRequestItem[]> {
+    let query = this.supabase
+      .from("renewal_requests")
+      .select(LANDLORD_RENEWAL_REQUESTS_QUERY)
+      .eq("landlord_id", landlordId);
+
+    if (status) {
+      query = query.eq("status", status);
+    }
+
+    const { data, error } = await query.order("created_at", { ascending: false });
+
+    if (error) {
+      throw new Error(`Failed to fetch landlord renewal requests: ${error.message}`);
+    }
+
+    return (data ?? []) as unknown as LandlordRenewalRequestItem[];
+  }
+
+  /**
+   * Get a single renewal request by ID.
+   *
+   * @param requestId - The renewal request id.
+   * @returns The renewal request row or null if not found.
+   */
+  async getRenewalRequestById(requestId: string): Promise<RenewalRequestDetail | null> {
+    const { data, error } = await this.supabase
+      .from("renewal_requests")
+      .select(RENEWAL_REQUEST_BY_ID_QUERY)
+      .eq("id", requestId)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(`Failed to fetch renewal request: ${error.message}`);
+    }
+
+    return (data as unknown as RenewalRequestDetail) ?? null;
   }
 }

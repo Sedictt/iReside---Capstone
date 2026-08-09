@@ -69,3 +69,44 @@ export type LeaseDetail = Omit<LeaseRow, "unit" | "landlord" | "tenant"> & {
   landlord: LeasePartyView | null;
   tenant: LeasePartyView | null;
 };
+
+export type { RenewalStatus } from "@/types/database";
+
+/** Tenant lease query result with joined unit and landlord profile. */
+export type TenantLeaseItem = LeaseRow & {
+  unit: (Database["public"]["Tables"]["units"]["Row"] & {
+    property: Database["public"]["Tables"]["properties"]["Row"] | null;
+  }) | null;
+  landlord: {
+    id: string;
+    full_name: string | null;
+    avatar_url: string | null;
+    email: string | null;
+    phone: string | null;
+  } | null;
+};
+
+/** Tenant renewal request item with joined current and new leases. */
+export type TenantRenewalRequestItem = Database["public"]["Tables"]["renewal_requests"]["Row"] & {
+  current_lease: {
+    id: string;
+    start_date: string;
+    end_date: string;
+    monthly_rent: number;
+  } | null;
+  new_lease: Database["public"]["Tables"]["leases"]["Row"] | null;
+};
+
+/** Landlord renewal request item with joined lease, unit, and tenant profile. */
+export type LandlordRenewalRequestItem = Database["public"]["Tables"]["renewal_requests"]["Row"] & {
+  current_lease: (Database["public"]["Tables"]["leases"]["Row"] & {
+    unit: Database["public"]["Tables"]["units"]["Row"] | null;
+    tenant: Database["public"]["Tables"]["profiles"]["Row"] | null;
+  }) | null;
+};
+
+/** Single renewal request detail with joined current and new leases. */
+export type RenewalRequestDetail = Database["public"]["Tables"]["renewal_requests"]["Row"] & {
+  current_lease: Database["public"]["Tables"]["leases"]["Row"] | null;
+  new_lease: Database["public"]["Tables"]["leases"]["Row"] | null;
+};
