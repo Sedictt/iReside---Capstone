@@ -1,19 +1,21 @@
 import { NextResponse } from "next/server";
-import { requireUser } from "@/lib/supabase/auth";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import type { Database } from "@/types/database";
 
 /**
  * GET /api/tenant/profile
  * Get the current tenant's profile
  */
-export async function GET() {
-    const { user, supabase } = await requireUser();
+export async function GET(request: Request) {
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
 
     const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("*")
-        .eq("id", user.id)
+        .eq("id", userId)
         .maybeSingle();
 
     if (profileError) {
@@ -30,7 +32,9 @@ export async function GET() {
  * Used to mark account as claimed in user_security_settings.
  */
 export async function PATCH(request: Request) {
-    const { user, supabase } = await requireUser();
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
 
     try {
         const body = await request.json();
@@ -54,7 +58,7 @@ export async function PATCH(request: Request) {
         const { data: updatedProfile, error: updateError } = await supabase
             .from("profiles")
             .update(updates)
-            .eq("id", user.id)
+            .eq("id", userId)
             .select()
             .single();
 
@@ -64,11 +68,12 @@ export async function PATCH(request: Request) {
         }
 
         if (shouldUpdateClaimState) {
-            const { error: securityError } = await (createAdminClient() as any)
+            const admin = createServiceRoleSupabaseClient();
+            const { error: securityError } = await (admin as any)
                 .from("user_security_settings")
                 .upsert(
                     {
-                        profile_id: user.id,
+                        profile_id: userId,
                         has_changed_password,
                         updated_at: new Date().toISOString(),
                     },
@@ -87,7 +92,7 @@ export async function PATCH(request: Request) {
                 .from("profile_private")
                 .upsert(
                     {
-                        profile_id: user.id,
+                        profile_id: userId,
                         phone: "phone" in otherFields ? otherFields.phone : updatedProfile.phone,
                         address: "address" in otherFields ? otherFields.address : updatedProfile.address,
                         updated_at: new Date().toISOString(),
@@ -107,3 +112,4 @@ export async function PATCH(request: Request) {
         return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
     }
 }
+

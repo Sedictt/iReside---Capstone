@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 
 const BUCKET_NAME = "property-images";
 const MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024;
@@ -15,7 +15,7 @@ const sanitizeFileName = (name: string) =>
         .replace(/^-|-$/g, "");
 
 const ensureBucket = async () => {
-    const admin = createAdminClient();
+    const admin = createServiceRoleSupabaseClient();
     const { data: bucket, error } = await admin.storage.getBucket(BUCKET_NAME);
 
     if (!error && bucket) {
@@ -33,15 +33,10 @@ const ensureBucket = async () => {
 };
 
 export async function POST(request: Request) {
-    const authClient = await createClient();
-    const {
-        data: { user },
-        error: userError,
-    } = await authClient.auth.getUser();
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
 
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     const formData = await request.formData();
     const propertyId = formData.get("propertyId");
@@ -50,11 +45,11 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Property id is required." }, { status: 400 });
     }
 
-    const { data: property, error: propertyError } = await authClient
+    const { data: property, error: propertyError } = await supabase
         .from("properties")
         .select("id")
         .eq("id", propertyId)
-        .eq("landlord_id", user.id)
+        .eq("landlord_id", userId)
         .maybeSingle();
 
     if (propertyError || !property) {
@@ -86,7 +81,7 @@ export async function POST(request: Request) {
     }
 
     try {
-        const admin = createAdminClient();
+        const admin = createServiceRoleSupabaseClient();
         await ensureBucket();
 
         const timestamp = Date.now();
@@ -97,7 +92,7 @@ export async function POST(request: Request) {
             const ext = file.name.includes(".") ? file.name.split(".").pop() : "jpg";
             const safeExt = sanitizeFileName(ext ?? "jpg") || "jpg";
             const safeBase = sanitizeFileName(file.name.replace(/\.[^.]+$/, "")) || `image-${index + 1}`;
-            const path = `${user.id}/${propertyId}/${timestamp}-${index + 1}-${safeBase}.${safeExt}`;
+            const path = `${userId}/${propertyId}/${timestamp}-${index + 1}-${safeBase}.${safeExt}`;
             const bytes = await file.arrayBuffer();
 
             const { error: uploadError } = await admin.storage.from(BUCKET_NAME).upload(path, bytes, {

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { PropertyService } from "@/lib/services/property";
 
 /**
  * GET /api/landlord/properties/[id]/renewal-settings
@@ -15,6 +16,7 @@ export async function GET(
   const { userId, supabase } = authContext;
 
   try {
+    const propertyService = new PropertyService(supabase);
     const { data: property, error } = await supabase
       .from("properties")
       .select("renewal_settings")
@@ -62,7 +64,12 @@ export async function PATCH(
     }
 
     return NextResponse.json(data.renewal_settings);
-  } catch (error) {
-    return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: error?.message || "Failed to update settings" },
+      { status: 500 }
+    );
   }
 }
+
+
