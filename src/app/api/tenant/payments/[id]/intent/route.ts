@@ -1,43 +1,36 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-
 import {
-    expireInPersonIntents,
-    getInPersonIntentExpiry,
-    insertPaymentAuditEvent,
-    sendPaymentNotifications,
-    sendPaymentSystemMessage,
-    toWorkflowSnapshot,
+  expireInPersonIntents,
+  getInPersonIntentExpiry,
+  insertPaymentAuditEvent,
+  sendPaymentNotifications,
+  sendPaymentSystemMessage,
+  toWorkflowSnapshot,
 } from "@/lib/billing/workflow";
-import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 
 type RouteContext = {
-    params: Promise<{ id: string }>;
+  params: Promise<{ id: string }>;
 };
 
 const intentSchema = z.object({
-    note: z.string().max(600).optional(),
-    selectedItemIds: z.array(z.string()).optional(),
-    selectedReadingIds: z.array(z.string()).optional(),
+  note: z.string().max(600).optional(),
+  selectedItemIds: z.array(z.string()).optional(),
+  selectedReadingIds: z.array(z.string()).optional(),
 });
 
 export async function POST(request: Request, context: RouteContext) {
-    const { id } = await context.params;
-    const supabase = await createClient();
-    const adminClient = createAdminClient();
+  const { id } = await context.params;
+  const authContext = await requireAuthenticatedUser(request);
+  if (!("userId" in authContext)) return authContext as Response;
+  const { userId } = authContext;
+  const adminClient = createServiceRoleSupabaseClient();
 
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
+  try {
+    await expireInPersonIntents(adminClient, userId, { tenantId: userId, paymentId: id });
 
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    try {
-        await expireInPersonIntents(adminClient, user.id, { tenantId: user.id, paymentId: id });
 
         const body = intentSchema.parse(await request.json().catch(() => ({})));
         const note = body.note?.trim() || null;
@@ -46,7 +39,7 @@ export async function POST(request: Request, context: RouteContext) {
             .from("payments")
             .select("id, tenant_id, landlord_id, invoice_number, status, workflow_status, intent_method, amount_tag, review_action, paid_amount, balance_remaining, receipt_number, payment_submitted_at, rejection_reason, in_person_intent_expires_at, metadata")
             .eq("id", id)
-            .eq("tenant_id", user.id)
+            .eq("tenant_id", userId)
             .maybeSingle();
 
         if (paymentError || !payment) {
@@ -87,7 +80,7 @@ export async function POST(request: Request, context: RouteContext) {
                 rejection_reason: null,
                 review_action: null,
                 last_action_at: nowIso,
-                last_action_by: user.id,
+                last_action_by: userId,
             })
             .eq("id", payment.id)
             .select("id, status, workflow_status, intent_method, amount_tag, review_action, paid_amount, balance_remaining, receipt_number, payment_submitted_at, rejection_reason, in_person_intent_expires_at")
@@ -115,7 +108,7 @@ export async function POST(request: Request, context: RouteContext) {
             adminClient,
             payment,
             {
-                actorId: user.id,
+                actorId: userId,
                 actorName: "Tenant",
                 content: "A face-to-face cash payment has been initiated. The landlord can now verify and confirm the receipt of funds using the interface below.",
                 metadata: {
@@ -130,7 +123,7 @@ export async function POST(request: Request, context: RouteContext) {
 
         await insertPaymentAuditEvent(adminClient, {
             paymentId: payment.id,
-            actorId: user.id,
+            actorId: userId,
             action: "tenant_in_person_intent_submitted",
             source: "api",
             beforeState,
@@ -140,6 +133,7 @@ export async function POST(request: Request, context: RouteContext) {
                 expiresAt,
             },
         });
+
 
         return NextResponse.json({ ok: true, expiresAt });
     } catch (error) {

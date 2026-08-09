@@ -1,38 +1,32 @@
 import { NextResponse } from "next/server";
-
 import {
-    expireInPersonIntents,
-    insertPaymentAuditEvent,
-    sendPaymentNotifications,
-    sendPaymentSystemMessage,
-    toWorkflowSnapshot,
+  expireInPersonIntents,
+  insertPaymentAuditEvent,
+  sendPaymentNotifications,
+  sendPaymentSystemMessage,
+  toWorkflowSnapshot,
 } from "@/lib/billing/workflow";
 import { BILLING_BUCKETS, uploadBillingFile } from "@/lib/billing/storage";
-import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 
 type RouteContext = {
-    params: Promise<{ id: string }>;
+  params: Promise<{ id: string }>;
 };
 
 export async function POST(request: Request, context: RouteContext) {
-    const { id } = await context.params;
-    const supabase = await createClient();
-    const adminClient = createAdminClient();
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
+  const { id } = await context.params;
+  const authContext = await requireAuthenticatedUser(request);
+  if (!("userId" in authContext)) return authContext as Response;
+  const { userId } = authContext;
+  const adminClient = createServiceRoleSupabaseClient();
 
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  try {
+    await expireInPersonIntents(adminClient, userId, { tenantId: userId, paymentId: id });
 
-    try {
-        await expireInPersonIntents(adminClient, user.id, { tenantId: user.id, paymentId: id });
+    const formData = await request.formData();
+    const method = formData.get("method");
 
-        const formData = await request.formData();
-        const method = formData.get("method");
         const referenceNumber = formData.get("referenceNumber");
         const note = formData.get("note");
         const partialAmountRaw = formData.get("partialAmount");
@@ -51,7 +45,7 @@ export async function POST(request: Request, context: RouteContext) {
             .from("payments")
             .select("id, tenant_id, landlord_id, amount, paid_amount, balance_remaining, allow_partial_payments, invoice_number, workflow_status, review_action, status, intent_method, amount_tag, receipt_number, payment_submitted_at, rejection_reason, in_person_intent_expires_at, reference_number, payment_proof_url, metadata")
             .eq("id", id)
-            .eq("tenant_id", user.id)
+            .eq("tenant_id", userId)
             .single();
 
         if (paymentError || !payment) {
@@ -98,7 +92,7 @@ export async function POST(request: Request, context: RouteContext) {
 
         const proofUpload = await uploadBillingFile({
             bucketName: BILLING_BUCKETS.paymentProofs,
-            ownerId: user.id,
+            ownerId: userId,
             scope: id,
             file,
         });
@@ -128,7 +122,7 @@ export async function POST(request: Request, context: RouteContext) {
                 },
                 in_person_intent_expires_at: null,
                 last_action_at: nowIso,
-                last_action_by: user.id,
+                last_action_by: userId,
             })
             .eq("id", payment.id)
             .select("id, status, workflow_status, intent_method, amount_tag, review_action, paid_amount, balance_remaining, receipt_number, payment_submitted_at, rejection_reason, in_person_intent_expires_at")
@@ -156,7 +150,7 @@ export async function POST(request: Request, context: RouteContext) {
                 adminClient,
                 payment,
                 {
-                    actorId: user.id,
+                    actorId: userId,
                     actorName: "Tenant",
                     content: `Payment proof submitted for invoice ${payment.invoice_number ?? payment.id}. Status is now Under Review.`,
                     metadata: {
@@ -168,7 +162,7 @@ export async function POST(request: Request, context: RouteContext) {
             ),
             insertPaymentAuditEvent(adminClient, {
                 paymentId: payment.id,
-                actorId: user.id,
+                actorId: userId,
                 action: "tenant_payment_submitted_gcash",
                 source: "api",
                 beforeState,
@@ -179,6 +173,7 @@ export async function POST(request: Request, context: RouteContext) {
                 },
             }),
         ]);
+
 
         return NextResponse.json({ ok: true });
     } catch (error) {

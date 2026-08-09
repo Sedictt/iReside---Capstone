@@ -1,37 +1,36 @@
-import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 
 export async function POST(
-    request: Request,
-    { params }: { params: Promise<{ id: string }> }
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
 ) {
-    const { id } = await params;
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+  const { id } = await params;
+  const authContext = await requireAuthenticatedUser(request);
+  if (!("userId" in authContext)) return authContext as Response;
+  const { userId, supabase } = authContext;
 
-    if (!user) {
-        return new NextResponse("Unauthorized", { status: 401 });
+  try {
+    const formData = await request.formData();
+    const action = formData.get("action") as "credit" | "refund";
+    const gcashNumber = formData.get("gcashNumber") as string;
+    const qrFile = formData.get("qrFile") as File | null;
+
+    const { data: payment, error: fetchError } = await supabase
+      .from("payments")
+      .select("id, metadata, tenant_id, landlord_id, invoice_number")
+      .eq("id", id)
+      .single();
+
+    if (fetchError || !payment) {
+      return new NextResponse("Payment not found", { status: 404 });
     }
 
-    try {
-        const formData = await request.formData();
-        const action = formData.get("action") as "credit" | "refund";
-        const gcashNumber = formData.get("gcashNumber") as string;
-        const qrFile = formData.get("qrFile") as File | null;
+    if (payment.tenant_id !== userId) {
+      return new NextResponse("Unauthorized", { status: 403 });
+    }
 
-        const { data: payment, error: fetchError } = await supabase
-            .from("payments")
-            .select("id, metadata, tenant_id, landlord_id, invoice_number")
-            .eq("id", id)
-            .single();
-
-        if (fetchError || !payment) {
-            return new NextResponse("Payment not found", { status: 404 });
-        }
-
-        if (payment.tenant_id !== user.id) {
-            return new NextResponse("Unauthorized", { status: 403 });
-        }
 
         let qrUrl = null;
         if (qrFile) {
@@ -68,17 +67,17 @@ export async function POST(
         if (updateError) throw updateError;
 
         // Notify Landlord via Dynamic System Message Update
-        const [{ data: tenantProfile }, { sendPaymentSystemMessage }, { createAdminClient }] = await Promise.all([
+        const [{ data: tenantProfile }, { sendPaymentSystemMessage }] = await Promise.all([
             supabase
                 .from("profiles")
                 .select("full_name")
-                .eq("id", user.id)
+                .eq("id", userId)
                 .single(),
             import("@/lib/billing/workflow"),
-            import("@/lib/supabase/admin"),
         ]);
         
-        const adminClient = createAdminClient();
+        const adminClient = createServiceRoleSupabaseClient();
+
 
         // Try to find an existing overpayment message to update dynamically
         // Primary: exact match on paymentId + issueType
@@ -159,11 +158,12 @@ export async function POST(
                 landlord_id: (payment as any).landlord_id,
                 invoice_number: (payment as any).invoice_number || "INV-" + payment.id.slice(0, 8),
             }, {
-                actorId: user.id,
+                actorId: userId,
                 actorName: tenantProfile?.full_name || "Tenant",
                 content,
                 metadata
             });
+
         }
 
         return NextResponse.json({ success: true });
