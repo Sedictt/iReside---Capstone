@@ -51,7 +51,7 @@ The following changes sit in the **working tree, not yet committed**. Do not los
 ## Verification status
 
 - ✅ `npx tsc --noEmit` → **0 errors, clean**.
-- ✅ `npx vitest run` → **341 passed / 0 failed** across all 30 test files.
+- ✅ `npx vitest run` → **354 passed / 0 failed** across all 32 test files.
 - ⚠️ Excluded from commit: `graphify-out/*`, `supabase/.temp/cli-latest`, `supabase_backup/*.sql`, and untracked scratch docs.
 
 ---
@@ -59,7 +59,9 @@ The following changes sit in the **working tree, not yet committed**. Do not los
 ## Status
 
 - **Phase 3.1 (Complete across Passes 1-5):** Full `LeaseService` extraction, domain types & errors, status machine migration & facade, route migrations for all landlord/tenant lease routes, 41 unit tests.
-- **Phase 3.2 Pass 1:** Created `src/lib/services/payment/` module (`payment.service.ts`, `payment.types.ts`, `payment.errors.ts`, `index.ts`), refactored `src/lib/queries/payments.ts` into a backward-compatible delegation facade, and added 18 unit tests.
+- **Phase 3.2 Pass 1 (5ff07e8):** Created `src/lib/services/payment/` module (`payment.service.ts`, `payment.types.ts`, `payment.errors.ts`, `index.ts`), refactored `src/lib/queries/payments.ts` into a backward-compatible delegation facade, and added 18 unit tests.
+- **Phase 3.2 Pass 2:** Created `billing.service.ts` and `expense.service.ts` with comprehensive unit test suites (13 tests), bringing the payment service test suite to 31 tests and project total to 354 passing tests.
+
 
 
 

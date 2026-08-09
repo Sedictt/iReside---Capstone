@@ -108,3 +108,28 @@ export interface SubmitPaymentProofInput {
   paymentNote?: string;
   intentMethod?: PaymentIntentMethod;
 }
+
+/** Input for recording an operational property expense. */
+export interface CreateExpenseInput {
+  landlordId: string;
+  propertyId?: string | null;
+  unitId?: string | null;
+  category: string;
+  amount: number;
+  dateIncurred: string;
+  description: string;
+}
+
+/** Input for recording a utility meter reading. */
+export interface RecordUtilityReadingInput {
+  leaseId: string;
+  utilityType: Database["public"]["Enums"]["utility_type"];
+  billingPeriodStart: string;
+  billingPeriodEnd: string;
+  previousReading: number;
+  currentReading: number;
+  note?: string | null;
+  proofImageUrl?: string | null;
+  proofImagePath?: string | null;
+}
+
