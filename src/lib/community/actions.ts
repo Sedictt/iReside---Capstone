@@ -1,8 +1,9 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createServiceRoleSupabaseClient } from '@/lib/supabase/admin'
 import { getCommunityPropertyId } from './queries'
+
 import { revalidatePath } from 'next/cache'
 import { auth } from '@/lib/supabase/middleware'
 import type {
@@ -318,7 +319,8 @@ export async function recordPostView(postId: string) {
         return
     }
 
-    const { error } = await (createAdminClient() as any).rpc('increment_post_view', {
+    const { error } = await (createServiceRoleSupabaseClient() as any).rpc('increment_post_view', {
+
         p_post_id: postId,
         p_user_id: userId,
         p_session_id: null
