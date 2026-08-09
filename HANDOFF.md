@@ -51,18 +51,16 @@ The following changes sit in the **working tree, not yet committed**. Do not los
 ## Verification status
 
 - ✅ `npx tsc --noEmit` → **0 errors, clean**.
-- ✅ `npx vitest run` → **323 passed / 0 failed** across all 29 test files.
+- ✅ `npx vitest run` → **341 passed / 0 failed** across all 30 test files.
 - ⚠️ Excluded from commit: `graphify-out/*`, `supabase/.temp/cli-latest`, `supabase_backup/*.sql`, and untracked scratch docs.
 
 ---
 
 ## Status
 
-- **Phase 3.1 Pass 1 (d1ed42b):** `LeaseService` extraction, status machine migration & facade, route migration for landlord lease GET routes.
-- **Phase 3.1 Pass 2 (95c93af):** Refactored `src/lib/queries/leases.ts` into `LeaseService` query methods (tenant leases, active lease, landlord full leases, renewal requests) with 100% backward-compatible facade wrappers + 24 unit tests.
-- **Phase 3.1 Pass 3 (b236708):** Migrated Tenant Lease GET routes (`/api/tenant/lease` and `/api/tenant/lease/[id]`) to `LeaseService` + `requireAuthenticatedUser` guard, added rich tenant lease query methods, and hardened test timeouts.
-- **Phase 3.1 Pass 4 (016da3c):** Migrated Landlord Signing Link route (`/api/landlord/leases/[leaseId]/signing-link`) to `LeaseService.generateLandlordSigningLink` with `LeaseSigningEligibilityError` domain error + 35 unit tests.
-- **Phase 3.1 Pass 5:** Extracted atomic landlord countersignature logic into `LeaseService.signLeaseAsLandlord` with optimistic locking and retry backoff, migrated `/api/landlord/leases/[leaseId]/sign` route, and added comprehensive unit test suites (41 tests).
+- **Phase 3.1 (Complete across Passes 1-5):** Full `LeaseService` extraction, domain types & errors, status machine migration & facade, route migrations for all landlord/tenant lease routes, 41 unit tests.
+- **Phase 3.2 Pass 1:** Created `src/lib/services/payment/` module (`payment.service.ts`, `payment.types.ts`, `payment.errors.ts`, `index.ts`), refactored `src/lib/queries/payments.ts` into a backward-compatible delegation facade, and added 18 unit tests.
+
 
 
 
