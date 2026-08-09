@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-02T00:25:25.233Z",
+  "generatedAt": "2026-08-09T10:05:21.153Z",
   "schema": "source-of-truth-db.sql",
   "migrations": "supabase/migrations",
   "tableCount": 58,
@@ -248,8 +248,8 @@
       "functionName": "update_updated_at"
     }
   ],
-  "referencedTableCount": 58,
-  "referencedFunctionCount": 2,
+  "referencedTableCount": 60,
+  "referencedFunctionCount": 3,
   "lintWarnings": {
     "auth_rls_initplan": 154,
     "multiple_permissive_policies": 162
@@ -519,8 +519,13 @@
     ],
     "multiplePermissivePolicies": []
   },
-  "missingInSchema": [],
-  "rpcMissingInSchema": [],
+  "missingInSchema": [
+    "community_reports",
+    "community_saved_posts"
+  ],
+  "rpcMissingInSchema": [
+    "increment_post_view_count"
+  ],
   "unreferencedFunctionsInCode": [
     "handle_new_user",
     "rls_auto_enable"
@@ -538,6 +543,9 @@
     ],
     "increment_post_view": [
       "src/lib/community/actions.ts"
+    ],
+    "increment_post_view_count": [
+      "src/lib/services/community/post.service.ts"
     ]
   },
   "storageBucketsReferenced": {
@@ -1777,7 +1785,7 @@
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 41,
+      "codeReferenceCount": 46,
       "codeReferenceFiles": [
         "src/app/api/application-payments/[token]/route.ts",
         "src/app/api/invites/[token]/route.ts",
@@ -1795,13 +1803,13 @@
         "src/app/api/landlord/inquiries/recent/route.ts",
         "src/app/api/landlord/invoices/[id]/review/route.ts",
         "src/app/api/landlord/lease/finalize/route.ts",
-        "src/app/api/landlord/leases/[leaseId]/sign/route.ts",
         "src/app/api/landlord/tenants/[id]/activity/route.ts",
         "src/app/api/landlord/unit-map/route.ts",
-        "src/app/api/tenant/applications/route.ts",
         "src/context/NotificationContext.tsx",
         "src/lib/application-payment-pending.ts",
-        "src/lib/messages/engine.ts"
+        "src/lib/messages/engine.ts",
+        "src/lib/services/application/application.service.ts",
+        "src/lib/services/lease/lease.service.ts"
       ],
       "functionReferences": [],
       "riskSignals": [
@@ -2040,9 +2048,10 @@
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 5,
+      "codeReferenceCount": 11,
       "codeReferenceFiles": [
-        "src/lib/community/actions.ts"
+        "src/lib/community/actions.ts",
+        "src/lib/services/community/comment.service.ts"
       ],
       "functionReferences": [],
       "riskSignals": []
@@ -2260,9 +2269,10 @@
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 4,
+      "codeReferenceCount": 8,
       "codeReferenceFiles": [
-        "src/lib/community/actions.ts"
+        "src/lib/community/actions.ts",
+        "src/lib/services/community/poll.service.ts"
       ],
       "functionReferences": [],
       "riskSignals": [
@@ -2480,9 +2490,13 @@
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 14,
+      "codeReferenceCount": 27,
       "codeReferenceFiles": [
-        "src/lib/community/actions.ts"
+        "src/__tests__/factories/__tests__/factories.test.ts",
+        "src/lib/community/actions.ts",
+        "src/lib/services/community/moderation.service.ts",
+        "src/lib/services/community/poll.service.ts",
+        "src/lib/services/community/post.service.ts"
       ],
       "functionReferences": [
         "increment_post_view"
@@ -2591,9 +2605,10 @@
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 4,
+      "codeReferenceCount": 8,
       "codeReferenceFiles": [
-        "src/lib/community/actions.ts"
+        "src/lib/community/actions.ts",
+        "src/lib/services/community/reaction.service.ts"
       ],
       "functionReferences": [],
       "riskSignals": [
@@ -2965,13 +2980,15 @@
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 10,
+      "codeReferenceCount": 16,
       "codeReferenceFiles": [
         "src/app/api/messages/conversations/[conversationId]/payments/route.ts",
         "src/app/api/messages/conversations/route.ts",
         "src/app/api/messages/users/[targetUserId]/reports/route.ts",
         "src/lib/billing/workflow.ts",
-        "src/lib/messages/engine.ts"
+        "src/lib/messages/engine.ts",
+        "src/lib/services/messaging/conversation.service.ts",
+        "src/lib/services/messaging/message.service.ts"
       ],
       "functionReferences": [],
       "riskSignals": []
@@ -3031,11 +3048,13 @@
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 4,
+      "codeReferenceCount": 6,
       "codeReferenceFiles": [
         "src/app/api/messages/conversations/route.ts",
         "src/lib/billing/workflow.ts",
-        "src/lib/messages/engine.ts"
+        "src/lib/messages/engine.ts",
+        "src/lib/services/messaging/conversation.service.ts",
+        "src/lib/services/messaging/message.service.ts"
       ],
       "functionReferences": [
         "handle_new_message"
@@ -3177,9 +3196,9 @@
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 2,
+      "codeReferenceCount": 4,
       "codeReferenceFiles": [
-        "src/app/api/landlord/expenses/route.ts"
+        "src/lib/services/payment/expense.service.ts"
       ],
       "functionReferences": [],
       "riskSignals": [
@@ -3380,8 +3399,7 @@
       "rlsEnabled": true,
       "codeReferenceCount": 3,
       "codeReferenceFiles": [
-        "src/app/api/iris/chat/route.ts",
-        "src/app/api/iris/history/route.ts"
+        "src/lib/services/iris/iris.service.ts"
       ],
       "functionReferences": [],
       "riskSignals": [
@@ -3644,7 +3662,7 @@
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 25,
+      "codeReferenceCount": 26,
       "codeReferenceFiles": [
         "src/app/admin/registrations/revert_registration.ts",
         "src/app/admin/registrations/sync_permit_card.ts",
@@ -3657,7 +3675,8 @@
         "src/app/api/landlord/onboarding/[token]/route.ts",
         "src/app/api/landlord/onboarding/resend-link/route.ts",
         "src/app/api/landlord/tour/route.ts",
-        "src/app/landlord/profile/page.tsx"
+        "src/app/landlord/profile/page.tsx",
+        "src/lib/services/user/user.service.ts"
       ],
       "functionReferences": [],
       "riskSignals": [
@@ -5124,7 +5143,7 @@
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 80,
+      "codeReferenceCount": 83,
       "codeReferenceFiles": [
         "src/app/api/admin/stats/route.ts",
         "src/app/api/landlord/analytics/overview/route.ts",
@@ -5137,11 +5156,7 @@
         "src/app/api/landlord/calendar/events/route.ts",
         "src/app/api/landlord/documents/route.ts",
         "src/app/api/landlord/lease/finalize/route.ts",
-        "src/app/api/landlord/leases/[leaseId]/route.ts",
         "src/app/api/landlord/leases/[leaseId]/sign/route.ts",
-        "src/app/api/landlord/leases/[leaseId]/signing-link/route.ts",
-        "src/app/api/landlord/leases/route.ts",
-        "src/app/api/landlord/maintenance/route.ts",
         "src/app/api/landlord/move-out-requests/[id]/approve/route.ts",
         "src/app/api/landlord/move-out-requests/[id]/complete/route.ts",
         "src/app/api/landlord/move-out/[id]/approve/route.ts",
@@ -5157,24 +5172,25 @@
         "src/app/api/landlord/unit-map/route.ts",
         "src/app/api/tenant/dashboard/route.ts",
         "src/app/api/tenant/lease/[id]/renew/route.ts",
-        "src/app/api/tenant/lease/[id]/route.ts",
         "src/app/api/tenant/lease/move-out/route.ts",
-        "src/app/api/tenant/lease/route.ts",
         "src/app/api/tenant/leases/[leaseId]/route.ts",
         "src/app/api/tenant/leases/[leaseId]/sign/route.ts",
-        "src/app/api/tenant/maintenance/route.ts",
         "src/app/api/tenant/unit-map/route.ts",
         "src/app/landlord/profile/page.tsx",
         "src/app/tenant/lease/[id]/page.tsx",
         "src/app/tenant/profile/page.tsx",
         "src/components/ui/ProfileCard.tsx",
         "src/lib/__tests__/lease-renewal.integration.test.ts",
+        "src/lib/api/auth-guard.ts",
         "src/lib/billing/server.ts",
         "src/lib/community/queries.ts",
-        "src/lib/iris/context.ts",
         "src/lib/messages/engine.ts",
         "src/lib/queries/amenities.ts",
-        "src/lib/queries/leases.ts"
+        "src/lib/services/application/application.service.ts",
+        "src/lib/services/iris/iris-context.service.ts",
+        "src/lib/services/lease/lease.service.ts",
+        "src/lib/services/maintenance/maintenance.service.ts",
+        "src/lib/services/payment/billing.service.ts"
       ],
       "functionReferences": [],
       "riskSignals": [
@@ -5506,17 +5522,17 @@
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 15,
+      "codeReferenceCount": 16,
       "codeReferenceFiles": [
         "src/app/api/landlord/analytics/overview/route.ts",
         "src/app/api/landlord/calendar/events/route.ts",
-        "src/app/api/landlord/maintenance/route.ts",
         "src/app/api/landlord/properties/overview/route.ts",
         "src/app/api/landlord/tenants/[id]/activity/route.ts",
         "src/app/api/landlord/unit-map/route.ts",
-        "src/app/api/tenant/maintenance/route.ts",
         "src/context/NotificationContext.tsx",
-        "src/lib/iris/context.ts"
+        "src/lib/services/iris/iris-context.service.ts",
+        "src/lib/services/maintenance/maintenance.service.ts",
+        "src/lib/services/property/property.service.ts"
       ],
       "functionReferences": [],
       "riskSignals": [
@@ -6129,19 +6145,18 @@
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 18,
+      "codeReferenceCount": 20,
       "codeReferenceFiles": [
         "src/app/api/admin/chat-moderation/reports/route.ts",
         "src/app/api/landlord/invoices/[id]/mark-refunded/route.ts",
         "src/app/api/landlord/invoices/[id]/review/route.ts",
         "src/app/api/messages/conversations/[conversationId]/files/route.ts",
-        "src/app/api/messages/conversations/[conversationId]/read/route.ts",
         "src/app/api/messages/conversations/[conversationId]/route.ts",
-        "src/app/api/messages/unread-count/route.ts",
         "src/app/api/messages/users/[targetUserId]/reports/route.ts",
         "src/app/api/tenant/payments/[id]/refund-info/route.ts",
         "src/lib/billing/workflow.ts",
-        "src/lib/messages/engine.ts"
+        "src/lib/messages/engine.ts",
+        "src/lib/services/messaging/message.service.ts"
       ],
       "functionReferences": [],
       "riskSignals": [
@@ -6557,7 +6572,7 @@
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 27,
+      "codeReferenceCount": 32,
       "codeReferenceFiles": [
         "src/app/api/landlord/leases/[leaseId]/sign/route.ts",
         "src/app/api/landlord/move-out-requests/[id]/approve/route.ts",
@@ -6567,7 +6582,6 @@
         "src/app/api/landlord/move-out/[id]/complete/route.ts",
         "src/app/api/landlord/move-out/[id]/deny/route.ts",
         "src/app/api/landlord/move-out/[id]/inspection/route.ts",
-        "src/app/api/landlord/notifications/recent/route.ts",
         "src/app/api/landlord/renewals/[id]/route.ts",
         "src/app/api/landlord/system-advisory/route.ts",
         "src/app/api/tenant/applications/route.ts",
@@ -6579,7 +6593,8 @@
         "src/app/api/tenant/unit-map/route.ts",
         "src/context/NotificationContext.tsx",
         "src/lib/__tests__/lease-renewal.integration.test.ts",
-        "src/lib/billing/workflow.ts"
+        "src/lib/billing/workflow.ts",
+        "src/lib/services/notification/notification.service.ts"
       ],
       "functionReferences": [],
       "riskSignals": [
@@ -6736,10 +6751,11 @@
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 6,
+      "codeReferenceCount": 7,
       "codeReferenceFiles": [
         "src/app/api/landlord/applications/[applicationId]/actions/route.ts",
-        "src/lib/billing/server.ts"
+        "src/lib/billing/server.ts",
+        "src/lib/services/payment/payment.service.ts"
       ],
       "functionReferences": [],
       "riskSignals": [
@@ -7572,7 +7588,7 @@
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 52,
+      "codeReferenceCount": 56,
       "codeReferenceFiles": [
         "src/app/api/landlord/analytics/overview/route.ts",
         "src/app/api/landlord/applications/[applicationId]/actions/route.ts",
@@ -7594,9 +7610,9 @@
         "src/app/landlord/profile/page.tsx",
         "src/lib/billing/server.ts",
         "src/lib/billing/workflow.ts",
-        "src/lib/iris/context.ts",
         "src/lib/messages/engine.ts",
-        "src/lib/queries/payments.ts"
+        "src/lib/services/iris/iris-context.service.ts",
+        "src/lib/services/payment/payment.service.ts"
       ],
       "functionReferences": [],
       "riskSignals": [
@@ -8094,7 +8110,7 @@
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 91,
+      "codeReferenceCount": 94,
       "codeReferenceFiles": [
         "src/app/admin/registrations/sync_permit_card.ts",
         "src/app/api/admin/chat-moderation/reports/[reportId]/route.ts",
@@ -8107,7 +8123,6 @@
         "src/app/api/admin/registrations/route.ts",
         "src/app/api/admin/stats/route.ts",
         "src/app/api/admin/users/[id]/route.ts",
-        "src/app/api/admin/users/route.ts",
         "src/app/api/auth/landlord-register/route.ts",
         "src/app/api/cron/monthly-invoices/route.ts",
         "src/app/api/landlord/2fa/route.ts",
@@ -8121,10 +8136,9 @@
         "src/app/api/landlord/inquiries/recent/route.ts",
         "src/app/api/landlord/lease/finalize/route.ts",
         "src/app/api/landlord/leases/[leaseId]/sign/route.ts",
-        "src/app/api/landlord/maintenance/route.ts",
+        "src/app/api/landlord/move-out/__tests__/landlord-move-out.test.ts",
         "src/app/api/landlord/onboarding/[token]/route.ts",
         "src/app/api/landlord/payments/overview/route.ts",
-        "src/app/api/landlord/tenants/[id]/activity/route.ts",
         "src/app/api/landlord/tenants/[id]/profile/route.ts",
         "src/app/api/landlord/tenants/manual/route.ts",
         "src/app/api/landlord/tenants/route.ts",
@@ -8134,7 +8148,6 @@
         "src/app/api/profile/cover/route.ts",
         "src/app/api/tenant/dashboard/route.ts",
         "src/app/api/tenant/leases/[leaseId]/sign/route.ts",
-        "src/app/api/tenant/maintenance/route.ts",
         "src/app/api/tenant/payments/[id]/refund-info/route.ts",
         "src/app/api/tenant/profile/route.ts",
         "src/app/api/tenant/tour/helpers.ts",
@@ -8153,9 +8166,13 @@
         "src/context/AuthContext.tsx",
         "src/lib/__tests__/lease-renewal.integration.test.ts",
         "src/lib/__tests__/renewal-policy.integration.test.ts",
+        "src/lib/api/auth-guard.ts",
         "src/lib/community/actions.ts",
-        "src/lib/iris/context.ts",
         "src/lib/messages/engine.ts",
+        "src/lib/services/application/application.service.ts",
+        "src/lib/services/iris/iris-context.service.ts",
+        "src/lib/services/maintenance/maintenance.service.ts",
+        "src/lib/services/user/user.service.ts",
         "src/lib/supabase/auth.ts",
         "src/lib/supabase/middleware.ts"
       ],
@@ -8450,7 +8467,7 @@
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 65,
+      "codeReferenceCount": 72,
       "codeReferenceFiles": [
         "src/app/api/admin/stats/route.ts",
         "src/app/api/invites/[token]/route.ts",
@@ -8461,11 +8478,9 @@
         "src/app/api/landlord/documents/route.ts",
         "src/app/api/landlord/inquiries/recent/route.ts",
         "src/app/api/landlord/invites/route.ts",
-        "src/app/api/landlord/maintenance/route.ts",
         "src/app/api/landlord/onboarding/[token]/route.ts",
         "src/app/api/landlord/payments/overview/route.ts",
         "src/app/api/landlord/properties/[id]/renewal-settings/route.ts",
-        "src/app/api/landlord/properties/[id]/route.ts",
         "src/app/api/landlord/properties/media/route.ts",
         "src/app/api/landlord/properties/overview/route.ts",
         "src/app/api/landlord/property-units/route.ts",
@@ -8474,17 +8489,19 @@
         "src/app/api/landlord/unit-map/floor-configs/route.ts",
         "src/app/api/landlord/unit-map/route.ts",
         "src/app/api/landlord/unit-map/units/[unitId]/floor/route.ts",
-        "src/app/api/tenant/maintenance/route.ts",
         "src/app/landlord/profile/page.tsx",
         "src/app/landlord/properties/[id]/environment/page.tsx",
         "src/app/landlord/properties/new/page.tsx",
         "src/components/landlord/LandlordSettings.tsx",
         "src/lib/__tests__/lease-renewal.integration.test.ts",
         "src/lib/__tests__/renewal-policy.integration.test.ts",
+        "src/lib/api/auth-guard.ts",
         "src/lib/billing/server.ts",
         "src/lib/community/actions.ts",
         "src/lib/community/queries.ts",
-        "src/lib/queries/properties.ts"
+        "src/lib/queries/properties.ts",
+        "src/lib/services/maintenance/maintenance.service.ts",
+        "src/lib/services/property/property.service.ts"
       ],
       "functionReferences": [],
       "riskSignals": [
@@ -8719,10 +8736,10 @@
         "src/app/api/landlord/applications/walk-in/route.ts",
         "src/app/api/landlord/lease/finalize/route.ts",
         "src/app/api/landlord/onboarding/[token]/route.ts",
-        "src/app/api/landlord/properties/[id]/route.ts",
         "src/app/api/landlord/properties/overview/route.ts",
         "src/app/landlord/properties/[id]/environment/page.tsx",
-        "src/app/landlord/properties/new/page.tsx"
+        "src/app/landlord/properties/new/page.tsx",
+        "src/lib/services/property/property.service.ts"
       ],
       "functionReferences": [],
       "riskSignals": [
@@ -9077,7 +9094,7 @@
         "src/app/api/tenant/lease/[id]/renew/route.ts",
         "src/app/api/tenant/renewals/route.ts",
         "src/lib/__tests__/lease-renewal.integration.test.ts",
-        "src/lib/queries/leases.ts"
+        "src/lib/services/lease/lease.service.ts"
       ],
       "functionReferences": [],
       "riskSignals": [
@@ -9835,10 +9852,10 @@
       "codeReferenceCount": 12,
       "codeReferenceFiles": [
         "src/app/api/admin/product-tour/metrics/route.ts",
-        "src/app/api/admin/users/route.ts",
         "src/app/api/landlord/tenants/route.ts",
         "src/app/api/tenant/tour/route.ts",
-        "src/lib/product-tour.ts"
+        "src/lib/product-tour.ts",
+        "src/lib/services/user/user.service.ts"
       ],
       "functionReferences": [],
       "riskSignals": [
@@ -10508,7 +10525,7 @@
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 48,
+      "codeReferenceCount": 54,
       "codeReferenceFiles": [
         "src/app/api/invites/[token]/route.ts",
         "src/app/api/landlord/analytics/overview/route.ts",
@@ -10518,12 +10535,10 @@
         "src/app/api/landlord/inquiries/recent/route.ts",
         "src/app/api/landlord/invites/route.ts",
         "src/app/api/landlord/lease/finalize/route.ts",
-        "src/app/api/landlord/maintenance/route.ts",
         "src/app/api/landlord/move-out-requests/[id]/complete/route.ts",
         "src/app/api/landlord/move-out/[id]/complete/route.ts",
         "src/app/api/landlord/onboarding/[token]/route.ts",
         "src/app/api/landlord/payments/overview/route.ts",
-        "src/app/api/landlord/properties/[id]/route.ts",
         "src/app/api/landlord/properties/overview/route.ts",
         "src/app/api/landlord/property-units/route.ts",
         "src/app/api/landlord/tenants/manual/route.ts",
@@ -10532,13 +10547,17 @@
         "src/app/api/landlord/unit-map/route.ts",
         "src/app/api/landlord/unit-map/units/[unitId]/floor/route.ts",
         "src/app/api/landlord/units/[id]/status/route.ts",
-        "src/app/api/tenant/maintenance/route.ts",
         "src/app/api/tenant/unit-map/route.ts",
         "src/app/landlord/profile/page.tsx",
         "src/context/NotificationContext.tsx",
         "src/lib/__tests__/lease-renewal.integration.test.ts",
+        "src/lib/api/auth-guard.ts",
         "src/lib/billing/server.ts",
-        "src/lib/community/queries.ts"
+        "src/lib/community/queries.ts",
+        "src/lib/services/application/application.service.ts",
+        "src/lib/services/maintenance/maintenance.service.ts",
+        "src/lib/services/payment/billing.service.ts",
+        "src/lib/services/property/property.service.ts"
       ],
       "functionReferences": [
         "handle_lease_status_change"
@@ -10847,10 +10866,11 @@
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 5,
+      "codeReferenceCount": 6,
       "codeReferenceFiles": [
         "src/app/api/landlord/payment-settings/route.ts",
-        "src/lib/billing/server.ts"
+        "src/lib/billing/server.ts",
+        "src/lib/services/payment/billing.service.ts"
       ],
       "functionReferences": [],
       "riskSignals": []
@@ -11141,11 +11161,12 @@
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 6,
+      "codeReferenceCount": 8,
       "codeReferenceFiles": [
         "src/app/api/landlord/move-out/[id]/inspection/route.ts",
         "src/app/api/landlord/utility-readings/route.ts",
-        "src/lib/billing/server.ts"
+        "src/lib/billing/server.ts",
+        "src/lib/services/payment/billing.service.ts"
       ],
       "functionReferences": [],
       "riskSignals": []

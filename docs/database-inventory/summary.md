@@ -1,6 +1,6 @@
 # Database Inventory Summary
 
-Generated: 2026-06-02T00:25:25.233Z
+Generated: 2026-08-09T10:05:21.153Z
 Schema source: `source-of-truth-db.sql`
 Migration overlay: `supabase/migrations`
 
@@ -10,10 +10,10 @@ Migration overlay: `supabase/migrations`
 - Schema views: 1
 - Schema functions: 12
 - Schema triggers: 24
-- Tables referenced from code/tests: 58
-- RPC functions referenced from code/tests: 2
-- Missing in schema: 0
-- RPC functions missing in schema: 0
+- Tables referenced from code/tests: 60
+- RPC functions referenced from code/tests: 3
+- Missing in schema: 2
+- RPC functions missing in schema: 1
 - Unreferenced in code/tests: 1
 - Functions not referenced by code RPC or triggers: 2
 - Functions granted to anon: 0
@@ -34,11 +34,12 @@ Migration overlay: `supabase/migrations`
 
 ## Referenced Tables Missing From Schema
 
-- None
+- `community_reports`
+- `community_saved_posts`
 
 ## Referenced RPC Functions Missing From Schema
 
-- None
+- `increment_post_view_count`
 
 ## Schema Tables Not Directly Referenced From Code
 
@@ -61,24 +62,25 @@ Migration overlay: `supabase/migrations`
 
 - `check_renewal_windows`: 1 files
 - `increment_post_view`: 1 files
+- `increment_post_view_count`: 1 files
 
 ## Most Referenced Tables
 
-- `profiles`: 91 references across 62 files
-- `leases`: 80 references across 49 files
-- `properties`: 65 references across 33 files
-- `payments`: 52 references across 23 files
-- `units`: 48 references across 29 files
-- `applications`: 41 references across 23 files
-- `notifications`: 27 references across 21 files
-- `landlord_applications`: 25 references across 12 files
+- `profiles`: 94 references across 63 files
+- `leases`: 83 references across 46 files
+- `properties`: 72 references across 33 files
+- `payments`: 56 references across 23 files
+- `units`: 54 references across 31 files
+- `applications`: 46 references across 23 files
+- `notifications`: 32 references across 21 files
+- `community_posts`: 27 references across 5 files
+- `landlord_applications`: 26 references across 13 files
 - `move_out_requests`: 23 references across 13 files
-- `messages`: 18 references across 11 files
+- `messages`: 20 references across 10 files
+- `conversation_participants`: 16 references across 7 files
+- `maintenance_requests`: 16 references across 9 files
 - `property_floor_configs`: 16 references across 4 files
-- `maintenance_requests`: 15 references across 9 files
 - `renewal_requests`: 15 references across 6 files
-- `community_posts`: 14 references across 1 files
-- `application_payment_requests`: 12 references across 5 files
 
 ## Tables With Structural Risk Signals
 

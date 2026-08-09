@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest --run",
+    "db:inventory": "node scripts/database-inventory.mjs",
     "moderation:candidates": "node scripts/messages/generate-profanity-candidates.mjs public/dataset/val.csv output/profanity-candidates.json",
     "moderation:spam-candidates": "node scripts/messages/generate-spam-candidates.mjs public/dataset/spam.csv output/spam-candidates.json"
   },
