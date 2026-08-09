@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 
 const BUCKET_NAME = "business-permits";
 const MAX_FILE_SIZE_BYTES = 15 * 1024 * 1024; // 15MB for documents/photos
@@ -14,7 +14,7 @@ const sanitizeFileName = (name: string) =>
         .replace(/^-|-$/g, "");
 
 const ensureBucket = async () => {
-    const admin = createAdminClient();
+    const admin = createServiceRoleSupabaseClient();
     const { data: bucket, error } = await admin.storage.getBucket(BUCKET_NAME);
 
     if (!error && bucket) {
@@ -32,15 +32,10 @@ const ensureBucket = async () => {
 };
 
 export async function POST(request: Request) {
-    const authClient = await createClient();
-    const {
-        data: { user },
-        error: userError,
-    } = await authClient.auth.getUser();
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId } = authContext;
 
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     const formData = await request.formData();
     const file = formData.get("file");
@@ -62,13 +57,13 @@ export async function POST(request: Request) {
     }
 
     try {
-        const admin = createAdminClient();
+        const admin = createServiceRoleSupabaseClient();
         await ensureBucket();
 
         const timestamp = Date.now();
         const ext = file.name.includes(".") ? file.name.split(".").pop() : "jpg";
         const safeExt = sanitizeFileName(ext ?? "jpg") || "jpg";
-        const path = `${user.id}/${timestamp}-permit.${safeExt}`;
+        const path = `${userId}/${timestamp}-permit.${safeExt}`;
         const bytes = await file.arrayBuffer();
 
         const { error: uploadError } = await admin.storage.from(BUCKET_NAME).upload(path, bytes, {
@@ -88,14 +83,14 @@ export async function POST(request: Request) {
         const { data: existingBusinessProfile } = await (admin as any)
             .from("landlord_business_profiles")
             .select("business_name, business_permit_number, business_permits")
-            .eq("profile_id", user.id)
+            .eq("profile_id", userId)
             .maybeSingle();
 
         const { error: profileError } = await (admin as any)
             .from("landlord_business_profiles")
             .upsert(
                 {
-                    profile_id: user.id,
+                    profile_id: userId,
                     business_name: existingBusinessProfile?.business_name ?? null,
                     business_permit_number: existingBusinessProfile?.business_permit_number ?? null,
                     business_permit_url: publicUrl,
@@ -104,6 +99,7 @@ export async function POST(request: Request) {
                 },
                 { onConflict: "profile_id" }
             );
+
 
         if (profileError) {
             console.error("DB Error:", profileError);

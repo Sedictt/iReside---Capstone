@@ -51,7 +51,7 @@ The following changes sit in the **working tree, not yet committed**. Do not los
 ## Verification status
 
 - ✅ `npx tsc --noEmit` → **0 errors, clean**.
-- ✅ `npx vitest run` → **368 passed / 0 failed** across all 34 test files.
+- ✅ `npx vitest run` → **378 passed / 0 failed** across all 36 test files.
 - ⚠️ Excluded from commit: `graphify-out/*`, `supabase/.temp/cli-latest`, `supabase_backup/*.sql`, and untracked scratch docs.
 
 ---
@@ -61,6 +61,8 @@ The following changes sit in the **working tree, not yet committed**. Do not los
 - **Phase 3.1 (Complete across Passes 1-5):** Full `LeaseService` extraction, domain types & errors, status machine migration & facade, route migrations for all landlord/tenant lease routes, 41 unit tests.
 - **Phase 3.2 (Complete across Passes 1-4):** Extracted `PaymentService`, `BillingService`, and `ExpenseService`, migrated all tenant and landlord payment/billing routes, 31 unit tests.
 - **Phase 3.3:** Created `src/lib/services/application/` (`ApplicationService`, `application.types.ts`, `application.errors.ts`, `application-state-machine.ts`, `index.ts`), added 14 unit tests, and migrated tenant and landlord application API routes to `ApplicationService`, `requireAuthenticatedUser`, and `createServiceRoleSupabaseClient`.
+- **Phase 3.4:** Created `src/lib/services/user/` (`UserService`, `AuthService`, `user.types.ts`, `user.errors.ts`, `index.ts`), added 10 unit tests, and migrated `/api/admin/users`, `/api/admin/users/[id]`, `/api/profile/avatar`, `/api/profile/cover`, and `/api/profile/permit` to use `UserService`, `requireAuthenticatedUser`, and `createServiceRoleSupabaseClient`.
+
 
 
 
