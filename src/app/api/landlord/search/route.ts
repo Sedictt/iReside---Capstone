@@ -12,27 +12,27 @@ export async function GET(request: Request) {
     const results: { id: string; type: string; title: string; subtitle: string; href: string }[] = [];
 
     if (query.trim()) {
-        const q = query.toLowerCase();
+        const normalizedQuery = query.toLowerCase();
 
         const { data: properties, error } = await supabase
             .from("properties")
             .select("id, name, address")
             .eq("landlord_id", userId)
-            .or(`name.ilike.%${q}%,address.ilike.%${q}%`)
+            .or(`name.ilike.%${normalizedQuery}%,address.ilike.%${normalizedQuery}%`)
             .limit(5);
 
         if (!error && properties) {
-            properties.forEach((p) => {
+            properties.forEach((propertyItem) => {
                 results.push({
-                    id: `prop-${p.id}`,
+                    id: `prop-${propertyItem.id}`,
                     type: "property",
-                    title: p.name,
-                    subtitle: p.address,
-                    href: `/landlord/properties?id=${p.id}`,
+                    title: propertyItem.name,
+                    subtitle: propertyItem.address,
+                    href: `/landlord/properties?id=${propertyItem.id}`,
                 });
             });
         }
     }
 
     return NextResponse.json({ results });
-}
+}
