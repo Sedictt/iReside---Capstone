@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { ensureUserInConversation, getProfilePreviewMap } from "@/lib/messages/engine";
 import { redactWithAiOrFallback } from "@/lib/messages/redaction-service";
 import type { Json, MessageType } from "@/types/database";
@@ -21,25 +21,19 @@ export async function GET(
     request: Request,
     context: { params: Promise<{ conversationId: string }> }
 ) {
-    const authClient = await createClient();
-
-    const {
-        data: { user },
-        error: userError,
-    } = await authClient.auth.getUser();
-
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId } = authContext;
 
     const { conversationId } = await context.params;
 
     try {
-        const supabase = createAdminClient();
-        const isMember = await ensureUserInConversation(supabase, conversationId, user.id);
+        const supabase = createServiceRoleSupabaseClient();
+        const isMember = await ensureUserInConversation(supabase, conversationId, userId);
         if (!isMember) {
             return NextResponse.json({ error: "Conversation not found." }, { status: 404 });
         }
+
 
         const url = new URL(request.url);
         const limitParam = Number(url.searchParams.get("limit") ?? "100");
@@ -152,16 +146,9 @@ export async function POST(
     request: Request,
     context: { params: Promise<{ conversationId: string }> }
 ) {
-    const authClient = await createClient();
-
-    const {
-        data: { user },
-        error: userError,
-    } = await authClient.auth.getUser();
-
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId } = authContext;
 
     const { conversationId } = await context.params;
 
@@ -178,11 +165,12 @@ export async function POST(
     }
 
     try {
-        const supabase = createAdminClient();
-        const isMember = await ensureUserInConversation(supabase, conversationId, user.id);
+        const supabase = createServiceRoleSupabaseClient();
+        const isMember = await ensureUserInConversation(supabase, conversationId, userId);
         if (!isMember) {
             return NextResponse.json({ error: "Conversation not found." }, { status: 404 });
         }
+
 
         const baseMetadata = isJsonObject(body.metadata) ? { ...body.metadata } : {};
         let resolvedMetadata: Json | null = body.metadata ?? null;
@@ -214,7 +202,8 @@ export async function POST(
             .from("messages")
             .insert({
                 conversation_id: conversationId,
-                sender_id: user.id,
+                sender_id: userId,
+
                 type: messageType,
                 content,
                 metadata: resolvedMetadata,

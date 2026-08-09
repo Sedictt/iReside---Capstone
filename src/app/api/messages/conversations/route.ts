@@ -1,33 +1,26 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { buildConversationSummaries, findDirectConversation } from "@/lib/messages/engine";
 
 type CreateConversationBody = {
     participantIds?: string[];
 };
 
-export async function GET() {
-    const authClient = await createClient();
-
-    const {
-        data: { user },
-        error: userError,
-    } = await authClient.auth.getUser();
-
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+export async function GET(request: Request) {
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId } = authContext;
 
     try {
-        const supabase = createAdminClient();
-        const conversations = await buildConversationSummaries(supabase, user.id);
+        const supabase = createServiceRoleSupabaseClient();
+        const conversations = await buildConversationSummaries(supabase, userId);
         return NextResponse.json({ conversations });
     } catch (error) {
         console.error("Failed to fetch conversations:", {
             error: error instanceof Error ? error.message : String(error),
             stack: error instanceof Error ? error.stack : undefined,
-            userId: user.id,
+            userId,
         });
         const message = error instanceof Error ? error.message : "Failed to fetch conversations.";
         return NextResponse.json({ error: message }, { status: 500 });
@@ -35,22 +28,15 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-    const authClient = await createClient();
-
-    const {
-        data: { user },
-        error: userError,
-    } = await authClient.auth.getUser();
-
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId } = authContext;
 
     const body = (await request.json()) as CreateConversationBody;
     const participantIds = Array.isArray(body.participantIds) ? body.participantIds : [];
 
     const cleanedParticipantIds = Array.from(
-        new Set(participantIds.map((id) => id?.trim()).filter((id): id is string => Boolean(id) && id !== user.id))
+        new Set(participantIds.map((id) => id?.trim()).filter((id): id is string => Boolean(id) && id !== userId))
     );
 
     if (cleanedParticipantIds.length === 0) {
@@ -58,10 +44,10 @@ export async function POST(request: Request) {
     }
 
     try {
-        const supabase = createAdminClient();
+        const supabase = createServiceRoleSupabaseClient();
 
         if (cleanedParticipantIds.length === 1) {
-            const existingConversationId = await findDirectConversation(supabase, user.id, cleanedParticipantIds[0]);
+            const existingConversationId = await findDirectConversation(supabase, userId, cleanedParticipantIds[0]);
             if (existingConversationId) {
                 return NextResponse.json({ conversationId: existingConversationId, reused: true });
             }
@@ -84,7 +70,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Failed to create conversation." }, { status: 500 });
         }
 
-        const inserts = [user.id, ...cleanedParticipantIds].map((participantId) => ({
+        const inserts = [userId, ...cleanedParticipantIds].map((participantId) => ({
             conversation_id: conversationId,
             user_id: participantId,
         }));
@@ -105,9 +91,10 @@ export async function POST(request: Request) {
         console.error("Failed to create conversation:", {
             error: error instanceof Error ? error.message : String(error),
             stack: error instanceof Error ? error.stack : undefined,
-            userId: user.id,
+            userId,
         });
         const message = error instanceof Error ? error.message : "Failed to create conversation.";
         return NextResponse.json({ error: message }, { status: 500 });
     }
 }
+

@@ -1,17 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const getUserMock = vi.fn();
-const createClientMock = vi.fn();
-const createAdminClientMock = vi.fn();
 const ensureUserInConversationMock = vi.fn();
 const redactWithAiOrFallbackMock = vi.fn();
+const requireAuthenticatedUserMock = vi.fn();
+const createServiceRoleSupabaseClientMock = vi.fn();
 
-vi.mock("@/lib/supabase/server", () => ({
-    createClient: createClientMock,
+vi.mock("@/lib/api/auth-guard", () => ({
+    requireAuthenticatedUser: requireAuthenticatedUserMock,
 }));
 
 vi.mock("@/lib/supabase/admin", () => ({
-    createAdminClient: createAdminClientMock,
+    createServiceRoleSupabaseClient: createServiceRoleSupabaseClientMock,
 }));
 
 vi.mock("@/lib/messages/engine", () => ({
@@ -28,10 +27,9 @@ describe("POST /api/messages/conversations/[conversationId]", () => {
         vi.resetAllMocks();
         vi.resetModules();
 
-        createClientMock.mockResolvedValue({
-            auth: {
-                getUser: getUserMock,
-            },
+        requireAuthenticatedUserMock.mockResolvedValue({
+            userId: "user-1",
+            supabase: {},
         });
 
         redactWithAiOrFallbackMock.mockResolvedValue({
@@ -48,10 +46,6 @@ describe("POST /api/messages/conversations/[conversationId]", () => {
     });
 
     it("enforces server-side censorship metadata for text messages", async () => {
-        getUserMock.mockResolvedValue({
-            data: { user: { id: "user-1" } },
-            error: null,
-        });
         ensureUserInConversationMock.mockResolvedValue(true);
         redactWithAiOrFallbackMock.mockResolvedValue({
             isSensitive: true,
@@ -80,9 +74,10 @@ describe("POST /api/messages/conversations/[conversationId]", () => {
         });
         const selectMock = vi.fn().mockReturnValue({ single: singleMock });
         const insertMock = vi.fn().mockReturnValue({ select: selectMock });
-        const fromMock = vi.fn().mockReturnValue({ insert: insertMock });
+        const updateMock = vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) });
+        const fromMock = vi.fn().mockReturnValue({ insert: insertMock, update: updateMock });
 
-        createAdminClientMock.mockReturnValue({
+        createServiceRoleSupabaseClientMock.mockReturnValue({
             from: fromMock,
         });
 
@@ -113,10 +108,6 @@ describe("POST /api/messages/conversations/[conversationId]", () => {
     });
 
     it("keeps non-sensitive text marked as not redacted", async () => {
-        getUserMock.mockResolvedValue({
-            data: { user: { id: "user-1" } },
-            error: null,
-        });
         ensureUserInConversationMock.mockResolvedValue(true);
         redactWithAiOrFallbackMock.mockResolvedValue({
             isSensitive: false,
@@ -145,8 +136,9 @@ describe("POST /api/messages/conversations/[conversationId]", () => {
         });
         const selectMock = vi.fn().mockReturnValue({ single: singleMock });
         const insertMock = vi.fn().mockReturnValue({ select: selectMock });
-        const fromMock = vi.fn().mockReturnValue({ insert: insertMock });
-        createAdminClientMock.mockReturnValue({ from: fromMock });
+        const updateMock = vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) });
+        const fromMock = vi.fn().mockReturnValue({ insert: insertMock, update: updateMock });
+        createServiceRoleSupabaseClientMock.mockReturnValue({ from: fromMock });
 
         const { POST } = await import("./route");
         await POST(
@@ -171,10 +163,6 @@ describe("POST /api/messages/conversations/[conversationId]", () => {
     });
 
     it("blocks profanity messages before insert", async () => {
-        getUserMock.mockResolvedValue({
-            data: { user: { id: "user-1" } },
-            error: null,
-        });
         ensureUserInConversationMock.mockResolvedValue(true);
         redactWithAiOrFallbackMock.mockResolvedValue({
             isSensitive: true,
@@ -190,7 +178,7 @@ describe("POST /api/messages/conversations/[conversationId]", () => {
 
         const insertMock = vi.fn();
         const fromMock = vi.fn().mockReturnValue({ insert: insertMock });
-        createAdminClientMock.mockReturnValue({ from: fromMock });
+        createServiceRoleSupabaseClientMock.mockReturnValue({ from: fromMock });
 
         const { POST } = await import("./route");
         const response = await POST(
@@ -212,10 +200,6 @@ describe("POST /api/messages/conversations/[conversationId]", () => {
     });
 
     it("blocks phishing messages before insert", async () => {
-        getUserMock.mockResolvedValue({
-            data: { user: { id: "user-1" } },
-            error: null,
-        });
         ensureUserInConversationMock.mockResolvedValue(true);
         redactWithAiOrFallbackMock.mockResolvedValue({
             isSensitive: true,
@@ -231,7 +215,7 @@ describe("POST /api/messages/conversations/[conversationId]", () => {
 
         const insertMock = vi.fn();
         const fromMock = vi.fn().mockReturnValue({ insert: insertMock });
-        createAdminClientMock.mockReturnValue({ from: fromMock });
+        createServiceRoleSupabaseClientMock.mockReturnValue({ from: fromMock });
 
         const { POST } = await import("./route");
         const response = await POST(
@@ -253,10 +237,6 @@ describe("POST /api/messages/conversations/[conversationId]", () => {
     });
 
     it("blocks spam messages before insert", async () => {
-        getUserMock.mockResolvedValue({
-            data: { user: { id: "user-1" } },
-            error: null,
-        });
         ensureUserInConversationMock.mockResolvedValue(true);
         redactWithAiOrFallbackMock.mockResolvedValue({
             isSensitive: true,
@@ -272,7 +252,7 @@ describe("POST /api/messages/conversations/[conversationId]", () => {
 
         const insertMock = vi.fn();
         const fromMock = vi.fn().mockReturnValue({ insert: insertMock });
-        createAdminClientMock.mockReturnValue({ from: fromMock });
+        createServiceRoleSupabaseClientMock.mockReturnValue({ from: fromMock });
 
         const { POST } = await import("./route");
         const response = await POST(
@@ -293,4 +273,3 @@ describe("POST /api/messages/conversations/[conversationId]", () => {
         expect(payload.error.toLowerCase()).toContain("spam");
     });
 });
-
