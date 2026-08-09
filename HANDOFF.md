@@ -51,7 +51,7 @@ The following changes sit in the **working tree, not yet committed**. Do not los
 ## Verification status
 
 - ✅ `npx tsc --noEmit` → **0 errors, clean**.
-- ✅ `npx vitest run` → **354 passed / 0 failed** across all 32 test files.
+- ✅ `npx vitest run` → **368 passed / 0 failed** across all 34 test files.
 - ⚠️ Excluded from commit: `graphify-out/*`, `supabase/.temp/cli-latest`, `supabase_backup/*.sql`, and untracked scratch docs.
 
 ---
@@ -59,10 +59,9 @@ The following changes sit in the **working tree, not yet committed**. Do not los
 ## Status
 
 - **Phase 3.1 (Complete across Passes 1-5):** Full `LeaseService` extraction, domain types & errors, status machine migration & facade, route migrations for all landlord/tenant lease routes, 41 unit tests.
-- **Phase 3.2 Pass 1 (5ff07e8):** Created `src/lib/services/payment/` module (`payment.service.ts`, `payment.types.ts`, `payment.errors.ts`, `index.ts`), refactored `src/lib/queries/payments.ts` into a backward-compatible delegation facade, and added 18 unit tests.
-- **Phase 3.2 Pass 2 (c008d3b):** Created `billing.service.ts` and `expense.service.ts` with comprehensive unit test suites (13 tests), bringing payment service suite to 31 tests.
-- **Phase 3.2 Pass 3 (a3f6cd1):** Migrated all tenant payment API routes (`/api/tenant/payments`, `/api/tenant/payments/[id]`, `/api/tenant/payments/[id]/submit`, `/api/tenant/payments/[id]/intent`, `/api/tenant/payments/[id]/refund-info`, `/api/tenant/payments/advance`) to `requireAuthenticatedUser` and `createServiceRoleSupabaseClient`.
-- **Phase 3.2 Pass 4:** Migrated landlord payment, billing & expense API routes (`/api/landlord/expenses`, `/api/landlord/utility-readings`, `/api/landlord/invoices`, `/api/landlord/invoices/[id]`, `/api/landlord/invoices/[id]/review`, `/api/landlord/invoices/[id]/reminder`, `/api/landlord/invoices/[id]/mark-refunded`) to `ExpenseService`, `BillingService`, and `createServiceRoleSupabaseClient`.
+- **Phase 3.2 (Complete across Passes 1-4):** Extracted `PaymentService`, `BillingService`, and `ExpenseService`, migrated all tenant and landlord payment/billing routes, 31 unit tests.
+- **Phase 3.3:** Created `src/lib/services/application/` (`ApplicationService`, `application.types.ts`, `application.errors.ts`, `application-state-machine.ts`, `index.ts`), added 14 unit tests, and migrated tenant and landlord application API routes to `ApplicationService`, `requireAuthenticatedUser`, and `createServiceRoleSupabaseClient`.
+
 
 
 

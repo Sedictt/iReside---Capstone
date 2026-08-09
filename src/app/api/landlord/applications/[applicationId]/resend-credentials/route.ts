@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { sendLandlordCredentialsCopy, sendTenantOnboardingReminder } from "@/lib/email";
 import { TENANT_PRODUCT_TOUR_ROUTE } from "@/lib/product-tour";
 
@@ -11,11 +11,12 @@ function generateTempPassword(): string {
     return Array.from({ length: 12 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
 }
 
-export async function POST(_request: Request, context: { params: Promise<{ applicationId: string }> }) {
+export async function POST(request: Request, context: { params: Promise<{ applicationId: string }> }) {
     const { applicationId } = await context.params;
-    const adminClient = createAdminClient();
+    const adminClient = createServiceRoleSupabaseClient();
 
-    const authContext = await requireAuthenticatedUser(_request);
+    const authContext = await requireAuthenticatedUser(request);
+
     if (!("userId" in authContext)) return authContext as Response;
     const { userId, supabase } = authContext;
 

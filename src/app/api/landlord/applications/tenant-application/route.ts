@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_ALLOWED_REGEX = /^[+()\-\s\d]+$/;
@@ -52,7 +52,8 @@ function isApplicantIdNotNullViolation(error: PostgrestLikeError | null | undefi
 }
 
 export async function POST(request: Request) {
-    const adminClient = createAdminClient();
+    const adminClient = createServiceRoleSupabaseClient();
+
 
     const authContext = await requireAuthenticatedUser(request);
     if (!("userId" in authContext)) return authContext as Response;
@@ -239,7 +240,8 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-    const adminClient = createAdminClient();
+    const adminClient = createServiceRoleSupabaseClient();
+
 
     const authContext = await requireAuthenticatedUser(request);
     if (!("userId" in authContext)) return authContext as Response;

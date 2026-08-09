@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { applyPaymentPendingExpiry } from "@/lib/application-payment-pending";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import type { ApplicationStatus, LeaseStatus } from "@/types/database";
+
 
 type ApplicationResponse = {
     id: string;
@@ -228,9 +229,10 @@ function extractMissingColumn(error: PostgrestLikeError | null | undefined) {
 }
 
 export async function GET(request: Request) {
-    const adminClient = createAdminClient();
+    const adminClient = createServiceRoleSupabaseClient();
 
     const authContext = await requireAuthenticatedUser(request);
+
     if (!("userId" in authContext)) return authContext as Response;
     const { userId, supabase } = authContext;
 

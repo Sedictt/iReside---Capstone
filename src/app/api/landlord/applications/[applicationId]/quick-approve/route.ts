@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import type { Json } from "@/types/database";
 import { sendTenantCredentials, sendLandlordCredentialsCopy } from "@/lib/email";
 import { generateSigningLink } from "@/lib/jwt";
@@ -53,7 +53,8 @@ export async function POST(
     context: { params: Promise<{ applicationId: string }> }
 ) {
     const { applicationId } = await context.params;
-    const adminClient = createAdminClient();
+    const adminClient = createServiceRoleSupabaseClient();
+
 
     const authContext = await requireAuthenticatedUser(request);
     if (!("userId" in authContext)) return authContext as Response;

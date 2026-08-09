@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { generateSigningToken } from "@/lib/jwt";
+
 import { hashToken } from "@/lib/jwt";
 import { logAuditEvent } from "@/lib/audit-logging";
 import { sendSigningLinkEmail } from "@/lib/email";
@@ -77,8 +78,9 @@ export async function POST(
     } else {
       // Create tenant account automatically if it doesn't exist
       console.log(`[signing-link] No profile found for ${application.applicant_email}. Provisioning account...`);
-      const adminClient = createAdminClient();
+      const adminClient = createServiceRoleSupabaseClient();
       const tempPassword = Math.random().toString(36).slice(-12);
+
       
       const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
         email: application.applicant_email,
@@ -218,7 +220,7 @@ export async function POST(
   
   if (application.lease_id === TARGET_LEASE_ID || lease?.id === TARGET_LEASE_ID) {
     console.log(`[signing-link] TARGET MATCH: Force activating lease ${TARGET_LEASE_ID}`);
-    const adminClient = createAdminClient();
+    const adminClient = createServiceRoleSupabaseClient();
     
     // Force update lease to active
     await adminClient.from("leases").update({
@@ -251,7 +253,8 @@ export async function POST(
   // If no lease exists, create one automatically
   if (!lease) {
     console.log(`[signing-link] No lease found for application ${applicationId}. Creating one...`);
-    const adminClient = createAdminClient();
+    const adminClient = createServiceRoleSupabaseClient();
+
     const unit = (application as any).unit as any;
     const property = unit?.property || unit?.properties as any;
     const contractTemplate = property?.contract_template || {};

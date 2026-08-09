@@ -5,7 +5,7 @@ import {
     areRequiredPaymentRequestsCompleted,
     logApplicationPaymentAudit,
 } from "@/lib/application-payment-pending";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 
 type RouteContext = {
@@ -14,7 +14,8 @@ type RouteContext = {
 
 export async function POST(request: Request, context: RouteContext) {
     const { applicationId } = await context.params;
-    const adminClient = createAdminClient();
+    const adminClient = createServiceRoleSupabaseClient();
+
 
     const authContext = await requireAuthenticatedUser(request);
     if (!("userId" in authContext)) return authContext as Response;
