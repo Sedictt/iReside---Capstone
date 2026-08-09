@@ -215,11 +215,11 @@ describe("Wizard Storage Utilities", () => {
     it("should return age of stored state in milliseconds", () => {
       const beforeSave = Date.now();
       saveWizardState({ step: 1 });
-      const afterSave = Date.now();
 
       const age = getWizardStateAge();
+      const afterCheck = Date.now();
       expect(age).toBeGreaterThanOrEqual(0);
-      expect(age).toBeLessThanOrEqual(afterSave - beforeSave);
+      expect(age).toBeLessThanOrEqual(afterCheck - beforeSave);
     });
 
     it("should return null when no state exists", () => {

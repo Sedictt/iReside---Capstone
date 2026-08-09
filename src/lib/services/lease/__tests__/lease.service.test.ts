@@ -283,4 +283,67 @@ describe("LeaseService", () => {
       expect(result).toBeNull();
     });
   });
+
+  describe("getTenantActiveLease", () => {
+    it("returns active lease when multiple leases exist", async () => {
+      const leases = [
+        { id: "draft-lease", status: "draft" },
+        { id: "active-lease", status: "active" },
+      ];
+      chain.order.mockResolvedValue({ data: leases, error: null });
+
+      const result = await service.getTenantActiveLease("tenant-1");
+
+      expect(mockSupabase.from).toHaveBeenCalledWith("leases");
+      expect(chain.eq).toHaveBeenCalledWith("tenant_id", "tenant-1");
+      expect(result).toEqual({ id: "active-lease", status: "active" });
+    });
+
+    it("falls back to the first lease if no active lease exists", async () => {
+      const leases = [{ id: "pending-lease", status: "pending_signature" }];
+      chain.order.mockResolvedValue({ data: leases, error: null });
+
+      const result = await service.getTenantActiveLease("tenant-1");
+
+      expect(result).toEqual({ id: "pending-lease", status: "pending_signature" });
+    });
+
+    it("returns null when no leases exist", async () => {
+      chain.order.mockResolvedValue({ data: [], error: null });
+
+      const result = await service.getTenantActiveLease("tenant-1");
+
+      expect(result).toBeNull();
+    });
+
+    it("throws on error", async () => {
+      chain.order.mockResolvedValue({ data: null, error: { message: "fetch failed" } });
+
+      await expect(service.getTenantActiveLease("tenant-1")).rejects.toThrow(
+        "Failed to fetch tenant active lease",
+      );
+    });
+  });
+
+  describe("getTenantLeaseById", () => {
+    it("returns lease detail for the tenant", async () => {
+      const lease = { id: "lease-100", tenant_id: "tenant-1", status: "active" };
+      chain.maybeSingle.mockResolvedValue({ data: lease, error: null });
+
+      const result = await service.getTenantLeaseById("tenant-1", "lease-100");
+
+      expect(mockSupabase.from).toHaveBeenCalledWith("leases");
+      expect(chain.eq).toHaveBeenCalledWith("id", "lease-100");
+      expect(chain.eq).toHaveBeenCalledWith("tenant_id", "tenant-1");
+      expect(result).toEqual(lease);
+    });
+
+    it("throws LeaseNotFoundError when not found", async () => {
+      chain.maybeSingle.mockResolvedValue({ data: null, error: null });
+
+      await expect(service.getTenantLeaseById("tenant-1", "lease-missing")).rejects.toBeInstanceOf(
+        LeaseNotFoundError,
+      );
+    });
+  });
 });

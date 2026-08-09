@@ -1,75 +1,35 @@
-import { NextRequest, NextResponse } from "next/server";
-import { requireUser } from "@/lib/supabase/auth";
-import { LeaseData } from "@/types/lease";
+import { NextResponse } from "next/server";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { LeaseService, LeaseNotFoundError } from "@/lib/services/lease";
 
+/**
+ * GET /api/tenant/lease/[id]
+ *
+ * Fetches a single lease for the authenticated tenant.
+ */
 export async function GET(
-    _request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+  request: Request,
+  context: { params: Promise<{ id: string }> }
 ) {
-    const { user, supabase } = await requireUser();
-    const { id } = await params;
+  const authContext = await requireAuthenticatedUser(request);
+  if (!("userId" in authContext)) return authContext as any;
+  const { userId, supabase } = authContext;
+  const { id: leaseId } = await context.params;
 
-    try {
-        const { data: lease, error: leaseError } = await supabase
-            .from("leases")
-            .select(`
-                id,
-                status,
-                start_date,
-                end_date,
-                monthly_rent,
-                security_deposit,
-                terms,
-                signed_at,
-                signed_document_url,
-                unit:units!inner (
-                    id,
-                    name,
-                    floor,
-                    sqft,
-                    beds,
-                    baths,
-                    property:properties!inner (
-                        id,
-                        name,
-                        address,
-                        city,
-                        images,
-                        house_rules,
-                        amenities:amenities (*),
-                        renewal_settings,
-                        renewal_window_days
-                    )
-                ),
-                landlord:profiles!leases_landlord_id_fkey (
-                    id,
-                    full_name,
-                    avatar_url,
-                    avatar_bg_color,
-                    phone
-                ),
-                tenant:profiles!leases_tenant_id_fkey (
-                    full_name
-                )
-            `)
-            .eq("id", id)
-            .eq("tenant_id", user.id)
-            .maybeSingle();
+  try {
+    const leaseService = new LeaseService(supabase);
+    const lease = await leaseService.getTenantLeaseById(userId, leaseId);
 
-        if (leaseError) throw leaseError;
-
-        if (!lease) {
-            return NextResponse.json(
-                { error: "Lease not found" },
-                { status: 404 }
-            );
-        }
-
-        return NextResponse.json({
-            lease: lease as unknown as LeaseData
-        });
-    } catch (e: unknown) {
-        const error = e as Error;
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({
+      lease,
+    });
+  } catch (error) {
+    if (error instanceof LeaseNotFoundError) {
+      return NextResponse.json({ error: "Lease not found" }, { status: 404 });
     }
+    console.error("[tenant-lease-by-id] Unexpected error:", error);
+    const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
+  }
 }
+

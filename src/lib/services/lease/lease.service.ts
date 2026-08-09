@@ -16,7 +16,9 @@ import type {
   TenantLeaseItem,
   TenantRenewalRequestItem,
 } from "./lease.types";
+import type { LeaseData } from "@/types/lease";
 import { LeaseNotFoundError } from "./lease.errors";
+
 
 /** Columns selected for the landlord lease list. */
 const LANDLORD_LIST_QUERY = `
@@ -150,6 +152,49 @@ const RENEWAL_REQUEST_BY_ID_QUERY = `
   current_lease:leases!renewal_requests_current_lease_id_fkey (*),
   new_lease:leases!renewal_requests_new_lease_id_fkey (*)
 `;
+
+/** Columns selected for rich tenant lease views with full property and unit amenities. */
+const TENANT_RICH_LEASE_QUERY = `
+  id,
+  status,
+  start_date,
+  end_date,
+  monthly_rent,
+  security_deposit,
+  terms,
+  signed_at,
+  signed_document_url,
+  unit:units!inner (
+    id,
+    name,
+    floor,
+    sqft,
+    beds,
+    baths,
+    property:properties!inner (
+      id,
+      name,
+      address,
+      city,
+      images,
+      house_rules,
+      amenities:amenities (*),
+      renewal_settings,
+      renewal_window_days
+    )
+  ),
+  landlord:profiles!leases_landlord_id_fkey (
+    id,
+    full_name,
+    avatar_url,
+    avatar_bg_color,
+    phone
+  ),
+  tenant:profiles!leases_tenant_id_fkey (
+    full_name
+  )
+`;
+
 
 export class LeaseService {
   constructor(private readonly supabase: SupabaseClient<Database>) {}
@@ -374,5 +419,57 @@ export class LeaseService {
     }
 
     return (data as unknown as RenewalRequestDetail) ?? null;
+  }
+
+  /**
+   * Get the primary active or most recent lease for a tenant with rich property details.
+   *
+   * @param tenantId - The tenant's user id.
+   * @returns The active or newest lease with full amenities, or null if no lease exists.
+   */
+  async getTenantActiveLease(tenantId: string): Promise<LeaseData | null> {
+    const { data: leasesData, error: leaseError } = await this.supabase
+      .from("leases")
+      .select(TENANT_RICH_LEASE_QUERY)
+      .eq("tenant_id", tenantId)
+      .order("start_date", { ascending: false });
+
+    if (leaseError) {
+      throw new Error(`Failed to fetch tenant active lease: ${leaseError.message}`);
+    }
+
+    if (!leasesData || leasesData.length === 0) {
+      return null;
+    }
+
+    const activeLease = leasesData.find((lease) => lease.status === "active") ?? leasesData[0];
+    return activeLease as unknown as LeaseData;
+  }
+
+  /**
+   * Fetch a single tenant lease by ID with rich property details, verifying tenant ownership.
+   *
+   * @param tenantId - The tenant's user id.
+   * @param leaseId - The lease id.
+   * @returns The full lease detail with property & amenities.
+   * @throws {LeaseNotFoundError} If the lease does not exist or does not belong to the tenant.
+   */
+  async getTenantLeaseById(tenantId: string, leaseId: string): Promise<LeaseData> {
+    const { data: lease, error: leaseError } = await this.supabase
+      .from("leases")
+      .select(TENANT_RICH_LEASE_QUERY)
+      .eq("id", leaseId)
+      .eq("tenant_id", tenantId)
+      .maybeSingle();
+
+    if (leaseError) {
+      throw new Error(`Failed to fetch tenant lease: ${leaseError.message}`);
+    }
+
+    if (!lease) {
+      throw new LeaseNotFoundError(leaseId);
+    }
+
+    return lease as unknown as LeaseData;
   }
 }
