@@ -1,6 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { LeaseService } from "../lease.service";
-import { LeaseNotFoundError } from "../lease.errors";
+import {
+  LeaseAccessError,
+  LeaseNotFoundError,
+  LeaseSigningEligibilityError,
+} from "../lease.errors";
+
 
 /**
  * Build a Supabase-shaped client mock whose `from()` returns a chain we control.
@@ -344,6 +349,62 @@ describe("LeaseService", () => {
       await expect(service.getTenantLeaseById("tenant-1", "lease-missing")).rejects.toBeInstanceOf(
         LeaseNotFoundError,
       );
+    });
+  });
+
+  describe("generateLandlordSigningLink", () => {
+    const validLease = {
+      id: "lease-sign-1",
+      status: "pending_landlord_signature",
+      landlord_id: "landlord-1",
+      tenant_signature: "data:image/png;base64,sample",
+      tenant_signed_at: "2026-06-01T00:00:00Z",
+    };
+
+    it("generates signing link on valid lease eligibility", async () => {
+      chain.maybeSingle.mockResolvedValue({ data: validLease, error: null });
+
+      const result = await service.generateLandlordSigningLink("landlord-1", "lease-sign-1");
+
+      expect(mockSupabase.from).toHaveBeenCalledWith("leases");
+      expect(chain.eq).toHaveBeenCalledWith("id", "lease-sign-1");
+      expect(result.leaseId).toBe("lease-sign-1");
+      expect(result.status).toBe("pending_landlord_signature");
+      expect(result.signingUrl).toContain("signing/landlord/lease-sign-1?token=");
+    });
+
+    it("throws LeaseNotFoundError when lease does not exist", async () => {
+      chain.maybeSingle.mockResolvedValue({ data: null, error: null });
+
+      await expect(
+        service.generateLandlordSigningLink("landlord-1", "missing-lease"),
+      ).rejects.toBeInstanceOf(LeaseNotFoundError);
+    });
+
+    it("throws LeaseAccessError when landlord id does not match", async () => {
+      chain.maybeSingle.mockResolvedValue({ data: validLease, error: null });
+
+      await expect(
+        service.generateLandlordSigningLink("wrong-landlord", "lease-sign-1"),
+      ).rejects.toBeInstanceOf(LeaseAccessError);
+    });
+
+    it("throws LeaseSigningEligibilityError when status is not pending_landlord_signature", async () => {
+      const draftLease = { ...validLease, status: "draft" };
+      chain.maybeSingle.mockResolvedValue({ data: draftLease, error: null });
+
+      await expect(
+        service.generateLandlordSigningLink("landlord-1", "lease-sign-1"),
+      ).rejects.toBeInstanceOf(LeaseSigningEligibilityError);
+    });
+
+    it("throws LeaseSigningEligibilityError when tenant has not signed yet", async () => {
+      const unsignedLease = { ...validLease, tenant_signature: null };
+      chain.maybeSingle.mockResolvedValue({ data: unsignedLease, error: null });
+
+      await expect(
+        service.generateLandlordSigningLink("landlord-1", "lease-sign-1"),
+      ).rejects.toBeInstanceOf(LeaseSigningEligibilityError);
     });
   });
 });

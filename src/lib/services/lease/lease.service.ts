@@ -17,7 +17,13 @@ import type {
   TenantRenewalRequestItem,
 } from "./lease.types";
 import type { LeaseData } from "@/types/lease";
-import { LeaseNotFoundError } from "./lease.errors";
+import {
+  LeaseAccessError,
+  LeaseNotFoundError,
+  LeaseSigningEligibilityError,
+} from "./lease.errors";
+import { generateLandlordSigningLink as createLandlordSigningUrl } from "@/lib/jwt";
+
 
 
 /** Columns selected for the landlord lease list. */
@@ -471,5 +477,56 @@ export class LeaseService {
     }
 
     return lease as unknown as LeaseData;
+  }
+
+  /**
+   * Validate eligibility and generate a secure signing link for a landlord to countersign a lease.
+   *
+   * @param landlordId - The landlord user id.
+   * @param leaseId - The lease id.
+   * @returns Object containing the signing URL, lease ID, and current lease status.
+   * @throws {LeaseNotFoundError} If lease does not exist.
+   * @throws {LeaseAccessError} If the user is not the landlord of this lease.
+   * @throws {LeaseSigningEligibilityError} If the lease is not pending landlord signature or tenant hasn't signed.
+   */
+  async generateLandlordSigningLink(
+    landlordId: string,
+    leaseId: string,
+  ): Promise<{ signingUrl: string; leaseId: string; status: Database["public"]["Tables"]["leases"]["Row"]["status"] }> {
+    const { data: lease, error: leaseError } = await this.supabase
+      .from("leases")
+      .select("id, status, landlord_id, tenant_signature, tenant_signed_at")
+      .eq("id", leaseId)
+      .maybeSingle();
+
+    if (leaseError) {
+      throw new Error(`Failed to fetch lease: ${leaseError.message}`);
+    }
+
+    if (!lease) {
+      throw new LeaseNotFoundError(leaseId);
+    }
+
+    if (lease.landlord_id !== landlordId) {
+      throw new LeaseAccessError("Unauthorized: You are not the landlord for this lease");
+    }
+
+    if (lease.status !== "pending_landlord_signature") {
+      throw new LeaseSigningEligibilityError(
+        `Cannot generate signing link. Lease status is: ${lease.status}. Expected: pending_landlord_signature`,
+      );
+    }
+
+    if (!lease.tenant_signature || !lease.tenant_signed_at) {
+      throw new LeaseSigningEligibilityError("Tenant has not signed this lease yet");
+    }
+
+    const signingUrl = createLandlordSigningUrl(leaseId, landlordId);
+
+    return {
+      signingUrl,
+      leaseId,
+      status: lease.status,
+    };
   }
 }

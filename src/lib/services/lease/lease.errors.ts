@@ -46,3 +46,10 @@ export class InvalidLeaseTransitionError extends LeaseError {
     super(message, { code: "LEASE_INVALID_TRANSITION", httpStatus: 409 });
   }
 }
+
+/** Thrown when a lease is not in a valid state or condition for signing. */
+export class LeaseSigningEligibilityError extends LeaseError {
+  constructor(message: string) {
+    super(message, { code: "LEASE_NOT_ELIGIBLE_FOR_SIGNING", httpStatus: 409 });
+  }
+}
