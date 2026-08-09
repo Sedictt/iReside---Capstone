@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-09T10:05:21.153Z",
+  "generatedAt": "2026-08-09T10:23:39.148Z",
   "schema": "source-of-truth-db.sql",
   "migrations": "supabase/migrations",
   "tableCount": 58,
@@ -517,7 +517,23 @@
         "command": "UPDATE"
       }
     ],
-    "multiplePermissivePolicies": []
+    "multiplePermissivePolicies": [
+      {
+        "table": "renewal_requests",
+        "command": "SELECT",
+        "count": 2
+      },
+      {
+        "table": "renewal_requests",
+        "command": "INSERT",
+        "count": 2
+      },
+      {
+        "table": "tenant_intake_invites",
+        "command": "SELECT",
+        "count": 2
+      }
+    ]
   },
   "missingInSchema": [
     "community_reports",
@@ -8467,7 +8483,7 @@
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 72,
+      "codeReferenceCount": 71,
       "codeReferenceFiles": [
         "src/app/api/admin/stats/route.ts",
         "src/app/api/invites/[token]/route.ts",
@@ -8483,7 +8499,6 @@
         "src/app/api/landlord/properties/[id]/renewal-settings/route.ts",
         "src/app/api/landlord/properties/media/route.ts",
         "src/app/api/landlord/properties/overview/route.ts",
-        "src/app/api/landlord/property-units/route.ts",
         "src/app/api/landlord/search/route.ts",
         "src/app/api/landlord/tenants/route.ts",
         "src/app/api/landlord/unit-map/floor-configs/route.ts",
@@ -9085,7 +9100,43 @@
         "name": "renewal_requests_pkey",
         "columns": "\"id\""
       },
-      "policies": [],
+      "policies": [
+        {
+          "name": "Landlords can view renewal requests for their properties",
+          "table": "renewal_requests",
+          "command": "SELECT",
+          "definition": "CREATE POLICY \"Landlords can view renewal requests for their properties\"\nON public.renewal_requests\nFOR SELECT\nTO authenticated\nUSING (landlord_id = (select auth.uid()));",
+          "unwrappedAuthCalls": false
+        },
+        {
+          "name": "Landlords can update renewal requests for their properties",
+          "table": "renewal_requests",
+          "command": "UPDATE",
+          "definition": "CREATE POLICY \"Landlords can update renewal requests for their properties\"\nON public.renewal_requests\nFOR UPDATE\nTO authenticated\nUSING (landlord_id = (select auth.uid()))\nWITH CHECK (landlord_id = (select auth.uid()));",
+          "unwrappedAuthCalls": false
+        },
+        {
+          "name": "Landlords can insert renewal requests",
+          "table": "renewal_requests",
+          "command": "INSERT",
+          "definition": "CREATE POLICY \"Landlords can insert renewal requests\"\nON public.renewal_requests\nFOR INSERT\nTO authenticated\nWITH CHECK (landlord_id = (select auth.uid()));",
+          "unwrappedAuthCalls": false
+        },
+        {
+          "name": "Tenants can view own renewal requests",
+          "table": "renewal_requests",
+          "command": "SELECT",
+          "definition": "CREATE POLICY \"Tenants can view own renewal requests\"\nON public.renewal_requests\nFOR SELECT\nTO authenticated\nUSING (tenant_id = (select auth.uid()));",
+          "unwrappedAuthCalls": false
+        },
+        {
+          "name": "Tenants can insert own renewal requests",
+          "table": "renewal_requests",
+          "command": "INSERT",
+          "definition": "CREATE POLICY \"Tenants can insert own renewal requests\"\nON public.renewal_requests\nFOR INSERT\nTO authenticated\nWITH CHECK (tenant_id = (select auth.uid()));",
+          "unwrappedAuthCalls": false
+        }
+      ],
       "rlsEnabled": true,
       "codeReferenceCount": 15,
       "codeReferenceFiles": [
@@ -9098,8 +9149,7 @@
       ],
       "functionReferences": [],
       "riskSignals": [
-        "json_columns",
-        "rls_enabled_without_policies"
+        "json_columns"
       ]
     },
     "saved_posts": {
@@ -9286,7 +9336,15 @@
         "name": "tenant_intake_invite_events_pkey",
         "columns": "\"id\""
       },
-      "policies": [],
+      "policies": [
+        {
+          "name": "Landlords can view invite events for their invites",
+          "table": "tenant_intake_invite_events",
+          "command": "SELECT",
+          "definition": "CREATE POLICY \"Landlords can view invite events for their invites\"\nON public.tenant_intake_invite_events\nFOR SELECT\nTO authenticated\nUSING (\n    EXISTS (\n        SELECT 1 FROM public.tenant_intake_invites\n        WHERE tenant_intake_invites.id = tenant_intake_invite_events.invite_id\n          AND tenant_intake_invites.landlord_id = (select auth.uid())\n    )\n);",
+          "unwrappedAuthCalls": false
+        }
+      ],
       "rlsEnabled": true,
       "codeReferenceCount": 5,
       "codeReferenceFiles": [
@@ -9296,8 +9354,7 @@
       ],
       "functionReferences": [],
       "riskSignals": [
-        "json_columns",
-        "rls_enabled_without_policies"
+        "json_columns"
       ]
     },
     "tenant_intake_invites": {
@@ -9511,7 +9568,36 @@
         "name": "tenant_intake_invites_pkey",
         "columns": "\"id\""
       },
-      "policies": [],
+      "policies": [
+        {
+          "name": "Landlords can view own invites",
+          "table": "tenant_intake_invites",
+          "command": "SELECT",
+          "definition": "CREATE POLICY \"Landlords can view own invites\"\nON public.tenant_intake_invites\nFOR SELECT\nTO authenticated\nUSING (landlord_id = (select auth.uid()));",
+          "unwrappedAuthCalls": false
+        },
+        {
+          "name": "Landlords can insert own invites",
+          "table": "tenant_intake_invites",
+          "command": "INSERT",
+          "definition": "CREATE POLICY \"Landlords can insert own invites\"\nON public.tenant_intake_invites\nFOR INSERT\nTO authenticated\nWITH CHECK (landlord_id = (select auth.uid()));",
+          "unwrappedAuthCalls": false
+        },
+        {
+          "name": "Landlords can update own invites",
+          "table": "tenant_intake_invites",
+          "command": "UPDATE",
+          "definition": "CREATE POLICY \"Landlords can update own invites\"\nON public.tenant_intake_invites\nFOR UPDATE\nTO authenticated\nUSING (landlord_id = (select auth.uid()))\nWITH CHECK (landlord_id = (select auth.uid()));",
+          "unwrappedAuthCalls": false
+        },
+        {
+          "name": "Tenants can view invites assigned to them",
+          "table": "tenant_intake_invites",
+          "command": "SELECT",
+          "definition": "CREATE POLICY \"Tenants can view invites assigned to them\"\nON public.tenant_intake_invites\nFOR SELECT\nTO authenticated\nUSING (tenant_id = (select auth.uid()));",
+          "unwrappedAuthCalls": false
+        }
+      ],
       "rlsEnabled": true,
       "codeReferenceCount": 8,
       "codeReferenceFiles": [
@@ -9523,8 +9609,7 @@
       "functionReferences": [],
       "riskSignals": [
         "json_columns",
-        "array_columns",
-        "rls_enabled_without_policies"
+        "array_columns"
       ]
     },
     "tenant_product_tour_events": {
@@ -10525,7 +10610,7 @@
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 54,
+      "codeReferenceCount": 53,
       "codeReferenceFiles": [
         "src/app/api/invites/[token]/route.ts",
         "src/app/api/landlord/analytics/overview/route.ts",
@@ -10540,7 +10625,6 @@
         "src/app/api/landlord/onboarding/[token]/route.ts",
         "src/app/api/landlord/payments/overview/route.ts",
         "src/app/api/landlord/properties/overview/route.ts",
-        "src/app/api/landlord/property-units/route.ts",
         "src/app/api/landlord/tenants/manual/route.ts",
         "src/app/api/landlord/tenants/route.ts",
         "src/app/api/landlord/unit-map/floor-configs/route.ts",

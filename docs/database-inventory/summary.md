@@ -1,6 +1,6 @@
 # Database Inventory Summary
 
-Generated: 2026-08-09T10:05:21.153Z
+Generated: 2026-08-09T10:23:39.148Z
 Schema source: `source-of-truth-db.sql`
 Migration overlay: `supabase/migrations`
 
@@ -26,11 +26,13 @@ Migration overlay: `supabase/migrations`
 ## Local RLS Diagnostics After Migration Overlay
 
 - Unwrapped auth.uid/auth.jwt policy calls: 52
-- Tables with multiple policies for the same command: 0
+- Tables with multiple policies for the same command: 3
 
 ### Multiple Policy Tables
 
-- None
+- `renewal_requests` SELECT: 2 policies
+- `renewal_requests` INSERT: 2 policies
+- `tenant_intake_invites` SELECT: 2 policies
 
 ## Referenced Tables Missing From Schema
 
@@ -68,9 +70,9 @@ Migration overlay: `supabase/migrations`
 
 - `profiles`: 94 references across 63 files
 - `leases`: 83 references across 46 files
-- `properties`: 72 references across 33 files
+- `properties`: 71 references across 32 files
 - `payments`: 56 references across 23 files
-- `units`: 54 references across 31 files
+- `units`: 53 references across 30 files
 - `applications`: 46 references across 23 files
 - `notifications`: 32 references across 21 files
 - `community_posts`: 27 references across 5 files
@@ -85,7 +87,6 @@ Migration overlay: `supabase/migrations`
 ## Tables With Structural Risk Signals
 
 - `properties`: json_columns, array_columns, unwrapped_auth_rls_calls
-- `tenant_intake_invites`: json_columns, array_columns, rls_enabled_without_policies
 - `amenities`: array_columns, unwrapped_auth_rls_calls
 - `application_payment_audit_events`: json_columns, unwrapped_auth_rls_calls
 - `application_payment_requests`: json_columns, unwrapped_auth_rls_calls
@@ -102,8 +103,7 @@ Migration overlay: `supabase/migrations`
 - `payment_items`: json_columns, unwrapped_auth_rls_calls
 - `payment_workflow_audit_events`: json_columns, unwrapped_auth_rls_calls
 - `profiles`: json_columns, array_columns
-- `renewal_requests`: json_columns, rls_enabled_without_policies
-- `tenant_intake_invite_events`: json_columns, rls_enabled_without_policies
+- `tenant_intake_invites`: json_columns, array_columns
 - `amenity_bookings`: unwrapped_auth_rls_calls
 - `community_poll_votes`: unwrapped_auth_rls_calls
 - `community_posts`: json_columns
@@ -124,7 +124,9 @@ Migration overlay: `supabase/migrations`
 - `payments`: json_columns
 - `property_environment_policies`: json_columns
 - `property_floor_configs`: unwrapped_auth_rls_calls
+- `renewal_requests`: json_columns
 - `saved_posts`: unwrapped_auth_rls_calls
+- `tenant_intake_invite_events`: json_columns
 - `tenant_product_tour_events`: json_columns
 - `tenant_product_tour_states`: json_columns
 - `unit_map_positions`: unwrapped_auth_rls_calls
