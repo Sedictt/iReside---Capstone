@@ -407,4 +407,144 @@ describe("LeaseService", () => {
       ).rejects.toBeInstanceOf(LeaseSigningEligibilityError);
     });
   });
+
+  describe("signLeaseAsLandlord", () => {
+    const validSignature =
+      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAFUlEQVR42mNk+M9QzwAEjDAGDMVmAQ==";
+
+    const pendingLease = {
+      id: "lease-1",
+      status: "pending_landlord_signature",
+      landlord_id: "landlord-1",
+      tenant_signature: "data:image/png;base64,sample",
+      tenant_signed_at: "2026-06-01T00:00:00Z",
+      signature_lock_version: 1,
+    };
+
+    function createMockAdminClient() {
+      const leasesChain: any = {
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: { signature_lock_version: 1 },
+              error: null,
+            }),
+          }),
+        }),
+        update: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              select: vi.fn().mockResolvedValue({
+                data: [{ id: "lease-1" }],
+                error: null,
+              }),
+            }),
+          }),
+        }),
+      };
+
+      const applicationsChain: any = {
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            maybeSingle: vi.fn().mockResolvedValue({
+              data: { id: "app-1", compliance_checklist: {} },
+              error: null,
+            }),
+          }),
+        }),
+        update: vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({ data: null, error: null }),
+        }),
+      };
+
+      return {
+        from: vi.fn((table: string) => {
+          if (table === "leases") return leasesChain;
+          if (table === "applications") return applicationsChain;
+          return leasesChain;
+        }),
+      } as any;
+    }
+
+    it("successfully signs lease as landlord", async () => {
+      chain.maybeSingle.mockResolvedValue({ data: pendingLease, error: null });
+      const mockAdmin = createMockAdminClient();
+
+      const result = await service.signLeaseAsLandlord(
+        {
+          leaseId: "lease-1",
+          landlordId: "landlord-1",
+          signature: validSignature,
+        },
+        mockAdmin,
+      );
+
+      expect(result.leaseId).toBe("lease-1");
+      expect(result.status).toBe("active");
+      expect(result.signedAt).toBeDefined();
+      expect(result.sanitizedSignature).toBeDefined();
+    });
+
+    it("throws LeaseNotFoundError when lease does not exist", async () => {
+      chain.maybeSingle.mockResolvedValue({ data: null, error: null });
+
+      await expect(
+        service.signLeaseAsLandlord({
+          leaseId: "missing-lease",
+          landlordId: "landlord-1",
+          signature: validSignature,
+        }),
+      ).rejects.toBeInstanceOf(LeaseNotFoundError);
+    });
+
+    it("throws LeaseAccessError on landlord mismatch", async () => {
+      chain.maybeSingle.mockResolvedValue({ data: pendingLease, error: null });
+
+      await expect(
+        service.signLeaseAsLandlord({
+          leaseId: "lease-1",
+          landlordId: "wrong-landlord",
+          signature: validSignature,
+        }),
+      ).rejects.toBeInstanceOf(LeaseAccessError);
+    });
+
+    it("throws LeaseSigningEligibilityError when lease status is not pending_landlord_signature", async () => {
+      const activeLease = { ...pendingLease, status: "active" };
+      chain.maybeSingle.mockResolvedValue({ data: activeLease, error: null });
+
+      await expect(
+        service.signLeaseAsLandlord({
+          leaseId: "lease-1",
+          landlordId: "landlord-1",
+          signature: validSignature,
+        }),
+      ).rejects.toBeInstanceOf(LeaseSigningEligibilityError);
+    });
+
+    it("throws LeaseSigningEligibilityError when tenant has not signed", async () => {
+      const unsignedLease = { ...pendingLease, tenant_signature: null };
+      chain.maybeSingle.mockResolvedValue({ data: unsignedLease, error: null });
+
+      await expect(
+        service.signLeaseAsLandlord({
+          leaseId: "lease-1",
+          landlordId: "landlord-1",
+          signature: validSignature,
+        }),
+      ).rejects.toBeInstanceOf(LeaseSigningEligibilityError);
+    });
+
+    it("throws LeaseSigningEligibilityError on invalid signature format", async () => {
+      chain.maybeSingle.mockResolvedValue({ data: pendingLease, error: null });
+
+      await expect(
+        service.signLeaseAsLandlord({
+          leaseId: "lease-1",
+          landlordId: "landlord-1",
+          signature: "not-a-valid-data-url",
+        }),
+      ).rejects.toBeInstanceOf(LeaseSigningEligibilityError);
+    });
+  });
 });

@@ -1,12 +1,17 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
-import { validateSignature, sanitizeSignatureDataURL, retryWithBackoff } from "@/lib/signature-validation";
 import { logAuditEvent, extractIpAddress, extractUserAgent } from "@/lib/audit-logging";
 import { sendLeaseActivatedNotification } from "@/lib/email";
-import { isValidLeaseStatusTransition, getTransitionErrorMessage } from "@/lib/lease-status-transitions";
 import { verifySigningToken } from "@/lib/jwt";
 import { generateLeasePdf } from "@/lib/lease-pdf";
+import {
+  LeaseService,
+  LeaseNotFoundError,
+  LeaseAccessError,
+  InvalidLeaseTransitionError,
+  LeaseSigningEligibilityError,
+} from "@/lib/services/lease";
 
 type SignLeaseBody = {
   landlord_signature: string;
@@ -74,158 +79,35 @@ export async function POST(
     landlordId = authContext.userId;
   }
 
-  // Fetch lease record
-  const { data: lease, error: leaseError } = await supabase
-    .from("leases")
-    .select("id, status, landlord_id, tenant_signature, tenant_signed_at")
-    .eq("id", leaseId)
-    .maybeSingle();
-
-  if (leaseError) {
-    console.error("[landlord-sign-lease] Database error:", leaseError);
-    return NextResponse.json(
-      { error: "Failed to fetch lease" },
-      { status: 500 }
-    );
-  }
-
-  if (!lease) {
-    return NextResponse.json(
-      { error: "Lease not found" },
-      { status: 404 }
-    );
-  }
-
-  // Verify landlord ID matches
-  if (lease.landlord_id !== landlordId) {
-    return NextResponse.json(
-      { error: "Unauthorized: You are not the landlord for this lease" },
-      { status: 403 }
-    );
-  }
-
-  // Validate lease status - must be pending landlord signature
-  if (lease.status !== "pending_landlord_signature") {
-    return NextResponse.json(
-      { error: `Cannot sign lease with status: ${lease.status}. Lease must be in 'pending_landlord_signature' status.` },
-      { status: 409 }
-    );
-  }
-
-  // Validate status transition
-  const newStatus = "active";
-  if (!isValidLeaseStatusTransition(lease.status, newStatus)) {
-    return NextResponse.json(
-      { error: getTransitionErrorMessage(lease.status, newStatus) },
-      { status: 409 }
-    );
-  }
-
-  // Verify tenant has already signed
-  if (!lease.tenant_signature || !lease.tenant_signed_at) {
-    return NextResponse.json(
-      { error: "Tenant has not signed this lease yet" },
-      { status: 409 }
-    );
-  }
-
-  // Validate signature format and content
-  const validation = await validateSignature(body.landlord_signature);
-  if (!validation.valid) {
-    return NextResponse.json(
-      { error: validation.error },
-      { status: 400 }
-    );
-  }
-
-  // Sanitize signature data URL
-  let sanitizedSignature: string;
-  try {
-    sanitizedSignature = sanitizeSignatureDataURL(body.landlord_signature);
-  } catch (error) {
-    return NextResponse.json(
-      { error: "Invalid signature data URL format" },
-      { status: 400 }
-    );
-  }
-
-  // Update lease with landlord signature using optimistic locking
-  const signedAt = new Date().toISOString();
-  
-  const updateLeaseAndApplication = async () => {
-    // Use admin client for system-level updates
-    const { createAdminClient } = await import("@/lib/supabase/admin");
-    const adminClient = createAdminClient();
-
-    // 1. Update lease
-    const { data: currentLease, error: fetchError } = await adminClient
-      .from("leases")
-      .select("signature_lock_version")
-      .eq("id", leaseId)
-      .single();
-
-    if (fetchError || !currentLease) {
-      throw new Error(`Failed to fetch lease for optimistic locking: ${fetchError?.message}`);
-    }
-
-    const currentLockVersion = currentLease.signature_lock_version;
-
-    const { error: updateLeaseError, data: updatedRows } = await adminClient
-      .from("leases")
-      .update({
-        landlord_signature: sanitizedSignature,
-        status: newStatus,
-        landlord_signed_at: signedAt,
-        signed_at: signedAt,
-        updated_at: signedAt,
-        signature_lock_version: currentLockVersion + 1,
-      })
-      .eq("id", leaseId)
-      .eq("signature_lock_version", currentLockVersion)
-      .select('id');
-
-    if (updateLeaseError) {
-      throw new Error(`Failed to update lease: ${updateLeaseError.message}`);
-    }
-    
-    if (!updatedRows || updatedRows.length === 0) {
-       throw new Error("Optimistic lock failure: lease was updated by another process.");
-    }
-
-    // 2. Update associated application
-    const { data: application, error: appFetchError } = await adminClient
-      .from("applications")
-      .select("id, compliance_checklist")
-      .eq("lease_id", leaseId)
-      .maybeSingle();
-
-    if (!appFetchError && application) {
-      const updatedChecklist = {
-        ...(application.compliance_checklist as any || {}),
-        lease_signed: true,
-        application_completed: true
-      };
-
-      await adminClient
-        .from("applications")
-        .update({
-          status: "approved",
-          compliance_checklist: updatedChecklist,
-          updated_at: signedAt
-        } as any)
-        .eq("id", application.id);
-    }
-  };
+  const leaseService = new LeaseService(supabase);
+  let signResult: { signedAt: string; sanitizedSignature: string };
 
   try {
-    await retryWithBackoff(updateLeaseAndApplication, 3, 1000);
+    signResult = await leaseService.signLeaseAsLandlord({
+      leaseId,
+      landlordId,
+      signature: body.landlord_signature,
+    });
   } catch (error) {
-    console.error("[landlord-sign-lease] Update error:", error);
+    if (error instanceof LeaseNotFoundError) {
+      return NextResponse.json({ error: error.message }, { status: 404 });
+    }
+    if (error instanceof LeaseAccessError) {
+      return NextResponse.json({ error: error.message }, { status: 403 });
+    }
+    if (error instanceof InvalidLeaseTransitionError || error instanceof LeaseSigningEligibilityError) {
+      return NextResponse.json({ error: error.message }, { status: 409 });
+    }
+
+    console.error("[landlord-sign-lease] Signing error:", error);
     return NextResponse.json(
       { error: "Failed to update lease. Please try again." },
       { status: 500 }
     );
   }
+
+  const signedAt = signResult.signedAt;
+  const sanitizedSignature = signResult.sanitizedSignature;
 
   // Log audit event
   try {
@@ -237,8 +119,7 @@ export async function POST(
       userAgent: extractUserAgent(request),
       metadata: {
         signing_mode: "remote",
-        tenant_signed_at: lease.tenant_signed_at,
-        status_transition: `${lease.status} -> ${newStatus}`,
+        status_transition: "pending_landlord_signature -> active",
       },
     });
   } catch (auditError) {
@@ -255,7 +136,7 @@ export async function POST(
       userAgent: extractUserAgent(request),
       metadata: {
         signed_at: signedAt,
-        status_transition: `${lease.status} -> ${newStatus}`,
+        status_transition: "pending_landlord_signature -> active",
       },
     });
   } catch (auditError) {
@@ -265,6 +146,7 @@ export async function POST(
   // Fetch full lease details for notifications and document generation
   let leaseDetails: any = null;
   let tenantProfile: any = null;
+
   let landlordProfile: any = null;
   
   try {

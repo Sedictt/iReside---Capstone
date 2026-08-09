@@ -110,3 +110,18 @@ export type RenewalRequestDetail = Database["public"]["Tables"]["renewal_request
   current_lease: Database["public"]["Tables"]["leases"]["Row"] | null;
   new_lease: Database["public"]["Tables"]["leases"]["Row"] | null;
 };
+
+/** Input for landlord countersigning a lease. */
+export interface SignLeaseAsLandlordInput {
+  leaseId: string;
+  landlordId: string;
+  signature: string;
+}
+
+/** Result returned after landlord successfully countersigns a lease. */
+export interface SignLeaseResult {
+  leaseId: string;
+  status: "active";
+  signedAt: string;
+  sanitizedSignature: string;
+}

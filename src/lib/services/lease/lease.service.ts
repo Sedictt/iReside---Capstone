@@ -13,16 +13,29 @@ import type {
   LeaseDetail,
   LeaseListItem,
   RenewalRequestDetail,
+  SignLeaseAsLandlordInput,
+  SignLeaseResult,
   TenantLeaseItem,
   TenantRenewalRequestItem,
 } from "./lease.types";
 import type { LeaseData } from "@/types/lease";
 import {
+  InvalidLeaseTransitionError,
   LeaseAccessError,
   LeaseNotFoundError,
   LeaseSigningEligibilityError,
 } from "./lease.errors";
 import { generateLandlordSigningLink as createLandlordSigningUrl } from "@/lib/jwt";
+import {
+  validateSignature,
+  sanitizeSignatureDataURL,
+  retryWithBackoff,
+} from "@/lib/signature-validation";
+import {
+  isValidLeaseStatusTransition,
+  getTransitionErrorMessage,
+} from "./lease-status-machine";
+
 
 
 
@@ -527,6 +540,139 @@ export class LeaseService {
       signingUrl,
       leaseId,
       status: lease.status,
+    };
+  }
+
+  /**
+   * Countersign a lease agreement as a landlord.
+   * Validates signature format, verifies lease status & tenant signature,
+   * and atomically updates the lease and linked application with optimistic locking.
+   *
+   * @param input - Lease ID, landlord ID, and base64 signature string.
+   * @param adminClientOverride - Optional admin client for testing or custom execution context.
+   * @returns Signing result containing status, timestamp, and sanitized signature.
+   */
+  async signLeaseAsLandlord(
+    input: SignLeaseAsLandlordInput,
+    adminClientOverride?: SupabaseClient<Database>,
+  ): Promise<SignLeaseResult> {
+    const { leaseId, landlordId, signature } = input;
+
+    // 1. Fetch and validate lease
+    const { data: lease, error: leaseError } = await this.supabase
+      .from("leases")
+      .select("id, status, landlord_id, tenant_signature, tenant_signed_at")
+      .eq("id", leaseId)
+      .maybeSingle();
+
+    if (leaseError) {
+      throw new Error(`Failed to fetch lease: ${leaseError.message}`);
+    }
+
+    if (!lease) {
+      throw new LeaseNotFoundError(leaseId);
+    }
+
+    if (lease.landlord_id !== landlordId) {
+      throw new LeaseAccessError("Unauthorized: You are not the landlord for this lease");
+    }
+
+    if (lease.status !== "pending_landlord_signature") {
+      throw new LeaseSigningEligibilityError(
+        `Cannot sign lease with status: ${lease.status}. Lease must be in 'pending_landlord_signature' status.`,
+      );
+    }
+
+    const newStatus = "active" as const;
+    if (!isValidLeaseStatusTransition(lease.status, newStatus)) {
+      throw new InvalidLeaseTransitionError(getTransitionErrorMessage(lease.status, newStatus));
+    }
+
+    if (!lease.tenant_signature || !lease.tenant_signed_at) {
+      throw new LeaseSigningEligibilityError("Tenant has not signed this lease yet");
+    }
+
+    // 2. Validate and sanitize signature
+    const validation = await validateSignature(signature);
+    if (!validation.valid) {
+      throw new LeaseSigningEligibilityError(validation.error ?? "Invalid signature format");
+    }
+
+    const sanitizedSignature = sanitizeSignatureDataURL(signature);
+    const signedAt = new Date().toISOString();
+
+    // 3. Perform optimistic lock update via service-role / admin client
+    const updateLeaseAndApplication = async () => {
+      const adminClient =
+        adminClientOverride ??
+        (await import("@/lib/supabase/admin")).createServiceRoleSupabaseClient();
+
+      const { data: currentLease, error: fetchError } = await adminClient
+        .from("leases")
+        .select("signature_lock_version")
+        .eq("id", leaseId)
+        .single();
+
+      if (fetchError || !currentLease) {
+        throw new Error(`Failed to fetch lease for optimistic locking: ${fetchError?.message}`);
+      }
+
+      const currentLockVersion = currentLease.signature_lock_version;
+
+      const { error: updateLeaseError, data: updatedRows } = await adminClient
+        .from("leases")
+        .update({
+          landlord_signature: sanitizedSignature,
+          status: newStatus,
+          landlord_signed_at: signedAt,
+          signed_at: signedAt,
+          updated_at: signedAt,
+          signature_lock_version: currentLockVersion + 1,
+        })
+        .eq("id", leaseId)
+        .eq("signature_lock_version", currentLockVersion)
+        .select("id");
+
+      if (updateLeaseError) {
+        throw new Error(`Failed to update lease: ${updateLeaseError.message}`);
+      }
+
+      if (!updatedRows || updatedRows.length === 0) {
+        throw new Error("Optimistic lock failure: lease was updated by another process.");
+      }
+
+      // Update associated application
+      const { data: application, error: appFetchError } = await adminClient
+        .from("applications")
+        .select("id, compliance_checklist")
+        .eq("lease_id", leaseId)
+        .maybeSingle();
+
+      if (!appFetchError && application) {
+        const updatedChecklist = {
+          ...((application.compliance_checklist as Record<string, unknown> | null) || {}),
+          lease_signed: true,
+          application_completed: true,
+        };
+
+        await adminClient
+          .from("applications")
+          .update({
+            status: "approved",
+            compliance_checklist: updatedChecklist,
+            updated_at: signedAt,
+          } as any)
+          .eq("id", application.id);
+      }
+    };
+
+    await retryWithBackoff(updateLeaseAndApplication, 3, 1000);
+
+    return {
+      leaseId,
+      status: "active",
+      signedAt,
+      sanitizedSignature,
     };
   }
 }
