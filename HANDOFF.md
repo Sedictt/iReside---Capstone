@@ -50,42 +50,36 @@ The following changes sit in the **working tree, not yet committed**. Do not los
 
 ## Verification status
 
-- ✅ `npx tsc --noEmit` → **0 errors, clean**.
-- ✅ `npx vitest run` → **411 passed / 0 failed** across all 44 test files.
-- ⚠️ Excluded from commit: `graphify-out/*`, `supabase/.temp/cli-latest`, `supabase_backup/*.sql`, and untracked scratch docs.
-
----
-
 ## Status
 
-- **Phase 3.1 (Complete across Passes 1-5):** Full `LeaseService` extraction, domain types & errors, status machine migration & facade, route migrations for all landlord/tenant lease routes, 41 unit tests.
-- **Phase 3.2 (Complete across Passes 1-4):** Extracted `PaymentService`, `BillingService`, and `ExpenseService`, migrated all tenant and landlord payment/billing routes, 31 unit tests.
+- **Phase 1 & 2:** Foundation envelopes, auth-guards, validation schemas, email service facade.
+- **Phase 3.1:** Full `LeaseService` extraction, domain types & errors, status machine migration & facade, route migrations for all landlord/tenant lease routes, 41 unit tests.
+- **Phase 3.2:** Extracted `PaymentService`, `BillingService`, and `ExpenseService`, migrated all tenant and landlord payment/billing routes, 31 unit tests.
 - **Phase 3.3:** Created `src/lib/services/application/` (`ApplicationService`, `application.types.ts`, `application.errors.ts`, `application-state-machine.ts`, `index.ts`), added 14 unit tests, and migrated tenant and landlord application API routes to `ApplicationService`, `requireAuthenticatedUser`, and `createServiceRoleSupabaseClient`.
 - **Phase 3.4:** Created `src/lib/services/user/` (`UserService`, `AuthService`, `user.types.ts`, `user.errors.ts`, `index.ts`), added 10 unit tests, and migrated `/api/admin/users`, `/api/admin/users/[id]`, `/api/profile/avatar`, `/api/profile/cover`, and `/api/profile/permit` to use `UserService`, `requireAuthenticatedUser`, and `createServiceRoleSupabaseClient`.
 - **Phase 3.5:** Extracted `src/lib/services/community/` (`PostService`, `CommentService`, `ReactionService`, `PollService`, `ModerationService`, `community.types.ts`, `community.errors.ts`, `index.ts`), migrated `src/lib/community/actions.ts` to `createServiceRoleSupabaseClient`, and added 20 unit tests across 5 test files.
 - **Phase 3.6:** Extracted `src/lib/services/messaging/` (`ConversationService`, `MessageService`, `messaging.types.ts`, `messaging.errors.ts`, `index.ts`). Migrated `messages/conversations/route.ts`, `messages/conversations/[conversationId]/route.ts`, `messages/conversations/[conversationId]/read/route.ts`, `messages/unread-count/route.ts`. Updated `[conversationId]/route.test.ts` to match new auth pattern. Added 7 unit tests.
 - **Phase 3.7:** Extracted `src/lib/services/notification/` (`NotificationService`, `notification.types.ts`, `notification.errors.ts`, `index.ts`). Migrated `landlord/notifications/recent/route.ts`. Added 6 unit tests.
-- **Phase 3.8:** Extracted `src/lib/services/property/` (`PropertyService`, `property.types.ts`, `property.errors.ts`, `index.ts`) covering `getPropertiesForLandlord`, `getPropertyIdsForLandlord`, `getPropertyDetail`, `getPropertiesWithUnits`, `getPortfolioOverview`, `getUnitForLandlord`, `updateRenewalSettings`. Added 6 unit tests.
+- **Phase 3.8:** Extracted `src/lib/services/property/` (`PropertyService`, `property.types.ts`, `property.errors.ts`, `index.ts`) covering `getPropertiesForLandlord`, `getPropertyIdsForLandlord`, `getPropertyDetail`, `getPropertiesWithUnits`, `getPortfolioOverview`, `getUnitForLandlord`, `updateRenewalSettings`. Migrated `src/app/api/landlord/properties/[id]/route.ts`. Added 6 unit tests.
+- **Phase 3.9:** Extracted `src/lib/services/maintenance/` (`MaintenanceService`, `maintenance.types.ts`, `maintenance.errors.ts`, `index.ts`) covering `getLandlordMaintenanceRequests`, `getTenantMaintenanceRequests`, `createLandlordMaintenance`, `createTenantMaintenance`, `updateLandlordMaintenance`, `updateTenantMaintenance`. Migrated `src/app/api/landlord/maintenance/route.ts` and `src/app/api/tenant/maintenance/route.ts` to use `requireAuthenticatedUser` and `MaintenanceService`. Added 7 unit tests.
+- **Phase 3.10:** Extracted `src/lib/services/iris/` (`IrisService`, `IrisContextService`, `iris.types.ts`, `iris.errors.ts`, `index.ts`) covering tenant AI context assembly, prompt formatting, chat completions orchestration with rate limit handling, and history retrieval. Migrated `src/app/api/iris/chat/route.ts`, `src/app/api/iris/history/route.ts`, and converted `src/lib/iris/context.ts` into a backward-compatible facade. Added 5 unit tests.
+- **Phase 5.3:** Extracted centralized `AppError` class hierarchy (`NotFoundError`, `UnauthorizedError`, `ForbiddenError`, `ValidationError`, `ConflictError`, `RateLimitError`, `InternalServerError`) in `src/lib/errors/app-error.ts` with `toApiResponseEnvelope` converter. Added 5 unit tests.
+- **Phase 6:** Built testing infrastructure:
+  - `src/__tests__/helpers/mock-supabase.ts`: Fluent chain mock builder.
+  - `src/__tests__/factories/`: Domain test factories (`user`, `property`, `lease`, `payment`, `maintenance`, `community`) with 9 unit tests.
+  - Removed dead external test `tests/example.spec.js`.
 
+---
 
+## Verification status
 
+- ✅ `npx tsc --noEmit` → **0 errors, clean**.
+- ✅ `npx vitest run` → **443 passed / 0 failed** across all 49 test files.
+- ⚠️ Excluded from commit: `graphify-out/*`, `supabase/.temp/cli-latest`, `supabase_backup/*.sql`, and untracked scratch docs.
 
+---
 
-
-
-
-
-
-
-
-## Deferred — future Phase 3.1 passes (NOT yet requested)
-- `src/lib/queries/leases.ts` — refactor its internal `createClient()` import into a constructor-injected service.
-- The 445-line `src/app/api/landlord/leases/sign/route.ts` monolith migration.
-- `signing-link` route and all `tenant/lease/**` routes.
-- Email / PDF / audit / jwt extraction into services (they stay as imported helpers for now).
-
-## Other notes
-- Test command: `npx vitest run` (jsdom, globals on, `@` → `./src`). Targeted: `npx vitest run src/lib/services/lease`.
-- Type check: `npx tsc --noEmit` (NOT `npx vite-tsc` — that package doesn't exist in this registry).
-- `docs/backend-refactoring-plan.md` is the authoritative plan. Phase 3.1 is "DO FIRST … sets the pattern."
-- Auth guard: `requireAuthenticatedUser()` from `@/lib/api/auth-guard` returns `{ userId, userEmail, userRole, supabase }` or a 401 Response; type-guard via `if (!("userId" in authContext)) return authContext as any;`. Tests that mock it mock `@/lib/api/auth-guard` (NOT `@/lib/supabase/server`) to avoid `resolveUserRole` consuming `mockReturnValueOnce` chain slots.
+## Next Steps
+- Phase 4: Database Hardening (sensitive data extraction from profiles, RLS policy consolidation).
+- Phase 5: API Route Standardization for remaining legacy endpoints.
+- Phase 7: Final Code Polish and Global Identifier Linting.
