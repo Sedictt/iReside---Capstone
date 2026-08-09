@@ -2,10 +2,11 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { verifySigningToken } from "@/lib/jwt";
+import { LeaseService, LeaseNotFoundError } from "@/lib/services/lease";
 
 /**
  * GET /api/landlord/leases/[leaseId]
- * 
+ *
  * Fetches lease details for landlord review before countersigning.
  * Supports both session-based and token-based (remote signing) access.
  */
@@ -48,56 +49,8 @@ export async function GET(
     }
 
     // Fetch lease with related data
-    const { data: lease, error: leaseError } = await supabase
-      .from("leases")
-      .select(`
-        id,
-        status,
-        landlord_id,
-        start_date,
-        end_date,
-        monthly_rent,
-        security_deposit,
-        terms,
-        tenant_signature,
-        tenant_signed_at,
-        signed_document_url,
-        signed_at,
-        landlord_signed_at,
-        unit:units!inner (
-          name,
-          property:properties!inner (
-            name,
-            address,
-            contract_template
-          )
-        ),
-        landlord:profiles!leases_landlord_id_fkey (
-          full_name,
-          email
-        ),
-        tenant:profiles!leases_tenant_id_fkey (
-          full_name,
-          email
-        )
-      `)
-      .eq("id", leaseId)
-      .maybeSingle();
-
-    if (leaseError) {
-      console.error("[get-landlord-lease] Database error:", leaseError);
-      return NextResponse.json(
-        { error: "Failed to fetch lease" },
-        { status: 500 }
-      );
-    }
-
-    if (!lease) {
-      return NextResponse.json(
-        { error: "Lease not found" },
-        { status: 404 }
-      );
-    }
+    const leaseService = new LeaseService(supabase);
+    const lease = await leaseService.getLeaseDetail(leaseId);
 
     // Verify landlord ID matches
     if (lease.landlord_id !== landlordId) {
@@ -109,6 +62,12 @@ export async function GET(
 
     return NextResponse.json(lease);
   } catch (error) {
+    if (error instanceof LeaseNotFoundError) {
+      return NextResponse.json(
+        { error: "Lease not found" },
+        { status: 404 }
+      );
+    }
     console.error("[get-landlord-lease] Unexpected error:", error);
     return NextResponse.json(
       { error: "An unexpected error occurred" },
