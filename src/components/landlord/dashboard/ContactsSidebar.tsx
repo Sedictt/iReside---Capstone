@@ -25,6 +25,7 @@ import { RoleBadge, type BadgeRole } from "@/components/profile/RoleBadge";
 import { ProfileCardTrigger } from "@/components/ui/ProfileCardTrigger";
 import { NotificationCard } from "@/components/messaging/NotificationCard";
 import { OfficialReceipt } from "@/components/messaging/OfficialReceipt";
+import { MiniChatSkeleton } from "@/components/messaging/MiniChatSkeleton";
 
 interface ChatUser {
     id: string;
@@ -1181,7 +1182,7 @@ export function ContactsSidebar() {
                                 className="custom-scrollbar flex flex-1 flex-col gap-3 overflow-y-auto neumorphic-inset m-2 p-4"
                             >
                                 {chatState.isLoading && (
-                                    <p className="text-center text-xs text-muted-foreground font-medium animate-pulse">Loading conversation…</p>
+                                    <MiniChatSkeleton />
                                 )}
                                 {!chatState.isLoading && chatState.messages.length === 0 && (
                                     <p className="text-center text-xs text-muted-foreground font-medium">No messages yet</p>

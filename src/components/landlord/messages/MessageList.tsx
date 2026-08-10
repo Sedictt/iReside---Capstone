@@ -3,6 +3,7 @@
 import { useRef, useEffect, useMemo } from "react";
 import { UiMessage } from "./types";
 import { MessageBubble } from "./MessageBubble";
+import { MessageListSkeleton } from "./MessageListSkeleton";
 import { cn } from "@/lib/utils";
 
 interface MessageListProps {
@@ -76,19 +77,7 @@ export function MessageList({
                 </div>
 
                 {isMessagesLoading ? (
-                    <div className="w-full space-y-6">
-                        {Array.from({ length: 5 }).map((_, index) => {
-                            const isMe = index % 3 === 2;
-                            return (
-                                <div key={`msg-skeleton-${index}`} className={cn("flex w-full", isMe ? "justify-end" : "justify-start")}>
-                                    <div className={cn(
-                                        "animate-pulse rounded-3xl h-16 neumorphic-panel",
-                                        isMe ? "w-1/3" : "w-1/2"
-                                    )} />
-                                </div>
-                            );
-                        })}
-                    </div>
+                    <MessageListSkeleton />
                 ) : (
                     <div className="space-y-2">
                         {groupedMessages.map((msg, idx) => {

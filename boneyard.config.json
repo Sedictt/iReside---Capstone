@@ -5,6 +5,8 @@
   "animate": "shimmer",
   "routes": [
     "/landlord/dashboard?boneyard=true",
-    "/landlord/analytics?boneyard=true"
+    "/landlord/analytics?boneyard=true",
+    "/landlord/messages?boneyard=true",
+    "/tenant/messages?boneyard=true"
   ]
 }

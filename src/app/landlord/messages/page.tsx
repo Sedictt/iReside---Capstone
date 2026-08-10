@@ -1097,21 +1097,44 @@ if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation
 
     useEffect(() => {
         if (!activeConversationId) { 
-            // Batch state updates via reducer (previously 3 setState calls)
-            dispatchMessagesView({ type: 'RESET' });
+            setMessagesState([]);
+            setIsOtherUserTyping(false);
+            setIsMessagesLoading(false);
+            setMessageInput("");
+            setPendingAttachments([]);
             return; 
         }
-        if (!user?.id) { dispatchMessagesView({ type: 'SET_LOADING', payload: true }); return; }
+        if (!user?.id) { 
+            setMessagesState([]);
+            setIsMessagesLoading(true);
+            return; 
+        }
         const cached = messagesCacheRef.current.get(activeConversationId);
         if (cached) { 
-            // Batch state updates via reducer
-            dispatchMessagesView({ type: 'LOAD_CACHED', payload: cached });
+            setMessagesState(cached);
+            setIsOtherUserTyping(false);
+            setIsMessagesLoading(false);
+            setMessageInput("");
+            setPendingAttachments([]);
+            // Background refresh to keep messages up to date
+            void refreshMessages(activeConversationId);
             return; 
         }
-        // Batch state updates via reducer
-        dispatchMessagesView({ type: 'LOAD_NEW' });
+        
+        // Immediately clear previous chat content and show skeleton loading
+        setMessagesState([]);
+        setIsOtherUserTyping(false);
+        setIsMessagesLoading(true);
+        setMessageInput("");
+        setPendingAttachments([]);
+
         let cancelled = false;
-        void (async () => { await refreshMessages(activeConversationId); if (!cancelled) dispatchMessagesView({ type: 'LOADED' }); })();
+        void (async () => { 
+            await refreshMessages(activeConversationId); 
+            if (!cancelled) {
+                setIsMessagesLoading(false); 
+            }
+        })();
         return () => { cancelled = true; };
     }, [activeConversationId, user?.id]);
 

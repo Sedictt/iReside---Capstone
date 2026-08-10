@@ -23,6 +23,7 @@ import { RoleBadge, type BadgeRole } from "@/components/profile/RoleBadge";
 import { ProfileCardTrigger } from "@/components/ui/ProfileCardTrigger";
 import { NotificationCard } from "@/components/messaging/NotificationCard";
 import { OfficialReceipt } from "@/components/messaging/OfficialReceipt";
+import { MiniChatSkeleton } from "@/components/messaging/MiniChatSkeleton";
 
 interface ChatUser {
     id: string;
@@ -1206,7 +1207,7 @@ export function TenantContactsSidebar() {
                                 className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 custom-scrollbar bg-background/60"
                             >
                                 {chatState.isLoading && (
-                                    <p className="text-xs text-muted-foreground text-center">Loading conversation…</p>
+                                    <MiniChatSkeleton />
                                 )}
                                 {!chatState.isLoading && chatState.messages.length === 0 && (
                                     <p className="text-xs text-muted-foreground text-center">No messages yet</p>

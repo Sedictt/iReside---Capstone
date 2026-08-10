@@ -1053,27 +1053,43 @@ if (isStillUploading) {
 
     useEffect(() => {
         if (!activeConversationId) { 
-            // Batch state updates for conversation reset
             setMessagesState([]); 
             setIsOtherUserTyping(false); 
             setIsMessagesLoading(false); 
+            setMessageInput("");
+            setPendingAttachments([]);
             return; 
         }
-        if (!user?.id) { setIsMessagesLoading(true); return; }
+        if (!user?.id) { 
+            setMessagesState([]);
+            setIsMessagesLoading(true); 
+            return; 
+        }
         const cached = messagesCacheRef.current.get(activeConversationId);
         if (cached) { 
-            // Batch state updates for cached messages
             setMessagesState(cached); 
             setIsOtherUserTyping(false); 
             setIsMessagesLoading(false); 
+            setMessageInput("");
+            setPendingAttachments([]);
+            // Background refresh to keep messages up to date
+            void refreshMessages(activeConversationId);
             return; 
         }
-        // Batch state updates for loading new messages
+        // Immediately clear previous chat content and show skeleton loading
         setMessagesState([]); 
         setIsOtherUserTyping(false); 
         setIsMessagesLoading(true);
+        setMessageInput("");
+        setPendingAttachments([]);
+
         let cancelled = false;
-        void (async () => { await refreshMessages(activeConversationId); if (!cancelled) setIsMessagesLoading(false); })();
+        void (async () => { 
+            await refreshMessages(activeConversationId); 
+            if (!cancelled) {
+                setIsMessagesLoading(false); 
+            }
+        })();
         return () => { cancelled = true; };
     }, [activeConversationId, user?.id]);
 
