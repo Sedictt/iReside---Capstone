@@ -252,7 +252,7 @@ export function RentApplications() {
  const searchParams = useSearchParams();
 
  const [activeTab, setActiveTab] = useState<"pending" | "approved" | "rejected" | "archived">("pending");
- const [searchQuery, setSearchQuery] = useState("");
+ const [searchQuery, setSearchQuery] = useState(() => searchParams?.get("search") || "");
  const [activeFilter, setActiveFilterState] = useState<ApplicationStatus | "all">("all");
  const [filterLoading, setFilterLoading] = useState(false);
 

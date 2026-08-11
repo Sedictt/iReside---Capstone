@@ -89,7 +89,7 @@ export function MessageList({
 
                             return (
                                 <MessageBubble
-                                    key={msg.id}
+                                    key={msg.id || `msg-${msg.createdAt || idx}-${idx}`}
                                     message={msg}
                                     isMe={msg.type === viewerRole}
                                     viewerRole={viewerRole}

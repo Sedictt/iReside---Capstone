@@ -86,9 +86,9 @@ export function ContactList({
                             {!isSearchingUsers && !userSearchError && userSearchResults.length === 0 && (
                                 <div className="px-4 py-3 text-xs text-disabled font-medium">No results found</div>
                             )}
-                            {!isSearchingUsers && !userSearchError && userSearchResults.map((result) => (
+                            {!isSearchingUsers && !userSearchError && userSearchResults.map((result, idx) => (
                                 <button
-                                    key={result.id}
+                                    key={result.id || `search-result-${idx}`}
                                     onClick={() => handleStartConversation(result.id)}
                                     className="flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left transition-all hover:bg-primary/5 group"
                                 >
@@ -142,9 +142,9 @@ export function ContactList({
                         ))}
                     </div>
                 ) : (
-                    contacts.map(contact => (
+                    contacts.map((contact, idx) => (
                         <ContactItem
-                            key={contact.id}
+                            key={contact.id || `contact-${contact.participantUserId || idx}-${idx}`}
                             contact={contact}
                             isActive={activeConversationId === contact.id}
                             onClick={() => setActiveConversationId(contact.id)}

@@ -67,6 +67,7 @@ import {
 import { InvoiceModal } from "../../../components/landlord/invoices/InvoiceModal";
 import { redactMessageForSend } from "../../../lib/messages/redaction-client";
 import { MessageReportWizard } from "@/components/messaging/MessageReportWizard";
+import { QuickActionSummaryModal } from "@/components/messaging/QuickActionSummaryModal";
 import { playSound } from "@/hooks/useSound";
 
 const MESSAGE_CACHE_KEY_PREFIX = "ireside:landlord:messages-cache";
@@ -267,6 +268,7 @@ function MessagesContent() {
     const [showFilesSidebar, setShowFilesSidebar] = useState(false);
     const [fileFilter, setFileFilter] = useState("media");
     const [showPaymentHistoryModal, setShowPaymentHistoryModal] = useState(false);
+    const [selectedQuickAction, setSelectedQuickAction] = useState<string | null>(null);
     const [paymentHistory, setPaymentHistory] = useState<PaymentHistoryEntry[]>([]);
     const [paymentHistoryTotal, setPaymentHistoryTotal] = useState(0);
     const [paymentHistoryLoading, setPaymentHistoryLoading] = useState(false);
@@ -910,10 +912,7 @@ setPaymentHistory([]);
     };
 
     const clearPendingAttachments = () => {
-        setPendingAttachments((current) => {
-            current.forEach((att) => { if (att.previewUrl) URL.revokeObjectURL(att.previewUrl); });
-            return [];
-        });
+        setPendingAttachments([]);
     };
 
     const removePendingAttachment = (id: string) => {
@@ -925,7 +924,7 @@ setPaymentHistory([]);
     };
 
     const queueSelectedFiles = (files: File[]) => {
-if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation first."; return; }
+        if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation first."; return; }
         fileUploadErrorRef.current = null;
         
         files.forEach(file => {
@@ -944,7 +943,7 @@ if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation
             
             setPendingAttachments(current => [...current, newAttachment]);
             
-            // Start upload immediately
+            // Start upload immediately in background
             void (async () => {
                 try {
                     const result = await uploadConversationFile(
@@ -975,7 +974,8 @@ if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation
         if (isSending) return;
         const textMessage = messageInput.trim();
         const hasText = textMessage.length > 0;
-        const hasAttachment = pendingAttachments.length > 0;
+        const attachmentsToSend = [...pendingAttachments];
+        const hasAttachment = attachmentsToSend.length > 0;
         if ((!hasText && !hasAttachment) || !activeConversationId) return;
 
         setIsSending(true);
@@ -985,71 +985,205 @@ if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation
             void activeChannelRef.current.send({ type: "broadcast", event: "typing", payload: { conversationId: activeConversationId, userId: user.id, isTyping: false } });
         }
 
-        // Store original input for use as caption in albums
-        const originalInput = messageInput;
+        // Clear input and attachments immediately so user has zero lag
+        setMessageInput("");
+        clearPendingAttachments();
 
-        if (hasText) {
-            const optimisticId = `local-${Date.now()}`;
-            const optimisticTimestamp = new Date().toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
-            setMessageInput("");
-            setMessagesState((prev) => [...prev, { id: optimisticId, type: "landlord", messageType: "text", content: textMessage, redactedContent: textMessage, timestamp: optimisticTimestamp, createdAt: new Date().toISOString(), isRedacted: false, isConfirmedDisclosed: false, status: "sending" }]);
-            const moderation = await redactMessageForSend(textMessage);
-            try {
-                const created = await sendConversationMessage(activeConversationId, textMessage, { isRedacted: moderation.isSensitive, redactedContent: moderation.redactedMessage, isConfirmedDisclosed: false, isPhishing: moderation.isPhishing, redactionCategory: moderation.redactionCategory, disclosureAllowed: moderation.disclosureAllowed });
-                const mapped = mapMessageToUi({ ...created, sender: null });
-                playSound("message", 0.4); // Sent sound
-                setMessagesState((prev) => prev.map((msg) => msg.id === optimisticId ? { ...mapped, status: "sent" } : msg));
-                window.setTimeout(() => setMessagesState((prev) => prev.map((msg) => msg.id === created.id && msg.status === "sent" ? { ...msg, status: "delivered" } : msg)), 350);
-            } catch (error) {
-                const message = error instanceof Error ? error.message : "Failed to send.";
-                messagesErrorRef.current = message;
-                setMessagesState((prev) => prev.map((msg) => msg.id === optimisticId ? { ...msg, status: "failed" } : msg));
-            }
-        }
+        const images = attachmentsToSend.filter(a => a.isImage);
+        const otherFiles = attachmentsToSend.filter(a => !a.isImage);
+        const optimisticTimestamp = new Date().toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 
-        const uploaded = pendingAttachments.filter(a => a.status === 'uploaded');
-        const isStillUploading = pendingAttachments.some(a => a.status === 'uploading');
-        
-        if (isStillUploading) {
-            messagesErrorRef.current = "Please wait for files to finish uploading.";
-            return;
-        }
+        // If user typed text and there are NO images, send text as standalone message
+        if (hasText && images.length === 0) {
+            const optimisticTextId = `local-${Date.now()}`;
+            setMessagesState((prev) => [...prev, { 
+                id: optimisticTextId, 
+                type: "landlord", 
+                messageType: "text", 
+                content: textMessage, 
+                redactedContent: textMessage, 
+                timestamp: optimisticTimestamp, 
+                createdAt: new Date().toISOString(), 
+                isRedacted: false, 
+                isConfirmedDisclosed: false, 
+                status: "sending" 
+            }]);
 
-        if (uploaded.length > 0) {
-            const images = uploaded.filter(a => a.isImage);
-            const otherFiles = uploaded.filter(a => !a.isImage);
-            
-            // Send images as album if 3+, or individual
-            if (images.length >= 3) {
-                const attachments = images.map(a => ({
-                    id: a.id,
-                    type: "landlord",
-                    messageType: "image",
-                    fileUrl: a.url,
-                    filePath: a.path,
-                    fileName: a.file.name,
-                    fileSize: a.file.size,
-                    mimeType: a.file.type,
-                    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                    createdAt: new Date().toISOString()
-                }));
-
+            void (async () => {
+                const moderation = await redactMessageForSend(textMessage);
                 try {
+                    const created = await sendConversationMessage(activeConversationId, textMessage, { 
+                        isRedacted: moderation.isSensitive, 
+                        redactedContent: moderation.redactedMessage, 
+                        isConfirmedDisclosed: false, 
+                        isPhishing: moderation.isPhishing, 
+                        redactionCategory: moderation.redactionCategory, 
+                        disclosureAllowed: moderation.disclosureAllowed 
+                    });
+                    const mapped = mapMessageToUi({ ...created, sender: null });
+                    playSound("message", 0.4);
+                    setMessagesState((prev) => prev.map((msg) => msg.id === optimisticTextId ? { ...mapped, status: "sent" } : msg));
+                    window.setTimeout(() => setMessagesState((prev) => prev.map((msg) => msg.id === created.id && msg.status === "sent" ? { ...msg, status: "delivered" } : msg)), 350);
+                } catch (error) {
+                    const message = error instanceof Error ? error.message : "Failed to send.";
+                    messagesErrorRef.current = message;
+                    setMessagesState((prev) => prev.map((msg) => msg.id === optimisticTextId ? { ...msg, status: "failed" } : msg));
+                }
+            })();
+        }
+
+        // Handle Images (with caption if provided)
+        if (images.length >= 3) {
+            // Album of 3+ images
+            const optimisticAlbumId = `local-album-${Date.now()}`;
+            const optimisticAttachments: UiMessageType[] = images.map((a, idx) => ({
+                id: `local-att-${Date.now()}-${idx}`,
+                type: "landlord",
+                messageType: "image",
+                fileUrl: a.previewUrl || a.url || undefined,
+                fileName: a.file.name,
+                fileSize: a.file.size,
+                mimeType: a.file.type,
+                content: "",
+                timestamp: optimisticTimestamp,
+                createdAt: new Date().toISOString(),
+                status: "sending"
+            }));
+
+            setMessagesState((prev) => [...prev, {
+                id: optimisticAlbumId,
+                type: "landlord",
+                messageType: "image",
+                content: textMessage || "",
+                timestamp: optimisticTimestamp,
+                createdAt: new Date().toISOString(),
+                isAlbum: true,
+                attachments: optimisticAttachments,
+                status: "sending"
+            }]);
+
+            void (async () => {
+                try {
+                    // Ensure all images are uploaded
+                    const uploadedImages = await Promise.all(images.map(async (a, idx) => {
+                        let finalUrl = a.url;
+                        let finalPath = a.path;
+                        if (!finalUrl || !finalPath) {
+                            const res = await uploadConversationFile(activeConversationId, a.file, undefined, true);
+                            finalUrl = res.file.url;
+                            finalPath = res.file.path;
+                        }
+                        return {
+                            id: `att-${Date.now()}-${idx}`,
+                            type: "landlord" as const,
+                            messageType: "image" as const,
+                            fileUrl: finalUrl,
+                            filePath: finalPath,
+                            fileName: a.file.name,
+                            fileSize: a.file.size,
+                            mimeType: a.file.type,
+                            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                            createdAt: new Date().toISOString()
+                        };
+                    }));
+
                     const created = await sendConversationMessage(
-                        activeConversationId, 
-                        originalInput.trim() || "", // No default caption
-                        { attachments, isAlbum: true },
+                        activeConversationId,
+                        textMessage || "", // Custom caption only, no filename
+                        { attachments: uploadedImages, isAlbum: true },
                         "image"
                     );
                     const mapped = mapMessageToUi({ ...created, sender: null });
-                    setMessagesState((prev) => [...prev, { ...mapped, status: "sent" }]);
-                    setMessageInput(""); // Clear again just in case it was only an album
-                    clearPendingAttachments();
-                } catch (error) { messagesErrorRef.current = "Failed to send album."; }
-} else {
-                // Send individually
-                await Promise.all(uploaded.map(async (att) => {
+                    playSound("message", 0.4);
+                    setMessagesState((prev) => prev.map((msg) => msg.id === optimisticAlbumId ? { ...mapped, status: "sent" } : msg));
+                    window.setTimeout(() => setMessagesState((prev) => prev.map((msg) => msg.id === created.id && msg.status === "sent" ? { ...msg, status: "delivered" } : msg)), 350);
+                } catch {
+                    messagesErrorRef.current = "Failed to send album.";
+                    setMessagesState((prev) => prev.map((msg) => msg.id === optimisticAlbumId ? { ...msg, status: "failed" } : msg));
+                }
+            })();
+        } else if (images.length > 0) {
+            // 1 or 2 individual images - optimistic display immediately
+            images.forEach((att, idx) => {
+                const optimisticImgId = `local-img-${Date.now()}-${idx}`;
+                const captionForThis = idx === 0 ? textMessage : "";
+
+                setMessagesState((prev) => [...prev, {
+                    id: optimisticImgId,
+                    type: "landlord",
+                    messageType: "image",
+                    fileUrl: att.previewUrl || att.url || undefined,
+                    fileName: att.file.name,
+                    fileSize: att.file.size,
+                    mimeType: att.file.type,
+                    content: captionForThis,
+                    timestamp: optimisticTimestamp,
+                    createdAt: new Date().toISOString(),
+                    status: "sending"
+                }]);
+
+                void (async () => {
                     try {
+                        let finalUrl = att.url;
+                        let finalPath = att.path;
+                        if (!finalUrl || !finalPath) {
+                            const res = await uploadConversationFile(activeConversationId, att.file, undefined, true);
+                            finalUrl = res.file.url;
+                            finalPath = res.file.path;
+                        }
+
+                        const created = await sendConversationMessage(
+                            activeConversationId,
+                            captionForThis, // Only caption, NEVER filename
+                            {
+                                fileName: att.file.name,
+                                fileSize: att.file.size,
+                                mimeType: att.file.type,
+                                filePath: finalPath,
+                                fileUrl: finalUrl
+                            },
+                            "image"
+                        );
+                        const mapped = mapMessageToUi({ ...created, sender: null });
+                        playSound("message", 0.4);
+                        setMessagesState((prev) => prev.map((msg) => msg.id === optimisticImgId ? { ...mapped, status: "sent" } : msg));
+                        window.setTimeout(() => setMessagesState((prev) => prev.map((msg) => msg.id === created.id && msg.status === "sent" ? { ...msg, status: "delivered" } : msg)), 350);
+                    } catch {
+                        messagesErrorRef.current = `Failed to send ${att.file.name}`;
+                        setMessagesState((prev) => prev.map((msg) => msg.id === optimisticImgId ? { ...msg, status: "failed" } : msg));
+                    }
+                })();
+            });
+        }
+
+        // Handle Other Files (PDF, docs, etc.)
+        if (otherFiles.length > 0) {
+            otherFiles.forEach((att, idx) => {
+                const optimisticFileId = `local-file-${Date.now()}-${idx}`;
+                setMessagesState((prev) => [...prev, {
+                    id: optimisticFileId,
+                    type: "landlord",
+                    messageType: "file",
+                    fileName: att.file.name,
+                    fileSize: att.file.size,
+                    mimeType: att.file.type,
+                    fileUrl: att.url || undefined,
+                    content: att.file.name,
+                    timestamp: optimisticTimestamp,
+                    createdAt: new Date().toISOString(),
+                    status: "sending"
+                }]);
+
+                void (async () => {
+                    try {
+                        let finalUrl = att.url;
+                        let finalPath = att.path;
+                        if (!finalUrl || !finalPath) {
+                            const res = await uploadConversationFile(activeConversationId, att.file, undefined, true);
+                            finalUrl = res.file.url;
+                            finalPath = res.file.path;
+                        }
+
                         const created = await sendConversationMessage(
                             activeConversationId,
                             att.file.name,
@@ -1057,20 +1191,24 @@ if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation
                                 fileName: att.file.name,
                                 fileSize: att.file.size,
                                 mimeType: att.file.type,
-                                filePath: att.path,
-                                fileUrl: att.url
+                                filePath: finalPath,
+                                fileUrl: finalUrl
                             },
-                            att.isImage ? "image" : "file"
+                            "file"
                         );
                         const mapped = mapMessageToUi({ ...created, sender: null });
-                        setMessagesState((prev) => [...prev, { ...mapped, status: "sent" }]);
-                    } catch (err) { messagesErrorRef.current = `Failed to send ${att.file.name}`; }
-                }));
-                clearPendingAttachments();
-            }
+                        playSound("message", 0.4);
+                        setMessagesState((prev) => prev.map((msg) => msg.id === optimisticFileId ? { ...mapped, status: "sent" } : msg));
+                        window.setTimeout(() => setMessagesState((prev) => prev.map((msg) => msg.id === created.id && msg.status === "sent" ? { ...msg, status: "delivered" } : msg)), 350);
+                    } catch {
+                        messagesErrorRef.current = `Failed to send ${att.file.name}`;
+                        setMessagesState((prev) => prev.map((msg) => msg.id === optimisticFileId ? { ...msg, status: "failed" } : msg));
+                    }
+                })();
+            });
         }
+
         void refreshConversations();
-        void refreshMessages(activeConversationId);
         setIsSending(false);
     };
 
@@ -1078,18 +1216,12 @@ if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation
 
     const handleQuickAction = (key: string) => {
         switch (key) {
-            case "request-payment": setMessageInput("Friendly reminder: please settle your outstanding rent balance."); break;
-            case "schedule-repair": push("/landlord/maintenance"); break;
-            case "view-lease": push("/landlord/tenants"); break;
-            case "send-notice": setMessageInput("Notice: "); break;
-            case "review-application": push("/landlord/applications"); break;
-            case "schedule-viewing": setMessageInput("Share your preferred dates for viewing."); break;
-            case "share-requirements": setMessageInput("Please submit required documents for screening."); break;
-            case "share-listing": push("/landlord/properties"); break;
-            case "view-profile": if (activeContact?.participantUserId) push(`/visitor/${activeContact.participantUserId}`); break;
             case "archive-chat": setPendingConfirmAction("archive"); break;
             case "report-user": openReportWizard(); break;
             case "block-contact": setPendingConfirmAction("block"); break;
+            default:
+                setSelectedQuickAction(key);
+                break;
         }
     };
 
@@ -1327,8 +1459,8 @@ if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation
                                         <p className="mt-2 text-sm font-medium text-medium">{displayContact.unit}</p>
                                     </div>
                                     <div className="grid grid-cols-2 gap-3">
-                                        {activeQuickActions.map((action) => (
-                                            <button key={action.key} onClick={() => handleQuickAction(action.key)} className="flex flex-col items-center gap-2 rounded-2xl neumorphic-inset-card p-4 transition-all hover:scale-[1.02] active:scale-95 group">
+                                        {activeQuickActions.map((action, idx) => (
+                                            <button key={action.key || `qa-${idx}`} onClick={() => handleQuickAction(action.key)} className="flex flex-col items-center gap-2 rounded-2xl neumorphic-inset-card p-4 transition-all hover:scale-[1.02] active:scale-95 group">
                                                 <div className={cn("p-2.5 rounded-xl transition-colors", action.iconContainerClassName)}><action.icon className={cn("size-5", action.iconClassName)} /></div>
                                                 <div className="text-center"><p className="text-[10px] font-black uppercase tracking-widest text-high">{action.labelTop}</p><p className="text-[10px] font-medium text-medium">{action.labelBottom}</p></div>
                                             </button>
@@ -1337,8 +1469,8 @@ if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation
                                     {canShowPaymentHistory && (
                                         <div className="space-y-4">
                                             <div className="flex items-center justify-between"><h5 className="text-[10px] font-black uppercase tracking-widest text-disabled">Payment History</h5><span className="text-[10px] font-black text-primary">Total: ₱{paymentHistoryTotal}</span></div>
-                                            <div className="space-y-2">{paymentHistoryLoading ? <div className="h-20 w-full animate-pulse rounded-2xl neumorphic-panel" /> : paymentHistory.length === 0 ? <p className="text-xs text-disabled text-center py-6 neumorphic-inset rounded-2xl italic">No payments found</p> : paymentHistory.slice(0, 5).map((payment) => (
-                                                <div key={payment.id} className="flex items-center justify-between p-3 rounded-2xl neumorphic-inset-card transition-colors">
+                                            <div className="space-y-2">{paymentHistoryLoading ? <div className="h-20 w-full animate-pulse rounded-2xl neumorphic-panel" /> : paymentHistory.length === 0 ? <p className="text-xs text-disabled text-center py-6 neumorphic-inset rounded-2xl italic">No payments found</p> : paymentHistory.slice(0, 5).map((payment, idx) => (
+                                                <div key={payment.id || `payment-${payment.dateLabel || idx}-${idx}`} className="flex items-center justify-between p-3 rounded-2xl neumorphic-inset-card transition-colors">
                                                     <div className="flex items-center gap-3"><div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/10"><Wallet className="size-3.5 text-emerald-500" /></div><div className="flex flex-col"><span className="text-xs font-black text-high truncate max-w-[100px]">{payment.typeLabel || 'Payment'}</span><span className="text-[9px] font-medium text-disabled">{payment.dateLabel}</span></div></div><span className="text-xs font-black text-emerald-500">₱{payment.amount}</span>
                                                 </div>
                                             ))}</div>
@@ -1369,10 +1501,10 @@ if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation
                                             "grid gap-3",
                                             fileFilter === 'media' ? "grid-cols-3" : "grid-cols-1"
                                         )}>
-                                            {sharedFiles.map((file) => (
+                                            {sharedFiles.map((file, idx) => (
                                                 file.isMedia && fileFilter !== 'files' ? (
                                                     <div 
-                                                        key={file.id} 
+                                                        key={file.id || `shared-media-${file.url || idx}-${idx}`} 
                                                         className="aspect-square rounded-xl overflow-hidden neumorphic-panel relative group cursor-pointer"
                                                         onClick={() => {
                                                             const mediaFiles = sharedFiles.filter(f => f.isMedia).map(f => ({ url: f.url, id: f.id }));
@@ -1392,7 +1524,7 @@ if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <div key={file.id} className="flex items-center gap-3 p-3 rounded-2xl neumorphic-inset-card transition-all group">
+                                                    <div key={file.id || `shared-file-${file.url || idx}-${idx}`} className="flex items-center gap-3 p-3 rounded-2xl neumorphic-inset-card transition-all group">
                                                         <div className="p-2.5 rounded-xl bg-surface-2 text-medium group-hover:bg-primary/10 group-hover:text-primary transition-colors">
                                                             <FileText className="size-5" />
                                                         </div>
@@ -1426,8 +1558,8 @@ if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation
 
             <AnimatePresence>
                 {pendingConfirmAction && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
-                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="w-full max-w-md rounded-[2.5rem] border border-border bg-card p-8 shadow-2xl">
+                    <div key="confirm-action-backdrop" className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
+                        <motion.div key="confirm-action-dialog" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="w-full max-w-md rounded-[2.5rem] border border-border bg-card p-8 shadow-2xl">
                             <div className="flex items-center gap-4 mb-6"><div className={cn("p-3 rounded-2xl", pendingConfirmAction === "block" ? "bg-red-500/10 text-red-500" : "bg-amber-500/10 text-amber-500")}>{pendingConfirmAction === "block" ? <ShieldCheck className="size-6" /> : <Folder className="size-6" />}</div><h3 className="text-xl font-black tracking-tight text-high">{pendingConfirmAction === "block" ? "Block Contact?" : "Archive Conversation?"}</h3></div>
                             <p className="text-sm text-medium leading-relaxed mb-8">{pendingConfirmAction === "block" ? "This user will no longer be able to message you. You can unblock them later in settings." : "This conversation will be moved to archives. You can still access it later from your archived messages."}</p>
                             <div className="flex justify-end gap-3">
@@ -1437,18 +1569,36 @@ if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation
                         </motion.div>
                     </div>
                 )}
+            </AnimatePresence>
 
-                <MessageReportWizard
-                    isOpen={showReportWizard}
-                    onClose={() => setShowReportWizard(false)}
-                    targetUserId={activeContact?.participantUserId}
-                    conversationId={activeConversationId}
-                    reportedUserLabel={activeContact?.name}
-                    initialMessageId={reportMessageId}
-                />
-                
+            <QuickActionSummaryModal
+                isOpen={Boolean(selectedQuickAction)}
+                onClose={() => {
+                    setSelectedQuickAction(null);
+                    if (activeConversationId) {
+                        void refreshMessages(activeConversationId);
+                        void refreshConversations();
+                    }
+                }}
+                actionKey={selectedQuickAction}
+                contact={displayContact}
+                currentUserRole="landlord"
+                onInsertMessage={(text) => setMessageInput(text)}
+            />
+
+            <MessageReportWizard
+                isOpen={showReportWizard}
+                onClose={() => setShowReportWizard(false)}
+                targetUserId={activeContact?.participantUserId}
+                conversationId={activeConversationId}
+                reportedUserLabel={activeContact?.name}
+                initialMessageId={reportMessageId}
+            />
+            
+            <AnimatePresence>
                 {previewImages.length > 0 && (
                     <motion.div 
+                        key="preview-images-lightbox"
                         initial={{ opacity: 0 }} 
                         animate={{ opacity: 1 }} 
                         exit={{ opacity: 0 }} 
@@ -1500,7 +1650,7 @@ if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation
                             >
                                 {previewImages.map((img, idx) => (
                                     <button
-                                        key={img.id}
+                                        key={img.id || `preview-thumb-${img.url || idx}-${idx}`}
                                         onClick={() => setPreviewImageIndex(idx)}
                                         className={cn(
                                             "relative flex-shrink-0 size-16 rounded-xl overflow-hidden border-2 transition-all",

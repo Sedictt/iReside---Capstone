@@ -27,7 +27,7 @@ export async function POST(request: Request, context: RouteContext) {
 
         const { data: payment, error: paymentError } = await adminClient
             .from("payments")
-            .select("id, tenant_id, landlord_id, invoice_number, workflow_status, status, intent_method, amount_tag, review_action, paid_amount, balance_remaining, receipt_number, payment_submitted_at, rejection_reason, in_person_intent_expires_at")
+            .select("id, tenant_id, landlord_id, invoice_number, workflow_status, status, intent_method, amount_tag, review_action, paid_amount, balance_remaining, receipt_number, payment_submitted_at, rejection_reason, in_person_intent_expires_at, reminder_sent_at")
             .eq("id", id)
             .eq("landlord_id", userId)
             .maybeSingle();
@@ -40,8 +40,11 @@ export async function POST(request: Request, context: RouteContext) {
             return NextResponse.json({ error: "Cannot remind a finalized invoice." }, { status: 409 });
         }
 
-        if (payment.workflow_status === "reminder_sent") {
-            return NextResponse.json({ ok: true, idempotent: true, remindedAt: new Date().toISOString() });
+        const lastReminded = payment.reminder_sent_at ? new Date(payment.reminder_sent_at).getTime() : 0;
+        const now = Date.now();
+        // Prevent double-clicking within 5 seconds
+        if (payment.workflow_status === "reminder_sent" && lastReminded > 0 && now - lastReminded < 5000) {
+            return NextResponse.json({ ok: true, idempotent: true, remindedAt: payment.reminder_sent_at });
         }
 
         const beforeState = toWorkflowSnapshot(payment);
