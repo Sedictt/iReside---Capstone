@@ -11,6 +11,7 @@ import {
 import { createPortal } from "react-dom";
 import { m as motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { Tooltip } from "@/components/ui/tooltip";
 
 import { formatDateLong, formatPhpCurrency } from "@/lib/billing/utils";
 import { cn } from "@/lib/utils";
@@ -740,7 +741,20 @@ export function InvoiceModal({
                                                     />
 
                                                     <div className="pt-4 border-t border-white/5">
-                                                        <div className="relative group/nudge">
+                                                        <Tooltip
+                                                            content={
+                                                                <div className="flex gap-2.5 items-start max-w-xs text-left py-0.5">
+                                                                    <div className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full bg-amber-500/20 text-amber-400">
+                                                                        <Info className="size-3" />
+                                                                    </div>
+                                                                    <p className="text-[11px] leading-relaxed text-slate-200 dark:text-zinc-200">
+                                                                        This sends a message to the tenant <span className="text-amber-400 font-bold">without changing anything</span>. Use this if you just want to tell them you&apos;re still reviewing their payment.
+                                                                    </p>
+                                                                </div>
+                                                            }
+                                                            side="top"
+                                                            sideOffset={8}
+                                                        >
                                                             <button 
                                                                 onClick={() => performAction("remind")}
                                                                 disabled={!!processingAction}
@@ -750,23 +764,7 @@ export function InvoiceModal({
                                                                 Send a Gentle Nudge
                                                                 <HelpCircle className="size-3 text-text-disabled group-hover:text-amber-400 transition-colors" />
                                                             </button>
-
-                                                            {/* Custom Premium Tooltip */}
-                                                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-64 pointer-events-none opacity-0 group-hover/nudge:opacity-100 translate-y-2 group-hover/nudge:translate-y-0 transition-all duration-300 z-50">
-                                                                <div className="relative rounded-2xl bg-surface-3 border border-white/10 p-4 shadow-2xl backdrop-blur-xl">
-                                                                    <div className="flex gap-3">
-                                                                        <div className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-amber-500/20 text-amber-400">
-                                                                            <Info className="size-3" />
-                                                                        </div>
-                                                                        <p className="text-[10px] font-medium leading-relaxed text-text-medium">
-                                                                            This sends a message to the tenant <span className="text-amber-400 font-black">without changing anything</span>. Use this if you just want to tell them you're still reviewing their payment.
-                                                                        </p>
-                                                                    </div>
-                                                                    {/* Tooltip Arrow */}
-                                                                    <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-surface-3" />
-                                                                </div>
-                                                            </div>
-                                                        </div>
+                                                        </Tooltip>
                                                     </div>
                                                 </motion.div>
                                             )}

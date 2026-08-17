@@ -78,7 +78,8 @@ export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActi
         loading: notificationsLoading, 
         error: notificationsError,
         markAsRead,
-        markAllAsRead 
+        markAllAsRead,
+        refresh
     } = useNotifications();
 
     const pageIndex = [
@@ -328,7 +329,15 @@ export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActi
                 {/* Notifications */}
                 <div className="relative">
                     <button
-                        onClick={() => setIsNotificationsOpen((current) => !current)}
+                        onClick={() => {
+                            setIsNotificationsOpen((current) => {
+                                const next = !current;
+                                if (next) {
+                                    void refresh();
+                                }
+                                return next;
+                            });
+                        }}
                         className="group relative flex size-11 items-center justify-center rounded-2xl neumorphic-extruded active:scale-95"
                     >
                         <Bell className="size-5 text-muted-foreground transition-colors group-hover:text-foreground" />

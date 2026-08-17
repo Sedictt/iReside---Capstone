@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Tooltip } from "@/components/ui/tooltip";
 import {
     ArrowRight,
     Building2,
@@ -195,18 +196,84 @@ export function CommandCenter({
                     
                     <div className="grid grid-cols-3 gap-3 sm:gap-4">
                         {[
-                            { label: "Invoice Ledger", icon: ReceiptText, href: "/landlord/invoices", color: "text-blue-400" },
-                            { label: "Tenant Records", icon: FileText, href: "/landlord/tenants", color: "text-emerald-400" },
-                            { label: "Property Portfolio", icon: Building2, href: "/landlord/properties", color: "text-violet-400" },
-                            { label: "Application Review", icon: ClipboardList, href: "/landlord/applications", color: "text-amber-400" },
-                            { label: "Utility Billing", icon: Zap, href: "/landlord/utility-billing", color: "text-sky-400" },
-                            { label: "Maintenance Logs", icon: Hammer, href: "/landlord/maintenance", color: "text-rose-400" },
-                            { label: "Lease Renewals", icon: RefreshCw, href: "/landlord/tenants?tab=renewals", color: "text-cyan-400" },
-                            { label: "Document Vault", icon: FolderSearch2, href: "/landlord/documents", color: "text-primary" },
-                            { label: "Account Settings", icon: Settings2, href: "/landlord/settings", color: "text-zinc-400" },
-                        ].map((action, i) => {
-                            const Content = (
-                                <>
+                            { 
+                                label: "Invoice Ledger", 
+                                icon: ReceiptText, 
+                                href: "/landlord/invoices", 
+                                color: "text-blue-400",
+                                description: "Track rental payments, monitor pending balances, and issue invoices."
+                            },
+                            { 
+                                label: "Tenant Records", 
+                                icon: FileText, 
+                                href: "/landlord/tenants", 
+                                color: "text-emerald-400",
+                                description: "View active tenant profiles, lease status, and occupant contact details."
+                            },
+                            { 
+                                label: "Property Portfolio", 
+                                icon: Building2, 
+                                href: "/landlord/properties", 
+                                color: "text-violet-400",
+                                description: "Manage properties, configure rental units, and review occupancy."
+                            },
+                            { 
+                                label: "Application Review", 
+                                icon: ClipboardList, 
+                                href: "/landlord/applications", 
+                                color: "text-amber-400",
+                                description: "Review applicant submissions, screening info, and send approvals."
+                            },
+                            { 
+                                label: "Utility Billing", 
+                                icon: Zap, 
+                                href: "/landlord/utility-billing", 
+                                color: "text-sky-400",
+                                description: "Calculate, bill, and split electricity, water, and utility fees."
+                            },
+                            { 
+                                label: "Maintenance Logs", 
+                                icon: Hammer, 
+                                href: "/landlord/maintenance", 
+                                color: "text-rose-400",
+                                description: "Track unit repair tickets, contractor assignments, and resolution status."
+                            },
+                            { 
+                                label: "Lease Renewals", 
+                                icon: RefreshCw, 
+                                href: "/landlord/tenants?tab=renewals", 
+                                color: "text-cyan-400",
+                                description: "Manage upcoming lease expirations, extensions, and renewal requests."
+                            },
+                            { 
+                                label: "Document Vault", 
+                                icon: FolderSearch2, 
+                                href: "/landlord/documents", 
+                                color: "text-primary",
+                                description: "Securely store and retrieve signed contracts, IDs, and property permits."
+                            },
+                            { 
+                                label: "Account Settings", 
+                                icon: Settings2, 
+                                href: "/landlord/settings", 
+                                color: "text-zinc-400",
+                                description: "Configure system preferences, payment gateways, and security settings."
+                            },
+                        ].map((action) => (
+                            <Tooltip 
+                                key={action.href} 
+                                content={action.description} 
+                                side="top" 
+                                sideOffset={8}
+                            >
+                                <Link 
+                                    href={action.href}
+                                    className={cn(
+                                        "neumorphic-extruded group flex flex-col items-center text-center gap-1.5 sm:gap-2 rounded-[1.25rem] p-2 sm:p-3",
+                                        "dark:bento-glass-card dark:hover:bg-primary/5 dark:hover:border-primary/20 dark:hover:shadow-[0_0_20px_rgba(196,176,255,0.1)] transition-all"
+                                    )}
+                                    aria-label={`${action.label}: ${action.description}`}
+                                >
                                     <div className={cn(
                                         "neumorphic-inset-card flex size-8 sm:size-10 items-center justify-center rounded-xl transition-all duration-300 group-hover:scale-110",
                                         "dark:bg-white/[0.05] dark:border-white/10 dark:shadow-none",
@@ -222,22 +289,9 @@ export function CommandCenter({
                                             {action.label}
                                         </span>
                                     </div>
-                                </>
-                            );
-
-                            return (
-                                <Link 
-                                    key={action.href}
-                                    href={action.href}
-                                    className={cn(
-                                        "neumorphic-extruded group flex flex-col items-center text-center gap-1.5 sm:gap-2 rounded-[1.25rem] p-2 sm:p-3",
-                                        "dark:bento-glass-card dark:hover:bg-primary/5 dark:hover:border-primary/20 dark:hover:shadow-[0_0_20px_rgba(196,176,255,0.1)] transition-all"
-                                    )}
-                                >
-                                    {Content}
                                 </Link>
-                            );
-                        })}
+                            </Tooltip>
+                        ))}
                     </div>
                 </div>
 

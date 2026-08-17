@@ -29,6 +29,8 @@ export const metadata: Metadata = {
 
 import { AuthProvider } from "@/context/AuthContext";
 import { GlobalLoadingProvider } from "@/context/GlobalLoadingContext";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { GlobalTooltipManager } from "@/components/ui/GlobalTooltipManager";
 
 
 export default function RootLayout({
@@ -69,21 +71,24 @@ export default function RootLayout({
             >
               <PageTransitionProvider>
                 <FramerMotionProvider>
-                  <GlobalClickSpark>
-                    {children}
-                    <Toaster
-                      position="top-right"
-                      richColors
-                      closeButton
-                      expand={true}
-                      theme="system"
-                      className="ireside-toaster"
-                      toastOptions={{
-                        className: 'ireside-toast',
-                      }}
-                    />
-                    <CookieConsent />
-                  </GlobalClickSpark>
+                  <TooltipProvider delayDuration={200} skipDelayDuration={150}>
+                    <GlobalTooltipManager />
+                    <GlobalClickSpark>
+                      {children}
+                      <Toaster
+                        position="top-right"
+                        richColors
+                        closeButton
+                        expand={true}
+                        theme="system"
+                        className="ireside-toaster"
+                        toastOptions={{
+                          className: 'ireside-toast',
+                        }}
+                      />
+                      <CookieConsent />
+                    </GlobalClickSpark>
+                  </TooltipProvider>
                 </FramerMotionProvider>
               </PageTransitionProvider>
             </ThemeProvider>

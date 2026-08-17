@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Building2, Calendar, CircleHelp, Copy, DoorClosed, DoorOpen, History, Link2, MapPin, QrCode, RefreshCw, ShieldCheck, Globe, Handshake, XCircle, AlertTriangle, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Tooltip } from "@/components/ui/tooltip";
 import { useAppToast } from "@/hooks/useAppToast";
 
 type InviteMode = "property" | "unit";
@@ -526,28 +527,18 @@ export function TenantInviteManager({
                                             <span className="inline-flex items-center gap-1.5 w-full justify-between">
                                                 <span>{option.label}</span>
                                                 {option.key === "valid_id" && (
-                                                    <span className="relative inline-flex items-center ml-1.5">
-                                                        <button
-                                                            type="button"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                setShowValidIdTooltip(!showValidIdTooltip);
-                                                            }}
-                                                            onBlur={() => setTimeout(() => setShowValidIdTooltip(false), 200)}
-                                                            aria-haspopup="true"
-                                                            aria-expanded={showValidIdTooltip}
-                                                            aria-label="Valid ID Information"
-                                                            className="focus:outline-none cursor-pointer focus-visible:ring-2 focus-visible:ring-primary rounded-full"
-                                                        >
-                                                            <CircleHelp
-                                                                className="size-4 rounded-full border border-amber-400/40 bg-amber-400/15 p-0.5 text-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.35)] animate-pulse"
-                                                            />
-                                                        </button>
-                                                        {showValidIdTooltip && (
-                                                            <span id="valid-id-tooltip-desc" role="tooltip" className="absolute left-1/2 -translate-x-1/2 top-6 z-30 w-64 max-w-[85vw] rounded-xl border border-border bg-background p-2.5 text-xs font-medium normal-case tracking-normal text-foreground shadow-xl animate-in fade-in slide-in-from-top-2 duration-200">
-                                                                {VALID_ID_TOOLTIP}
-                                                            </span>
-                                                        )}
+                                                    <span className="relative inline-flex items-center ml-1.5" onClick={(e) => e.stopPropagation()}>
+                                                        <Tooltip content={VALID_ID_TOOLTIP} side="top" sideOffset={8}>
+                                                            <button
+                                                                type="button"
+                                                                aria-label="Valid ID Information"
+                                                                className="focus:outline-none cursor-pointer focus-visible:ring-2 focus-visible:ring-primary rounded-full"
+                                                            >
+                                                                <CircleHelp
+                                                                    className="size-4 rounded-full border border-amber-400/40 bg-amber-400/15 p-0.5 text-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.35)] animate-pulse"
+                                                                />
+                                                            </button>
+                                                        </Tooltip>
                                                     </span>
                                                 )}
                                             </span>
