@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from "react";
 import Image from "next/image";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -30,6 +30,8 @@ import {
     File,
     Download,
     ExternalLink,
+    ChevronDown,
+    ArrowUpRight,
     Bot,
     Zap
 } from "lucide-react";
@@ -72,6 +74,7 @@ import { redactMessageForSend } from "../../../lib/messages/redaction-client";
 import { TenantIrisChat } from "@/components/tenant/TenantIrisChat";
 import { MessageReportWizard } from "@/components/messaging/MessageReportWizard";
 import { QuickActionSummaryModal } from "@/components/messaging/QuickActionSummaryModal";
+import { PaymentHistoryModal } from "@/components/messaging/PaymentHistoryModal";
 import { PaymentIssueResolver } from "@/components/messaging/PaymentIssueResolver";
 import { playSound } from "@/hooks/useSound";
 
@@ -281,6 +284,7 @@ export default function TenantMessagesPage() {
     const [showFilesSidebar, setShowFilesSidebar] = useState(false);
     const [fileFilter, setFileFilter] = useState("media");
     const [showPaymentHistoryModal, setShowPaymentHistoryModal] = useState(false);
+    const [isPaymentHistoryExpanded, setIsPaymentHistoryExpanded] = useState(false);
     const [selectedQuickAction, setSelectedQuickAction] = useState<string | null>(null);
     const [paymentHistory, setPaymentHistory] = useState<PaymentHistoryEntry[]>([]);
     const [paymentHistoryTotal, setPaymentHistoryTotal] = useState(0);
@@ -295,7 +299,10 @@ export default function TenantMessagesPage() {
     const [userSearchError, setUserSearchError] = useState<string | null>(null);
     const [isOtherUserTyping, setIsOtherUserTyping] = useState(false);
     const [isSidebarLoading, setIsSidebarLoading] = useState(true);
-    const [isMessagesLoading, setIsMessagesLoading] = useState(false);
+    const [isMessagesLoading, setIsMessagesLoading] = useState(true);
+    const [hasMoreMessages, setHasMoreMessages] = useState(false);
+    const [isLoadingEarlier, setIsLoadingEarlier] = useState(false);
+    const scrollPositionAdjustmentRef = useRef<{ previousScrollHeight: number; previousScrollTop: number } | null>(null);
     const [pendingAttachments, setPendingAttachments] = useState<PendingAttachmentType[]>([]);
     const isUploadingFile = pendingAttachments.some(a => a.status === 'uploading');
     const [isSending, setIsSending] = useState(false);
@@ -602,6 +609,7 @@ const seen = new Set<string>();
     const activeRelationshipStatus = activeContact?.relationshipStatus ?? "stranger";
     const activeQuickActions = TENANT_QUICK_ACTIONS;
     const canShowPaymentHistory = activeContact?.hasPaymentHistory ?? false;
+    const isChatLoading = isSidebarLoading || isMessagesLoading || Boolean(activeConversationId && !activeContact);
 
     const displayContact = activeContact ?? {
         id: "",
@@ -661,8 +669,9 @@ setPaymentHistoryLoading(true);
     }, []);
 
     useEffect(() => {
+        setIsPaymentHistoryExpanded(false);
         if (!activeConversationId || !canShowPaymentHistory) {
-setPaymentHistory([]);
+            setPaymentHistory([]);
             setPaymentHistoryTotal(0);
             paymentHistoryErrorRef.current = null;
             return;
@@ -817,10 +826,13 @@ setPaymentHistory([]);
         } finally { setIsSidebarLoading(false); }
     }
 
-    const refreshMessages = async (conversationId: string) => {
-        const { data: list, error } = await fetchConversationMessages(conversationId, 200);
+    const refreshMessages = async (conversationId: string, limitOverride?: number) => {
+        const fetchLimit = limitOverride ?? Math.max(20, messagesState.length || 20);
+        const { data: list, hasMore, error } = await fetchConversationMessages(conversationId, { limit: fetchLimit });
         messagesErrorRef.current = error;
+        if (error) return;
         const mapped: UiMessageType[] = list.map(mapMessageToUi);
+        setHasMoreMessages(hasMore);
         messagesCacheRef.current.set(conversationId, mapped);
         if (user?.id) {
             try { sessionStorage.setItem(`${MESSAGE_CACHE_KEY_PREFIX}:${user.id}`, JSON.stringify(Object.fromEntries(messagesCacheRef.current.entries()))); } catch { }
@@ -833,8 +845,54 @@ setPaymentHistory([]);
                 return [...stabilized, ...optimistic];
             });
         }
-        if (!error) await markConversationAsRead(conversationId);
+        await markConversationAsRead(conversationId);
     };
+
+    const loadEarlierMessages = async () => {
+        if (!activeConversationId || isLoadingEarlier || !hasMoreMessages) return;
+        const oldestMessage = messagesState[0];
+        if (!oldestMessage?.createdAt) return;
+
+        const container = messagesScrollRef.current;
+        if (container) {
+            scrollPositionAdjustmentRef.current = {
+                previousScrollHeight: container.scrollHeight,
+                previousScrollTop: container.scrollTop,
+            };
+        }
+
+        setIsLoadingEarlier(true);
+        try {
+            const { data: olderList, hasMore, error } = await fetchConversationMessages(activeConversationId, {
+                limit: 20,
+                before: oldestMessage.createdAt,
+            });
+
+            if (!error && olderList.length > 0) {
+                const olderMapped: UiMessageType[] = olderList.map(mapMessageToUi);
+                setHasMoreMessages(hasMore);
+                setMessagesState((prev) => {
+                    const existingIds = new Set(prev.map((m) => m.id));
+                    const newUniqueOlder = olderMapped.filter((m) => !existingIds.has(m.id));
+                    return [...newUniqueOlder, ...prev];
+                });
+            } else {
+                setHasMoreMessages(hasMore);
+            }
+        } finally {
+            setIsLoadingEarlier(false);
+        }
+    };
+
+    useLayoutEffect(() => {
+        if (scrollPositionAdjustmentRef.current && messagesScrollRef.current) {
+            const container = messagesScrollRef.current;
+            const { previousScrollHeight, previousScrollTop } = scrollPositionAdjustmentRef.current;
+            const heightDelta = container.scrollHeight - previousScrollHeight;
+            container.scrollTop = previousScrollTop + heightDelta;
+            scrollPositionAdjustmentRef.current = null;
+        }
+    }, [messagesState]);
 
     const handleConfirmF2FPayment = async (paymentId: string) => {
         setIsF2FInterfaceOpen(false);
@@ -1189,6 +1247,10 @@ setPaymentHistory([]);
     useEffect(() => { if (!user) return; refreshConversations(); }, [user]);
 
     useEffect(() => {
+        setHasMoreMessages(false);
+        setIsLoadingEarlier(false);
+        scrollPositionAdjustmentRef.current = null;
+
         if (!activeConversationId) { 
             setMessagesState([]); 
             setIsOtherUserTyping(false); 
@@ -1210,7 +1272,7 @@ setPaymentHistory([]);
             setMessageInput("");
             setPendingAttachments([]);
             // Background refresh to keep messages up to date
-            void refreshMessages(activeConversationId);
+            void refreshMessages(activeConversationId, 20);
             return; 
         }
         // Immediately clear previous chat content and show skeleton loading
@@ -1222,7 +1284,7 @@ setPaymentHistory([]);
 
         let cancelled = false;
         void (async () => { 
-            await refreshMessages(activeConversationId); 
+            await refreshMessages(activeConversationId, 20); 
             if (!cancelled) {
                 setIsMessagesLoading(false); 
             }
@@ -1364,6 +1426,7 @@ useEffect(() => {
                     <>
                         <ChatHeader
                             contact={displayContact}
+                            isLoading={isChatLoading}
                             showFilesSidebar={showFilesSidebar}
                             setShowFilesSidebar={setShowFilesSidebar}
                             showInfoSidebar={showInfoSidebar}
@@ -1374,7 +1437,10 @@ useEffect(() => {
                         <MessageList
                             messages={messagesState}
                             viewerRole="tenant"
-                            isMessagesLoading={isMessagesLoading}
+                            isMessagesLoading={isChatLoading}
+                            hasMoreMessages={hasMoreMessages}
+                            isLoadingEarlier={isLoadingEarlier}
+                            onLoadEarlier={loadEarlierMessages}
                             onDownloadImage={handleDownloadImage}
                             onOpenF2F={(msg) => { setActiveF2FPayment(msg); setIsF2FInterfaceOpen(true); }}
                             onImageClick={(images, index) => { setPreviewImages(images); setPreviewImageIndex(index); }}
@@ -1397,6 +1463,7 @@ useEffect(() => {
                             isSending={isSending}
                             isOtherUserTyping={isOtherUserTyping}
                             otherUserName={displayContact.name}
+                            isLoading={isChatLoading}
                         />
                     </>
                 )}
@@ -1429,13 +1496,67 @@ useEffect(() => {
                                         ))}
                                     </div>
                                     {canShowPaymentHistory && (
-                                        <div className="space-y-4">
-                                            <div className="flex items-center justify-between"><h5 className="text-[10px] font-black uppercase tracking-widest text-disabled">Payment History</h5><span className="text-[10px] font-black text-primary">Total: ₱{paymentHistoryTotal}</span></div>
-                                            <div className="space-y-2">{paymentHistoryLoading ? <div className="h-20 w-full animate-pulse rounded-2xl bg-surface-2" /> : paymentHistory.length === 0 ? <p className="text-xs text-disabled text-center py-6 bg-surface-2/50 rounded-2xl italic border border-dashed border-divider">No payments found</p> : paymentHistory.slice(0, 5).map((payment, idx) => (
-                                                <div key={payment.id || `payment-${payment.dateLabel || idx}-${idx}`} className="flex items-center justify-between p-3 rounded-2xl border border-divider bg-surface-2/30 hover:bg-surface-2 transition-colors">
-                                                    <div className="flex items-center gap-3"><div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/10"><Wallet className="size-3.5 text-emerald-500" /></div><div className="flex flex-col"><span className="text-xs font-black text-high truncate max-w-[100px]">{payment.typeLabel || 'Payment'}</span><span className="text-[9px] font-medium text-disabled">{payment.dateLabel}</span></div></div><span className="text-xs font-black text-emerald-500">₱{payment.amount}</span>
-                                                </div>
-                                            ))}</div>
+                                        <div className="space-y-3">
+                                            <div className="flex items-center justify-between">
+                                                <h5 className="text-[10px] font-black uppercase tracking-widest text-disabled">Payment History</h5>
+                                                <span className="text-[10px] font-black text-primary">Total: ₱{paymentHistoryTotal.toLocaleString()}</span>
+                                            </div>
+                                            <div className="space-y-2">
+                                                {paymentHistoryLoading ? (
+                                                    <div className="h-20 w-full animate-pulse rounded-2xl bg-surface-2" />
+                                                ) : paymentHistory.length === 0 ? (
+                                                    <p className="text-xs text-disabled text-center py-6 bg-surface-2/50 rounded-2xl italic border border-dashed border-divider">No payments found</p>
+                                                ) : (
+                                                    <>
+                                                        {(isPaymentHistoryExpanded ? paymentHistory : paymentHistory.slice(0, 4)).map((payment, idx) => (
+                                                            <div
+                                                                key={payment.id || `payment-${payment.dateLabel || idx}-${idx}`}
+                                                                onClick={() => setShowPaymentHistoryModal(true)}
+                                                                className="flex items-center justify-between p-3 rounded-2xl border border-divider bg-surface-2/30 hover:bg-surface-2 hover:border-primary/30 transition-all cursor-pointer group"
+                                                            >
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/10 group-hover:scale-105 transition-transform">
+                                                                        <Wallet className="size-3.5 text-emerald-500" />
+                                                                    </div>
+                                                                    <div className="flex flex-col">
+                                                                        <span className="text-xs font-black text-high truncate max-w-[120px]">
+                                                                            {payment.typeLabel || 'Payment'}
+                                                                        </span>
+                                                                        <span className="text-[9px] font-medium text-disabled">
+                                                                            {payment.dateLabel}
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                                <span className="text-xs font-black text-emerald-500">
+                                                                    ₱{payment.amount.toLocaleString()}
+                                                                </span>
+                                                            </div>
+                                                        ))}
+
+                                                        <div className="flex items-center gap-2 pt-1">
+                                                            {paymentHistory.length > 4 && (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setIsPaymentHistoryExpanded(!isPaymentHistoryExpanded)}
+                                                                    className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-divider bg-surface-2/40 hover:bg-surface-2 text-[10px] font-black uppercase tracking-wider text-medium hover:text-primary transition-all active:scale-95"
+                                                                >
+                                                                    <span>{isPaymentHistoryExpanded ? "See Less" : `See More (${paymentHistory.length - 4})`}</span>
+                                                                    <ChevronDown className={cn("size-3 transition-transform duration-200", isPaymentHistoryExpanded && "rotate-180")} />
+                                                                </button>
+                                                            )}
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setShowPaymentHistoryModal(true)}
+                                                                className="flex items-center justify-center gap-1 py-2 px-3 rounded-xl border border-divider bg-surface-2/40 hover:bg-surface-2 text-[10px] font-black uppercase tracking-wider text-primary hover:bg-surface-3 transition-all active:scale-95"
+                                                                title="View Full Payment Ledger"
+                                                            >
+                                                                <span>Ledger</span>
+                                                                <ArrowUpRight className="size-3" />
+                                                            </button>
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </div>
                                         </div>
                                     )}
                                     <div className="pt-4 space-y-3">
@@ -1557,6 +1678,16 @@ useEffect(() => {
                 contact={displayContact}
                 currentUserRole="tenant"
                 onInsertMessage={(text) => setMessageInput(text)}
+            />
+
+            <PaymentHistoryModal
+                isOpen={showPaymentHistoryModal}
+                onClose={() => setShowPaymentHistoryModal(false)}
+                contact={displayContact}
+                payments={paymentHistory}
+                totalPaid={paymentHistoryTotal}
+                isLoading={paymentHistoryLoading}
+                role="tenant"
             />
 
             <MessageReportWizard

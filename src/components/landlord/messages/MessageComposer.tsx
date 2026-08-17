@@ -16,6 +16,7 @@ import { PendingAttachment } from "./types";
 import { m as motion, AnimatePresence } from "framer-motion";
 import data from '@emoji-mart/data';
 import Picker from '@emoji-mart/react';
+import { Skeleton } from "@/components/ui/Skeleton";
 
 
 interface MessageComposerProps {
@@ -29,6 +30,7 @@ interface MessageComposerProps {
     isSending?: boolean;
     isOtherUserTyping: boolean;
     otherUserName?: string;
+    isLoading?: boolean;
 }
 
 export function MessageComposer({
@@ -41,7 +43,8 @@ export function MessageComposer({
     isUploadingFile,
     isSending = false,
     isOtherUserTyping,
-    otherUserName
+    otherUserName,
+    isLoading = false,
 }: MessageComposerProps) {
     const { resolvedTheme } = useTheme();
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -80,6 +83,18 @@ export function MessageComposer({
             textAreaRef.current.style.cssText = `height: ${Math.min(scrollHeight, 120)}px;`;
         }
     }, [messageInput]);
+
+    if (isLoading) {
+        return (
+            <div className="z-20 flex flex-col gap-2 p-4 sm:p-6 pb-6 pt-2 animate-in fade-in duration-200">
+                <div className="flex items-center gap-3 w-full p-2.5 rounded-[2rem] neumorphic-inset-card opacity-70">
+                    <Skeleton className="size-10 rounded-full shrink-0 opacity-60" />
+                    <Skeleton className="h-9 flex-1 rounded-2xl opacity-40" />
+                    <Skeleton className="size-10 rounded-full shrink-0 opacity-60" />
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="p-4 relative mt-2">

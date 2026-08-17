@@ -36,19 +36,33 @@ export async function GET(
 
 
         const url = new URL(request.url);
-        const limitParam = Number(url.searchParams.get("limit") ?? "100");
-        const limit = Number.isFinite(limitParam) ? Math.max(1, Math.min(500, Math.floor(limitParam))) : 100;
+        const limitParam = Number(url.searchParams.get("limit") ?? "20");
+        const limit = Number.isFinite(limitParam) ? Math.max(1, Math.min(100, Math.floor(limitParam))) : 20;
+        const before = url.searchParams.get("before");
 
-        const { data: messages, error: messagesError } = await supabase
+        let query = supabase
             .from("messages")
             .select("id, conversation_id, sender_id, type, content, metadata, read_at, created_at")
-            .eq("conversation_id", conversationId)
-            .order("created_at", { ascending: true })
-            .limit(limit);
+            .eq("conversation_id", conversationId);
+
+        if (before) {
+            query = query.lt("created_at", before);
+        }
+
+        // Fetch limit + 1 in descending order (most recent first) to detect if more older messages exist
+        const { data: rawMessages, error: messagesError } = await query
+            .order("created_at", { ascending: false })
+            .limit(limit + 1);
 
         if (messagesError) {
             return NextResponse.json({ error: "Failed to fetch messages." }, { status: 500 });
         }
+
+        const hasMore = (rawMessages ?? []).length > limit;
+        const sliced = (rawMessages ?? []).slice(0, limit);
+        // Reverse to chronological (ascending) order for client UI rendering
+        const messages = sliced.reverse();
+        const nextCursor = hasMore && messages.length > 0 ? messages[0].created_at : null;
 
         const senderIds = Array.from(new Set((messages ?? []).map((message) => message.sender_id)));
         const profileMap = await getProfilePreviewMap(supabase, senderIds);
@@ -135,7 +149,11 @@ export async function GET(
             };
         });
 
-        return NextResponse.json({ messages: payload });
+        return NextResponse.json({ 
+            messages: payload,
+            hasMore,
+            nextCursor,
+        });
     } catch (error) {
         console.error("Failed to fetch conversation messages:", error);
         return NextResponse.json({ error: "Failed to fetch messages." }, { status: 500 });
