@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 
 export async function GET(
     request: Request,
@@ -7,7 +7,8 @@ export async function GET(
 ) {
     try {
         const { id } = await params;
-        const adminClient = createAdminClient();
+        const adminClient = createServiceRoleSupabaseClient();
+
 
         // Get user profile
         const { data: profile, error: profileError } = await adminClient
@@ -57,7 +58,8 @@ export async function POST(
         const body = await request.json();
         const { action } = body;
 
-        const adminClient = createAdminClient();
+        const adminClient = createServiceRoleSupabaseClient();
+
 
         if (action === "resend_onboarding") {
             // Get the user's profile and application

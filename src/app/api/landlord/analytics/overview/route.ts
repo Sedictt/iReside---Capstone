@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { requireUser } from "@/lib/supabase/auth";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 
 type ChangeType = "positive" | "negative" | "neutral";
 
@@ -339,8 +338,9 @@ const buildFinancialWindows = (payments: PaymentRow[]) => {
 };
 
 export async function GET(request: Request) {
-    const { user } = await requireUser();
-    const supabase = await createClient();
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
 
     const { searchParams } = new URL(request.url);
 
@@ -368,7 +368,7 @@ export async function GET(request: Request) {
     let propertiesQuery = supabase
         .from("properties")
         .select("id")
-        .eq("landlord_id", user.id);
+        .eq("landlord_id", userId);
 
     if (propertyId && propertyId !== "all") {
         propertiesQuery = propertiesQuery.eq("id", propertyId);
@@ -378,16 +378,16 @@ export async function GET(request: Request) {
         supabase
             .from("leases")
             .select("id, unit_id, tenant_id, status, start_date, end_date, monthly_rent")
-            .eq("landlord_id", user.id),
+            .eq("landlord_id", userId),
         propertiesQuery,
         supabase
             .from("payments")
             .select("amount, status, paid_at, due_date, description, lease_id")
-            .eq("landlord_id", user.id),
+            .eq("landlord_id", userId),
         supabase
             .from("maintenance_requests")
             .select("unit_id, created_at, resolved_at, priority")
-            .eq("landlord_id", user.id),
+            .eq("landlord_id", userId),
     ]);
 
     if (leasesRes.error || propertiesRes.error || paymentsRes.error || maintenanceRes.error) {

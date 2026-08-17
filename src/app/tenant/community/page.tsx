@@ -19,6 +19,7 @@ import {
     getManagementProperties,
     getSavedPostIds,
     reportPost,
+    recordPostView,
     toggleReaction,
     toggleSavePost,
     togglePinPost,
@@ -550,6 +551,7 @@ export default function TenantCommunityHubPage() {
                                     onCommentSubmit={handleCommentSubmit}
                                     onEditComment={handleEditComment}
                                     onDeleteComment={handleDeleteComment}
+                                    onView={recordPostView}
                                     isMutating={isMutatingPost}
                                     currentUserId={user?.id}
                                     isManagementUser={isManagementUser}

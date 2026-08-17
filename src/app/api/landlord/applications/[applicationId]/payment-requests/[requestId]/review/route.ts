@@ -5,8 +5,8 @@ import {
     areRequiredPaymentRequestsCompleted,
     logApplicationPaymentAudit,
 } from "@/lib/application-payment-pending";
-import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 
 type RouteContext = {
     params: Promise<{ applicationId: string; requestId: string }>;
@@ -16,17 +16,12 @@ type ReviewAction = "confirm" | "reject" | "needs_correction";
 
 export async function POST(request: Request, context: RouteContext) {
     const { applicationId, requestId } = await context.params;
-    const supabase = await createClient();
-    const adminClient = createAdminClient();
+    const adminClient = createServiceRoleSupabaseClient();
 
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
 
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
 
     const body = (await request.json()) as { action?: ReviewAction; note?: string | null };
     const action = body.action;
@@ -40,7 +35,7 @@ export async function POST(request: Request, context: RouteContext) {
         .from("applications")
         .select("id, status, landlord_id")
         .eq("id", applicationId)
-        .eq("landlord_id", user.id)
+        .eq("landlord_id", userId)
         .maybeSingle();
 
     if (applicationError || !application) {
@@ -93,7 +88,7 @@ export async function POST(request: Request, context: RouteContext) {
     const updatePayload = {
         status: nextStatus,
         reviewed_at: nowIso,
-        reviewed_by: user.id,
+        reviewed_by: userId,
         review_note: note || null,
     } as any;
 
@@ -123,7 +118,7 @@ export async function POST(request: Request, context: RouteContext) {
     await logApplicationPaymentAudit(adminClient, {
         application_id: application.id,
         payment_request_id: paymentRequest.id,
-        actor_id: user.id,
+        actor_id: userId,
         actor_role: "landlord",
         event_type: eventType,
         metadata: {

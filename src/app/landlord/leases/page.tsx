@@ -10,7 +10,6 @@ import {
  Clock,
  AlertCircle,
  ShieldCheck,
- Loader2,
  Download,
  History,
  RefreshCw,
@@ -23,6 +22,7 @@ import {
  CalendarRange,
  RotateCcw,
 } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { m as motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import {
@@ -113,7 +113,7 @@ function LeasesContent() {
 
  {loading ? (
  <div className="flex h-96 flex-col items-center justify-center gap-4">
- <Loader2 className="size-8 animate-spin text-primary" />
+ <LoadingSpinner size="md" className="text-primary" />
  <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">
  Loading Lease Record...
  </p>
@@ -608,7 +608,7 @@ export default function LeasesPage() {
  <Suspense
  fallback={
  <div className="flex h-screen items-center justify-center">
- <Loader2 className="size-8 animate-spin text-primary" />
+ <LoadingSpinner size="md" className="text-primary" />
  </div>
  }
  >

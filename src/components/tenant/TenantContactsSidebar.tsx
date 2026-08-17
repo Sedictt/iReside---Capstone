@@ -23,6 +23,7 @@ import { RoleBadge, type BadgeRole } from "@/components/profile/RoleBadge";
 import { ProfileCardTrigger } from "@/components/ui/ProfileCardTrigger";
 import { NotificationCard } from "@/components/messaging/NotificationCard";
 import { OfficialReceipt } from "@/components/messaging/OfficialReceipt";
+import { MiniChatSkeleton } from "@/components/messaging/MiniChatSkeleton";
 
 interface ChatUser {
     id: string;
@@ -440,14 +441,41 @@ export function TenantContactsSidebar() {
             return;
         }
 
-        setChatStateById((prev) => ({
-            ...prev,
-            [conversationId]: {
-                ...(prev[conversationId] ?? DEFAULT_CHAT_STATE),
-                isUploading: true,
-                error: null,
-            },
-        }));
+        const isImage = file.type.startsWith("image/");
+        const previewUrl = isImage ? URL.createObjectURL(file) : null;
+        const optimisticId = `local-${Date.now()}`;
+
+        if (isImage && previewUrl) {
+            const optimisticMessage: MiniChatMessage = {
+                id: optimisticId,
+                senderId: user?.id || "me",
+                content: "",
+                createdAt: new Date().toISOString(),
+                isOwn: true,
+                status: "sending",
+                fileUrl: previewUrl,
+                fileMimeType: file.type,
+            };
+
+            setChatStateById((prev) => ({
+                ...prev,
+                [conversationId]: {
+                    ...(prev[conversationId] ?? DEFAULT_CHAT_STATE),
+                    messages: [...(prev[conversationId]?.messages ?? []), optimisticMessage],
+                    isUploading: true,
+                    error: null,
+                },
+            }));
+        } else {
+            setChatStateById((prev) => ({
+                ...prev,
+                [conversationId]: {
+                    ...(prev[conversationId] ?? DEFAULT_CHAT_STATE),
+                    isUploading: true,
+                    error: null,
+                },
+            }));
+        }
 
         try {
             await uploadConversationFile(conversationId, file);
@@ -459,6 +487,7 @@ export function TenantContactsSidebar() {
                 ...prev,
                 [conversationId]: {
                     ...(prev[conversationId] ?? DEFAULT_CHAT_STATE),
+                    messages: (prev[conversationId]?.messages ?? []).filter((m) => m.id !== optimisticId),
                     error: message,
                 },
             }));
@@ -471,7 +500,7 @@ export function TenantContactsSidebar() {
                 },
             }));
         }
-    }, [loadChatMessages, refreshConversations]);
+    }, [loadChatMessages, refreshConversations, user?.id]);
 
     useEffect(() => {
         let isCancelled = false;
@@ -1206,7 +1235,7 @@ export function TenantContactsSidebar() {
                                 className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 custom-scrollbar bg-background/60"
                             >
                                 {chatState.isLoading && (
-                                    <p className="text-xs text-muted-foreground text-center">Loading conversation…</p>
+                                    <MiniChatSkeleton />
                                 )}
                                 {!chatState.isLoading && chatState.messages.length === 0 && (
                                     <p className="text-xs text-muted-foreground text-center">No messages yet</p>
@@ -1233,8 +1262,16 @@ export function TenantContactsSidebar() {
                                             hasImage && "p-1 bg-card border-border"
                                         )}>
                                             {hasImage && message.fileUrl && (
-                                                <a href={message.fileUrl} target="_blank" rel="noreferrer" className="block rounded-xl overflow-hidden w-full bg-background">
-                                                    <Image src={message.fileUrl} alt="Shared image" width={400} height={48} className="object-contain" />
+                                                <a href={message.fileUrl} target="_blank" rel="noreferrer" className="block rounded-xl overflow-hidden w-full bg-background relative">
+                                                    <Image src={message.fileUrl} alt="Shared image" width={400} height={300} className="object-cover max-h-[220px] w-auto h-auto rounded-xl" />
+                                                    {message.status === "sending" && (
+                                                        <div className="absolute inset-0 bg-black/30 backdrop-blur-[1px] flex items-center justify-center pointer-events-none">
+                                                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/60 text-white text-[10px] font-black">
+                                                                <div className="size-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                                <span>Sending…</span>
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 </a>
                                             )}
 

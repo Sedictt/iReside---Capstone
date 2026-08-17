@@ -16,6 +16,7 @@ import { PendingAttachment } from "./types";
 import { m as motion, AnimatePresence } from "framer-motion";
 import data from '@emoji-mart/data';
 import Picker from '@emoji-mart/react';
+import { Skeleton } from "@/components/ui/Skeleton";
 
 
 interface MessageComposerProps {
@@ -29,6 +30,7 @@ interface MessageComposerProps {
     isSending?: boolean;
     isOtherUserTyping: boolean;
     otherUserName?: string;
+    isLoading?: boolean;
 }
 
 export function MessageComposer({
@@ -41,7 +43,8 @@ export function MessageComposer({
     isUploadingFile,
     isSending = false,
     isOtherUserTyping,
-    otherUserName
+    otherUserName,
+    isLoading = false,
 }: MessageComposerProps) {
     const { resolvedTheme } = useTheme();
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -81,6 +84,18 @@ export function MessageComposer({
         }
     }, [messageInput]);
 
+    if (isLoading) {
+        return (
+            <div className="z-20 flex flex-col gap-2 p-4 sm:p-6 pb-6 pt-2 animate-in fade-in duration-200">
+                <div className="flex items-center gap-3 w-full p-2.5 rounded-[2rem] neumorphic-inset-card opacity-70">
+                    <Skeleton className="size-10 rounded-full shrink-0 opacity-60" />
+                    <Skeleton className="h-9 flex-1 rounded-2xl opacity-40" />
+                    <Skeleton className="size-10 rounded-full shrink-0 opacity-60" />
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="p-4 relative mt-2">
             <AnimatePresence>
@@ -112,8 +127,8 @@ export function MessageComposer({
                             exit={{ opacity: 0, y: 10 }}
                             className="flex flex-wrap gap-2 p-3 rounded-2xl bg-surface-2 border border-divider shadow-inner max-h-[160px] overflow-y-auto custom-scrollbar-premium"
                         >
-                            {pendingAttachments.map((att) => (
-                                <div key={att.id} className="relative group">
+                            {pendingAttachments.map((att, idx) => (
+                                <div key={att.id || `pending-att-${idx}`} className="relative group">
                                     <div className="size-16 rounded-xl overflow-hidden border border-divider bg-surface-3 relative">
                                         {att.isImage && att.previewUrl ? (
                                             <Image src={att.previewUrl} fill sizes="80px" className="object-cover" alt="Preview" />
@@ -124,12 +139,13 @@ export function MessageComposer({
                                         )}
                                         
                                         {att.status === 'uploading' && (
-                                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[1px]">
-                                                <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                                <span className="absolute bottom-1 text-[8px] font-black text-white">{att.progress}%</span>
+                                            <div className="absolute inset-0 bg-black/45 flex flex-col items-center justify-center backdrop-blur-[1px] text-white">
+                                                <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin mb-1" />
+                                                <span className="text-[8px] font-black uppercase tracking-wider">
+                                                    {typeof att.progress === 'number' && att.progress > 0 && att.progress < 100 ? `${att.progress}%` : "Readying…"}
+                                                </span>
                                             </div>
                                         )}
-
 
                                         {att.status === 'error' && (
                                             <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center backdrop-blur-[1px]">
@@ -138,14 +154,12 @@ export function MessageComposer({
                                         )}
                                     </div>
                                     
-                                    {att.status !== 'uploading' && (
-                                        <button 
-                                            onClick={() => removePendingAttachment(att.id)}
-                                            className="absolute -top-1.5 -right-1.5 size-5 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg hover:scale-110 active:scale-90 transition-transform z-10"
-                                        >
-                                            <X className="size-3" />
-                                        </button>
-                                    )}
+                                    <button 
+                                        onClick={() => removePendingAttachment(att.id)}
+                                        className="absolute -top-1.5 -right-1.5 size-5 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg hover:scale-110 active:scale-90 transition-transform z-10"
+                                    >
+                                        <X className="size-3" />
+                                    </button>
                                     
                                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center pointer-events-none">
                                         <span className="text-[8px] text-white font-black uppercase truncate px-1 max-w-full">
@@ -202,10 +216,10 @@ export function MessageComposer({
                         </button>
                         <button 
                             onClick={onSendMessage}
-                            disabled={(!messageInput.trim() && pendingAttachments.length === 0) || isUploadingFile || isSending}
+                            disabled={(!messageInput.trim() && pendingAttachments.length === 0) || isSending}
                             className={cn(
                                 "p-2.5 rounded-full transition-all flex items-center justify-center min-w-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
-                                (messageInput.trim() || pendingAttachments.length > 0) && !isUploadingFile && !isSending
+                                (messageInput.trim() || pendingAttachments.length > 0) && !isSending
                                     ? "neumorphic-primary text-white hover:scale-105 active:scale-95" 
                                     : "bg-surface-3 text-disabled"
                             )}

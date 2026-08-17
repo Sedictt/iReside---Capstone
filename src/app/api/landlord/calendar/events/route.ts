@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { requireUser } from "@/lib/supabase/auth";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 
 export async function GET(request: Request) {
     try {
-        const { user } = await requireUser();
-        const supabase = await createClient();
+        const authContext = await requireAuthenticatedUser(request);
+        if (!("userId" in authContext)) return authContext as Response;
+        const { userId, supabase } = authContext;
 
         const { searchParams } = new URL(request.url);
         const propertyId = searchParams.get("propertyId");
@@ -44,7 +44,7 @@ export async function GET(request: Request) {
                     )
                 )
             `)
-            .eq("landlord_id", user.id);
+            .eq("landlord_id", userId);
 
         // 2. Fetch Leases (Start & End dates)
         const leasesPromise = supabase
@@ -72,7 +72,7 @@ export async function GET(request: Request) {
                     )
                 )
             `)
-            .eq("landlord_id", user.id);
+            .eq("landlord_id", userId);
 
         // 3. Fetch Maintenance Requests
         const maintenancePromise = supabase
@@ -103,7 +103,7 @@ export async function GET(request: Request) {
                     )
                 )
             `)
-            .eq("landlord_id", user.id);
+            .eq("landlord_id", userId);
 
         // 4. Fetch Amenity Bookings
         const bookingsPromise = supabase
@@ -134,7 +134,7 @@ export async function GET(request: Request) {
                     )
                 )
             `)
-            .eq("landlord_id", user.id);
+            .eq("landlord_id", userId);
 
         // Run all queries in parallel for peak performance
         const [paymentsRes, leasesRes, maintenanceRes, bookingsRes] = await Promise.all([

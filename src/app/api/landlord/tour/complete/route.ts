@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
     LANDLORD_PRODUCT_TOUR_STEPS,
@@ -12,23 +12,18 @@ const completeSchema = z.object({
 });
 
 export async function POST(request: Request) {
-    const supabase = await createClient();
-    const adminClient = createAdminClient();
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
 
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const adminClient = createAdminClient();
 
     try {
         const body = await request.json();
         const { stepId } = completeSchema.parse(body);
 
         const state = await completeLandlordProductTour(adminClient as any, {
-            landlordId: user.id,
+            landlordId: userId,
             triggerSource: "manual",
             stepId: stepId as any,
         });

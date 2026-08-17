@@ -60,7 +60,7 @@ export function MaintenanceDashboard() {
  const { selectedPropertyId } = useProperty();
  const searchParams = useSearchParams();
  const [filter, setFilter] = useState<"All" | Status>("All");
- const [searchQuery, setSearchQuery] = useState("");
+ const [searchQuery, setSearchQuery] = useState(() => searchParams?.get("search") || "");
  const [selectedRequest, setSelectedRequest] = useState<MaintenanceRequest | null>(null);
  const [requests, setRequests] = useState<MaintenanceRequest[]>([]);
  const [previewMode, setPreviewMode] = useState<string | null>(null);

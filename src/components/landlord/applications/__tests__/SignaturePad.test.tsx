@@ -1,6 +1,26 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import { SignaturePad } from "../SignaturePad";
+
+let mockIsEmptyValue = true;
+let endStrokeCallback: () => void = () => {};
+const mockClear = vi.fn();
+
+vi.mock("signature_pad", () => {
+  return {
+    default: class MockSignaturePad {
+      clear = mockClear;
+      isEmpty = () => mockIsEmptyValue;
+      toDataURL = () => "data:image/png;base64,mockdata";
+      addEventListener = (event: string, cb: () => void) => {
+        if (event === "endStroke") {
+          endStrokeCallback = cb;
+        }
+      };
+      off = vi.fn();
+    }
+  };
+});
 
 describe("SignaturePad", () => {
   let mockOnSave: Mock<(dataUrl: string) => void>;
@@ -9,6 +29,9 @@ describe("SignaturePad", () => {
   beforeEach(() => {
     mockOnSave = vi.fn();
     mockOnClear = vi.fn();
+    mockIsEmptyValue = true;
+    endStrokeCallback = () => {};
+    mockClear.mockClear();
 
     // Mock canvas context
     HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
@@ -21,6 +44,9 @@ describe("SignaturePad", () => {
       lineTo: vi.fn(),
       stroke: vi.fn(),
       clearRect: vi.fn(),
+      fillRect: vi.fn(),
+      arc: vi.fn(),
+      fill: vi.fn(),
     })) as unknown as any;
 
     HTMLCanvasElement.prototype.toDataURL = vi.fn(() => "data:image/png;base64,mockdata");
@@ -60,10 +86,15 @@ describe("SignaturePad", () => {
   it("should clear canvas when clear button is clicked", () => {
     render(<SignaturePad onSave={mockOnSave} onClear={mockOnClear} />);
 
+    // Simulate drawing
+    mockIsEmptyValue = false;
+    act(() => {
+      endStrokeCallback();
+    });
+
     const clearButton = screen.getByText("Clear");
-    // We can't easily simulate signature_pad drawing via fireEvent on canvas in jsdom
-    // because signature_pad uses internal state. 
-    // But we can check if the button exists and triggers clear.
+    expect(clearButton).not.toBeDisabled();
+
     fireEvent.click(clearButton);
     expect(mockOnClear).toHaveBeenCalledTimes(1);
   });
@@ -71,8 +102,18 @@ describe("SignaturePad", () => {
   it("should handle save button interaction", () => {
     render(<SignaturePad onSave={mockOnSave} />);
 
+    // Simulate drawing
+    mockIsEmptyValue = false;
+    act(() => {
+      endStrokeCallback();
+    });
+
     const saveButton = screen.getByText("Finalize Signature");
-    expect(saveButton).toBeDisabled();
+    expect(saveButton).not.toBeDisabled();
+
+    fireEvent.click(saveButton);
+    expect(mockOnSave).toHaveBeenCalledTimes(1);
+    expect(mockOnSave).toHaveBeenCalledWith("data:image/png;base64,mockdata");
   });
 
   it("should apply custom className", () => {

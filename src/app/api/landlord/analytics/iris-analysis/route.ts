@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import Groq from "groq-sdk";
-import { createClient } from "@/lib/supabase/server";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 
 const groq = new Groq({
     apiKey: process.env.GROQ_API_KEY,
@@ -135,15 +135,9 @@ const buildStatsAwareFallback = (stats: unknown): IrisAnalysisResponse => {
 };
 
 export async function POST(request: Request) {
-    const supabase = await createClient();
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
 
     let statsPayload: unknown = null;
 

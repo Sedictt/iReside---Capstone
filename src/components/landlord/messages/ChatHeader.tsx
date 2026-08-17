@@ -12,9 +12,11 @@ import {
 import { cn } from "@/lib/utils";
 import { ContactItem, QuickAction } from "./types";
 import { RoleBadge } from "@/components/profile/RoleBadge";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 interface ChatHeaderProps {
     contact: ContactItem;
+    isLoading?: boolean;
     showFilesSidebar: boolean;
     setShowFilesSidebar: (val: boolean) => void;
     showInfoSidebar: boolean;
@@ -25,6 +27,7 @@ interface ChatHeaderProps {
 
 export function ChatHeader({
     contact,
+    isLoading = false,
     showFilesSidebar,
     setShowFilesSidebar,
     showInfoSidebar,
@@ -32,6 +35,31 @@ export function ChatHeader({
     openReportWizard,
     onBack
 }: ChatHeaderProps) {
+    if (isLoading) {
+        return (
+            <div className="z-20 flex h-20 shrink-0 items-center justify-between px-6 pt-2 animate-in fade-in duration-200">
+                <div className="flex items-center gap-4">
+                    {onBack && (
+                        <div className="sm:hidden">
+                            <Skeleton className="size-8 rounded-xl opacity-60" />
+                        </div>
+                    )}
+                    <Skeleton className="size-12 rounded-full opacity-70 shrink-0" />
+                    <div className="space-y-1.5">
+                        <Skeleton className="h-4 w-32 rounded-md opacity-80" />
+                        <Skeleton className="h-3 w-20 rounded-md opacity-50" />
+                    </div>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Skeleton className="h-8 w-16 rounded-xl opacity-40" />
+                    <div className="h-8 w-[1px] bg-divider mx-2 opacity-30" />
+                    <Skeleton className="size-8 rounded-xl opacity-40" />
+                    <Skeleton className="size-8 rounded-xl opacity-40" />
+                </div>
+            </div>
+        );
+    }
+
     const isPlaceholder = !contact.id;
 
     return (

@@ -238,9 +238,31 @@ export const fetchConversations = async () => {
     }
 };
 
-export const fetchConversationMessages = async (conversationId: string, limit = 100) => {
+export type FetchMessagesOptions = {
+    limit?: number;
+    before?: string | null;
+};
+
+export type FetchMessagesResult = {
+    data: ConversationMessage[];
+    hasMore: boolean;
+    nextCursor: string | null;
+    error: string | null;
+};
+
+export const fetchConversationMessages = async (
+    conversationId: string, 
+    options?: number | FetchMessagesOptions
+): Promise<FetchMessagesResult> => {
     try {
-        const response = await fetch(`/api/messages/conversations/${conversationId}?limit=${limit}`, {
+        const limit = typeof options === "number" ? options : (options?.limit ?? 20);
+        const before = typeof options === "object" ? options?.before : undefined;
+
+        const params = new URLSearchParams();
+        if (limit) params.set("limit", String(limit));
+        if (before) params.set("before", before);
+
+        const response = await fetch(`/api/messages/conversations/${conversationId}?${params.toString()}`, {
             method: "GET",
             cache: "no-store",
         });
@@ -250,21 +272,31 @@ export const fetchConversationMessages = async (conversationId: string, limit = 
             console.warn("Failed to fetch messages", { conversationId, status: response.status, detail });
             return {
                 data: [],
+                hasMore: false,
+                nextCursor: null,
                 error: buildListFetchErrorMessage("messages", response.status, detail),
-            } satisfies ListFetchResult<ConversationMessage>;
+            };
         }
 
-        const payload = (await response.json()) as { messages?: ConversationMessage[] };
+        const payload = (await response.json()) as { 
+            messages?: ConversationMessage[];
+            hasMore?: boolean;
+            nextCursor?: string | null;
+        };
         return {
             data: payload.messages ?? [],
+            hasMore: Boolean(payload.hasMore),
+            nextCursor: payload.nextCursor ?? null,
             error: null,
-        } satisfies ListFetchResult<ConversationMessage>;
+        };
     } catch {
         console.warn("Failed to fetch messages due to a network or parsing issue.", { conversationId });
         return {
             data: [],
+            hasMore: false,
+            nextCursor: null,
             error: "Unable to load messages right now. Please check your connection and try again.",
-        } satisfies ListFetchResult<ConversationMessage>;
+        };
     }
 };
 

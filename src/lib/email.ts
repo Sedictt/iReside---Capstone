@@ -1,16 +1,6 @@
-import nodemailer from "nodemailer";
+"use server";
 
-const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT ?? 587),
-    secure: Number(process.env.SMTP_PORT) === 465,
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-    },
-});
-
-const FROM = process.env.SMTP_FROM ?? "iReside <noreply@ireside.app>";
+import { sendEmail } from "./email/transport";
 
 export async function sendTenantCredentials({
     to,
@@ -113,7 +103,7 @@ export async function sendTenantCredentials({
 
     const text = `Hi ${tenantName},\n\nYour iReside tenant account is ready.\n\n${leaseDetails ? `LEASE DETAILS:\nProperty: ${leaseDetails.property_name}\nUnit: ${leaseDetails.unit_name}\nMove-in Date: ${new Date(leaseDetails.move_in_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}\nMonthly Rent: ₱${leaseDetails.monthly_rent.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\n\n` : ""}${signingLink ? `SIGN YOUR LEASE:\n${signingLink}\n\n` : ""}LOGIN CREDENTIALS:\nEmail: ${to}\nTemporary Password: ${tempPassword}\n${inviteUrl ? `\nSet your password: ${inviteUrl}\n` : ""}\nPlease change your password after first login.\n\n— iReside`;
 
-    await transporter.sendMail({ from: FROM, to, subject, html, text });
+    await sendEmail({ recipientEmail: to, subject, htmlBody: html, textBody: text });
 }
 
 export async function sendLandlordCredentialsCopy({
@@ -165,7 +155,7 @@ export async function sendLandlordCredentialsCopy({
 
     const text = `Hi ${landlordName},\n\nTenant account created for ${tenantName}.\n\nEmail: ${tenantEmail}\nTemp Password: ${tempPassword}\n${inviteUrl ? `Reset link: ${inviteUrl}\n` : ""}\n— iReside`;
 
-    await transporter.sendMail({ from: FROM, to, subject, html, text });
+    await sendEmail({ recipientEmail: to, subject, htmlBody: html, textBody: text });
 }
 
 export async function sendSigningLinkEmail({
@@ -264,7 +254,7 @@ export async function sendSigningLinkEmail({
 
     const text = `Hi ${tenantName},\n\nYour lease application has been approved! Your lease agreement is ready for signature.\n\nPROPERTY DETAILS:\nProperty: ${propertyName}\nUnit: ${unitName}\nMonthly Rent: ₱${rentAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\nSecurity Deposit: ₱${depositAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\n\nSIGN LEASE AGREEMENT:\n${signingUrl}\n\nLink expires: ${expiresAt.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}\n\nLANDLORD CONTACT:\n${landlordName}\n${landlordEmail}\n\n— iReside`;
 
-    await transporter.sendMail({ from: FROM, to, subject, html, text });
+    await sendEmail({ recipientEmail: to, subject, htmlBody: html, textBody: text });
 }
 
 export async function sendTenantSignedNotification({
@@ -322,7 +312,7 @@ export async function sendTenantSignedNotification({
 
     const text = `Hi ${landlordName},\n\n${tenantName} has signed their lease agreement.\n\nLease ID: ${leaseId}\n\n${signingUrl ? `Countersign here: ${signingUrl}` : 'Log in to your landlord dashboard to countersign the lease.'}\n\n— iReside`;
 
-    await transporter.sendMail({ from: FROM, to, subject, html, text });
+    await sendEmail({ recipientEmail: to, subject, htmlBody: html, textBody: text });
 }
 
 export async function sendLeaseActivatedNotification({
@@ -385,7 +375,7 @@ export async function sendLeaseActivatedNotification({
 
     const text = `Hi ${tenantName},\n\nYour lease agreement has been fully signed and is now active!\n\nPROPERTY DETAILS:\nProperty: ${propertyName}\nUnit: ${unitName}\nMove-in Date: ${new Date(moveInDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}\n\nWelcome to your new home! You can now access your tenant portal to manage your lease.\n\n— iReside`;
 
-    await transporter.sendMail({ from: FROM, to, subject, html, text });
+    await sendEmail({ recipientEmail: to, subject, htmlBody: html, textBody: text });
 }
 
 export async function sendTenantOnboardingReminder({
@@ -457,7 +447,7 @@ Continue here: ${onboardingUrl}
 ${tempPassword ? `Temporary password: ${tempPassword}\n` : ""}${inviteUrl ? `Password setup link: ${inviteUrl}\n` : ""}
 — iReside`;
 
-    await transporter.sendMail({ from: FROM, to, subject, html, text });
+    await sendEmail({ recipientEmail: to, subject, htmlBody: html, textBody: text });
 }
 
 export async function sendProspectPaymentRequestEmail({
@@ -539,7 +529,7 @@ Link expires on: ${expiresLabel}
 We will only finalize approval after both payments are landlord-confirmed.
 `;
 
-    await transporter.sendMail({ from: FROM, to, subject, html, text });
+    await sendEmail({ recipientEmail: to, subject, htmlBody: html, textBody: text });
 }
 
 export async function sendRegistrationOTP({
@@ -583,7 +573,7 @@ export async function sendRegistrationOTP({
 
 const text = `Your iReside verification code is: ${otp}\n\nThis code expires in 10 minutes.`;
 
-    await transporter.sendMail({ from: FROM, to, subject, html, text });
+    await sendEmail({ recipientEmail: to, subject, htmlBody: html, textBody: text });
 }
 
 export async function sendLandlordRegistrationApproved({
@@ -660,7 +650,7 @@ Log in with the credentials you created during registration.
 
 — iReside`;
 
-    await transporter.sendMail({ from: FROM, to, subject, html, text });
+    await sendEmail({ recipientEmail: to, subject, htmlBody: html, textBody: text });
 }
 
 export async function sendLandlordOnboardingMagicLink({
@@ -745,5 +735,5 @@ Complete your setup before the link expires.
 
 — iReside`;
 
-    await transporter.sendMail({ from: FROM, to, subject, html, text });
+    await sendEmail({ recipientEmail: to, subject, htmlBody: html, textBody: text });
 }

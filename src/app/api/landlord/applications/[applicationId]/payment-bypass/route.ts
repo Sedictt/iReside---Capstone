@@ -5,8 +5,8 @@ import {
     areRequiredPaymentRequestsCompleted,
     logApplicationPaymentAudit,
 } from "@/lib/application-payment-pending";
-import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 
 type RouteContext = {
     params: Promise<{ applicationId: string }>;
@@ -14,17 +14,12 @@ type RouteContext = {
 
 export async function POST(request: Request, context: RouteContext) {
     const { applicationId } = await context.params;
-    const supabase = await createClient();
-    const adminClient = createAdminClient();
+    const adminClient = createServiceRoleSupabaseClient();
 
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
 
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, userEmail, supabase } = authContext;
 
     const body = (await request.json()) as { password?: string; reason?: string };
     const password = typeof body.password === "string" ? body.password : "";
@@ -41,7 +36,7 @@ export async function POST(request: Request, context: RouteContext) {
         .from("applications")
         .select("id, status, landlord_id")
         .eq("id", applicationId)
-        .eq("landlord_id", user.id)
+        .eq("landlord_id", userId)
         .maybeSingle();
 
     if (applicationError || !application) {
@@ -60,16 +55,16 @@ export async function POST(request: Request, context: RouteContext) {
         return NextResponse.json({ error: "Application is not in payment-pending stage." }, { status: 409 });
     }
 
-    if (!user.email) {
+    if (!userEmail) {
         return NextResponse.json({ error: "Unable to verify password for this account." }, { status: 400 });
     }
 
     const verify = await supabase.auth.signInWithPassword({
-        email: user.email,
+        email: userEmail,
         password,
     });
 
-    if (verify.error || !verify.data.user || verify.data.user.id !== user.id) {
+    if (verify.error || !verify.data.user || verify.data.user.id !== userId) {
         return NextResponse.json({ error: "Password verification failed." }, { status: 401 });
     }
 
@@ -92,7 +87,7 @@ export async function POST(request: Request, context: RouteContext) {
             status: "completed",
             bypassed: true,
             reviewed_at: nowIso,
-            reviewed_by: user.id,
+            reviewed_by: userId,
             review_note: reviewNote,
             submitted_at: nowIso,
         };
@@ -113,7 +108,7 @@ export async function POST(request: Request, context: RouteContext) {
         await logApplicationPaymentAudit(adminClient, {
             application_id: application.id,
             payment_request_id: row.id,
-            actor_id: user.id,
+            actor_id: userId,
             actor_role: "landlord",
             event_type: "bypass_used",
             metadata: {

@@ -7,34 +7,29 @@ import {
     sendPaymentSystemMessage,
     toWorkflowSnapshot,
 } from "@/lib/billing/workflow";
-import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 
 type RouteContext = {
     params: Promise<{ id: string }>;
 };
 
-export async function POST(_: Request, context: RouteContext) {
+export async function POST(request: Request, context: RouteContext) {
     const { id } = await context.params;
-    const supabase = await createClient();
-    const adminClient = createAdminClient();
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
+    const adminClient = createServiceRoleSupabaseClient();
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
 
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     try {
-        await expireInPersonIntents(adminClient, user.id, { landlordId: user.id, paymentId: id });
+        await expireInPersonIntents(adminClient, userId, { landlordId: userId, paymentId: id });
 
         const { data: payment, error: paymentError } = await adminClient
             .from("payments")
-            .select("id, tenant_id, landlord_id, invoice_number, workflow_status, status, intent_method, amount_tag, review_action, paid_amount, balance_remaining, receipt_number, payment_submitted_at, rejection_reason, in_person_intent_expires_at")
+            .select("id, tenant_id, landlord_id, invoice_number, workflow_status, status, intent_method, amount_tag, review_action, paid_amount, balance_remaining, receipt_number, payment_submitted_at, rejection_reason, in_person_intent_expires_at, reminder_sent_at")
             .eq("id", id)
-            .eq("landlord_id", user.id)
+            .eq("landlord_id", userId)
             .maybeSingle();
 
         if (paymentError || !payment) {
@@ -45,8 +40,11 @@ export async function POST(_: Request, context: RouteContext) {
             return NextResponse.json({ error: "Cannot remind a finalized invoice." }, { status: 409 });
         }
 
-        if (payment.workflow_status === "reminder_sent") {
-            return NextResponse.json({ ok: true, idempotent: true, remindedAt: new Date().toISOString() });
+        const lastReminded = payment.reminder_sent_at ? new Date(payment.reminder_sent_at).getTime() : 0;
+        const now = Date.now();
+        // Prevent double-clicking within 5 seconds
+        if (payment.workflow_status === "reminder_sent" && lastReminded > 0 && now - lastReminded < 5000) {
+            return NextResponse.json({ ok: true, idempotent: true, remindedAt: payment.reminder_sent_at });
         }
 
         const beforeState = toWorkflowSnapshot(payment);
@@ -59,10 +57,10 @@ export async function POST(_: Request, context: RouteContext) {
                 workflow_status: "reminder_sent",
                 reminder_sent_at: nowIso,
                 last_action_at: nowIso,
-                last_action_by: user.id,
+                last_action_by: userId,
             })
             .eq("id", payment.id)
-            .eq("landlord_id", user.id)
+            .eq("landlord_id", userId)
             .select("id, tenant_id, landlord_id, invoice_number, workflow_status, status, intent_method, amount_tag, review_action, paid_amount, balance_remaining, receipt_number, payment_submitted_at, rejection_reason, in_person_intent_expires_at")
             .single();
 
@@ -87,7 +85,7 @@ export async function POST(_: Request, context: RouteContext) {
             adminClient,
             updatedPayment,
             {
-                actorId: user.id,
+                actorId: userId,
                 actorName: "IRIS",
                 content: "A payment reminder has been sent for this invoice. You can settle it quickly using the button below.",
                 metadata: {
@@ -100,7 +98,7 @@ export async function POST(_: Request, context: RouteContext) {
 
         await insertPaymentAuditEvent(adminClient, {
             paymentId: updatedPayment.id,
-            actorId: user.id,
+            actorId: userId,
             action: "reminder_sent",
             source: "api",
             beforeState,

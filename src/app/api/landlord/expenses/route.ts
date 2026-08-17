@@ -1,68 +1,59 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { requireUser } from "@/lib/supabase/auth";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { ExpenseService } from "@/lib/services/payment";
 
 export async function POST(request: Request) {
-    try {
-        const { user } = await requireUser();
-        const supabase = await createClient();
+  try {
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
 
-        const body = await request.json();
-        const { category, amount, date_incurred, description, propertyId } = body;
+    const body = await request.json();
+    const { category, amount, date_incurred, description, propertyId } = body;
 
-        if (!category || !amount || !date_incurred || !description) {
-            return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
-        }
-
-        const { error } = await supabase.from("expenses").insert({
-            landlord_id: user.id,
-            property_id: propertyId || null,
-            category,
-            amount,
-            date_incurred,
-            description,
-        });
-
-        if (error) throw error;
-
-        return NextResponse.json({ success: true });
-    } catch (error) {
-        console.error("Failed to record expense:", error);
-        return NextResponse.json(
-            { error: "Failed to record expense" },
-            { status: 500 }
-        );
+    if (!category || !amount || !date_incurred || !description) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
+
+    const expenseService = new ExpenseService(supabase);
+    await expenseService.createExpense({
+      landlordId: userId,
+      propertyId: propertyId || null,
+      category,
+      amount,
+      dateIncurred: date_incurred,
+      description,
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Failed to record expense:", error);
+    return NextResponse.json(
+      { error: "Failed to record expense" },
+      { status: 500 }
+    );
+  }
 }
 
 export async function GET(request: Request) {
-    try {
-        const { user } = await requireUser();
-        const supabase = await createClient();
+  try {
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
 
-        const { searchParams } = new URL(request.url);
-        const propertyId = searchParams.get("propertyId");
+    const { searchParams } = new URL(request.url);
+    const propertyId = searchParams.get("propertyId");
 
-        let query = supabase
-            .from("expenses")
-            .select("*")
-            .eq("landlord_id", user.id)
-            .order("date_incurred", { ascending: false });
+    const expenseService = new ExpenseService(supabase);
+    const expenses = await expenseService.getExpenses(userId, propertyId ?? undefined);
 
-        if (propertyId && propertyId !== "all") {
-            query = query.eq("property_id", propertyId);
-        }
-
-        const { data: expenses, error } = await query;
-
-        if (error) throw error;
-
-        return NextResponse.json({ expenses });
-    } catch (error) {
-        console.error("Failed to fetch expenses:", error);
-        return NextResponse.json(
-            { error: "Failed to fetch expenses" },
-            { status: 500 }
-        );
-    }
+    return NextResponse.json({ expenses });
+  } catch (error) {
+    console.error("Failed to fetch expenses:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch expenses" },
+      { status: 500 }
+    );
+  }
 }
+

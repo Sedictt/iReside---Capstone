@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { sendLandlordCredentialsCopy, sendTenantOnboardingReminder } from "@/lib/email";
 import { TENANT_PRODUCT_TOUR_ROUTE } from "@/lib/product-tour";
 
@@ -11,18 +11,14 @@ function generateTempPassword(): string {
     return Array.from({ length: 12 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
 }
 
-export async function POST(_request: Request, context: { params: Promise<{ applicationId: string }> }) {
+export async function POST(request: Request, context: { params: Promise<{ applicationId: string }> }) {
     const { applicationId } = await context.params;
-    const supabase = await createClient();
-    const adminClient = createAdminClient();
+    const adminClient = createServiceRoleSupabaseClient();
 
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authContext = await requireAuthenticatedUser(request);
+
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
 
     const { data: application, error: appError } = await supabase
         .from("applications")
@@ -45,7 +41,7 @@ export async function POST(_request: Request, context: { params: Promise<{ appli
         `
         )
         .eq("id", applicationId)
-        .eq("landlord_id", user.id)
+        .eq("landlord_id", userId)
         .maybeSingle();
 
     if (appError) {
@@ -67,15 +63,31 @@ export async function POST(_request: Request, context: { params: Promise<{ appli
 
     const { data: existingProfile } = await adminClient
         .from("profiles")
-        .select("id, has_changed_password")
+        .select("id")
         .eq("email", tenantEmail)
         .maybeSingle();
 
     const accountExisted = Boolean(existingProfile?.id);
     let tenantId = existingProfile?.id ?? null;
 
+    let hasChangedPassword = false;
+    if (tenantId) {
+        const { data: securitySettings, error: securityError } = await (adminClient as any)
+            .from("user_security_settings")
+            .select("has_changed_password")
+            .eq("profile_id", tenantId)
+            .maybeSingle();
+
+        if (securityError) {
+            console.error("[resend-credentials] security settings fetch error:", securityError);
+            return NextResponse.json({ error: "Failed to load tenant account state." }, { status: 500 });
+        }
+
+        hasChangedPassword = securitySettings?.has_changed_password === true;
+    }
+
     // Security check: prevent resending credentials for claimed accounts
-    if (accountExisted && existingProfile?.has_changed_password === true) {
+    if (accountExisted && hasChangedPassword) {
         return NextResponse.json(
             { error: "Cannot resend credentials for claimed accounts. The tenant has already set up their password." },
             { status: 403 }
@@ -131,12 +143,25 @@ export async function POST(_request: Request, context: { params: Promise<{ appli
                     full_name: tenantName,
                     email: tenantEmail,
                     role: "tenant" as const,
-                    has_changed_password: false,
                 },
                 { onConflict: "id" }
             )
             .then(({ error }) => {
                 if (error) console.error("[resend-credentials] profile upsert error:", error);
+            });
+
+        await (adminClient as any)
+            .from("user_security_settings")
+            .upsert(
+                {
+                    profile_id: tenantId,
+                    has_changed_password: false,
+                    updated_at: new Date().toISOString(),
+                },
+                { onConflict: "profile_id" }
+            )
+            .then(({ error }: { error: unknown }) => {
+                if (error) console.error("[resend-credentials] security settings upsert error:", error);
             });
 
         const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
@@ -159,7 +184,7 @@ export async function POST(_request: Request, context: { params: Promise<{ appli
     const { data: landlordProfile } = await adminClient
         .from("profiles")
         .select("email, full_name")
-        .eq("id", user.id)
+        .eq("id", userId)
         .maybeSingle();
 
     const onboardingUrl = `${APP_URL}${TENANT_PRODUCT_TOUR_ROUTE}`;

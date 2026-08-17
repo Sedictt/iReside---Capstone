@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { requireUser } from "@/lib/supabase/auth";
+import { createClient } from "@/lib/supabase/server";
 import { generateMonthlyInvoices } from "@/lib/billing/server";
 
 function generateTempPassword(length = 12): string {
@@ -14,8 +14,9 @@ function generateTempPassword(length = 12): string {
 }
 
 export async function POST(request: Request) {
-    const { user } = await requireUser();
-    const supabase = await createClient();
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
     const adminClient = createAdminClient();
 
     const body = await request.json();
@@ -100,7 +101,7 @@ export async function POST(request: Request) {
     }
     // --------------------------------
 
-    if (application.landlord_id !== user.id) {
+    if (application.landlord_id !== userId) {
         return NextResponse.json({ error: "Unauthorized." }, { status: 403 });
     }
 
@@ -157,7 +158,7 @@ export async function POST(request: Request) {
                     securityDeposit: security_deposit,
                     landlordSignature: landlord_signature,
                     tenantSignature: tenant_signature,
-                    landlordId: user.id,
+                    landlordId: userId,
                     tempPassword: null,
                 });
             }
@@ -198,7 +199,7 @@ export async function POST(request: Request) {
         securityDeposit: security_deposit,
         landlordSignature: landlord_signature,
         tenantSignature: tenant_signature,
-        landlordId: user.id,
+        landlordId: userId,
         tempPassword,
     });
 }

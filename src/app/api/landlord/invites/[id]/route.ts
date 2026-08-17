@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function PATCH(
@@ -7,16 +7,10 @@ export async function PATCH(
     context: { params: Promise<{ id: string }> }
 ) {
     const { id } = await context.params;
-    const supabase = await createClient();
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
     const adminClient = createAdminClient();
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     const body = (await request.json().catch(() => ({}))) as { status?: "revoked" };
     if (body.status !== "revoked") {
@@ -27,7 +21,7 @@ export async function PATCH(
         .from("tenant_intake_invites" as any)
         .select("id")
         .eq("id", id)
-        .eq("landlord_id", user.id)
+        .eq("landlord_id", userId)
         .maybeSingle();
 
     if (findError || !invite) {
@@ -38,7 +32,7 @@ export async function PATCH(
         .from("tenant_intake_invites" as any)
         .update({ status: "revoked" })
         .eq("id", id)
-        .eq("landlord_id", user.id);
+        .eq("landlord_id", userId);
 
     if (updateError) {
         return NextResponse.json({ error: "Failed to revoke invite." }, { status: 500 });

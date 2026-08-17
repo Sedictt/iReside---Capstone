@@ -1,45 +1,45 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const tenantId = searchParams.get("tenantId");
     
-    const supabase = await createClient();
-    
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
 
     const { data: profile } = await supabase
         .from("profiles")
-        .select("*")
-        .eq("id", user.id)
+        .select("id, full_name, avatar_url, avatar_bg_color, phone, created_at")
+        .eq("id", userId)
         .single();
 
     if (!profile) {
         return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
+    const { data: businessProfile } = await (supabase as any)
+        .from("landlord_business_profiles")
+        .select("business_permit_url")
+        .eq("profile_id", userId)
+        .maybeSingle();
 
     let applicationsQuery = supabase
         .from(tenantId ? "applications" : "landlord_applications")
         .select("*");
     
     if (tenantId) {
-        applicationsQuery = (applicationsQuery as any).eq("applicant_id", tenantId).eq("landlord_id", user.id);
+        applicationsQuery = (applicationsQuery as any).eq("applicant_id", tenantId).eq("landlord_id", userId);
     } else {
-        applicationsQuery = (applicationsQuery as any).eq("profile_id", user.id);
+        applicationsQuery = (applicationsQuery as any).eq("profile_id", userId);
     }
 
 
     let propertiesQuery = supabase
         .from("properties")
         .select("id, name, contract_template, base_rent_amount, updated_at")
-        .eq("landlord_id", user.id);
+        .eq("landlord_id", userId);
     
 
     let leasesQuery = supabase
@@ -55,7 +55,7 @@ export async function GET(request: Request) {
             unit:units(id, name, property_id, property:properties(id, name)),
             tenant:profiles!tenant_id(full_name)
         `)
-        .eq("landlord_id", user.id);
+        .eq("landlord_id", userId);
 
     if (tenantId) {
         leasesQuery = leasesQuery.eq("tenant_id", tenantId);
@@ -89,7 +89,7 @@ export async function GET(request: Request) {
     };
 
     const identityDoc = getDocument("identity_document_url");
-    const permitDoc = getDocument("business_permit_url") || (profile as any)?.business_permit_url;
+    const permitDoc = getDocument("business_permit_url") || businessProfile?.business_permit_url;
     const permitCardDoc = getDocument("business_permit_card_url");
     const ownershipDoc = getDocument("ownership_document_url");
     const livenessDoc = getDocument("liveness_document_url");

@@ -4,6 +4,7 @@ import React from 'react';
 import { m as motion, AnimatePresence } from "framer-motion";
 import { FileText, LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 interface IResideLoadingProps {
   isVisible: boolean;
@@ -14,12 +15,12 @@ interface IResideLoadingProps {
 }
 
 /**
- * Universal Loading Screen for iReside
+ * Universal Loading Screen for iReside (standardized with the core LoadingSpinner)
  * 
  * Features:
  * - Glassmorphic backdrop with heavy blur
- * - Animated primary spinner
- * - Customizable title and subtext
+ * - Animated primary premium gradient spinner
+ * - Customizable title, subtext, and central overlay icon
  * - Framer Motion transitions
  */
 export function IResideLoading({
@@ -48,21 +49,18 @@ export function IResideLoading({
             transition={{ duration: 0.4, ease: "easeOut" }}
             className="flex flex-col items-center"
           >
-            <div className="relative">
-              {/* Static Ring */}
-              <div className="size-20 border-2 border-primary/10 rounded-full" />
+            <div className="relative flex items-center justify-center">
+              {/* Premium Standardized Spinner */}
+              <LoadingSpinner size="lg" className="size-20" />
               
-              {/* Active Spinner */}
-              <div className="absolute inset-0 size-20 border-t-2 border-primary rounded-full animate-spin" />
-              
-              {/* Icon */}
+              {/* Icon Overlay inside the spinner core */}
               <div className="absolute inset-0 flex items-center justify-center">
                 <Icon className="size-6 text-primary" />
               </div>
             </div>
 
             <div className="mt-8 space-y-2">
-              <h2 className="text-2xl font-black tracking-tighter text-foreground uppercase italic leading-none">
+              <h2 className="text-2xl font-black tracking-tighter text-foreground uppercase leading-none">
                 {title}
               </h2>
               <p className="text-muted-foreground text-[10px] font-black uppercase tracking-[0.4em] opacity-60">

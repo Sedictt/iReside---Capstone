@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { requireUser } from "@/lib/supabase/auth";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
  * GET /api/landlord/tenants/[tenantId]/profile
@@ -12,8 +12,9 @@ export async function GET(
     context: { params: Promise<{ id: string }> }
 ) {
     const { id: tenantId } = await context.params;
-    const supabase = await createClient();
-    const { user } = await requireUser();
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
 
     // Fetch tenant profile
     const { data: profile, error: profileError } = await supabase
@@ -25,10 +26,8 @@ export async function GET(
             role,
             avatar_url,
             avatar_bg_color,
-            phone,
             bio,
             website,
-            address,
             cover_url,
             socials,
             created_at
@@ -66,7 +65,7 @@ export async function GET(
             )
         `)
         .eq("tenant_id", tenantId)
-        .eq("landlord_id", user.id)
+        .eq("landlord_id", userId)
         .in("status", ["active", "expired"])
         .maybeSingle();
 
@@ -92,5 +91,27 @@ export async function GET(
           }
         : null;
 
-    return NextResponse.json({ profile, activeLease });
+    let privateProfile: { phone: string | null; address: string | null } | null = null;
+    if (activeLease) {
+        const { data, error } = await (createAdminClient() as any)
+            .from("profile_private")
+            .select("phone, address")
+            .eq("profile_id", tenantId)
+            .maybeSingle();
+
+        if (error) {
+            console.error("[tenant-profile] Failed to load private profile:", error);
+            return NextResponse.json({ error: "Failed to load private profile" }, { status: 500 });
+        }
+
+        privateProfile = data;
+    }
+
+    const responseProfile = {
+        ...profile,
+        phone: privateProfile?.phone ?? null,
+        address: privateProfile?.address ?? null,
+    };
+
+    return NextResponse.json({ profile: responseProfile, activeLease });
 }

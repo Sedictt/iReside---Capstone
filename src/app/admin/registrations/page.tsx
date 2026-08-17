@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import {
     ArrowRight,
     Building2,
@@ -11,7 +12,6 @@ import {
     ExternalLink,
     FileText,
     Fingerprint,
-    LoaderCircle,
     Mail,
     Phone,
     Search,
@@ -465,7 +465,7 @@ export default function AdminRegistrationsPage() {
                                                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-primary/25 bg-primary/15 px-5 py-3 text-xs font-black text-primary transition-colors hover:bg-primary/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:opacity-50"
                                             >
                                                 {verifyingId === selected.id ? (
-                                                    <><LoaderCircle className="size-3.5 animate-spin" />Verifying</>
+                                                    <><LoadingSpinner size="sm" className="size-3.5" />Verifying</>
                                                 ) : (
                                                     <><ShieldCheck className="size-3.5" />Verify</>
                                                 )}
@@ -654,7 +654,7 @@ export default function AdminRegistrationsPage() {
                                 <div className="flex items-center gap-3">
                                     {savingId === selected.id && (
                                         <span className="inline-flex items-center gap-2 rounded-lg border border-primary/15 bg-primary/5 px-3 py-1.5 text-[11px] font-black text-primary/70">
-                                            <LoaderCircle className="size-3 animate-spin" />
+                                            <LoadingSpinner size="sm" className="size-3" />
                                             Saving changes
                                         </span>
                                     )}

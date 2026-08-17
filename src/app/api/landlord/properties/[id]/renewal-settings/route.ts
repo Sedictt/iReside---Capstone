@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { PropertyService } from "@/lib/services/property";
 
 /**
  * GET /api/landlord/properties/[id]/renewal-settings
@@ -10,17 +11,17 @@ export async function GET(
   context: { params: Promise<{ id: string }> }
 ) {
   const { id } = await context.params;
-  const supabase = await createClient();
+  const authContext = await requireAuthenticatedUser(request);
+  if (!("userId" in authContext)) return authContext as Response;
+  const { userId, supabase } = authContext;
 
   try {
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
+    const propertyService = new PropertyService(supabase);
     const { data: property, error } = await supabase
       .from("properties")
       .select("renewal_settings")
       .eq("id", id)
-      .eq("landlord_id", user.id)
+      .eq("landlord_id", userId)
       .single();
 
     if (error || !property) {
@@ -42,12 +43,11 @@ export async function PATCH(
   context: { params: Promise<{ id: string }> }
 ) {
   const { id } = await context.params;
-  const supabase = await createClient();
+  const authContext = await requireAuthenticatedUser(request);
+  if (!("userId" in authContext)) return authContext as Response;
+  const { userId, supabase } = authContext;
 
   try {
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
     const body = await request.json();
     const { settings } = body;
 
@@ -55,7 +55,7 @@ export async function PATCH(
       .from("properties")
       .update({ renewal_settings: settings })
       .eq("id", id)
-      .eq("landlord_id", user.id)
+      .eq("landlord_id", userId)
       .select()
       .single();
 
@@ -64,7 +64,12 @@ export async function PATCH(
     }
 
     return NextResponse.json(data.renewal_settings);
-  } catch (error) {
-    return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: error?.message || "Failed to update settings" },
+      { status: 500 }
+    );
   }
 }
+
+

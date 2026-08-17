@@ -135,7 +135,6 @@ export async function POST(request: Request) {
                 id: userId,
                 email: parsed.email.toLowerCase(),
                 full_name: parsed.fullName,
-                phone: parsed.phone,
                 role: 'landlord',
             })
             .select()
@@ -149,6 +148,17 @@ export async function POST(request: Request) {
             }
             return NextResponse.json({ error: "Failed to create profile" }, { status: 500 });
         }
+
+        await (adminClient as any)
+            .from("profile_private")
+            .upsert(
+                {
+                    profile_id: profileData.id,
+                    phone: parsed.phone,
+                    updated_at: new Date().toISOString(),
+                },
+                { onConflict: "profile_id" }
+            );
 
         // Helper to upload base64 file to storage (skip if bucket doesn't exist)
         async function uploadFile(file: UploadedFile | undefined, folder: string): Promise<string | null> {
@@ -221,15 +231,16 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Failed to submit application" }, { status: 500 });
         }
 
-        // Immediately sync business info to profile so it's ready even before onboarding
-        await adminClient
-            .from("profiles")
-            .update({
+        // Immediately sync business info to the normalized business profile.
+        await (adminClient as any)
+            .from("landlord_business_profiles")
+            .upsert({
+                profile_id: profileData.id,
                 business_name: parsed.propertyName,
                 business_permit_url: permitCardDocUrl || permitDocUrl, // Prioritize card
+                business_permits: [permitCardDocUrl || permitDocUrl].filter(Boolean),
                 updated_at: new Date().toISOString(),
-            })
-            .eq("id", profileData.id);
+            }, { onConflict: "profile_id" });
 
         return NextResponse.json({
             success: true,

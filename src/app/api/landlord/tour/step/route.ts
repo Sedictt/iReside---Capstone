@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
     LANDLORD_PRODUCT_TOUR_STEPS,
@@ -16,23 +16,17 @@ const stepSchema = z.object({
 });
 
 export async function POST(request: Request) {
-    const supabase = await createClient();
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
     const adminClient = createAdminClient();
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     try {
         const body = await request.json();
         const { stepId, route, anchorId, anchorFound, metadata } = stepSchema.parse(body);
 
         const result = await progressLandlordProductTourStep(adminClient as any, {
-            landlordId: user.id,
+            landlordId: userId,
             stepId: stepId as any,
             triggerSource: "step_progression",
             route,

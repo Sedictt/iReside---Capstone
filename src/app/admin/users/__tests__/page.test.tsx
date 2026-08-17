@@ -43,7 +43,7 @@ describe("AdminUsersPage — unit tests", () => {
         vi.restoreAllMocks();
     });
 
-    it('renders "No users found." when API returns an empty array (Requirement 3.4)', async () => {
+    it('renders "No records found" when API returns an empty array (Requirement 3.4)', async () => {
         vi.stubGlobal(
             "fetch",
             vi.fn().mockResolvedValue({
@@ -54,7 +54,7 @@ describe("AdminUsersPage — unit tests", () => {
         render(<AdminUsersPage />);
 
         await waitFor(() => {
-            expect(screen.getByText("No users found.")).toBeInTheDocument();
+            expect(screen.getAllByText("No records found")[0]).toBeInTheDocument();
         });
     });
 
@@ -70,8 +70,8 @@ describe("AdminUsersPage — unit tests", () => {
         render(<AdminUsersPage />);
 
         await waitFor(() => {
-            expect(screen.getByText("Bob Jones")).toBeInTheDocument();
-            expect(screen.getByText("bob@example.com")).toBeInTheDocument();
+            expect(screen.getAllByText("Bob Jones")[0]).toBeInTheDocument();
+            expect(screen.getAllByText("bob@example.com")[0]).toBeInTheDocument();
         });
     });
 
@@ -81,8 +81,9 @@ describe("AdminUsersPage — unit tests", () => {
             vi.fn().mockReturnValue(new Promise(() => {})) // never resolves
         );
 
-        render(<AdminUsersPage />);
-        expect(screen.getByText("Loading...")).toBeInTheDocument();
+        const { container } = render(<AdminUsersPage />);
+        // Verify skeleton elements are rendered
+        expect(container.querySelector(".animate-pulse")).toBeInTheDocument();
     });
 
     it("fetches from /api/admin/users on mount (Requirement 3.1)", async () => {

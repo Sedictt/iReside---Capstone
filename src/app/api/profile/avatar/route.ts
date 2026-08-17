@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/admin";
-import { requireUser } from "@/lib/supabase/auth";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 
 const BUCKET_NAME = "profile-avatars";
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
@@ -14,7 +14,7 @@ const sanitizeFileName = (name: string) =>
         .replace(/^-|-$/g, "");
 
 const ensureBucket = async () => {
-    const admin = createAdminClient();
+    const admin = createServiceRoleSupabaseClient();
     const { data: bucket, error } = await admin.storage.getBucket(BUCKET_NAME);
 
     if (!error && bucket) {
@@ -33,7 +33,9 @@ const ensureBucket = async () => {
 
 export async function POST(request: Request) {
     try {
-        const { user, supabase: authClient } = await requireUser();
+        const authContext = await requireAuthenticatedUser(request);
+        if (!("userId" in authContext)) return authContext as Response;
+        const { userId } = authContext;
 
         const formData = await request.formData();
         const file = formData.get("file");
@@ -54,13 +56,13 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Only image uploads are allowed." }, { status: 400 });
         }
 
-        const admin = createAdminClient();
+        const admin = createServiceRoleSupabaseClient();
         await ensureBucket();
 
         const timestamp = Date.now();
         const ext = file.name.includes(".") ? file.name.split(".").pop() : "jpg";
         const safeExt = sanitizeFileName(ext ?? "jpg") || "jpg";
-        const path = `${user.id}/${timestamp}-avatar.${safeExt}`;
+        const path = `${userId}/${timestamp}-avatar.${safeExt}`;
         const bytes = await file.arrayBuffer();
 
         const { error: uploadError } = await admin.storage.from(BUCKET_NAME).upload(path, bytes, {
@@ -79,7 +81,7 @@ export async function POST(request: Request) {
         const { error: profileError } = await admin
             .from("profiles")
             .update({ avatar_url: publicUrl })
-            .eq("id", user.id);
+            .eq("id", userId);
 
         if (profileError) {
             return NextResponse.json({ error: "Failed to save avatar URL." }, { status: 500 });
@@ -87,10 +89,8 @@ export async function POST(request: Request) {
 
         return NextResponse.json({ avatarUrl: publicUrl }, { status: 200 });
     } catch (error) {
-        if (error instanceof Error && error.message === "Unauthorized") {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
         console.error("Failed to upload avatar:", error);
         return NextResponse.json({ error: "Failed to update profile avatar." }, { status: 500 });
     }
 }
+

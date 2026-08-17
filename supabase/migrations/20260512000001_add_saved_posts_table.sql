@@ -8,21 +8,24 @@ CREATE TABLE IF NOT EXISTS public.saved_posts (
 );
 
 -- Index for faster lookups
-CREATE INDEX idx_saved_posts_user ON saved_posts(user_id);
-CREATE INDEX idx_saved_posts_post ON saved_posts(post_id);
+CREATE INDEX IF NOT EXISTS idx_saved_posts_user ON saved_posts(user_id);
+CREATE INDEX IF NOT EXISTS idx_saved_posts_post ON saved_posts(post_id);
 
 -- Enable RLS
 ALTER TABLE saved_posts ENABLE ROW LEVEL SECURITY;
 
 -- Policy: Users can save posts
+DROP POLICY IF EXISTS "Users can save posts" ON saved_posts;
 CREATE POLICY "Users can save posts" ON saved_posts
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Policy: Users can unsave posts
+DROP POLICY IF EXISTS "Users can unsave posts" ON saved_posts;
 CREATE POLICY "Users can unsave posts" ON saved_posts
   FOR DELETE USING (auth.uid() = user_id);
 
 -- Policy: Users can view their own saved posts
+DROP POLICY IF EXISTS "Users can view own saved posts" ON saved_posts;
 CREATE POLICY "Users can view own saved posts" ON saved_posts
   FOR SELECT USING (auth.uid() = user_id);
 
@@ -35,6 +38,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS update_community_comments_updated_at ON community_comments;
 CREATE TRIGGER update_community_comments_updated_at
   BEFORE UPDATE ON community_comments
   FOR EACH ROW

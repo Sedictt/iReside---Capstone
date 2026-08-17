@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
     LANDLORD_QUESTS,
@@ -10,16 +10,10 @@ import {
 } from "@/lib/landlord-product-tour";
 
 export async function POST(request: Request) {
-    const supabase = await createClient();
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
     const adminClient = createAdminClient();
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     try {
         const { questId } = (await request.json()) as { questId: LandlordQuestId };
@@ -44,7 +38,7 @@ export async function POST(request: Request) {
                 status: "in_progress",
                 last_event_at: new Date().toISOString(),
             })
-            .eq("landlord_id", user.id)
+            .eq("landlord_id", userId)
             .select("*")
             .single();
 

@@ -1,43 +1,36 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
 import { createMultiMonthAdvancePayment } from "@/lib/billing/server";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 
 const advancePaymentSchema = z.object({
-    targetMonth: z.string().regex(/^\d{4}-\d{2}$/).optional(),
-    monthsCount: z.number().int().min(1).max(12).optional().default(1),
+  targetMonth: z.string().regex(/^\d{4}-\d{2}$/).optional(),
+  monthsCount: z.number().int().min(1).max(12).optional().default(1),
 });
 
 export async function POST(request: Request) {
-    const supabase = await createClient();
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
+  const authContext = await requireAuthenticatedUser(request);
+  if (!("userId" in authContext)) return authContext as Response;
+  const { userId, supabase } = authContext;
 
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    let targetMonth: string | undefined;
+    let monthsCount = 1;
+
+    const contentType = request.headers.get("content-type") || "";
+
+    if (contentType.includes("application/json")) {
+      const body = await request.json();
+      const parsed = advancePaymentSchema.parse(body);
+      targetMonth = parsed.targetMonth;
+      monthsCount = parsed.monthsCount;
     }
 
-    try {
-        let targetMonth: string | undefined;
-        let monthsCount = 1;
+    const result = await createMultiMonthAdvancePayment(supabase, userId, {
+      targetMonth,
+      monthsCount,
+    });
 
-        const contentType = request.headers.get("content-type") || "";
-        
-        if (contentType.includes("application/json")) {
-            const body = await request.json();
-            const parsed = advancePaymentSchema.parse(body);
-            targetMonth = parsed.targetMonth;
-            monthsCount = parsed.monthsCount;
-        }
-
-        console.log("Creating advance payment for user:", user.id, { targetMonth, monthsCount });
-        
-        const result = await createMultiMonthAdvancePayment(supabase, user.id, {
-            targetMonth,
-            monthsCount,
-        });
         
         console.log("Advance payment created successfully:", result);
         

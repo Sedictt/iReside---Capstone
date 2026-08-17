@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 
 /** PATCH /api/landlord/units/[id]/status
  *  Body: { status: "vacant" | "occupied" | "maintenance" }
@@ -8,11 +8,9 @@ export async function PATCH(
     request: NextRequest,
     context: { params: Promise<{ id: string }> | { id: string } }
 ) {
-    const supabase = await createClient();
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
 
     const resolvedParams = await context.params;
     const unitId = resolvedParams?.id;
@@ -45,7 +43,7 @@ export async function PATCH(
     }
 
     const property = unit.properties as unknown as { landlord_id: string };
-    if (property.landlord_id !== user.id) {
+    if (property.landlord_id !== userId) {
         return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 

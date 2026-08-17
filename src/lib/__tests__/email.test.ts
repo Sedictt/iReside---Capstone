@@ -1,13 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-// Mock nodemailer before importing the email module
+// Mock nodemailer before importing the email module — uses namespace import (import * as nodemailer)
 const mockSendMail = vi.fn().mockResolvedValue({ messageId: 'test-message-id' });
 vi.mock('nodemailer', () => ({
-  default: {
-    createTransport: vi.fn(() => ({
-      sendMail: mockSendMail,
-    })),
-  },
+  createTransport: vi.fn(() => ({
+    sendMail: mockSendMail,
+  })),
 }));
 
 describe('Email Utilities', () => {

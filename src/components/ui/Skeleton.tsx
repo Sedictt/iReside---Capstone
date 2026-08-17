@@ -1,11 +1,24 @@
 import { cn } from "@/lib/utils";
+import { Skeleton as BoneyardSkeleton } from "boneyard-js/react";
 
 interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
     className?: string;
     shimmer?: boolean;
+    name?: string;
+    loading?: boolean;
+    fixture?: any;
+    children?: React.ReactNode;
 }
 
-export function Skeleton({ className, shimmer = true, ...props }: SkeletonProps) {
+export function Skeleton({ className, shimmer = true, name, loading, fixture, children, ...props }: SkeletonProps) {
+    if (name) {
+        return (
+            <BoneyardSkeleton name={name} loading={loading ?? false} fixture={fixture}>
+                {children}
+            </BoneyardSkeleton>
+        );
+    }
+    
     return (
         <div
             className={cn(

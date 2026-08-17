@@ -94,7 +94,7 @@ describe('JWT Utilities for Lease Signing', () => {
 
       expect(link).toBeDefined();
       expect(link).toContain('http://localhost:3000');
-      expect(link).toContain('/tenant/sign-lease/');
+      expect(link).toContain('/signing/tenant/');
       expect(link).toContain(leaseId);
       expect(link).toContain('?token=');
     });

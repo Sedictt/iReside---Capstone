@@ -49,7 +49,11 @@ function LoginContent() {
         });
 
         if (error) {
-            setError(error.message);
+            if (error.message?.toLowerCase().includes("schema")) {
+                setError("Login failed due to a Supabase auth schema issue. Please contact support.");
+            } else {
+                setError(error.message);
+            }
             setLoading(false);
             return;
         }

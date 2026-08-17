@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 
 type UnitMapPositionRow = {
     unit_id: string;
@@ -30,11 +30,9 @@ function isValidUnitMapPosition(position: Pick<UnitMapPositionRow, "floor_key" |
  *  Returns: units (with positions), floor_configs, map_decorations
  */
 export async function GET(request: NextRequest) {
-    const supabase = await createClient();
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as any;
+    const { userId, supabase } = authContext;
 
     const propertyId = request.nextUrl.searchParams.get("propertyId");
     if (!propertyId) {
@@ -46,7 +44,7 @@ export async function GET(request: NextRequest) {
         .from("properties")
         .select("id, map_decorations" as any)
         .eq("id", propertyId)
-        .eq("landlord_id", user.id)
+        .eq("landlord_id", userId)
         .maybeSingle() as any;
 
     if (propError || !property) {
@@ -105,7 +103,7 @@ export async function GET(request: NextRequest) {
                 profiles!leases_tenant_id_fkey(full_name, avatar_url, avatar_bg_color)
             `)
             .in("unit_id", unitIds)
-            .eq("landlord_id", user.id)
+            .eq("landlord_id", userId)
             .in("status", ["active", "pending_landlord_signature", "pending_tenant_signature"]);
 
         if (leasesError) {
@@ -132,7 +130,7 @@ export async function GET(request: NextRequest) {
             .from("maintenance_requests")
             .select("unit_id, title, description, status, created_at")
             .in("unit_id", unitIds)
-            .eq("landlord_id", user.id)
+            .eq("landlord_id", userId)
             .in("status", ["open", "assigned", "in_progress"]);
 
         if (maintenanceError) {
@@ -154,10 +152,10 @@ export async function GET(request: NextRequest) {
     let applicationCounts: Record<string, number> = {};
     if (unitIds.length > 0) {
         const { data: apps, error: appsError } = await (supabase
-            .from("tenant_applications" as any)
+            .from("applications")
             .select("unit_id, id")
             .in("unit_id", unitIds)
-            .in("status", ["pending", "reviewing"]) as any);
+            .in("status", ["pending", "reviewing"]));
         
         if (!appsError && apps) {
             for (const app of (apps as any[])) {
@@ -198,11 +196,9 @@ export async function GET(request: NextRequest) {
  *  Upserts all positions + optionally updates decorations blob
  */
 export async function POST(request: NextRequest) {
-    const supabase = await createClient();
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as any;
+    const { userId, supabase } = authContext;
 
     const body = await request.json() as {
         propertyId: string;
@@ -232,7 +228,7 @@ export async function POST(request: NextRequest) {
         .from("properties")
         .select("id")
         .eq("id", propertyId)
-        .eq("landlord_id", user.id)
+        .eq("landlord_id", userId)
         .maybeSingle();
 
     if (propError || !property) {
@@ -326,7 +322,7 @@ export async function POST(request: NextRequest) {
             .from("properties")
             .update({ map_decorations: decorations } as any)
             .eq("id", propertyId)
-            .eq("landlord_id", user.id) as any);
+            .eq("landlord_id", userId) as any);
 
         if (decError) {
             return NextResponse.json({ error: "Failed to save decorations" }, { status: 500 });
@@ -340,11 +336,9 @@ export async function POST(request: NextRequest) {
  *  Rename a floor
  */
 export async function PATCH(request: NextRequest) {
-    const supabase = await createClient();
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as any;
+    const { userId, supabase } = authContext;
 
     const body = await request.json() as {
         propertyId: string;
@@ -362,7 +356,7 @@ export async function PATCH(request: NextRequest) {
         .from("properties")
         .select("id")
         .eq("id", propertyId)
-        .eq("landlord_id", user.id)
+        .eq("landlord_id", userId)
         .maybeSingle();
 
     if (!property) {
@@ -386,11 +380,9 @@ export async function PATCH(request: NextRequest) {
  *  Remove a floor and move its units to the first available floor
  */
 export async function DELETE(request: NextRequest) {
-    const supabase = await createClient();
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as any;
+    const { userId, supabase } = authContext;
 
     const propertyId = request.nextUrl.searchParams.get("propertyId")?.trim();
     const floorKey = request.nextUrl.searchParams.get("floorKey")?.trim();
@@ -404,7 +396,7 @@ export async function DELETE(request: NextRequest) {
         .from("properties")
         .select("id")
         .eq("id", propertyId)
-        .eq("landlord_id", user.id)
+        .eq("landlord_id", userId)
         .maybeSingle();
 
     if (!property) {
@@ -503,11 +495,9 @@ export async function DELETE(request: NextRequest) {
  *  Add a new floor
  */
 export async function PUT(request: NextRequest) {
-    const supabase = await createClient();
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as any;
+    const { userId, supabase } = authContext;
 
     const body = await request.json() as {
         propertyId: string;

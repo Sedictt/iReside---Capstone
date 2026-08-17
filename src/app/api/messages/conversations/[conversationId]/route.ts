@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { ensureUserInConversation, getProfilePreviewMap } from "@/lib/messages/engine";
 import { redactWithAiOrFallback } from "@/lib/messages/redaction-service";
 import type { Json, MessageType } from "@/types/database";
@@ -21,40 +21,48 @@ export async function GET(
     request: Request,
     context: { params: Promise<{ conversationId: string }> }
 ) {
-    const authClient = await createClient();
-
-    const {
-        data: { user },
-        error: userError,
-    } = await authClient.auth.getUser();
-
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId } = authContext;
 
     const { conversationId } = await context.params;
 
     try {
-        const supabase = createAdminClient();
-        const isMember = await ensureUserInConversation(supabase, conversationId, user.id);
+        const supabase = createServiceRoleSupabaseClient();
+        const isMember = await ensureUserInConversation(supabase, conversationId, userId);
         if (!isMember) {
             return NextResponse.json({ error: "Conversation not found." }, { status: 404 });
         }
 
-        const url = new URL(request.url);
-        const limitParam = Number(url.searchParams.get("limit") ?? "100");
-        const limit = Number.isFinite(limitParam) ? Math.max(1, Math.min(500, Math.floor(limitParam))) : 100;
 
-        const { data: messages, error: messagesError } = await supabase
+        const url = new URL(request.url);
+        const limitParam = Number(url.searchParams.get("limit") ?? "20");
+        const limit = Number.isFinite(limitParam) ? Math.max(1, Math.min(100, Math.floor(limitParam))) : 20;
+        const before = url.searchParams.get("before");
+
+        let query = supabase
             .from("messages")
             .select("id, conversation_id, sender_id, type, content, metadata, read_at, created_at")
-            .eq("conversation_id", conversationId)
-            .order("created_at", { ascending: true })
-            .limit(limit);
+            .eq("conversation_id", conversationId);
+
+        if (before) {
+            query = query.lt("created_at", before);
+        }
+
+        // Fetch limit + 1 in descending order (most recent first) to detect if more older messages exist
+        const { data: rawMessages, error: messagesError } = await query
+            .order("created_at", { ascending: false })
+            .limit(limit + 1);
 
         if (messagesError) {
             return NextResponse.json({ error: "Failed to fetch messages." }, { status: 500 });
         }
+
+        const hasMore = (rawMessages ?? []).length > limit;
+        const sliced = (rawMessages ?? []).slice(0, limit);
+        // Reverse to chronological (ascending) order for client UI rendering
+        const messages = sliced.reverse();
+        const nextCursor = hasMore && messages.length > 0 ? messages[0].created_at : null;
 
         const senderIds = Array.from(new Set((messages ?? []).map((message) => message.sender_id)));
         const profileMap = await getProfilePreviewMap(supabase, senderIds);
@@ -141,7 +149,11 @@ export async function GET(
             };
         });
 
-        return NextResponse.json({ messages: payload });
+        return NextResponse.json({ 
+            messages: payload,
+            hasMore,
+            nextCursor,
+        });
     } catch (error) {
         console.error("Failed to fetch conversation messages:", error);
         return NextResponse.json({ error: "Failed to fetch messages." }, { status: 500 });
@@ -152,16 +164,9 @@ export async function POST(
     request: Request,
     context: { params: Promise<{ conversationId: string }> }
 ) {
-    const authClient = await createClient();
-
-    const {
-        data: { user },
-        error: userError,
-    } = await authClient.auth.getUser();
-
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId } = authContext;
 
     const { conversationId } = await context.params;
 
@@ -178,11 +183,12 @@ export async function POST(
     }
 
     try {
-        const supabase = createAdminClient();
-        const isMember = await ensureUserInConversation(supabase, conversationId, user.id);
+        const supabase = createServiceRoleSupabaseClient();
+        const isMember = await ensureUserInConversation(supabase, conversationId, userId);
         if (!isMember) {
             return NextResponse.json({ error: "Conversation not found." }, { status: 404 });
         }
+
 
         const baseMetadata = isJsonObject(body.metadata) ? { ...body.metadata } : {};
         let resolvedMetadata: Json | null = body.metadata ?? null;
@@ -214,7 +220,8 @@ export async function POST(
             .from("messages")
             .insert({
                 conversation_id: conversationId,
-                sender_id: user.id,
+                sender_id: userId,
+
                 type: messageType,
                 content,
                 metadata: resolvedMetadata,

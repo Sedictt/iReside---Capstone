@@ -10,8 +10,11 @@ import {
     sendPaymentSystemMessage,
     toWorkflowSnapshot,
 } from "@/lib/billing/workflow";
-import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+import type { Database } from "@/types/database";
 
 const reviewSchema = z.object({
     action: z.enum(["confirm", "confirm_received", "reject", "request_completion"]),
@@ -30,7 +33,7 @@ type RouteContext = {
     params: Promise<{ id: string }>;
 };
 
-async function syncMoveInPaymentChecklist(supabase: Awaited<ReturnType<typeof createClient>>, leaseId: string) {
+async function syncMoveInPaymentChecklist(supabase: SupabaseClient<Database>, leaseId: string) {
     const requiredDescriptions = new Set(["Advance Rent - First Month", "Security Deposit"]);
     const { data: leasePayments, error: paymentsError } = await supabase
         .from("payments")
@@ -85,16 +88,11 @@ async function syncMoveInPaymentChecklist(supabase: Awaited<ReturnType<typeof cr
 
 export async function POST(request: Request, context: RouteContext) {
     const { id } = await context.params;
-    const supabase = await createClient();
-    const adminClient = createAdminClient();
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
+    const adminClient = createServiceRoleSupabaseClient();
+    const authContext = await requireAuthenticatedUser(request);
 
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
 
     try {
         const formData = await request.formData();
@@ -117,7 +115,7 @@ export async function POST(request: Request, context: RouteContext) {
             }
         }
 
-        await expireInPersonIntents(adminClient, user.id, { landlordId: user.id, paymentId: id });
+        await expireInPersonIntents(adminClient, userId, { landlordId: userId, paymentId: id });
 
         let refundProofUrl = parsed.refundProofUrl || null;
         if (refundProofFile && refundProofFile.size > 0) {
@@ -138,7 +136,7 @@ export async function POST(request: Request, context: RouteContext) {
             .from("payments")
             .select("id, lease_id, amount, paid_amount, balance_remaining, tenant_id, landlord_id, allow_partial_payments, receipt_number, method, invoice_number, status, workflow_status, intent_method, amount_tag, review_action, payment_submitted_at, rejection_reason, in_person_intent_expires_at, metadata")
             .eq("id", id)
-            .eq("landlord_id", user.id)
+            .eq("landlord_id", userId)
             .single();
 
         if (paymentError || !payment) {
@@ -280,7 +278,7 @@ export async function POST(request: Request, context: RouteContext) {
                 },
                 in_person_intent_expires_at: null,
                 last_action_at: nowIso,
-                last_action_by: user.id,
+                last_action_by: userId,
             })
             .eq("id", id)
             .select("id, lease_id, amount, paid_amount, balance_remaining, tenant_id, landlord_id, allow_partial_payments, receipt_number, method, invoice_number, status, workflow_status, intent_method, amount_tag, review_action, payment_submitted_at, rejection_reason, in_person_intent_expires_at")
@@ -301,7 +299,7 @@ export async function POST(request: Request, context: RouteContext) {
                     receipt_number: updatedPayment.receipt_number,
                     method: updatedPayment.method,
                 },
-                user.id,
+                userId,
                 parsed.note ?? null,
                 {
                     originalAmount: Number(updatedPayment.amount),
@@ -316,7 +314,7 @@ export async function POST(request: Request, context: RouteContext) {
                     workflow_status: "receipted",
                     receipt_number: receipt.receipt_number,
                     last_action_at: nowIso,
-                    last_action_by: user.id,
+                    last_action_by: userId,
                 })
                 .eq("id", updatedPayment.id);
 
@@ -386,7 +384,7 @@ export async function POST(request: Request, context: RouteContext) {
                 adminClient,
                 updatedPayment,
                 {
-                    actorId: user.id,
+                    actorId: userId,
                     actorName: "Landlord",
                     content:
                         finalWorkflowStatus === "rejected"
@@ -444,7 +442,7 @@ export async function POST(request: Request, context: RouteContext) {
                     adminClient,
                     updatedPayment,
                     {
-                        actorId: user.id,
+                        actorId: userId,
                         actorName: "Landlord",
                         content: "The refund has been processed and reconciliation is complete.",
                         metadata: {
@@ -463,7 +461,7 @@ export async function POST(request: Request, context: RouteContext) {
 
         await insertPaymentAuditEvent(adminClient, {
             paymentId: updatedPayment.id,
-            actorId: user.id,
+            actorId: userId,
             action: `landlord_review_${finalWorkflowStatus}`,
             source: "api",
             idempotencyKey,

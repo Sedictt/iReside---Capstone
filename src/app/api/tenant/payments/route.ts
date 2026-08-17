@@ -1,20 +1,22 @@
 import { NextResponse } from "next/server";
-
 import { expireInPersonIntents } from "@/lib/billing/workflow";
 import { getTenantPaymentOverview } from "@/lib/billing/server";
-import { createAdminClient } from "@/lib/supabase/admin";
-import { requireUser } from "@/lib/supabase/auth";
+import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 
-export async function GET() {
-    const { user, supabase } = await requireUser();
-    const adminClient = createAdminClient();
+export async function GET(request: Request) {
+  const authContext = await requireAuthenticatedUser(request);
+  if (!("userId" in authContext)) return authContext as Response;
+  const { userId, supabase } = authContext;
+  const adminClient = createServiceRoleSupabaseClient();
 
-    try {
-        // Parallelize: expireInPersonIntents and getTenantPaymentOverview are independent
-        const [_, overview] = await Promise.all([
-            expireInPersonIntents(adminClient, user.id, { tenantId: user.id }),
-            getTenantPaymentOverview(supabase, user.id),
-        ]);
+  try {
+    // Parallelize: expireInPersonIntents and getTenantPaymentOverview are independent
+    const [_, overview] = await Promise.all([
+      expireInPersonIntents(adminClient, userId, { tenantId: userId }),
+      getTenantPaymentOverview(supabase, userId),
+    ]);
+
         
         // Compute upcoming months forecast
         const now = new Date();
@@ -25,7 +27,7 @@ export async function GET() {
         const { data: existingPayments } = await supabase
             .from("payments")
             .select("id, amount, due_date, billing_cycle, status, metadata")
-            .eq("tenant_id", user.id)
+            .eq("tenant_id", userId)
             .in("status", ["pending", "processing"])
             .order("billing_cycle", { ascending: true })
             .limit(3);

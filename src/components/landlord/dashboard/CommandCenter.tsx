@@ -25,11 +25,15 @@ type CommandCenterProps = {
     nearDueCount: number;
     vacantUnitsCount: number;
     activeInviteCount: number;
+    loadingPayments?: boolean;
+    loadingUnits?: boolean;
+    loadingInvites?: boolean;
 };
 
 type StatCard = {
     label: string;
     value: number;
+    isLoading?: boolean;
     href: string;
     toneClass: string;
     icon: LucideIcon;
@@ -55,11 +59,15 @@ export function CommandCenter({
     nearDueCount,
     vacantUnitsCount,
     activeInviteCount,
+    loadingPayments = false,
+    loadingUnits = false,
+    loadingInvites = false,
 }: CommandCenterProps) {
     const statCards: StatCard[] = [
         {
             label: "Overdue",
             value: overdueCount,
+            isLoading: loadingPayments,
             href: "/landlord/invoices",
             toneClass: "text-red-400",
             icon: Zap
@@ -67,6 +75,7 @@ export function CommandCenter({
         {
             label: "Near Due",
             value: nearDueCount,
+            isLoading: loadingPayments,
             href: "/landlord/invoices",
             toneClass: "text-amber-400",
             icon: TrendingUp
@@ -74,6 +83,7 @@ export function CommandCenter({
         {
             label: "Vacant",
             value: vacantUnitsCount,
+            isLoading: loadingUnits,
             href: "/landlord/properties",
             toneClass: "text-sky-400",
             icon: Building2
@@ -81,6 +91,7 @@ export function CommandCenter({
         {
             label: "Invites",
             value: activeInviteCount,
+            isLoading: loadingInvites,
             href: "/landlord/applications",
             toneClass: "text-primary",
             icon: QrCode
@@ -160,7 +171,11 @@ export function CommandCenter({
                             <stat.icon className="size-4 opacity-80 transition-opacity group-hover:opacity-100" />
                             <div className="flex flex-col">
                                 <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{stat.label}</span>
-                                <span className="text-sm sm:text-base font-black leading-none text-foreground">{stat.value}</span>
+                                {stat.isLoading ? (
+                                    <div className="h-4 w-8 rounded bg-muted animate-pulse mt-1" />
+                                ) : (
+                                    <span className="text-sm sm:text-base font-black leading-none text-foreground">{stat.value}</span>
+                                )}
                             </div>
                         </Link>
                     ))}

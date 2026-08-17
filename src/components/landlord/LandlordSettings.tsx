@@ -436,17 +436,44 @@ export function LandlordSettings() {
                 .from("profiles")
                 .update({
                     full_name: formData.full_name,
-                    business_name: formData.business_name,
-                    phone: formData.phone,
                     website: formData.website,
-                    address: formData.address,
                     bio: formData.bio,
-                    business_permit_number: formData.business_permit_number,
                     socials: formData.socials,
                 })
                 .eq("id", profile.id);
 
             if (error) throw error;
+
+            const { error: privateError } = await (supabase as any)
+                .from("profile_private")
+                .upsert(
+                    {
+                        profile_id: profile.id,
+                        phone: formData.phone,
+                        address: formData.address,
+                        updated_at: new Date().toISOString(),
+                    },
+                    { onConflict: "profile_id" }
+                );
+
+            if (privateError) throw privateError;
+
+            const { error: businessError } = await (supabase as any)
+                .from("landlord_business_profiles")
+                .upsert(
+                    {
+                        profile_id: profile.id,
+                        business_name: formData.business_name,
+                        business_permit_number: formData.business_permit_number,
+                        business_permit_url: profile.business_permit_url,
+                        business_permits: profile.business_permits ?? [],
+                        updated_at: new Date().toISOString(),
+                    },
+                    { onConflict: "profile_id" }
+                );
+
+            if (businessError) throw businessError;
+
             await refreshProfile();
             toast.success("Settings updated successfully");
         } catch (error: any) {

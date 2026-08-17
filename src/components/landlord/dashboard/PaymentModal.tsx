@@ -47,11 +47,17 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
     const [confirmedPayments, setConfirmedPayments] = useState<string[]>([]);
     const [selectedActionPayment, setSelectedActionPayment] = useState<PaymentListItem | null>(null);
     const [isConfirmingAction, setIsConfirmingAction] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
 
     if (!category) return null;
 
     const payments = paymentsByCategory[category] || [];
     const categoryCopy = CATEGORY_COPY[category];
+
+    const filteredPayments = payments.filter(payment => 
+        payment.tenant.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        payment.unit.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     const handleConfirm = (paymentId: string) => {
         setConfirmedPayments(prev => [...prev, paymentId]);
@@ -60,15 +66,15 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
 
     const getStatusStyles = () => {
         switch (category) {
-            case "Overdue": return "text-red-400 bg-red-500/10 border-red-500/20";
-            case "Near Due": return "text-amber-400 bg-amber-500/10 border-amber-500/20";
-            case "Paid": return "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
+            case "Overdue": return "text-rose-600 dark:text-red-400 bg-rose-50 dark:bg-red-500/10 border-rose-100 dark:border-red-500/20";
+            case "Near Due": return "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 border-amber-100 dark:border-amber-500/20";
+            case "Paid": return "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-100 dark:border-emerald-500/20";
         }
     };
 
     const getDotColor = () => {
         switch (category) {
-            case "Overdue": return "bg-red-500";
+            case "Overdue": return "bg-rose-500 dark:bg-red-500";
             case "Near Due": return "bg-amber-500";
             case "Paid": return "bg-emerald-500";
         }
@@ -83,25 +89,25 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="fixed inset-0 h-screen w-screen bg-black/80 backdrop-blur-md z-[100] transition-opacity"
+                        className="fixed inset-0 h-screen w-screen bg-black/50 dark:bg-black/80 backdrop-blur-md z-[100] transition-opacity"
                     />
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                        className="fixed left-1/2 top-1/2 z-[101] flex max-h-[90vh] w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-[2.5rem] border border-white/10 bg-card shadow-[0_40px_100px_rgba(0,0,0,0.7)]"
+                        className="fixed left-1/2 top-1/2 z-[101] flex max-h-[90vh] w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-[2.5rem] neumorphic-panel"
                     >
                         {/* Header */}
-                        <div className="flex shrink-0 items-center justify-between border-b border-white/5 bg-neutral-900/50 p-8 backdrop-blur-xl">
+                        <div className="flex shrink-0 items-center justify-between border-b border-neutral-200/50 dark:border-white/5 bg-neutral-100/60 dark:bg-neutral-900/50 p-8 backdrop-blur-xl">
                             <div className="flex items-center gap-5">
-                                <div className="rounded-2xl bg-white/5 p-4 border border-white/5">
+                                <div className="rounded-2xl neumorphic-inset-card p-4 text-primary">
                                     <CreditCard className="size-6 text-primary" />
                                 </div>
                                 <div>
-                                    <h2 className="flex items-center gap-3 text-2xl font-black text-white">
+                                    <h2 className="flex items-center gap-3 text-2xl font-black text-foreground">
                                         {categoryCopy.title}
                                         <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-black text-primary border border-primary/20">
-                                            {payments.length}
+                                            {filteredPayments.length}
                                         </span>
                                     </h2>
                                     <p className="mt-1 text-xs font-medium text-muted-foreground">{categoryCopy.description}</p>
@@ -109,45 +115,47 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                             </div>
                             <button 
                                 onClick={onClose} 
-                                className="group flex size-12 items-center justify-center rounded-2xl border border-white/5 bg-white/5 text-muted-foreground transition-all hover:bg-white/10 hover:text-white hover:rotate-90"
+                                className="group flex size-12 items-center justify-center rounded-2xl neumorphic-extruded text-muted-foreground transition-all hover:text-primary hover:rotate-90 active:scale-95"
                             >
                                 <X className="size-5" />
                             </button>
                         </div>
 
                         {/* Search Bar - Premium Glass */}
-                        <div className="shrink-0 border-b border-white/5 p-8 bg-white/[0.02]">
+                        <div className="shrink-0 border-b border-neutral-200/50 dark:border-white/5 p-8 bg-neutral-50/30 dark:bg-white/[0.02]">
                             <div className="relative group">
                                 <Search className="absolute left-5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
                                 <input
                                     type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
                                     placeholder={`Filter ${categoryCopy.filterLabel} entries…`}
-                                    className="w-full rounded-2xl border border-white/10 bg-black/40 py-4 pl-14 pr-6 text-sm text-white placeholder:text-neutral-500 transition-all focus:border-primary/40 focus:outline-none focus:ring-1 focus:ring-primary/40 focus:shadow-[0_0_20px_rgba(var(--primary-rgb),0.1)]"
+                                    className="w-full rounded-2xl neumorphic-inset bg-background py-4 pl-14 pr-6 text-sm text-foreground placeholder:text-muted-foreground/60 transition-all focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/20"
                                 />
                             </div>
                         </div>
 
                         {/* List Area */}
-                        <div className="flex-1 overflow-y-auto p-8 space-y-4 custom-scrollbar-premium bg-gradient-to-b from-transparent to-black/20">
-                            {payments.length === 0 ? (
-                                <div className="rounded-[2.5rem] border border-dashed border-white/10 bg-white/5 p-16 text-center backdrop-blur-sm">
+                        <div className="flex-1 overflow-y-auto p-8 space-y-4 custom-scrollbar-premium bg-gradient-to-b from-transparent to-black/[0.03] dark:to-black/20">
+                            {filteredPayments.length === 0 ? (
+                                <div className="rounded-[2.5rem] border border-dashed border-neutral-300 dark:border-white/10 bg-neutral-100/30 dark:bg-white/5 p-16 text-center backdrop-blur-sm">
                                     <p className="text-sm font-black uppercase tracking-widest text-muted-foreground/40">{categoryCopy.emptyState}</p>
                                 </div>
                             ) : (
-                                payments.map((payment) => (
+                                filteredPayments.map((payment) => (
                                     <div
                                         key={payment.id}
                                         onClick={() => setSelectedActionPayment(payment)}
                                         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedActionPayment(payment); }}}
                                         tabIndex={0}
                                         role="button"
-                                        className="group relative flex cursor-pointer items-center justify-between overflow-hidden rounded-[1.75rem] border border-white/5 bg-white/[0.03] p-5 transition-all hover:bg-white/[0.06] hover:ring-1 hover:ring-primary/20 active:scale-[0.98]"
+                                        className="group relative flex cursor-pointer items-center justify-between overflow-hidden rounded-[1.75rem] border border-neutral-200/50 dark:border-white/5 bg-card p-5 transition-all hover:bg-neutral-50/80 dark:hover:bg-white/[0.06] hover:shadow-[4px_4px_12px_rgba(163,177,198,0.25)] dark:hover:shadow-[inset_0_0_20px_rgba(255,255,255,0.01)] hover:border-primary/20 active:scale-[0.98]"
                                     >
                                         <div className="flex items-center gap-5 relative z-10">
                                             <div className="relative">
                                                 <div
                                                     className="relative size-14 rounded-full border-2 border-background overflow-hidden transition-all duration-500 group-hover:scale-110"
-                                                    style={{ backgroundColor: payment.avatarBgColor || '#171717' }}
+                                                    style={{ backgroundColor: payment.avatarBgColor || 'var(--neutral-200)' }}
                                                 >
                                                     <Image src={payment.avatar || FALLBACK_AVATAR} alt={payment.tenant} fill sizes="56px" className="object-cover" />
                                                 </div>
@@ -157,17 +165,17 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                                                 )} />
                                             </div>
                                             <div className="min-w-0">
-                                                <h4 className="text-base font-black text-white transition-colors group-hover:text-primary truncate">{payment.tenant}</h4>
+                                                <h4 className="text-base font-black text-foreground transition-colors group-hover:text-primary truncate">{payment.tenant}</h4>
                                                 <p className="text-[11px] font-black text-muted-foreground uppercase tracking-wider">{payment.unit}</p>
                                             </div>
                                         </div>
                                         
                                         <div className="text-right flex flex-col items-end relative z-10">
-                                            <h4 className="mb-1 text-base font-black text-white tracking-tight">PHP {payment.amount.toLocaleString()}</h4>
+                                            <h4 className="mb-1 text-base font-black text-foreground tracking-tight">PHP {payment.amount.toLocaleString()}</h4>
                                             <div className="flex items-center justify-end gap-2 text-[10px] font-black uppercase tracking-widest">
                                                 <span className={cn(
-                                                    "px-2 py-0.5 rounded-full border border-white/5 bg-white/5",
-                                                    confirmedPayments.includes(payment.id) || category === "Paid" ? "text-emerald-500" : getStatusStyles().split(' ')[0]
+                                                    "px-2 py-0.5 rounded-full border border-neutral-200 dark:border-white/5 bg-neutral-100 dark:bg-white/5",
+                                                    confirmedPayments.includes(payment.id) || category === "Paid" ? "text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-100 dark:border-emerald-500/20" : getStatusStyles()
                                                 )}>
                                                     {confirmedPayments.includes(payment.id) ? "Acknowledged" : category}
                                                 </span>
@@ -188,7 +196,7 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
-                                    className="absolute inset-0 bg-black/90 backdrop-blur-md"
+                                    className="absolute inset-0 bg-black/75 backdrop-blur-md"
                                     onClick={() => {
                                         setSelectedActionPayment(null);
                                         setIsConfirmingAction(false);
@@ -201,7 +209,7 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                                     initial={{ opacity: 0, scale: 0.9, y: 20 }}
                                     animate={{ opacity: 1, scale: 1, y: 0 }}
                                     exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                                    className="relative z-10 w-full max-w-sm overflow-hidden rounded-[2.5rem] border border-white/10 bg-neutral-900 shadow-[0_50px_100px_rgba(0,0,0,0.8)]"
+                                    className="relative z-10 w-full max-w-sm overflow-hidden rounded-[2.5rem] neumorphic-panel"
                                 >
                                     {!isConfirmingAction ? (
                                         <>
@@ -212,23 +220,23 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                                                         alt={selectedActionPayment.tenant}
                                                         fill
                                                         sizes="96px"
-                                                        className="rounded-full border-4 border-primary/20 object-cover shadow-2xl shadow-primary/10"
+                                                        className="rounded-full border-4 border-neutral-200 dark:border-primary/20 object-cover"
                                                     />
-                                                    <div className="absolute -bottom-1 -right-1 size-7 rounded-full border-4 border-neutral-900 bg-emerald-500 shadow-lg" />
+                                                    <div className="absolute -bottom-1 -right-1 size-7 rounded-full border-4 border-background bg-emerald-500 shadow-lg" />
                                                 </div>
-                                                <h3 className="text-2xl font-black text-white">{selectedActionPayment.tenant}</h3>
+                                                <h3 className="text-2xl font-black text-foreground">{selectedActionPayment.tenant}</h3>
                                                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] mt-1">{selectedActionPayment.unit}</p>
                                                 
-                                                <div className="mt-8 flex flex-col gap-2 rounded-3xl bg-white/[0.02] p-6 border border-white/5">
+                                                <div className="mt-8 flex flex-col gap-2 rounded-3xl bg-neutral-100/50 dark:bg-white/[0.02] p-6 border border-neutral-200 dark:border-white/5">
                                                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Settlement Due</p>
-                                                    <h4 className="text-4xl font-black text-white tracking-tighter">PHP {selectedActionPayment.amount.toLocaleString()}</h4>
+                                                    <h4 className="text-4xl font-black text-foreground tracking-tighter">PHP {selectedActionPayment.amount.toLocaleString()}</h4>
                                                 </div>
                                             </div>
 
                                             <div className="grid gap-3 p-8 pt-0">
                                                 <button 
                                                     onClick={() => setIsConfirmingAction(true)}
-                                                    className="group flex items-center justify-between rounded-2xl bg-primary px-6 py-5 shadow-[0_15px_30px_rgba(var(--primary-rgb),0.3)] transition-all hover:scale-[1.02] hover:shadow-[0_20px_40px_rgba(var(--primary-rgb),0.4)] active:scale-95"
+                                                    className="group flex items-center justify-between rounded-2xl bg-primary px-6 py-5 transition-all hover:scale-[1.02] hover:brightness-105 active:scale-95"
                                                 >
                                                     <div className="flex items-center gap-4">
                                                         <div className="flex size-10 items-center justify-center rounded-xl bg-white/20">
@@ -241,7 +249,7 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
 
                                                 <button 
                                                     onClick={() => setSelectedActionPayment(null)}
-                                                    className="flex items-center justify-center rounded-2xl border border-white/5 bg-white/5 py-4 text-[11px] font-black uppercase tracking-[0.4em] text-muted-foreground/60 transition-all hover:bg-white/10 hover:text-white"
+                                                    className="flex items-center justify-center rounded-2xl neumorphic-extruded py-4 text-[11px] font-black uppercase tracking-[0.4em] text-muted-foreground transition-all hover:text-foreground hover:scale-[1.02] active:scale-95"
                                                 >
                                                     Dismiss
                                                 </button>
@@ -252,7 +260,7 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                                             <div className="mx-auto mb-6 flex size-20 items-center justify-center rounded-3xl bg-primary/10 text-primary">
                                                 <AlertTriangle className="size-10" />
                                             </div>
-                                            <h3 className="text-2xl font-black text-white tracking-tight">Double Check</h3>
+                                            <h3 className="text-2xl font-black text-foreground tracking-tight">Double Check</h3>
                                             
                                             <div className="mt-6 rounded-[1.5rem] border border-primary/20 bg-primary/5 p-6">
                                                 <p className="text-xs font-black leading-relaxed text-primary/80">
@@ -263,13 +271,13 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                                             <div className="mt-10 flex flex-col gap-3">
                                                 <button 
                                                     onClick={() => handleConfirm(selectedActionPayment.id)}
-                                                    className="w-full rounded-2xl bg-primary py-5 text-sm font-black uppercase tracking-widest text-white shadow-[0_15px_30px_rgba(var(--primary-rgb),0.3)] transition-all hover:scale-[1.02] active:scale-95"
+                                                    className="w-full rounded-2xl bg-primary py-5 text-sm font-black uppercase tracking-widest text-white transition-all hover:scale-[1.02] active:scale-95"
                                                 >
                                                     Confirm Record
                                                 </button>
                                                 <button 
                                                     onClick={() => setIsConfirmingAction(false)}
-                                                    className="w-full rounded-2xl border border-white/5 bg-white/5 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 transition-all hover:bg-white/10 hover:text-white"
+                                                    className="w-full rounded-2xl neumorphic-extruded py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground transition-all hover:text-foreground hover:scale-[1.02] active:scale-95"
                                                 >
                                                     Go Back
                                                 </button>

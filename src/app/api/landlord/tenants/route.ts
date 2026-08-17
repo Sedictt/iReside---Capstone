@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { requireUser } from "@/lib/supabase/auth";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import type { LeaseStatus, PaymentStatus } from "@/types/database";
 
 type TenantStatus = "Active" | "Moving Out" | "Evicted";
@@ -81,8 +80,9 @@ const logOptionalQueryFailure = (scope: string, error: unknown) => {
 };
 
 export async function GET(request: Request) {
-    const { user } = await requireUser();
-    const supabase = await createClient();
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
 
     const optionalStateClient = supabase as unknown as OptionalTenantStateClient;
     const { searchParams } = new URL(request.url);
@@ -91,7 +91,7 @@ export async function GET(request: Request) {
     let leaseQuery = supabase
         .from("leases")
         .select("id, tenant_id, unit_id, status, end_date, monthly_rent")
-        .eq("landlord_id", user.id)
+        .eq("landlord_id", userId)
         .in("status", ["active", "expired", "terminated"]);
 
     if (propertyId && propertyId !== "all") {
@@ -99,7 +99,7 @@ export async function GET(request: Request) {
             .from("properties")
             .select("id")
             .eq("id", propertyId)
-            .eq("landlord_id", user.id)
+            .eq("landlord_id", userId)
             .maybeSingle();
 
         if (propertyError) {

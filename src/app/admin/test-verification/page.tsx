@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import {
     ExternalLink,
-    LoaderCircle,
     Search,
     ShieldCheck,
     ShieldX,
@@ -146,7 +146,7 @@ export default function TestVerificationPage() {
                             >
                                 {verifying ? (
                                     <>
-                                        <LoaderCircle className="size-4 animate-spin" />
+                                        <LoadingSpinner size="sm" className="size-4" />
                                         Verifying...
                                     </>
                                 ) : (

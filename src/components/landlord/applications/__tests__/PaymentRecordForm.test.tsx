@@ -21,18 +21,18 @@ describe("PaymentRecordForm", () => {
     render(<PaymentRecordForm {...defaultProps} />);
 
     expect(screen.getByText("Advance Rent")).toBeInTheDocument();
-    expect(screen.getByLabelText(/Amount/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Payment Method/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Reference Number/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Paid Date/i)).toBeInTheDocument();
-    expect(screen.getByText("Completed")).toBeInTheDocument();
+    expect(screen.getByLabelText(/Amount Due/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Method/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Ref Number/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Payment Date/i)).toBeInTheDocument();
+    expect(screen.getByText("Received")).toBeInTheDocument();
     expect(screen.getByText("Pending")).toBeInTheDocument();
   });
 
   it("should display the correct amount", () => {
     render(<PaymentRecordForm {...defaultProps} amount={25000} />);
 
-    const amountInput = screen.getByLabelText(/Amount/i) as HTMLInputElement;
+    const amountInput = screen.getByLabelText(/Amount Due/i) as HTMLInputElement;
     expect(amountInput.value).toBe("25000");
   });
 
@@ -46,7 +46,7 @@ describe("PaymentRecordForm", () => {
       />
     );
 
-    const amountInput = screen.getByLabelText(/Amount/i);
+    const amountInput = screen.getByLabelText(/Amount Due/i);
     fireEvent.change(amountInput, { target: { value: "20000" } });
 
     expect(onAmountChange).toHaveBeenCalledWith(20000);
@@ -62,7 +62,7 @@ describe("PaymentRecordForm", () => {
       />
     );
 
-    const amountInput = screen.getByLabelText(/Amount/i) as HTMLInputElement;
+    const amountInput = screen.getByLabelText(/Amount Due/i) as HTMLInputElement;
     expect(amountInput.disabled).toBe(true);
   });
 
@@ -70,7 +70,7 @@ describe("PaymentRecordForm", () => {
     const onMethodChange = vi.fn();
     render(<PaymentRecordForm {...defaultProps} onMethodChange={onMethodChange} />);
 
-    const methodSelect = screen.getByLabelText(/Payment Method/i);
+    const methodSelect = screen.getByLabelText(/Method/i);
     fireEvent.change(methodSelect, { target: { value: "gcash" } });
 
     expect(onMethodChange).toHaveBeenCalledWith("gcash");
@@ -79,12 +79,12 @@ describe("PaymentRecordForm", () => {
   it("should display all payment method options", () => {
     render(<PaymentRecordForm {...defaultProps} />);
 
-    const methodSelect = screen.getByLabelText(/Payment Method/i);
+    const methodSelect = screen.getByLabelText(/Method/i);
     const options = methodSelect.querySelectorAll("option");
 
     // 6 payment methods + 1 placeholder option
     expect(options).toHaveLength(7);
-    expect(options[0].textContent).toBe("Select payment method");
+    expect(options[0].textContent).toBe("Choose Method");
     expect(options[1].textContent).toBe("GCash");
     expect(options[2].textContent).toBe("Maya");
     expect(options[3].textContent).toBe("Bank Transfer");
@@ -99,7 +99,7 @@ describe("PaymentRecordForm", () => {
       <PaymentRecordForm {...defaultProps} onReferenceChange={onReferenceChange} />
     );
 
-    const referenceInput = screen.getByLabelText(/Reference Number/i);
+    const referenceInput = screen.getByLabelText(/Ref Number/i);
     fireEvent.change(referenceInput, { target: { value: "REF123456" } });
 
     expect(onReferenceChange).toHaveBeenCalledWith("REF123456");
@@ -109,7 +109,7 @@ describe("PaymentRecordForm", () => {
     const onPaidAtChange = vi.fn();
     render(<PaymentRecordForm {...defaultProps} onPaidAtChange={onPaidAtChange} />);
 
-    const dateInput = screen.getByLabelText(/Paid Date/i);
+    const dateInput = screen.getByLabelText(/Payment Date/i);
     fireEvent.change(dateInput, { target: { value: "2024-06-15" } });
 
     expect(onPaidAtChange).toHaveBeenCalledWith("2024-06-15");
@@ -119,7 +119,7 @@ describe("PaymentRecordForm", () => {
     const onStatusChange = vi.fn();
     render(<PaymentRecordForm {...defaultProps} onStatusChange={onStatusChange} />);
 
-    const completedButton = screen.getByText("Completed");
+    const completedButton = screen.getByText("Received");
     fireEvent.click(completedButton);
 
     expect(onStatusChange).toHaveBeenCalledWith("completed");
@@ -135,14 +135,14 @@ describe("PaymentRecordForm", () => {
 
     rerender(<PaymentRecordForm {...defaultProps} status="completed" />);
 
-    const completedButton = screen.getByText("Completed");
+    const completedButton = screen.getByText("Received");
     expect(completedButton).toHaveClass("bg-primary");
   });
 
   it("should display validation errors for required fields", () => {
     render(<PaymentRecordForm {...defaultProps} />);
 
-    const methodSelect = screen.getByLabelText(/Payment Method/i);
+    const methodSelect = screen.getByLabelText(/Method/i);
     expect(methodSelect).toHaveAttribute("required");
   });
 
@@ -175,10 +175,10 @@ describe("PaymentRecordForm", () => {
       />
     );
 
-    const amountInput = screen.getByLabelText(/Amount/i) as HTMLInputElement;
-    const methodSelect = screen.getByLabelText(/Payment Method/i) as HTMLSelectElement;
-    const referenceInput = screen.getByLabelText(/Reference Number/i) as HTMLInputElement;
-    const dateInput = screen.getByLabelText(/Paid Date/i) as HTMLInputElement;
+    const amountInput = screen.getByLabelText(/Amount Due/i) as HTMLInputElement;
+    const methodSelect = screen.getByLabelText(/Method/i) as HTMLSelectElement;
+    const referenceInput = screen.getByLabelText(/Ref Number/i) as HTMLInputElement;
+    const dateInput = screen.getByLabelText(/Payment Date/i) as HTMLInputElement;
 
     expect(amountInput.value).toBe("18000");
     expect(methodSelect.value).toBe("gcash");

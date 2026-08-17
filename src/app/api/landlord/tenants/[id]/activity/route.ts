@@ -1,29 +1,14 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 
 export async function GET(
     request: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
     const tenantId = (await params).id;
-    const supabase = await createClient();
-    
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Fetch profile to ensure access
-    const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single();
-
-    if (!profile || profile.role !== "landlord") {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
 
     // Parallel fetch activity data
     const [maintenance, payments, leases, applications] = await Promise.all([
@@ -31,25 +16,25 @@ export async function GET(
             .from("maintenance_requests")
             .select("id, title, status, created_at, category")
             .eq("tenant_id", tenantId)
-            .eq("landlord_id", user.id)
+            .eq("landlord_id", userId)
             .order("created_at", { ascending: false }),
         supabase
             .from("payments")
             .select("id, amount, status, created_at, description")
             .eq("tenant_id", tenantId)
-            .eq("landlord_id", user.id)
+            .eq("landlord_id", userId)
             .order("created_at", { ascending: false }),
         supabase
             .from("leases")
             .select("id, status, created_at, signed_at")
             .eq("tenant_id", tenantId)
-            .eq("landlord_id", user.id)
+            .eq("landlord_id", userId)
             .order("created_at", { ascending: false }),
         supabase
             .from("applications")
             .select("id, status, created_at")
             .eq("applicant_id", tenantId)
-            .eq("landlord_id", user.id)
+            .eq("landlord_id", userId)
             .order("created_at", { ascending: false })
     ]);
 

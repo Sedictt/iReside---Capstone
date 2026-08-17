@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 function generateTempPassword(length = 12): string {
@@ -12,17 +12,10 @@ function generateTempPassword(length = 12): string {
 }
 
 export async function POST(request: Request) {
-    const supabase = await createClient();
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as any;
+    const { userId } = authContext;
     const adminClient = createAdminClient();
-
-    const {
-        data: { user: landlord },
-        error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !landlord) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     const body = await request.json();
     const {
@@ -90,7 +83,7 @@ export async function POST(request: Request) {
             .insert({
                 unit_id: unitId,
                 tenant_id: tenantId,
-                landlord_id: landlord.id,
+                landlord_id: userId,
                 start_date: startDate,
                 end_date: endDate,
                 monthly_rent: monthlyRent,

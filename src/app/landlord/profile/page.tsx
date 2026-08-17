@@ -133,12 +133,17 @@ export default async function LandlordProfilePage() {
         redirect('/login');
     }
 
-    const [profileRes, propertiesRes, activeLeasesRes, paymentsRes, feedbackRes, applicationsRes] =
+    const [profileRes, businessProfileRes, propertiesRes, activeLeasesRes, paymentsRes, feedbackRes, applicationsRes] =
         await Promise.all([
             supabase
                 .from('profiles')
-                .select('id, full_name, email, role, avatar_url, avatar_bg_color, phone, bio, website, address, created_at, cover_url, socials, business_permit_url, business_permit_number, business_name')
+                .select('id, full_name, email, role, avatar_url, avatar_bg_color, phone, bio, website, address, created_at, cover_url, socials')
                 .eq('id', user.id)
+                .maybeSingle(),
+            (supabase as any)
+                .from('landlord_business_profiles')
+                .select('business_name, business_permit_url, business_permit_number, business_permits')
+                .eq('profile_id', user.id)
                 .maybeSingle(),
             supabase
                 .from('properties')
@@ -167,7 +172,15 @@ export default async function LandlordProfilePage() {
                 .maybeSingle(),
         ]);
 
-    const profile = profileRes.data;
+    const profile = profileRes.data
+        ? {
+            ...profileRes.data,
+            business_name: businessProfileRes.data?.business_name ?? null,
+            business_permit_url: businessProfileRes.data?.business_permit_url ?? null,
+            business_permit_number: businessProfileRes.data?.business_permit_number ?? null,
+            business_permits: businessProfileRes.data?.business_permits ?? [],
+        }
+        : null;
     const properties = (propertiesRes.data ?? []) as LandlordProperty[];
     const verificationStatus = applicationsRes.data?.verification_status === 'verified';
 

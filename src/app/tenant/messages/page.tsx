@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from "react";
 import Image from "next/image";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -30,6 +30,8 @@ import {
     File,
     Download,
     ExternalLink,
+    ChevronDown,
+    ArrowUpRight,
     Bot,
     Zap
 } from "lucide-react";
@@ -71,6 +73,8 @@ import { InvoiceModal } from "../../../components/landlord/invoices/InvoiceModal
 import { redactMessageForSend } from "../../../lib/messages/redaction-client";
 import { TenantIrisChat } from "@/components/tenant/TenantIrisChat";
 import { MessageReportWizard } from "@/components/messaging/MessageReportWizard";
+import { QuickActionSummaryModal } from "@/components/messaging/QuickActionSummaryModal";
+import { PaymentHistoryModal } from "@/components/messaging/PaymentHistoryModal";
 import { PaymentIssueResolver } from "@/components/messaging/PaymentIssueResolver";
 import { playSound } from "@/hooks/useSound";
 
@@ -280,6 +284,8 @@ export default function TenantMessagesPage() {
     const [showFilesSidebar, setShowFilesSidebar] = useState(false);
     const [fileFilter, setFileFilter] = useState("media");
     const [showPaymentHistoryModal, setShowPaymentHistoryModal] = useState(false);
+    const [isPaymentHistoryExpanded, setIsPaymentHistoryExpanded] = useState(false);
+    const [selectedQuickAction, setSelectedQuickAction] = useState<string | null>(null);
     const [paymentHistory, setPaymentHistory] = useState<PaymentHistoryEntry[]>([]);
     const [paymentHistoryTotal, setPaymentHistoryTotal] = useState(0);
     const [paymentHistoryLoading, setPaymentHistoryLoading] = useState(false);
@@ -293,7 +299,10 @@ export default function TenantMessagesPage() {
     const [userSearchError, setUserSearchError] = useState<string | null>(null);
     const [isOtherUserTyping, setIsOtherUserTyping] = useState(false);
     const [isSidebarLoading, setIsSidebarLoading] = useState(true);
-    const [isMessagesLoading, setIsMessagesLoading] = useState(false);
+    const [isMessagesLoading, setIsMessagesLoading] = useState(true);
+    const [hasMoreMessages, setHasMoreMessages] = useState(false);
+    const [isLoadingEarlier, setIsLoadingEarlier] = useState(false);
+    const scrollPositionAdjustmentRef = useRef<{ previousScrollHeight: number; previousScrollTop: number } | null>(null);
     const [pendingAttachments, setPendingAttachments] = useState<PendingAttachmentType[]>([]);
     const isUploadingFile = pendingAttachments.some(a => a.status === 'uploading');
     const [isSending, setIsSending] = useState(false);
@@ -600,6 +609,7 @@ const seen = new Set<string>();
     const activeRelationshipStatus = activeContact?.relationshipStatus ?? "stranger";
     const activeQuickActions = TENANT_QUICK_ACTIONS;
     const canShowPaymentHistory = activeContact?.hasPaymentHistory ?? false;
+    const isChatLoading = isSidebarLoading || isMessagesLoading || Boolean(activeConversationId && !activeContact);
 
     const displayContact = activeContact ?? {
         id: "",
@@ -659,8 +669,9 @@ setPaymentHistoryLoading(true);
     }, []);
 
     useEffect(() => {
+        setIsPaymentHistoryExpanded(false);
         if (!activeConversationId || !canShowPaymentHistory) {
-setPaymentHistory([]);
+            setPaymentHistory([]);
             setPaymentHistoryTotal(0);
             paymentHistoryErrorRef.current = null;
             return;
@@ -815,10 +826,13 @@ setPaymentHistory([]);
         } finally { setIsSidebarLoading(false); }
     }
 
-    const refreshMessages = async (conversationId: string) => {
-        const { data: list, error } = await fetchConversationMessages(conversationId, 200);
+    const refreshMessages = async (conversationId: string, limitOverride?: number) => {
+        const fetchLimit = limitOverride ?? Math.max(20, messagesState.length || 20);
+        const { data: list, hasMore, error } = await fetchConversationMessages(conversationId, { limit: fetchLimit });
         messagesErrorRef.current = error;
+        if (error) return;
         const mapped: UiMessageType[] = list.map(mapMessageToUi);
+        setHasMoreMessages(hasMore);
         messagesCacheRef.current.set(conversationId, mapped);
         if (user?.id) {
             try { sessionStorage.setItem(`${MESSAGE_CACHE_KEY_PREFIX}:${user.id}`, JSON.stringify(Object.fromEntries(messagesCacheRef.current.entries()))); } catch { }
@@ -831,8 +845,54 @@ setPaymentHistory([]);
                 return [...stabilized, ...optimistic];
             });
         }
-        if (!error) await markConversationAsRead(conversationId);
+        await markConversationAsRead(conversationId);
     };
+
+    const loadEarlierMessages = async () => {
+        if (!activeConversationId || isLoadingEarlier || !hasMoreMessages) return;
+        const oldestMessage = messagesState[0];
+        if (!oldestMessage?.createdAt) return;
+
+        const container = messagesScrollRef.current;
+        if (container) {
+            scrollPositionAdjustmentRef.current = {
+                previousScrollHeight: container.scrollHeight,
+                previousScrollTop: container.scrollTop,
+            };
+        }
+
+        setIsLoadingEarlier(true);
+        try {
+            const { data: olderList, hasMore, error } = await fetchConversationMessages(activeConversationId, {
+                limit: 20,
+                before: oldestMessage.createdAt,
+            });
+
+            if (!error && olderList.length > 0) {
+                const olderMapped: UiMessageType[] = olderList.map(mapMessageToUi);
+                setHasMoreMessages(hasMore);
+                setMessagesState((prev) => {
+                    const existingIds = new Set(prev.map((m) => m.id));
+                    const newUniqueOlder = olderMapped.filter((m) => !existingIds.has(m.id));
+                    return [...newUniqueOlder, ...prev];
+                });
+            } else {
+                setHasMoreMessages(hasMore);
+            }
+        } finally {
+            setIsLoadingEarlier(false);
+        }
+    };
+
+    useLayoutEffect(() => {
+        if (scrollPositionAdjustmentRef.current && messagesScrollRef.current) {
+            const container = messagesScrollRef.current;
+            const { previousScrollHeight, previousScrollTop } = scrollPositionAdjustmentRef.current;
+            const heightDelta = container.scrollHeight - previousScrollHeight;
+            container.scrollTop = previousScrollTop + heightDelta;
+            scrollPositionAdjustmentRef.current = null;
+        }
+    }, [messagesState]);
 
     const handleConfirmF2FPayment = async (paymentId: string) => {
         setIsF2FInterfaceOpen(false);
@@ -866,10 +926,7 @@ setPaymentHistory([]);
     };
 
     const clearPendingAttachments = () => {
-        setPendingAttachments((current) => {
-            current.forEach((att) => { if (att.previewUrl) URL.revokeObjectURL(att.previewUrl); });
-            return [];
-        });
+        setPendingAttachments([]);
     };
 
     const removePendingAttachment = (id: string) => {
@@ -881,7 +938,7 @@ setPaymentHistory([]);
     };
 
     const queueSelectedFiles = (files: File[]) => {
-if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation first."; return; }
+        if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation first."; return; }
         fileUploadErrorRef.current = null;
 
         files.forEach(file => {
@@ -900,7 +957,7 @@ if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation
 
             setPendingAttachments(current => [...current, newAttachment]);
 
-            // Start upload immediately
+            // Start upload immediately in background
             void (async () => {
                 try {
                     const result = await uploadConversationFile(
@@ -931,7 +988,8 @@ if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation
         if (isSending) return;
         const textMessage = messageInput.trim();
         const hasText = textMessage.length > 0;
-        const hasAttachment = pendingAttachments.length > 0;
+        const attachmentsToSend = [...pendingAttachments];
+        const hasAttachment = attachmentsToSend.length > 0;
         if ((!hasText && !hasAttachment) || !activeConversationId) return;
         
         setIsSending(true);
@@ -941,71 +999,205 @@ if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation
             void activeChannelRef.current.send({ type: "broadcast", event: "typing", payload: { conversationId: activeConversationId, userId: user.id, isTyping: false } });
         }
 
-        // Store original input for use as caption in albums
-        const originalInput = messageInput;
+        // Clear input and attachments immediately so user has zero lag
+        setMessageInput("");
+        clearPendingAttachments();
 
-        if (hasText) {
-            const optimisticId = `local-${Date.now()}`;
-            const optimisticTimestamp = new Date().toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
-            setMessageInput("");
-            setMessagesState((prev) => [...prev, { id: optimisticId, type: "tenant", messageType: "text", content: textMessage, redactedContent: textMessage, timestamp: optimisticTimestamp, createdAt: new Date().toISOString(), isRedacted: false, isConfirmedDisclosed: false, status: "sending" }]);
-            const moderation = await redactMessageForSend(textMessage);
-            try {
-                const created = await sendConversationMessage(activeConversationId, textMessage, { isRedacted: moderation.isSensitive, redactedContent: moderation.redactedMessage, isConfirmedDisclosed: false, isPhishing: moderation.isPhishing, redactionCategory: moderation.redactionCategory, disclosureAllowed: moderation.disclosureAllowed });
-                const mapped = mapMessageToUi({ ...created, sender: null });
-                playSound("message", 0.4); // Sent sound
-                setMessagesState((prev) => prev.map((msg) => msg.id === optimisticId ? { ...mapped, status: "sent" } : msg));
-                window.setTimeout(() => setMessagesState((prev) => prev.map((msg) => msg.id === created.id && msg.status === "sent" ? { ...msg, status: "delivered" } : msg)), 350);
-            } catch (error) {
-const message = error instanceof Error ? error.message : "Failed to send.";
-                messagesErrorRef.current = message;
-                setMessagesState((prev) => prev.map((msg) => msg.id === optimisticId ? { ...msg, status: "failed" } : msg));
-            }
-        }
+        const images = attachmentsToSend.filter(a => a.isImage);
+        const otherFiles = attachmentsToSend.filter(a => !a.isImage);
+        const optimisticTimestamp = new Date().toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 
-        const uploaded = pendingAttachments.filter(a => a.status === 'uploaded');
-        const isStillUploading = pendingAttachments.some(a => a.status === 'uploading');
+        // If user typed text and there are NO images, send text as standalone message
+        if (hasText && images.length === 0) {
+            const optimisticTextId = `local-${Date.now()}`;
+            setMessagesState((prev) => [...prev, { 
+                id: optimisticTextId, 
+                type: "tenant", 
+                messageType: "text", 
+                content: textMessage, 
+                redactedContent: textMessage, 
+                timestamp: optimisticTimestamp, 
+                createdAt: new Date().toISOString(), 
+                isRedacted: false, 
+                isConfirmedDisclosed: false, 
+                status: "sending" 
+            }]);
 
-if (isStillUploading) {
-            messagesErrorRef.current = "Please wait for files to finish uploading.";
-            return;
-        }
-
-        if (uploaded.length > 0) {
-            const images = uploaded.filter(a => a.isImage);
-            const otherFiles = uploaded.filter(a => !a.isImage);
-
-            // Send images as album if 3+, or individual
-            if (images.length >= 3) {
-                const attachments = images.map(a => ({
-                    id: a.id,
-                    type: "tenant",
-                    messageType: "image",
-                    fileUrl: a.url,
-                    filePath: a.path,
-                    fileName: a.file.name,
-                    fileSize: a.file.size,
-                    mimeType: a.file.type,
-                    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                    createdAt: new Date().toISOString()
-                }));
-
+            void (async () => {
+                const moderation = await redactMessageForSend(textMessage);
                 try {
+                    const created = await sendConversationMessage(activeConversationId, textMessage, { 
+                        isRedacted: moderation.isSensitive, 
+                        redactedContent: moderation.redactedMessage, 
+                        isConfirmedDisclosed: false, 
+                        isPhishing: moderation.isPhishing, 
+                        redactionCategory: moderation.redactionCategory, 
+                        disclosureAllowed: moderation.disclosureAllowed 
+                    });
+                    const mapped = mapMessageToUi({ ...created, sender: null });
+                    playSound("message", 0.4);
+                    setMessagesState((prev) => prev.map((msg) => msg.id === optimisticTextId ? { ...mapped, status: "sent" } : msg));
+                    window.setTimeout(() => setMessagesState((prev) => prev.map((msg) => msg.id === created.id && msg.status === "sent" ? { ...msg, status: "delivered" } : msg)), 350);
+                } catch (error) {
+                    const message = error instanceof Error ? error.message : "Failed to send.";
+                    messagesErrorRef.current = message;
+                    setMessagesState((prev) => prev.map((msg) => msg.id === optimisticTextId ? { ...msg, status: "failed" } : msg));
+                }
+            })();
+        }
+
+        // Handle Images (with caption if provided)
+        if (images.length >= 3) {
+            // Album of 3+ images
+            const optimisticAlbumId = `local-album-${Date.now()}`;
+            const optimisticAttachments: UiMessageType[] = images.map((a, idx) => ({
+                id: `local-att-${Date.now()}-${idx}`,
+                type: "tenant",
+                messageType: "image",
+                fileUrl: a.previewUrl || a.url || undefined,
+                fileName: a.file.name,
+                fileSize: a.file.size,
+                mimeType: a.file.type,
+                content: "",
+                timestamp: optimisticTimestamp,
+                createdAt: new Date().toISOString(),
+                status: "sending"
+            }));
+
+            setMessagesState((prev) => [...prev, {
+                id: optimisticAlbumId,
+                type: "tenant",
+                messageType: "image",
+                content: textMessage || "",
+                timestamp: optimisticTimestamp,
+                createdAt: new Date().toISOString(),
+                isAlbum: true,
+                attachments: optimisticAttachments,
+                status: "sending"
+            }]);
+
+            void (async () => {
+                try {
+                    // Ensure all images are uploaded
+                    const uploadedImages = await Promise.all(images.map(async (a, idx) => {
+                        let finalUrl = a.url;
+                        let finalPath = a.path;
+                        if (!finalUrl || !finalPath) {
+                            const res = await uploadConversationFile(activeConversationId, a.file, undefined, true);
+                            finalUrl = res.file.url;
+                            finalPath = res.file.path;
+                        }
+                        return {
+                            id: `att-${Date.now()}-${idx}`,
+                            type: "tenant" as const,
+                            messageType: "image" as const,
+                            fileUrl: finalUrl,
+                            filePath: finalPath,
+                            fileName: a.file.name,
+                            fileSize: a.file.size,
+                            mimeType: a.file.type,
+                            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                            createdAt: new Date().toISOString()
+                        };
+                    }));
+
                     const created = await sendConversationMessage(
                         activeConversationId,
-                        originalInput.trim() || "", // No default caption
-                        { attachments, isAlbum: true },
+                        textMessage || "", // Custom caption only, no filename
+                        { attachments: uploadedImages, isAlbum: true },
                         "image"
                     );
                     const mapped = mapMessageToUi({ ...created, sender: null });
-                    setMessagesState((prev) => [...prev, { ...mapped, status: "sent" }]);
-                    setMessageInput(""); // Clear again just in case it was only an album
-                    clearPendingAttachments();
-                } catch (error) { messagesErrorRef.current = "Failed to send album."; }
-} else {
-                // Send individually
-                await Promise.all(uploaded.map(async (att) => {
+                    playSound("message", 0.4);
+                    setMessagesState((prev) => prev.map((msg) => msg.id === optimisticAlbumId ? { ...mapped, status: "sent" } : msg));
+                    window.setTimeout(() => setMessagesState((prev) => prev.map((msg) => msg.id === created.id && msg.status === "sent" ? { ...msg, status: "delivered" } : msg)), 350);
+                } catch {
+                    messagesErrorRef.current = "Failed to send album.";
+                    setMessagesState((prev) => prev.map((msg) => msg.id === optimisticAlbumId ? { ...msg, status: "failed" } : msg));
+                }
+            })();
+        } else if (images.length > 0) {
+            // 1 or 2 individual images - optimistic display immediately
+            images.forEach((att, idx) => {
+                const optimisticImgId = `local-img-${Date.now()}-${idx}`;
+                const captionForThis = idx === 0 ? textMessage : "";
+
+                setMessagesState((prev) => [...prev, {
+                    id: optimisticImgId,
+                    type: "tenant",
+                    messageType: "image",
+                    fileUrl: att.previewUrl || att.url || undefined,
+                    fileName: att.file.name,
+                    fileSize: att.file.size,
+                    mimeType: att.file.type,
+                    content: captionForThis,
+                    timestamp: optimisticTimestamp,
+                    createdAt: new Date().toISOString(),
+                    status: "sending"
+                }]);
+
+                void (async () => {
                     try {
+                        let finalUrl = att.url;
+                        let finalPath = att.path;
+                        if (!finalUrl || !finalPath) {
+                            const res = await uploadConversationFile(activeConversationId, att.file, undefined, true);
+                            finalUrl = res.file.url;
+                            finalPath = res.file.path;
+                        }
+
+                        const created = await sendConversationMessage(
+                            activeConversationId,
+                            captionForThis, // Only caption, NEVER filename
+                            {
+                                fileName: att.file.name,
+                                fileSize: att.file.size,
+                                mimeType: att.file.type,
+                                filePath: finalPath,
+                                fileUrl: finalUrl
+                            },
+                            "image"
+                        );
+                        const mapped = mapMessageToUi({ ...created, sender: null });
+                        playSound("message", 0.4);
+                        setMessagesState((prev) => prev.map((msg) => msg.id === optimisticImgId ? { ...mapped, status: "sent" } : msg));
+                        window.setTimeout(() => setMessagesState((prev) => prev.map((msg) => msg.id === created.id && msg.status === "sent" ? { ...msg, status: "delivered" } : msg)), 350);
+                    } catch {
+                        messagesErrorRef.current = `Failed to send ${att.file.name}`;
+                        setMessagesState((prev) => prev.map((msg) => msg.id === optimisticImgId ? { ...msg, status: "failed" } : msg));
+                    }
+                })();
+            });
+        }
+
+        // Handle Other Files (PDF, docs, etc.)
+        if (otherFiles.length > 0) {
+            otherFiles.forEach((att, idx) => {
+                const optimisticFileId = `local-file-${Date.now()}-${idx}`;
+                setMessagesState((prev) => [...prev, {
+                    id: optimisticFileId,
+                    type: "tenant",
+                    messageType: "file",
+                    fileName: att.file.name,
+                    fileSize: att.file.size,
+                    mimeType: att.file.type,
+                    fileUrl: att.url || undefined,
+                    content: att.file.name,
+                    timestamp: optimisticTimestamp,
+                    createdAt: new Date().toISOString(),
+                    status: "sending"
+                }]);
+
+                void (async () => {
+                    try {
+                        let finalUrl = att.url;
+                        let finalPath = att.path;
+                        if (!finalUrl || !finalPath) {
+                            const res = await uploadConversationFile(activeConversationId, att.file, undefined, true);
+                            finalUrl = res.file.url;
+                            finalPath = res.file.path;
+                        }
+
                         const created = await sendConversationMessage(
                             activeConversationId,
                             att.file.name,
@@ -1013,31 +1205,31 @@ if (isStillUploading) {
                                 fileName: att.file.name,
                                 fileSize: att.file.size,
                                 mimeType: att.file.type,
-                                filePath: att.path,
-                                fileUrl: att.url
+                                filePath: finalPath,
+                                fileUrl: finalUrl
                             },
-                            att.isImage ? "image" : "file"
+                            "file"
                         );
                         const mapped = mapMessageToUi({ ...created, sender: null });
-                        setMessagesState((prev) => [...prev, { ...mapped, status: "sent" }]);
-                    } catch (err) { messagesErrorRef.current = `Failed to send ${att.file.name}`; }
-                }));
-                clearPendingAttachments();
-            }
+                        playSound("message", 0.4);
+                        setMessagesState((prev) => prev.map((msg) => msg.id === optimisticFileId ? { ...mapped, status: "sent" } : msg));
+                        window.setTimeout(() => setMessagesState((prev) => prev.map((msg) => msg.id === created.id && msg.status === "sent" ? { ...msg, status: "delivered" } : msg)), 350);
+                    } catch {
+                        messagesErrorRef.current = `Failed to send ${att.file.name}`;
+                        setMessagesState((prev) => prev.map((msg) => msg.id === optimisticFileId ? { ...msg, status: "failed" } : msg));
+                    }
+                })();
+            });
         }
+
         void refreshConversations();
-        void refreshMessages(activeConversationId);
         setIsSending(false);
     };
 
     const handleFileUpload = (files: File[]) => queueSelectedFiles(files);
 
     const handleQuickAction = (key: string) => {
-        console.log("Handling quick action:", key);
         switch (key) {
-            case "pay-rent": router.push("/tenant/payments"); break;
-            case "request-repair": router.push("/tenant/maintenance"); break;
-            case "view-lease": router.push("/tenant/lease"); break;
             case "chat-iris": 
                 // Batch state updates for iRis activation
                 setIsIrisActive(true); 
@@ -1046,34 +1238,57 @@ if (isStillUploading) {
             case "archive-chat": setPendingConfirmAction("archive"); break;
             case "report-user": openReportWizard(); break;
             case "block-contact": setPendingConfirmAction("block"); break;
+            default:
+                setSelectedQuickAction(key);
+                break;
         }
     };
 
     useEffect(() => { if (!user) return; refreshConversations(); }, [user]);
 
     useEffect(() => {
+        setHasMoreMessages(false);
+        setIsLoadingEarlier(false);
+        scrollPositionAdjustmentRef.current = null;
+
         if (!activeConversationId) { 
-            // Batch state updates for conversation reset
             setMessagesState([]); 
             setIsOtherUserTyping(false); 
             setIsMessagesLoading(false); 
+            setMessageInput("");
+            setPendingAttachments([]);
             return; 
         }
-        if (!user?.id) { setIsMessagesLoading(true); return; }
+        if (!user?.id) { 
+            setMessagesState([]);
+            setIsMessagesLoading(true); 
+            return; 
+        }
         const cached = messagesCacheRef.current.get(activeConversationId);
         if (cached) { 
-            // Batch state updates for cached messages
             setMessagesState(cached); 
             setIsOtherUserTyping(false); 
             setIsMessagesLoading(false); 
+            setMessageInput("");
+            setPendingAttachments([]);
+            // Background refresh to keep messages up to date
+            void refreshMessages(activeConversationId, 20);
             return; 
         }
-        // Batch state updates for loading new messages
+        // Immediately clear previous chat content and show skeleton loading
         setMessagesState([]); 
         setIsOtherUserTyping(false); 
         setIsMessagesLoading(true);
+        setMessageInput("");
+        setPendingAttachments([]);
+
         let cancelled = false;
-        void (async () => { await refreshMessages(activeConversationId); if (!cancelled) setIsMessagesLoading(false); })();
+        void (async () => { 
+            await refreshMessages(activeConversationId, 20); 
+            if (!cancelled) {
+                setIsMessagesLoading(false); 
+            }
+        })();
         return () => { cancelled = true; };
     }, [activeConversationId, user?.id]);
 
@@ -1211,6 +1426,7 @@ useEffect(() => {
                     <>
                         <ChatHeader
                             contact={displayContact}
+                            isLoading={isChatLoading}
                             showFilesSidebar={showFilesSidebar}
                             setShowFilesSidebar={setShowFilesSidebar}
                             showInfoSidebar={showInfoSidebar}
@@ -1221,7 +1437,10 @@ useEffect(() => {
                         <MessageList
                             messages={messagesState}
                             viewerRole="tenant"
-                            isMessagesLoading={isMessagesLoading}
+                            isMessagesLoading={isChatLoading}
+                            hasMoreMessages={hasMoreMessages}
+                            isLoadingEarlier={isLoadingEarlier}
+                            onLoadEarlier={loadEarlierMessages}
                             onDownloadImage={handleDownloadImage}
                             onOpenF2F={(msg) => { setActiveF2FPayment(msg); setIsF2FInterfaceOpen(true); }}
                             onImageClick={(images, index) => { setPreviewImages(images); setPreviewImageIndex(index); }}
@@ -1244,6 +1463,7 @@ useEffect(() => {
                             isSending={isSending}
                             isOtherUserTyping={isOtherUserTyping}
                             otherUserName={displayContact.name}
+                            isLoading={isChatLoading}
                         />
                     </>
                 )}
@@ -1268,21 +1488,75 @@ useEffect(() => {
                                         <p className="mt-2 text-sm font-medium text-medium">{displayContact.unit}</p>
                                     </div>
                                     <div className="grid grid-cols-2 gap-3">
-                                        {activeQuickActions.map((action) => (
-                                            <button key={action.key} onClick={() => handleQuickAction(action.key)} className="flex flex-col items-center gap-2 rounded-2xl border border-divider bg-surface-2 p-4 transition-all hover:bg-surface-3 hover:scale-[1.02] active:scale-95 group">
+                                        {activeQuickActions.map((action, idx) => (
+                                            <button key={action.key || `qa-${idx}`} onClick={() => handleQuickAction(action.key)} className="flex flex-col items-center gap-2 rounded-2xl border border-divider bg-surface-2 p-4 transition-all hover:bg-surface-3 hover:scale-[1.02] active:scale-95 group">
                                                 <div className={cn("p-2.5 rounded-xl transition-colors", action.iconContainerClassName)}><action.icon className={cn("size-5", action.iconClassName)} /></div>
                                                 <div className="text-center"><p className="text-[10px] font-black uppercase tracking-widest text-high">{action.labelTop}</p><p className="text-[10px] font-medium text-medium">{action.labelBottom}</p></div>
                                             </button>
                                         ))}
                                     </div>
                                     {canShowPaymentHistory && (
-                                        <div className="space-y-4">
-                                            <div className="flex items-center justify-between"><h5 className="text-[10px] font-black uppercase tracking-widest text-disabled">Payment History</h5><span className="text-[10px] font-black text-primary">Total: ₱{paymentHistoryTotal}</span></div>
-                                            <div className="space-y-2">{paymentHistoryLoading ? <div className="h-20 w-full animate-pulse rounded-2xl bg-surface-2" /> : paymentHistory.length === 0 ? <p className="text-xs text-disabled text-center py-6 bg-surface-2/50 rounded-2xl italic border border-dashed border-divider">No payments found</p> : paymentHistory.slice(0, 5).map((payment) => (
-                                                <div key={payment.id} className="flex items-center justify-between p-3 rounded-2xl border border-divider bg-surface-2/30 hover:bg-surface-2 transition-colors">
-                                                    <div className="flex items-center gap-3"><div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/10"><Wallet className="size-3.5 text-emerald-500" /></div><div className="flex flex-col"><span className="text-xs font-black text-high truncate max-w-[100px]">{payment.typeLabel || 'Payment'}</span><span className="text-[9px] font-medium text-disabled">{payment.dateLabel}</span></div></div><span className="text-xs font-black text-emerald-500">₱{payment.amount}</span>
-                                                </div>
-                                            ))}</div>
+                                        <div className="space-y-3">
+                                            <div className="flex items-center justify-between">
+                                                <h5 className="text-[10px] font-black uppercase tracking-widest text-disabled">Payment History</h5>
+                                                <span className="text-[10px] font-black text-primary">Total: ₱{paymentHistoryTotal.toLocaleString()}</span>
+                                            </div>
+                                            <div className="space-y-2">
+                                                {paymentHistoryLoading ? (
+                                                    <div className="h-20 w-full animate-pulse rounded-2xl bg-surface-2" />
+                                                ) : paymentHistory.length === 0 ? (
+                                                    <p className="text-xs text-disabled text-center py-6 bg-surface-2/50 rounded-2xl italic border border-dashed border-divider">No payments found</p>
+                                                ) : (
+                                                    <>
+                                                        {(isPaymentHistoryExpanded ? paymentHistory : paymentHistory.slice(0, 4)).map((payment, idx) => (
+                                                            <div
+                                                                key={payment.id || `payment-${payment.dateLabel || idx}-${idx}`}
+                                                                onClick={() => setShowPaymentHistoryModal(true)}
+                                                                className="flex items-center justify-between p-3 rounded-2xl border border-divider bg-surface-2/30 hover:bg-surface-2 hover:border-primary/30 transition-all cursor-pointer group"
+                                                            >
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/10 group-hover:scale-105 transition-transform">
+                                                                        <Wallet className="size-3.5 text-emerald-500" />
+                                                                    </div>
+                                                                    <div className="flex flex-col">
+                                                                        <span className="text-xs font-black text-high truncate max-w-[120px]">
+                                                                            {payment.typeLabel || 'Payment'}
+                                                                        </span>
+                                                                        <span className="text-[9px] font-medium text-disabled">
+                                                                            {payment.dateLabel}
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                                <span className="text-xs font-black text-emerald-500">
+                                                                    ₱{payment.amount.toLocaleString()}
+                                                                </span>
+                                                            </div>
+                                                        ))}
+
+                                                        <div className="flex items-center gap-2 pt-1">
+                                                            {paymentHistory.length > 4 && (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setIsPaymentHistoryExpanded(!isPaymentHistoryExpanded)}
+                                                                    className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-divider bg-surface-2/40 hover:bg-surface-2 text-[10px] font-black uppercase tracking-wider text-medium hover:text-primary transition-all active:scale-95"
+                                                                >
+                                                                    <span>{isPaymentHistoryExpanded ? "See Less" : `See More (${paymentHistory.length - 4})`}</span>
+                                                                    <ChevronDown className={cn("size-3 transition-transform duration-200", isPaymentHistoryExpanded && "rotate-180")} />
+                                                                </button>
+                                                            )}
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setShowPaymentHistoryModal(true)}
+                                                                className="flex items-center justify-center gap-1 py-2 px-3 rounded-xl border border-divider bg-surface-2/40 hover:bg-surface-2 text-[10px] font-black uppercase tracking-wider text-primary hover:bg-surface-3 transition-all active:scale-95"
+                                                                title="View Full Payment Ledger"
+                                                            >
+                                                                <span>Ledger</span>
+                                                                <ArrowUpRight className="size-3" />
+                                                            </button>
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </div>
                                         </div>
                                     )}
                                     <div className="pt-4 space-y-3">
@@ -1310,10 +1584,10 @@ useEffect(() => {
                                             "grid gap-3",
                                             fileFilter === 'media' ? "grid-cols-3" : "grid-cols-1"
                                         )}>
-                                            {sharedFiles.map((file) => (
+                                            {sharedFiles.map((file, idx) => (
                                                 file.isMedia && fileFilter !== 'files' ? (
                                                     <div
-                                                        key={file.id}
+                                                        key={file.id || `shared-media-${file.url || idx}-${idx}`}
                                                         className="aspect-square rounded-xl overflow-hidden border border-divider bg-surface-2 relative group cursor-pointer"
                                                         role="button"
                                                         tabIndex={0}
@@ -1344,7 +1618,7 @@ useEffect(() => {
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <div key={file.id} className="flex items-center gap-3 p-3 rounded-2xl border border-divider bg-surface-2/30 hover:bg-surface-2 transition-all group">
+                                                    <div key={file.id || `shared-file-${file.url || idx}-${idx}`} className="flex items-center gap-3 p-3 rounded-2xl border border-divider bg-surface-2/30 hover:bg-surface-2 transition-all group">
                                                         <div className="p-2.5 rounded-xl bg-surface-2 text-medium group-hover:bg-primary/10 group-hover:text-primary transition-colors">
                                                             <FileText className="size-5" />
                                                         </div>
@@ -1378,8 +1652,8 @@ useEffect(() => {
 
             <AnimatePresence>
                 {pendingConfirmAction && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
-                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="w-full max-w-md rounded-[2.5rem] border border-border bg-card p-8 shadow-2xl">
+                    <div key="confirm-action-backdrop" className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
+                        <motion.div key="confirm-action-dialog" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="w-full max-w-md rounded-[2.5rem] border border-border bg-card p-8 shadow-2xl">
                             <div className="flex items-center gap-4 mb-6"><div className={cn("p-3 rounded-2xl", pendingConfirmAction === "block" ? "bg-red-500/10 text-red-500" : "bg-amber-500/10 text-amber-500")}>{pendingConfirmAction === "block" ? <ShieldCheck className="size-6" /> : <Folder className="size-6" />}</div><h3 className="text-xl font-black tracking-tight text-high">{pendingConfirmAction === "block" ? "Block Contact?" : "Archive Conversation?"}</h3></div>
                             <p className="text-sm text-medium leading-relaxed mb-8">{pendingConfirmAction === "block" ? "This user will no longer be able to message you. You can unblock them later in settings." : "This conversation will be moved to archives. You can still access it later from your archived messages."}</p>
                             <div className="flex justify-end gap-3">
@@ -1389,18 +1663,46 @@ useEffect(() => {
                         </motion.div>
                     </div>
                 )}
+            </AnimatePresence>
 
-                <MessageReportWizard
-                    isOpen={showReportWizard}
-                    onClose={() => setShowReportWizard(false)}
-                    targetUserId={activeContact?.participantUserId}
-                    conversationId={activeConversationId}
-                    reportedUserLabel={activeContact?.name}
-                    initialMessageId={reportMessageId}
-                />
+            <QuickActionSummaryModal
+                isOpen={Boolean(selectedQuickAction)}
+                onClose={() => {
+                    setSelectedQuickAction(null);
+                    if (activeConversationId) {
+                        void refreshMessages(activeConversationId);
+                        void refreshConversations();
+                    }
+                }}
+                actionKey={selectedQuickAction}
+                contact={displayContact}
+                currentUserRole="tenant"
+                onInsertMessage={(text) => setMessageInput(text)}
+            />
 
+            <PaymentHistoryModal
+                isOpen={showPaymentHistoryModal}
+                onClose={() => setShowPaymentHistoryModal(false)}
+                contact={displayContact}
+                payments={paymentHistory}
+                totalPaid={paymentHistoryTotal}
+                isLoading={paymentHistoryLoading}
+                role="tenant"
+            />
+
+            <MessageReportWizard
+                isOpen={showReportWizard}
+                onClose={() => setShowReportWizard(false)}
+                targetUserId={activeContact?.participantUserId}
+                conversationId={activeConversationId}
+                reportedUserLabel={activeContact?.name}
+                initialMessageId={reportMessageId}
+            />
+
+            <AnimatePresence>
                 {previewImages.length > 0 && (
                     <motion.div
+                        key="preview-images-lightbox"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -1459,7 +1761,7 @@ useEffect(() => {
                             >
                                 {previewImages.map((img, idx) => (
                                     <button
-                                        key={img.id}
+                                        key={img.id || `preview-thumb-${img.url || idx}-${idx}`}
                                         onClick={() => setPreviewImageIndex(idx)}
                                         className={cn(
                                             "flex-shrink-0 size-16 rounded-xl overflow-hidden border-2 transition-all",

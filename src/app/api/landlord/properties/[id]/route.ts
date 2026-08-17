@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { requireUser } from "@/lib/supabase/auth";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { PropertyService } from "@/lib/services/property";
+import { PropertyNotFoundError } from "@/lib/services/property/property.errors";
 
 export async function GET(
     _request: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
-    const { user } = await requireUser();
-    const supabase = await createClient();
+    const authContext = await requireAuthenticatedUser(_request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
 
     const resolvedParams = await params;
     const propertyId = resolvedParams?.id;
@@ -15,42 +17,39 @@ export async function GET(
         return NextResponse.json({ error: "Property id is required." }, { status: 400 });
     }
 
-    const { data: property, error: propertyError } = await supabase
-        .from("properties")
-        .select("id, name, type, address, description, amenities, house_rules, images, contract_template, total_units, total_floors, base_rent_amount")
-        .eq("id", propertyId)
-        .eq("landlord_id", user.id)
-        .maybeSingle();
+    try {
+        const propertyService = new PropertyService(supabase);
+        const propertyDetail = await propertyService.getPropertyDetail(propertyId, userId);
 
-    if (propertyError) {
+        return NextResponse.json({
+            property: {
+                id: propertyDetail.id,
+                name: propertyDetail.name,
+                type: propertyDetail.type,
+                address: propertyDetail.address,
+                description: propertyDetail.description,
+                amenities: propertyDetail.amenities,
+                house_rules: propertyDetail.houseRules,
+                images: propertyDetail.images,
+                contract_template: propertyDetail.contractTemplate,
+                total_units: propertyDetail.totalUnits,
+                total_floors: propertyDetail.totalFloors,
+                base_rent_amount: propertyDetail.baseRentAmount,
+                unitCount: propertyDetail.unitCount,
+                env_policy: propertyDetail.envPolicy
+                    ? {
+                          utility_split_method: propertyDetail.envPolicy.utilitySplitMethod,
+                          utility_fixed_charge_amount: propertyDetail.envPolicy.utilityFixedChargeAmount,
+                          max_occupants_per_unit: propertyDetail.envPolicy.maxOccupantsPerUnit,
+                      }
+                    : null,
+            },
+        });
+    } catch (error) {
+        if (error instanceof PropertyNotFoundError) {
+            return NextResponse.json({ error: "Property not found or access denied." }, { status: 404 });
+        }
         return NextResponse.json({ error: "Failed to load property details." }, { status: 500 });
     }
-
-    if (!property) {
-        return NextResponse.json({ error: "Property not found or access denied." }, { status: 404 });
-    }
-
-    const { count: unitCount, error: unitCountError } = await supabase
-        .from("units")
-        .select("id", { count: "exact", head: true })
-        .eq("property_id", property.id);
-
-    if (unitCountError) {
-        return NextResponse.json({ error: "Failed to load property units." }, { status: 500 });
-    }
-
-    // Load environment policy fields for wizard hydration (best-effort)
-    const { data: envPolicy } = await supabase
-        .from("property_environment_policies" as any)
-        .select("utility_split_method, utility_fixed_charge_amount, max_occupants_per_unit")
-        .eq("property_id", propertyId)
-        .maybeSingle();
-
-    return NextResponse.json({
-        property: {
-            ...property,
-            unitCount: unitCount ?? 1,
-            env_policy: envPolicy ?? null,
-        },
-    });
 }
+

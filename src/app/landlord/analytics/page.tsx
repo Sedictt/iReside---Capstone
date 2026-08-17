@@ -277,6 +277,11 @@ export default function AnalyticsPage() {
     const { profile } = useAuth();
     const { selectedPropertyId } = useProperty();
     const [mounted, setMounted] = useState(false);
+    const [isBoneyard, setIsBoneyard] = useState(false);
+    
+    useEffect(() => {
+        setIsBoneyard(typeof window !== "undefined" && window.location.search.includes("boneyard=true"));
+    }, []);
     const [showMoreKpis, setShowMoreKpis] = useState(false);
     const [selectedRange, setSelectedRange] = useState<RangeOption["id"]>("30d");
     const [startDate, setStartDate] = useState(formatIsoDate(shiftDays(-29)));
@@ -299,6 +304,7 @@ export default function AnalyticsPage() {
         statsError: null,
     });
     const { primaryKpis, extendedKpis, financialChart, operationalSnapshot, statsLoading, statsError } = statsState;
+    const showSkeletons = statsLoading || isBoneyard;
     const HISTORY_LIMIT = 5;
 
     const reportStartDate = useMemo(() => new Date(`${startDate}T00:00:00`), [startDate]);
@@ -771,7 +777,7 @@ export default function AnalyticsPage() {
                 <div className="mt-12 space-y-4">
                     {/* Stats Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        {statsLoading ? (
+                        {showSkeletons ? (
                             Array.from({ length: 4 }).map((_, i) => <KpiCardSkeleton key={`analytics-kpi-${i}`} />)
                         ) : (
                             primaryKpis.map((kpi) => (
@@ -803,7 +809,7 @@ export default function AnalyticsPage() {
                                 "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 transition-transform duration-500 pt-4",
                                 showMoreKpis ? "translate-y-0" : "-translate-y-4"
                             )}>
-                                {statsLoading ? (
+                                {showSkeletons ? (
                                     Array.from({ length: 4 }).map((_, i) => <KpiCardSkeleton key={`analytics-kpi-${i}`} />)
                                 ) : (
                                     extendedKpis.map((kpi) => (
@@ -846,7 +852,7 @@ export default function AnalyticsPage() {
                 <div className="relative z-10">
                     {/* Chart Section */}
                     <div className="h-[480px]">
-                        {statsLoading ? (
+                        {showSkeletons ? (
                             <ChartSkeleton />
                         ) : (
                             <FinancialPerformanceChart dataByWindow={financialChart} />

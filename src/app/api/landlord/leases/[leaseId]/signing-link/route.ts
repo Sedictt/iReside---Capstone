@@ -1,13 +1,18 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { generateLandlordSigningLink } from "@/lib/jwt";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import {
+  LeaseService,
+  LeaseNotFoundError,
+  LeaseAccessError,
+  LeaseSigningEligibilityError,
+} from "@/lib/services/lease";
 
 /**
  * POST /api/landlord/leases/[leaseId]/signing-link
- * 
+ *
  * Generates a secure signing link for a landlord to countersign a lease.
  * Only works for leases in "pending_landlord_signature" status.
- * 
+ *
  * Requirements: Lease countersignature workflow
  */
 export async function POST(
@@ -15,72 +20,36 @@ export async function POST(
   context: { params: Promise<{ leaseId: string }> }
 ) {
   const { leaseId } = await context.params;
-  const supabase = await createClient();
+  const authContext = await requireAuthenticatedUser(request);
+  if (!("userId" in authContext)) return authContext as Response;
+  const { userId: landlordId, supabase } = authContext;
 
-  // Get authenticated user
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) {
+  try {
+    const leaseService = new LeaseService(supabase);
+    const result = await leaseService.generateLandlordSigningLink(landlordId, leaseId);
+
+    return NextResponse.json({
+      success: true,
+      signingUrl: result.signingUrl,
+      leaseId: result.leaseId,
+      status: result.status,
+    });
+  } catch (error) {
+    if (error instanceof LeaseNotFoundError) {
+      return NextResponse.json({ error: error.message }, { status: 404 });
+    }
+    if (error instanceof LeaseAccessError) {
+      return NextResponse.json({ error: error.message }, { status: 403 });
+    }
+    if (error instanceof LeaseSigningEligibilityError) {
+      return NextResponse.json({ error: error.message }, { status: 409 });
+    }
+
+    console.error("[landlord-signing-link] Unexpected error:", error);
     return NextResponse.json(
-      { error: "Unauthorized" },
-      { status: 401 }
-    );
-  }
-
-  const landlordId = user.id;
-
-  // Fetch lease record
-  const { data: lease, error: leaseError } = await supabase
-    .from("leases")
-    .select("id, status, landlord_id, tenant_signature, tenant_signed_at")
-    .eq("id", leaseId)
-    .maybeSingle();
-
-  if (leaseError) {
-    console.error("[landlord-signing-link] Database error:", leaseError);
-    return NextResponse.json(
-      { error: "Failed to fetch lease" },
+      { error: "Failed to generate signing link" },
       { status: 500 }
     );
   }
-
-  if (!lease) {
-    return NextResponse.json(
-      { error: "Lease not found" },
-      { status: 404 }
-    );
-  }
-
-  // Verify landlord ID matches
-  if (lease.landlord_id !== landlordId) {
-    return NextResponse.json(
-      { error: "Unauthorized: You are not the landlord for this lease" },
-      { status: 403 }
-    );
-  }
-
-  // Verify lease is in correct status for countersignature
-  if (lease.status !== "pending_landlord_signature") {
-    return NextResponse.json(
-      { error: `Cannot generate signing link. Lease status is: ${lease.status}. Expected: pending_landlord_signature` },
-      { status: 409 }
-    );
-  }
-
-  // Verify tenant has already signed
-  if (!lease.tenant_signature || !lease.tenant_signed_at) {
-    return NextResponse.json(
-      { error: "Tenant has not signed this lease yet" },
-      { status: 409 }
-    );
-  }
-
-  // Generate landlord signing link
-  const signingUrl = generateLandlordSigningLink(leaseId, landlordId);
-
-  return NextResponse.json({
-    success: true,
-    signingUrl,
-    leaseId,
-    status: lease.status,
-  });
 }
+

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { requireUser } from "@/lib/supabase/auth";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 
 type InquiryItem = {
     id: string;
@@ -49,13 +48,14 @@ const formatRelativeDate = (value: string) => {
 };
 
 export async function GET() {
-    const { user } = await requireUser();
-    const supabase = await createClient();
+    const authContext = await requireAuthenticatedUser();
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase } = authContext;
 
     const { data: inquiryRows, error } = await supabase
         .from("applications")
         .select("id, status, message, created_at, applicant_id, unit_id")
-        .eq("landlord_id", user.id)
+        .eq("landlord_id", userId)
         .not("message", "is", null)
         .order("created_at", { ascending: false })
         .limit(8);
@@ -111,7 +111,7 @@ export async function GET() {
     const { data: actionRows, error: actionsError } =
         inquiryIds.length > 0
             ? await actionQuery
-                  .eq("landlord_id", user.id)
+                  .eq("landlord_id", userId)
                   .in("inquiry_id", inquiryIds) as any
             : { data: [], error: null };
 

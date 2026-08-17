@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_ALLOWED_REGEX = /^[+()\-\s\d]+$/;
@@ -52,17 +52,12 @@ function isApplicantIdNotNullViolation(error: PostgrestLikeError | null | undefi
 }
 
 export async function POST(request: Request) {
-    const supabase = await createClient();
-    const adminClient = createAdminClient();
+    const adminClient = createServiceRoleSupabaseClient();
 
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
 
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase: _supabase } = authContext;
 
     const body = await request.json();
 
@@ -164,7 +159,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Property not found for unit." }, { status: 404 });
     }
 
-    if (property.landlord_id !== user.id) {
+    if (property.landlord_id !== userId) {
         return NextResponse.json({ error: "You do not own this unit." }, { status: 403 });
     }
 
@@ -181,8 +176,8 @@ export async function POST(request: Request) {
 
     const insertPayload: Record<string, unknown> = {
         unit_id,
-        landlord_id: user.id,
-        created_by: user.id,
+        landlord_id: userId,
+        created_by: userId,
         applicant_name: normalizedApplicantName,
         applicant_phone: normalizedApplicantPhone || null,
         applicant_email: normalizedApplicantEmail,
@@ -225,7 +220,7 @@ export async function POST(request: Request) {
 
         if (isApplicantIdNotNullViolation(error) && !("applicant_id" in insertPayload)) {
             // Backward-compatibility for environments where applicant_id is still NOT NULL.
-            insertPayload.applicant_id = user.id;
+            insertPayload.applicant_id = userId;
             continue;
         }
 
@@ -245,17 +240,12 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-    const supabase = await createClient();
-    const adminClient = createAdminClient();
+    const adminClient = createServiceRoleSupabaseClient();
 
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
 
-    if (userError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId, supabase: _supabase } = authContext;
 
     const body = await request.json();
     const {
@@ -349,8 +339,8 @@ export async function PATCH(request: Request) {
 
     const createdBy = typeof existing.created_by === "string" ? existing.created_by : null;
     const landlordId = typeof existing.landlord_id === "string" ? existing.landlord_id : null;
-    const isOwner = landlordId === user.id;
-    const isCreator = createdBy === user.id;
+    const isOwner = landlordId === userId;
+    const isCreator = createdBy === userId;
 
     if (!isOwner && !isCreator) {
         return NextResponse.json({ error: "Unauthorized to update this application." }, { status: 403 });

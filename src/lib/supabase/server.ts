@@ -2,7 +2,13 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import type { Database } from '@/types/database'
 
-export async function createClient() {
+/**
+ * Creates a Supabase client for use in Server Components and API routes.
+ *
+ * Uses the request cookie store for session management.
+ * This is the primary server-side client.
+ */
+export async function createServerSupabaseClient() {
     const cookieStore = await cookies()
 
     return createServerClient<Database>(
@@ -28,3 +34,9 @@ export async function createClient() {
         }
     )
 }
+
+/**
+ * @deprecated Use `createServerSupabaseClient` instead.
+ * Kept as a backward-compatible alias during the refactoring migration.
+ */
+export const createClient = createServerSupabaseClient;
