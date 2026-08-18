@@ -70,7 +70,7 @@ export const FloorSelector: React.FC<FloorSelectorProps> = ({
                             <Layers className={`size-3.5 ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`} />
                         </div>
                         <span className={`text-xs font-black truncate text-left uppercase tracking-wider ${isDark ? 'text-white' : 'text-zinc-900'}`}>
-                            {activeTab?.title || 'Unknown'}
+                            {activeTab?.title || (floorTabs.length === 0 ? 'No Floors' : 'Unknown')}
                         </span>
                     </div>
                     <ChevronDown className={`size-4 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''} ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`} />
@@ -92,26 +92,43 @@ export const FloorSelector: React.FC<FloorSelectorProps> = ({
                             `}
                         >
                             <div className="max-h-[300px] overflow-y-auto scrollbar-hide py-1">
-                                {floorTabs.map((tab) => (
-                                    <button
-                                        key={tab.id}
-                                        onClick={() => {
-                                            onSelect(tab.id);
-                                            setIsOpen(false);
-                                        }}
-                                        className={`
-                                            flex items-center justify-between w-full px-3 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 group
-                                            ${tab.id === activeFloor
-                                                ? (isDark ? 'bg-primary/20 text-primary' : 'bg-primary/10 text-primary')
-                                                : (isDark ? 'text-zinc-400 hover:bg-white/5 hover:text-white' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900')}
-                                        `}
-                                    >
-                                        <span>{tab.title}</span>
-                                        {tab.id === activeFloor && (
-                                            <div className="size-1.5 rounded-full bg-primary" />
+                                {floorTabs.length === 0 ? (
+                                    <div className="px-3 py-3 text-center">
+                                        <p className="text-[11px] font-medium text-zinc-400">No floors added yet</p>
+                                        {!readOnly && (
+                                            <button
+                                                onClick={() => {
+                                                    onCreate();
+                                                    setIsOpen(false);
+                                                }}
+                                                className="mt-2 text-[10px] font-black uppercase tracking-wider text-primary hover:underline"
+                                            >
+                                                + Add First Floor
+                                            </button>
                                         )}
-                                    </button>
-                                ))}
+                                    </div>
+                                ) : (
+                                    floorTabs.map((tab) => (
+                                        <button
+                                            key={tab.id}
+                                            onClick={() => {
+                                                onSelect(tab.id);
+                                                setIsOpen(false);
+                                            }}
+                                            className={`
+                                                flex items-center justify-between w-full px-3 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 group
+                                                ${tab.id === activeFloor
+                                                    ? (isDark ? 'bg-primary/20 text-primary' : 'bg-primary/10 text-primary')
+                                                    : (isDark ? 'text-zinc-400 hover:bg-white/5 hover:text-white' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900')}
+                                            `}
+                                        >
+                                            <span>{tab.title}</span>
+                                            {tab.id === activeFloor && (
+                                                <div className="size-1.5 rounded-full bg-primary" />
+                                            )}
+                                        </button>
+                                    ))
+                                )}
                             </div>
                         </motion.div>
                     )}

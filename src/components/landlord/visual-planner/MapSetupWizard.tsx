@@ -11,7 +11,8 @@ import {
     ArrowRight,
     Layout,
     Sparkles,
-    Plus
+    Plus,
+    Layers
 } from "lucide-react";
 import {
     DndContext,
@@ -40,9 +41,10 @@ interface MapSetupWizardProps {
     propertyId: string;
     propertyName: string;
     onSetupComplete: () => void;
+    previewEmptyFloors?: boolean;
 }
 
-export function MapSetupWizard({ propertyId, propertyName, onSetupComplete }: MapSetupWizardProps) {
+export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, previewEmptyFloors = false }: MapSetupWizardProps) {
     const [units, setUnits] = useState<DbUnit[]>([]);
     const [floorConfigs, setFloorConfigs] = useState<FloorConfig[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -70,6 +72,20 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete }: Ma
     );
 
     const loadData = useCallback(async () => {
+        if (previewEmptyFloors) {
+            setUnits([
+                { id: "preview-u1", name: "Unit 101", floor: -1, status: "vacant", beds: 1, baths: 1, sqft: 450, position: null },
+                { id: "preview-u2", name: "Unit 102", floor: -1, status: "vacant", beds: 2, baths: 1, sqft: 600, position: null },
+                { id: "preview-u3", name: "Unit 103", floor: -1, status: "vacant", beds: 1, baths: 1, sqft: 450, position: null },
+                { id: "preview-u4", name: "Unit 201", floor: -1, status: "vacant", beds: 2, baths: 2, sqft: 750, position: null },
+                { id: "preview-u5", name: "Unit 202", floor: -1, status: "vacant", beds: 1, baths: 1, sqft: 500, position: null },
+            ]);
+            setFloorConfigs([]);
+            setPlacedCount(0);
+            setIsLoading(false);
+            return;
+        }
+
         try {
             setIsLoading(true);
             const res = await fetch(`/api/landlord/unit-map?propertyId=${propertyId}`);
@@ -91,7 +107,7 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete }: Ma
         } finally {
             setIsLoading(false);
         }
-    }, [propertyId, onSetupComplete]);
+    }, [propertyId, onSetupComplete, previewEmptyFloors]);
 
     useEffect(() => {
         void loadData();
@@ -100,12 +116,14 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete }: Ma
     const totalUnits = units.length;
     const progress = totalUnits > 0 ? Math.round((placedCount / totalUnits) * 100) : 0;
 
-    const handleAddFloor = async () => {
+    const handleAddFloor = async (floorNum?: number) => {
         setIsSaving(true);
         try {
-            const nextFloorNumber = floorConfigs.length > 0 
-                ? Math.max(...floorConfigs.map(fc => fc.floor_number)) + 1 
-                : 1;
+            const nextFloorNumber = floorNum !== undefined
+                ? floorNum
+                : (floorConfigs.length > 0 
+                    ? Math.max(...floorConfigs.map(fc => fc.floor_number)) + 1 
+                    : 1);
             
             // Optimistic update: add floor to state immediately
             const newFloor: FloorConfig = {
@@ -117,6 +135,12 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete }: Ma
             };
             setFloorConfigs(prev => [...prev, newFloor]);
             
+            if (previewEmptyFloors) {
+                setError(null);
+                setIsSaving(false);
+                return;
+            }
+
             // Send to server
             const res = await fetch("/api/landlord/unit-map/floor-configs", {
                 method: "PUT",
@@ -491,7 +515,7 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete }: Ma
                                 </div>
                                 <button
                                     data-tour-id="tour-wizard-add-floor"
-                                    onClick={handleAddFloor}
+                                    onClick={() => handleAddFloor()}
                                     disabled={isSaving}
                                     className="group flex shrink-0 items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-6 py-3 transition-all hover:bg-white/10 active:scale-95 disabled:opacity-50"
                                 >
@@ -514,14 +538,71 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete }: Ma
                                     </div>
                                 )}
 
-                                {floorConfigs.map((fc) => (
-                                    <FloorLane
-                                        key={fc.floor_key}
-                                        floor={fc}
-                                        units={units.filter((u) => u.floor === fc.floor_number)}
-                                        onRemove={() => handleRemoveFloor(fc.floor_key)}
-                                    />
-                                ))}
+                                {floorConfigs.length === 0 ? (
+                                    <div className="col-span-1 lg:col-span-2 flex flex-col items-center justify-center rounded-[2rem] border-2 border-dashed border-primary/20 bg-primary/[0.02] p-8 sm:p-12 text-center transition-all animate-in fade-in zoom-in-95 duration-300">
+                                        <div className="relative mb-6">
+                                            <div className="absolute inset-0 rounded-3xl bg-primary/20 animate-pulse blur-xl pointer-events-none" />
+                                            <div className="relative flex size-16 items-center justify-center rounded-3xl border border-primary/30 bg-primary/10 text-primary shadow-inner">
+                                                <Layers className="size-8" />
+                                            </div>
+                                        </div>
+
+                                        <h3 className="text-xl font-black tracking-tight text-white mb-2">
+                                            No Floors Created Yet
+                                        </h3>
+                                        <p className="max-w-md text-xs font-medium leading-relaxed text-neutral-400 mb-8">
+                                            Your building needs at least one floor level before units can be placed on the architectural map. Add your property&apos;s levels below to begin.
+                                        </p>
+
+                                        {/* Step Guide Cards */}
+                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-xl mb-8 text-left">
+                                            <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-4">
+                                                <div className="flex size-6 items-center justify-center rounded-lg bg-primary/10 text-primary text-[11px] font-black mb-2">1</div>
+                                                <p className="text-xs font-black text-white">Create Levels</p>
+                                                <p className="text-[10px] text-neutral-400 leading-relaxed mt-1">Add Ground Floor, Floor 1, Floor 2, etc.</p>
+                                            </div>
+                                            <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-4">
+                                                <div className="flex size-6 items-center justify-center rounded-lg bg-white/10 text-neutral-300 text-[11px] font-black mb-2">2</div>
+                                                <p className="text-xs font-black text-white">Assign Units</p>
+                                                <p className="text-[10px] text-neutral-400 leading-relaxed mt-1">Drag units from the pool to their floors.</p>
+                                            </div>
+                                            <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-4">
+                                                <div className="flex size-6 items-center justify-center rounded-lg bg-white/10 text-neutral-300 text-[11px] font-black mb-2">3</div>
+                                                <p className="text-xs font-black text-white">Generate Map</p>
+                                                <p className="text-[10px] text-neutral-400 leading-relaxed mt-1">Auto-build your high-fidelity canvas layout.</p>
+                                            </div>
+                                        </div>
+
+                                        {/* Action Buttons */}
+                                        <div className="flex flex-wrap items-center justify-center gap-3">
+                                            <button
+                                                onClick={() => handleAddFloor(1)}
+                                                disabled={isSaving}
+                                                className="flex items-center gap-2 rounded-2xl bg-primary px-6 py-3 text-xs font-black uppercase tracking-widest text-black transition-all hover:scale-105 active:scale-95 disabled:opacity-50 shadow-lg shadow-primary/20"
+                                            >
+                                                {isSaving ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4 stroke-[3px]" />}
+                                                Add First Floor (Floor 1)
+                                            </button>
+                                            <button
+                                                onClick={() => handleAddFloor(0)}
+                                                disabled={isSaving}
+                                                className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-white/10 active:scale-95 disabled:opacity-50"
+                                            >
+                                                <Plus className="size-4" />
+                                                Add Ground Floor
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    floorConfigs.map((fc) => (
+                                        <FloorLane
+                                            key={fc.floor_key}
+                                            floor={fc}
+                                            units={units.filter((u) => u.floor === fc.floor_number)}
+                                            onRemove={() => handleRemoveFloor(fc.floor_key)}
+                                        />
+                                    ))
+                                )}
                             </div>
                         </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import VisualBuilder from "@/components/landlord/visual-planner/VisualBuilder";
 import { MapSetupWizard } from "@/components/landlord/visual-planner/MapSetupWizard";
 import { PropertySelectorHub } from "@/components/landlord/community/PropertySelectorHub";
@@ -9,12 +10,21 @@ import { Map } from "lucide-react";
 
 type MapState = "loading" | "no-property" | "setup" | "ready";
 
-export default function UnitMapPage() {
+function UnitMapContent() {
+    const searchParams = useSearchParams();
+    const preview = searchParams.get("preview");
+    const isPreviewEmptyFloor = preview === "empty-floor" || preview === "setup" || preview === "true";
+
     const { selectedPropertyId, selectedProperty, loading, properties } = useProperty();
     const [mapState, setMapState] = useState<MapState>("loading");
     const [setupKey, setSetupKey] = useState(0);
 
     useEffect(() => {
+        if (isPreviewEmptyFloor) {
+            setMapState("setup");
+            return;
+        }
+
         if (loading && properties.length === 0) {
             setMapState("loading");
             return;
@@ -48,7 +58,20 @@ export default function UnitMapPage() {
         };
 
         void checkSetup();
-    }, [selectedPropertyId, loading, properties.length, setupKey]);
+    }, [selectedPropertyId, loading, properties.length, setupKey, isPreviewEmptyFloor]);
+
+    if (isPreviewEmptyFloor) {
+        return (
+            <div className="flex flex-col h-full">
+                <MapSetupWizard
+                    propertyId="preview-property"
+                    propertyName="Skyline Residences (Preview)"
+                    previewEmptyFloors={true}
+                    onSetupComplete={() => setMapState("ready")}
+                />
+            </div>
+        );
+    }
 
     if (mapState === "loading") {
         return null;
@@ -82,5 +105,13 @@ export default function UnitMapPage() {
         <div data-tour-id="tour-unit-map" className="h-full">
             <VisualBuilder />
         </div>
+    );
+}
+
+export default function UnitMapPage() {
+    return (
+        <Suspense fallback={null}>
+            <UnitMapContent />
+        </Suspense>
     );
 }
