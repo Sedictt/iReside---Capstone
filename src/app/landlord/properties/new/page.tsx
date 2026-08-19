@@ -210,108 +210,110 @@ function NewAssetContent() {
 
     const handleSubmit = async () => {
         setIsSubmitting(true);
-        setSaveStage("Finalizing configuration...");
+        setSaveStage("Saving configuration...");
         try {
-            if (!user) throw new Error("Session expired.");
+            if (!user) throw new Error("Session expired. Please log in again.");
 
-            const propPayload = {
+            let currentImages = [...existingImageUrls];
+
+            // 1. Upload new media files if any
+            if (mediaFiles.length > 0) {
+                setSaveStage("Uploading photos...");
+                const targetPropId = id || "temp-property";
+                const mediaFormData = new FormData();
+                mediaFormData.append("propertyId", targetPropId);
+                for (const file of mediaFiles) {
+                    mediaFormData.append("files", file);
+                }
+
+                // If editing existing property, upload directly
+                if (id) {
+                    try {
+                        const mediaRes = await fetch("/api/landlord/properties/media", {
+                            method: "POST",
+                            body: mediaFormData,
+                        });
+                        const mediaData = await mediaRes.json();
+                        if (mediaRes.ok && Array.isArray(mediaData.imageUrls)) {
+                            currentImages = [...currentImages, ...mediaData.imageUrls];
+                        }
+                    } catch (uploadErr) {
+                        console.warn("Photo upload warning:", uploadErr);
+                    }
+                }
+            }
+
+            setSaveStage("Saving property details...");
+
+            const endpoint = isEditMode && id ? `/api/landlord/properties/${id}` : `/api/landlord/properties`;
+            const method = isEditMode && id ? "PUT" : "POST";
+
+            const payload = {
                 name: formData.propertyName,
                 address: formData.address,
                 type: formData.propertyType,
-                total_units: parseInt(formData.totalUnits),
-                total_floors: parseInt(formData.floorCount),
-                base_rent_amount: parseFloat(formData.baseRent.toString()) || 0,
+                total_units: formData.totalUnits,
+                total_floors: formData.floorCount,
+                base_rent_amount: formData.baseRent,
                 description: formData.description,
                 amenities: formData.amenities,
                 house_rules: formData.buildingRules,
-                landlord_id: user.id,
-                city: "Valenzuela",
-                images: existingImageUrls,
+                images: currentImages,
+                contract_mode: formData.contractMode,
+                contract_file: formData.contractFile,
+                occupancy_limit: formData.occupancyLimit,
+                utility_billing: formData.utilityBilling,
             };
 
-            let propId = id;
-            if (isEditMode && id) {
-                const { error: updateError } = await supabase
-                    .from("properties")
-                    .update(propPayload)
-                    .eq("id", id)
-                    .select()
-                    .single();
-                if (updateError) throw new Error(`Failed to update property: ${updateError.message}`);
-            } else {
-                const { data, error } = await supabase.from("properties").insert(propPayload).select("id").single();
-                if (error) throw error;
-                propId = data?.id;
+            const response = await fetch(endpoint, {
+                method,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+
+            const result = await response.json();
+
+            if (!response.ok || !result.success) {
+                throw new Error(result.error || "Failed to save property.");
             }
 
-            if (propId) {
-                // Map frontend choices to DB columns
-                // Mapping: 
-                // fixed_charge -> utility_policy_mode: included_in_rent, utility_split_method: fixed_charge
-                // individual_meter -> utility_policy_mode: separate_metered, utility_split_method: individual_meter
-                // equal_per_head -> utility_policy_mode: mixed, utility_split_method: equal_per_head
-
-                const policyMapping: Record<string, { mode: string, split: string }> = {
-                    fixed_charge: { mode: "included_in_rent", split: "fixed_charge" },
-                    individual_meter: { mode: "separate_metered", split: "individual_meter" },
-                    equal_per_head: { mode: "mixed", split: "equal_per_head" }
-                };
-
-                const mapping = policyMapping[formData.utilityBilling] || policyMapping.fixed_charge;
-
-                // Save environment policy
-                const { error: policyError } = await (supabase as any).from("property_environment_policies").upsert({
-                    property_id: propId,
-                    environment_mode: "residential",
-                    max_occupants_per_unit: parseInt(formData.occupancyLimit),
-                    utility_policy_mode: mapping.mode,
-                    updated_at: new Date().toISOString()
-                }, { onConflict: "property_id" });
-                if (policyError) throw new Error(`Failed to save environment policy: ${policyError.message}`);
-
-                // Sync contract metadata if generated
-                if (formData.contractMode === "generate") {
-                    const { error: contractError } = await supabase.from("properties").update({
-                        contract_template: {
-                            answers: {
-                                rent: formData.baseRent.toString(),
-                                occupancy_limit: formData.occupancyLimit,
-                                utility_split_method: formData.utilityBilling,
-                                utilities: formData.amenities,
-                            },
-                            customClauses: formData.buildingRules.map((rule, idx) => ({
-                                id: idx,
-                                title: "Building Rule",
-                                description: rule
-                            })),
-                            contract_mode: "generate",
-                            last_updated: new Date().toISOString()
-                        }
-                    }).eq("id", propId);
-                    if (contractError) throw new Error(`Failed to save contract template: ${contractError.message}`);
-                } else if (formData.contractMode === "upload") {
-                    const { error: uploadError } = await supabase.from("properties").update({
-                        contract_template: {
-                            contract_mode: "upload",
-                            file_name: formData.contractFile,
-                            last_updated: new Date().toISOString()
-                        }
-                    }).eq("id", propId);
-                    if (uploadError) throw new Error(`Failed to save uploaded contract: ${uploadError.message}`);
+            // If new property was created and there were media files, upload them now with the real property ID
+            if (!isEditMode && result.propertyId && mediaFiles.length > 0) {
+                setSaveStage("Uploading photos...");
+                try {
+                    const mediaFormData = new FormData();
+                    mediaFormData.append("propertyId", result.propertyId);
+                    for (const file of mediaFiles) {
+                        mediaFormData.append("files", file);
+                    }
+                    const mediaRes = await fetch("/api/landlord/properties/media", {
+                        method: "POST",
+                        body: mediaFormData,
+                    });
+                    const mediaData = await mediaRes.json();
+                    if (mediaRes.ok && Array.isArray(mediaData.imageUrls) && mediaData.imageUrls.length > 0) {
+                        await fetch(`/api/landlord/properties/${result.propertyId}`, {
+                            method: "PUT",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                ...payload,
+                                images: [...currentImages, ...mediaData.imageUrls],
+                            }),
+                        });
+                    }
+                } catch (mediaErr) {
+                    console.warn("Media upload post-create warning:", mediaErr);
                 }
-
-            }
-
-            if (propId) {
-                // ... (rest of the logic)
             }
 
             toast.success(isEditMode ? "Property updated successfully!" : "Property created successfully!");
-            setIsSubmitting(false);
             push("/landlord/properties");
         } catch (e) {
+            console.error("Save error:", e);
             toast.error(e instanceof Error ? e.message : "Failed to save property. Please try again.");
+        } finally {
             setIsSubmitting(false);
+            setSaveStage(null);
         }
     };
 
@@ -802,8 +804,21 @@ function NewAssetContent() {
                         <button onClick={handleBack} disabled={isSubmitting} className={cn("flex items-center gap-2 text-white/40 hover:text-white transition-all font-black uppercase text-[11px]", step === 1 ? "opacity-0 pointer-events-none" : "")}>
                             <ArrowLeft className="size-4" /><span>Back</span>
                         </button>
-                        <button onClick={handleNext} disabled={isSubmitting} className="px-10 py-5 bg-primary text-black rounded-2xl font-black uppercase text-sm shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all">
-                            {isSubmitting ? "Syncing..." : step === 4 ? "Finalize Profile" : "Continue"}
+                        <button 
+                            onClick={handleNext} 
+                            disabled={isSubmitting} 
+                            className="px-10 py-5 bg-primary text-black rounded-2xl font-black uppercase text-sm shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
+                        >
+                            {isSubmitting ? (
+                                <>
+                                    <div className="size-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                                    <span>{saveStage || "Saving..."}</span>
+                                </>
+                            ) : step === 4 ? (
+                                <span>{isEditMode ? "Save Changes" : "Save Property"}</span>
+                            ) : (
+                                <span>Continue</span>
+                            )}
                         </button>
                     </div>
                 </div>
