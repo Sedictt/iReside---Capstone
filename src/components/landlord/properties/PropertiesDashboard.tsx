@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PropertyTenantsModal } from "./PropertyTenantsModal";
+import { PropertyMaintenanceModal } from "./PropertyMaintenanceModal";
 
 type PropertyStatus = "Performing" | "Stable" | "Attention Required";
 
@@ -76,6 +77,7 @@ export function PropertiesDashboard() {
     const [activeTab, setActiveTab] = useState<typeof FILTER_TABS[number]>(FILTER_TABS[0]);
     const [hubModalId, setHubModalId] = useState<string | null>(null);
     const [tenantsModalProperty, setTenantsModalProperty] = useState<PropertyCard | null>(null);
+    const [maintenanceModalProperty, setMaintenanceModalProperty] = useState<PropertyCard | null>(null);
 
     const loadProperties = useCallback(async (signal?: AbortSignal) => {
         setIsLoading(true);
@@ -434,12 +436,19 @@ export function PropertiesDashboard() {
                                         <span className="text-sm font-medium text-foreground">View Tenants</span>
                                     </button>
 
-                                    <Link href="/landlord/maintenance" className="neumorphic-extruded group flex flex-col items-center justify-center rounded-2xl p-4 transition-all">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setMaintenanceModalProperty(activeProperty);
+                                            setHubModalId(null);
+                                        }}
+                                        className="neumorphic-extruded group flex flex-col items-center justify-center rounded-2xl p-4 transition-all text-center"
+                                    >
                                         <div className="neumorphic-inset-card size-12 text-amber-400 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                                             <Wrench className="size-5" />
                                         </div>
                                         <span className="text-sm font-medium text-foreground">Maintenance</span>
-                                    </Link>
+                                    </button>
                                 </div>
                             </motion.div>
                         </div>
@@ -455,6 +464,17 @@ export function PropertiesDashboard() {
                     propertyName={tenantsModalProperty.name}
                     propertyImage={tenantsModalProperty.image}
                     onClose={() => setTenantsModalProperty(null)}
+                />
+            )}
+
+            {/* Property Maintenance Modal */}
+            {maintenanceModalProperty && (
+                <PropertyMaintenanceModal
+                    isOpen={Boolean(maintenanceModalProperty)}
+                    propertyId={maintenanceModalProperty.id}
+                    propertyName={maintenanceModalProperty.name}
+                    propertyImage={maintenanceModalProperty.image}
+                    onClose={() => setMaintenanceModalProperty(null)}
                 />
             )}
         </div>
