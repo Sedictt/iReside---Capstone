@@ -20,6 +20,7 @@ import {
 import { cn } from "@/lib/utils";
 import { PropertyTenantsModal } from "./PropertyTenantsModal";
 import { PropertyMaintenanceModal } from "./PropertyMaintenanceModal";
+import { AnimatedFilterPills } from "@/components/ui/AnimatedFilterPills";
 
 type PropertyStatus = "Performing" | "Stable" | "Attention Required";
 
@@ -164,22 +165,13 @@ export function PropertiesDashboard() {
 
             {/* View Controls & Filters */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="neumorphic-inset flex w-full rounded-xl p-1 sm:w-auto">
-                    {FILTER_TABS.map((tab) => (
-                        <button
-                            key={tab}
-                            onClick={() => setActiveTab(tab)}
-                            className={cn(
-                                "flex-1 sm:flex-none px-6 py-2.5 rounded-lg text-sm font-medium transition-all",
-                                activeTab === tab
-                                    ? "neumorphic-extruded text-foreground"
-                                    : "text-muted-foreground hover:text-foreground"
-                            )}
-                        >
-                            {tab}
-                        </button>
-                    ))}
-                </div>
+                <AnimatedFilterPills
+                    variant="neumorphic"
+                    options={FILTER_TABS as any}
+                    activeId={activeTab}
+                    onChange={(tab) => setActiveTab(tab)}
+                    layoutGroupId="properties-portfolio-filter"
+                />
 
                 <div className="relative w-full sm:w-80">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />

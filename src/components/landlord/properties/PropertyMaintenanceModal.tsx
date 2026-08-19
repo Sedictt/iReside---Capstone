@@ -23,6 +23,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { MaintenanceRequestModal } from "@/components/landlord/maintenance/MaintenanceRequestModal";
 import type { MaintenanceRequest } from "@/components/landlord/maintenance/MaintenanceDashboard";
+import { AnimatedFilterPills } from "@/components/ui/AnimatedFilterPills";
 
 interface PropertyMaintenanceModalProps {
     isOpen: boolean;
@@ -177,22 +178,14 @@ export function PropertyMaintenanceModal({
                                 />
                             </div>
 
-                            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-                                {["all", "pending", "in progress", "resolved"].map((tab) => (
-                                    <button
-                                        key={tab}
-                                        onClick={() => setStatusFilter(tab)}
-                                        className={cn(
-                                            "rounded-xl px-3 py-1.5 text-xs font-bold capitalize transition-all shrink-0",
-                                            statusFilter === tab
-                                                ? "bg-amber-400 text-black font-black"
-                                                : "bg-white/5 text-neutral-400 hover:text-white hover:bg-white/10"
-                                        )}
-                                    >
-                                        {tab}
-                                    </button>
-                                ))}
-                            </div>
+                            <AnimatedFilterPills
+                                variant="amber"
+                                size="sm"
+                                options={["all", "pending", "in progress", "resolved"]}
+                                activeId={statusFilter}
+                                onChange={(tab) => setStatusFilter(tab)}
+                                layoutGroupId="property-maintenance-filter-pills"
+                            />
                         </div>
 
                         {/* Content / Requests List */}
