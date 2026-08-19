@@ -61,7 +61,7 @@ const MEDIA_UPLOAD_TIMEOUT_MS = 25_000;
 const PROPERTY_LOAD_TIMEOUT_MS = 12_000;
 
 function NewAssetContent() {
-    const { push } = useRouter();
+    const router = useRouter();
     const searchParams = useSearchParams();
     const mode = searchParams?.get("mode");
     const id = searchParams?.get("id");
@@ -205,7 +205,7 @@ function NewAssetContent() {
 
     const handleBack = () => {
         if (step > 1) setStep(s => (s - 1) as Step);
-        else push("/landlord/properties");
+        else router.push("/landlord/properties");
     };
 
     const handleSubmit = async () => {
@@ -307,7 +307,8 @@ function NewAssetContent() {
             }
 
             toast.success(isEditMode ? "Property updated successfully!" : "Property created successfully!");
-            push("/landlord/properties");
+            router.refresh();
+            router.push("/landlord/properties");
         } catch (e) {
             console.error("Save error:", e);
             toast.error(e instanceof Error ? e.message : "Failed to save property. Please try again.");
@@ -435,7 +436,7 @@ function NewAssetContent() {
                                         {isEditMode && (
                                             <button 
                                                 type="button"
-                                                onClick={() => push("/landlord/support?topic=property_info_change")}
+                                                onClick={() => router.push("/landlord/support?topic=property_info_change")}
                                                 className="w-full py-4 rounded-2xl border border-primary/20 bg-primary/5 text-[10px] font-black uppercase tracking-[0.2em] text-primary hover:bg-primary/10 transition-all flex items-center justify-center gap-2"
                                             >
                                                 <ShieldCheck className="size-3.5" />

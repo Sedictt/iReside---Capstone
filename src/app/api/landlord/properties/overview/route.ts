@@ -30,6 +30,8 @@ const getStatus = (occupied: number, total: number, maintenanceCount: number): P
     return "Stable";
 };
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
     const authContext = await requireAuthenticatedUser();
     if (!("userId" in authContext)) return authContext as Response;
@@ -37,7 +39,7 @@ export async function GET() {
 
     const { data: properties, error: propertiesError } = await supabase
         .from("properties")
-        .select("id, name, address, type, images")
+        .select("id, name, address, type, images, total_units, total_floors, base_rent_amount")
         .eq("landlord_id", userId)
         .order("created_at", { ascending: false });
 
@@ -48,7 +50,10 @@ export async function GET() {
     const propertyIds = (properties ?? []).map((property) => property.id);
 
     if (propertyIds.length === 0) {
-        return NextResponse.json({ properties: [] });
+        return NextResponse.json(
+            { properties: [] },
+            { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } }
+        );
     }
 
     const { data: units, error: unitsError } = await supabase
@@ -139,7 +144,7 @@ export async function GET() {
     const result = (properties ?? []).map((property) => {
         const propertyUnits = unitsByProperty.get(property.id) ?? [];
         const occupied = propertyUnits.filter((unit) => unit.status === "occupied").length;
-        const total = propertyUnits.length;
+        const total = propertyUnits.length > 0 ? propertyUnits.length : (property.total_units ?? 1);
 
         const propertyUnitIds = new Set(propertyUnits.map((unit) => unit.id));
         const activeMaintenance = (maintenanceRows ?? []).filter(
@@ -172,7 +177,7 @@ export async function GET() {
             id: property.id,
             name: property.name,
             address: property.address,
-            type: policy?.environment_mode || property.type,
+            type: property.type || policy?.environment_mode || "apartment",
             needsReview: policy?.needs_review || false,
             capRate: `${capRate.toFixed(1)}%`,
             noi: formatCompactCurrency(noiValue),
@@ -193,5 +198,8 @@ export async function GET() {
         };
     });
 
-    return NextResponse.json({ properties: result });
+    return NextResponse.json(
+        { properties: result },
+        { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } }
+    );
 }
