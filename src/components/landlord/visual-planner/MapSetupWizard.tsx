@@ -37,6 +37,7 @@ import {
 } from "@dnd-kit/sortable";
 import { cn } from "@/lib/utils";
 import { generateUnitList, type NumberingStyle } from "@/lib/unit-naming";
+import { useAppToast } from "@/hooks/useAppToast";
 
 import { SortableUnit, FloorLane, floorDisplayName } from "./components/WizardUnits";
 import type { DbUnit, FloorConfig } from "./components/WizardUnits";
@@ -61,6 +62,7 @@ const sortUnitsSequential = (unitList: DbUnit[]) => {
 };
 
 export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, previewEmptyFloors = false }: MapSetupWizardProps) {
+    const toast = useAppToast();
     const [units, setUnits] = useState<DbUnit[]>([]);
     const [floorConfigs, setFloorConfigs] = useState<FloorConfig[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -252,8 +254,10 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
             );
             await Promise.all(promises);
             setError(null);
+            toast.success("Units distributed evenly across floors!");
         } catch {
             setError("Failed to distribute units evenly across floors.");
+            toast.error("Failed to distribute units evenly across floors.");
         } finally {
             setIsSaving(false);
         }
@@ -279,8 +283,12 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
             }
             setIsRenumberModalOpen(false);
             setError(null);
+            toast.success("Units successfully renumbered!", {
+                description: `Applied ${renumberStyle === "floor_based" ? "floor-based" : "sequential"} numbering with prefix "${renumberPrefix}".`,
+            });
         } catch (err: any) {
             setError(err.message || "Failed to batch rename units.");
+            toast.error(err.message || "Failed to batch rename units.");
         } finally {
             setIsRenumbering(false);
         }
