@@ -112,25 +112,33 @@ const MODE_CARDS: {
     id: EnvironmentMode;
     label: string;
     tagline: string;
+    description: string;
     icon: typeof Shield;
+    badgeColor: string;
 }[] = [
     {
         id: "apartment",
         label: "Apartment",
-        tagline: "Residential Suites",
+        tagline: "Standard Residential",
+        description: "Autonomous private residences with flexible occupant limits and independent leases.",
         icon: Building2,
+        badgeColor: "text-blue-400 bg-blue-400/10 border-blue-400/20",
     },
     {
         id: "dormitory",
         label: "Dormitory",
-        tagline: "Student & Bedspace",
+        tagline: "Structured Community",
+        description: "Student & institutional accommodation with curfew hours, visitor rules, and per-bed occupancy.",
         icon: Shield,
+        badgeColor: "text-amber-400 bg-amber-400/10 border-amber-400/20",
     },
     {
         id: "boarding_house",
         label: "Boarding House",
-        tagline: "Private Co-Living",
+        tagline: "Shared Co-Living",
+        description: "Private single rooms with shared common amenities, hybrid billing, and quiet hour guidelines.",
         icon: Users,
+        badgeColor: "text-purple-400 bg-purple-400/10 border-purple-400/20",
     },
 ];
 
@@ -355,19 +363,21 @@ export default function PropertyEnvironmentPage() {
                     </div>
                 </div>
 
-                {/* Compact Operating Environment Switcher */}
-                <div className="neumorphic-panel rounded-3xl p-4 space-y-3">
-                    <div className="flex items-center justify-between px-1">
-                        <h2 className="text-xs font-black uppercase tracking-widest text-neutral-400 flex items-center gap-2">
-                            <Building2 className="size-3.5 text-primary" />
-                            <span>Operating Environment</span>
-                        </h2>
-                        <span className="text-[11px] text-neutral-500 font-medium">
-                            Auto-configures defaults
-                        </span>
+                {/* Operating Environment Descriptive Cards */}
+                <div className="neumorphic-panel rounded-[2rem] p-6 space-y-4">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h2 className="text-sm font-black tracking-tight text-white flex items-center gap-2">
+                                <Building2 className="size-4 text-primary" />
+                                <span>Operating Environment Mode</span>
+                            </h2>
+                            <p className="text-xs text-neutral-400 font-medium mt-0.5">
+                                Select how this property operates to auto-calibrate occupancy rules, curfews, and metering defaults.
+                            </p>
+                        </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
                         {MODE_CARDS.map((card) => {
                             const Icon = card.icon;
                             const isSelected = mode === card.id;
@@ -378,37 +388,50 @@ export default function PropertyEnvironmentPage() {
                                     type="button"
                                     onClick={() => handleModeChange(card.id)}
                                     className={cn(
-                                        "group flex items-center justify-between rounded-2xl p-3 text-left transition-all duration-200",
+                                        "group relative flex flex-col justify-between rounded-2xl p-5 text-left transition-all duration-300",
                                         isSelected
-                                            ? "neumorphic-inset border border-primary/50 bg-primary/[0.04] shadow-sm shadow-primary/10"
-                                            : "neumorphic-panel hover:border-white/10 active:scale-[0.99]"
+                                            ? "neumorphic-inset border-2 border-primary/50 bg-primary/[0.04] shadow-md shadow-primary/10"
+                                            : "neumorphic-panel hover:border-white/20 active:scale-[0.99]"
                                     )}
                                 >
-                                    <div className="flex items-center gap-3">
-                                        <div
-                                            className={cn(
-                                                "neumorphic-inset-card size-9 rounded-xl flex items-center justify-center shrink-0 transition-colors",
-                                                isSelected ? "text-primary" : "text-neutral-400"
+                                    <div>
+                                        <div className="flex items-start justify-between gap-2 mb-3">
+                                            <div
+                                                className={cn(
+                                                    "neumorphic-inset-card size-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105",
+                                                    isSelected ? "text-primary" : "text-neutral-400"
+                                                )}
+                                            >
+                                                <Icon className="size-5" />
+                                            </div>
+                                            {isSelected ? (
+                                                <div className="size-5 rounded-full bg-primary text-black flex items-center justify-center shadow-sm">
+                                                    <Check className="size-3 stroke-[3]" />
+                                                </div>
+                                            ) : (
+                                                <div className="size-5 rounded-full border border-white/10" />
                                             )}
-                                        >
-                                            <Icon className="size-4" />
                                         </div>
-                                        <div>
-                                            <p className="text-xs font-black text-white group-hover:text-primary transition-colors">
-                                                {card.label}
-                                            </p>
-                                            <p className="text-[10px] font-medium text-neutral-500">
-                                                {card.tagline}
-                                            </p>
-                                        </div>
+
+                                        <h3 className="text-sm font-black text-white group-hover:text-primary transition-colors">
+                                            {card.label}
+                                        </h3>
+                                        <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mt-0.5">
+                                            {card.tagline}
+                                        </p>
+                                        <p className="text-xs text-neutral-400 mt-2 leading-relaxed font-medium">
+                                            {card.description}
+                                        </p>
                                     </div>
-                                    {isSelected ? (
-                                        <div className="size-5 rounded-full bg-primary text-black flex items-center justify-center shadow-sm shrink-0">
-                                            <Check className="size-3 stroke-[3]" />
-                                        </div>
-                                    ) : (
-                                        <div className="size-4 rounded-full border border-white/10 shrink-0" />
-                                    )}
+
+                                    <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between">
+                                        <span className={cn("text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border", card.badgeColor)}>
+                                            {card.id.replace("_", " ")}
+                                        </span>
+                                        <span className="text-[10px] font-bold text-neutral-500 group-hover:text-neutral-300 transition-colors">
+                                            {isSelected ? "Active Mode" : "Switch Mode →"}
+                                        </span>
+                                    </div>
                                 </button>
                             );
                         })}
