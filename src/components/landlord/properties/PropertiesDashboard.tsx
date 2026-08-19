@@ -26,6 +26,10 @@ type PropertyCard = {
     name: string;
     address: string;
     type: string;
+    totalFloors?: number;
+    totalUnits?: number;
+    baseRentAmount?: number;
+    amenitiesCount?: number;
     needsReview?: boolean;
     capRate: string;
     noi: string;
@@ -234,8 +238,19 @@ export function PropertiesDashboard() {
                                     {/* Header: Name, Address & Status */}
                                     <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6">
                                         <div className="space-y-1">
-                                            <div className="flex items-center gap-3">
+                                            <div className="flex flex-wrap items-center gap-2.5">
                                                 <h3 className="text-2xl font-black text-foreground leading-tight">{property.name}</h3>
+                                                <div className={cn(
+                                                    "neumorphic-inset-card inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider whitespace-nowrap",
+                                                    property.type === "dormitory"
+                                                        ? "text-blue-500 border-blue-500/30"
+                                                        : property.type === "boarding_house"
+                                                            ? "text-purple-500 border-purple-500/30"
+                                                            : "text-primary border-primary/30"
+                                                )}>
+                                                    <Building2 className="size-3" />
+                                                    <span>{property.type === "dormitory" ? "Dormitory" : property.type === "boarding_house" ? "Boarding House" : "Apartment"}</span>
+                                                </div>
                                                 <div className={cn(
                                                     "neumorphic-inset-card inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider whitespace-nowrap",
                                                     property.status === "Performing" || property.status === "Stable"
@@ -258,7 +273,7 @@ export function PropertiesDashboard() {
 
                                     {/* Operational Metrics & Activities */}
                                     <div className="flex w-full flex-col justify-between gap-8 lg:flex-row lg:items-center">
-                                        <div className="flex flex-wrap items-center gap-6 lg:gap-10">
+                                        <div className="flex flex-wrap items-center gap-6 lg:gap-8">
                                             {/* Occupancy Mini-Visual */}
                                             <div className="flex items-center gap-4">
                                                 <div className="relative size-14">
@@ -317,6 +332,26 @@ export function PropertiesDashboard() {
                                                     </p>
                                                 </div>
                                             </div>
+
+                                            {property.baseRentAmount !== undefined && property.baseRentAmount > 0 && (
+                                                <>
+                                                    <div className="hidden h-10 w-px bg-border/60 sm:block" />
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="neumorphic-inset-card size-14 rounded-2xl flex items-center justify-center text-primary font-black text-lg">
+                                                            ₱
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-xs font-black uppercase tracking-wider text-muted-foreground/80">Base Rent</p>
+                                                            <p className="text-xl font-black text-foreground">
+                                                                ₱{property.baseRentAmount.toLocaleString()}
+                                                            </p>
+                                                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                                                                {property.totalFloors ?? 1} Floor{(property.totalFloors ?? 1) > 1 ? "s" : ""}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </>
+                                            )}
                                         </div>
 
                                         {/* Actions */}

@@ -39,7 +39,7 @@ export async function GET() {
 
     const { data: properties, error: propertiesError } = await supabase
         .from("properties")
-        .select("id, name, address, type, images, total_units, total_floors, base_rent_amount")
+        .select("id, name, address, type, images, total_units, total_floors, base_rent_amount, amenities, house_rules")
         .eq("landlord_id", userId)
         .order("created_at", { ascending: false });
 
@@ -63,9 +63,16 @@ export async function GET() {
 
     const { data: policies, error: policiesError } = (await (supabase as any)
         .from("property_environment_policies")
-        .select("property_id, environment_mode, needs_review")
+        .select("property_id, environment_mode, needs_review, max_occupants_per_unit, utility_policy_mode, utility_split_method")
         .in("property_id", propertyIds)) as {
-        data: Array<{ property_id: string; environment_mode: string | null; needs_review: boolean | null }> | null;
+        data: Array<{
+            property_id: string;
+            environment_mode: string | null;
+            needs_review: boolean | null;
+            max_occupants_per_unit: number | null;
+            utility_policy_mode: string | null;
+            utility_split_method: string | null;
+        }> | null;
         error: any;
     };
 
@@ -144,7 +151,8 @@ export async function GET() {
     const result = (properties ?? []).map((property) => {
         const propertyUnits = unitsByProperty.get(property.id) ?? [];
         const occupied = propertyUnits.filter((unit) => unit.status === "occupied").length;
-        const total = propertyUnits.length > 0 ? propertyUnits.length : (property.total_units ?? 1);
+        const configuredUnits = Number(property.total_units) || 0;
+        const total = configuredUnits > 0 ? configuredUnits : Math.max(propertyUnits.length, 1);
 
         const propertyUnitIds = new Set(propertyUnits.map((unit) => unit.id));
         const activeMaintenance = (maintenanceRows ?? []).filter(
@@ -178,6 +186,10 @@ export async function GET() {
             name: property.name,
             address: property.address,
             type: property.type || policy?.environment_mode || "apartment",
+            totalFloors: Number(property.total_floors) || 1,
+            totalUnits: total,
+            baseRentAmount: Number(property.base_rent_amount) || 0,
+            amenitiesCount: Array.isArray(property.amenities) ? property.amenities.length : 0,
             needsReview: policy?.needs_review || false,
             capRate: `${capRate.toFixed(1)}%`,
             noi: formatCompactCurrency(noiValue),
