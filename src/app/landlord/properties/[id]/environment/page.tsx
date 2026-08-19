@@ -727,25 +727,6 @@ export default function PropertyEnvironmentPage() {
                         </div>
                     </div>
                 </div>
-
-                {/* Bottom Save Action Bar */}
-                <div className="flex items-center justify-end gap-4 pt-4 border-t border-white/5">
-                    <button
-                        onClick={() => push(`/landlord/properties`)}
-                        disabled={saving}
-                        className="px-6 py-3 rounded-2xl text-xs font-bold text-neutral-400 hover:text-white transition-all"
-                    >
-                        Back to Properties
-                    </button>
-                    <button
-                        onClick={handleSave}
-                        disabled={saving}
-                        className="neumorphic-primary flex items-center gap-2 rounded-2xl px-8 py-3.5 text-xs font-black uppercase tracking-widest text-primary-foreground transition-all hover:scale-105 active:scale-95 shadow-xl shadow-primary/25 disabled:opacity-50"
-                    >
-                        <Save className="size-4" />
-                        <span>{saving ? "Saving Changes..." : "Save Environment Policy"}</span>
-                    </button>
-                </div>
             </div>
         </div>
     );
