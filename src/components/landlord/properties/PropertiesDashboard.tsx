@@ -332,26 +332,6 @@ export function PropertiesDashboard() {
                                                     </p>
                                                 </div>
                                             </div>
-
-                                            {property.baseRentAmount !== undefined && property.baseRentAmount > 0 && (
-                                                <>
-                                                    <div className="hidden h-10 w-px bg-border/60 sm:block" />
-                                                    <div className="flex items-center gap-4">
-                                                        <div className="neumorphic-inset-card size-14 rounded-2xl flex items-center justify-center text-primary font-black text-lg">
-                                                            ₱
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-xs font-black uppercase tracking-wider text-muted-foreground/80">Base Rent</p>
-                                                            <p className="text-xl font-black text-foreground">
-                                                                ₱{property.baseRentAmount.toLocaleString()}
-                                                            </p>
-                                                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                                                                {property.totalFloors ?? 1} Floor{(property.totalFloors ?? 1) > 1 ? "s" : ""}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </>
-                                            )}
                                         </div>
 
                                         {/* Actions */}
