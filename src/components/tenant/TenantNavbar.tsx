@@ -21,6 +21,7 @@ import {
     X,
     LayoutGrid,
     Sparkles,
+    Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -107,6 +108,7 @@ export function TenantSidebar() {
         error: notificationsError,
         markAsRead,
         markAllAsRead,
+        refresh,
         importantNotifications
     } = useNotifications();
 
@@ -215,7 +217,15 @@ return (
                         <div className="relative" ref={mobileNotificationsRef}>
                             <button
                                 type="button"
-                                onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                                onClick={() => {
+                                    setIsNotificationsOpen((current) => {
+                                        const next = !current;
+                                        if (next) {
+                                            void refresh();
+                                        }
+                                        return next;
+                                    });
+                                }}
                                 className={cn(
                                     "relative flex size-9 items-center justify-center rounded-lg transition-all",
                                     isNotificationsOpen ? "neumorphic-primary" : "neumorphic-extruded text-muted-foreground hover:text-foreground"
@@ -247,6 +257,7 @@ return (
                                             error={notificationsError}
                                             unreadCount={unreadCount}
                                             onNotificationClick={handleNotificationClick}
+                                            onMarkAsRead={markAsRead}
                                             onMarkAllAsRead={markAllAsRead}
                                         />
                                     </motion.div>
@@ -304,7 +315,15 @@ return (
                         <div className="relative" ref={notificationsRef}>
                             <button
                                 type="button"
-                                onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                                onClick={() => {
+                                    setIsNotificationsOpen((current) => {
+                                        const next = !current;
+                                        if (next) {
+                                            void refresh();
+                                        }
+                                        return next;
+                                    });
+                                }}
                                 className={cn(
                                     "relative rounded-xl p-2 transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
                                     isNotificationsOpen ? "neumorphic-extruded active text-primary-foreground" : "neumorphic-extruded text-muted-foreground hover:text-foreground"
@@ -336,6 +355,7 @@ return (
                                             error={notificationsError}
                                             unreadCount={unreadCount}
                                             onNotificationClick={handleNotificationClick}
+                                            onMarkAsRead={markAsRead}
                                             onMarkAllAsRead={markAllAsRead}
                                         />
                                     </motion.div>
@@ -432,6 +452,7 @@ function NotificationPanelContent({
     error, 
     unreadCount, 
     onNotificationClick, 
+    onMarkAsRead,
     onMarkAllAsRead 
 }: { 
     notifications: Notification[], 
@@ -439,6 +460,7 @@ function NotificationPanelContent({
     error: string | null, 
     unreadCount: number, 
     onNotificationClick: (n: Notification) => void, 
+    onMarkAsRead?: (id: string) => void,
     onMarkAllAsRead: () => void 
 }) {
     return (
@@ -473,17 +495,51 @@ function NotificationPanelContent({
                         <div 
                             key={notification.id} 
                             onClick={() => onNotificationClick(notification)}
-                            className="group/item relative px-6 py-4 transition-all hover:bg-muted/50 cursor-pointer border-b border-border/30 last:border-0"
+                            className={cn(
+                                "group/item relative px-6 py-4 transition-all hover:bg-muted/50 cursor-pointer border-b border-border/30 last:border-0",
+                                !notification.read ? "bg-primary/[0.04]" : "opacity-75 hover:opacity-100"
+                            )}
                         >
                             <div className="flex items-start justify-between gap-4">
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-black text-foreground group-hover/item:text-primary transition-colors truncate">{notification.title}</p>
-                                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground line-clamp-2">{notification.message}</p>
-                                    <p className="mt-2 text-[10px] font-black text-muted-foreground/40 uppercase tracking-wider">{formatTimeAgo(notification.created_at)}</p>
+                                    <p className={cn(
+                                        "text-sm font-black transition-colors truncate",
+                                        !notification.read ? "text-foreground group-hover/item:text-primary" : "text-muted-foreground group-hover/item:text-foreground"
+                                    )}>
+                                        {notification.title}
+                                    </p>
+                                    <p className={cn(
+                                        "mt-1 text-xs leading-relaxed line-clamp-2",
+                                        !notification.read ? "text-muted-foreground" : "text-muted-foreground/60"
+                                    )}>
+                                        {notification.message}
+                                    </p>
+                                    <p className="mt-2 text-[10px] font-black text-muted-foreground/40 uppercase tracking-wider">
+                                        {formatTimeAgo(notification.created_at)}
+                                    </p>
                                 </div>
-                                {!notification.read && (
-                                    <div className="mt-1.5 size-2 shrink-0 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),0.6)]" />
-                                )}
+                                <div className="flex items-center justify-center size-7 shrink-0 mt-0.5">
+                                    {!notification.read ? (
+                                        <div className="relative flex items-center justify-center size-7">
+                                            <span className="size-2 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),0.6)] group-hover/item:scale-0 transition-transform duration-200" />
+                                            {onMarkAsRead && (
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        onMarkAsRead(notification.id);
+                                                    }}
+                                                    title="Mark as read"
+                                                    className="absolute inset-0 z-10 flex items-center justify-center opacity-0 group-hover/item:opacity-100 bg-primary/20 rounded-full text-primary hover:bg-primary/30 transition-all duration-200 transform scale-50 group-hover/item:scale-100"
+                                                >
+                                                    <Check className="size-3.5 stroke-[3px]" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="size-1.5 rounded-full bg-muted-foreground/20" />
+                                    )}
+                                </div>
                             </div>
                         </div>
                     ))
@@ -491,6 +547,7 @@ function NotificationPanelContent({
             </div>
             <div className="border-t border-border/50 p-3 bg-muted/20">
                 <button 
+                    type="button"
                     onClick={(e) => {
                         e.stopPropagation();
                         onMarkAllAsRead();

@@ -83,45 +83,116 @@ function notificationReducer(state: NotificationState, action: NotificationActio
                 error: null,
                 counts: { applications: 0, maintenance: 0, messages: 0 },
             };
-        case 'MARK_AS_READ':
+        case 'MARK_AS_READ': {
+            const updated = state.notifications.map(n =>
+                n.id === action.payload ? { ...n, read: true } : n
+            );
+            const unread = updated.filter(n => !n.read);
+            const importantTypes: NotificationType[] = [
+                'lease', 
+                'lease_renewal_request', 
+                'payment', 
+                'maintenance',
+                'application'
+            ];
+            const important = unread.filter(n => importantTypes.includes(n.type));
             return {
                 ...state,
-                notifications: state.notifications.map(n =>
-                    n.id === action.payload ? { ...n, read: true } : n
-                ),
-                unreadCount: Math.max(0, state.unreadCount - 1),
+                notifications: updated,
+                importantNotifications: important,
+                unreadCount: unread.length,
+                urgentCount: important.length,
             };
-        case 'MARK_ALL_AS_READ':
+        }
+        case 'MARK_ALL_AS_READ': {
+            const updated = state.notifications.map(n => ({ ...n, read: true }));
             return {
                 ...state,
-                notifications: state.notifications.map(n => ({ ...n, read: true })),
+                notifications: updated,
+                importantNotifications: [],
                 unreadCount: 0,
+                urgentCount: 0,
             };
-        case 'DELETE_NOTIFICATION':
+        }
+        case 'DELETE_NOTIFICATION': {
             const wasUnread = state.notifications.find(n => n.id === action.payload && !n.read);
+            const updated = state.notifications.filter(n => n.id !== action.payload);
+            const unread = updated.filter(n => !n.read);
+            const importantTypes: NotificationType[] = [
+                'lease', 
+                'lease_renewal_request', 
+                'payment', 
+                'maintenance',
+                'application'
+            ];
+            const important = unread.filter(n => importantTypes.includes(n.type));
             return {
                 ...state,
-                notifications: state.notifications.filter(n => n.id !== action.payload),
-                unreadCount: wasUnread ? Math.max(0, state.unreadCount - 1) : state.unreadCount,
+                notifications: updated,
+                importantNotifications: important,
+                unreadCount: wasUnread ? Math.max(0, state.unreadCount - 1) : unread.length,
+                urgentCount: important.length,
             };
-        case 'ADD_NOTIFICATION':
+        }
+        case 'ADD_NOTIFICATION': {
+            const updated = [action.payload, ...state.notifications.filter(n => n.id !== action.payload.id)];
+            const unread = updated.filter(n => !n.read);
+            const importantTypes: NotificationType[] = [
+                'lease', 
+                'lease_renewal_request', 
+                'payment', 
+                'maintenance',
+                'application'
+            ];
+            const important = unread.filter(n => importantTypes.includes(n.type));
             return {
                 ...state,
-                notifications: [action.payload, ...state.notifications],
-                unreadCount: action.payload.read ? state.unreadCount : state.unreadCount + 1,
+                notifications: updated,
+                importantNotifications: important,
+                unreadCount: unread.length,
+                urgentCount: important.length,
             };
-        case 'UPDATE_NOTIFICATION':
+        }
+        case 'UPDATE_NOTIFICATION': {
+            const updated = state.notifications.map(n =>
+                n.id === action.payload.id ? action.payload : n
+            );
+            const unread = updated.filter(n => !n.read);
+            const importantTypes: NotificationType[] = [
+                'lease', 
+                'lease_renewal_request', 
+                'payment', 
+                'maintenance',
+                'application'
+            ];
+            const important = unread.filter(n => importantTypes.includes(n.type));
             return {
                 ...state,
-                notifications: state.notifications.map(n =>
-                    n.id === action.payload.id ? action.payload : n
-                ),
+                notifications: updated,
+                importantNotifications: important,
+                unreadCount: unread.length,
+                urgentCount: important.length,
             };
-        case 'REMOVE_NOTIFICATION':
+        }
+        case 'REMOVE_NOTIFICATION': {
+            const updated = state.notifications.filter(n => n.id !== action.payload);
+            const unread = updated.filter(n => !n.read);
+            const importantTypes: NotificationType[] = [
+                'lease', 
+                'lease_renewal_request', 
+                'payment', 
+                'maintenance',
+                'application'
+            ];
+            const important = unread.filter(n => importantTypes.includes(n.type));
             return {
                 ...state,
-                notifications: state.notifications.filter(n => n.id !== action.payload),
+                notifications: updated,
+                importantNotifications: important,
+                unreadCount: unread.length,
+                urgentCount: important.length,
             };
+        }
         default:
             return state;
     }
@@ -254,10 +325,12 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         }
     }, [user, profile, selectedPropertyId, supabase]);
 
-    const fetchNotifications = useCallback(async () => {
+    const fetchNotifications = useCallback(async (silent = false) => {
         if (!user) return;
 
-        dispatch({ type: 'SET_LOADING', payload: true });
+        if (!silent) {
+            dispatch({ type: 'SET_LOADING', payload: true });
+        }
         try {
             const { data, error } = await supabase
                 .from("notifications")
@@ -265,6 +338,13 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
                 .eq("user_id", user.id)
                 .order("created_at", { ascending: false })
                 .limit(50);
+
+            if (error) {
+                if (!silent) {
+                    dispatch({ type: 'SET_ERROR', payload: error.message });
+                }
+                return;
+            }
 
             let finalData = data || [];
 
@@ -327,33 +407,45 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
             dispatch({ type: 'SET_IMPORTANT_NOTIFICATIONS', payload: important });
             dispatch({ type: 'SET_URGENT_COUNT', payload: important.length });
         } catch (err) {
-            dispatch({ type: 'SET_ERROR', payload: err instanceof Error ? err.message : "Failed to fetch notifications" });
+            if (!silent) {
+                dispatch({ type: 'SET_ERROR', payload: err instanceof Error ? err.message : "Failed to fetch notifications" });
+            }
         } finally {
-            dispatch({ type: 'SET_LOADING', payload: false });
+            if (!silent) {
+                dispatch({ type: 'SET_LOADING', payload: false });
+            }
         }
     }, [user, supabase]);
 
     const refresh = useCallback(async () => {
-        await Promise.all([fetchNotifications(), fetchCounts()]);
+        await Promise.all([fetchNotifications(false), fetchCounts()]);
     }, [fetchNotifications, fetchCounts]);
 
-    const markAsRead = async (id: string) => {
-        try {
-            const { error } = await supabase
-                .from("notifications")
-                .update({ read: true })
-                .eq("id", id);
+    const markAsRead = useCallback(async (id: string) => {
+        // Optimistically mark as read in local state so it immediately reflects in UI
+        dispatch({ type: 'MARK_AS_READ', payload: id });
 
-            if (error) throw error;
+        if (!id.startsWith("mock-")) {
+            try {
+                const { error } = await supabase
+                    .from("notifications")
+                    .update({ read: true })
+                    .eq("id", id);
 
-            dispatch({ type: 'MARK_AS_READ', payload: id });
-        } catch (err) {
-            console.error("Error marking notification as read:", err);
+                if (error) {
+                    console.error("Error marking notification as read in DB:", error);
+                }
+            } catch (err) {
+                console.error("Error marking notification as read:", err);
+            }
         }
-    };
+    }, [supabase]);
 
-    const markAllAsRead = async () => {
+    const markAllAsRead = useCallback(async () => {
         if (!user) return;
+        // Optimistically mark all as read in local state immediately
+        dispatch({ type: 'MARK_ALL_AS_READ' });
+
         try {
             const { error } = await supabase
                 .from("notifications")
@@ -361,28 +453,32 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
                 .eq("user_id", user.id)
                 .eq("read", false);
 
-            if (error) throw error;
-
-            dispatch({ type: 'MARK_ALL_AS_READ' });
+            if (error) {
+                console.error("Error marking all notifications as read in DB:", error);
+            }
         } catch (err) {
             console.error("Error marking all notifications as read:", err);
         }
-    };
+    }, [user, supabase]);
 
-    const deleteNotification = async (id: string) => {
-        try {
-            const { error } = await supabase
-                .from("notifications")
-                .delete()
-                .eq("id", id);
+    const deleteNotification = useCallback(async (id: string) => {
+        dispatch({ type: 'DELETE_NOTIFICATION', payload: id });
 
-            if (error) throw error;
+        if (!id.startsWith("mock-")) {
+            try {
+                const { error } = await supabase
+                    .from("notifications")
+                    .delete()
+                    .eq("id", id);
 
-            dispatch({ type: 'DELETE_NOTIFICATION', payload: id });
-        } catch (err) {
-            console.error("Error deleting notification:", err);
+                if (error) {
+                    console.error("Error deleting notification in DB:", error);
+                }
+            } catch (err) {
+                console.error("Error deleting notification:", err);
+            }
         }
-    };
+    }, [supabase]);
 
     // eslint-disable-next-line react-doctor/effect-needs-cleanup
     useEffect(() => {
@@ -419,11 +515,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
                     } else if (payload.eventType === "UPDATE") {
                         const updatedNotification = payload.new as Notification;
                         dispatch({ type: 'UPDATE_NOTIFICATION', payload: updatedNotification });
-                        // Recalculate unread count
-                        fetchNotifications();
                     } else if (payload.eventType === "DELETE") {
-                        dispatch({ type: 'REMOVE_NOTIFICATION', payload: payload.old.id });
-                        fetchNotifications();
+                        dispatch({ type: 'REMOVE_NOTIFICATION', payload: (payload.old as { id: string }).id });
                     }
                 }
             )

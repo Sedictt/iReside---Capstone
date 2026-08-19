@@ -49,6 +49,20 @@ type SystemAdvisory = {
     createdAt: string;
 };
 
+function formatTimeAgo(value: string) {
+    const time = new Date(value).getTime();
+    if (Number.isNaN(time)) return "Recently";
+    const diff = Date.now() - time;
+    const minutes = Math.floor(diff / (1000 * 60));
+    if (minutes < 1) return "Just now";
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `${days}d ago`;
+    return new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
 const OPEN_UNIT_STATUSES = ["available", "vacant", "open", "listed"];
 const INACTIVE_INVITE_STATUSES = ["expired", "revoked", "inactive", "disabled", "cancelled"];
 
@@ -405,35 +419,58 @@ export default function LandlordDashboard() {
                     onCreateInvite={() => setIsInviteModalOpen(true)}
                 />
 
-                {/* System Advisory - Premium Styling */}
-                {systemAdvisory && !isAdvisoryDismissed && (
-                    <div className="group relative overflow-hidden rounded-[2rem] border border-amber-500/25 bg-amber-500/10 p-6 backdrop-blur-sm animate-in zoom-in-95 duration-500">
-                        <button
-                            onClick={handleDismissAdvisory}
-                            className="absolute top-4 right-4 z-20 text-amber-300/60 hover:text-amber-300 hover:bg-amber-500/10 p-1.5 rounded-lg active:scale-95 transition-all"
-                            aria-label="Dismiss advisory alert"
+                {/* System Advisory - Sleek Neumorphic Glass Alert */}
+                <AnimatePresence>
+                    {systemAdvisory && !isAdvisoryDismissed && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -8, scale: 0.95, height: 0, marginBottom: 0 }}
+                            transition={{ duration: 0.3, ease: "easeOut" }}
+                            className="group relative w-full shrink-0 overflow-hidden rounded-[2rem] neumorphic-panel border border-amber-500/20 bg-gradient-to-r from-amber-500/10 via-surface-2/60 to-surface-1/80 p-5 sm:p-6 backdrop-blur-xl shadow-lg shadow-amber-500/5"
                         >
-                            <X className="size-4" />
-                        </button>
-                        <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                            <div className="flex items-center gap-5">
-                                <div className="flex size-14 items-center justify-center rounded-2xl border border-amber-500/20 bg-amber-500/12 text-amber-400">
-                                    <AlertTriangle className="size-7" />
+                            {/* Ambient Subtle Background Glow */}
+                            <div className="absolute -left-10 -top-10 size-36 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
+                            <div className="absolute -right-10 -bottom-10 size-36 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+
+                            <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                <div className="flex items-start sm:items-center gap-4 min-w-0 flex-1 pr-6 sm:pr-0">
+                                    <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-400 shadow-inner">
+                                        <AlertTriangle className="size-6 text-amber-400" />
+                                    </div>
+                                    <div className="min-w-0 flex-1 space-y-1">
+                                        <div className="flex items-center gap-2.5 flex-wrap">
+                                            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 border border-amber-500/25 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-amber-400">
+                                                <span className="size-1.5 rounded-full bg-amber-400 animate-pulse" />
+                                                System Advisory
+                                            </span>
+                                            <span className="text-xs text-muted-foreground/60 font-medium">
+                                                {formatTimeAgo(systemAdvisory.createdAt)}
+                                            </span>
+                                        </div>
+                                        <h3 className="text-sm sm:text-base font-black text-foreground tracking-tight">
+                                            {systemAdvisory.title}
+                                        </h3>
+                                        <p className="text-xs sm:text-sm leading-relaxed text-muted-foreground">
+                                            {systemAdvisory.message}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="pr-6">
-                                    <h3 className="text-lg font-black text-amber-300">{systemAdvisory.title}</h3>
-                                    <p className="text-sm font-medium text-muted-foreground/80">{systemAdvisory.message}</p>
+
+                                <div className="flex items-center gap-3 self-end sm:self-center shrink-0">
+                                    <button
+                                        onClick={handleDismissAdvisory}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider text-muted-foreground hover:text-foreground hover:bg-white/10 transition-all neumorphic-extruded active:scale-95"
+                                        aria-label="Dismiss advisory alert"
+                                    >
+                                        <X className="size-3.5" />
+                                        <span>Dismiss</span>
+                                    </button>
                                 </div>
                             </div>
-                            <div className="rounded-xl border border-amber-500/25 bg-amber-500/12 px-4 py-2 text-xs font-black uppercase tracking-widest text-amber-300">
-                                Global Alert
-                            </div>
-                        </div>
-                        <div className="absolute -right-10 top-1/2 -translate-y-1/2 opacity-[0.03] transition-transform duration-700 group-hover:scale-125">
-                            <AlertTriangle className="size-40" />
-                        </div>
-                    </div>
-                )}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
 
                 {/* Primary Hub */}

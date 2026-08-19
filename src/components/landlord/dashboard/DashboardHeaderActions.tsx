@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { useNotifications } from "@/context/NotificationContext";
 import { ProfileWidget } from "@/components/landlord/ProfileWidget";
 import { LandlordQuestBoard } from "@/components/landlord/dashboard/LandlordQuestBoard";
+import { MissionTriggerButton } from "@/components/landlord/dashboard/MissionTriggerButton";
 
 type SearchResultType = "property" | "tenant" | "maintenance" | "page" | "invoice" | "document";
 
@@ -78,7 +79,8 @@ export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActi
         loading: notificationsLoading, 
         error: notificationsError,
         markAsRead,
-        markAllAsRead 
+        markAllAsRead,
+        refresh
     } = useNotifications();
 
     const pageIndex = [
@@ -252,18 +254,7 @@ export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActi
         <>
             <div className="absolute top-3 right-3 sm:top-4 sm:right-4 md:top-8 md:right-8 z-20 flex items-center gap-1.5 sm:gap-2 md:gap-4">
                 {/* Mission Control Trigger */}
-                <button
-                    onClick={onQuestPanelOpen}
-                    data-tour-id="tour-quest-trigger"
-                    className="relative group flex size-11 items-center justify-center rounded-2xl neumorphic-extruded active:scale-95 text-primary"
-                >
-                    <div className="absolute inset-0 rounded-2xl bg-primary/20 animate-pulse blur-md pointer-events-none" />
-                    <AlertCircle className="size-5 text-primary transition-transform group-hover:scale-110" />
-                    
-                    <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 scale-0 px-2 py-1 rounded bg-surface-4 text-[10px] font-black text-foreground opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all whitespace-nowrap border border-white/5 shadow-xl">
-                        View Missions
-                    </span>
-                </button>
+                <MissionTriggerButton onOpen={onQuestPanelOpen} />
 
                 {/* Search Bar */}
                 <div className="relative group hidden sm:block" ref={searchRef}>
@@ -328,7 +319,15 @@ export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActi
                 {/* Notifications */}
                 <div className="relative">
                     <button
-                        onClick={() => setIsNotificationsOpen((current) => !current)}
+                        onClick={() => {
+                            setIsNotificationsOpen((current) => {
+                                const next = !current;
+                                if (next) {
+                                    void refresh();
+                                }
+                                return next;
+                            });
+                        }}
                         className="group relative flex size-11 items-center justify-center rounded-2xl neumorphic-extruded active:scale-95"
                     >
                         <Bell className="size-5 text-muted-foreground transition-colors group-hover:text-foreground" />

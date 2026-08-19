@@ -16,16 +16,41 @@ const NAV_ITEMS: SidebarNavSection[] = [
         hideHeading: true,
         collapsible: false,
         items: [
-            { label: "Overview", href: "/admin/dashboard", icon: LayoutDashboard },
-            { label: "Registrations", href: "/admin/registrations", icon: FileCheck },
-            { label: "User Directory", href: "/admin/users", icon: Users },
-            { label: "Chat Moderation", href: "/admin/chat-moderation", icon: MessageSquareWarning },
+            { 
+                label: "Overview", 
+                href: "/admin/dashboard", 
+                icon: LayoutDashboard,
+                description: "System health metrics, active user stats & platform overview"
+            },
+            { 
+                label: "Registrations", 
+                href: "/admin/registrations", 
+                icon: FileCheck,
+                description: "Review & approve incoming landlord and tenant registrations"
+            },
+            { 
+                label: "User Directory", 
+                href: "/admin/users", 
+                icon: Users,
+                description: "Manage registered accounts, roles and platform permissions"
+            },
+            { 
+                label: "Chat Moderation", 
+                href: "/admin/chat-moderation", 
+                icon: MessageSquareWarning,
+                description: "Inspect flagged messages, enforce community rules & safety"
+            },
         ],
     },
     {
         category: "Temporary",
         items: [
-            { label: "Consultation Tool", href: "/admin/consultation-tool", icon: PenTool },
+            { 
+                label: "Consultation Tool", 
+                href: "/admin/consultation-tool", 
+                icon: PenTool,
+                description: "Real-time consultation and tenant guidance tool"
+            },
         ],
     },
 ];

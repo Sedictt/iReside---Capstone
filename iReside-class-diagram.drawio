@@ -1,0 +1,463 @@
+<mxGraphModel>
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    
+    <!-- Title -->
+    <mxCell id="title" value="&lt;b&gt;iReside - Class Diagram&lt;/b&gt;&lt;br&gt;&lt;i&gt;Excluding Iris AI&lt;/i&gt;" style="text;html=1;fontSize=24;fontStyle=0;align=center;verticalAlign=top;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="400" y="10" width="500" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- ==================== DOMAIN 1: AUTH &amp; USER ==================== -->
+    <mxCell id="auth-domain" value="&lt;b&gt;Auth &amp; User Domain&lt;/b&gt;" style=" rounded=1;fillColor=#E8F0FE;strokeColor=#4285F4;fontSize=13;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="40" y="70" width="240" height="30" as="geometry"/>
+    </mxCell>
+
+    <!-- Profile -->
+    <mxCell id="profile" value="&lt;b&gt;&amp;lt;&amp;lt;entity&amp;gt;&amp;gt;&lt;br&gt;Profile&lt;/b&gt;&lt;hr&gt;+ id: string&lt;br&gt;+ email: string&lt;br&gt;+ full_name: string&lt;br&gt;+ role: UserRole&lt;br&gt;+ avatar_url: string?&lt;br&gt;+ phone: string?&lt;br&gt;+ bio: string?&lt;br&gt;+ cover_url: string?&lt;br&gt;+ socials: Json?&lt;br&gt;+ address: string?&lt;br&gt;+ created_at: datetime&lt;br&gt;+ updated_at: datetime" style=" rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4285F4;fontSize=10;align=left;verticalAlign=top;overflow=hidden;" vertex="1" parent="1">
+      <mxGeometry x="40" y="110" width="220" height="180" as="geometry"/>
+    </mxCell>
+
+    <!-- UserRole enum -->
+    <mxCell id="userrole" value="&lt;b&gt;&amp;lt;&amp;lt;enum&amp;gt;&amp;gt;&lt;br&gt;UserRole&lt;/b&gt;&lt;hr&gt;tenant&lt;br&gt;landlord&lt;br&gt;admin" style=" rounded=1;whiteSpace=wrap;html=1;fillColor=#FCE8E6;strokeColor=#D93025;fontSize=10;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="300" y="130" width="140" height="80" as="geometry"/>
+    </mxCell>
+
+    <!-- AuthContext -->
+    <mxCell id="authcontext" value="&lt;b&gt;&amp;lt;&amp;lt;context&amp;gt;&amp;gt;&lt;br&gt;AuthContext&lt;/b&gt;&lt;hr&gt;+ session: Session?&lt;br&gt;+ profile: Profile?&lt;br&gt;+ isLoading: boolean&lt;br&gt;+ error: string?&lt;br&gt;+ signIn(email, pwd): Promise&lt;br&gt;+ signOut(): Promise&lt;br&gt;+ refreshSession(): Promise" style=" rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4285F4;fontSize=10;align=left;verticalAlign=top;dashed=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="310" width="200" height="130" as="geometry"/>
+    </mxCell>
+
+    <!-- ==================== DOMAIN 2: PROPERTY ==================== -->
+    <mxCell id="prop-domain" value="&lt;b&gt;Property Domain&lt;/b&gt;" style=" rounded=1;fillColor=#E8F5E9;strokeColor=#34A853;fontSize=13;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="520" y="70" width="240" height="30" as="geometry"/>
+    </mxCell>
+
+    <!-- Property -->
+    <mxCell id="property" value="&lt;b&gt;&amp;lt;&amp;lt;entity&amp;gt;&amp;gt;&lt;br&gt;Property&lt;/b&gt;&lt;hr&gt;+ id: string&lt;br&gt;+ landlord_id: string&lt;br&gt;+ name: string&lt;br&gt;+ address: string&lt;br&gt;+ city: string&lt;br&gt;+ type: PropertyType&lt;br&gt;+ description: string?&lt;br&gt;+ amenities: string[]&lt;br&gt;+ house_rules: string[]&lt;br&gt;+ images: string[]&lt;br&gt;+ total_units: number?&lt;br&gt;+ created_at: datetime" style=" rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#34A853;fontSize=10;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="520" y="110" width="220" height="175" as="geometry"/>
+    </mxCell>
+
+    <!-- PropertyType enum -->
+    <mxCell id="propertytype" value="&lt;b&gt;&amp;lt;&amp;lt;enum&amp;gt;&amp;gt;&lt;br&gt;PropertyType&lt;/b&gt;&lt;hr&gt;apartment&lt;br&gt;dormitory&lt;br&gt;..." style=" rounded=1;whiteSpace=wrap;html=1;fillColor=#FCE8E6;strokeColor=#D93025;fontSize=10;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="800" y="125" width="130" height="80" as="geometry"/>
+    </mxCell>
+
+    <!-- Unit -->
+    <mxCell id="unit" value="&lt;b&gt;&amp;lt;&amp;lt;entity&amp;gt;&amp;gt;&lt;br&gt;Unit&lt;/b&gt;&lt;hr&gt;+ id: string&lt;br&gt;+ property_id: string&lt;br&gt;+ name: string&lt;br&gt;+ floor: number&lt;br&gt;+ status: UnitStatus&lt;br&gt;+ rent_amount: number&lt;br&gt;+ sqft: number?&lt;br&gt;+ beds: number&lt;br&gt;+ baths: number&lt;br&gt;+ created_at: datetime" style=" rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#34A853;fontSize=10;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="520" y="310" width="200" height="150" as="geometry"/>
+    </mxCell>
+
+    <!-- UnitStatus enum -->
+    <mxCell id="unitstatus" value="&lt;b&gt;&amp;lt;&amp;lt;enum&amp;gt;&amp;gt;&lt;br&gt;UnitStatus&lt;/b&gt;&lt;hr&gt;vacant&lt;br&gt;occupied&lt;br&gt;maintenance" style=" rounded=1;whiteSpace=wrap;html=1;fillColor=#FCE8E6;strokeColor=#D93025;fontSize=10;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="750" y="330" width="130" height="80" as="geometry"/>
+    </mxCell>
+
+    <!-- ==================== DOMAIN 3: LEASE ==================== -->
+    <mxCell id="lease-domain" value="&lt;b&gt;Lease Domain&lt;/b&gt;" style=" rounded=1;fillColor=#FEF7E0;strokeColor=#F9AB00;fontSize=13;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="40" y="470" width="240" height="30" as="geometry"/>
+    </mxCell>
+
+    <!-- Lease -->
+    <mxCell id="lease" value="&lt;b&gt;&amp;lt;&amp;lt;entity&amp;gt;&amp;gt;&lt;br&gt;Lease&lt;/b&gt;&lt;hr&gt;+ id: string&lt;br&gt;+ unit_id: string&lt;br&gt;+ tenant_id: string&lt;br&gt;+ landlord_id: string&lt;br&gt;+ status: LeaseStatus&lt;br&gt;+ start_date: date&lt;br&gt;+ end_date: date&lt;br&gt;+ monthly_rent: number&lt;br&gt;+ security_deposit: number&lt;br&gt;+ terms: Json?&lt;br&gt;+ signed_at: datetime?&lt;br&gt;+ signed_document_url: string?&lt;br&gt;+ created_at: datetime" style=" rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#F9AB00;fontSize=10;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="40" y="510" width="220" height="195" as="geometry"/>
+    </mxCell>
+
+    <!-- LeaseStatus enum -->
+    <mxCell id="leasestatus" value="&lt;b&gt;&amp;lt;&amp;lt;enum&amp;gt;&amp;gt;&lt;br&gt;LeaseStatus&lt;/b&gt;&lt;hr&gt;draft&lt;br&gt;active&lt;br&gt;expired&lt;br&gt;terminated&lt;br&gt;..." style=" rounded=1;whiteSpace=wrap;html=1;fillColor=#FCE8E6;strokeColor=#D93025;fontSize=10;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="300" y="540" width="120" height="90" as="geometry"/>
+    </mxCell>
+
+    <!-- LeaseRenewal -->
+    <mxCell id="leaserenewal" value="&lt;b&gt;&amp;lt;&amp;lt;entity&amp;gt;&amp;gt;&lt;br&gt;LeaseRenewal&lt;/b&gt;&lt;hr&gt;+ id: string&lt;br&gt;+ lease_id: string&lt;br&gt;+ tenant_id: string&lt;br&gt;+ landlord_id: string&lt;br&gt;+ status: RenewalStatus&lt;br&gt;+ proposed_rent: number?&lt;br&gt;+ proposed_security_deposit: number?&lt;br&gt;+ created_at: datetime" style=" rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#F9AB00;fontSize=10;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="40" y="730" width="200" height="140" as="geometry"/>
+    </mxCell>
+
+    <!-- ==================== DOMAIN 4: PAYMENT/BILLING ==================== -->
+    <mxCell id="billing-domain" value="&lt;b&gt;Payment &amp; Billing Domain&lt;/b&gt;" style=" rounded=1;fillColor=#F3E8FD;strokeColor=#9334E6;fontSize=13;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="520" y="490" width="240" height="30" as="geometry"/>
+    </mxCell>
+
+    <!-- Payment -->
+    <mxCell id="payment" value="&lt;b&gt;&amp;lt;&amp;lt;entity&amp;gt;&amp;gt;&lt;br&gt;Payment&lt;/b&gt;&lt;hr&gt;+ id: string&lt;br&gt;+ lease_id: string&lt;br&gt;+ tenant_id: string&lt;br&gt;+ landlord_id: string&lt;br&gt;+ amount: number&lt;br&gt;+ status: PaymentStatus&lt;br&gt;+ method: PaymentMethod?&lt;br&gt;+ due_date: date&lt;br&gt;+ paid_at: datetime?&lt;br&gt;+ subtotal: number&lt;br&gt;+ paid_amount: number&lt;br&gt;+ receipt_number: string?&lt;br&gt;+ metadata: Json&lt;br&gt;+ workflow_status: PaymentWorkflowStatus&lt;br&gt;+ created_at: datetime" style=" rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#9334E6;fontSize=10;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="520" y="530" width="220" height="200" as="geometry"/>
+    </mxCell>
+
+    <!-- PaymentItem -->
+    <mxCell id="paymentitem" value="&lt;b&gt;&amp;lt;&amp;lt;entity&amp;gt;&amp;gt;&lt;br&gt;PaymentItem&lt;/b&gt;&lt;hr&gt;+ id: string&lt;br&gt;+ payment_id: string&lt;br&gt;+ label: string&lt;br&gt;+ amount: number&lt;br&gt;+ category: string&lt;br&gt;+ utility_type: UtilityType?&lt;br&gt;+ billing_mode: UtilityBillingMode?&lt;br&gt;+ reading_id: string?" style=" rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#9334E6;fontSize=10;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="790" y="545" width="190" height="130" as="geometry"/>
+    </mxCell>
+
+    <!-- PaymentReceipt -->
+    <mxCell id="paymentreceipt" value="&lt;b&gt;&amp;lt;&amp;lt;entity&amp;gt;&amp;gt;&lt;br&gt;PaymentReceipt&lt;/b&gt;&lt;hr&gt;+ id: string&lt;br&gt;+ payment_id: string&lt;br&gt;+ landlord_id: string&lt;br&gt;+ tenant_id: string&lt;br&gt;+ receipt_number: string&lt;br&gt;+ amount: number&lt;br&gt;+ receipt_url: string?&lt;br&gt;+ issued_at: datetime" style=" rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#9334E6;fontSize=10;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="790" y="700" width="190" height="140" as="geometry"/>
+    </mxCell>
+
+    <!-- LandlordPaymentDestination -->
+    <mxCell id="paymentdest" value="&lt;b&gt;&amp;lt;&amp;lt;entity&amp;gt;&amp;gt;&lt;br&gt;LandlordPaymentDest&lt;/b&gt;&lt;hr&gt;+ id: string&lt;br&gt;+ landlord_id: string&lt;br&gt;+ provider: string&lt;br&gt;+ account_number: string&lt;br&gt;+ account_name: string&lt;br&gt;+ is_enabled: boolean" style=" rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#9334E6;fontSize=10;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="790" y="870" width="190" height="120" as="geometry"/>
+    </mxCell>
+
+    <!-- Payment enum group -->
+    <mxCell id="payment-enums" value="&lt;b&gt;Payment Enums&lt;/b&gt;&lt;hr&gt;&amp;lt;&amp;lt;enum&amp;gt;&amp;gt; PaymentStatus: pending / processing / completed / failed / refunded&lt;br&gt;&amp;lt;&amp;lt;enum&amp;gt;&amp;gt; PaymentMethod: credit_card / debit_card / gcash / maya / cash&lt;br&gt;&amp;lt;&amp;lt;enum&amp;gt;&amp;gt; PaymentWorkflowStatus: pending / confirmed / rejected / receipted&lt;br&gt;&amp;lt;&amp;lt;enum&amp;gt;&amp;gt; PaymentAmountTag: exact / partial / overpaid / short_paid" style=" rounded=1;whiteSpace=wrap;html=1;fillColor=#FCE8E6;strokeColor=#D93025;fontSize=9;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="1020" y="530" width="250" height="120" as="geometry"/>
+    </mxCell>
+
+    <!-- ==================== DOMAIN 5: UTILITY ==================== -->
+    <mxCell id="util-domain" value="&lt;b&gt;Utility Domain&lt;/b&gt;" style=" rounded=1;fillColor=#E0F7FA;strokeColor=#00ACC1;fontSize=13;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="1020" y="70" width="240" height="30" as="geometry"/>
+    </mxCell>
+
+    <!-- UtilityConfig -->
+    <mxCell id="utilconfig" value="&lt;b&gt;&amp;lt;&amp;lt;entity&amp;gt;&amp;gt;&lt;br&gt;UtilityConfig&lt;/b&gt;&lt;hr&gt;+ id: string&lt;br&gt;+ landlord_id: string&lt;br&gt;+ property_id: string&lt;br&gt;+ unit_id: string?&lt;br&gt;+ utility_type: UtilityType&lt;br&gt;+ billing_mode: UtilityBillingMode&lt;br&gt;+ rate: number&lt;br&gt;+ unit_label: string&lt;br&gt;+ is_active: boolean" style=" rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#00ACC1;fontSize=10;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="1020" y="110" width="200" height="140" as="geometry"/>
+    </mxCell>
+
+    <!-- UtilityReading -->
+    <mxCell id="utilityreading" value="&lt;b&gt;&amp;lt;&amp;lt;entity&amp;gt;&amp;gt;&lt;br&gt;UtilityReading&lt;/b&gt;&lt;hr&gt;+ id: string&lt;br&gt;+ landlord_id: string&lt;br&gt;+ lease_id: string&lt;br&gt;+ unit_id: string&lt;br&gt;+ utility_type: UtilityType&lt;br&gt;+ billing_mode: UtilityBillingMode&lt;br&gt;+ previous_reading: number&lt;br&gt;+ current_reading: number&lt;br&gt;+ usage: number&lt;br&gt;+ billed_rate: number&lt;br&gt;+ entered_at: datetime&lt;br&gt;+ status: string" style=" rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#00ACC1;fontSize=10;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="1020" y="270" width="210" height="175" as="geometry"/>
+    </mxCell>
+
+    <!-- UtilityType enum -->
+    <mxCell id="utilitytype" value="&lt;b&gt;&amp;lt;&amp;lt;enum&amp;gt;&amp;gt;&lt;br&gt;UtilityType&lt;/b&gt;&lt;hr&gt;water&lt;br&gt;electricity" style=" rounded=1;whiteSpace=wrap;html=1;fillColor=#FCE8E6;strokeColor=#D93025;fontSize=10;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="1260" y="125" width="130" height="65" as="geometry"/>
+    </mxCell>
+
+    <!-- ==================== DOMAIN 6: MAINTENANCE ==================== -->
+    <mxCell id="maint-domain" value="&lt;b&gt;Maintenance Domain&lt;/b&gt;" style=" rounded=1;fillColor=#FFF3E0;strokeColor=#FF7043;fontSize=13;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="40" y="900" width="240" height="30" as="geometry"/>
+    </mxCell>
+
+    <!-- MaintenanceRequest -->
+    <mxCell id="maintenancereq" value="&lt;b&gt;&amp;lt;&amp;lt;entity&amp;gt;&amp;gt;&lt;br&gt;MaintenanceRequest&lt;/b&gt;&lt;hr&gt;+ id: string&lt;br&gt;+ unit_id: string&lt;br&gt;+ tenant_id: string&lt;br&gt;+ landlord_id: string&lt;br&gt;+ title: string&lt;br&gt;+ description: string&lt;br&gt;+ status: MaintenanceStatus&lt;br&gt;+ priority: MaintenancePriority&lt;br&gt;+ category: string?&lt;br&gt;+ images: string[]&lt;br&gt;+ resolved_at: datetime?&lt;br&gt;+ sentiment: MaintenanceSentiment?&lt;br&gt;+ created_at: datetime" style=" rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#FF7043;fontSize=10;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="40" y="940" width="220" height="190" as="geometry"/>
+    </mxCell>
+
+    <!-- Maintenance enums -->
+    <mxCell id="maint-enums" value="&lt;b&gt;Maintenance Enums&lt;/b&gt;&lt;hr&gt;&amp;lt;&amp;lt;enum&amp;gt;&amp;gt; MaintenanceStatus: pending / open / assigned / in_progress / resolved / closed / cancelled&lt;br&gt;&amp;lt;&amp;lt;enum&amp;gt;&amp;gt; MaintenancePriority: low / medium / high / urgent&lt;br&gt;&amp;lt;&amp;lt;enum&amp;gt;&amp;gt; MaintenanceSentiment: distressed / negative / neutral / positive&lt;br&gt;&amp;lt;&amp;lt;enum&amp;gt;&amp;gt; MaintenanceRepairMethod: landlord / third_party / self_repair" style=" rounded=1;whiteSpace=wrap;html=1;fillColor=#FCE8E6;strokeColor=#D93025;fontSize=9;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="300" y="940" width="240" height="110" as="geometry"/>
+    </mxCell>
+
+    <!-- ==================== DOMAIN 7: AMENITY ==================== -->
+    <mxCell id="amenity-domain" value="&lt;b&gt;Amenity Domain&lt;/b&gt;" style=" rounded=1;fillColor=#F1F8E9;strokeColor=#689F38;fontSize=13;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="520" y="780" width="240" height="30" as="geometry"/>
+    </mxCell>
+
+    <!-- Amenity -->
+    <mxCell id="amenity" value="&lt;b&gt;&amp;lt;&amp;lt;entity&amp;gt;&amp;gt;&lt;br&gt;Amenity&lt;/b&gt;&lt;hr&gt;+ id: string&lt;br&gt;+ property_id: string&lt;br&gt;+ landlord_id: string&lt;br&gt;+ name: string&lt;br&gt;+ type: string&lt;br&gt;+ description: string?&lt;br&gt;+ capacity: number?&lt;br&gt;+ price_per_unit: number?&lt;br&gt;+ status: string&lt;br&gt;+ icon_name: string?" style=" rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#689F38;fontSize=10;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="520" y="820" width="200" height="150" as="geometry"/>
+    </mxCell>
+
+    <!-- AmenityBooking -->
+    <mxCell id="amenitybooking" value="&lt;b&gt;&amp;lt;&amp;lt;entity&amp;gt;&amp;gt;&lt;br&gt;AmenityBooking&lt;/b&gt;&lt;hr&gt;+ id: string&lt;br&gt;+ amenity_id: string&lt;br&gt;+ tenant_id: string&lt;br&gt;+ landlord_id: string&lt;br&gt;+ booking_date: date&lt;br&gt;+ start_time: time&lt;br&gt;+ end_time: time&lt;br&gt;+ total_price: number&lt;br&gt;+ status: string" style=" rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#689F38;fontSize=10;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="520" y="990" width="200" height="140" as="geometry"/>
+    </mxCell>
+
+    <!-- ==================== DOMAIN 8: APPLICATION/MOVE ==================== -->
+    <mxCell id="app-domain" value="&lt;b&gt;Application &amp; Move Domain&lt;/b&gt;" style=" rounded=1;fillColor=#FBE9E7;strokeColor=#D84315;fontSize=13;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="790" y="1060" width="240" height="30" as="geometry"/>
+    </mxCell>
+
+    <!-- Application -->
+    <mxCell id="application" value="&lt;b&gt;&amp;lt;&amp;lt;entity&amp;gt;&amp;gt;&lt;br&gt;Application&lt;/b&gt;&lt;hr&gt;+ id: string&lt;br&gt;+ unit_id: string&lt;br&gt;+ status: ApplicationStatus&lt;br&gt;+ message: string?&lt;br&gt;+ documents: string[]&lt;br&gt;+ reviewed_at: datetime?&lt;br&gt;+ created_at: datetime&lt;br&gt;+ invite_id: string?" style=" rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#D84315;fontSize=10;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="790" y="1100" width="200" height="140" as="geometry"/>
+    </mxCell>
+
+    <!-- MoveOutRequest -->
+    <mxCell id="moveout" value="&lt;b&gt;&amp;lt;&amp;lt;entity&amp;gt;&amp;gt;&lt;br&gt;MoveOutRequest&lt;/b&gt;&lt;hr&gt;+ id: string&lt;br&gt;+ lease_id: string&lt;br&gt;+ unit_id: string&lt;br&gt;+ tenant_id: string&lt;br&gt;+ status: MoveOutStatus&lt;br&gt;+ requested_date: date&lt;br&gt;+ reason: string?" style=" rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#D84315;fontSize=10;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="790" y="1260" width="200" height="125" as="geometry"/>
+    </mxCell>
+
+    <!-- UnitTransferRequest -->
+    <mxCell id="unittransfer" value="&lt;b&gt;&amp;lt;&amp;lt;entity&amp;gt;&amp;gt;&lt;br&gt;UnitTransferRequest&lt;/b&gt;&lt;hr&gt;+ id: string&lt;br&gt;+ from_unit_id: string&lt;br&gt;+ to_unit_id: string&lt;br&gt;+ tenant_id: string&lt;br&gt;+ status: UnitTransferStatus&lt;br&gt;+ requested_date: date" style=" rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#D84315;fontSize=10;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="1040" y="1100" width="200" height="115" as="geometry"/>
+    </mxCell>
+
+    <!-- ==================== DOMAIN 9: MESSAGING ==================== -->
+    <mxCell id="msg-domain" value="&lt;b&gt;Messaging Domain&lt;/b&gt;" style=" rounded=1;fillColor=#E3F2FD;strokeColor=#1565C0;fontSize=13;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="1020" y="490" width="240" height="30" as="geometry"/>
+    </mxCell>
+
+    <!-- Conversation -->
+    <mxCell id="conversation" value="&lt;b&gt;&amp;lt;&amp;lt;entity&amp;gt;&amp;gt;&lt;br&gt;Conversation&lt;/b&gt;&lt;hr&gt;+ id: string&lt;br&gt;+ created_at: datetime" style=" rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#1565C0;fontSize=10;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="1020" y="670" width="180" height="70" as="geometry"/>
+    </mxCell>
+
+    <!-- ConversationParticipant -->
+    <mxCell id="convparticipant" value="&lt;b&gt;&amp;lt;&amp;lt;entity&amp;gt;&amp;gt;&lt;br&gt;ConversationParticipant&lt;/b&gt;&lt;hr&gt;+ id: string&lt;br&gt;+ conversation_id: string&lt;br&gt;+ user_id: string&lt;br&gt;+ archived: boolean&lt;br&gt;+ blocked: boolean" style=" rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#1565C0;fontSize=10;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="1020" y="760" width="210" height="100" as="geometry"/>
+    </mxCell>
+
+    <!-- Message -->
+    <mxCell id="message" value="&lt;b&gt;&amp;lt;&amp;lt;entity&amp;gt;&amp;gt;&lt;br&gt;Message&lt;/b&gt;&lt;hr&gt;+ id: string&lt;br&gt;+ conversation_id: string&lt;br&gt;+ sender_id: string&lt;br&gt;+ content: string&lt;br&gt;+ type: MessageType&lt;br&gt;+ metadata: Json?&lt;br&gt;+ read_at: datetime?&lt;br&gt;+ created_at: datetime" style=" rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#1565C0;fontSize=10;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="1020" y="880" width="220" height="140" as="geometry"/>
+    </mxCell>
+
+    <!-- ==================== DOMAIN 10: COMMUNITY ==================== -->
+    <mxCell id="community-domain" value="&lt;b&gt;Community Domain&lt;/b&gt;" style=" rounded=1;fillColor=#FFF8E1;strokeColor=#F57F17;fontSize=13;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="40" y="1160" width="240" height="30" as="geometry"/>
+    </mxCell>
+
+    <!-- CommunityPost -->
+    <mxCell id="communitypost" value="&lt;b&gt;&amp;lt;&amp;lt;entity&amp;gt;&amp;gt;&lt;br&gt;CommunityPost&lt;/b&gt;&lt;hr&gt;+ id: string&lt;br&gt;+ property_id: string&lt;br&gt;+ author_id: string&lt;br&gt;+ author_role: tenant|landlord&lt;br&gt;+ type: CommunityPostType&lt;br&gt;+ title: string&lt;br&gt;+ content: string?&lt;br&gt;+ is_pinned: boolean&lt;br&gt;+ is_moderated: boolean&lt;br&gt;+ status: CommunityPostStatus&lt;br&gt;+ view_count: number&lt;br&gt;+ created_at: datetime" style=" rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#F57F17;fontSize=10;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="40" y="1200" width="220" height="185" as="geometry"/>
+    </mxCell>
+
+    <!-- Community enums -->
+    <mxCell id="community-enums" value="&lt;b&gt;Community Enums&lt;/b&gt;&lt;hr&gt;&amp;lt;&amp;lt;enum&amp;gt;&amp;gt; CommunityPostType: announcement / poll / photo_album / discussion&lt;br&gt;&amp;lt;&amp;lt;enum&amp;gt;&amp;gt; CommunityPostStatus: draft / published / archived&lt;br&gt;&amp;lt;&amp;lt;enum&amp;gt;&amp;gt; CommunityReactionType: like / heart / thumbs_up / clap / celebration" style=" rounded=1;whiteSpace=wrap;html=1;fillColor=#FCE8E6;strokeColor=#D93025;fontSize=9;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="300" y="1200" width="250" height="90" as="geometry"/>
+    </mxCell>
+
+    <!-- ==================== DOMAIN 11: NOTIFICATION ==================== -->
+    <mxCell id="notif-domain" value="&lt;b&gt;Notification &amp; Admin Domain&lt;/b&gt;" style=" rounded=1;fillColor=#F3E5F5;strokeColor=#7B1FA2;fontSize=13;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="790" y="70" width="200" height="30" as="geometry"/>
+    </mxCell>
+
+    <!-- Notification -->
+    <mxCell id="notification" value="&lt;b&gt;&amp;lt;&amp;lt;entity&amp;gt;&amp;gt;&lt;br&gt;Notification&lt;/b&gt;&lt;hr&gt;+ id: string&lt;br&gt;+ user_id: string&lt;br&gt;+ type: NotificationType&lt;br&gt;+ title: string&lt;br&gt;+ message: string&lt;br&gt;+ data: Json?&lt;br&gt;+ read: boolean&lt;br&gt;+ created_at: datetime" style=" rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7B1FA2;fontSize=10;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="790" y="110" width="200" height="140" as="geometry"/>
+    </mxCell>
+
+    <!-- LandlordReview -->
+    <mxCell id="landlordreview" value="&lt;b&gt;&amp;lt;&amp;lt;entity&amp;gt;&amp;gt;&lt;br&gt;LandlordReview&lt;/b&gt;&lt;hr&gt;+ id: string&lt;br&gt;+ lease_id: string&lt;br&gt;+ landlord_id: string&lt;br&gt;+ tenant_id: string&lt;br&gt;+ rating: number&lt;br&gt;+ comment: string?&lt;br&gt;+ created_at: datetime" style=" rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7B1FA2;fontSize=10;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="790" y="270" width="200" height="130" as="geometry"/>
+    </mxCell>
+
+    <!-- Expense -->
+    <mxCell id="expense" value="&lt;b&gt;&amp;lt;&amp;lt;entity&amp;gt;&amp;gt;&lt;br&gt;Expense&lt;/b&gt;&lt;hr&gt;+ id: string&lt;br&gt;+ landlord_id: string&lt;br&gt;+ property_id: string?&lt;br&gt;+ unit_id: string?&lt;br&gt;+ category: string&lt;br&gt;+ amount: number&lt;br&gt;+ description: string&lt;br&gt;+ created_at: datetime" style=" rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7B1FA2;fontSize=10;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="790" y="420" width="200" height="130" as="geometry"/>
+    </mxCell>
+
+    <!-- ==================== DOMAIN 12: SERVICE LAYER ==================== -->
+    <mxCell id="service-domain" value="&lt;b&gt;Service Layer (Key Modules)&lt;/b&gt;" style=" rounded=1;fillColor=#ECEFF1;strokeColor=#546E7A;fontSize=13;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="40" y="1430" width="240" height="30" as="geometry"/>
+    </mxCell>
+
+    <!-- Auth Service -->
+    <mxCell id="auth-service" value="&lt;b&gt;&amp;lt;&amp;lt;service&amp;gt;&amp;gt;&lt;br&gt;SupabaseAuth&lt;/b&gt;&lt;hr&gt;+ signInWithPassword()&lt;br&gt;+ signOut()&lt;br&gt;+ getSession()&lt;br&gt;+ onAuthStateChange()" style=" rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#546E7A;fontSize=10;align=left;verticalAlign=top;dashed=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="1470" width="200" height="90" as="geometry"/>
+    </mxCell>
+
+    <!-- Billing Service -->
+    <mxCell id="billing-service" value="&lt;b&gt;&amp;lt;&amp;lt;service&amp;gt;&amp;gt;&lt;br&gt;BillingService&lt;/b&gt;&lt;hr&gt;+ listLandlordInvoices()&lt;br&gt;+ getInvoiceDetail()&lt;br&gt;+ getTenantPaymentOverview()&lt;br&gt;+ getBillingWorkspace()&lt;br&gt;+ generateMonthlyInvoices()&lt;br&gt;+ recordUtilityReading()&lt;br&gt;+ createAdvancePayment()" style=" rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#546E7A;fontSize=10;align=left;verticalAlign=top;dashed=1;" vertex="1" parent="1">
+      <mxGeometry x="270" y="1470" width="200" height="135" as="geometry"/>
+    </mxCell>
+
+    <!-- Messaging Service -->
+    <mxCell id="messaging-service" value="&lt;b&gt;&amp;lt;&amp;lt;service&amp;gt;&amp;gt;&lt;br&gt;MessagingEngine&lt;/b&gt;&lt;hr&gt;+ buildConversationSummaries()&lt;br&gt;+ getProfilePreviewMap()&lt;br&gt;+ getConversationIdsForUser()&lt;br&gt;+ getUnreadCounts()&lt;br&gt;+ findDirectConversation()&lt;br&gt;+ ensureUserInConversation()" style=" rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#546E7A;fontSize=10;align=left;verticalAlign=top;dashed=1;" vertex="1" parent="1">
+      <mxGeometry x="500" y="1470" width="200" height="130" as="geometry"/>
+    </mxCell>
+
+    <!-- SupabaseClient -->
+    <mxCell id="supabase-client" value="&lt;b&gt;&amp;lt;&amp;lt;service&amp;gt;&amp;gt;&lt;br&gt;SupabaseClient&lt;/b&gt;&lt;hr&gt;Supabase client (server &amp; browser)&lt;br&gt;+ from(table): QueryBuilder&lt;br&gt;+ rpc(fn, params): Promise&lt;br&gt;+ auth: AuthClient&lt;br&gt;+ storage: StorageClient" style=" rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#546E7A;fontSize=10;align=left;verticalAlign=top;dashed=1;" vertex="1" parent="1">
+      <mxGeometry x="730" y="1470" width="200" height="100" as="geometry"/>
+    </mxCell>
+
+    <!-- ==================== RELATIONSHIPS ==================== -->
+
+    <!-- Profile -> AuthContext (uses) -->
+    <mxCell id="rel-profile-auth" value="" style=" endArrow=open;endFill=0;edgeStyle=orthogonalEdgeStyle;dashed=1;fontSize=10;" edge="1" parent="1" source="profile" target="authcontext">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- Profile -role--> UserRole -->
+    <mxCell id="rel-profile-role" value="role" style=" endArrow=open;endFill=0;edgeStyle=orthogonalEdgeStyle;fontSize=10;" edge="1" parent="1" source="profile" target="userrole">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="290" y="190" as="sourcePoint"/>
+      </mxGeometry>
+    </mxCell>
+
+    <!-- Profile 1-* Property -->
+    <mxCell id="rel-profile-property" value="1 owns *" style=" endArrow=open;endFill=0;edgeStyle=orthogonalEdgeStyle;fontSize=9;startArrow=open;startFill=0;" edge="1" parent="1" source="profile" target="property">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="350" y="200"/>
+          <mxPoint x="400" y="200"/>
+          <mxPoint x="450" y="200"/>
+          <mxPoint x="500" y="200"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+
+    <!-- Property 1-* Unit -->
+    <mxCell id="rel-property-unit" value="1 has *" style=" endArrow=open;endFill=0;edgeStyle=orthogonalEdgeStyle;fontSize=9;startArrow=open;startFill=0;" edge="1" parent="1" source="property" target="unit">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- Unit -status--> UnitStatus -->
+    <mxCell id="rel-unit-statusenum" value="status" style=" endArrow=open;endFill=0;edgeStyle=orthogonalEdgeStyle;fontSize=10;" edge="1" parent="1" source="unit" target="unitstatus">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- Property *-1 Profile (landlord) -->
+    <mxCell id="rel-property-landlord" value="landlord" style=" endArrow=open;endFill=0;edgeStyle=orthogonalEdgeStyle;fontSize=9;startArrow=open;startFill=0;" edge="1" parent="1" source="property" target="profile">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="490" y="160"/>
+          <mxPoint x="350" y="160"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+
+    <!-- Unit 1-* Lease -->
+    <mxCell id="rel-unit-lease" value="1 has *" style=" endArrow=open;endFill=0;edgeStyle=orthogonalEdgeStyle;fontSize=9;startArrow=open;startFill=0;" edge="1" parent="1" source="unit" target="lease">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="450" y="440"/>
+          <mxPoint x="350" y="440"/>
+          <mxPoint x="250" y="440"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+
+    <!-- Lease -status--> LeaseStatus -->
+    <mxCell id="rel-lease-status" value="status" style=" endArrow=open;endFill=0;edgeStyle=orthogonalEdgeStyle;fontSize=10;" edge="1" parent="1" source="lease" target="leasestatus">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- Lease 1-* Payment -->
+    <mxCell id="rel-lease-payment" value="1 has *" style=" endArrow=open;endFill=0;edgeStyle=orthogonalEdgeStyle;fontSize=9;startArrow=open;startFill=0;" edge="1" parent="1" source="lease" target="payment">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="300" y="600"/>
+          <mxPoint x="400" y="600"/>
+          <mxPoint x="520" y="600"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+
+    <!-- Payment 1-* PaymentItem -->
+    <mxCell id="rel-payment-items" value="1 has *" style=" endArrow=open;endFill=0;edgeStyle=orthogonalEdgeStyle;fontSize=9;startArrow=open;startFill=0;" edge="1" parent="1" source="payment" target="paymentitem">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- Payment 1-1 PaymentReceipt -->
+    <mxCell id="rel-payment-receipt" value="1 has *" style=" endArrow=open;endFill=0;edgeStyle=orthogonalEdgeStyle;fontSize=9;startArrow=open;startFill=0;" edge="1" parent="1" source="payment" target="paymentreceipt">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- LandlordPaymentDest -landlord--> Profile -->
+    <mxCell id="rel-paymentdest-landlord" value="landlord" style=" endArrow=open;endFill=0;edgeStyle=orthogonalEdgeStyle;fontSize=10;" edge="1" parent="1" source="paymentdest" target="profile">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="800" y="900"/>
+          <mxPoint x="350" y="900"/>
+          <mxPoint x="250" y="200"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+
+    <!-- Property *- UtilityConfig -->
+    <mxCell id="rel-property-util" value="1 has *" style=" endArrow=open;endFill=0;edgeStyle=orthogonalEdgeStyle;fontSize=9;startArrow=open;startFill=0;" edge="1" parent="1" source="property" target="utilconfig">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="740" y="140"/>
+          <mxPoint x="900" y="140"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+
+    <!-- UtilityConfig *- UtilityReading -->
+    <mxCell id="rel-utilconfig-reading" value="1 has *" style=" endArrow=open;endFill=0;edgeStyle=orthogonalEdgeStyle;fontSize=9;startArrow=open;startFill=0;" edge="1" parent="1" source="utilconfig" target="utilityreading">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- Unit *- MaintenanceRequest -->
+    <mxCell id="rel-unit-maintenance" value="1 has *" style=" endArrow=open;endFill=0;edgeStyle=orthogonalEdgeStyle;fontSize=9;startArrow=open;startFill=0;" edge="1" parent="1" source="unit" target="maintenancereq">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="450" y="950"/>
+          <mxPoint x="260" y="950"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+
+    <!-- Property *- Amenity -->
+    <mxCell id="rel-property-amenity" value="1 has *" style=" endArrow=open;endFill=0;edgeStyle=orthogonalEdgeStyle;fontSize=9;startArrow=open;startFill=0;" edge="1" parent="1" source="property" target="amenity">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="650" y="500"/>
+          <mxPoint x="650" y="700"/>
+          <mxPoint x="620" y="800"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+
+    <!-- Amenity 1-* AmenityBooking -->
+    <mxCell id="rel-amenity-booking" value="1 has *" style=" endArrow=open;endFill=0;edgeStyle=orthogonalEdgeStyle;fontSize=9;startArrow=open;startFill=0;" edge="1" parent="1" source="amenity" target="amenitybooking">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- Lease 1- LeaseRenewal -->
+    <mxCell id="rel-lease-renewal" value="1 has *" style=" endArrow=open;endFill=0;edgeStyle=orthogonalEdgeStyle;fontSize=9;startArrow=open;startFill=0;" edge="1" parent="1" source="lease" target="leaserenewal">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- Application -> Unit -->
+    <mxCell id="rel-app-unit" value="for unit" style=" endArrow=open;endFill=0;edgeStyle=orthogonalEdgeStyle;fontSize=9;" edge="1" parent="1" source="application" target="unit">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="850" y="1050"/>
+          <mxPoint x="620" y="400"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+
+    <!-- Conversation 1-* Message -->
+    <mxCell id="rel-conv-message" value="1 has *" style=" endArrow=open;endFill=0;edgeStyle=orthogonalEdgeStyle;fontSize=9;startArrow=open;startFill=0;" edge="1" parent="1" source="conversation" target="message">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- Conversation 1-* ConversationParticipant -->
+    <mxCell id="rel-conv-participant" value="1 has *" style=" endArrow=open;endFill=0;edgeStyle=orthogonalEdgeStyle;fontSize=9;startArrow=open;startFill=0;" edge="1" parent="1" source="conversation" target="convparticipant">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- Profile 1-* ConversationParticipant (is member) -->
+    <mxCell id="rel-profile-convpart" value="1 participates in *" style=" endArrow=open;endFill=0;edgeStyle=orthogonalEdgeStyle;fontSize=9;startArrow=open;startFill=0;" edge="1" parent="1" source="profile" target="convparticipant">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="350" y="800"/>
+          <mxPoint x="1000" y="800"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+
+    <!-- Profile 1-* Notification -->
+    <mxCell id="rel-profile-notification" value="1 receives *" style=" endArrow=open;endFill=0;edgeStyle=orthogonalEdgeStyle;fontSize=9;startArrow=open;startFill=0;" edge="1" parent="1" source="profile" target="notification">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="350" y="140"/>
+          <mxPoint x="780" y="140"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+
+    <!-- CommunityPost -> Property -->
+    <mxCell id="rel-community-prop" value="belongs to" style=" endArrow=open;endFill=0;edgeStyle=orthogonalEdgeStyle;fontSize=9;" edge="1" parent="1" source="communitypost" target="property">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="300" y="1250"/>
+          <mxPoint x="400" y="1250"/>
+          <mxPoint x="520" y="180"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+
+    <!-- Profile 1-* CommunityPost -->
+    <mxCell id="rel-profile-community" value="1 authors *" style=" endArrow=open;endFill=0;edgeStyle=orthogonalEdgeStyle;fontSize=9;startArrow=open;startFill=0;" edge="1" parent="1" source="profile" target="communitypost">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="280" y="230"/>
+          <mxPoint x="280" y="1280"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+
+    <!-- ==================== LEGEND ==================== -->
+    <mxCell id="legend" value="&lt;b&gt;Legend&lt;/b&gt;&lt;hr&gt;&amp;lt;&amp;lt;entity&amp;gt;&amp;gt; = Database Entity (Supabase table)&lt;br&gt;&amp;lt;&amp;lt;enum&amp;gt;&amp;gt; = Enum/Type Union&lt;br&gt;&amp;lt;&amp;lt;context&amp;gt;&amp;gt; = React Context&lt;br&gt;&amp;lt;&amp;lt;service&amp;gt;&amp;gt; = Service Module&lt;br&gt;&lt;br&gt;&lt;b&gt;Relationships:&lt;/b&gt;&lt;br&gt;1 — * = One-to-Many&lt;br&gt;* — * = Many-to-Many&lt;br&gt;1 owns * = One owns Many&lt;br&gt;dashed = uses / depends on" style=" rounded=1;whiteSpace=wrap;html=1;fillColor=#FAFAFA;strokeColor=#9E9E9E;fontSize=9;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="1040" y="1040" width="250" height="155" as="geometry"/>
+    </mxCell>
+
+  </root>
+</mxGraphModel>

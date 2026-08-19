@@ -1,0 +1,50 @@
+wing: ireside
+rooms:
+- name: documentation
+  description: Files from docs/
+- name: graphify_out
+  description: Files from graphify-out/
+- name: iris_3d_model
+  description: Files from iris-3d-model/
+- name: lowpoly_apartment
+  description: Files from lowpoly_apartment/
+- name: neumorphism
+  description: Files from neumorphism/
+- name: output
+  description: Files from output/
+- name: plans
+  description: Files from Plans/
+- name: playwright_report
+  description: Files from playwright-report/
+- name: plugins
+  description: Files from plugins/
+- name: public
+  description: Files from public/
+- name: react_doctor_ddadb6ee_f432_4811_b417_554b401a633a
+  description: Files from react-doctor-ddadb6ee-f432-4811-b417-554b401a633a/
+- name: scratch
+  description: Files from scratch/
+- name: screenshots
+  description: Files from screenshots/
+- name: src
+  description: Files from src/
+- name: supabase
+  description: Files from supabase/
+- name: supabase_backup
+  description: Files from supabase_backup/
+- name: test_results
+  description: Files from test-results/
+- name: testing
+  description: Files from tests/
+- name: tmp
+  description: Files from tmp/
+- name: scripts
+  description: Files from scripts/
+- name: design
+  description: Files from assets/
+- name: backend
+  description: Files from models/
+- name: frontend
+  description: Files from components/
+- name: general
+  description: Files that don't fit other rooms

@@ -1,9 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
-import { BarChart, ChevronDown, Download, Eye, EyeOff, FileText, History, TrendingUp, X } from "lucide-react";
+import Link from "next/link";
+import { ArrowUpRight, BarChart, ChevronDown, CreditCard, Download, Eye, EyeOff, FileText, History, TrendingUp, X } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { cn } from "@/lib/utils";
+import { Tooltip } from "@/components/ui/tooltip";
 import { IrisAIAgent } from "@/components/landlord/dashboard/IrisAIAgent";
 import { useAuth } from "@/hooks/useAuth";
 import { KpiCard } from "@/components/landlord/dashboard/KpiCard";
@@ -694,7 +696,7 @@ export default function AnalyticsPage() {
                     <p className="mt-2 text-sm text-muted-foreground">Detailed insights into your property performance and portfolio health.</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
-                    <div className="group/iris-toggle relative">
+                    <Tooltip content="Toggle iRis mascot visibility on this page." side="top">
                         <button
                             type="button"
                             onClick={() => setIsIrisVisible((prev) => !prev)}
@@ -706,20 +708,11 @@ export default function AnalyticsPage() {
                             )}
                             aria-pressed={!isIrisVisible}
                             aria-label={isIrisVisible ? "Hide iRis assistant" : "Show iRis assistant"}
-                            aria-describedby="iris-toggle-tooltip"
                         >
                             {isIrisVisible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                             {isIrisVisible ? "Hide iRis" : "Show iRis"}
                         </button>
-                        <div
-                            id="iris-toggle-tooltip"
-                            role="tooltip"
-                            className="neumorphic-panel pointer-events-none absolute left-1/2 top-[-0.85rem] z-20 w-max max-w-[17rem] -translate-x-1/2 -translate-y-full rounded-xl px-3 py-2 text-[10px] font-black tracking-wide text-foreground opacity-0 backdrop-blur-xl transition-all duration-200 group-hover/iris-toggle:opacity-100 group-hover/iris-toggle:translate-y-[-2.75rem] group-focus-within/iris-toggle:opacity-100 group-focus-within/iris-toggle:translate-y-[-2.75rem]"
-                        >
-                            Toggle iRis mascot visibility on this page.
-                            <div className="absolute left-1/2 top-full size-2.5 -translate-x-1/2 -translate-y-1/2 rotate-45 border-r border-b border-white/10 bg-[#1b1b1d]" />
-                        </div>
-                    </div>
+                    </Tooltip>
                     <button
                         onClick={() => setIsExportModalOpen(true)}
                         className="neumorphic-primary group inline-flex items-center gap-2.5 rounded-2xl px-6 py-3 text-sm font-black transition-all hover:scale-105 active:scale-95"
@@ -847,6 +840,15 @@ export default function AnalyticsPage() {
                             <p className="text-sm font-medium text-muted-foreground/80">Revenue streams, expenses, and operational health overview.</p>
                         </div>
                     </div>
+                    <Link
+                        href="/landlord/invoices"
+                        className="group shrink-0 flex items-center gap-2 rounded-xl px-4 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-semibold neumorphic-extruded active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all text-muted-foreground hover:text-primary"
+                        aria-label="Redirect to Finance Hub"
+                    >
+                        <CreditCard className="size-4 text-primary transition-transform group-hover:scale-110" aria-hidden="true" />
+                        <span>Finance Hub</span>
+                        <ArrowUpRight className="size-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
+                    </Link>
                 </div>
 
                 <div className="relative z-10">

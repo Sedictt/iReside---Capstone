@@ -173,6 +173,15 @@ export const getQuestProgress = (questId: LandlordQuestId, state: LandlordProduc
     return Math.round((effectiveCompleted / questStepIds.length) * 100);
 };
 
+export const getOverallQuestProgress = (state: LandlordProductTourState | null): number => {
+    if (!state) return 0;
+    if (state.status === "completed") return 100;
+    const progressList = LANDLORD_QUESTS.map((quest) => getQuestProgress(quest.id as LandlordQuestId, state));
+    if (progressList.length === 0) return 0;
+    const avg = Math.round(progressList.reduce((acc, val) => acc + val, 0) / progressList.length);
+    return Math.min(100, Math.max(0, avg));
+};
+
 export type LandlordProductTourStepId = (typeof LANDLORD_PRODUCT_TOUR_STEPS)[number]["id"];
 export type LandlordProductTourStatus = "not_started" | "in_progress" | "skipped" | "completed";
 export type LandlordProductTourEventType =
