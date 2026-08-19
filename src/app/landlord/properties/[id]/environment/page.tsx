@@ -57,9 +57,9 @@ const GENDER_OPTIONS: { value: GenderRestrictionMode; label: string }[] = [
 ];
 
 const UTILITY_OPTIONS: { value: UtilityPolicyMode; label: string; description: string }[] = [
-    { value: "included_in_rent", label: "Included in Rent", description: "Bundled in flat monthly rent" },
-    { value: "separate_metered", label: "Separate & Metered", description: "Direct sub-metered billing" },
-    { value: "mixed", label: "Mixed / Base + Sub-meter", description: "Fixed base fee + overage usage" },
+    { value: "included_in_rent", label: "Included in Rent (All-Inclusive)", description: "Utilities are already covered in the monthly rent" },
+    { value: "separate_metered", label: "Separate Meter (Tenant Pays Usage)", description: "Tenant pays electric & water bills directly based on actual meter readings" },
+    { value: "mixed", label: "Mixed (Fixed Monthly Fee + Metered)", description: "Fixed base utility fee with sub-metered overages" },
 ];
 
 const DORM_DEFAULTS = {
@@ -503,7 +503,7 @@ export default function PropertyEnvironmentPage() {
                             <div className="space-y-1.5">
                                 <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 flex items-center gap-1.5">
                                     <Zap className="size-3 text-amber-400" />
-                                    <span>Utility Framework</span>
+                                    <span>Electricity & Water Billing</span>
                                 </label>
                                 <select
                                     value={formData.utility_policy_mode}
