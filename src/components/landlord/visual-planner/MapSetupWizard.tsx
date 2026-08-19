@@ -599,44 +599,50 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
                     <div className="flex h-full gap-8 p-8">
                         {/* Floor Boards Section */}
                         <div className="flex-1 overflow-y-auto no-scrollbar rounded-[2.5rem] bg-white/[0.01] border border-white/5 p-8">
-                            <div className="mb-10 flex items-start justify-between gap-6">
-                                <div className="max-w-lg">
-                                    <h2 className="text-3xl font-black tracking-tight text-white">Organize Units by Floor</h2>
-                                    <p className="mt-2 text-sm leading-relaxed text-neutral-400 font-medium">
-                                        Drag and drop units into their respective floors. This will determine how they appear on your property&apos;s visual map.
+                            <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                <div className="max-w-xl">
+                                    <h2 className="text-2xl lg:text-3xl font-black tracking-tight text-white">Organize Units by Floor</h2>
+                                    <p className="mt-1 text-xs text-neutral-400 font-medium leading-relaxed">
+                                        Drag and drop units into their respective floors to configure your building layout.
                                     </p>
                                 </div>
-                                <div className="flex flex-wrap items-center gap-3">
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsRenumberModalOpen(true)}
-                                        disabled={isSaving || units.length === 0}
-                                        className="group flex shrink-0 items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-5 py-3 transition-all hover:bg-white/10 active:scale-95 disabled:opacity-50 text-white"
-                                    >
-                                        <Hash className="size-4 text-primary" />
-                                        <span className="text-xs font-black uppercase tracking-widest">Renumber Units</span>
-                                    </button>
-                                    {floorConfigs.length > 1 && (
+                                <div className="flex items-center gap-3 shrink-0">
+                                    {/* Action Group */}
+                                    <div className="flex items-center rounded-2xl border border-white/10 bg-white/[0.03] p-1 shadow-inner backdrop-blur-md">
                                         <button
                                             type="button"
-                                            onClick={handleDistributeEvenly}
-                                            disabled={isSaving}
-                                            className="group flex shrink-0 items-center gap-2 rounded-2xl border border-primary/20 bg-primary/10 px-5 py-3 transition-all hover:bg-primary/20 active:scale-95 disabled:opacity-50"
+                                            onClick={() => setIsRenumberModalOpen(true)}
+                                            disabled={isSaving || units.length === 0}
+                                            className="flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold text-neutral-300 hover:text-white hover:bg-white/10 transition-all active:scale-95 disabled:opacity-40"
                                         >
-                                            <Equal className="size-4 text-primary" />
-                                            <span className="text-xs font-black uppercase tracking-widest text-primary">Distribute Evenly</span>
+                                            <Hash className="size-3.5 text-primary" />
+                                            <span>Renumber</span>
                                         </button>
-                                    )}
+
+                                        {floorConfigs.length > 1 && (
+                                            <>
+                                                <div className="h-4 w-px bg-white/10" />
+                                                <button
+                                                    type="button"
+                                                    onClick={handleDistributeEvenly}
+                                                    disabled={isSaving}
+                                                    className="flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold text-neutral-300 hover:text-white hover:bg-white/10 transition-all active:scale-95 disabled:opacity-40"
+                                                >
+                                                    <Equal className="size-3.5 text-primary" />
+                                                    <span>Distribute Evenly</span>
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
+
                                     <button
                                         data-tour-id="tour-wizard-add-floor"
                                         onClick={() => handleAddFloor()}
                                         disabled={isSaving}
-                                        className="group flex shrink-0 items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-6 py-3 transition-all hover:bg-white/10 active:scale-95 disabled:opacity-50"
+                                        className="group flex items-center gap-2 rounded-2xl border border-primary/30 bg-primary/10 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-primary hover:bg-primary hover:text-black transition-all active:scale-95 shadow-lg shadow-primary/5 disabled:opacity-50"
                                     >
-                                        <div className="flex size-6 items-center justify-center rounded-lg bg-primary/20 text-primary group-hover:bg-primary group-hover:text-black transition-all">
-                                            <Plus className="size-4" />
-                                        </div>
-                                        <span className="text-xs font-black uppercase tracking-widest">Add New Floor</span>
+                                        <Plus className="size-4 stroke-[2.5]" />
+                                        <span>Add Floor</span>
                                     </button>
                                 </div>
                             </div>
