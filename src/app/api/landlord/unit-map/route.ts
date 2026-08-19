@@ -125,14 +125,17 @@ export async function GET(request: NextRequest) {
     // Auto-heal / sync missing units
     const currentUnitCount = units?.length || 0;
     if (targetUnits > currentUnitCount) {
-        const unitsPerFloor = Math.max(1, Math.ceil(targetUnits / targetFloors));
+        const activeFloorList = (floorConfigs ?? []).map((f: any) => f.floor_number).sort((a: number, b: number) => a - b);
+        const availableFloors = activeFloorList.length > 0 ? activeFloorList : [1];
+        const unitsPerFloor = Math.max(1, Math.ceil(targetUnits / availableFloors.length));
         const unitPrefix = propType === "dormitory" ? "Room" : propType === "boarding_house" ? "Room" : "Unit";
         const unitsToCreate = Array.from({ length: targetUnits - currentUnitCount }, (_, idx) => {
-            const unitIndex = currentUnitCount + idx + 1;
-            const floorNumber = targetFloors === 1 ? 1 : Math.min(targetFloors, Math.floor((unitIndex - 1) / unitsPerFloor) + 1);
+            const overallIndex = currentUnitCount + idx;
+            const floorIdx = Math.min(availableFloors.length - 1, Math.floor(overallIndex / unitsPerFloor));
+            const floorNumber = availableFloors[floorIdx];
             return {
                 property_id: propertyId,
-                name: `${unitPrefix} ${unitIndex}`,
+                name: `${unitPrefix} ${overallIndex + 1}`,
                 floor: floorNumber,
                 status: "vacant",
                 rent_amount: targetRent,
