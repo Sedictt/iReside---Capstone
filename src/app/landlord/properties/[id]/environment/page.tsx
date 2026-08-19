@@ -21,6 +21,8 @@ import {
 import { cn } from "@/lib/utils";
 import { PropertyEnvironmentBanner } from "@/components/landlord/PropertyEnvironmentBanner";
 import { createClient } from "@/lib/supabase/client";
+import { PageLoader } from "@/components/ui/LoadingSpinner";
+import { useAppToast } from "@/hooks/useAppToast";
 
 type EnvironmentMode = "apartment" | "dormitory" | "boarding_house";
 
@@ -114,10 +116,11 @@ const MODE_INFO: Record<EnvironmentMode, { label: string; description: string; i
 };
 
 export default function PropertyEnvironmentPage() {
+    const toast = useAppToast();
     const params = useParams();
     const { push } = useRouter();
     const supabase = useMemo(() => createClient(), []);
-    const propertyId = params.id as string;
+    const propertyId = typeof params?.id === "string" ? params.id : Array.isArray(params?.id) ? params.id[0] : "";
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -142,68 +145,91 @@ export default function PropertyEnvironmentPage() {
     });
 
     useEffect(() => {
+        if (!propertyId) return;
+
+        let isMounted = true;
+        setLoading(true);
+        setError(null);
+
         async function fetchPolicy() {
             try {
                 const { data: propData, error: propError } = await supabase
                     .from("properties")
-                    .select("name")
+                    .select("name, type")
                     .eq("id", propertyId)
-                    .single();
+                    .maybeSingle();
 
-                if (propError) throw propError;
-                setPropertyName(propData.name);
+                if (propError) {
+                    console.warn("Error fetching property:", propError);
+                }
+
+                if (isMounted && propData) {
+                    setPropertyName(propData.name || "Property");
+                    if (propData.type && (propData.type === "apartment" || propData.type === "dormitory" || propData.type === "boarding_house")) {
+                        setMode(propData.type as EnvironmentMode);
+                    }
+                }
 
                 const { data: policyData, error: policyError } = await (supabase as any)
                     .from("property_environment_policies")
                     .select("*")
                     .eq("property_id", propertyId)
-                    .single();
+                    .maybeSingle();
 
                 if (policyError && policyError.code !== "PGRST116") {
-                    throw policyError;
+                    console.warn("Error fetching policy:", policyError);
                 }
 
-                if (policyData) {
-                    setPolicy(policyData as PropertyPolicy);
-                    setFormData({
-                        max_occupants_per_unit: policyData.max_occupants_per_unit ?? getDefaultsForMode(mode).max_occupants_per_unit,
-                        curfew_enabled: policyData.curfew_enabled ?? getDefaultsForMode(mode).curfew_enabled,
-                        curfew_time: policyData.curfew_time ?? getDefaultsForMode(mode).curfew_time ?? "",
-                        visitor_cutoff_enabled: policyData.visitor_cutoff_enabled ?? getDefaultsForMode(mode).visitor_cutoff_enabled,
-                        visitor_cutoff_time: policyData.visitor_cutoff_time ?? getDefaultsForMode(mode).visitor_cutoff_time ?? "",
-                        quiet_hours_start: policyData.quiet_hours_start ?? getDefaultsForMode(mode).quiet_hours_start ?? "",
-                        quiet_hours_end: policyData.quiet_hours_end ?? getDefaultsForMode(mode).quiet_hours_end ?? "",
-                        gender_restriction_mode: (policyData.gender_restriction_mode as GenderRestrictionMode) ?? "none",
-                        utility_policy_mode: (policyData.utility_policy_mode as UtilityPolicyMode) ?? "included_in_rent",
-                        utility_fixed_charge_amount: (policyData as any).utility_fixed_charge_amount ?? null,
-                    });
-                    setMode((policyData.environment_mode as EnvironmentMode) || mode);
-                } else {
-                    const defaults = getDefaultsForMode(mode);
-                    setFormData({
-                        max_occupants_per_unit: defaults.max_occupants_per_unit ?? 5,
-                        curfew_enabled: defaults.curfew_enabled,
-                        curfew_time: defaults.curfew_time ?? "",
-                        visitor_cutoff_enabled: defaults.visitor_cutoff_enabled,
-                        visitor_cutoff_time: defaults.visitor_cutoff_time ?? "",
-                        quiet_hours_start: defaults.quiet_hours_start ?? "",
-                        quiet_hours_end: defaults.quiet_hours_end ?? "",
-                        gender_restriction_mode: defaults.gender_restriction_mode as GenderRestrictionMode,
-                        utility_policy_mode: defaults.utility_policy_mode as UtilityPolicyMode,
-                        utility_fixed_charge_amount: null,
-                    });
+                if (isMounted) {
+                    if (policyData) {
+                        const targetMode = (policyData.environment_mode as EnvironmentMode) || (propData?.type as EnvironmentMode) || "apartment";
+                        const defaults = getDefaultsForMode(targetMode);
+
+                        setPolicy(policyData as PropertyPolicy);
+                        setMode(targetMode);
+                        setFormData({
+                            max_occupants_per_unit: policyData.max_occupants_per_unit ?? defaults.max_occupants_per_unit,
+                            curfew_enabled: policyData.curfew_enabled ?? defaults.curfew_enabled,
+                            curfew_time: policyData.curfew_time ?? defaults.curfew_time ?? "",
+                            visitor_cutoff_enabled: policyData.visitor_cutoff_enabled ?? defaults.visitor_cutoff_enabled,
+                            visitor_cutoff_time: policyData.visitor_cutoff_time ?? defaults.visitor_cutoff_time ?? "",
+                            quiet_hours_start: policyData.quiet_hours_start ?? defaults.quiet_hours_start ?? "",
+                            quiet_hours_end: policyData.quiet_hours_end ?? defaults.quiet_hours_end ?? "",
+                            gender_restriction_mode: (policyData.gender_restriction_mode as GenderRestrictionMode) ?? defaults.gender_restriction_mode,
+                            utility_policy_mode: (policyData.utility_policy_mode as UtilityPolicyMode) ?? defaults.utility_policy_mode,
+                            utility_fixed_charge_amount: (policyData as any).utility_fixed_charge_amount ?? null,
+                        });
+                    } else {
+                        const targetMode = (propData?.type as EnvironmentMode) || "apartment";
+                        const defaults = getDefaultsForMode(targetMode);
+                        setMode(targetMode);
+                        setFormData({
+                            max_occupants_per_unit: defaults.max_occupants_per_unit ?? 5,
+                            curfew_enabled: defaults.curfew_enabled,
+                            curfew_time: defaults.curfew_time ?? "",
+                            visitor_cutoff_enabled: defaults.visitor_cutoff_enabled,
+                            visitor_cutoff_time: defaults.visitor_cutoff_time ?? "",
+                            quiet_hours_start: defaults.quiet_hours_start ?? "",
+                            quiet_hours_end: defaults.quiet_hours_end ?? "",
+                            gender_restriction_mode: defaults.gender_restriction_mode as GenderRestrictionMode,
+                            utility_policy_mode: defaults.utility_policy_mode as UtilityPolicyMode,
+                            utility_fixed_charge_amount: null,
+                        });
+                    }
                 }
             } catch (err) {
                 console.error("Error fetching policy:", err);
-                setError("Failed to load property environment settings");
+                if (isMounted) setError("Failed to load property environment settings");
             } finally {
-                setLoading(false);
+                if (isMounted) setLoading(false);
             }
         }
 
-        if (propertyId) {
-            fetchPolicy();
-        }
+        void fetchPolicy();
+
+        return () => {
+            isMounted = false;
+        };
     }, [propertyId, supabase]);
 
     const handleModeChange = (newMode: EnvironmentMode) => {
@@ -253,23 +279,19 @@ export default function PropertyEnvironmentPage() {
             if (upsertError) throw upsertError;
 
             setSuccess(true);
+            toast.success("Environment configuration saved successfully!");
             setTimeout(() => setSuccess(false), 3000);
-        } catch (err) {
+        } catch (err: any) {
             console.error("Error saving policy:", err);
             setError("Failed to save environment settings");
+            toast.error(err?.message || "Failed to save environment settings");
         } finally {
             setSaving(false);
         }
     };
 
     if (loading) {
-        return (
-            <div className="flex h-full w-full flex-col gap-8 bg-background p-6 md:p-8">
-                <div className="rounded-2xl border border-border bg-muted/40 p-4 animate-pulse">
-                    Loading environment settings...
-                </div>
-            </div>
-        );
+        return <PageLoader message="Loading Environment Settings" />;
     }
 
     return (
