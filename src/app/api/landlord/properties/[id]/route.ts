@@ -182,6 +182,62 @@ export async function PUT(
             { onConflict: "property_id" }
         );
 
+        // Sync Units & Floor Configs
+        const targetUnits = parseInt(String(total_units || 1), 10) || 1;
+        const targetFloors = parseInt(String(total_floors || 1), 10) || 1;
+        const targetRent = parseFloat(String(base_rent_amount || 0)) || 0;
+        const propType = type || "apartment";
+
+        const { data: existingUnits } = await (admin as any)
+            .from("units")
+            .select("id, name, floor, rent_amount")
+            .eq("property_id", propertyId);
+
+        const currentUnitCount = existingUnits?.length || 0;
+        if (targetUnits > currentUnitCount) {
+            const unitsPerFloor = Math.max(1, Math.ceil(targetUnits / targetFloors));
+            const unitPrefix = propType === "dormitory" ? "Room" : propType === "boarding_house" ? "Room" : "Unit";
+            const unitsToCreate = Array.from({ length: targetUnits - currentUnitCount }, (_, idx) => {
+                const unitIndex = currentUnitCount + idx + 1;
+                const floorNumber = targetFloors === 1 ? 1 : Math.min(targetFloors, Math.floor((unitIndex - 1) / unitsPerFloor) + 1);
+                return {
+                    property_id: propertyId,
+                    name: `${unitPrefix} ${unitIndex}`,
+                    floor: floorNumber,
+                    status: "vacant",
+                    rent_amount: targetRent,
+                    beds: 1,
+                    baths: 1,
+                };
+            });
+            await (admin as any).from("units").insert(unitsToCreate);
+        }
+
+        const floorConfigs = [];
+        for (let i = 1; i <= targetFloors; i++) {
+            floorConfigs.push({
+                property_id: propertyId,
+                floor_number: i,
+                floor_key: `floor${i}`,
+                display_name: `Floor ${i}`,
+                sort_order: i,
+            });
+        }
+        for (const u of existingUnits || []) {
+            if (u.floor && u.floor > 0 && !floorConfigs.some(fc => fc.floor_number === u.floor)) {
+                floorConfigs.push({
+                    property_id: propertyId,
+                    floor_number: u.floor,
+                    floor_key: `floor${u.floor}`,
+                    display_name: `Floor ${u.floor}`,
+                    sort_order: u.floor,
+                });
+            }
+        }
+        await (admin as any)
+            .from("property_floor_configs")
+            .upsert(floorConfigs, { onConflict: "property_id,floor_key" });
+
         return NextResponse.json(
             { success: true, propertyId },
             {
