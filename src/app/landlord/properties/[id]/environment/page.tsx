@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { m as motion } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import {
     Building2,
     Shield,
@@ -17,6 +17,11 @@ import {
     Check,
     Minus,
     Plus,
+    HelpCircle,
+    Info,
+    X,
+    Lightbulb,
+    FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
@@ -61,6 +66,44 @@ const UTILITY_OPTIONS: { value: UtilityPolicyMode; label: string; description: s
     { value: "separate_metered", label: "Separate Meter (Tenant Pays Usage)", description: "Tenant pays electric & water bills directly based on actual meter readings" },
     { value: "mixed", label: "Mixed (Fixed Monthly Fee + Metered)", description: "Fixed base utility fee with sub-metered overages" },
 ];
+
+const UTILITY_GUIDE_DETAILS: Record<UtilityPolicyMode, {
+    title: string;
+    tagline: string;
+    howItWorks: string;
+    invoicing: string;
+    bestFor: string;
+    pros: string[];
+    accentColor: string;
+}> = {
+    included_in_rent: {
+        title: "Included in Rent (All-Inclusive)",
+        tagline: "Zero Meter Logging • Flat Monthly Rent",
+        howItWorks: "The landlord pays the utility provider directly. No separate utility bills are issued to tenants—rent is flat and covers power and water.",
+        invoicing: "Tenants receive 1 monthly invoice containing only their standard base rent.",
+        bestFor: "High-end apartments, studio flats without dedicated sub-meters, and short-term leases.",
+        pros: ["Zero monthly meter reading effort", "Predictable monthly bills for tenants", "Simpler bookkeeping"],
+        accentColor: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20",
+    },
+    separate_metered: {
+        title: "Separate Meter (Tenant Pays Usage)",
+        tagline: "Sub-Metered • Pay What You Consume",
+        howItWorks: "Each unit has dedicated electricity and water sub-meters. You log meter readings each cycle, and iReside automatically calculates the exact consumption costs.",
+        invoicing: "Tenants receive an itemized monthly invoice breakdown: Base Rent + Exact Electric (kWh) + Exact Water (m³).",
+        bestFor: "Apartment complexes, dormitory rooms with individual air conditioning, and commercial units.",
+        pros: ["100% fair consumption billing", "Protects landlords from excessive AC usage", "Automatic rate-per-kWh calculation"],
+        accentColor: "text-amber-400 bg-amber-400/10 border-amber-400/20",
+    },
+    mixed: {
+        title: "Mixed (Fixed Monthly Fee + Metered)",
+        tagline: "Hybrid Billing • Base Fee + Overages",
+        howItWorks: "A fixed base amount (e.g. ₱500/month) is automatically included in every invoice for baseline utilities or common areas, plus any sub-metered charges if applicable.",
+        invoicing: "Tenants receive an invoice with: Base Rent + Fixed Utility Charge (₱) + Optional Overages.",
+        bestFor: "Boarding houses, student dormitories, and co-living units with shared common kitchens and bathrooms.",
+        pros: ["Guaranteed baseline utility cost recovery", "Covers shared amenity electricity", "Simple budgeting for tenants"],
+        accentColor: "text-blue-400 bg-blue-400/10 border-blue-400/20",
+    },
+};
 
 const DORM_DEFAULTS = {
     curfew_enabled: true,
@@ -152,6 +195,7 @@ export default function PropertyEnvironmentPage() {
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [isUtilityGuideOpen, setIsUtilityGuideOpen] = useState(false);
     const [propertyName, setPropertyName] = useState("");
     const [policy, setPolicy] = useState<PropertyPolicy | null>(null);
     const [mode, setMode] = useState<EnvironmentMode>("apartment");
@@ -317,6 +361,8 @@ export default function PropertyEnvironmentPage() {
         return <PageLoader message="Loading Environment Settings" />;
     }
 
+    const currentUtilityGuide = UTILITY_GUIDE_DETAILS[formData.utility_policy_mode] || UTILITY_GUIDE_DETAILS.included_in_rent;
+
     return (
         <div className="min-h-screen bg-background text-foreground pb-12">
             <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-6">
@@ -410,7 +456,7 @@ export default function PropertyEnvironmentPage() {
                                                     <Check className="size-3 stroke-[3]" />
                                                 </div>
                                             ) : (
-                                                <div className="size-5 rounded-full border border-white/10" />
+                                                <div className="size-4 rounded-full border border-white/10" />
                                             )}
                                         </div>
 
@@ -453,7 +499,7 @@ export default function PropertyEnvironmentPage() {
                             </div>
                         </div>
 
-                        <div className="space-y-3.5">
+                        <div className="space-y-4">
                             {/* Max Occupants Stepper */}
                             <div className="space-y-1.5">
                                 <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">
@@ -499,12 +545,23 @@ export default function PropertyEnvironmentPage() {
                                 </select>
                             </div>
 
-                            {/* Utility Billing Mode */}
-                            <div className="space-y-1.5">
-                                <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 flex items-center gap-1.5">
-                                    <Zap className="size-3 text-amber-400" />
-                                    <span>Electricity & Water Billing</span>
-                                </label>
+                            {/* Electricity & Water Billing Selection + Live Explainer */}
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 flex items-center gap-1.5">
+                                        <Zap className="size-3 text-amber-400" />
+                                        <span>Electricity & Water Billing</span>
+                                    </label>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsUtilityGuideOpen(true)}
+                                        className="flex items-center gap-1 text-[11px] font-bold text-amber-400/90 hover:text-amber-300 transition-colors"
+                                    >
+                                        <HelpCircle className="size-3" />
+                                        <span>Compare Styles</span>
+                                    </button>
+                                </div>
+
                                 <select
                                     value={formData.utility_policy_mode}
                                     onChange={(e) => setFormData(prev => ({ ...prev, utility_policy_mode: e.target.value as UtilityPolicyMode }))}
@@ -516,6 +573,30 @@ export default function PropertyEnvironmentPage() {
                                         </option>
                                     ))}
                                 </select>
+
+                                {/* Live Contextual Breakdown Banner */}
+                                <motion.div
+                                    key={formData.utility_policy_mode}
+                                    initial={{ opacity: 0, y: 3 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="rounded-2xl border border-white/5 bg-white/[0.02] p-3 space-y-1.5"
+                                >
+                                    <div className="flex items-center justify-between gap-2">
+                                        <div className="flex items-center gap-1.5">
+                                            <Lightbulb className="size-3.5 text-amber-400 shrink-0" />
+                                            <span className="text-[11px] font-black text-white">
+                                                {currentUtilityGuide.tagline}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <p className="text-[11px] text-neutral-400 leading-relaxed font-medium">
+                                        {currentUtilityGuide.howItWorks}
+                                    </p>
+                                    <div className="pt-1 flex items-center gap-1.5 text-[10px] text-neutral-500 font-bold">
+                                        <FileText className="size-3 text-neutral-400" />
+                                        <span>Invoice: {currentUtilityGuide.invoicing}</span>
+                                    </div>
+                                </motion.div>
                             </div>
 
                             {/* Optional Fixed Charge */}
@@ -657,6 +738,121 @@ export default function PropertyEnvironmentPage() {
                     </div>
                 </div>
             </div>
+
+            {/* In-Page Utility Billing Styles Comparison Guide Modal */}
+            <AnimatePresence>
+                {isUtilityGuideOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl"
+                        onClick={() => setIsUtilityGuideOpen(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.95, y: 10 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.95, y: 10 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="neumorphic-panel w-full max-w-3xl rounded-[2.5rem] p-6 sm:p-8 space-y-6 border border-white/10 max-h-[90vh] overflow-y-auto"
+                        >
+                            <div className="flex items-start justify-between gap-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="size-11 rounded-2xl bg-amber-400/10 border border-amber-400/20 flex items-center justify-center text-amber-400">
+                                        <Zap className="size-6" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-black text-white tracking-tight">
+                                            Utility Billing Styles Guide
+                                        </h3>
+                                        <p className="text-xs text-neutral-400 font-medium">
+                                            Understand how each electricity & water billing policy functions in iReside.
+                                        </p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setIsUtilityGuideOpen(false)}
+                                    className="neumorphic-extruded size-9 rounded-xl flex items-center justify-center text-neutral-400 hover:text-white transition-all active:scale-95"
+                                >
+                                    <X className="size-4" />
+                                </button>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                {(Object.entries(UTILITY_GUIDE_DETAILS) as [UtilityPolicyMode, typeof UTILITY_GUIDE_DETAILS[UtilityPolicyMode]][]).map(([key, item]) => {
+                                    const isSelected = formData.utility_policy_mode === key;
+
+                                    return (
+                                        <div
+                                            key={key}
+                                            className={cn(
+                                                "rounded-3xl p-5 flex flex-col justify-between space-y-4 transition-all",
+                                                isSelected
+                                                    ? "neumorphic-inset border-2 border-amber-400/50 bg-amber-400/[0.03]"
+                                                    : "neumorphic-panel border border-white/5"
+                                            )}
+                                        >
+                                            <div className="space-y-3">
+                                                <div className="flex items-center justify-between">
+                                                    <span className={cn("text-[9px] font-black uppercase px-2 py-0.5 rounded-md border", item.accentColor)}>
+                                                        {key.replace("_", " ")}
+                                                    </span>
+                                                    {isSelected && (
+                                                        <span className="text-[10px] font-black text-amber-400">Selected</span>
+                                                    )}
+                                                </div>
+
+                                                <h4 className="text-sm font-black text-white">{item.title}</h4>
+                                                <p className="text-[11px] text-neutral-400 leading-relaxed font-medium">
+                                                    {item.howItWorks}
+                                                </p>
+
+                                                <div className="space-y-1.5 pt-2 border-t border-white/5">
+                                                    <p className="text-[10px] font-black uppercase tracking-wider text-neutral-500">Key Benefits:</p>
+                                                    <ul className="space-y-1">
+                                                        {item.pros.map((pro, i) => (
+                                                            <li key={i} className="text-[11px] text-neutral-300 flex items-center gap-1.5">
+                                                                <Check className="size-3 text-primary shrink-0" />
+                                                                <span>{pro}</span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            </div>
+
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setFormData(prev => ({ ...prev, utility_policy_mode: key }));
+                                                    setIsUtilityGuideOpen(false);
+                                                }}
+                                                className={cn(
+                                                    "w-full py-2 rounded-xl text-xs font-bold transition-all text-center",
+                                                    isSelected
+                                                        ? "bg-amber-400 text-black font-black"
+                                                        : "bg-white/5 hover:bg-white/10 text-neutral-300"
+                                                )}
+                                            >
+                                                {isSelected ? "Current Policy" : "Choose This Style"}
+                                            </button>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            <div className="pt-2 flex justify-end">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsUtilityGuideOpen(false)}
+                                    className="px-6 py-2.5 rounded-xl bg-white/10 text-xs font-bold text-white hover:bg-white/20 transition-all"
+                                >
+                                    Close Guide
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
