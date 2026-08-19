@@ -10,7 +10,9 @@ import {
     ChevronRight,
     ArrowRight,
     Layout,
-    Sparkles,
+    Equal,
+    SlidersHorizontal,
+    Eye,
     Plus,
     Layers,
     Hash,
@@ -547,7 +549,7 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
                                     : "bg-white/5 border-white/10 text-white hover:bg-white/10"
                             )}
                         >
-                            <Sparkles className="size-4" />
+                            <SlidersHorizontal className="size-4" />
                         </button>
                         
                         <button
@@ -613,7 +615,7 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
                                             disabled={isSaving}
                                             className="group flex shrink-0 items-center gap-2 rounded-2xl border border-primary/20 bg-primary/10 px-5 py-3 transition-all hover:bg-primary/20 active:scale-95 disabled:opacity-50"
                                         >
-                                            <Sparkles className="size-4 text-primary" />
+                                            <Equal className="size-4 text-primary" />
                                             <span className="text-xs font-black uppercase tracking-widest text-primary">Distribute Evenly</span>
                                         </button>
                                     )}
@@ -876,7 +878,7 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
                                 {/* Preview */}
                                 <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-4 space-y-2">
                                     <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-neutral-400">
-                                        <Sparkles className="size-3.5 text-primary" />
+                                        <Eye className="size-3.5 text-primary" />
                                         <span>Preview ({units.length} total units):</span>
                                     </div>
                                     <div className="flex flex-wrap items-center gap-1.5">

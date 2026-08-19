@@ -24,7 +24,8 @@ import {
     Wallet,
     Sparkles,
     FilePlus,
-    Hash
+    Hash,
+    Eye
 } from "lucide-react";
 import { generateUnitList } from "@/lib/unit-naming";
 import { cn } from "@/lib/utils";
@@ -623,7 +624,7 @@ function NewAssetContent() {
                                         {/* Dynamic Live Preview */}
                                         <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-neutral-400">
-                                                <Sparkles className="size-3.5 text-primary" />
+                                                <Eye className="size-3.5 text-primary" />
                                                 <span>Live Preview of Generated Units:</span>
                                             </div>
                                             <div className="flex flex-wrap items-center gap-1.5">
