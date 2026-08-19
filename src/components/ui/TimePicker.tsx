@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { m as motion, AnimatePresence } from "framer-motion";
-import { Clock, Check, ChevronDown } from "lucide-react";
+import { Clock, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface TimePickerProps {
@@ -14,14 +14,14 @@ interface TimePickerProps {
     presets?: string[]; // e.g. ["20:00", "21:00", "22:00", "23:00", "00:00"]
 }
 
-// Helper to convert 24h "HH:mm" to { hour: 1-12, minute: "00"-"55", period: "AM"|"PM" }
+// Helper to convert 24h "HH:mm" to { hour: 1-12, minute: "00"-"59", period: "AM"|"PM" }
 function parse24HourTime(timeStr?: string | null) {
     if (!timeStr || !timeStr.includes(":")) {
         return { hour: 10, minute: "00", period: "PM" as const };
     }
     const [hStr, mStr] = timeStr.split(":");
     let h = parseInt(hStr, 10);
-    const m = mStr ? mStr.padStart(2, "0") : "00";
+    const m = mStr ? mStr.padStart(2, "0").slice(0, 2) : "00";
 
     if (isNaN(h)) h = 10;
     const period = h >= 12 ? ("PM" as const) : ("AM" as const);
@@ -31,12 +31,13 @@ function parse24HourTime(timeStr?: string | null) {
     return { hour: hour12, minute: m, period };
 }
 
-// Helper to convert { hour: 1-12, minute: "00", period: "AM"|"PM" } to 24h "HH:mm"
+// Helper to convert { hour: 1-12, minute: "00"-"59", period: "AM"|"PM" } to 24h "HH:mm"
 function formatTo24HourTime(hour: number, minute: string, period: "AM" | "PM"): string {
     let h = hour;
     if (period === "AM" && h === 12) h = 0;
     if (period === "PM" && h < 12) h += 12;
-    return `${h.toString().padStart(2, "0")}:${minute.padStart(2, "0")}`;
+    const minInt = Math.max(0, Math.min(59, parseInt(minute, 10) || 0));
+    return `${h.toString().padStart(2, "0")}:${minInt.toString().padStart(2, "0")}`;
 }
 
 // Format "HH:mm" to "10:00 PM"
@@ -47,7 +48,7 @@ export function formatDisplayTime(timeStr?: string | null): string {
 }
 
 const HOURS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-const MINUTES = ["00", "15", "30", "45"];
+const MINUTE_PRESETS = ["00", "15", "30", "45"];
 const DEFAULT_PRESETS = ["06:00", "07:00", "08:00", "20:00", "21:00", "22:00", "23:00", "00:00"];
 
 export function TimePicker({
@@ -89,22 +90,31 @@ export function TimePicker({
         };
     }, [isOpen]);
 
-    const handleSelectHour = (h: number) => {
-        setSelectedHour(h);
-        const new24 = formatTo24HourTime(h, selectedMinute, selectedPeriod);
-        onChange(new24);
+    const handleHourChange = (newHour: number) => {
+        const clamped = Math.max(1, Math.min(12, newHour));
+        setSelectedHour(clamped);
+        onChange(formatTo24HourTime(clamped, selectedMinute, selectedPeriod));
     };
 
-    const handleSelectMinute = (m: string) => {
-        setSelectedMinute(m);
-        const new24 = formatTo24HourTime(selectedHour, m, selectedPeriod);
-        onChange(new24);
+    const handleMinuteChange = (newMinuteStr: string) => {
+        const sanitized = newMinuteStr.replace(/\D/g, "").slice(0, 2);
+        setSelectedMinute(sanitized);
+        if (sanitized.length > 0) {
+            const num = Math.min(59, parseInt(sanitized, 10));
+            onChange(formatTo24HourTime(selectedHour, num.toString().padStart(2, "0"), selectedPeriod));
+        }
+    };
+
+    const handleMinuteBlur = () => {
+        const num = Math.max(0, Math.min(59, parseInt(selectedMinute, 10) || 0));
+        const formatted = num.toString().padStart(2, "0");
+        setSelectedMinute(formatted);
+        onChange(formatTo24HourTime(selectedHour, formatted, selectedPeriod));
     };
 
     const handleTogglePeriod = (p: "AM" | "PM") => {
         setSelectedPeriod(p);
-        const new24 = formatTo24HourTime(selectedHour, selectedMinute, p);
-        onChange(new24);
+        onChange(formatTo24HourTime(selectedHour, selectedMinute, p));
     };
 
     const handlePresetClick = (preset24: string) => {
@@ -148,27 +158,52 @@ export function TimePicker({
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 4, scale: 0.96 }}
                         transition={{ duration: 0.15, ease: "easeOut" }}
-                        className="neumorphic-panel absolute right-0 top-full z-50 mt-2 w-72 rounded-3xl border border-white/10 p-4 shadow-2xl backdrop-blur-2xl"
+                        className="neumorphic-panel absolute right-0 top-full z-50 mt-2 w-80 rounded-3xl border border-white/10 p-4 shadow-2xl backdrop-blur-2xl"
                     >
-                        {/* Time Display Header */}
-                        <div className="mb-4 flex items-center justify-between rounded-2xl bg-white/[0.03] p-2.5 border border-white/5">
-                            <div className="flex items-center gap-1">
-                                <span className="text-xl font-black text-white">
-                                    {selectedHour.toString().padStart(2, "0")}
-                                </span>
-                                <span className="text-lg font-bold text-primary animate-pulse">:</span>
-                                <span className="text-xl font-black text-white">{selectedMinute}</span>
+                        {/* Direct Editable Time Digits (Type Any Precise Time) */}
+                        <div className="mb-4 flex items-center justify-between rounded-2xl bg-white/[0.04] p-3 border border-white/5">
+                            <div className="flex items-center gap-1.5">
+                                {/* Editable Hour Input */}
+                                <div className="flex flex-col items-center">
+                                    <input
+                                        type="number"
+                                        min={1}
+                                        max={12}
+                                        value={selectedHour}
+                                        onChange={(e) => handleHourChange(parseInt(e.target.value, 10) || 1)}
+                                        className="neumorphic-inset size-10 rounded-xl text-center text-lg font-black text-white outline-none focus:ring-2 focus:ring-primary/50"
+                                        title="Type exact hour (1-12)"
+                                    />
+                                    <span className="text-[9px] uppercase font-bold text-neutral-500 mt-1">Hour</span>
+                                </div>
+
+                                <span className="text-xl font-bold text-primary mb-3.5">:</span>
+
+                                {/* Editable Minute Input */}
+                                <div className="flex flex-col items-center">
+                                    <input
+                                        type="text"
+                                        inputMode="numeric"
+                                        maxLength={2}
+                                        value={selectedMinute}
+                                        onChange={(e) => handleMinuteChange(e.target.value)}
+                                        onBlur={handleMinuteBlur}
+                                        className="neumorphic-inset size-10 rounded-xl text-center text-lg font-black text-white outline-none focus:ring-2 focus:ring-primary/50"
+                                        title="Type exact minute (00-59)"
+                                    />
+                                    <span className="text-[9px] uppercase font-bold text-neutral-500 mt-1">Min</span>
+                                </div>
                             </div>
 
                             {/* AM / PM Segmented Control */}
-                            <div className="neumorphic-inset flex rounded-xl p-0.5 border border-white/5">
+                            <div className="neumorphic-inset flex rounded-xl p-0.5 border border-white/5 self-start mt-1">
                                 {(["AM", "PM"] as const).map((p) => (
                                     <button
                                         key={p}
                                         type="button"
                                         onClick={() => handleTogglePeriod(p)}
                                         className={cn(
-                                            "rounded-lg px-2.5 py-1 text-[10px] font-black tracking-wider transition-all",
+                                            "rounded-lg px-3 py-1.5 text-xs font-black tracking-wider transition-all",
                                             selectedPeriod === p
                                                 ? "bg-primary text-black shadow-sm"
                                                 : "text-neutral-400 hover:text-white"
@@ -183,7 +218,7 @@ export function TimePicker({
                         {/* Quick Presets */}
                         <div className="mb-3">
                             <p className="mb-1.5 text-[9px] font-black uppercase tracking-widest text-neutral-400">
-                                Common Hours
+                                Quick Pick
                             </p>
                             <div className="flex flex-wrap gap-1.5">
                                 {presets.map((preset) => {
@@ -219,7 +254,7 @@ export function TimePicker({
                                         <button
                                             key={h}
                                             type="button"
-                                            onClick={() => handleSelectHour(h)}
+                                            onClick={() => handleHourChange(h)}
                                             className={cn(
                                                 "flex size-8 items-center justify-center rounded-xl text-xs font-bold transition-all",
                                                 isSelected
@@ -234,19 +269,22 @@ export function TimePicker({
                             </div>
                         </div>
 
-                        {/* Minutes Grid */}
+                        {/* Minute Presets */}
                         <div className="border-t border-white/5 pt-3">
-                            <p className="mb-1.5 text-[9px] font-black uppercase tracking-widest text-neutral-400">
-                                Minute
-                            </p>
+                            <div className="flex items-center justify-between mb-1.5">
+                                <p className="text-[9px] font-black uppercase tracking-widest text-neutral-400">
+                                    Minute Intervals
+                                </p>
+                                <span className="text-[9px] text-neutral-500 font-medium">Or type above</span>
+                            </div>
                             <div className="grid grid-cols-4 gap-1.5">
-                                {MINUTES.map((m) => {
+                                {MINUTE_PRESETS.map((m) => {
                                     const isSelected = selectedMinute === m;
                                     return (
                                         <button
                                             key={m}
                                             type="button"
-                                            onClick={() => handleSelectMinute(m)}
+                                            onClick={() => handleMinuteChange(m)}
                                             className={cn(
                                                 "flex h-7 items-center justify-center rounded-xl text-xs font-bold transition-all",
                                                 isSelected
@@ -266,9 +304,9 @@ export function TimePicker({
                             <button
                                 type="button"
                                 onClick={() => setIsOpen(false)}
-                                className="w-full rounded-xl bg-white/10 py-1.5 text-center text-xs font-bold text-white hover:bg-primary hover:text-black transition-colors"
+                                className="w-full rounded-xl bg-white/10 py-2 text-center text-xs font-bold text-white hover:bg-primary hover:text-black transition-colors"
                             >
-                                Done
+                                Apply Time
                             </button>
                         </div>
                     </motion.div>
