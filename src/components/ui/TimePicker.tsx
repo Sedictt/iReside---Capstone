@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { Clock, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -51,6 +51,10 @@ const HOURS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 const MINUTE_PRESETS = ["00", "15", "30", "45"];
 const DEFAULT_PRESETS = ["06:00", "07:00", "08:00", "20:00", "21:00", "22:00", "23:00", "00:00"];
 
+const POPOVER_HEIGHT = 380;
+const POPOVER_WIDTH = 320;
+const VIEWPORT_PADDING = 16;
+
 export function TimePicker({
     value,
     onChange,
@@ -61,11 +65,38 @@ export function TimePicker({
 }: TimePickerProps) {
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
+    const [placement, setPlacement] = useState<{
+        vertical: "bottom" | "top";
+        horizontal: "right" | "left";
+    }>({ vertical: "bottom", horizontal: "right" });
 
     const parsed = parse24HourTime(value);
     const [selectedHour, setSelectedHour] = useState(parsed.hour);
     const [selectedMinute, setSelectedMinute] = useState(parsed.minute);
     const [selectedPeriod, setSelectedPeriod] = useState<"AM" | "PM">(parsed.period);
+
+    // Viewport-aware collision calculation
+    const updatePlacement = useCallback(() => {
+        if (!containerRef.current) return;
+        const rect = containerRef.current.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const viewportWidth = window.innerWidth;
+
+        // Vertical collision check
+        const spaceBelow = viewportHeight - rect.bottom;
+        const spaceAbove = rect.top;
+        const shouldDropUp = spaceBelow < POPOVER_HEIGHT && spaceAbove > spaceBelow;
+
+        // Horizontal collision check
+        const spaceRight = viewportWidth - rect.left;
+        const spaceLeft = rect.right;
+        const shouldAlignRight = spaceRight < POPOVER_WIDTH && spaceLeft > spaceRight;
+
+        setPlacement({
+            vertical: shouldDropUp ? "top" : "bottom",
+            horizontal: shouldAlignRight ? "right" : "left",
+        });
+    }, []);
 
     // Sync internal state when external value changes
     useEffect(() => {
@@ -75,18 +106,38 @@ export function TimePicker({
         setSelectedPeriod(p.period);
     }, [value]);
 
-    // Close when clicking outside
+    // Recalculate placement when opened or on resize / scroll
+    useEffect(() => {
+        if (isOpen) {
+            updatePlacement();
+            window.addEventListener("resize", updatePlacement, { passive: true });
+            window.addEventListener("scroll", updatePlacement, { passive: true });
+        }
+        return () => {
+            window.removeEventListener("resize", updatePlacement);
+            window.removeEventListener("scroll", updatePlacement);
+        };
+    }, [isOpen, updatePlacement]);
+
+    // Close when clicking outside or pressing Escape
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
             if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
                 setIsOpen(false);
             }
         }
+        function handleKeyDown(event: KeyboardEvent) {
+            if (event.key === "Escape") {
+                setIsOpen(false);
+            }
+        }
         if (isOpen) {
             document.addEventListener("mousedown", handleClickOutside);
+            document.addEventListener("keydown", handleKeyDown);
         }
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
+            document.removeEventListener("keydown", handleKeyDown);
         };
     }, [isOpen]);
 
@@ -130,7 +181,10 @@ export function TimePicker({
             {/* Trigger Button */}
             <button
                 type="button"
-                onClick={() => setIsOpen(!isOpen)}
+                onClick={() => {
+                    updatePlacement();
+                    setIsOpen(!isOpen);
+                }}
                 className={cn(
                     "neumorphic-inset flex items-center justify-between gap-2.5 rounded-xl border border-white/5 px-3 py-2 text-xs font-bold text-white transition-all hover:border-white/20 active:scale-[0.98]",
                     size === "sm" ? "py-1.5 px-2.5 text-[11px]" : "py-2 px-3 text-xs",
@@ -150,17 +204,29 @@ export function TimePicker({
                 />
             </button>
 
-            {/* Popover Dropdown */}
+            {/* Viewport-Aware Popover Dropdown */}
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
-                        initial={{ opacity: 0, y: 6, scale: 0.96 }}
+                        initial={{
+                            opacity: 0,
+                            y: placement.vertical === "top" ? -6 : 6,
+                            scale: 0.96
+                        }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 4, scale: 0.96 }}
+                        exit={{
+                            opacity: 0,
+                            y: placement.vertical === "top" ? -4 : 4,
+                            scale: 0.96
+                        }}
                         transition={{ duration: 0.15, ease: "easeOut" }}
-                        className="neumorphic-panel absolute right-0 top-full z-50 mt-2 w-80 rounded-3xl border border-white/10 p-4 shadow-2xl backdrop-blur-2xl"
+                        className={cn(
+                            "neumorphic-panel absolute z-50 w-80 max-w-[calc(100vw-32px)] rounded-3xl border border-white/10 p-4 shadow-2xl backdrop-blur-2xl",
+                            placement.vertical === "top" ? "bottom-full mb-2" : "top-full mt-2",
+                            placement.horizontal === "right" ? "right-0" : "left-0"
+                        )}
                     >
-                        {/* Direct Editable Time Digits (Type Any Precise Time) */}
+                        {/* Direct Editable Time Digits */}
                         <div className="mb-4 flex items-center justify-between rounded-2xl bg-white/[0.04] p-3 border border-white/5">
                             <div className="flex items-center gap-1.5">
                                 {/* Editable Hour Input */}
