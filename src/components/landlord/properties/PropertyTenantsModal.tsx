@@ -236,7 +236,10 @@ export function PropertyTenantsModal({
                                         >
                                             <div className="flex items-start justify-between gap-3">
                                                 <div className="flex items-center gap-3 min-w-0">
-                                                    <div className="size-10 rounded-xl bg-primary/20 text-primary border border-primary/30 flex items-center justify-center font-black text-sm shrink-0 overflow-hidden relative">
+                                                    <div
+                                                        className="size-11 rounded-2xl flex items-center justify-center font-black text-sm shrink-0 overflow-hidden relative text-white shadow-inner"
+                                                        style={{ backgroundColor: t.avatarBgColor || "#8B5CF6" }}
+                                                    >
                                                         {t.avatarUrl ? (
                                                             <Image
                                                                 src={t.avatarUrl}
@@ -245,7 +248,7 @@ export function PropertyTenantsModal({
                                                                 className="object-cover"
                                                             />
                                                         ) : (
-                                                            <span>{t.avatar || t.name.slice(0, 2).toUpperCase()}</span>
+                                                            <span className="font-black drop-shadow-sm">{t.avatar || t.name.slice(0, 2).toUpperCase()}</span>
                                                         )}
                                                     </div>
                                                     <div className="min-w-0">
