@@ -16,6 +16,8 @@ export interface LandlordLeaseFilters {
   propertyId?: string;
   /** Single status, or comma-separated list of statuses. */
   status?: string;
+  /** Filter to leases on a single unit. */
+  unitId?: string;
 }
 
 /** Joined unit + property view used in landlord lease list. */

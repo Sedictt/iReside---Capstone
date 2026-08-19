@@ -48,20 +48,31 @@ import {
 import { UnitTooltip } from "./components/UnitTooltip";
 import { TransferRequestModal } from "./components/TransferRequestModal";
 import { FloorSelector } from "./components/FloorSelector";
+import { LeasePreviewModal } from "./components/LeasePreviewModal";
+import { MaintenanceRequestModal } from "@/components/landlord/maintenance/MaintenanceRequestModal";
+import type { MaintenanceRequest } from "@/components/landlord/maintenance/MaintenanceDashboard";
 
 /** Unit History Modal Component */
 const UnitHistoryModal = ({
     isOpen,
     onClose,
-    unit
+    unit,
+    initialTab = "tenants",
 }: {
     isOpen: boolean;
     onClose: () => void;
     unit: Unit | null;
+    initialTab?: "tenants" | "maintenance";
 }) => {
-    const [activeTab, setActiveTab] = useState<"tenants" | "maintenance">("tenants");
+    const [activeTab, setActiveTab] = useState<"tenants" | "maintenance">(initialTab);
     const { resolvedTheme } = useTheme();
     const isDark = resolvedTheme === "dark";
+
+    useEffect(() => {
+        if (isOpen) {
+            setActiveTab(initialTab);
+        }
+    }, [isOpen, initialTab]);
 
     if (!unit) return null;
 
@@ -156,7 +167,7 @@ const UnitHistoryModal = ({
                                                 </p>
                                             </div>
                                             <div className="text-right">
-                                                <p className={`text-xs font-black text-foreground`}>â‚±{item.rent.toLocaleString()}</p>
+                                                <p className={`text-xs font-black text-foreground`}>₱{item.rent.toLocaleString()}</p>
                                                 <p className="text-[9px] font-black text-muted-foreground">Monthly Rent</p>
                                             </div>
                                         </div>
@@ -177,7 +188,7 @@ const UnitHistoryModal = ({
                                                 <p className="text-[10px] font-black text-muted-foreground mt-1"><ClientOnlyDate date={item.date} /> &bull; {item.description}</p>
                                             </div>
                                             <div className="text-right">
-                                                <p className={`text-xs font-black text-foreground`}>â‚±{item.cost.toLocaleString()}</p>
+                                                <p className={`text-xs font-black text-foreground`}>₱{item.cost.toLocaleString()}</p>
                                                 <p className="text-[9px] font-black text-muted-foreground">Cost</p>
                                             </div>
                                         </div>
@@ -530,6 +541,11 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const [isWalkInModalOpen, setIsWalkInModalOpen] = useState(false);
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
     const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+    const [historyInitialTab, setHistoryInitialTab] = useState<"tenants" | "maintenance">("tenants");
+    const [isLeasePreviewModalOpen, setIsLeasePreviewModalOpen] = useState(false);
+    const [isMaintenanceModalOpen, setIsMaintenanceModalOpen] = useState(false);
+    const [maintenanceModalMode, setMaintenanceModalMode] = useState<"view" | "create">("view");
+    const [activeMaintenanceRequest, setActiveMaintenanceRequest] = useState<MaintenanceRequest | null>(null);
     const [isComplaintModalOpen, setIsComplaintModalOpen] = useState(false);
     const [complaintUnit, setComplaintUnit] = useState<Unit | null>(null);
     const [tooltipUnit, setTooltipUnit] = useState<Unit | null>(null);
@@ -2687,6 +2703,30 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         : null;
     const selectedUnitNote = selectedUnit ? (unitNotes[selectedUnit.id] ?? "") : "";
 
+    const handleOpenMaintenance = useCallback((mode: "view" | "create") => {
+        setMaintenanceModalMode(mode);
+        if (mode === "view" && selectedUnit) {
+            const req: MaintenanceRequest = {
+                id: selectedUnit.dbId ? `MR-${selectedUnit.dbId.slice(0, 8).toUpperCase()}` : `MR-${selectedUnit.id.toUpperCase()}`,
+                title: selectedUnit.maintenanceTitle || selectedUnit.details || "In-Unit Repair",
+                description: selectedUnit.maintenanceDescription || `Maintenance issue reported for Unit ${selectedUnit.name}.`,
+                property: selectedProperty?.name || "Property",
+                unit: selectedUnit.name,
+                tenant: selectedUnit.tenant || "Resident",
+                tenantAvatar: selectedUnit.tenantAvatarUrl || null,
+                tenantAvatarBgColor: selectedUnit.tenantAvatarBgColor || "bg-primary",
+                priority: "High",
+                status: (selectedUnit.maintenanceStatus === "completed" ? "Resolved" : selectedUnit.maintenanceStatus === "in_progress" ? "In Progress" : selectedUnit.maintenanceStatus === "assigned" ? "Assigned" : "Pending") as any,
+                reportedAt: selectedUnit.maintenanceDate || new Date().toISOString(),
+                images: [],
+            };
+            setActiveMaintenanceRequest(req);
+        } else {
+            setActiveMaintenanceRequest(null);
+        }
+        setIsMaintenanceModalOpen(true);
+    }, [selectedUnit, selectedProperty]);
+
     return (
         <div className={`${isDark ? 'bg-background-dark text-zinc-100' : 'bg-background text-zinc-800'} h-full flex flex-col overflow-hidden antialiased selection:bg-primary/30 ${readOnly ? 'pointer-events-auto' : ''}`}>
             {/* Header */}
@@ -3759,14 +3799,14 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                     <AnimatePresence>
                         {selectedItem && !readOnly && !isHUDHidden && (
                             <motion.div
-                                initial={{ opacity: 0, y: 20, x: "-50%" }}
+                                initial={{ opacity: 0, y: -20, x: "-50%" }}
                                 animate={{ opacity: 1, y: 0, x: "-50%" }}
-                                exit={{ opacity: 0, y: 20, x: "-50%" }}
-                                className={`absolute bottom-28 left-1/2 -translate-x-1/2 z-50 flex gap-2 rounded-2xl backdrop-blur-xl border p-2 shadow-2xl ${isDark ? 'bg-zinc-900/90 border-white/10' : 'bg-white/90 border-zinc-200/50'}`}
+                                exit={{ opacity: 0, y: -20, x: "-50%" }}
+                                className={`absolute top-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1.5 rounded-2xl backdrop-blur-2xl border p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] max-w-[calc(100%-2rem)] ${isDark ? 'bg-zinc-900/95 border-white/10' : 'bg-white/95 border-zinc-200/80'}`}
                             >
                                 {selectedItem.kind === "corridor" ? (
                                     <>
-                                        <div className="flex items-center gap-2 px-2 py-1">
+                                        <div className="flex items-center gap-2 px-3 py-1.5">
                                             <span className={`material-icons-round text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>edit</span>
                                             <input
                                                 type="text"
@@ -3776,13 +3816,13 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                     setCorridors(prev => prev.map(c => c.id === selectedItem.id ? { ...c, label: val } : c));
                                                 }}
                                                 placeholder="Corridor Name"
-                                                className={`bg-transparent border-none outline-none text-xs font-black uppercase tracking-wider w-40 ${isDark ? 'text-white' : 'text-zinc-800'}`}
+                                                className={`bg-transparent border-none outline-none text-xs font-black uppercase tracking-wider w-36 ${isDark ? 'text-white' : 'text-zinc-800'}`}
                                             />
                                         </div>
-                                        <div className="w-px h-6 bg-white/10 mx-1 my-auto" />
+                                        <div className={`w-px h-5 mx-1 my-auto ${isDark ? 'bg-white/10' : 'bg-zinc-200'}`} />
                                         <button
                                             onClick={() => rotateSelectedItem(selectedItem)}
-                                            className={`flex items-center gap-2 px-4 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition-all ${isDark ? 'text-white/70 hover:text-white hover:bg-white/10' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100'}`}
+                                            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition-all ${isDark ? 'text-white/80 hover:text-white hover:bg-white/10' : 'text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100'}`}
                                             title="Rotate (R)"
                                         >
                                             <span className="material-icons-round text-lg">rotate_right</span>
@@ -3793,7 +3833,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                     <>
                                         <button
                                             onClick={() => flipSelectedItem('x')}
-                                            className={`flex items-center gap-2 px-4 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition-all ${isDark ? 'text-white/70 hover:text-white hover:bg-white/10' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100'}`}
+                                            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition-all whitespace-nowrap ${isDark ? 'text-white/80 hover:text-white hover:bg-white/10' : 'text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100'}`}
                                             title="Flip Horizontal (X)"
                                         >
                                             <span className="material-icons-round text-lg">flip</span>
@@ -3801,16 +3841,16 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                         </button>
                                         <button
                                             onClick={() => flipSelectedItem('y')}
-                                            className={`flex items-center gap-2 px-4 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition-all ${isDark ? 'text-white/70 hover:text-white hover:bg-white/10' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100'}`}
+                                            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition-all whitespace-nowrap ${isDark ? 'text-white/80 hover:text-white hover:bg-white/10' : 'text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100'}`}
                                             title="Flip Vertical (Y)"
                                         >
                                             <span className="material-icons-round text-lg rotate-90">flip</span>
                                             Flip V <span className="text-[9px] opacity-50 ml-1">(Y)</span>
                                         </button>
-                                        <div className="w-px h-6 bg-white/10 mx-1 my-auto" />
+                                        <div className={`w-px h-5 mx-1 my-auto ${isDark ? 'bg-white/10' : 'bg-zinc-200'}`} />
                                         <button
                                             onClick={() => rotateSelectedItem(selectedItem)}
-                                            className={`flex items-center gap-2 px-4 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition-all ${isDark ? 'text-white/70 hover:text-white hover:bg-white/10' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100'}`}
+                                            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition-all whitespace-nowrap ${isDark ? 'text-white/80 hover:text-white hover:bg-white/10' : 'text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100'}`}
                                             title="Rotate (R)"
                                         >
                                             <span className="material-icons-round text-lg">rotate_right</span>
@@ -4120,7 +4160,16 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                         onToggleNotes={() => setIsNotesPanelOpen((current) => !current)}
                                         onOpenWalkIn={() => setIsWalkInModalOpen(true)}
                                         onOpenInvite={() => setIsInviteModalOpen(true)}
-                                        onOpenHistory={() => setIsHistoryModalOpen(true)}
+                                        onOpenHistory={() => {
+                                            setHistoryInitialTab("tenants");
+                                            setIsHistoryModalOpen(true);
+                                        }}
+                                        onOpenLease={() => setIsLeasePreviewModalOpen(true)}
+                                        onOpenMaintenance={handleOpenMaintenance}
+                                        onOpenServiceLogs={() => {
+                                            setHistoryInitialTab("maintenance");
+                                            setIsHistoryModalOpen(true);
+                                        }}
                                     />
                                 ) : selectedStructure ? (
                                     <StructureDetailsPanel
@@ -4185,6 +4234,38 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                     isOpen={isHistoryModalOpen}
                     onClose={() => setIsHistoryModalOpen(false)}
                     unit={selectedUnit}
+                    initialTab={historyInitialTab}
+                />
+
+                <LeasePreviewModal
+                    isOpen={isLeasePreviewModalOpen}
+                    onClose={() => setIsLeasePreviewModalOpen(false)}
+                    unit={selectedUnit}
+                    property={selectedProperty}
+                />
+
+                <MaintenanceRequestModal
+                    isOpen={isMaintenanceModalOpen}
+                    onClose={() => setIsMaintenanceModalOpen(false)}
+                    request={activeMaintenanceRequest}
+                    mode={maintenanceModalMode}
+                    propertyId={selectedPropertyId !== "all" ? selectedPropertyId : undefined}
+                    units={dbUnits.map(u => ({ id: u.id, name: u.name }))}
+                    onRequestUpdated={(updated) => {
+                        if (selectedUnit) {
+                            setUnits(prev => prev.map(u => u.id === selectedUnit.id ? { 
+                                ...u, 
+                                maintenanceStatus: updated.status.toLowerCase().replace(" ", "_"),
+                                maintenanceTitle: updated.title,
+                                maintenanceDescription: updated.description,
+                            } : u));
+                        }
+                        setIsMaintenanceModalOpen(false);
+                    }}
+                    onRequestCreated={() => {
+                        setRefreshKey(prev => prev + 1);
+                        setIsMaintenanceModalOpen(false);
+                    }}
                 />
 
                 <AnimatePresence>
@@ -4293,6 +4374,9 @@ const UnitDetailsPanel = ({
     onOpenWalkIn,
     onOpenInvite,
     onOpenHistory,
+    onOpenLease,
+    onOpenMaintenance,
+    onOpenServiceLogs,
 }: {
     unit: Unit;
     onUpdate: (updates: Partial<Unit>) => void;
@@ -4303,6 +4387,9 @@ const UnitDetailsPanel = ({
     onOpenWalkIn?: () => void;
     onOpenInvite?: () => void;
     onOpenHistory?: () => void;
+    onOpenLease?: () => void;
+    onOpenMaintenance?: (mode: "view" | "create") => void;
+    onOpenServiceLogs?: () => void;
 }) => {
     const [tenantActionMenu, setTenantActionMenu] = useState<TenantActionMenuState>({ isOpen: false });
     const [quickActionError, setQuickActionError] = useState<string | null>(null);
@@ -4378,12 +4465,29 @@ const UnitDetailsPanel = ({
         const guard = evaluateQuickAction(unit, action);
         
         if (action === "manage-maintenance") {
-             window.location.href = `/landlord/maintenance?unitId=${unit.id}`;
-             return;
+            if (onOpenMaintenance) {
+                onOpenMaintenance("view");
+            } else {
+                window.location.href = `/landlord/maintenance?unitId=${unit.id}`;
+            }
+            return;
+        }
+
+        if (action === "start-maintenance") {
+            if (onOpenMaintenance) {
+                onOpenMaintenance("create");
+            } else {
+                window.location.href = `/landlord/maintenance?unitId=${unit.id}`;
+            }
+            return;
         }
 
         if (action === "view-lease") {
-            window.location.href = `/landlord/leases?unitId=${unit.id}`;
+            if (onOpenLease) {
+                onOpenLease();
+            } else {
+                window.location.href = `/landlord/leases?unitId=${unit.id}`;
+            }
             return;
         }
 
@@ -4398,7 +4502,11 @@ const UnitDetailsPanel = ({
         }
 
         if (action === "unit-maintenance") {
-            window.location.href = `/landlord/maintenance?unitId=${unit.id}`;
+            if (onOpenServiceLogs) {
+                onOpenServiceLogs();
+            } else {
+                window.location.href = `/landlord/maintenance?unitId=${unit.id}`;
+            }
             return;
         }
 
@@ -4692,7 +4800,13 @@ const UnitDetailsPanel = ({
                                     <div className="flex-1">
                                         <div className="flex items-center justify-between">
                                             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-600 dark:text-rose-400">ACTIVE REPAIR</h3>
-                                            <Link href={`/landlord/maintenance?unitId=${unit.id}`} className="text-[9px] font-black text-rose-600 hover:underline dark:text-rose-400">DETAILS</Link>
+                                            <button 
+                                                type="button"
+                                                onClick={() => onOpenMaintenance ? onOpenMaintenance("view") : (window.location.href = `/landlord/maintenance?unitId=${unit.id}`)}
+                                                className="text-[9px] font-black text-rose-600 hover:underline dark:text-rose-400 cursor-pointer"
+                                            >
+                                                DETAILS
+                                            </button>
                                         </div>
                                         <p className="mt-2 text-lg font-black leading-tight text-zinc-900 dark:text-white line-clamp-2">
                                             {unit.maintenanceTitle || unit.details?.trim() || "Unspecified Repair"}
@@ -4710,7 +4824,19 @@ const UnitDetailsPanel = ({
                         {/* Lease Analytics & Timeline */}
                         {(unit.status === 'occupied' || unit.status === 'neardue') && (
                             <div className="group relative overflow-hidden rounded-[32px] border border-zinc-200 bg-white p-8 shadow-xl shadow-zinc-200/20 dark:border-white/5 dark:bg-zinc-900/40 dark:shadow-none">
-                                <h3 className="mb-8 text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">LEASE ANALYTICS</h3>
+                                <div className="flex items-center justify-between mb-8">
+                                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">LEASE ANALYTICS</h3>
+                                    {onOpenLease && (
+                                        <button
+                                            type="button"
+                                            onClick={onOpenLease}
+                                            className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-primary hover:underline"
+                                        >
+                                            <span className="material-icons-round text-xs">visibility</span>
+                                            View Lease
+                                        </button>
+                                    )}
+                                </div>
                                 
                                 <div className="flex flex-col items-center">
                                     <div className="relative h-44 w-72">

@@ -8,16 +8,24 @@ interface UnitHistoryModalProps {
     isOpen: boolean;
     onClose: () => void;
     unit: Unit | null;
+    initialTab?: "tenants" | "maintenance";
 }
 
 export const UnitHistoryModal = ({
     isOpen,
     onClose,
-    unit
+    unit,
+    initialTab = "tenants"
 }: UnitHistoryModalProps) => {
-    const [activeTab, setActiveTab] = useState<"tenants" | "maintenance">("tenants");
+    const [activeTab, setActiveTab] = useState<"tenants" | "maintenance">(initialTab);
     const { resolvedTheme } = useTheme();
     const isDark = resolvedTheme === "dark";
+
+    React.useEffect(() => {
+        if (isOpen) {
+            setActiveTab(initialTab);
+        }
+    }, [isOpen, initialTab]);
 
     if (!unit) return null;
 
@@ -109,7 +117,7 @@ export const UnitHistoryModal = ({
                                             </div>
                                             <div className="flex items-center justify-between pt-3 border-t border-border/50">
                                                 <span className="text-xs text-muted-foreground">Monthly Rent</span>
-                                                <span className="font-mono font-black text-primary">Ã¢â€šÂ±{item.rent.toLocaleString()}</span>
+                                                <span className="font-mono font-black text-primary">₱{item.rent.toLocaleString()}</span>
                                             </div>
                                         </div>
                                     ))}
@@ -130,7 +138,7 @@ export const UnitHistoryModal = ({
                                                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-500`}>
                                                     {item.status}
                                                 </span>
-                                                <span className="font-mono font-black">Ã¢â€šÂ±{item.cost.toLocaleString()}</span>
+                                                <span className="font-mono font-black">₱{item.cost.toLocaleString()}</span>
                                             </div>
                                         </div>
                                     ))}

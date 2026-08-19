@@ -86,24 +86,7 @@ export const evaluateQuickAction = (
     unit: Unit,
     action: QuickActionType
 ): QuickActionGuardResult => {
-    const currentStatus = unit.status;
-    const validActions = QUICK_ACTIONS_BY_STATUS[currentStatus] ?? [];
-    if (!validActions.includes(action)) {
-        return {
-            allowed: false,
-            requiresConfirmation: false,
-            reason: `Action is not allowed while unit is ${currentStatus}.`,
-        };
-    }
-
-    if (action === "start-maintenance") {
-        if (unit.maintenanceStatus) {
-            return { allowed: false, requiresConfirmation: false, reason: "A maintenance request is already active for this unit." };
-        }
-        return { allowed: true, requiresConfirmation: false, nextStatus: "maintenance" };
-    }
-
-    if (action === "manage-maintenance") {
+    if (action === "manage-maintenance" || action === "start-maintenance") {
         return { allowed: true, requiresConfirmation: false };
     }
 
