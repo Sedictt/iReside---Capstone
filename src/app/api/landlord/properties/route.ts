@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
+import { generateUnitList } from "@/lib/unit-naming";
 
 export async function POST(request: Request) {
     const authContext = await requireAuthenticatedUser(request);
@@ -25,6 +26,9 @@ export async function POST(request: Request) {
             occupancy_limit,
             utility_billing,
             city,
+            unit_prefix,
+            numbering_style,
+            starting_number,
         } = body;
 
         if (!name || typeof name !== "string" || !name.trim()) {
@@ -113,21 +117,22 @@ export async function POST(request: Request) {
         const targetRent = parseFloat(String(base_rent_amount || 0)) || 0;
         const propType = type || "apartment";
 
-        const unitsPerFloor = Math.max(1, Math.ceil(targetUnits / targetFloors));
-        const unitPrefix = propType === "dormitory" ? "Room" : propType === "boarding_house" ? "Room" : "Unit";
-        const unitsToCreate = Array.from({ length: targetUnits }, (_, idx) => {
-            const unitIndex = idx + 1;
-            const floorNumber = targetFloors === 1 ? 1 : Math.min(targetFloors, Math.floor(idx / unitsPerFloor) + 1);
-            return {
-                property_id: propertyId,
-                name: `${unitPrefix} ${unitIndex}`,
-                floor: floorNumber,
-                status: "vacant",
-                rent_amount: targetRent,
-                beds: 1,
-                baths: 1,
-            };
+        const prefix = unit_prefix || (propType === "dormitory" ? "Room" : propType === "boarding_house" ? "Room" : "Unit");
+        const generatedList = generateUnitList(targetUnits, targetFloors, {
+            prefix,
+            numberingStyle: numbering_style || "floor_based",
+            startingNumber: starting_number || 101,
         });
+
+        const unitsToCreate = generatedList.map((item) => ({
+            property_id: propertyId,
+            name: item.name,
+            floor: item.floor,
+            status: "vacant",
+            rent_amount: targetRent,
+            beds: 1,
+            baths: 1,
+        }));
         await (admin as any).from("units").insert(unitsToCreate);
 
         const floorConfigs = [];

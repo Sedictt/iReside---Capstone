@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { PropertyService } from "@/lib/services/property";
 import { PropertyNotFoundError } from "@/lib/services/property/property.errors";
+import { generateUnitName, NumberingStyle } from "@/lib/unit-naming";
 
 export const dynamic = "force-dynamic";
 
@@ -92,6 +93,9 @@ export async function PUT(
             contract_file,
             occupancy_limit,
             utility_billing,
+            unit_prefix,
+            numbering_style,
+            starting_number,
         } = body;
 
         // Verify property belongs to landlord
@@ -196,13 +200,31 @@ export async function PUT(
         const currentUnitCount = existingUnits?.length || 0;
         if (targetUnits > currentUnitCount) {
             const unitsPerFloor = Math.max(1, Math.ceil(targetUnits / targetFloors));
-            const unitPrefix = propType === "dormitory" ? "Room" : propType === "boarding_house" ? "Room" : "Unit";
+            const prefix = unit_prefix || (propType === "dormitory" ? "Room" : propType === "boarding_house" ? "Room" : "Unit");
+            const style: NumberingStyle = numbering_style || "floor_based";
+            const startNum = starting_number || 101;
+
+            const floorCounters: Record<number, number> = {};
+            for (const u of existingUnits || []) {
+                const f = u.floor || 1;
+                floorCounters[f] = (floorCounters[f] || 0) + 1;
+            }
+
             const unitsToCreate = Array.from({ length: targetUnits - currentUnitCount }, (_, idx) => {
-                const unitIndex = currentUnitCount + idx + 1;
-                const floorNumber = targetFloors === 1 ? 1 : Math.min(targetFloors, Math.floor((unitIndex - 1) / unitsPerFloor) + 1);
+                const overallIndex = currentUnitCount + idx;
+                const floorNumber = targetFloors === 1 ? 1 : Math.min(targetFloors, Math.floor(overallIndex / unitsPerFloor) + 1);
+                floorCounters[floorNumber] = (floorCounters[floorNumber] || 0) + 1;
+                const unitIndexOnFloor = floorCounters[floorNumber];
+
+                const unitName = generateUnitName(overallIndex, floorNumber, unitIndexOnFloor, {
+                    prefix,
+                    numberingStyle: style,
+                    startingNumber: startNum,
+                });
+
                 return {
                     property_id: propertyId,
-                    name: `${unitPrefix} ${unitIndex}`,
+                    name: unitName,
                     floor: floorNumber,
                     status: "vacant",
                     rent_amount: targetRent,

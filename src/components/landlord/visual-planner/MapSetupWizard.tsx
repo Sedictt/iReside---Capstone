@@ -12,7 +12,9 @@ import {
     Layout,
     Sparkles,
     Plus,
-    Layers
+    Layers,
+    Hash,
+    X
 } from "lucide-react";
 import {
     DndContext,
@@ -32,6 +34,7 @@ import {
     sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
 import { cn } from "@/lib/utils";
+import { generateUnitList, type NumberingStyle } from "@/lib/unit-naming";
 
 import { SortableUnit, FloorLane, floorDisplayName } from "./components/WizardUnits";
 import type { DbUnit, FloorConfig } from "./components/WizardUnits";
@@ -65,6 +68,11 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
     const [activeUnit, setActiveUnit] = useState<DbUnit | null>(null);
     const [isBulkOrganizerOpen, setIsBulkOrganizerOpen] = useState(false);
     const [floorDistribution, setFloorDistribution] = useState<Record<number, number>>({});
+    const [isRenumberModalOpen, setIsRenumberModalOpen] = useState(false);
+    const [renumberPrefix, setRenumberPrefix] = useState("Unit");
+    const [renumberStyle, setRenumberStyle] = useState<NumberingStyle>("floor_based");
+    const [renumberStartingNumber, setRenumberStartingNumber] = useState(101);
+    const [isRenumbering, setIsRenumbering] = useState(false);
 
     // Initialize distribution on load
     useEffect(() => {
@@ -246,6 +254,33 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
             setError("Failed to distribute units evenly across floors.");
         } finally {
             setIsSaving(false);
+        }
+    };
+
+    const handleApplyRenumber = async () => {
+        setIsRenumbering(true);
+        try {
+            const res = await fetch("/api/landlord/unit-map/batch-rename", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    propertyId,
+                    prefix: renumberPrefix,
+                    numberingStyle: renumberStyle,
+                    startingNumber: renumberStartingNumber,
+                }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || "Failed to rename units.");
+            if (data.units) {
+                setUnits(data.units);
+            }
+            setIsRenumberModalOpen(false);
+            setError(null);
+        } catch (err: any) {
+            setError(err.message || "Failed to batch rename units.");
+        } finally {
+            setIsRenumbering(false);
         }
     };
 
@@ -562,6 +597,15 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
                                     </p>
                                 </div>
                                 <div className="flex flex-wrap items-center gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsRenumberModalOpen(true)}
+                                        disabled={isSaving || units.length === 0}
+                                        className="group flex shrink-0 items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-5 py-3 transition-all hover:bg-white/10 active:scale-95 disabled:opacity-50 text-white"
+                                    >
+                                        <Hash className="size-4 text-primary" />
+                                        <span className="text-xs font-black uppercase tracking-widest">Renumber Units</span>
+                                    </button>
                                     {floorConfigs.length > 1 && (
                                         <button
                                             type="button"
@@ -727,6 +771,161 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
                     </DragOverlay>
                 </DndContext>
             </main>
+
+            {/* Batch Renumber & Rename Modal */}
+            <AnimatePresence>
+                {isRenumberModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.95, opacity: 0 }}
+                            className="relative w-full max-w-lg rounded-[2.5rem] border border-white/10 bg-[#0a0a0a] p-8 shadow-2xl space-y-6"
+                        >
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="flex size-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                                        <Hash className="size-5" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-black text-white">Customize Unit Numbering</h3>
+                                        <p className="text-xs text-neutral-400 font-medium">Batch renumber and label all units</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setIsRenumberModalOpen(false)}
+                                    className="flex size-8 items-center justify-center rounded-xl bg-white/5 text-neutral-400 hover:bg-white/10 hover:text-white transition-all"
+                                >
+                                    <X className="size-4" />
+                                </button>
+                            </div>
+
+                            <div className="space-y-4">
+                                {/* Prefix */}
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-wider text-neutral-400">Unit Prefix / Label</label>
+                                    <div className="flex flex-wrap gap-2">
+                                        {["Unit", "Room", "Studio", "Apt", "Suite", "Villa", "Bed"].map((preset) => (
+                                            <button
+                                                key={preset}
+                                                type="button"
+                                                onClick={() => setRenumberPrefix(preset)}
+                                                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
+                                                    renumberPrefix === preset
+                                                        ? "bg-primary text-black"
+                                                        : "bg-white/5 text-white/70 hover:bg-white/10"
+                                                }`}
+                                            >
+                                                {preset}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={renumberPrefix}
+                                        onChange={(e) => setRenumberPrefix(e.target.value)}
+                                        placeholder="Or type custom prefix (e.g. Tower A-)"
+                                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3 text-xs font-black text-white outline-none focus:border-primary/50"
+                                    />
+                                </div>
+
+                                {/* Scheme */}
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-wider text-neutral-400">Numbering Pattern</label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setRenumberStyle("floor_based")}
+                                            className={`p-3.5 rounded-2xl border text-left transition-all ${
+                                                renumberStyle === "floor_based"
+                                                    ? "bg-primary/10 border-primary/50 text-white"
+                                                    : "bg-white/5 border-white/5 text-white/60 hover:bg-white/10"
+                                            }`}
+                                        >
+                                            <p className="text-xs font-black">Floor-Based</p>
+                                            <p className="text-[10px] text-neutral-400 mt-0.5">101, 102 / 201, 202</p>
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => setRenumberStyle("sequential")}
+                                            className={`p-3.5 rounded-2xl border text-left transition-all ${
+                                                renumberStyle === "sequential"
+                                                    ? "bg-primary/10 border-primary/50 text-white"
+                                                    : "bg-white/5 border-white/5 text-white/60 hover:bg-white/10"
+                                            }`}
+                                        >
+                                            <p className="text-xs font-black">Sequential</p>
+                                            <p className="text-[10px] text-neutral-400 mt-0.5">1, 2, 3... or custom start</p>
+                                        </button>
+                                    </div>
+
+                                    {renumberStyle === "sequential" && (
+                                        <div className="pt-1">
+                                            <label className="text-[9px] font-black uppercase tracking-wider text-neutral-400">Starting Number</label>
+                                            <input
+                                                type="number"
+                                                value={renumberStartingNumber}
+                                                onChange={(e) => setRenumberStartingNumber(parseInt(e.target.value) || 1)}
+                                                className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-2.5 text-xs font-black text-white outline-none focus:border-primary/50 mt-1"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Preview */}
+                                <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-4 space-y-2">
+                                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-neutral-400">
+                                        <Sparkles className="size-3.5 text-primary" />
+                                        <span>Preview ({units.length} total units):</span>
+                                    </div>
+                                    <div className="flex flex-wrap items-center gap-1.5">
+                                        {generateUnitList(
+                                            Math.min(6, units.length),
+                                            Math.max(1, floorConfigs.length),
+                                            {
+                                                prefix: renumberPrefix,
+                                                numberingStyle: renumberStyle,
+                                                startingNumber: renumberStartingNumber,
+                                            }
+                                        ).map((item, idx) => (
+                                            <span key={idx} className="rounded-lg bg-primary/10 border border-primary/20 px-2.5 py-1 text-[10px] font-black text-primary">
+                                                {item.name}
+                                            </span>
+                                        ))}
+                                        {units.length > 6 && (
+                                            <span className="text-[10px] font-bold text-neutral-500">
+                                                +{units.length - 6} more
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex items-center justify-end gap-3 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsRenumberModalOpen(false)}
+                                    disabled={isRenumbering}
+                                    className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-xs font-black uppercase tracking-widest text-white hover:bg-white/10 transition-all disabled:opacity-50"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleApplyRenumber}
+                                    disabled={isRenumbering}
+                                    className="flex items-center gap-2 rounded-2xl bg-primary px-6 py-3 text-xs font-black uppercase tracking-widest text-black transition-all hover:scale-105 active:scale-95 disabled:opacity-50 shadow-lg shadow-primary/20"
+                                >
+                                    {isRenumbering ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />}
+                                    Apply & Save
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

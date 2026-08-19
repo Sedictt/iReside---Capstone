@@ -23,8 +23,10 @@ import {
     X,
     Wallet,
     Sparkles,
-    FilePlus
+    FilePlus,
+    Hash
 } from "lucide-react";
+import { generateUnitList } from "@/lib/unit-naming";
 import { cn } from "@/lib/utils";
 import { SmartContractPreviewModal } from "@/components/landlord/properties/SmartContractPreviewModal";
 import ClickSpark from "@/components/ui/ClickSpark";
@@ -101,6 +103,9 @@ function NewAssetContent() {
         contractMode: "generate" as "generate" | "upload",
         contractFile: null as string | null,
         propertyType: "apartment" as SupportedPropertyEnum,
+        unitPrefix: "Unit",
+        numberingStyle: "floor_based" as "floor_based" | "sequential",
+        startingNumber: 101,
     });
 
     const hasHydratedEditData = formData.propertyName.trim().length > 0 && formData.address.trim().length > 0;
@@ -141,7 +146,10 @@ function NewAssetContent() {
                     amenities: Array.isArray(p.amenities) ? p.amenities : [],
                     propertyType: (p.type ?? "apartment") as SupportedPropertyEnum,
                     contractMode,
-                    contractFile
+                    contractFile,
+                    unitPrefix: p.type === "dormitory" || p.type === "boarding_house" ? "Room" : "Unit",
+                    numberingStyle: "floor_based",
+                    startingNumber: 101,
                 });
 
                 setExistingImageUrls(Array.isArray(p.images) ? p.images : []);
@@ -263,6 +271,9 @@ function NewAssetContent() {
                 contract_file: formData.contractFile,
                 occupancy_limit: formData.occupancyLimit,
                 utility_billing: formData.utilityBilling,
+                unit_prefix: formData.unitPrefix,
+                numbering_style: formData.numberingStyle,
+                starting_number: formData.startingNumber,
             };
 
             const response = await fetch(endpoint, {
@@ -519,6 +530,121 @@ function NewAssetContent() {
                                                     onChange={(e) => handleInputChange("occupancyLimit", e.target.value)}
                                                     className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm font-black text-white outline-none focus:border-primary/50"
                                                 />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Unit Identification & Numbering */}
+                                    <div className="col-span-1 md:col-span-2 bg-white/[0.02] border border-white/5 rounded-[2rem] p-8 space-y-6">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <Hash className="size-4 text-primary" />
+                                                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Unit Identification & Numbering</h3>
+                                            </div>
+                                            <span className="text-[10px] font-black uppercase tracking-wider text-primary/80 bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
+                                                Customizable
+                                            </span>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            {/* Prefix Selector */}
+                                            <div className="space-y-3">
+                                                <label className="text-[10px] font-black uppercase tracking-wider text-white/30 px-1">Unit Prefix / Label</label>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {["Unit", "Room", "Studio", "Apt", "Suite", "Villa", "Bed"].map((preset) => (
+                                                        <button
+                                                            key={preset}
+                                                            type="button"
+                                                            onClick={() => handleInputChange("unitPrefix", preset)}
+                                                            className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
+                                                                formData.unitPrefix === preset
+                                                                    ? "bg-primary text-black"
+                                                                    : "bg-white/5 text-white/70 hover:bg-white/10"
+                                                            }`}
+                                                        >
+                                                            {preset}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                                <input
+                                                    type="text"
+                                                    value={formData.unitPrefix}
+                                                    onChange={(e) => handleInputChange("unitPrefix", e.target.value)}
+                                                    placeholder="Or type custom prefix (e.g. Tower A-)"
+                                                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3 text-xs font-black text-white outline-none focus:border-primary/50"
+                                                />
+                                            </div>
+
+                                            {/* Numbering Scheme */}
+                                            <div className="space-y-3">
+                                                <label className="text-[10px] font-black uppercase tracking-wider text-white/30 px-1">Numbering Scheme</label>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleInputChange("numberingStyle", "floor_based")}
+                                                        className={`p-3 rounded-2xl border text-left transition-all ${
+                                                            formData.numberingStyle === "floor_based"
+                                                                ? "bg-primary/10 border-primary/50 text-white"
+                                                                : "bg-white/5 border-white/5 text-white/60 hover:bg-white/10"
+                                                        }`}
+                                                    >
+                                                        <p className="text-xs font-black">Floor-Based</p>
+                                                        <p className="text-[10px] text-white/40 mt-0.5">101, 102 / 201, 202</p>
+                                                    </button>
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleInputChange("numberingStyle", "sequential")}
+                                                        className={`p-3 rounded-2xl border text-left transition-all ${
+                                                            formData.numberingStyle === "sequential"
+                                                                ? "bg-primary/10 border-primary/50 text-white"
+                                                                : "bg-white/5 border-white/5 text-white/60 hover:bg-white/10"
+                                                        }`}
+                                                    >
+                                                        <p className="text-xs font-black">Sequential</p>
+                                                        <p className="text-[10px] text-white/40 mt-0.5">1, 2, 3... or from 101</p>
+                                                    </button>
+                                                </div>
+
+                                                {formData.numberingStyle === "sequential" && (
+                                                    <div className="pt-1">
+                                                        <label className="text-[9px] font-black uppercase tracking-wider text-white/30 px-1">Starting Number</label>
+                                                        <input
+                                                            type="number"
+                                                            value={formData.startingNumber}
+                                                            onChange={(e) => handleInputChange("startingNumber", parseInt(e.target.value) || 1)}
+                                                            className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-2.5 text-xs font-black text-white outline-none focus:border-primary/50 mt-1"
+                                                        />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Dynamic Live Preview */}
+                                        <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-neutral-400">
+                                                <Sparkles className="size-3.5 text-primary" />
+                                                <span>Live Preview of Generated Units:</span>
+                                            </div>
+                                            <div className="flex flex-wrap items-center gap-1.5">
+                                                {generateUnitList(
+                                                    Math.min(6, parseInt(formData.totalUnits) || 4),
+                                                    parseInt(formData.floorCount) || 2,
+                                                    {
+                                                        prefix: formData.unitPrefix,
+                                                        numberingStyle: formData.numberingStyle,
+                                                        startingNumber: formData.startingNumber,
+                                                    }
+                                                ).map((item, idx) => (
+                                                    <span key={idx} className="rounded-lg bg-primary/10 border border-primary/20 px-2.5 py-1 text-[10px] font-black text-primary">
+                                                        {item.name}
+                                                    </span>
+                                                ))}
+                                                {(parseInt(formData.totalUnits) || 1) > 6 && (
+                                                    <span className="text-[10px] font-bold text-neutral-500">
+                                                        +{(parseInt(formData.totalUnits) || 1) - 6} more
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
