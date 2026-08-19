@@ -23,6 +23,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { TenantDetailModal } from "@/components/landlord/tenants/TenantDetailModal";
+import { AnimatedFilterPills } from "@/components/ui/AnimatedFilterPills";
 
 interface PropertyTenantsModalProps {
     isOpen: boolean;
@@ -181,22 +182,14 @@ export function PropertyTenantsModal({
                                 />
                             </div>
 
-                            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-                                {["all", "active", "moving out", "evicted"].map((tab) => (
-                                    <button
-                                        key={tab}
-                                        onClick={() => setStatusFilter(tab)}
-                                        className={cn(
-                                            "rounded-xl px-3 py-1.5 text-xs font-bold capitalize transition-all shrink-0",
-                                            statusFilter === tab
-                                                ? "bg-primary text-black"
-                                                : "bg-white/5 text-neutral-400 hover:text-white hover:bg-white/10"
-                                        )}
-                                    >
-                                        {tab}
-                                    </button>
-                                ))}
-                            </div>
+                            <AnimatedFilterPills
+                                variant="primary"
+                                size="sm"
+                                options={["all", "active", "moving out", "evicted"]}
+                                activeId={statusFilter}
+                                onChange={(tab) => setStatusFilter(tab)}
+                                layoutGroupId="property-tenants-filter-pills"
+                            />
                         </div>
 
                         {/* Content / Tenant List */}
