@@ -21,6 +21,7 @@ import {
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { PageLoader } from "@/components/ui/LoadingSpinner";
+import { TimePicker } from "@/components/ui/TimePicker";
 import { useAppToast } from "@/hooks/useAppToast";
 
 type EnvironmentMode = "apartment" | "dormitory" | "boarding_house";
@@ -567,11 +568,11 @@ export default function PropertyEnvironmentPage() {
                                     </div>
                                     <div className="flex items-center gap-2.5">
                                         {formData.curfew_enabled && (
-                                            <input
-                                                type="time"
+                                            <TimePicker
+                                                size="sm"
                                                 value={formData.curfew_time}
-                                                onChange={(e) => setFormData(prev => ({ ...prev, curfew_time: e.target.value }))}
-                                                className="neumorphic-panel rounded-lg px-2.5 py-1 text-xs font-bold text-white outline-none focus:ring-1 focus:ring-primary/50"
+                                                onChange={(val) => setFormData(prev => ({ ...prev, curfew_time: val }))}
+                                                placeholder="Curfew Time"
                                             />
                                         )}
                                         <button
@@ -601,11 +602,11 @@ export default function PropertyEnvironmentPage() {
                                     </div>
                                     <div className="flex items-center gap-2.5">
                                         {formData.visitor_cutoff_enabled && (
-                                            <input
-                                                type="time"
+                                            <TimePicker
+                                                size="sm"
                                                 value={formData.visitor_cutoff_time}
-                                                onChange={(e) => setFormData(prev => ({ ...prev, visitor_cutoff_time: e.target.value }))}
-                                                className="neumorphic-panel rounded-lg px-2.5 py-1 text-xs font-bold text-white outline-none focus:ring-1 focus:ring-primary/50"
+                                                onChange={(val) => setFormData(prev => ({ ...prev, visitor_cutoff_time: val }))}
+                                                placeholder="Cutoff Time"
                                             />
                                         )}
                                         <button
@@ -628,24 +629,26 @@ export default function PropertyEnvironmentPage() {
                                 </div>
 
                                 {/* Quiet Hours Range */}
-                                <div className="neumorphic-inset rounded-2xl p-3 space-y-2">
+                                <div className="neumorphic-inset rounded-2xl p-3 space-y-2.5">
                                     <div className="flex items-center gap-2">
                                         <Moon className="size-3.5 text-primary" />
                                         <p className="text-xs font-black text-white">Quiet Hours Period</p>
                                     </div>
                                     <div className="flex items-center justify-between gap-2">
-                                        <input
-                                            type="time"
+                                        <TimePicker
+                                            size="sm"
+                                            className="flex-1"
                                             value={formData.quiet_hours_start}
-                                            onChange={(e) => setFormData(prev => ({ ...prev, quiet_hours_start: e.target.value }))}
-                                            className="neumorphic-panel rounded-lg px-2.5 py-1.5 text-xs font-bold text-white outline-none w-full text-center"
+                                            onChange={(val) => setFormData(prev => ({ ...prev, quiet_hours_start: val }))}
+                                            placeholder="Start Time"
                                         />
-                                        <span className="text-[10px] font-black uppercase text-neutral-500">to</span>
-                                        <input
-                                            type="time"
+                                        <span className="text-[10px] font-black uppercase text-neutral-500 shrink-0">to</span>
+                                        <TimePicker
+                                            size="sm"
+                                            className="flex-1"
                                             value={formData.quiet_hours_end}
-                                            onChange={(e) => setFormData(prev => ({ ...prev, quiet_hours_end: e.target.value }))}
-                                            className="neumorphic-panel rounded-lg px-2.5 py-1.5 text-xs font-bold text-white outline-none w-full text-center"
+                                            onChange={(val) => setFormData(prev => ({ ...prev, quiet_hours_end: val }))}
+                                            placeholder="End Time"
                                         />
                                     </div>
                                 </div>
