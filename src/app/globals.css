@@ -63,8 +63,8 @@
   /* Neutral Black */
   --color-surface-dark: #171717;
   /* Neutral Dark Grey */
-  --color-status-vacant: #c4b0ff;
-  /* Purple for Vacant (Available/Good) */
+  --color-status-vacant: #10B981;
+  /* Green for Vacant (Available) */
   --color-status-occupied: #3b82f6;
   /* Blue for Occupied */
   --color-status-due: #F59E0B;

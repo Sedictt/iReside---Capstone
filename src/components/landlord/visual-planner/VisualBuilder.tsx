@@ -3499,16 +3499,19 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                 ></div>
                                             </div>
 
-                                            <div className={`absolute inset-0 opacity-[0.18] group-hover:opacity-[0.3] transition-opacity ${unit.status === 'occupied' ? 'bg-status-occupied' :
-                                                unit.status === 'vacant' ? 'bg-status-vacant' :
-                                                    unit.status === 'maintenance' ? 'bg-status-maintenance' : 'bg-status-due'
-                                                }`}></div>
+                                            <div className={`absolute inset-0 opacity-[0.18] group-hover:opacity-[0.3] transition-opacity ${
+                                                unit.status === 'occupied' ? 'bg-blue-500' :
+                                                unit.status === 'vacant' ? 'bg-emerald-500' :
+                                                unit.status === 'maintenance' ? 'bg-red-500' : 'bg-amber-500'
+                                            }`}></div>
 
                                             <div className="absolute inset-0 flex flex-col items-center justify-center p-2 z-20">
-                                                <div className={`size-2.5 rounded-full mb-2 shadow-[0_0_10px_rgba(255,255,255,0.9)] ${unit.status === 'occupied' ? 'bg-status-occupied' :
-                                                    unit.status === 'vacant' ? 'bg-status-vacant' :
-                                                        unit.status === 'maintenance' ? 'bg-status-maintenance' : 'bg-status-due'
-                                                    }`}></div>
+                                                <div className={`size-2.5 rounded-full mb-2 ${
+                                                    unit.status === 'occupied' ? 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.9)]' :
+                                                    unit.status === 'vacant' ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.9)]' :
+                                                    unit.status === 'maintenance' ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.9)]' :
+                                                    'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.9)]'
+                                                }`}></div>
 
                                                 <h4 className={`text-xs font-black drop-shadow-sm ${isDark ? 'text-neutral-200' : 'text-zinc-700'}`}>{unit.name}</h4>
 
@@ -3516,7 +3519,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                     <p className={`mt-1 font-mono text-[10px] ${isDark ? 'text-neutral-400' : 'text-zinc-500'}`}>{unit.tenant}</p>
                                                 )}
                                                 {unit.status === 'vacant' && (
-                                                    <span className={`mt-1 rounded border px-1.5 text-[9px] font-black uppercase tracking-wider ${isDark ? 'border-blue-500/30 bg-blue-500/10 text-blue-400' : 'border-blue-400/60 bg-blue-100/90 text-blue-800'}`}>Vacant</span>
+                                                    <span className={`mt-1 rounded border px-1.5 text-[9px] font-black uppercase tracking-wider ${isDark ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400' : 'border-emerald-400/60 bg-emerald-100/90 text-emerald-800'}`}>Vacant</span>
                                                 )}
                                                 {unit.status === 'maintenance' && (
                                                     <span className={`mt-1 rounded border px-1.5 text-[9px] font-black uppercase tracking-wider ${isDark ? 'border-red-500/30 bg-red-500/10 text-red-400' : 'border-red-400/60 bg-red-100/90 text-red-800'}`}>Maint</span>
@@ -3676,10 +3679,11 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                         return (
                                                             <div
                                                                 key={`minimap-${unit.id}`}
-                                                                className={`absolute rounded-[1px] ${unit.status === 'occupied' ? 'bg-status-occupied/85' :
-                                                                    unit.status === 'vacant' ? 'bg-status-vacant/85' :
-                                                                        unit.status === 'maintenance' ? 'bg-status-maintenance/85' : 'bg-status-due/85'
-                                                                    }`}
+                                                                className={`absolute rounded-[1px] ${
+                                                                    unit.status === 'occupied' ? 'bg-blue-500/85' :
+                                                                    unit.status === 'vacant' ? 'bg-emerald-500/85' :
+                                                                    unit.status === 'maintenance' ? 'bg-red-500/85' : 'bg-amber-500/85'
+                                                                }`}
                                                                 style={{
                                                                     left: `${((BLUEPRINT_MARGIN + unit.x) / WORLD_WIDTH) * 100}%`,
                                                                     top: `${((BLUEPRINT_MARGIN + unit.y) / WORLD_HEIGHT) * 100}%`,
