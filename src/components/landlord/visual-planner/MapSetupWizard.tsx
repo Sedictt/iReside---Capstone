@@ -201,6 +201,43 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
         }
     };
 
+    const handleDistributeEvenly = async () => {
+        if (floorConfigs.length <= 1 || units.length === 0) return;
+        setIsSaving(true);
+        try {
+            const sortedUnits = [...units].sort((a, b) => {
+                const aNum = parseInt(a.name.replace(/\D/g, ""), 10) || 0;
+                const bNum = parseInt(b.name.replace(/\D/g, ""), 10) || 0;
+                if (aNum !== bNum) return aNum - bNum;
+                return a.name.localeCompare(b.name, undefined, { numeric: true });
+            });
+
+            const sortedFloors = [...floorConfigs].sort((a, b) => a.sort_order - b.sort_order || a.floor_number - b.floor_number);
+            const unitsPerFloor = Math.ceil(sortedUnits.length / sortedFloors.length);
+
+            const newUnits: DbUnit[] = sortedUnits.map((u, idx) => {
+                const floorIdx = Math.min(sortedFloors.length - 1, Math.floor(idx / unitsPerFloor));
+                return { ...u, floor: sortedFloors[floorIdx].floor_number };
+            });
+
+            setUnits(newUnits);
+
+            const promises = newUnits.map(u => 
+                fetch(`/api/landlord/unit-map/units/${u.id}/floor`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ floor: u.floor }),
+                })
+            );
+            await Promise.all(promises);
+            setError(null);
+        } catch {
+            setError("Failed to distribute units evenly across floors.");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     const handleUpdateUnitFloor = async (unitId: string, newFloor: number) => {
         setUnits(prev => prev.map(u => u.id === unitId ? { ...u, floor: newFloor } : u));
         try {
@@ -513,17 +550,30 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
                                         Drag and drop units into their respective floors. This will determine how they appear on your property&apos;s visual map.
                                     </p>
                                 </div>
-                                <button
-                                    data-tour-id="tour-wizard-add-floor"
-                                    onClick={() => handleAddFloor()}
-                                    disabled={isSaving}
-                                    className="group flex shrink-0 items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-6 py-3 transition-all hover:bg-white/10 active:scale-95 disabled:opacity-50"
-                                >
-                                    <div className="flex size-6 items-center justify-center rounded-lg bg-primary/20 text-primary group-hover:bg-primary group-hover:text-black transition-all">
-                                        <Plus className="size-4" />
-                                    </div>
-                                    <span className="text-xs font-black uppercase tracking-widest">Add New Floor</span>
-                                </button>
+                                <div className="flex flex-wrap items-center gap-3">
+                                    {floorConfigs.length > 1 && (
+                                        <button
+                                            type="button"
+                                            onClick={handleDistributeEvenly}
+                                            disabled={isSaving}
+                                            className="group flex shrink-0 items-center gap-2 rounded-2xl border border-primary/20 bg-primary/10 px-5 py-3 transition-all hover:bg-primary/20 active:scale-95 disabled:opacity-50"
+                                        >
+                                            <Sparkles className="size-4 text-primary" />
+                                            <span className="text-xs font-black uppercase tracking-widest text-primary">Distribute Evenly</span>
+                                        </button>
+                                    )}
+                                    <button
+                                        data-tour-id="tour-wizard-add-floor"
+                                        onClick={() => handleAddFloor()}
+                                        disabled={isSaving}
+                                        className="group flex shrink-0 items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-6 py-3 transition-all hover:bg-white/10 active:scale-95 disabled:opacity-50"
+                                    >
+                                        <div className="flex size-6 items-center justify-center rounded-lg bg-primary/20 text-primary group-hover:bg-primary group-hover:text-black transition-all">
+                                            <Plus className="size-4" />
+                                        </div>
+                                        <span className="text-xs font-black uppercase tracking-widest">Add New Floor</span>
+                                    </button>
+                                </div>
                             </div>
 
                             <div data-tour-id="tour-wizard-lanes" className="grid grid-cols-1 lg:grid-cols-2 gap-10">
