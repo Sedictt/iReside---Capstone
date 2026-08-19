@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { m as motion, AnimatePresence } from "framer-motion";
+import { m as motion } from "framer-motion";
 import {
     Building2,
     Shield,
@@ -12,15 +12,11 @@ import {
     VenusAndMars,
     Zap,
     DollarSign,
-    CheckCircle2,
-    AlertCircle,
     ArrowLeft,
     Save,
-    Sparkles,
     Check,
-    Lock,
-    Sliders,
-    Layers,
+    Minus,
+    Plus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
@@ -52,17 +48,17 @@ interface PropertyPolicy {
 type GenderRestrictionMode = "none" | "male_only" | "female_only" | "custom";
 type UtilityPolicyMode = "included_in_rent" | "separate_metered" | "mixed";
 
-const GENDER_OPTIONS: { value: GenderRestrictionMode; label: string; description: string }[] = [
-    { value: "none", label: "No Restriction", description: "Open to all genders without restriction" },
-    { value: "male_only", label: "Male Only", description: "Exclusive to male occupants only" },
-    { value: "female_only", label: "Female Only", description: "Exclusive to female occupants only" },
-    { value: "custom", label: "Custom Rules", description: "Subject to specialized lease clauses" },
+const GENDER_OPTIONS: { value: GenderRestrictionMode; label: string }[] = [
+    { value: "none", label: "No Restriction (All Genders)" },
+    { value: "male_only", label: "Male Only" },
+    { value: "female_only", label: "Female Only" },
+    { value: "custom", label: "Custom Rules / By Clause" },
 ];
 
 const UTILITY_OPTIONS: { value: UtilityPolicyMode; label: string; description: string }[] = [
-    { value: "included_in_rent", label: "Included in Rent", description: "Utilities are bundled into the flat monthly rental rate" },
-    { value: "separate_metered", label: "Separate & Metered", description: "Occupants pay sub-metered electricity & water bills directly" },
-    { value: "mixed", label: "Mixed / Hybrid Policy", description: "Base utilities included with sub-metered overages or fixed charges" },
+    { value: "included_in_rent", label: "Included in Rent", description: "Bundled in flat monthly rent" },
+    { value: "separate_metered", label: "Separate & Metered", description: "Direct sub-metered billing" },
+    { value: "mixed", label: "Mixed / Base + Sub-meter", description: "Fixed base fee + overage usage" },
 ];
 
 const DORM_DEFAULTS = {
@@ -116,33 +112,25 @@ const MODE_CARDS: {
     id: EnvironmentMode;
     label: string;
     tagline: string;
-    description: string;
     icon: typeof Shield;
-    badgeColor: string;
 }[] = [
     {
         id: "apartment",
         label: "Apartment",
-        tagline: "Standard Residential",
-        description: "Autonomous private residences with flexible occupant limits and independent leases.",
+        tagline: "Residential Suites",
         icon: Building2,
-        badgeColor: "text-blue-400 bg-blue-400/10 border-blue-400/20",
     },
     {
         id: "dormitory",
         label: "Dormitory",
-        tagline: "Structured Community",
-        description: "Student & institutional accommodation with curfew hours, visitor rules, and per-bed occupancy.",
+        tagline: "Student & Bedspace",
         icon: Shield,
-        badgeColor: "text-amber-400 bg-amber-400/10 border-amber-400/20",
     },
     {
         id: "boarding_house",
         label: "Boarding House",
-        tagline: "Shared Co-Living",
-        description: "Private single rooms with shared common amenities, hybrid billing, and quiet hour guidelines.",
+        tagline: "Private Co-Living",
         icon: Users,
-        badgeColor: "text-purple-400 bg-purple-400/10 border-purple-400/20",
     },
 ];
 
@@ -155,9 +143,6 @@ export default function PropertyEnvironmentPage() {
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [success, setSuccess] = useState(false);
-
     const [propertyName, setPropertyName] = useState("");
     const [policy, setPolicy] = useState<PropertyPolicy | null>(null);
     const [mode, setMode] = useState<EnvironmentMode>("apartment");
@@ -180,7 +165,6 @@ export default function PropertyEnvironmentPage() {
 
         let isMounted = true;
         setLoading(true);
-        setError(null);
 
         async function fetchPolicy() {
             try {
@@ -250,7 +234,6 @@ export default function PropertyEnvironmentPage() {
                 }
             } catch (err) {
                 console.error("Error fetching policy:", err);
-                if (isMounted) setError("Failed to load property environment settings");
             } finally {
                 if (isMounted) setLoading(false);
             }
@@ -282,8 +265,6 @@ export default function PropertyEnvironmentPage() {
 
     const handleSave = async () => {
         setSaving(true);
-        setError(null);
-        setSuccess(false);
 
         try {
             const payload: any = {
@@ -309,18 +290,14 @@ export default function PropertyEnvironmentPage() {
 
             if (upsertError) throw upsertError;
 
-            // Also update property type in properties table to keep in sync
             await supabase
                 .from("properties")
                 .update({ type: mode })
                 .eq("id", propertyId);
 
-            setSuccess(true);
-            toast.success("Environment configuration saved successfully!");
-            setTimeout(() => setSuccess(false), 3000);
+            toast.success("Environment policies updated!");
         } catch (err: any) {
             console.error("Error saving policy:", err);
-            setError("Failed to save environment settings");
             toast.error(err?.message || "Failed to save environment settings");
         } finally {
             setSaving(false);
@@ -332,68 +309,65 @@ export default function PropertyEnvironmentPage() {
     }
 
     return (
-        <div className="min-h-screen bg-background text-foreground pb-24">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-                {/* Header Navigation & Title Bar */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
+        <div className="min-h-screen bg-background text-foreground pb-12">
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+                {/* Header Navigation & Single Save Action */}
+                <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3.5">
                         <button
                             onClick={() => push(`/landlord/properties`)}
-                            className="neumorphic-extruded size-11 rounded-2xl flex items-center justify-center text-neutral-400 hover:text-white transition-all active:scale-95 shrink-0"
+                            className="neumorphic-extruded size-10 rounded-2xl flex items-center justify-center text-neutral-400 hover:text-white transition-all active:scale-95 shrink-0"
                             title="Back to Properties"
                         >
-                            <ArrowLeft className="size-5" />
+                            <ArrowLeft className="size-4" />
                         </button>
                         <div>
-                            <div className="flex items-center gap-2.5">
-                                <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+                            <div className="flex items-center gap-2">
+                                <h1 className="text-xl font-black tracking-tight text-white">
                                     Environment Scope
                                 </h1>
-                                <span className="rounded-full bg-primary/10 border border-primary/20 px-3 py-0.5 text-[10px] font-black text-primary uppercase tracking-widest">
+                                <span className="rounded-full bg-primary/10 border border-primary/20 px-2.5 py-0.5 text-[10px] font-black text-primary uppercase tracking-wider">
                                     {mode.replace("_", " ")}
                                 </span>
                             </div>
-                            <p className="text-xs text-neutral-400 font-medium mt-1">
-                                Configure occupancy rules, curfew guidelines, and billing policies for{" "}
-                                <span className="text-white font-bold">{propertyName}</span>.
+                            <p className="text-xs text-neutral-400 font-medium truncate max-w-md">
+                                Operating rules, tenant constraints, and billing for <span className="text-white font-bold">{propertyName}</span>
                             </p>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-3 self-end sm:self-auto">
+                    <div className="flex items-center gap-2.5">
                         <button
                             onClick={() => push(`/landlord/properties`)}
                             disabled={saving}
-                            className="px-5 py-2.5 rounded-2xl text-xs font-bold text-neutral-400 hover:text-white hover:bg-white/5 transition-all"
+                            className="px-4 py-2 rounded-xl text-xs font-bold text-neutral-400 hover:text-white transition-all"
                         >
                             Cancel
                         </button>
                         <button
                             onClick={handleSave}
                             disabled={saving}
-                            className="neumorphic-primary flex items-center gap-2 rounded-2xl px-6 py-3 text-xs font-black uppercase tracking-widest text-primary-foreground transition-all hover:scale-105 active:scale-95 shadow-lg shadow-primary/20 disabled:opacity-50"
+                            className="neumorphic-primary flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-black uppercase tracking-wider text-primary-foreground transition-all hover:scale-105 active:scale-95 shadow-md shadow-primary/20 disabled:opacity-50"
                         >
-                            <Save className="size-4" />
-                            <span>{saving ? "Saving..." : "Save Policy"}</span>
+                            <Save className="size-3.5" />
+                            <span>{saving ? "Saving…" : "Save Policy"}</span>
                         </button>
                     </div>
                 </div>
 
-                {/* Property Type Selection (Neumorphic Interactive Cards) */}
-                <div className="neumorphic-panel rounded-[2.5rem] p-6 sm:p-8 space-y-6">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h2 className="text-lg font-black tracking-tight text-white flex items-center gap-2.5">
-                                <Building2 className="size-5 text-primary" />
-                                <span>Operating Environment Mode</span>
-                            </h2>
-                            <p className="text-xs text-neutral-400 font-medium mt-1">
-                                Selecting an environment sets intelligent baseline defaults for occupancy and curfews.
-                            </p>
-                        </div>
+                {/* Compact Operating Environment Switcher */}
+                <div className="neumorphic-panel rounded-3xl p-4 space-y-3">
+                    <div className="flex items-center justify-between px-1">
+                        <h2 className="text-xs font-black uppercase tracking-widest text-neutral-400 flex items-center gap-2">
+                            <Building2 className="size-3.5 text-primary" />
+                            <span>Operating Environment</span>
+                        </h2>
+                        <span className="text-[11px] text-neutral-500 font-medium">
+                            Auto-configures defaults
+                        </span>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                         {MODE_CARDS.map((card) => {
                             const Icon = card.icon;
                             const isSelected = mode === card.id;
@@ -404,326 +378,255 @@ export default function PropertyEnvironmentPage() {
                                     type="button"
                                     onClick={() => handleModeChange(card.id)}
                                     className={cn(
-                                        "group relative flex flex-col justify-between rounded-3xl p-6 text-left transition-all duration-300",
+                                        "group flex items-center justify-between rounded-2xl p-3 text-left transition-all duration-200",
                                         isSelected
-                                            ? "neumorphic-inset border-2 border-primary/50 bg-primary/[0.03] shadow-lg shadow-primary/5"
-                                            : "neumorphic-panel hover:border-white/20 hover:scale-[1.01] active:scale-[0.99]"
+                                            ? "neumorphic-inset border border-primary/50 bg-primary/[0.04] shadow-sm shadow-primary/10"
+                                            : "neumorphic-panel hover:border-white/10 active:scale-[0.99]"
                                     )}
                                 >
-                                    <div>
-                                        <div className="flex items-start justify-between gap-3 mb-4">
-                                            <div
-                                                className={cn(
-                                                    "neumorphic-inset-card size-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110",
-                                                    isSelected ? "text-primary" : "text-neutral-400"
-                                                )}
-                                            >
-                                                <Icon className="size-6" />
-                                            </div>
-                                            {isSelected ? (
-                                                <div className="size-6 rounded-full bg-primary text-black flex items-center justify-center shadow-md">
-                                                    <Check className="size-3.5 stroke-[3]" />
-                                                </div>
-                                            ) : (
-                                                <div className="size-6 rounded-full border border-white/10" />
+                                    <div className="flex items-center gap-3">
+                                        <div
+                                            className={cn(
+                                                "neumorphic-inset-card size-9 rounded-xl flex items-center justify-center shrink-0 transition-colors",
+                                                isSelected ? "text-primary" : "text-neutral-400"
                                             )}
+                                        >
+                                            <Icon className="size-4" />
                                         </div>
-
-                                        <h3 className="text-base font-black text-white group-hover:text-primary transition-colors">
-                                            {card.label}
-                                        </h3>
-                                        <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider mt-0.5">
-                                            {card.tagline}
-                                        </p>
-                                        <p className="text-xs text-neutral-400 mt-2.5 leading-relaxed font-medium">
-                                            {card.description}
-                                        </p>
+                                        <div>
+                                            <p className="text-xs font-black text-white group-hover:text-primary transition-colors">
+                                                {card.label}
+                                            </p>
+                                            <p className="text-[10px] font-medium text-neutral-500">
+                                                {card.tagline}
+                                            </p>
+                                        </div>
                                     </div>
-
-                                    <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between">
-                                        <span className={cn("text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg border", card.badgeColor)}>
-                                            {card.id}
-                                        </span>
-                                        <span className="text-[11px] font-bold text-neutral-500 group-hover:text-neutral-300 transition-colors">
-                                            {isSelected ? "Active Mode" : "Switch Mode →"}
-                                        </span>
-                                    </div>
+                                    {isSelected ? (
+                                        <div className="size-5 rounded-full bg-primary text-black flex items-center justify-center shadow-sm shrink-0">
+                                            <Check className="size-3 stroke-[3]" />
+                                        </div>
+                                    ) : (
+                                        <div className="size-4 rounded-full border border-white/10 shrink-0" />
+                                    )}
                                 </button>
                             );
                         })}
                     </div>
                 </div>
 
-                {/* Policy Configuration Matrix (Two-Column Layout) */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Occupancy & Tenant Restrictions */}
-                    <div className="neumorphic-panel rounded-[2.5rem] p-6 sm:p-8 space-y-6 flex flex-col justify-between">
-                        <div>
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="neumorphic-inset-card size-10 rounded-2xl flex items-center justify-center text-primary">
-                                    <Users className="size-5" />
-                                </div>
-                                <div>
-                                    <h2 className="text-lg font-black tracking-tight text-white">
-                                        Occupancy & Tenant Demographics
-                                    </h2>
-                                    <p className="text-xs text-neutral-400 font-medium">
-                                        Capacity limits and tenant restriction guidelines.
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="space-y-6">
-                                {/* Max Occupants */}
-                                <div className="space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <label className="text-xs font-bold uppercase tracking-wider text-neutral-300">
-                                            Maximum Occupants per Unit
-                                        </label>
-                                        <span className="text-xs font-black text-primary px-2.5 py-0.5 rounded-lg bg-primary/10 border border-primary/20">
-                                            {formData.max_occupants_per_unit} {formData.max_occupants_per_unit === 1 ? "Person" : "Persons"}
-                                        </span>
-                                    </div>
-                                    <input
-                                        type="number"
-                                        min={1}
-                                        max={20}
-                                        value={formData.max_occupants_per_unit}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, max_occupants_per_unit: parseInt(e.target.value) || 1 }))}
-                                        className="neumorphic-inset w-full rounded-2xl px-4 py-3 text-sm font-bold text-white outline-none focus:ring-2 focus:ring-primary/40 transition-all"
-                                    />
-                                    <p className="text-[11px] text-neutral-500 font-medium">
-                                        Specifies the hard occupancy capacity enforced in tenant intake forms and contracts.
-                                    </p>
-                                </div>
-
-                                {/* Gender Restriction */}
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 flex items-center gap-2">
-                                        <VenusAndMars className="size-4 text-primary" />
-                                        <span>Gender Restriction Policy</span>
-                                    </label>
-                                    <div className="relative">
-                                        <select
-                                            value={formData.gender_restriction_mode}
-                                            onChange={(e) => setFormData(prev => ({ ...prev, gender_restriction_mode: e.target.value as GenderRestrictionMode }))}
-                                            className="neumorphic-inset w-full rounded-2xl px-4 py-3 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-primary/40 appearance-none transition-all cursor-pointer"
-                                        >
-                                            {GENDER_OPTIONS.map((opt) => (
-                                                <option key={opt.value} value={opt.value} className="bg-[#121212] text-white">
-                                                    {opt.label} — {opt.description}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Utility Billing Policies */}
-                    <div className="neumorphic-panel rounded-[2.5rem] p-6 sm:p-8 space-y-6 flex flex-col justify-between">
-                        <div>
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="neumorphic-inset-card size-10 rounded-2xl flex items-center justify-center text-amber-400">
-                                    <Zap className="size-5" />
-                                </div>
-                                <div>
-                                    <h2 className="text-lg font-black tracking-tight text-white">
-                                        Utility & Metering Structure
-                                    </h2>
-                                    <p className="text-xs text-neutral-400 font-medium">
-                                        Electricity, water, and sub-meter billing policies.
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="space-y-6">
-                                {/* Utility Billing Mode */}
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-neutral-300">
-                                        Billing Framework
-                                    </label>
-                                    <div className="relative">
-                                        <select
-                                            value={formData.utility_policy_mode}
-                                            onChange={(e) => setFormData(prev => ({ ...prev, utility_policy_mode: e.target.value as UtilityPolicyMode }))}
-                                            className="neumorphic-inset w-full rounded-2xl px-4 py-3 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-amber-400/40 appearance-none transition-all cursor-pointer"
-                                        >
-                                            {UTILITY_OPTIONS.map((opt) => (
-                                                <option key={opt.value} value={opt.value} className="bg-[#121212] text-white">
-                                                    {opt.label} — {opt.description}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                </div>
-
-                                {/* Optional Fixed Charge for Mixed Mode */}
-                                {formData.utility_policy_mode === "mixed" && (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 5 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        className="space-y-2"
-                                    >
-                                        <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 flex items-center gap-2">
-                                            <DollarSign className="size-4 text-amber-400" />
-                                            <span>Fixed Monthly Utility Fee (₱)</span>
-                                        </label>
-                                        <input
-                                            type="number"
-                                            min={0}
-                                            step={50}
-                                            value={formData.utility_fixed_charge_amount ?? ""}
-                                            onChange={(e) => setFormData(prev => ({
-                                                ...prev,
-                                                utility_fixed_charge_amount: e.target.value ? parseFloat(e.target.value) : null
-                                            }))}
-                                            placeholder="e.g. 500.00"
-                                            className="neumorphic-inset w-full rounded-2xl px-4 py-3 text-sm font-bold text-white placeholder:text-neutral-600 outline-none focus:ring-2 focus:ring-amber-400/40 transition-all"
-                                        />
-                                        <p className="text-[11px] text-neutral-500 font-medium">
-                                            Fixed base amount added automatically to each month&apos;s invoice.
-                                        </p>
-                                    </motion.div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Building Rules, Curfew & Quiet Hours */}
-                <div className="neumorphic-panel rounded-[2.5rem] p-6 sm:p-8 space-y-6">
-                    <div className="flex items-center gap-3">
-                        <div className="neumorphic-inset-card size-10 rounded-2xl flex items-center justify-center text-primary">
-                            <Clock className="size-5" />
-                        </div>
-                        <div>
-                            <h2 className="text-lg font-black tracking-tight text-white">
-                                Property Operating Rules & Curfews
-                            </h2>
-                            <p className="text-xs text-neutral-400 font-medium">
-                                Gate access regulations and quiet hours displayed to residents on their portal.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-                        {/* Curfew Toggle & Time */}
-                        <div className="neumorphic-panel rounded-3xl p-6 flex flex-col justify-between space-y-4">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <h4 className="text-sm font-bold text-white">Curfew Schedule</h4>
-                                    <p className="text-xs text-neutral-400 mt-0.5">Enforce building entrance closing time</p>
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={() => setFormData(prev => ({ ...prev, curfew_enabled: !prev.curfew_enabled }))}
-                                    className={cn(
-                                        "relative h-7 w-12 rounded-full transition-colors",
-                                        formData.curfew_enabled ? "bg-primary" : "bg-white/10"
-                                    )}
-                                >
-                                    <motion.span
-                                        layout
-                                        className={cn(
-                                            "absolute top-1 size-5 rounded-full bg-white shadow-md",
-                                            formData.curfew_enabled ? "left-6" : "left-1"
-                                        )}
-                                    />
-                                </button>
-                            </div>
-
-                            {formData.curfew_enabled && (
-                                <motion.div
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: "auto" }}
-                                    className="pt-3 border-t border-white/5 space-y-1.5"
-                                >
-                                    <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">
-                                        Curfew Gate Close Time
-                                    </label>
-                                    <input
-                                        type="time"
-                                        value={formData.curfew_time}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, curfew_time: e.target.value }))}
-                                        className="neumorphic-inset w-full rounded-2xl px-4 py-2.5 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-primary/40"
-                                    />
-                                </motion.div>
-                            )}
-                        </div>
-
-                        {/* Visitor Cutoff Toggle & Time */}
-                        <div className="neumorphic-panel rounded-3xl p-6 flex flex-col justify-between space-y-4">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <h4 className="text-sm font-bold text-white">Visitor Cutoff</h4>
-                                    <p className="text-xs text-neutral-400 mt-0.5">Non-resident guest departure deadline</p>
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={() => setFormData(prev => ({ ...prev, visitor_cutoff_enabled: !prev.visitor_cutoff_enabled }))}
-                                    className={cn(
-                                        "relative h-7 w-12 rounded-full transition-colors",
-                                        formData.visitor_cutoff_enabled ? "bg-primary" : "bg-white/10"
-                                    )}
-                                >
-                                    <motion.span
-                                        layout
-                                        className={cn(
-                                            "absolute top-1 size-5 rounded-full bg-white shadow-md",
-                                            formData.visitor_cutoff_enabled ? "left-6" : "left-1"
-                                        )}
-                                    />
-                                </button>
-                            </div>
-
-                            {formData.visitor_cutoff_enabled && (
-                                <motion.div
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: "auto" }}
-                                    className="pt-3 border-t border-white/5 space-y-1.5"
-                                >
-                                    <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">
-                                        Guest Departure Time
-                                    </label>
-                                    <input
-                                        type="time"
-                                        value={formData.visitor_cutoff_time}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, visitor_cutoff_time: e.target.value }))}
-                                        className="neumorphic-inset w-full rounded-2xl px-4 py-2.5 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-primary/40"
-                                    />
-                                </motion.div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Quiet Hours Range */}
-                    <div className="neumorphic-inset rounded-3xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                            <div className="size-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-primary shrink-0">
-                                <Moon className="size-5" />
+                {/* Compact 2-Column Bento Form Layout */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Left Column: Occupancy & Billing Policies */}
+                    <div className="neumorphic-panel rounded-3xl p-5 space-y-4">
+                        <div className="flex items-center gap-2.5 pb-2 border-b border-white/5">
+                            <div className="neumorphic-inset-card size-8 rounded-xl flex items-center justify-center text-primary">
+                                <Users className="size-4" />
                             </div>
                             <div>
-                                <h4 className="text-sm font-bold text-white">Quiet Hours Schedule</h4>
-                                <p className="text-xs text-neutral-400 mt-0.5">Mandatory noise restriction interval</p>
+                                <h3 className="text-sm font-black text-white">Occupancy & Billing</h3>
+                                <p className="text-[11px] text-neutral-400 font-medium">Capacity and utility metering</p>
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-3">
-                            <input
-                                type="time"
-                                value={formData.quiet_hours_start}
-                                onChange={(e) => setFormData(prev => ({ ...prev, quiet_hours_start: e.target.value }))}
-                                className="neumorphic-panel rounded-xl px-3 py-2 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-primary/40"
-                            />
-                            <span className="text-xs font-black uppercase text-neutral-500">to</span>
-                            <input
-                                type="time"
-                                value={formData.quiet_hours_end}
-                                onChange={(e) => setFormData(prev => ({ ...prev, quiet_hours_end: e.target.value }))}
-                                className="neumorphic-panel rounded-xl px-3 py-2 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-primary/40"
-                            />
+                        <div className="space-y-3.5">
+                            {/* Max Occupants Stepper */}
+                            <div className="space-y-1.5">
+                                <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">
+                                    Max Occupants Per Unit
+                                </label>
+                                <div className="flex items-center gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setFormData(prev => ({ ...prev, max_occupants_per_unit: Math.max(1, prev.max_occupants_per_unit - 1) }))}
+                                        className="neumorphic-extruded size-9 rounded-xl flex items-center justify-center text-neutral-300 hover:text-white active:scale-95 shrink-0"
+                                    >
+                                        <Minus className="size-3.5" />
+                                    </button>
+                                    <div className="neumorphic-inset flex-1 rounded-xl py-2 text-center text-sm font-black text-white">
+                                        {formData.max_occupants_per_unit} {formData.max_occupants_per_unit === 1 ? "Person" : "Persons"}
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setFormData(prev => ({ ...prev, max_occupants_per_unit: Math.min(20, prev.max_occupants_per_unit + 1) }))}
+                                        className="neumorphic-extruded size-9 rounded-xl flex items-center justify-center text-neutral-300 hover:text-white active:scale-95 shrink-0"
+                                    >
+                                        <Plus className="size-3.5" />
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Gender Restriction */}
+                            <div className="space-y-1.5">
+                                <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 flex items-center gap-1.5">
+                                    <VenusAndMars className="size-3 text-primary" />
+                                    <span>Gender Policy</span>
+                                </label>
+                                <select
+                                    value={formData.gender_restriction_mode}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, gender_restriction_mode: e.target.value as GenderRestrictionMode }))}
+                                    className="neumorphic-inset w-full rounded-xl px-3.5 py-2.5 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-primary/40 appearance-none cursor-pointer"
+                                >
+                                    {GENDER_OPTIONS.map((opt) => (
+                                        <option key={opt.value} value={opt.value} className="bg-[#141414] text-white">
+                                            {opt.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Utility Billing Mode */}
+                            <div className="space-y-1.5">
+                                <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 flex items-center gap-1.5">
+                                    <Zap className="size-3 text-amber-400" />
+                                    <span>Utility Framework</span>
+                                </label>
+                                <select
+                                    value={formData.utility_policy_mode}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, utility_policy_mode: e.target.value as UtilityPolicyMode }))}
+                                    className="neumorphic-inset w-full rounded-xl px-3.5 py-2.5 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-amber-400/40 appearance-none cursor-pointer"
+                                >
+                                    {UTILITY_OPTIONS.map((opt) => (
+                                        <option key={opt.value} value={opt.value} className="bg-[#141414] text-white">
+                                            {opt.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Optional Fixed Charge */}
+                            {formData.utility_policy_mode === "mixed" && (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: "auto" }}
+                                    className="space-y-1.5 pt-1"
+                                >
+                                    <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 flex items-center gap-1.5">
+                                        <DollarSign className="size-3 text-amber-400" />
+                                        <span>Fixed Monthly Utility Fee (₱)</span>
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min={0}
+                                        step={50}
+                                        value={formData.utility_fixed_charge_amount ?? ""}
+                                        onChange={(e) => setFormData(prev => ({
+                                            ...prev,
+                                            utility_fixed_charge_amount: e.target.value ? parseFloat(e.target.value) : null
+                                        }))}
+                                        placeholder="e.g. 500"
+                                        className="neumorphic-inset w-full rounded-xl px-3.5 py-2 text-xs font-bold text-white placeholder:text-neutral-600 outline-none focus:ring-2 focus:ring-amber-400/40"
+                                    />
+                                </motion.div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Right Column: Building Rules, Curfews & Quiet Hours */}
+                    <div className="neumorphic-panel rounded-3xl p-5 space-y-4 flex flex-col justify-between">
+                        <div>
+                            <div className="flex items-center gap-2.5 pb-2 border-b border-white/5">
+                                <div className="neumorphic-inset-card size-8 rounded-xl flex items-center justify-center text-primary">
+                                    <Clock className="size-4" />
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-black text-white">Access & Curfew Rules</h3>
+                                    <p className="text-[11px] text-neutral-400 font-medium">Gate access & quiet periods</p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-3 pt-2">
+                                {/* Curfew Setting */}
+                                <div className="neumorphic-inset rounded-2xl p-3 flex items-center justify-between gap-3">
+                                    <div>
+                                        <p className="text-xs font-black text-white">Curfew Restriction</p>
+                                        <p className="text-[10px] text-neutral-500 font-medium">Enforce gate lock time</p>
+                                    </div>
+                                    <div className="flex items-center gap-2.5">
+                                        {formData.curfew_enabled && (
+                                            <input
+                                                type="time"
+                                                value={formData.curfew_time}
+                                                onChange={(e) => setFormData(prev => ({ ...prev, curfew_time: e.target.value }))}
+                                                className="neumorphic-panel rounded-lg px-2.5 py-1 text-xs font-bold text-white outline-none focus:ring-1 focus:ring-primary/50"
+                                            />
+                                        )}
+                                        <button
+                                            type="button"
+                                            onClick={() => setFormData(prev => ({ ...prev, curfew_enabled: !prev.curfew_enabled }))}
+                                            className={cn(
+                                                "relative h-6 w-11 rounded-full transition-colors shrink-0",
+                                                formData.curfew_enabled ? "bg-primary" : "bg-white/10"
+                                            )}
+                                        >
+                                            <motion.span
+                                                layout
+                                                className={cn(
+                                                    "absolute top-0.5 size-5 rounded-full bg-white shadow-sm",
+                                                    formData.curfew_enabled ? "left-5" : "left-0.5"
+                                                )}
+                                            />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Visitor Cutoff Setting */}
+                                <div className="neumorphic-inset rounded-2xl p-3 flex items-center justify-between gap-3">
+                                    <div>
+                                        <p className="text-xs font-black text-white">Visitor Cutoff</p>
+                                        <p className="text-[10px] text-neutral-500 font-medium">Guest exit deadline</p>
+                                    </div>
+                                    <div className="flex items-center gap-2.5">
+                                        {formData.visitor_cutoff_enabled && (
+                                            <input
+                                                type="time"
+                                                value={formData.visitor_cutoff_time}
+                                                onChange={(e) => setFormData(prev => ({ ...prev, visitor_cutoff_time: e.target.value }))}
+                                                className="neumorphic-panel rounded-lg px-2.5 py-1 text-xs font-bold text-white outline-none focus:ring-1 focus:ring-primary/50"
+                                            />
+                                        )}
+                                        <button
+                                            type="button"
+                                            onClick={() => setFormData(prev => ({ ...prev, visitor_cutoff_enabled: !prev.visitor_cutoff_enabled }))}
+                                            className={cn(
+                                                "relative h-6 w-11 rounded-full transition-colors shrink-0",
+                                                formData.visitor_cutoff_enabled ? "bg-primary" : "bg-white/10"
+                                            )}
+                                        >
+                                            <motion.span
+                                                layout
+                                                className={cn(
+                                                    "absolute top-0.5 size-5 rounded-full bg-white shadow-sm",
+                                                    formData.visitor_cutoff_enabled ? "left-5" : "left-0.5"
+                                                )}
+                                            />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Quiet Hours Range */}
+                                <div className="neumorphic-inset rounded-2xl p-3 space-y-2">
+                                    <div className="flex items-center gap-2">
+                                        <Moon className="size-3.5 text-primary" />
+                                        <p className="text-xs font-black text-white">Quiet Hours Period</p>
+                                    </div>
+                                    <div className="flex items-center justify-between gap-2">
+                                        <input
+                                            type="time"
+                                            value={formData.quiet_hours_start}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, quiet_hours_start: e.target.value }))}
+                                            className="neumorphic-panel rounded-lg px-2.5 py-1.5 text-xs font-bold text-white outline-none w-full text-center"
+                                        />
+                                        <span className="text-[10px] font-black uppercase text-neutral-500">to</span>
+                                        <input
+                                            type="time"
+                                            value={formData.quiet_hours_end}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, quiet_hours_end: e.target.value }))}
+                                            className="neumorphic-panel rounded-lg px-2.5 py-1.5 text-xs font-bold text-white outline-none w-full text-center"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
