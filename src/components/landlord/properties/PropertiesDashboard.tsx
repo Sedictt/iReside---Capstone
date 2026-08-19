@@ -78,6 +78,7 @@ export function PropertiesDashboard() {
         try {
             const response = await fetch("/api/landlord/properties/overview", {
                 method: "GET",
+                cache: "no-store",
                 signal,
             });
 

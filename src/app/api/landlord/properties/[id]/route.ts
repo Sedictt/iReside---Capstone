@@ -4,6 +4,8 @@ import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { PropertyService } from "@/lib/services/property";
 import { PropertyNotFoundError } from "@/lib/services/property/property.errors";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(
     _request: Request,
     { params }: { params: Promise<{ id: string }> }
@@ -22,30 +24,35 @@ export async function GET(
         const propertyService = new PropertyService(supabase);
         const propertyDetail = await propertyService.getPropertyDetail(propertyId, userId);
 
-        return NextResponse.json({
-            property: {
-                id: propertyDetail.id,
-                name: propertyDetail.name,
-                type: propertyDetail.type,
-                address: propertyDetail.address,
-                description: propertyDetail.description,
-                amenities: propertyDetail.amenities,
-                house_rules: propertyDetail.houseRules,
-                images: propertyDetail.images,
-                contract_template: propertyDetail.contractTemplate,
-                total_units: propertyDetail.totalUnits,
-                total_floors: propertyDetail.totalFloors,
-                base_rent_amount: propertyDetail.baseRentAmount,
-                unitCount: propertyDetail.unitCount,
-                env_policy: propertyDetail.envPolicy
-                    ? {
-                          utility_split_method: propertyDetail.envPolicy.utilitySplitMethod,
-                          utility_fixed_charge_amount: propertyDetail.envPolicy.utilityFixedChargeAmount,
-                          max_occupants_per_unit: propertyDetail.envPolicy.maxOccupantsPerUnit,
-                      }
-                    : null,
+        return NextResponse.json(
+            {
+                property: {
+                    id: propertyDetail.id,
+                    name: propertyDetail.name,
+                    type: propertyDetail.type,
+                    address: propertyDetail.address,
+                    description: propertyDetail.description,
+                    amenities: propertyDetail.amenities,
+                    house_rules: propertyDetail.houseRules,
+                    images: propertyDetail.images,
+                    contract_template: propertyDetail.contractTemplate,
+                    total_units: propertyDetail.totalUnits,
+                    total_floors: propertyDetail.totalFloors,
+                    base_rent_amount: propertyDetail.baseRentAmount,
+                    unitCount: propertyDetail.unitCount,
+                    env_policy: propertyDetail.envPolicy
+                        ? {
+                              utility_split_method: propertyDetail.envPolicy.utilitySplitMethod,
+                              utility_fixed_charge_amount: propertyDetail.envPolicy.utilityFixedChargeAmount,
+                              max_occupants_per_unit: propertyDetail.envPolicy.maxOccupantsPerUnit,
+                          }
+                        : null,
+                },
             },
-        });
+            {
+                headers: { "Cache-Control": "no-store, no-cache, must-revalidate" },
+            }
+        );
     } catch (error) {
         if (error instanceof PropertyNotFoundError) {
             return NextResponse.json({ error: "Property not found or access denied." }, { status: 404 });
@@ -165,15 +172,22 @@ export async function PUT(
         await (admin as any).from("property_environment_policies").upsert(
             {
                 property_id: propertyId,
-                environment_mode: "residential",
+                environment_mode: type || "apartment",
                 max_occupants_per_unit: parseInt(String(occupancy_limit || 5), 10) || 5,
                 utility_policy_mode: mapping.mode,
+                utility_split_method: mapping.split,
+                needs_review: false,
                 updated_at: new Date().toISOString(),
             },
             { onConflict: "property_id" }
         );
 
-        return NextResponse.json({ success: true, propertyId });
+        return NextResponse.json(
+            { success: true, propertyId },
+            {
+                headers: { "Cache-Control": "no-store, no-cache, must-revalidate" },
+            }
+        );
     } catch (error) {
         console.error("Failed to update property:", error);
         return NextResponse.json(
