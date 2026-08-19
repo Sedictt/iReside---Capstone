@@ -18,6 +18,7 @@ import {
     Edit3
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PropertyTenantsModal } from "./PropertyTenantsModal";
 
 type PropertyStatus = "Performing" | "Stable" | "Attention Required";
 
@@ -74,6 +75,7 @@ export function PropertiesDashboard() {
     const [searchQuery, setSearchQuery] = useState("");
     const [activeTab, setActiveTab] = useState<typeof FILTER_TABS[number]>(FILTER_TABS[0]);
     const [hubModalId, setHubModalId] = useState<string | null>(null);
+    const [tenantsModalProperty, setTenantsModalProperty] = useState<PropertyCard | null>(null);
 
     const loadProperties = useCallback(async (signal?: AbortSignal) => {
         setIsLoading(true);
@@ -418,12 +420,19 @@ export function PropertiesDashboard() {
                                     </Link>
 
 
-                                    <Link href="/landlord/tenants" className="neumorphic-extruded group flex flex-col items-center justify-center rounded-2xl p-4 transition-all">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setTenantsModalProperty(activeProperty);
+                                            setHubModalId(null);
+                                        }}
+                                        className="neumorphic-extruded group flex flex-col items-center justify-center rounded-2xl p-4 transition-all text-center"
+                                    >
                                         <div className="neumorphic-inset-card size-12 text-emerald-400 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                                             <Users className="size-5" />
                                         </div>
                                         <span className="text-sm font-medium text-foreground">View Tenants</span>
-                                    </Link>
+                                    </button>
 
                                     <Link href="/landlord/maintenance" className="neumorphic-extruded group flex flex-col items-center justify-center rounded-2xl p-4 transition-all">
                                         <div className="neumorphic-inset-card size-12 text-amber-400 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
@@ -437,6 +446,17 @@ export function PropertiesDashboard() {
                     );
                 })()}
             </AnimatePresence>
+
+            {/* Property Tenants Modal */}
+            {tenantsModalProperty && (
+                <PropertyTenantsModal
+                    isOpen={Boolean(tenantsModalProperty)}
+                    propertyId={tenantsModalProperty.id}
+                    propertyName={tenantsModalProperty.name}
+                    propertyImage={tenantsModalProperty.image}
+                    onClose={() => setTenantsModalProperty(null)}
+                />
+            )}
         </div>
     );
 }
