@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
+
+export const dynamic = "force-dynamic";
 
 type UnitMapPositionRow = {
     unit_id: string;
@@ -42,7 +45,7 @@ export async function GET(request: NextRequest) {
     // Verify ownership
     const { data: property, error: propError } = await supabase
         .from("properties")
-        .select("id, map_decorations" as any)
+        .select("id, name, type, total_units, total_floors, base_rent_amount, map_decorations" as any)
         .eq("id", propertyId)
         .eq("landlord_id", userId)
         .maybeSingle() as any;
@@ -51,8 +54,14 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: "Property not found or access denied" }, { status: 404 });
     }
 
+    const admin = createServiceRoleSupabaseClient();
+    const targetFloors = Math.max(1, Number(property.total_floors) || 1);
+    const targetUnits = Math.max(1, Number(property.total_units) || 1);
+    const targetRent = Number(property.base_rent_amount) || 0;
+    const propType = property.type || "apartment";
+
     // Fetch floor configs ordered by sort_order / floor_number
-    const { data: floorConfigs, error: floorError } = await (supabase
+    let { data: floorConfigs, error: floorError } = await (supabase
         .from("property_floor_configs" as any)
         .select("id, floor_number, floor_key, display_name, sort_order")
         .eq("property_id", propertyId)
@@ -64,7 +73,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch units with their map positions
-    const { data: units, error: unitsError } = await supabase
+    let { data: units, error: unitsError } = await supabase
         .from("units")
         .select("id, name, floor, status, rent_amount, beds, baths, sqft")
         .eq("property_id", propertyId)
@@ -72,6 +81,73 @@ export async function GET(request: NextRequest) {
 
     if (unitsError) {
         return NextResponse.json({ error: "Failed to fetch units" }, { status: 500 });
+    }
+
+    // Auto-heal / sync missing floor configs
+    const existingFloorNumbers = new Set((floorConfigs ?? []).map((f: any) => f.floor_number));
+    const neededFloorConfigs: any[] = [];
+    for (let i = 1; i <= targetFloors; i++) {
+        if (!existingFloorNumbers.has(i)) {
+            neededFloorConfigs.push({
+                property_id: propertyId,
+                floor_number: i,
+                floor_key: `floor${i}`,
+                display_name: `Floor ${i}`,
+                sort_order: i,
+            });
+        }
+    }
+    for (const u of units ?? []) {
+        if (u.floor && u.floor > 0 && !existingFloorNumbers.has(u.floor) && !neededFloorConfigs.some(f => f.floor_number === u.floor)) {
+            neededFloorConfigs.push({
+                property_id: propertyId,
+                floor_number: u.floor,
+                floor_key: `floor${u.floor}`,
+                display_name: `Floor ${u.floor}`,
+                sort_order: u.floor,
+            });
+        }
+    }
+    if (neededFloorConfigs.length > 0) {
+        await (admin as any)
+            .from("property_floor_configs")
+            .upsert(neededFloorConfigs, { onConflict: "property_id,floor_key" });
+
+        const { data: refreshedFloors } = await (admin
+            .from("property_floor_configs" as any)
+            .select("id, floor_number, floor_key, display_name, sort_order")
+            .eq("property_id", propertyId)
+            .order("sort_order", { ascending: true })
+            .order("floor_number", { ascending: true }) as any);
+        floorConfigs = refreshedFloors ?? floorConfigs;
+    }
+
+    // Auto-heal / sync missing units
+    const currentUnitCount = units?.length || 0;
+    if (targetUnits > currentUnitCount) {
+        const unitsPerFloor = Math.max(1, Math.ceil(targetUnits / targetFloors));
+        const unitPrefix = propType === "dormitory" ? "Room" : propType === "boarding_house" ? "Room" : "Unit";
+        const unitsToCreate = Array.from({ length: targetUnits - currentUnitCount }, (_, idx) => {
+            const unitIndex = currentUnitCount + idx + 1;
+            const floorNumber = targetFloors === 1 ? 1 : Math.min(targetFloors, Math.floor((unitIndex - 1) / unitsPerFloor) + 1);
+            return {
+                property_id: propertyId,
+                name: `${unitPrefix} ${unitIndex}`,
+                floor: floorNumber,
+                status: "vacant",
+                rent_amount: targetRent,
+                beds: 1,
+                baths: 1,
+            };
+        });
+        await (admin as any).from("units").insert(unitsToCreate);
+
+        const { data: refreshedUnits } = await supabase
+            .from("units")
+            .select("id, name, floor, status, rent_amount, beds, baths, sqft")
+            .eq("property_id", propertyId)
+            .order("created_at", { ascending: true });
+        units = refreshedUnits ?? units;
     }
 
     const unitIds = (units ?? []).map(u => u.id);
