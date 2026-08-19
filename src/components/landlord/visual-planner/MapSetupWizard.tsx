@@ -44,6 +44,17 @@ interface MapSetupWizardProps {
     previewEmptyFloors?: boolean;
 }
 
+const sortUnitsSequential = (unitList: DbUnit[]) => {
+    return [...unitList].sort((a, b) => {
+        const aNum = parseInt(a.name.replace(/\D/g, ""), 10);
+        const bNum = parseInt(b.name.replace(/\D/g, ""), 10);
+        const aHas = !isNaN(aNum);
+        const bHas = !isNaN(bNum);
+        if (aHas && bHas && aNum !== bNum) return aNum - bNum;
+        return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: "base" });
+    });
+};
+
 export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, previewEmptyFloors = false }: MapSetupWizardProps) {
     const [units, setUnits] = useState<DbUnit[]>([]);
     const [floorConfigs, setFloorConfigs] = useState<FloorConfig[]>([]);
@@ -582,7 +593,7 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
                                     <div className="col-span-1 lg:col-span-2 mb-4">
                                         <FloorLane
                                             floor={{ id: "unassigned", floor_number: -1, floor_key: "unassigned", display_name: "Unassigned Units (Holding Area)", sort_order: -999 }}
-                                            units={units.filter(u => u.floor === -1)}
+                                            units={sortUnitsSequential(units.filter(u => u.floor === -1))}
                                             onRemove={() => {}}
                                         />
                                     </div>
@@ -648,7 +659,7 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
                                         <FloorLane
                                             key={fc.floor_key}
                                             floor={fc}
-                                            units={units.filter((u) => u.floor === fc.floor_number)}
+                                            units={sortUnitsSequential(units.filter((u) => u.floor === fc.floor_number))}
                                             onRemove={() => handleRemoveFloor(fc.floor_key)}
                                         />
                                     ))
