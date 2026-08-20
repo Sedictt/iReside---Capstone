@@ -218,13 +218,11 @@ return (
                             <button
                                 type="button"
                                 onClick={() => {
-                                    setIsNotificationsOpen((current) => {
-                                        const next = !current;
-                                        if (next) {
-                                            void refresh();
-                                        }
-                                        return next;
-                                    });
+                                    const next = !isNotificationsOpen;
+                                    setIsNotificationsOpen(next);
+                                    if (next) {
+                                        void refresh();
+                                    }
                                 }}
                                 className={cn(
                                     "relative flex size-9 items-center justify-center rounded-lg transition-all",
@@ -316,13 +314,11 @@ return (
                             <button
                                 type="button"
                                 onClick={() => {
-                                    setIsNotificationsOpen((current) => {
-                                        const next = !current;
-                                        if (next) {
-                                            void refresh();
-                                        }
-                                        return next;
-                                    });
+                                    const next = !isNotificationsOpen;
+                                    setIsNotificationsOpen(next);
+                                    if (next) {
+                                        void refresh();
+                                    }
                                 }}
                                 className={cn(
                                     "relative rounded-xl p-2 transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",

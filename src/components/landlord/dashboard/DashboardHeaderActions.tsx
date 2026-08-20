@@ -320,13 +320,11 @@ export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActi
                 <div className="relative">
                     <button
                         onClick={() => {
-                            setIsNotificationsOpen((current) => {
-                                const next = !current;
-                                if (next) {
-                                    void refresh();
-                                }
-                                return next;
-                            });
+                            const next = !isNotificationsOpen;
+                            setIsNotificationsOpen(next);
+                            if (next) {
+                                void refresh();
+                            }
                         }}
                         className="group relative flex size-11 items-center justify-center rounded-2xl neumorphic-extruded active:scale-95"
                     >
