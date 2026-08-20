@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Settings, User, LogOut, CreditCard, Pencil } from "lucide-react";
+import { Settings, User, LogOut, Pencil } from "lucide-react";
 import { signOut } from "@/lib/supabase/client-auth";
 import { useState, useRef, useEffect } from "react";
 import { AnimatePresence, m as motion } from "framer-motion";
@@ -195,13 +195,6 @@ export function ProfileWidget() {
                             >
                                 <Settings className="size-4 group-hover:text-primary transition-colors" />
                                 <span>Settings</span>
-                            </Link>
-                            <Link
-                                href="/landlord/billing"
-                                className="group flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-black transition-all hover:neumorphic-inset-card active:scale-[0.98] text-muted-foreground hover:text-primary border border-transparent"
-                            >
-                                <CreditCard className="size-4 group-hover:text-primary transition-colors" />
-                                <span>Billing & Plans</span>
                             </Link>
 
                             <div className="my-1.5 h-px bg-white/5"></div>
