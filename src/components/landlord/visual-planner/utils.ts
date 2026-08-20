@@ -45,6 +45,7 @@ export const dbUnitToCanvasUnit = (dbUnit: DbUnit): Unit => {
         maintenanceStatus: dbUnit.maintenance_status,
         floor: dbUnit.floor,
         applicationCount: dbUnit.application_count,
+        rentAmount: dbUnit.rent_amount,
     };
 };
 

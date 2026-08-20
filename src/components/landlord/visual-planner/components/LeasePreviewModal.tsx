@@ -53,12 +53,13 @@ export const LeasePreviewModal = ({
 
                     if (matchedLease && isMounted) {
                         // Map API LeaseListItem / LeaseDetail to LeaseData for LeaseDocument
+                        const leaseRent = Number(matchedLease.monthly_rent || matchedLease.unit?.rent_amount || unit.rentAmount || 15000);
                         const formattedLease: LeaseData = {
                             id: matchedLease.id || `LSE-${targetUnitId.slice(0, 8).toUpperCase()}`,
                             start_date: matchedLease.start_date || unit.leaseStart || new Date().toISOString().split("T")[0],
                             end_date: matchedLease.end_date || unit.leaseEnd || new Date(Date.now() + 365 * 86400000).toISOString().split("T")[0],
-                            monthly_rent: Number(matchedLease.monthly_rent || matchedLease.unit?.rent_amount || 0),
-                            security_deposit: Number(matchedLease.security_deposit || (matchedLease.monthly_rent || 0)),
+                            monthly_rent: leaseRent,
+                            security_deposit: Number(matchedLease.security_deposit || leaseRent),
                             signed_at: matchedLease.signed_at || matchedLease.landlord_signed_at || null,
                             signed_document_url: matchedLease.signed_document_url || null,
                             terms: {
@@ -70,17 +71,21 @@ export const LeasePreviewModal = ({
                                 id: matchedLease.unit?.id || targetUnitId,
                                 name: matchedLease.unit?.name || unit.name,
                                 floor: unit.floor || 1,
-                                sqft: unit.areaSqm ? unit.areaSqm * 10.764 : null,
-                                beds: unit.bedrooms ?? 1,
-                                baths: unit.baths ?? 1,
+                                sqft: unit.areaSqm ? Math.round(unit.areaSqm * 10.764) : null,
+                                beds: matchedLease.unit?.beds ?? unit.bedrooms ?? 1,
+                                baths: matchedLease.unit?.baths ?? unit.baths ?? 1,
                                 property: {
                                     id: property?.id || matchedLease.unit?.property?.id || "prop-1",
                                     name: property?.name || matchedLease.unit?.property?.name || "Residential Property",
                                     address: property?.address || matchedLease.unit?.property?.address || "Main Street",
-                                    city: property?.city || "Metro Manila",
-                                    images: [],
-                                    house_rules: ["Standard Residential Guidelines", "No Unauthorized Alterations", "Quiet Hours 10PM-8AM"],
-                                    amenities: [],
+                                    city: property?.city || matchedLease.unit?.property?.city || "Metro Manila",
+                                    images: Array.isArray(property?.images) ? property.images : Array.isArray(matchedLease.unit?.property?.images) ? matchedLease.unit.property.images : [],
+                                    house_rules: Array.isArray(property?.house_rules) && property.house_rules.length > 0 
+                                        ? property.house_rules 
+                                        : Array.isArray(matchedLease.unit?.property?.house_rules) && matchedLease.unit.property.house_rules.length > 0
+                                            ? matchedLease.unit.property.house_rules
+                                            : ["Standard Residential Guidelines", "No Unauthorized Alterations", "Quiet Hours 10PM-8AM"],
+                                    amenities: Array.isArray(property?.amenities) ? property.amenities : Array.isArray(matchedLease.unit?.property?.amenities) ? matchedLease.unit.property.amenities : [],
                                 },
                             },
                             landlord: {
@@ -107,12 +112,13 @@ export const LeasePreviewModal = ({
             if (!isMounted) return;
 
             // Fallback for demo / preview / prototype units
+            const rentVal = unit.rentAmount || 15000;
             const fallbackLease: LeaseData = {
                 id: `LSE-${targetUnitId.slice(0, 8).toUpperCase()}`,
                 start_date: unit.leaseStart || new Date().toISOString().split("T")[0],
                 end_date: unit.leaseEnd || new Date(Date.now() + 365 * 86400000).toISOString().split("T")[0],
-                monthly_rent: 15000,
-                security_deposit: 15000,
+                monthly_rent: rentVal,
+                security_deposit: rentVal,
                 signed_at: new Date().toISOString(),
                 signed_document_url: null,
                 terms: {
@@ -132,9 +138,11 @@ export const LeasePreviewModal = ({
                         name: property?.name || "Residential Property",
                         address: property?.address || "iReside Residences, Taft Ave",
                         city: property?.city || "Metro Manila",
-                        images: [],
-                        house_rules: ["Standard Residential Guidelines", "No Unauthorized Alterations", "Quiet Hours 10PM-8AM"],
-                        amenities: [],
+                        images: Array.isArray(property?.images) ? property.images : [],
+                        house_rules: Array.isArray(property?.house_rules) && property.house_rules.length > 0 
+                            ? property.house_rules 
+                            : ["Standard Residential Guidelines", "No Unauthorized Alterations", "Quiet Hours 10PM-8AM"],
+                        amenities: Array.isArray(property?.amenities) ? property.amenities : [],
                     },
                 },
                 landlord: {

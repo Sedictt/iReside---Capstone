@@ -26,6 +26,7 @@ export interface Unit {
     maintenanceStatus?: string;
     floor?: number;   // DB floor number
     applicationCount?: number;
+    rentAmount?: number;
 }
 
 /** Shape returned by GET /api/landlord/unit-map */

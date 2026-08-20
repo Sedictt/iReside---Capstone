@@ -49,6 +49,8 @@ import { UnitTooltip } from "./components/UnitTooltip";
 import { TransferRequestModal } from "./components/TransferRequestModal";
 import { FloorSelector } from "./components/FloorSelector";
 import { LeasePreviewModal } from "./components/LeasePreviewModal";
+import { VisualPlannerSkeleton } from "./components/VisualPlannerSkeleton";
+import { MapSetupWizard } from "./MapSetupWizard";
 import { MaintenanceRequestModal } from "@/components/landlord/maintenance/MaintenanceRequestModal";
 import type { MaintenanceRequest } from "@/components/landlord/maintenance/MaintenanceDashboard";
 
@@ -58,11 +60,13 @@ const UnitHistoryModal = ({
     onClose,
     unit,
     initialTab = "tenants",
+    onOpenLease,
 }: {
     isOpen: boolean;
     onClose: () => void;
     unit: Unit | null;
     initialTab?: "tenants" | "maintenance";
+    onOpenLease?: () => void;
 }) => {
     const [activeTab, setActiveTab] = useState<"tenants" | "maintenance">(initialTab);
     const { resolvedTheme } = useTheme();
@@ -169,6 +173,19 @@ const UnitHistoryModal = ({
                                             <div className="text-right">
                                                 <p className={`text-xs font-black text-foreground`}>₱{item.rent.toLocaleString()}</p>
                                                 <p className="text-[9px] font-black text-muted-foreground">Monthly Rent</p>
+                                                {onOpenLease && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            onClose();
+                                                            onOpenLease();
+                                                        }}
+                                                        className="text-[9px] font-black text-primary uppercase tracking-wider hover:underline mt-1 inline-flex items-center gap-0.5"
+                                                    >
+                                                        <span className="material-icons-round text-xs">visibility</span>
+                                                        View Lease
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     ))
@@ -702,6 +719,10 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                             ?? "floor1"
                 );
                 
+                const initialUnits = newFloorLayouts[initialFloorKey]?.units ?? [];
+                const initialCorridors = newFloorLayouts[initialFloorKey]?.corridors ?? [];
+                const initialStructures = newFloorLayouts[initialFloorKey]?.structures ?? [];
+
                 // Batch all state updates
                 setDbUnits(data.units);
                 setFloorConfigs(data.floorConfigs);
@@ -711,10 +732,20 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                 setUnplacedDbUnits(unplaced);
                 setFloorLayouts(newFloorLayouts);
                 setActiveFloor(initialFloorKey);
-                setUnits(newFloorLayouts[initialFloorKey]?.units ?? []);
-                setCorridors(newFloorLayouts[initialFloorKey]?.corridors ?? []);
-                setStructures(newFloorLayouts[initialFloorKey]?.structures ?? []);
+                setUnits(initialUnits);
+                setCorridors(initialCorridors);
+                setStructures(initialStructures);
                 setHasHydratedFloorState(true);
+
+                // Set loaded state as baseline session history so undo cannot revoke below loaded state
+                isUndoingRef.current = true;
+                historyRef.current = [{
+                    units: initialUnits,
+                    corridors: initialCorridors,
+                    structures: initialStructures,
+                }];
+                historyIndexRef.current = 0;
+                setUndoAvailable(false);
             } catch (err) {
                 if ((err as Error).name === "AbortError") return;
                 setMapLoadError((err as Error).message);
@@ -755,7 +786,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const scaleRef = useRef(scale);
     const dragPointerOffsetRef = useRef<DragPointerOffsetState | null>(null);
     const trashRef = useRef<HTMLDivElement>(null);
-    const historyRef = useRef<FloorLayout[]>([DEFAULT_FLOOR_LAYOUTS[DEFAULT_ACTIVE_FLOOR]]);
+    const historyRef = useRef<FloorLayout[]>([]);
     const historyIndexRef = useRef(0);
     const isUndoingRef = useRef(false);
     const activeSidebarDragRef = useRef<any>(null);
@@ -819,9 +850,9 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         }
     };
 
-    // Auto-record history on changes
+    // Auto-record history on changes made during the session
     useEffect(() => {
-        if (demoMode || isUndoingRef.current) {
+        if (demoMode || isLoadingMap || !hasHydratedFloorState || isUndoingRef.current) {
             if (isUndoingRef.current) isUndoingRef.current = false;
             return;
         }
@@ -832,10 +863,17 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
             structures,
         };
 
+        if (historyRef.current.length === 0) {
+            historyRef.current = [currentLayout];
+            historyIndexRef.current = 0;
+            setUndoAvailable(false);
+            return;
+        }
+
         const lastLayout = historyRef.current[historyIndexRef.current];
 
         // Deep compare to avoid duplicates
-        if (JSON.stringify(currentLayout) === JSON.stringify(lastLayout)) return;
+        if (lastLayout && JSON.stringify(currentLayout) === JSON.stringify(lastLayout)) return;
 
         // If we are not at the end of history, truncate the future
         const newHistory = historyRef.current.slice(0, historyIndexRef.current + 1);
@@ -849,7 +887,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         historyRef.current = newHistory;
         historyIndexRef.current = newHistory.length - 1;
         setUndoAvailable(historyIndexRef.current > 0);
-    }, [units, corridors, structures]);
+    }, [units, corridors, structures, isLoadingMap, hasHydratedFloorState, demoMode]);
 
     useEffect(() => {
         if (selectedItem?.kind !== "unit") {
@@ -1504,10 +1542,19 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
     const handleViewportPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
         if (draggingUnitId !== null || draggingCorridorId !== null || draggingStructureId !== null || e.button !== 0) return;
-        if ((e.target as HTMLElement).closest('[data-unit-card="true"]')) return;
-        if ((e.target as HTMLElement).closest('[data-corridor-card="true"]')) return;
-        if ((e.target as HTMLElement).closest('[data-structure-card="true"]')) return;
-        if ((e.target as HTMLElement).closest('[data-tooltip="true"]')) return;
+        const target = e.target as HTMLElement;
+        if (
+            target.closest('[data-unit-card="true"]') ||
+            target.closest('[data-unit-id]') ||
+            target.closest('[data-corridor-card="true"]') ||
+            target.closest('[data-structure-card="true"]') ||
+            target.closest('[data-tooltip="true"]') ||
+            target.closest('[data-no-pan="true"]') ||
+            target.closest('button') ||
+            target.closest('input')
+        ) {
+            return;
+        }
 
         setSelectedItem(null);
         setTooltipUnit(null);
@@ -2727,6 +2774,25 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         setIsMaintenanceModalOpen(true);
     }, [selectedUnit, selectedProperty]);
 
+    if (isLoadingMap && !demoMode) {
+        return <VisualPlannerSkeleton propertyName={selectedProperty?.name} />;
+    }
+
+    if (!readOnly && isSetupComplete === false && totalDbUnits > 0 && selectedPropertyId && selectedPropertyId !== "all") {
+        return (
+            <div className="flex flex-col h-full">
+                <MapSetupWizard
+                    propertyId={selectedPropertyId}
+                    propertyName={selectedProperty?.name ?? "Your Property"}
+                    onSetupComplete={() => {
+                        setIsSetupComplete(true);
+                        setRefreshKey((prev) => prev + 1);
+                    }}
+                />
+            </div>
+        );
+    }
+
     return (
         <div className={`${isDark ? 'bg-background-dark text-zinc-100' : 'bg-background text-zinc-800'} h-full flex flex-col overflow-hidden antialiased selection:bg-primary/30 ${readOnly ? 'pointer-events-auto' : ''}`}>
             {/* Header */}
@@ -3041,7 +3107,10 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                         dragMomentum={false}
                                         dragSnapToOrigin
                                         transition={{ duration: 0 }}
-                                        onPointerDown={readOnly ? undefined : () => setSelectedItem({ kind: "corridor", id: corridor.id })}
+                                        onPointerDown={readOnly ? undefined : (e) => {
+                                            e.stopPropagation();
+                                            setSelectedItem({ kind: "corridor", id: corridor.id });
+                                        }}
                                         onDragStart={(event, info) => {
                                             const pointer = getClientPointFromDragEvent(event) ?? info.point;
                                             setSelectedItem({ kind: "corridor", id: corridor.id });
@@ -3196,7 +3265,10 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                         dragMomentum={false}
                                         dragSnapToOrigin
                                         transition={{ duration: 0 }}
-                                        onPointerDown={readOnly ? undefined : () => setSelectedItem({ kind: "structure", id: structure.id })}
+                                        onPointerDown={readOnly ? undefined : (e) => {
+                                            e.stopPropagation();
+                                            setSelectedItem({ kind: "structure", id: structure.id });
+                                        }}
                                         onDragStart={(event, info) => {
                                             const pointer = getClientPointFromDragEvent(event) ?? info.point;
                                             setSelectedItem({ kind: "structure", id: structure.id });
@@ -3402,205 +3474,291 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                     </motion.div>
                                 ))}
 
-                                {units.map((unit) => (
-                                    <motion.div
-                                        key={unit.id}
-                                        data-unit-card="true"
-                                        className={`absolute group cursor-pointer ${
-                                            draggingUnitId === unit.id
-                                                ? dragPlacement?.kind === "unit" && dragPlacement.id === unit.id && !dragPlacement.isValid
-                                                    ? 'ring-2 ring-red-500/80 ring-offset-2 ring-offset-background'
-                                                    : 'ring-2 ring-emerald-500/80 ring-offset-2 ring-offset-background'
-                                                : selectedItem?.kind === "unit" && selectedItem.id === unit.id
-                                                    ? 'ring-2 ring-primary ring-offset-1 ring-offset-background'
-                                                    : ''
-                                        }`}
-                                        style={{
-                                            left: unit.x,
-                                            top: unit.y,
-                                            width: unit.w,
-                                            height: unit.h,
-                                            zIndex: draggingUnitId === unit.id ? 40 : 10,
-                                        }}
-                                        initial={false}
-                                        animate={{ 
-                                            opacity: statusFilters.includes(unit.status) ? 1 : 0,
-                                            scale: statusFilters.includes(unit.status) ? 1 : 0.95,
-                                            pointerEvents: statusFilters.includes(unit.status) ? 'auto' : 'none'
-                                        }}
-                                        transition={{ duration: 0.25, ease: "easeInOut" }}
-                                        drag={!readOnly && !isLayoutLocked && statusFilters.includes(unit.status)}
-                                        dragConstraints={blueprintRef}
-                                        dragElastic={0}
-                                        dragMomentum={false}
-                                        dragSnapToOrigin
-                                        onPointerDown={readOnly ? () => setTooltipUnit(unit) : () => setSelectedItem({ kind: "unit", id: unit.id })}
-                                        onDragStart={(event, info) => {
-                                             const pointer = getClientPointFromDragEvent(event) ?? info.point;
-                                             setSelectedItem({ kind: "unit", id: unit.id });
-                                             setDraggingUnitId(unit.id);
-                                             setIsTrashHot(false);
-                                             setDragPointerAnchor("unit", unit.id, unit.x, unit.y, pointer.x, pointer.y);
-                                             setDragPlacementIndicator("unit", unit.id, true, false);
-                                         }}
-                                         onDrag={(event, info) => {
-                                             const pointer = getClientPointFromDragEvent(event) ?? info.point;
-                                             const placement = resolveDragPlacement(
-                                                 "unit",
-                                                 unit.id,
-                                                 unit.w,
-                                                 unit.h,
-                                                 pointer.x,
-                                                 pointer.y,
-                                                 unit.x,
-                                                 unit.y
-                                             );
-                                             updateTrashHotState(pointer.x, pointer.y);
-                                             setDragPlacementIndicator("unit", unit.id, placement.isValid, placement.isMagnetic);
-                                         }}
-                                        onDragEnd={(event, info) => {
-                                            const pointer = getClientPointFromDragEvent(event) ?? info.point;
-                                            const shouldDelete = isPointerNearTrash(pointer.x, pointer.y);
-                                            if (shouldDelete) {
-                                                requestDeleteItem({ kind: "unit", id: unit.id }, "trash");
-                                                setDragPlacement(null);
-                                                setDraggingUnitId(current => current === unit.id ? null : current);
-                                                clearDragPointerAnchor("unit", unit.id);
-                                                setIsTrashHot(false);
-                                                return;
-                                            }
-
-                                            flushSync(() => {
-                                                setUnits(prevUnits => {
-                                                    const currentUnit = prevUnits.find((u) => u.id === unit.id);
-                                                    if (!currentUnit) return prevUnits;
-
-                                                    const placement = resolveDragPlacement(
-                                                        "unit",
-                                                        currentUnit.id,
-                                                        currentUnit.w,
-                                                        currentUnit.h,
-                                                        pointer.x,
-                                                        pointer.y,
-                                                        currentUnit.x,
-                                                        currentUnit.y
-                                                    );
-                                                    if (!placement.isValid) {
-                                                        triggerOverlapToast();
-                                                        return prevUnits;
+{units.map((unit) => {
+                                        const isFiltered = !statusFilters.includes(unit.status);
+                                        return (
+                                            <motion.div
+                                                key={unit.id}
+                                                data-unit-id={unit.id}
+                                                data-unit-card="true"
+                                                className={`absolute group cursor-pointer ${
+                                                    draggingUnitId === unit.id
+                                                        ? dragPlacement?.kind === "unit" && dragPlacement.id === unit.id && !dragPlacement.isValid
+                                                            ? 'ring-2 ring-red-500/80 ring-offset-2 ring-offset-background'
+                                                            : 'ring-2 ring-emerald-500/80 ring-offset-2 ring-offset-background'
+                                                        : selectedItem?.kind === "unit" && selectedItem.id === unit.id
+                                                            ? 'ring-2 ring-primary ring-offset-1 ring-offset-background'
+                                                            : ''
+                                                }`}
+                                                style={{
+                                                    left: unit.x,
+                                                    top: unit.y,
+                                                    width: unit.w,
+                                                    height: unit.h,
+                                                    zIndex: draggingUnitId === unit.id ? 40 : 10,
+                                                }}
+                                                initial={false}
+                                                animate={{ 
+                                                    scale: isFiltered ? 0.985 : 1,
+                                                    opacity: isFiltered ? 0.8 : 1,
+                                                }}
+                                                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                                                drag={!readOnly && !isLayoutLocked}
+                                                dragConstraints={blueprintRef}
+                                                dragElastic={0}
+                                                dragMomentum={false}
+                                                dragSnapToOrigin
+                                                onPointerDown={(e) => {
+                                                    e.stopPropagation();
+                                                    if (readOnly) {
+                                                        setTooltipUnit(unit);
+                                                    } else {
+                                                        setSelectedItem({ kind: "unit", id: unit.id });
+                                                    }
+                                                }}
+                                                onDragStart={(event, info) => {
+                                                     const pointer = getClientPointFromDragEvent(event) ?? info.point;
+                                                     setSelectedItem({ kind: "unit", id: unit.id });
+                                                     setDraggingUnitId(unit.id);
+                                                     setIsTrashHot(false);
+                                                     setDragPointerAnchor("unit", unit.id, unit.x, unit.y, pointer.x, pointer.y);
+                                                     setDragPlacementIndicator("unit", unit.id, true, false);
+                                                 }}
+                                                 onDrag={(event, info) => {
+                                                     const pointer = getClientPointFromDragEvent(event) ?? info.point;
+                                                     const placement = resolveDragPlacement(
+                                                         "unit",
+                                                         unit.id,
+                                                         unit.w,
+                                                         unit.h,
+                                                         pointer.x,
+                                                         pointer.y,
+                                                         unit.x,
+                                                         unit.y
+                                                     );
+                                                     updateTrashHotState(pointer.x, pointer.y);
+                                                     setDragPlacementIndicator("unit", unit.id, placement.isValid, placement.isMagnetic);
+                                                 }}
+                                                onDragEnd={(event, info) => {
+                                                    const pointer = getClientPointFromDragEvent(event) ?? info.point;
+                                                    const shouldDelete = isPointerNearTrash(pointer.x, pointer.y);
+                                                    if (shouldDelete) {
+                                                        requestDeleteItem({ kind: "unit", id: unit.id }, "trash");
+                                                        setDragPlacement(null);
+                                                        setDraggingUnitId(current => current === unit.id ? null : current);
+                                                        clearDragPointerAnchor("unit", unit.id);
+                                                        setIsTrashHot(false);
+                                                        return;
                                                     }
 
-                                                    return prevUnits.map((existingUnit) =>
-                                                        existingUnit.id === unit.id
-                                                            ? {
-                                                                ...existingUnit,
-                                                                x: placement.x,
-                                                                y: placement.y,
+                                                    flushSync(() => {
+                                                        setUnits(prevUnits => {
+                                                            const currentUnit = prevUnits.find((u) => u.id === unit.id);
+                                                            if (!currentUnit) return prevUnits;
+
+                                                            const placement = resolveDragPlacement(
+                                                                "unit",
+                                                                currentUnit.id,
+                                                                currentUnit.w,
+                                                                currentUnit.h,
+                                                                pointer.x,
+                                                                pointer.y,
+                                                                currentUnit.x,
+                                                                currentUnit.y
+                                                            );
+                                                            if (!placement.isValid) {
+                                                                triggerOverlapToast();
+                                                                return prevUnits;
                                                             }
-                                                            : existingUnit
-                                                    );
-                                                });
-                                            });
-                                            setDragPlacement(null);
-                                            setDraggingUnitId(current => current === unit.id ? null : current);
-                                            clearDragPointerAnchor("unit", unit.id);
-                                            setIsTrashHot(false);
-                                        }}
-                                    >
-                                        <div className={`relative h-full w-full overflow-hidden rounded-[1px] select-none ${isDark ? 'bg-neutral-800 shadow-sm' : 'bg-white shadow-sm'}`}>
-                                            <div className="absolute inset-0" style={{ transform: `scaleX(${unit.flipX ? -1 : 1}) scaleY(${unit.flipY ? -1 : 1})` }}>
-                                                <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-zinc-400'}`}></div>
-                                                <div className={`absolute inset-[4px] border ${isDark ? 'border-neutral-600' : 'border-zinc-300'}`}></div>
 
-                                                <div className={`absolute bottom-0 left-1/2 z-10 h-[6px] w-1/3 -translate-x-1/2 border-x-2 ${isDark ? 'border-neutral-500 bg-neutral-800' : 'border-zinc-400 bg-zinc-100'}`}></div>
+                                                            return prevUnits.map((existingUnit) =>
+                                                                existingUnit.id === unit.id
+                                                                    ? {
+                                                                        ...existingUnit,
+                                                                        x: placement.x,
+                                                                        y: placement.y,
+                                                                    }
+                                                                    : existingUnit
+                                                            );
+                                                        });
+                                                    });
+                                                    setDragPlacement(null);
+                                                    setDraggingUnitId(current => current === unit.id ? null : current);
+                                                    clearDragPointerAnchor("unit", unit.id);
+                                                    setIsTrashHot(false);
+                                                }}
+                                            >
+                                                <div className={`relative h-full w-full overflow-hidden rounded-[1px] select-none transition-all duration-300 ease-out ${
+                                                    isDark 
+                                                        ? (isFiltered ? 'bg-[#161722] border border-zinc-700/80 shadow-none' : 'bg-neutral-800 shadow-sm') 
+                                                        : (isFiltered ? 'bg-zinc-200/90 border border-zinc-400 shadow-none' : 'bg-white shadow-sm')
+                                                }`}>
+                                                    <div className="absolute inset-0 transition-opacity duration-300" style={{ transform: `scaleX(${unit.flipX ? -1 : 1}) scaleY(${unit.flipY ? -1 : 1})` }}>
+                                                        <div className={`absolute inset-0 border-[2px] transition-colors duration-300 ${
+                                                            isFiltered
+                                                                ? (isDark ? 'border-zinc-700/70' : 'border-zinc-400')
+                                                                : (isDark ? 'border-neutral-500' : 'border-zinc-400')
+                                                        }`}></div>
+                                                        <div className={`absolute inset-[4px] border transition-colors duration-300 ${
+                                                            isFiltered
+                                                                ? (isDark ? 'border-zinc-800' : 'border-zinc-300')
+                                                                : (isDark ? 'border-neutral-600' : 'border-zinc-300')
+                                                        }`}></div>
 
-                                                <div className={`absolute left-1/4 right-1/4 top-0 z-10 flex h-[6px] items-center justify-center border-x ${isDark ? 'border-neutral-500 bg-neutral-800' : 'border-zinc-400 bg-zinc-100'}`}>
-                                                    <div className={`h-px w-full ${isDark ? 'bg-neutral-600' : 'bg-zinc-300'}`}></div>
+                                                        <div className={`absolute bottom-0 left-1/2 z-10 h-[6px] w-1/3 -translate-x-1/2 border-x-2 transition-colors duration-300 ${
+                                                            isFiltered
+                                                                ? (isDark ? 'border-zinc-700 bg-zinc-800' : 'border-zinc-400 bg-zinc-200')
+                                                                : (isDark ? 'border-neutral-500 bg-neutral-800' : 'border-zinc-400 bg-zinc-100')
+                                                        }`}></div>
+
+                                                        <div className={`absolute left-1/4 right-1/4 top-0 z-10 flex h-[6px] items-center justify-center border-x transition-colors duration-300 ${
+                                                            isFiltered
+                                                                ? (isDark ? 'border-zinc-700 bg-zinc-800' : 'border-zinc-400 bg-zinc-200')
+                                                                : (isDark ? 'border-neutral-500 bg-neutral-800' : 'border-zinc-400 bg-zinc-100')
+                                                        }`}>
+                                                            <div className={`h-px w-full transition-colors duration-300 ${isFiltered ? (isDark ? 'bg-zinc-700' : 'bg-zinc-400') : (isDark ? 'bg-neutral-600' : 'bg-zinc-300')}`}></div>
+                                                        </div>
+
+                                                        <div className={`absolute bottom-1/4 left-0 top-1/4 z-10 flex w-[6px] flex-col justify-center border-y transition-colors duration-300 ${
+                                                            isFiltered
+                                                                ? (isDark ? 'border-zinc-700 bg-zinc-800' : 'border-zinc-400 bg-zinc-200')
+                                                                : (isDark ? 'border-neutral-500 bg-neutral-800' : 'border-zinc-400 bg-zinc-100')
+                                                        }`}>
+                                                            <div className={`mx-auto h-full w-px transition-colors duration-300 ${isFiltered ? (isDark ? 'bg-zinc-700' : 'bg-zinc-400') : (isDark ? 'bg-neutral-500' : 'bg-zinc-400')}`}></div>
+                                                        </div>
+                                                        <div className={`absolute bottom-1/4 right-0 top-1/4 z-10 flex w-[6px] flex-col justify-center border-y transition-colors duration-300 ${
+                                                            isFiltered
+                                                                ? (isDark ? 'border-zinc-700 bg-zinc-800' : 'border-zinc-400 bg-zinc-200')
+                                                                : (isDark ? 'border-neutral-500 bg-neutral-800' : 'border-zinc-400 bg-zinc-100')
+                                                        }`}>
+                                                            <div className={`mx-auto h-full w-px transition-colors duration-300 ${isFiltered ? (isDark ? 'bg-zinc-700' : 'bg-zinc-400') : (isDark ? 'bg-neutral-500' : 'bg-zinc-400')}`}></div>
+                                                        </div>
+
+                                                        <div className={`absolute right-[8px] top-[8px] size-5 border transition-colors duration-300 ${
+                                                            isFiltered
+                                                                ? (isDark ? 'border-zinc-800 bg-zinc-900/70' : 'border-zinc-300 bg-zinc-100/70')
+                                                                : (isDark ? 'border-neutral-600 bg-neutral-700/70' : 'border-zinc-300 bg-zinc-50/70')
+                                                        }`}></div>
+                                                        <div className={`absolute bottom-[8px] left-[8px] flex size-4 flex-col gap-0.5 border p-0.5 transition-colors duration-300 ${
+                                                            isFiltered
+                                                                ? (isDark ? 'border-zinc-800 bg-zinc-900/70' : 'border-zinc-300 bg-zinc-100/70')
+                                                                : (isDark ? 'border-neutral-600 bg-neutral-700/70' : 'border-zinc-300 bg-zinc-50/70')
+                                                        }`}>
+                                                            <div className={`h-full w-full border transition-colors duration-300 ${isFiltered ? (isDark ? 'border-zinc-800' : 'border-zinc-300') : (isDark ? 'border-neutral-700' : 'border-zinc-400/70')}`}></div>
+                                                        </div>
+                                                        <div className={`absolute bottom-[8px] right-[8px] flex size-4 flex-col gap-0.5 border p-0.5 transition-colors duration-300 ${
+                                                            isFiltered
+                                                                ? (isDark ? 'border-zinc-800 bg-zinc-900/70' : 'border-zinc-300 bg-zinc-100/70')
+                                                                : (isDark ? 'border-neutral-600 bg-neutral-700/70' : 'border-zinc-300 bg-zinc-50/70')
+                                                        }`}>
+                                                            <div className={`h-full w-full border transition-colors duration-300 ${isFiltered ? (isDark ? 'border-zinc-800' : 'border-zinc-300') : (isDark ? 'border-neutral-700' : 'border-zinc-400/70')}`}></div>
+                                                        </div>
+
+                                                        <div
+                                                            className="absolute inset-[8px] opacity-[0.16]"
+                                                            style={{ backgroundImage: isDark ? 'linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)' : 'linear-gradient(rgba(148,163,184,0.45) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.45) 1px, transparent 1px)', backgroundSize: '10px 10px' }}
+                                                        ></div>
+                                                    </div>
+
+                                                    <div className={`absolute inset-0 transition-all duration-300 ease-out ${
+                                                        isFiltered
+                                                            ? (isDark ? 'bg-zinc-800/40 opacity-100' : 'bg-zinc-300/40 opacity-100')
+                                                            : `opacity-[0.18] group-hover:opacity-[0.3] ${
+                                                                unit.status === 'occupied' ? 'bg-blue-500' :
+                                                                unit.status === 'vacant' ? 'bg-emerald-500' :
+                                                                unit.status === 'maintenance' ? 'bg-red-500' : 'bg-amber-500'
+                                                            }`
+                                                    }`}></div>
+
+                                                    <div className="absolute inset-0 flex flex-col items-center justify-center p-2 z-20">
+                                                        <div className={`size-2.5 rounded-full mb-2 transition-all duration-300 ease-out ${
+                                                            isFiltered
+                                                                ? (isDark ? 'bg-zinc-500 border border-zinc-400/40 shadow-none' : 'bg-zinc-400 border border-zinc-500/40 shadow-none')
+                                                                : unit.status === 'occupied' ? 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.9)]'
+                                                                : unit.status === 'vacant' ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.9)]'
+                                                                : unit.status === 'maintenance' ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.9)]'
+                                                                : 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.9)]'
+                                                        }`}></div>
+
+                                                        <h4 className={`text-xs font-black drop-shadow-sm transition-colors duration-300 ease-out ${
+                                                            isFiltered
+                                                                ? (isDark ? 'text-zinc-300' : 'text-zinc-600')
+                                                                : (isDark ? 'text-neutral-200' : 'text-zinc-700')
+                                                        }`}>{unit.name}</h4>
+
+                                                        {unit.tenant && (
+                                                            <p className={`mt-1 font-mono text-[10px] transition-colors duration-300 ease-out ${
+                                                                isFiltered
+                                                                    ? (isDark ? 'text-zinc-400' : 'text-zinc-500')
+                                                                    : (isDark ? 'text-neutral-400' : 'text-zinc-500')
+                                                            }`}>{unit.tenant}</p>
+                                                        )}
+                                                        {unit.status === 'vacant' && (
+                                                            <span className={`mt-1 rounded border px-1.5 text-[9px] font-black uppercase tracking-wider transition-all duration-300 ease-out ${
+                                                                isFiltered
+                                                                    ? (isDark ? 'border-zinc-700 bg-zinc-800/90 text-zinc-400' : 'border-zinc-400 bg-zinc-300 text-zinc-600')
+                                                                    : (isDark ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400' : 'border-emerald-400/60 bg-emerald-100/90 text-emerald-800')
+                                                            }`}>Vacant</span>
+                                                        )}
+                                                        {unit.status === 'occupied' && (
+                                                            <span className={`mt-1 rounded border px-1.5 text-[9px] font-black uppercase tracking-wider transition-all duration-300 ease-out ${
+                                                                isFiltered
+                                                                    ? (isDark ? 'border-zinc-700 bg-zinc-800/90 text-zinc-400' : 'border-zinc-400 bg-zinc-300 text-zinc-600')
+                                                                    : (isDark ? 'border-blue-500/30 bg-blue-500/10 text-blue-400' : 'border-blue-400/60 bg-blue-100/90 text-blue-800')
+                                                            }`}>Occupied</span>
+                                                        )}
+                                                        {unit.status === 'maintenance' && (
+                                                            <span className={`mt-1 rounded border px-1.5 text-[9px] font-black uppercase tracking-wider transition-all duration-300 ease-out ${
+                                                                isFiltered
+                                                                    ? (isDark ? 'border-zinc-700 bg-zinc-800/90 text-zinc-400' : 'border-zinc-400 bg-zinc-300 text-zinc-600')
+                                                                    : (isDark ? 'border-red-500/30 bg-red-500/10 text-red-400' : 'border-red-400/60 bg-red-100/90 text-red-800')
+                                                            }`}>Maint</span>
+                                                        )}
+                                                        {unit.status === 'neardue' && (
+                                                            <span className={`mt-1 rounded border px-1.5 text-[9px] font-black uppercase tracking-wider transition-all duration-300 ease-out ${
+                                                                isFiltered
+                                                                    ? (isDark ? 'border-zinc-700 bg-zinc-800/90 text-zinc-400' : 'border-zinc-400 bg-zinc-300 text-zinc-600')
+                                                                    : (isDark ? 'border-amber-500/30 bg-amber-500/10 text-amber-400' : 'border-amber-400/60 bg-amber-100/90 text-amber-800')
+                                                            }`}>Near Due</span>
+                                                        )}
+                                                    </div>
+
+                                                    <div className={`absolute bottom-0 right-0 size-3 cursor-nwse-resize rounded-br-sm border-b-2 border-r-2 opacity-0 group-hover:opacity-100 ${isDark ? 'border-neutral-500' : 'border-zinc-400'}`}></div>
                                                 </div>
-
-                                                <div className={`absolute bottom-1/4 left-0 top-1/4 z-10 flex w-[6px] flex-col justify-center border-y ${isDark ? 'border-neutral-500 bg-neutral-800' : 'border-zinc-400 bg-zinc-100'}`}>
-                                                    <div className={`mx-auto h-full w-px ${isDark ? 'bg-neutral-500' : 'bg-zinc-400'}`}></div>
-                                                </div>
-                                                <div className={`absolute bottom-1/4 right-0 top-1/4 z-10 flex w-[6px] flex-col justify-center border-y ${isDark ? 'border-neutral-500 bg-neutral-800' : 'border-zinc-400 bg-zinc-100'}`}>
-                                                    <div className={`mx-auto h-full w-px ${isDark ? 'bg-neutral-500' : 'bg-zinc-400'}`}></div>
-                                                </div>
-
-                                                <div className={`absolute right-[8px] top-[8px] size-5 border ${isDark ? 'border-neutral-600 bg-neutral-700/70' : 'border-zinc-300 bg-zinc-50/70'}`}></div>
-                                                <div className={`absolute bottom-[8px] left-[8px] flex size-4 flex-col gap-0.5 border p-0.5 ${isDark ? 'border-neutral-600 bg-neutral-700/70' : 'border-zinc-300 bg-zinc-50/70'}`}>
-                                                    <div className={`h-full w-full border ${isDark ? 'border-neutral-700' : 'border-zinc-400/70'}`}></div>
-                                                </div>
-                                                <div className={`absolute bottom-[8px] right-[8px] flex size-4 flex-col gap-0.5 border p-0.5 ${isDark ? 'border-neutral-600 bg-neutral-700/70' : 'border-zinc-300 bg-zinc-50/70'}`}>
-                                                    <div className={`h-full w-full border ${isDark ? 'border-neutral-700' : 'border-zinc-400/70'}`}></div>
-                                                </div>
-
-                                                <div
-                                                    className="absolute inset-[8px] opacity-[0.16]"
-                                                    style={{ backgroundImage: isDark ? 'linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)' : 'linear-gradient(rgba(148,163,184,0.45) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.45) 1px, transparent 1px)', backgroundSize: '10px 10px' }}
-                                                ></div>
-                                            </div>
-
-                                            <div className={`absolute inset-0 opacity-[0.18] group-hover:opacity-[0.3] transition-opacity ${
-                                                unit.status === 'occupied' ? 'bg-blue-500' :
-                                                unit.status === 'vacant' ? 'bg-emerald-500' :
-                                                unit.status === 'maintenance' ? 'bg-red-500' : 'bg-amber-500'
-                                            }`}></div>
-
-                                            <div className="absolute inset-0 flex flex-col items-center justify-center p-2 z-20">
-                                                <div className={`size-2.5 rounded-full mb-2 ${
-                                                    unit.status === 'occupied' ? 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.9)]' :
-                                                    unit.status === 'vacant' ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.9)]' :
-                                                    unit.status === 'maintenance' ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.9)]' :
-                                                    'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.9)]'
-                                                }`}></div>
-
-                                                <h4 className={`text-xs font-black drop-shadow-sm ${isDark ? 'text-neutral-200' : 'text-zinc-700'}`}>{unit.name}</h4>
-
-                                                {unit.status !== 'vacant' && unit.tenant && (
-                                                    <p className={`mt-1 font-mono text-[10px] ${isDark ? 'text-neutral-400' : 'text-zinc-500'}`}>{unit.tenant}</p>
+                                                {draggingUnitId === unit.id && dragPlacement?.kind === "unit" && dragPlacement.id === unit.id && (
+                                                    <>
+                                                        <div className={`pointer-events-none absolute inset-0 rounded-[1px] ${dragPlacement.isValid ? 'bg-emerald-500/12' : 'bg-red-500/18'}`}></div>
+                                                        {(!dragPlacement.isValid || dragPlacement.isMagnetic) && (
+                                                            <span className={`pointer-events-none absolute left-2 top-2 z-40 rounded px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${dragPlacement.isValid ? 'border border-emerald-400/40 bg-emerald-500/15 text-emerald-300' : 'border border-red-400/40 bg-red-500/15 text-red-300'}`}>
+                                                                {dragPlacement.isValid ? 'Snap' : 'Blocked'}
+                                                            </span>
+                                                        )}
+                                                    </>
                                                 )}
-                                                {unit.status === 'vacant' && (
-                                                    <span className={`mt-1 rounded border px-1.5 text-[9px] font-black uppercase tracking-wider ${isDark ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400' : 'border-emerald-400/60 bg-emerald-100/90 text-emerald-800'}`}>Vacant</span>
-                                                )}
-                                                {unit.status === 'maintenance' && (
-                                                    <span className={`mt-1 rounded border px-1.5 text-[9px] font-black uppercase tracking-wider ${isDark ? 'border-red-500/30 bg-red-500/10 text-red-400' : 'border-red-400/60 bg-red-100/90 text-red-800'}`}>Maint</span>
-                                                )}
-                                            </div>
+                                            </motion.div>
+                                        );
+                                    })}
 
-                                            <div className={`absolute bottom-0 right-0 size-3 cursor-nwse-resize rounded-br-sm border-b-2 border-r-2 opacity-0 group-hover:opacity-100 ${isDark ? 'border-neutral-500' : 'border-zinc-400'}`}></div>
-                                        </div>
-                                        {draggingUnitId === unit.id && dragPlacement?.kind === "unit" && dragPlacement.id === unit.id && (
-                                            <>
-                                                <div className={`pointer-events-none absolute inset-0 rounded-[1px] ${dragPlacement.isValid ? 'bg-emerald-500/12' : 'bg-red-500/18'}`}></div>
-                                                {(!dragPlacement.isValid || dragPlacement.isMagnetic) && (
-                                                    <span className={`pointer-events-none absolute left-2 top-2 z-40 rounded px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${dragPlacement.isValid ? 'border border-emerald-400/40 bg-emerald-500/15 text-emerald-300' : 'border border-red-400/40 bg-red-500/15 text-red-300'}`}>
-                                                        {dragPlacement.isValid ? 'Snap' : 'Blocked'}
-                                                    </span>
-                                                )}
-                                            </>
+                                    <AnimatePresence>
+                                        {readOnly && tooltipUnit && (
+                                            <UnitTooltip 
+                                                unit={tooltipUnit} 
+                                                onClose={() => setTooltipUnit(null)} 
+                                                isDark={isDark}
+                                                onAction={(action: "transfer" | "complain") => {
+                                                    if (action === "transfer") {
+                                                        setTransferModalUnit(tooltipUnit);
+                                                        setTransferReason("");
+                                                        setTransferError(null);
+                                                        setTransferSuccess(false);
+                                                    } else if (action === "complain") {
+                                                        setComplaintUnit(tooltipUnit);
+                                                        setIsComplaintModalOpen(true);
+                                                    }
+                                                }}
+                                            />
                                         )}
-                                    </motion.div>
-                                ))}
-
-                                <AnimatePresence>
-                                    {readOnly && tooltipUnit && (
-                                        <UnitTooltip 
-                                            unit={tooltipUnit} 
-                                            onClose={() => setTooltipUnit(null)} 
-                                            isDark={isDark}
-                                            onAction={(action: "transfer" | "complain") => {
-                                                if (action === "transfer") {
-                                                    setTransferModalUnit(tooltipUnit);
-                                                    setTransferReason("");
-                                                    setTransferError(null);
-                                                    setTransferSuccess(false);
-                                                } else if (action === "complain") {
-                                                    setComplaintUnit(tooltipUnit);
-                                                    setIsComplaintModalOpen(true);
-                                                }
-                                            }}
-                                        />
-                                    )}
-                                </AnimatePresence>
+                                    </AnimatePresence>
 
                             </div>
                         </motion.div>
@@ -3715,14 +3873,17 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                     ></div>
 
                                                     {units.map((unit) => {
-                                                        if (!statusFilters.includes(unit.status)) return null;
+                                                        const isMinimapFiltered = !statusFilters.includes(unit.status);
                                                         return (
                                                             <div
                                                                 key={`minimap-${unit.id}`}
-                                                                className={`absolute rounded-[1px] ${
-                                                                    unit.status === 'occupied' ? 'bg-blue-500/85' :
-                                                                    unit.status === 'vacant' ? 'bg-emerald-500/85' :
-                                                                    unit.status === 'maintenance' ? 'bg-red-500/85' : 'bg-amber-500/85'
+                                                                className={`absolute rounded-[1px] transition-all ${
+                                                                    isMinimapFiltered
+                                                                        ? (isDark ? 'bg-zinc-600 border border-zinc-500/40' : 'bg-zinc-400 border border-zinc-500/40')
+                                                                        : unit.status === 'occupied' ? 'bg-blue-500/85'
+                                                                        : unit.status === 'vacant' ? 'bg-emerald-500/85'
+                                                                        : unit.status === 'maintenance' ? 'bg-red-500/85'
+                                                                        : 'bg-amber-500/85'
                                                                 }`}
                                                                 style={{
                                                                     left: `${((BLUEPRINT_MARGIN + unit.x) / WORLD_WIDTH) * 100}%`,
@@ -3774,19 +3935,44 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                             </div>
                                         </div>
 
-                                        <div className="flex flex-col bg-card/95 border border-border rounded-lg shadow-xl overflow-hidden backdrop-blur">
-                                            <button onClick={handleZoomIn} className="p-2 hover:bg-muted text-zinc-600 transition-colors border-b border-border" title="Zoom In"><span className="material-icons-round text-lg">add</span></button>
-                                            <button onClick={handleZoomOut} className="p-2 hover:bg-muted text-zinc-600 transition-colors border-b border-border" title="Zoom Out"><span className="material-icons-round text-lg">remove</span></button>
-                                            <button onClick={handleFit} className="p-2 hover:bg-muted text-zinc-600 transition-colors border-b border-border" title="Fit to Screen"><span className="material-icons-round text-lg">aspect_ratio</span></button>
+                                        <div className={`flex flex-col rounded-2xl shadow-2xl p-1.5 backdrop-blur-xl border ${isDark ? 'bg-zinc-900/90 border-white/10' : 'bg-card/95 border-border'}`}>
+                                            <button 
+                                                onClick={handleZoomIn} 
+                                                className={`size-10 rounded-xl flex items-center justify-center transition-all ${isDark ? 'text-white/70 hover:text-white hover:bg-white/10 active:scale-95' : 'text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100 active:scale-95'}`} 
+                                                title="Zoom In"
+                                            >
+                                                <span className="material-icons-round text-xl">add</span>
+                                            </button>
+                                            <button 
+                                                onClick={handleZoomOut} 
+                                                className={`size-10 rounded-xl flex items-center justify-center transition-all ${isDark ? 'text-white/70 hover:text-white hover:bg-white/10 active:scale-95' : 'text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100 active:scale-95'}`} 
+                                                title="Zoom Out"
+                                            >
+                                                <span className="material-icons-round text-xl">remove</span>
+                                            </button>
+                                            <button 
+                                                onClick={handleFit} 
+                                                className={`size-10 rounded-xl flex items-center justify-center transition-all ${isDark ? 'text-white/70 hover:text-white hover:bg-white/10 active:scale-95' : 'text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100 active:scale-95'}`} 
+                                                title="Fit to Screen"
+                                            >
+                                                <span className="material-icons-round text-xl">aspect_ratio</span>
+                                            </button>
                                             {!readOnly && (
-                                                <button
-                                                    onClick={performUndo}
-                                                    disabled={!undoAvailable}
-                                                    className={`p-2 transition-colors ${undoAvailable ? 'hover:bg-muted text-zinc-600' : 'text-zinc-300 cursor-not-allowed'}`}
-                                                    title="Undo (Ctrl+Z)"
-                                                >
-                                                    <span className="material-icons-round text-lg">undo</span>
-                                                </button>
+                                                <>
+                                                    <div className={`h-px my-0.5 mx-1.5 ${isDark ? 'bg-white/10' : 'bg-zinc-200'}`} />
+                                                    <button
+                                                        onClick={performUndo}
+                                                        disabled={!undoAvailable}
+                                                        className={`size-10 rounded-xl flex items-center justify-center transition-all ${
+                                                            undoAvailable
+                                                                ? (isDark ? 'text-white/70 hover:text-white hover:bg-white/10 active:scale-95' : 'text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100 active:scale-95')
+                                                                : (isDark ? 'text-white/20 cursor-not-allowed' : 'text-zinc-300 cursor-not-allowed')
+                                                        }`}
+                                                        title={undoAvailable ? "Undo (Ctrl+Z)" : "Nothing to undo"}
+                                                    >
+                                                        <span className="material-icons-round text-xl">undo</span>
+                                                    </button>
+                                                </>
                                             )}
                                         </div>
                                     </div>
@@ -3873,43 +4059,43 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                 >
                                     <button 
                                         onClick={() => setIsLayoutLocked(!isLayoutLocked)}
-                                        className={`size-10 rounded-xl flex items-center justify-center transition-all ${isLayoutLocked ? 'bg-amber-500 text-zinc-900 shadow-lg shadow-amber-500/20' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                                        className={`size-10 rounded-xl flex items-center justify-center transition-all ${isLayoutLocked ? 'bg-amber-500 text-zinc-900 shadow-lg shadow-amber-500/20' : 'text-white/70 hover:text-white hover:bg-white/10 active:scale-95'}`}
                                         title={isLayoutLocked ? "Unlock Layout" : "Lock Layout (L)"}
                                     >
                                         <span className="material-icons-round text-xl">{isLayoutLocked ? 'lock' : 'lock_open'}</span>
                                     </button>
                                     <button 
                                         onClick={toggleFullscreen}
-                                        className={`size-10 rounded-xl flex items-center justify-center transition-all ${isCanvasFullscreen ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                                        className={`size-10 rounded-xl flex items-center justify-center transition-all ${isCanvasFullscreen ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-white/70 hover:text-white hover:bg-white/10 active:scale-95'}`}
                                         title="Toggle Canvas Fullscreen (F)"
                                     >
                                         <span className="material-icons-round text-xl">{isCanvasFullscreen ? 'fullscreen_exit' : 'fullscreen'}</span>
                                     </button>
-                                    <div className="h-px bg-white/10 my-1 mx-2" />
+                                    <div className="h-px bg-white/10 my-1 mx-1.5" />
                                     <button 
                                         onClick={() => setShowHotkeys(true)}
-                                        className="size-10 rounded-xl flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition-all"
+                                        className="size-10 rounded-xl flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 active:scale-95 transition-all"
                                         title="Hotkeys Hint (?)"
                                     >
                                         <span className="material-icons-round text-xl">help_outline</span>
                                     </button>
                                     <button 
                                         onClick={() => setIsSidebarVisible(!isSidebarVisible)}
-                                        className={`size-10 rounded-xl flex items-center justify-center transition-all ${isSidebarVisible ? 'text-white/40 hover:text-white hover:bg-white/5' : 'bg-primary text-white shadow-lg shadow-primary/20'}`}
+                                        className={`size-10 rounded-xl flex items-center justify-center transition-all ${isSidebarVisible ? 'text-white/70 hover:text-white hover:bg-white/10 active:scale-95' : 'bg-primary text-white shadow-lg shadow-primary/20'}`}
                                         title={isSidebarVisible ? "Hide Sidebar (S)" : "Show Sidebar (S)"}
                                     >
                                         <span className="material-icons-round text-xl">{isSidebarVisible ? 'dock' : 'view_sidebar'}</span>
                                     </button>
-                                    <div className="h-px bg-white/10 my-1 mx-2" />
+                                    <div className="h-px bg-white/10 my-1 mx-1.5" />
                                 </motion.div>
                             )}
                             
                             <button 
                                 onClick={() => setIsHUDHidden(!isHUDHidden)}
-                                className={`size-10 rounded-xl flex items-center justify-center transition-all ${isHUDHidden ? 'bg-primary text-white shadow-lg shadow-primary/20 animate-pulse' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
-                                title={isHUDHidden ? "Show HUD" : "Hide HUD (H)"}
+                                className={`size-10 rounded-xl flex items-center justify-center transition-all ${isHUDHidden ? 'bg-primary text-white shadow-lg shadow-primary/20 animate-pulse' : 'text-white/70 hover:text-white hover:bg-white/10 active:scale-95'}`}
+                                title={isHUDHidden ? "Show Interface (H)" : "Hide Interface (H)"}
                             >
-                                <span className="material-icons-round text-xl">{isHUDHidden ? 'visibility' : 'visibility_off'}</span>
+                                <span className="material-icons-round text-xl">{isHUDHidden ? 'visibility_off' : 'visibility'}</span>
                             </button>
                         </div>
                     </div>
@@ -4235,6 +4421,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                     onClose={() => setIsHistoryModalOpen(false)}
                     unit={selectedUnit}
                     initialTab={historyInitialTab}
+                    onOpenLease={() => setIsLeasePreviewModalOpen(true)}
                 />
 
                 <LeasePreviewModal
@@ -4482,17 +4669,10 @@ const UnitDetailsPanel = ({
             return;
         }
 
-        if (action === "view-lease") {
+        if (action === "view-lease" || action === "renew-lease") {
             if (onOpenLease) {
                 onOpenLease();
-            } else {
-                window.location.href = `/landlord/leases?unitId=${unit.id}`;
             }
-            return;
-        }
-
-        if (action === "renew-lease") {
-            window.location.href = `/landlord/leases?unitId=${unit.id}&action=renew`;
             return;
         }
 

@@ -9,13 +9,15 @@ interface UnitHistoryModalProps {
     onClose: () => void;
     unit: Unit | null;
     initialTab?: "tenants" | "maintenance";
+    onOpenLease?: () => void;
 }
 
 export const UnitHistoryModal = ({
     isOpen,
     onClose,
     unit,
-    initialTab = "tenants"
+    initialTab = "tenants",
+    onOpenLease,
 }: UnitHistoryModalProps) => {
     const [activeTab, setActiveTab] = useState<"tenants" | "maintenance">(initialTab);
     const { resolvedTheme } = useTheme();
@@ -116,8 +118,23 @@ export const UnitHistoryModal = ({
                                                 </span>
                                             </div>
                                             <div className="flex items-center justify-between pt-3 border-t border-border/50">
-                                                <span className="text-xs text-muted-foreground">Monthly Rent</span>
-                                                <span className="font-mono font-black text-primary">₱{item.rent.toLocaleString()}</span>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-xs text-muted-foreground">Monthly Rent</span>
+                                                    <span className="font-mono font-black text-primary">₱{item.rent.toLocaleString()}</span>
+                                                </div>
+                                                {onOpenLease && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            onClose();
+                                                            onOpenLease();
+                                                        }}
+                                                        className="text-[10px] font-black text-primary uppercase tracking-wider hover:underline flex items-center gap-1"
+                                                    >
+                                                        <span className="material-icons-round text-xs">visibility</span>
+                                                        View Lease
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     ))}

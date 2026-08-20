@@ -156,40 +156,53 @@ export async function GET(request: NextRequest) {
     const unitIds = (units ?? []).map(u => u.id);
     
     let positions: UnitMapPositionRow[] = [];
+    let leaseData: Record<string, { tenant_name: string | null; lease_start: string | null; lease_end: string | null; tenant_avatar_url: string | null; tenant_avatar_bg_color: string | null }> = {};
+    let maintenanceData: Record<string, { maintenance_title: string | null; maintenance_description: string | null; maintenance_created_at: string | null; maintenance_status: string | null }> = {};
+    let applicationCounts: Record<string, number> = {};
 
     if (unitIds.length > 0) {
-        const { data: posData, error: posError } = await (supabase
-            .from("unit_map_positions" as any)
-            .select("unit_id, floor_key, x, y, w, h")
-            .in("unit_id", unitIds) as any);
+        const [
+            { data: posData, error: posError },
+            { data: leases, error: leasesError },
+            { data: maintenanceRequests, error: maintenanceError },
+            { data: apps, error: appsError }
+        ] = await Promise.all([
+            supabase
+                .from("unit_map_positions" as any)
+                .select("unit_id, floor_key, x, y, w, h")
+                .in("unit_id", unitIds) as any,
+            supabase
+                .from("leases")
+                .select(`
+                    unit_id,
+                    start_date,
+                    end_date,
+                    profiles!leases_tenant_id_fkey(full_name, avatar_url, avatar_bg_color)
+                `)
+                .in("unit_id", unitIds)
+                .eq("landlord_id", userId)
+                .in("status", ["active", "pending_landlord_signature", "pending_tenant_signature"]),
+            supabase
+                .from("maintenance_requests")
+                .select("unit_id, title, description, status, created_at")
+                .in("unit_id", unitIds)
+                .eq("landlord_id", userId)
+                .in("status", ["open", "assigned", "in_progress"]),
+            supabase
+                .from("applications")
+                .select("unit_id, id")
+                .in("unit_id", unitIds)
+                .in("status", ["pending", "reviewing"]) as any,
+        ]);
 
         if (posError) {
             return NextResponse.json({ error: "Failed to fetch positions" }, { status: 500 });
         }
         positions = posData ?? [];
-    }
-
-    // Fetch active leases for units in this property (owned by the landlord)
-    let leaseData: Record<string, { tenant_name: string | null; lease_start: string | null; lease_end: string | null; tenant_avatar_url: string | null; tenant_avatar_bg_color: string | null }> = {};
-    
-    if (unitIds.length > 0) {
-        const { data: leases, error: leasesError } = await supabase
-            .from("leases")
-            .select(`
-                unit_id,
-                start_date,
-                end_date,
-                profiles!leases_tenant_id_fkey(full_name, avatar_url, avatar_bg_color)
-            `)
-            .in("unit_id", unitIds)
-            .eq("landlord_id", userId)
-            .in("status", ["active", "pending_landlord_signature", "pending_tenant_signature"]);
 
         if (leasesError) {
             return NextResponse.json({ error: "Failed to fetch lease data" }, { status: 500 });
         }
-
-        // Build lease lookup by unit_id
         for (const lease of (leases ?? []) as any[]) {
             leaseData[lease.unit_id] = {
                 tenant_name: lease.profiles?.full_name ?? null,
@@ -199,24 +212,10 @@ export async function GET(request: NextRequest) {
                 lease_end: lease.end_date ?? null,
             };
         }
-    }
-
-    // Fetch maintenance requests for units in this property
-    let maintenanceData: Record<string, { maintenance_title: string | null; maintenance_description: string | null; maintenance_created_at: string | null; maintenance_status: string | null }> = {};
-    
-    if (unitIds.length > 0) {
-        const { data: maintenanceRequests, error: maintenanceError } = await supabase
-            .from("maintenance_requests")
-            .select("unit_id, title, description, status, created_at")
-            .in("unit_id", unitIds)
-            .eq("landlord_id", userId)
-            .in("status", ["open", "assigned", "in_progress"]);
 
         if (maintenanceError) {
             return NextResponse.json({ error: "Failed to fetch maintenance data" }, { status: 500 });
         }
-
-        // Build maintenance lookup by unit_id (use latest if multiple)
         for (const request of (maintenanceRequests ?? []) as any[]) {
             maintenanceData[request.unit_id] = {
                 maintenance_title: request.title ?? null,
@@ -225,17 +224,7 @@ export async function GET(request: NextRequest) {
                 maintenance_status: request.status ?? null,
             };
         }
-    }
 
-    // Fetch pending application counts for units
-    let applicationCounts: Record<string, number> = {};
-    if (unitIds.length > 0) {
-        const { data: apps, error: appsError } = await (supabase
-            .from("applications")
-            .select("unit_id, id")
-            .in("unit_id", unitIds)
-            .in("status", ["pending", "reviewing"]));
-        
         if (!appsError && apps) {
             for (const app of (apps as any[])) {
                 applicationCounts[app.unit_id] = (applicationCounts[app.unit_id] || 0) + 1;
