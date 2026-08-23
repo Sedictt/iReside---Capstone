@@ -58,17 +58,15 @@ function LogoLink({ children }: { children: React.ReactNode }) {
     const { user, loading } = useAuth();
 
     const getRedirectPath = () => {
-        if (loading || !user) return "/";
+        if (loading || !user) return "/login";
         const role = user.user_metadata?.role as string | undefined;
         switch (role) {
-            case "landlord":
-                return "/landlord/dashboard";
             case "tenant":
                 return "/tenant/dashboard";
+            case "landlord":
             case "admin":
-                return "/admin/dashboard";
             default:
-                return "/";
+                return "/landlord/dashboard";
         }
     };
 

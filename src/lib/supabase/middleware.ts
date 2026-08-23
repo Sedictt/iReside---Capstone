@@ -100,26 +100,25 @@ export async function updateSession(request: NextRequest) {
         return supabaseResponse;
     }
 
-    // Protect /admin routes - only allow users with admin role.
+    // Deprecate /admin routes - redirect all admin portal attempts to landlord dashboard (or login).
     if (request.nextUrl.pathname.startsWith("/admin")) {
+        const url = request.nextUrl.clone();
         if (!user) {
-            const url = request.nextUrl.clone();
             url.pathname = "/login";
-            return NextResponse.redirect(url);
+        } else {
+            url.pathname = "/landlord/dashboard";
         }
-        if (role !== "admin") {
-            const url = request.nextUrl.clone();
-            url.pathname = role === "landlord" ? "/landlord/dashboard" : "/tenant/community";
-            return NextResponse.redirect(url);
-        }
+        return NextResponse.redirect(url);
     }
 
     // If user is already logged in, prevent them from accessing auth pages.
     if (user && (request.nextUrl.pathname.startsWith("/login") || request.nextUrl.pathname.startsWith("/signup"))) {
         const url = request.nextUrl.clone();
-        if (role === "admin") url.pathname = "/admin/dashboard";
-        else if (role === "landlord") url.pathname = "/landlord/dashboard";
-        else url.pathname = "/tenant/community";
+        if (role === "admin" || role === "landlord") {
+            url.pathname = "/landlord/dashboard";
+        } else {
+            url.pathname = "/tenant/dashboard";
+        }
         return NextResponse.redirect(url);
     }
 

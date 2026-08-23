@@ -1,3 +1,9 @@
+/**
+ * @deprecated [DEPRECATED - Turnkey Architecture]
+ * Legacy multi-tenant admin overview dashboard.
+ * Retained for non-destructive technical reference only.
+ * Excluded from active turnkey system architecture, documentation, and diagrams.
+ */
 "use client";
 
 import type { ElementType } from "react";

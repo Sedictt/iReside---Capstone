@@ -2,9 +2,9 @@ import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
 const getDashboardPathForRole = (role: string) => {
-  if (role === 'admin') return '/admin/dashboard'
-  if (role === 'landlord') return '/landlord/dashboard'
-  return '/tenant/dashboard'
+  if (role === 'tenant') return '/tenant/dashboard'
+  // Both landlord and legacy admin roles map to turnkey landlord dashboard
+  return '/landlord/dashboard'
 }
 
 export async function GET(request: Request) {
