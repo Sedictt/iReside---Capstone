@@ -28,6 +28,7 @@ import { TenantInviteManager } from "@/components/landlord/applications/TenantIn
 import { CommandCenter } from "@/components/landlord/dashboard/CommandCenter";
 import { LandlordWelcomeLightbox } from "@/components/landlord/dashboard/LandlordWelcomeLightbox";
 import { MobileMessagesSheet } from "@/components/landlord/dashboard/MobileMessagesSheet";
+import { LobbyFlyerModal } from "@/components/landlord/flyer/LobbyFlyerModal";
 
 type PaymentCategory = "Overdue" | "Near Due" | "Paid";
 
@@ -135,6 +136,7 @@ export default function LandlordDashboard() {
 
     const [isWalkInModalOpen, setIsWalkInModalOpen] = useState(false);
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+    const [isFlyerModalOpen, setIsFlyerModalOpen] = useState(false);
     const [loadingUnits, setLoadingUnits] = useState(true);
     const [loadingInvites, setLoadingInvites] = useState(true);
     const [isAdvisoryDismissed, setIsAdvisoryDismissed] = useState(false);
@@ -213,6 +215,7 @@ export default function LandlordDashboard() {
                 setOpenPaymentModal(null);
                 setIsWalkInModalOpen(false);
                 setIsInviteModalOpen(false);
+                setIsFlyerModalOpen(false);
             }
             // Ctrl+K/Cmd+K triggers Walk-in Application modal instantly
             if ((e.ctrlKey || e.metaKey) && e.key === "k") {
@@ -417,6 +420,7 @@ export default function LandlordDashboard() {
                 <DashboardBanner
                     onNewWalkIn={() => setIsWalkInModalOpen(true)}
                     onCreateInvite={() => setIsInviteModalOpen(true)}
+                    onOpenFlyer={() => setIsFlyerModalOpen(true)}
                 />
 
                 {/* System Advisory - Sleek Neumorphic Glass Alert */}
@@ -662,6 +666,12 @@ export default function LandlordDashboard() {
                     </div>
                 </div>
             )}
+
+            {/* Lobby QR Code Flyer Generator Modal */}
+            <LobbyFlyerModal
+                isOpen={isFlyerModalOpen}
+                onClose={() => setIsFlyerModalOpen(false)}
+            />
 
             <AnimatePresence>
                 {selectedActionPayment && (
