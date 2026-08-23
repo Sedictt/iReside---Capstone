@@ -18,6 +18,7 @@ interface DashboardBannerProps {
     simplifiedMode?: boolean;
     onNewWalkIn?: () => void;
     onCreateInvite?: () => void;
+    onOpenFlyer?: () => void;
 }
 
 export function DashboardBanner({
@@ -27,7 +28,8 @@ export function DashboardBanner({
     className,
     simplifiedMode = false,
     onNewWalkIn,
-    onCreateInvite
+    onCreateInvite,
+    onOpenFlyer
 }: DashboardBannerProps) {
     const getManilaTime = () => new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Manila" }));
     const [time, setTime] = useState<Date>(() => getManilaTime());
@@ -85,6 +87,7 @@ export function DashboardBanner({
                         time={time}
                         onNewWalkIn={onNewWalkIn}
                         onCreateInvite={onCreateInvite}
+                        onOpenFlyer={onOpenFlyer}
                     />
 
                     {/* Digital Clock - only visible on large screens */}
