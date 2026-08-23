@@ -30,6 +30,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Logo } from "@/components/ui/Logo";
+import { HighContrastToggle } from "@/components/ui/HighContrastToggle";
 import { cn } from "@/lib/utils";
 
 interface MigrationStep {
@@ -216,6 +217,7 @@ export default function TechnicalCommissioningPage() {
         </div>
 
         <div className="flex items-center gap-2">
+          <HighContrastToggle />
           <div className="bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 px-3 py-1 rounded-md text-xs font-bold font-mono text-zinc-600 dark:text-zinc-300">
             <span className="text-zinc-950 dark:text-white font-black">{migrationCompleted ? "✓" : currentStep}</span> / 3
           </div>

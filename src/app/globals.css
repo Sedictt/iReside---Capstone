@@ -99,6 +99,161 @@
   --primary-foreground: #1e1b4b;
 }
 
+/* ==========================================================================
+   HIGH CONTRAST / ACCESSIBILITY MODE (WCAG AAA)
+   Replaces soft low-contrast neumorphism with crisp solid borders & pure contrasts
+   ========================================================================== */
+.high-contrast,
+[data-high-contrast="true"] {
+  --background: #ffffff;
+  --foreground: #000000;
+  --card: #ffffff;
+  --card-foreground: #000000;
+  --surface-0: #ffffff;
+  --surface-1: #ffffff;
+  --surface-2: #f4f4f5;
+  --surface-3: #e4e4e7;
+  --surface-4: #d4d4d8;
+  --border: #000000;
+  --divider: #000000;
+  --muted: #f4f4f5;
+  --muted-foreground: #000000;
+  --text-high: #000000;
+  --text-medium: #000000;
+  --text-disabled: #52525b;
+}
+
+.high-contrast.dark,
+.dark.high-contrast,
+.dark[data-high-contrast="true"] {
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: #000000;
+  --card-foreground: #ffffff;
+  --surface-0: #000000;
+  --surface-1: #000000;
+  --surface-2: #18181b;
+  --surface-3: #27272a;
+  --surface-4: #3f3f46;
+  --border: #ffffff;
+  --divider: #ffffff;
+  --muted: #18181b;
+  --muted-foreground: #ffffff;
+  --text-high: #ffffff;
+  --text-medium: #ffffff;
+  --text-disabled: #a1a1aa;
+}
+
+/* 1. Neumorphic Overrides: Flatten blurry shadows into solid structural borders */
+:is(.high-contrast, [data-high-contrast="true"]) :is(.neumorphic-panel, .neumorphic-extruded, .neumorphic-inset, .neumorphic-inset-card, .neumorphic-primary, .neumorphic-card) {
+  box-shadow: none !important;
+  background-color: var(--background) !important;
+  color: var(--foreground) !important;
+  border-width: 2px !important;
+  border-style: solid !important;
+  border-color: #000000 !important;
+}
+
+:is(.high-contrast.dark, .dark.high-contrast, .dark[data-high-contrast="true"]) :is(.neumorphic-panel, .neumorphic-extruded, .neumorphic-inset, .neumorphic-inset-card, .neumorphic-primary, .neumorphic-card) {
+  box-shadow: none !important;
+  background-color: var(--background) !important;
+  color: var(--foreground) !important;
+  border-width: 2px !important;
+  border-style: solid !important;
+  border-color: #ffffff !important;
+}
+
+/* Hover and Active states in High Contrast */
+:is(.high-contrast, [data-high-contrast="true"]) .neumorphic-extruded:hover {
+  background-color: #f4f4f5 !important;
+  border-color: #000000 !important;
+  transform: none !important;
+}
+
+:is(.high-contrast.dark, .dark.high-contrast, .dark[data-high-contrast="true"]) .neumorphic-extruded:hover {
+  background-color: #18181b !important;
+  border-color: #ffffff !important;
+  transform: none !important;
+}
+
+:is(.high-contrast, [data-high-contrast="true"]) :is(.neumorphic-extruded:active, .neumorphic-extruded.active, .neumorphic-inset, .neumorphic-inset-card) {
+  background-color: #f4f4f5 !important;
+  border-color: #000000 !important;
+  box-shadow: none !important;
+}
+
+:is(.high-contrast.dark, .dark.high-contrast, .dark[data-high-contrast="true"]) :is(.neumorphic-extruded:active, .neumorphic-extruded.active, .neumorphic-inset, .neumorphic-inset-card) {
+  background-color: #18181b !important;
+  border-color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+/* Primary Neumorphic buttons in High Contrast */
+:is(.high-contrast, [data-high-contrast="true"]) .neumorphic-primary {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border: 2px solid #000000 !important;
+}
+
+:is(.high-contrast.dark, .dark.high-contrast, .dark[data-high-contrast="true"]) .neumorphic-primary {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 2px solid #ffffff !important;
+}
+
+/* 2. Universal solid borders for cards, panels, inputs, and dividers */
+:is(.high-contrast, [data-high-contrast="true"]) :is(.border, .border-t, .border-b, .border-l, .border-r, [class*="border-zinc-"], [class*="border-white/"], [class*="border-border"], hr) {
+  border-color: #000000 !important;
+}
+
+:is(.high-contrast.dark, .dark.high-contrast, .dark[data-high-contrast="true"]) :is(.border, .border-t, .border-b, .border-l, .border-r, [class*="border-zinc-"], [class*="border-white/"], [class*="border-border"], hr) {
+  border-color: #ffffff !important;
+}
+
+/* 3. Text contrast enforcement: Bold & high-visibility */
+:is(.high-contrast, [data-high-contrast="true"]) :is(.text-muted-foreground, .text-neutral-400, .text-zinc-500, .text-zinc-400, .text-zinc-600) {
+  color: #000000 !important;
+  font-weight: 600 !important;
+}
+
+:is(.high-contrast.dark, .dark.high-contrast, .dark[data-high-contrast="true"]) :is(.text-muted-foreground, .text-neutral-400, .text-zinc-500, .text-zinc-400, .text-zinc-600) {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+/* 4. Active Navigation & Selected Tabs in High Contrast (Inverted Solid High-Visibility Highlight) */
+:is(.high-contrast, [data-high-contrast="true"]) :is(.neumorphic-active, [aria-current="page"]) {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border-width: 2.5px !important;
+  border-style: solid !important;
+  border-color: #000000 !important;
+  font-weight: 900 !important;
+}
+
+:is(.high-contrast, [data-high-contrast="true"]) :is(.neumorphic-active, [aria-current="page"]) :is(svg, span, p, div) {
+  color: #ffffff !important;
+}
+
+:is(.high-contrast.dark, .dark.high-contrast, .dark[data-high-contrast="true"]) :is(.neumorphic-active, [aria-current="page"]) {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border-width: 2.5px !important;
+  border-style: solid !important;
+  border-color: #ffffff !important;
+  font-weight: 900 !important;
+}
+
+:is(.high-contrast.dark, .dark.high-contrast, .dark[data-high-contrast="true"]) :is(.neumorphic-active, [aria-current="page"]) :is(svg, span, p, div) {
+  color: #000000 !important;
+}
+
+/* 5. Focus Ring Accessibility */
+:is(.high-contrast, [data-high-contrast="true"]) :is(button, a, input, select, textarea):focus-visible {
+  outline: 3px solid currentColor !important;
+  outline-offset: 2px !important;
+}
+
 .light {
   color-scheme: light;
 }
@@ -567,6 +722,17 @@ input[type="number"] {
 .dark .neumorphic-extruded.active {
   box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.6), inset -4px -4px 8px rgba(255, 255, 255, 0.06);
   transform: translateY(1.5px);
+}
+
+.neumorphic-active {
+  background-color: var(--background);
+  box-shadow: inset 3px 3px 6px rgba(163, 177, 198, 0.4), inset -3px -3px 6px rgba(255, 255, 255, 1);
+  border: 1.5px solid var(--primary);
+}
+.dark .neumorphic-active {
+  background-color: var(--surface-1);
+  box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.6), inset -4px -4px 8px rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(var(--primary-rgb), 0.5);
 }
 
 .neumorphic-inset {

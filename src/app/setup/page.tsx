@@ -28,11 +28,14 @@ import {
   Image as ImageIcon,
   Trash2,
   CreditCard,
+  Contrast,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useTheme } from "next-themes";
+import { useHighContrast } from "@/hooks/useHighContrast";
+import { HighContrastToggle } from "@/components/ui/HighContrastToggle";
 import { Logo } from "@/components/ui/Logo";
 import { cn } from "@/lib/utils";
 
@@ -133,6 +136,7 @@ export default function BusinessPersonalizationWizardPage() {
 
   // Step 2: Light / Dark Mode & Modern HSL Palette
   const { resolvedTheme, setTheme } = useTheme();
+  const { isHighContrast, toggleHighContrast } = useHighContrast();
   const [modePreference, setModePreference] = useState<"dark" | "light">("dark");
 
   React.useEffect(() => {
@@ -329,6 +333,8 @@ export default function BusinessPersonalizationWizardPage() {
         </div>
 
         <div className="flex items-center gap-2.5">
+          <HighContrastToggle />
+
           <button
             type="button"
             onClick={() => handleModeToggle(modePreference === "dark" ? "light" : "dark")}
@@ -734,28 +740,28 @@ export default function BusinessPersonalizationWizardPage() {
                     </div>
                   </div>
 
-                  {/* 1. Theme Experience Selector */}
-                  <div className="grid grid-cols-2 gap-2">
+                  {/* 1. Theme Experience & Accessibility Selector */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     <button
                       type="button"
                       onClick={() => handleModeToggle("dark")}
                       className={cn(
                         "p-2 rounded-xl text-left transition-all flex items-center justify-between border",
-                        modePreference === "dark"
+                        modePreference === "dark" && !isHighContrast
                           ? "bg-zinc-100 dark:bg-zinc-800 border-zinc-400 dark:border-zinc-600 shadow-xs"
                           : "bg-zinc-50 dark:bg-zinc-950/40 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400"
                       )}
                       style={
-                        modePreference === "dark"
+                        modePreference === "dark" && !isHighContrast
                           ? { borderColor: primaryColor, backgroundColor: `${primaryColor}12` }
                           : undefined
                       }
                     >
                       <div className="flex items-center gap-2">
-                        <Moon className="size-3.5" style={modePreference === "dark" ? { color: primaryColor } : undefined} />
+                        <Moon className="size-3.5" style={modePreference === "dark" && !isHighContrast ? { color: primaryColor } : undefined} />
                         <span className="text-xs font-bold">Dark Mode</span>
                       </div>
-                      {modePreference === "dark" && <Check className="size-3 stroke-[3]" style={{ color: primaryColor }} />}
+                      {modePreference === "dark" && !isHighContrast && <Check className="size-3 stroke-[3]" style={{ color: primaryColor }} />}
                     </button>
 
                     <button
@@ -763,21 +769,38 @@ export default function BusinessPersonalizationWizardPage() {
                       onClick={() => handleModeToggle("light")}
                       className={cn(
                         "p-2 rounded-xl text-left transition-all flex items-center justify-between border",
-                        modePreference === "light"
+                        modePreference === "light" && !isHighContrast
                           ? "bg-zinc-100 dark:bg-zinc-800 border-zinc-400 dark:border-zinc-600 shadow-xs"
                           : "bg-zinc-50 dark:bg-zinc-950/40 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400"
                       )}
                       style={
-                        modePreference === "light"
+                        modePreference === "light" && !isHighContrast
                           ? { borderColor: primaryColor, backgroundColor: `${primaryColor}12` }
                           : undefined
                       }
                     >
                       <div className="flex items-center gap-2">
-                        <Sun className="size-3.5" style={modePreference === "light" ? { color: primaryColor } : undefined} />
+                        <Sun className="size-3.5" style={modePreference === "light" && !isHighContrast ? { color: primaryColor } : undefined} />
                         <span className="text-xs font-bold">Light Mode</span>
                       </div>
-                      {modePreference === "light" && <Check className="size-3 stroke-[3]" style={{ color: primaryColor }} />}
+                      {modePreference === "light" && !isHighContrast && <Check className="size-3 stroke-[3]" style={{ color: primaryColor }} />}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => toggleHighContrast()}
+                      className={cn(
+                        "p-2 rounded-xl text-left transition-all flex items-center justify-between border cursor-pointer",
+                        isHighContrast
+                          ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 border-black dark:border-white shadow-xs ring-2 ring-primary/40"
+                          : "bg-zinc-50 dark:bg-zinc-950/40 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-zinc-400"
+                      )}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Contrast className="size-3.5 text-primary" />
+                        <span className="text-xs font-bold">High Contrast</span>
+                      </div>
+                      {isHighContrast && <Check className="size-3 stroke-[3]" />}
                     </button>
                   </div>
 
