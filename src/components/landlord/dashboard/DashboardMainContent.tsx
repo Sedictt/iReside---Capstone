@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { UserPlus, QrCode, Wrench, Map, Printer } from "lucide-react";
+import { UserPlus, QrCode, Wrench, Map, Printer, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface DashboardMainContentProps {
@@ -104,9 +104,16 @@ export function DashboardMainContent({
                         <Link 
                             href="/landlord/unit-map" 
                             title="Unit Map"
-                            className="flex h-14 w-14 items-center justify-center rounded-2xl neumorphic-extruded active:scale-95 shrink-0"
+                            className="flex h-14 w-14 items-center justify-center rounded-2xl neumorphic-extruded active:scale-95 shrink-0 text-foreground hover:text-rose-500 transition-colors"
                         >
                             <Map className="size-5 text-rose-500" />
+                        </Link>
+                        <Link 
+                            href="/landlord/docs" 
+                            title="Help & User Manual"
+                            className="flex h-14 w-14 items-center justify-center rounded-2xl neumorphic-extruded active:scale-95 shrink-0 text-foreground hover:text-primary transition-colors"
+                        >
+                            <HelpCircle className="size-5 text-indigo-400" />
                         </Link>
                     </div>
                 </div>
@@ -196,6 +203,13 @@ export function DashboardMainContent({
                             className="flex h-9 w-9 items-center justify-center rounded-xl neumorphic-extruded active:scale-95"
                         >
                             <Map className="size-4 text-rose-500" />
+                        </Link>
+                        <Link 
+                            href="/landlord/docs" 
+                            title="Help & User Manual"
+                            className="flex h-9 w-9 items-center justify-center rounded-xl neumorphic-extruded active:scale-95 text-foreground hover:text-primary"
+                        >
+                            <HelpCircle className="size-4 text-indigo-400" />
                         </Link>
                     </div>
                 </div>
