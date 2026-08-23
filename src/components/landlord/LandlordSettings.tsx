@@ -36,12 +36,14 @@ import {
     Linkedin,
     UploadCloud,
     ArrowLeft,
-    RotateCcw
+    RotateCcw,
+    BookOpen
 } from "lucide-react";
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { BillingOperationsPanel } from "@/components/landlord/BillingOperationsPanel";
+import { DocumentationHub } from "@/components/landlord/docs/DocumentationHub";
 import { useAuth } from "@/hooks/useAuth";
 import { PageLoader } from "@/components/ui/LoadingSpinner";
 import { AvatarPicker } from "@/components/profile/AvatarPicker";
@@ -53,7 +55,7 @@ import { UAParser } from "ua-parser-js";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
 
 // --- Types ---
-type SettingsCategory = "Identity" | "Finance" | "Security" | "Notifications" | "Data";
+type SettingsCategory = "Identity" | "Finance" | "Security" | "Notifications" | "Data" | "Docs";
 
 interface SidebarItem {
     id: SettingsCategory;
@@ -92,6 +94,12 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
         label: "Data & Privacy", 
         icon: Globe,
         description: "Export data and account deletion"
+    },
+    { 
+        id: "Docs", 
+        label: "Manual & IT Docs", 
+        icon: BookOpen,
+        description: "User guide, FAQs & system handover"
     },
 ];
 
@@ -182,6 +190,7 @@ export function LandlordSettings() {
         Security: ["Account", "Protection", "Sessions"],
         Notifications: ["Alerts"],
         Data: ["Export", "Tour", "Danger"],
+        Docs: ["Knowledge Base"],
     };
 
     // Reset sub-tab when main tab changes (skip if restoring from URL)
@@ -1401,6 +1410,7 @@ export function LandlordSettings() {
             case "Security": return renderSecurity();
             case "Notifications": return renderNotifications();
             case "Data": return renderData();
+            case "Docs": return <DocumentationHub onNavigateTab={(tab) => setActiveTab(tab as SettingsCategory)} />;
             default: return null;
         }
     };
