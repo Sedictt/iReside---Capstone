@@ -23,7 +23,8 @@ import {
     Compass,
     SlidersHorizontal,
     FileCheck2,
-    CalendarClock
+    CalendarClock,
+    Palette
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
@@ -260,7 +261,17 @@ const FEATURE_INDEX: SearchResult[] = [
         href: "/landlord/settings?category=Identity",
         icon: Settings,
         badge: "Settings",
-        keywords: ["profile", "identity", "name", "permit", "phone", "email", "business", "logo"]
+        keywords: ["profile", "identity", "name", "permit", "phone", "email", "business", "avatar"]
+    },
+    {
+        id: "setting-personalization",
+        type: "setting",
+        title: "Personalization & Branding",
+        subtitle: "Themes, high contrast, brand colors, property logo & banner photos",
+        href: "/landlord/settings?category=Personalization",
+        icon: Palette,
+        badge: "Settings",
+        keywords: ["personalization", "customization", "theme", "dark mode", "light mode", "high contrast", "banner", "logo", "branding", "colors"]
     },
     {
         id: "setting-finance",
@@ -577,7 +588,7 @@ export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActi
 
     return (
         <>
-            <div className="absolute top-3 right-3 sm:top-4 sm:right-4 md:top-8 md:right-8 z-20 flex items-center gap-1.5 sm:gap-2 md:gap-4">
+            <div className="absolute top-3 right-3 sm:top-4 sm:right-4 md:top-8 md:right-8 z-50 flex items-center gap-1.5 sm:gap-2 md:gap-4">
                 {/* Mission Control Trigger */}
                 <MissionTriggerButton onOpen={onQuestPanelOpen} />
 

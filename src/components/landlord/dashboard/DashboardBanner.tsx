@@ -99,24 +99,13 @@ export function DashboardBanner({
             {/* Background Layer */}
             <DashboardBackground image={activeBanner} />
 
-            {/* Header Actions */}
+            {/* Header Actions (Floating Controls & Dropdown with top z-index z-50) */}
             <DashboardHeaderActions onQuestPanelOpen={handleQuestPanelOpen} />
 
-            {/* Floating Banner Customizer Button (Subtle & Hover-Revealed) */}
-            <button
-                type="button"
-                onClick={() => setIsCustomizerOpen(true)}
-                className="absolute bottom-3 right-4 z-20 opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300 px-3 py-1.5 rounded-xl bg-background/80 hover:bg-background border border-border/60 backdrop-blur-md text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-foreground flex items-center gap-1.5 shadow-sm active:scale-95 cursor-pointer"
-                title="Customize banner image"
-            >
-                <Camera className="size-3.5 text-primary" />
-                <span>Customize Banner</span>
-            </button>
-
             {/* Main Content Area */}
-            <div className="relative z-10 w-full px-4 py-5 sm:px-6 sm:py-8 md:px-10 md:py-10">
+            <div className="relative z-10 w-full px-4 py-5 sm:px-6 sm:py-8 md:px-10 md:py-10 pointer-events-none">
                 {/* Banner uses lg:grid to put content on left, clock on right on large screens */}
-                <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] items-center gap-6 lg:gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] items-center gap-6 lg:gap-8 pointer-events-auto">
                     <DashboardMainContent
                         title={displayTitle}
                         subtitle={displaySubtitle}
@@ -132,6 +121,17 @@ export function DashboardBanner({
                     </div>
                 </div>
             </div>
+
+            {/* Floating Banner Customizer Button (z-20 for instant clicks, layered behind z-50 dropdown) */}
+            <button
+                type="button"
+                onClick={() => setIsCustomizerOpen(true)}
+                className="absolute bottom-3 right-4 z-20 pointer-events-auto opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300 px-3 py-1.5 rounded-xl bg-background/80 hover:bg-background border border-border/60 backdrop-blur-md text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-foreground flex items-center gap-1.5 shadow-sm active:scale-95 cursor-pointer"
+                title="Customize banner image"
+            >
+                <Camera className="size-3.5 text-primary" />
+                <span>Customize Banner</span>
+            </button>
 
             {/* Side Quest Panel */}
             <LandlordQuestBoard 
