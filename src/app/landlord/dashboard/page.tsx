@@ -844,31 +844,31 @@ function PaymentCard({ payment, fallbackAvatar, onClick }: { payment: PaymentLis
             type="button"
             onClick={onClick}
             aria-label={`View payment details for ${tenant}, Unit ${unit}. Amount: PHP ${amount}.`}
-            className="group relative flex w-full cursor-pointer items-center justify-between overflow-hidden rounded-2xl p-4 neumorphic-extruded active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all text-left"
+            className="group relative flex w-full cursor-pointer items-center justify-between overflow-hidden rounded-2xl p-3 sm:p-3.5 neumorphic-extruded active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all text-left"
         >
-            <div className="flex items-center gap-4 relative z-10 w-full">
+            <div className="flex items-center gap-2.5 sm:gap-3 relative z-10 min-w-0 flex-1 mr-2">
                 <div className="relative shrink-0">
                     <div
-                        className="relative size-12 rounded-full border-2 border-background/50 overflow-hidden transition-all duration-500 group-hover:scale-110 shadow-sm"
+                        className="relative size-10 sm:size-11 rounded-full border-2 border-background/50 overflow-hidden transition-all duration-500 group-hover:scale-105 shadow-xs"
                         style={{ backgroundColor: (payment as any).avatarBgColor || '#171717' }}
                     >
-                        <Image src={avatar || fallbackAvatar} alt="" fill sizes="48px" className="object-cover" aria-hidden="true" />
+                        <Image src={avatar || fallbackAvatar} alt="" fill sizes="44px" className="object-cover" aria-hidden="true" />
                     </div>
                     <div className={cn(
-                        "absolute -bottom-0.5 -right-0.5 size-4 rounded-full border-2 border-background",
+                        "absolute -bottom-0.5 -right-0.5 size-3.5 rounded-full border-2 border-background",
                         isPaid ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : isNearDue ? "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]"
                     )} aria-hidden="true" />
                 </div>
                 <div className="min-w-0 flex-1">
-                    <h4 className="truncate text-sm font-black text-foreground group-hover:text-primary transition-colors">{tenant}</h4>
-                    <p className="text-xs font-semibold text-muted-foreground">Unit {unit}</p>
+                    <h4 className="truncate text-xs sm:text-sm font-black text-foreground group-hover:text-primary transition-colors">{tenant}</h4>
+                    <p className="text-[11px] font-semibold text-muted-foreground truncate">Unit {unit}</p>
                 </div>
             </div>
 
-            <div className="text-right relative z-10 flex flex-col items-end shrink-0 pl-4">
-                <h4 className="mb-0.5 text-sm font-black text-foreground">PHP {amount.toLocaleString()}</h4>
-                <div className="flex items-center justify-end gap-1.5 mt-1">
-                    <span className="text-xs font-semibold text-muted-foreground">{date}</span>
+            <div className="text-right relative z-10 flex flex-col items-end shrink-0">
+                <h4 className="text-xs sm:text-sm font-black text-foreground whitespace-nowrap">PHP {amount.toLocaleString()}</h4>
+                <div className="flex items-center justify-end gap-1 mt-0.5">
+                    <span className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground whitespace-nowrap">{date}</span>
                 </div>
             </div>
 

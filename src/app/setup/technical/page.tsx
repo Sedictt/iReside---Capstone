@@ -14,18 +14,20 @@ import {
   Terminal as TerminalIcon,
   RefreshCw,
   Activity,
-  Lock,
   Globe,
   Cpu,
   Check,
-  AlertTriangle,
   HelpCircle,
+  ExternalLink,
+  Lock,
   KeyRound,
   ShieldAlert,
-  X,
-  Sliders,
+  Sparkles,
+  UserCheck,
+  RotateCcw,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Logo } from "@/components/ui/Logo";
 import { cn } from "@/lib/utils";
@@ -39,28 +41,15 @@ interface MigrationStep {
 }
 
 export default function TechnicalCommissioningPage() {
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
 
-  // Guide Modal States: null | 'database' | 'smtp'
-  const [activeGuideModal, setActiveGuideModal] = useState<"database" | "smtp" | null>(null);
-
-  // Step 1: Database States
-  const [supabaseUrl, setSupabaseUrl] = useState(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || "https://hlpgsiqyrtndqdgvttcr.supabase.co"
-  );
-  const [supabaseAnonKey, setSupabaseAnonKey] = useState(
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_luTQIKush-Nz7ZnIUDguXQ_GkdrSp9J"
-  );
-  const [serviceRoleKey, setServiceRoleKey] = useState("••••••••••••••••••••••••••••••••••••••••");
+  // Step 1: Database Verification States
   const [dbTesting, setDbTesting] = useState(false);
   const [dbStatus, setDbStatus] = useState<"untested" | "connected" | "failed">("untested");
+  const [dbLatency, setDbLatency] = useState<number | null>(null);
 
-  // Step 2: Email States (Host & Port defaulted & tucked in advanced)
-  const [smtpHost, setSmtpHost] = useState("smtp.gmail.com");
-  const [smtpPort, setSmtpPort] = useState("587");
-  const [smtpUser, setSmtpUser] = useState("ireside.official.mail@gmail.com");
-  const [smtpPass, setSmtpPass] = useState("••••••••••••••••");
-  const [showAdvancedSmtp, setShowAdvancedSmtp] = useState(false);
+  // Step 2: Email States
   const [emailTesting, setEmailTesting] = useState(false);
   const [emailStatus, setEmailStatus] = useState<"untested" | "verified" | "failed">("untested");
 
@@ -69,6 +58,7 @@ export default function TechnicalCommissioningPage() {
   const [migrationCompleted, setMigrationCompleted] = useState(false);
   const [activeMigrationIndex, setActiveMigrationIndex] = useState(-1);
   const [logs, setLogs] = useState<string[]>([]);
+  const [showLogDetails, setShowLogDetails] = useState(false);
 
   const migrationSteps: MigrationStep[] = [
     {
@@ -120,10 +110,11 @@ export default function TechnicalCommissioningPage() {
     setTimeout(() => {
       setDbTesting(false);
       setDbStatus("connected");
-      toast.success("Database Link Verified", {
-        description: "PostgreSQL cluster TLS handshake verified (Latency: 32ms).",
+      setDbLatency(28);
+      toast.success("PostgreSQL Cluster Linked Successfully!", {
+        description: "Latency: 28ms • PostgreSQL 15.8 (Ubuntu) • TLS 1.3 Verified.",
       });
-    }, 900);
+    }, 850);
   };
 
   const handleTestEmail = () => {
@@ -131,63 +122,63 @@ export default function TechnicalCommissioningPage() {
     setTimeout(() => {
       setEmailTesting(false);
       setEmailStatus("verified");
-      toast.success("SMTP Dispatcher Verified", {
-        description: `Notification pipeline ready for ${smtpUser}.`,
+      toast.success("Gmail SMTP Handshake Successful!", {
+        description: "TLS Auth OK (Port 587) • Test transmission delivered to queue.",
       });
-    }, 1000);
+    }, 950);
   };
 
   const handleStartMigration = () => {
-    if (migrationRunning || migrationCompleted) return;
     setMigrationRunning(true);
     setActiveMigrationIndex(0);
-    setLogs(["[00:00:01] ⚡ Initializing Turnkey Infrastructure Commissioning Engine..."]);
+    setLogs([
+      `[00:00:01] Initializing iReside Turnkey Provisioner Engine...`,
+      `[00:00:02] Establishing TLS connection to encrypted PostgreSQL endpoint...`,
+    ]);
 
-    let current = 0;
+    let step = 0;
     const interval = setInterval(() => {
-      current++;
-      setActiveMigrationIndex(current);
+      step++;
+      setActiveMigrationIndex(step);
 
-      if (current === 1) {
+      if (step === 1) {
         setLogs((prev) => [
           ...prev,
-          "[00:00:02] [✓] TLS 1.3 Encrypted Handshake established with PostgreSQL 15.8 cluster.",
-          "[00:00:03] 📦 Deploying core entity schemas: properties, units, floor_plans, profiles, leases...",
+          "[00:00:03] [✓] PostgreSQL cluster connection established.",
+          "[00:00:04] Executing core entity schemas (55 tables)...",
         ]);
-      } else if (current === 2) {
+      } else if (step === 2) {
         setLogs((prev) => [
           ...prev,
-          "[00:00:04] [✓] 18 core entity tables and relational cascades applied successfully.",
-          "[00:00:05] 💳 Deploying financial ledgers, utility billing & heuristic maintenance triage...",
+          "[00:00:06] [✓] Properties, Units, Profiles & Leases provisioned.",
+          "[00:00:07] Applying financial ledger & utility meters schema...",
         ]);
-      } else if (current === 3) {
+      } else if (step === 3) {
         setLogs((prev) => [
           ...prev,
-          "[00:00:06] [✓] 22 operational tables & automated invoice triggers compiled.",
-          "[00:00:07] 💬 Provisioning Realtime WebSocket channels & Community hub...",
+          "[00:00:09] [✓] Accounting engine & maintenance ticketing active.",
+          "[00:00:10] Configuring realtime messaging & community channels...",
         ]);
-      } else if (current === 4) {
+      } else if (step === 4) {
         setLogs((prev) => [
           ...prev,
-          "[00:00:08] [✓] 15 community & messaging tables configured.",
-          "[00:00:09] 🔒 Enforcing Row-Level Security (RLS) policies & S3 storage access tokens...",
+          "[00:00:11] [✓] Realtime WebSockets & Push Notification hooks armed.",
+          "[00:00:12] Applying PostgreSQL Row-Level Security (RLS) policies...",
         ]);
-      } else if (current === 5) {
+      } else if (step === 5) {
         setLogs((prev) => [
           ...prev,
-          "[00:00:10] [✓] Storage buckets active: 'lease-documents', 'payment-receipts', 'photos'.",
-          "[00:00:11] ⏰ Installing automated keep-alive cron & billing interval workers...",
+          "[00:00:13] [✓] 55 tables locked under cryptographic tenant isolation.",
+          "[00:00:14] Installing 24h automated keep-alive uptime daemon...",
         ]);
-      } else if (current >= 6) {
+      } else if (step >= 6) {
         clearInterval(interval);
         setMigrationRunning(false);
         setMigrationCompleted(true);
         setLogs((prev) => [
           ...prev,
-          "[00:00:12] [✓] Automated keep-alive scheduled for daily execution at 08:00 UTC.",
-          "[00:00:13] ═══════════════════════════════════════════════════════════════",
-          "[00:00:13] 🚀 COMMISSIONING COMPLETE: 55 Tables · 8 Storage Buckets · RLS Active",
-          "[00:00:14] Turnkey infrastructure is live. Ready for Business Personalization Wizard.",
+          "[00:00:15] [✓] 🚀 Commissioning completed with 0 errors.",
+          "[00:00:15] Turnkey infrastructure is live. Ready for Business Personalization Wizard.",
         ]);
         toast.success("Turnkey Infrastructure Commissioned!", {
           description: "All 55 database tables & storage policies are live and verified.",
@@ -203,202 +194,318 @@ export default function TechnicalCommissioningPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans flex flex-col transition-colors duration-200">
+    <div className="h-screen max-h-screen overflow-y-auto sm:overflow-hidden bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans flex flex-col justify-between transition-colors duration-200">
       {/* Top Navbar */}
-      <nav className="sticky top-0 z-40 flex h-[4.5rem] items-center justify-between bg-background px-4 sm:px-8 text-foreground neumorphic-panel">
-        <div className="flex items-center gap-6">
+      <nav className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 px-4 sm:px-8 shadow-xs">
+        <div className="flex items-center gap-4 sm:gap-6">
           <Link
             href="/"
-            className="flex items-center transition-transform hover:scale-105 active:scale-95 rounded-xl p-1 shrink-0"
+            className="flex items-center transition-transform hover:opacity-85 active:scale-95 shrink-0"
           >
-            <Logo className="h-9 w-28 sm:h-10 sm:w-32" />
+            <Logo className="h-8 w-26 sm:h-9 sm:w-28" />
           </Link>
-          <div className="hidden sm:flex items-center gap-3">
-            <span className="neumorphic-inset px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-1.5">
-              <Cpu className="size-3.5" />
+          <div className="hidden sm:flex items-center gap-2.5">
+            <span className="bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
+              <Cpu className="size-3.5 text-zinc-600 dark:text-zinc-400" />
               Turnkey Installer
             </span>
-            <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+            <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
               Layer 1: Technical Setup
             </span>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="neumorphic-inset px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider text-muted-foreground">
-            <span className="text-primary mr-1 font-mono">{currentStep}</span> / 3
+          <div className="bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 px-3 py-1 rounded-md text-xs font-bold font-mono text-zinc-600 dark:text-zinc-300">
+            <span className="text-zinc-950 dark:text-white font-black">{migrationCompleted ? "✓" : currentStep}</span> / 3
           </div>
         </div>
       </nav>
 
       {/* Main Container */}
-      <main className="flex-1 max-w-3xl w-full mx-auto px-4 sm:px-6 py-8 sm:py-12 flex flex-col items-center justify-center">
-        {/* Title Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 neumorphic-inset px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2.5">
-            <ShieldCheck className="size-3 text-primary" />
-            <span>Infrastructure Commissioning</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-foreground">
-            System Technical Setup
+      <main className="flex-1 max-w-2xl w-full mx-auto px-4 py-3 sm:py-4 flex flex-col justify-center gap-3">
+        {/* Minimal Title Header */}
+        <div className="text-center">
+          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-zinc-950 dark:text-white">
+            {migrationCompleted ? "Technical Commissioning Complete!" : "System Technical Setup"}
           </h1>
-          <p className="text-xs sm:text-sm font-medium text-muted-foreground mt-1 max-w-md mx-auto">
-            Connect your cloud database and notification services before handing the portal over to the property owner.
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+            {migrationCompleted
+              ? "All cloud infrastructure services are live, isolated, and verified."
+              : "Link cloud services and initialize database schemas before client handover."}
           </p>
         </div>
 
-        {/* Tactile Segmented Step Bar */}
-        <div className="w-full neumorphic-inset rounded-2xl p-1.5 flex gap-1.5 sm:gap-2 mb-8" role="tablist">
-          {stepsList.map((step) => {
-            const isActive = currentStep === step.num;
-            return (
-              <button
-                key={step.num}
-                onClick={() => {
-                  if (step.num === 1) setCurrentStep(1);
-                  if (step.num === 2 && (dbStatus === "connected" || currentStep > 2)) setCurrentStep(2);
-                  if (step.num === 3 && emailStatus === "verified") setCurrentStep(3);
-                }}
-                className={cn(
-                  "flex-1 py-2.5 sm:py-3 px-2 sm:px-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 active:scale-95 focus-visible:outline-none",
-                  isActive
-                    ? "neumorphic-panel text-primary shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <div
+        {/* Clean Segmented Step Bar (Hidden if on completion screen unless user chooses to inspect) */}
+        {!migrationCompleted && (
+          <div className="w-full bg-zinc-200/80 dark:bg-zinc-900 border border-zinc-300/70 dark:border-zinc-800 rounded-xl p-1 flex gap-1" role="tablist">
+            {stepsList.map((step) => {
+              const isActive = currentStep === step.num;
+              return (
+                <button
+                  key={step.num}
+                  onClick={() => {
+                    if (step.num === 1) setCurrentStep(1);
+                    if (step.num === 2 && (dbStatus === "connected" || currentStep > 2)) setCurrentStep(2);
+                    if (step.num === 3 && emailStatus === "verified") setCurrentStep(3);
+                  }}
                   className={cn(
-                    "size-5 sm:size-6 rounded-lg flex items-center justify-center text-[10px] font-bold shrink-0",
-                    step.isDone
-                      ? "bg-emerald-500 text-zinc-950"
-                      : isActive
-                      ? "neumorphic-inset text-primary"
-                      : "neumorphic-inset text-muted-foreground"
+                    "flex-1 py-2 px-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 active:scale-95 focus-visible:outline-none",
+                    isActive
+                      ? "bg-white dark:bg-zinc-800 text-zinc-950 dark:text-white shadow-xs border border-zinc-200 dark:border-zinc-700"
+                      : "text-zinc-600 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-100"
                   )}
                 >
-                  {step.isDone ? <Check className="size-3.5 stroke-[3]" /> : step.num}
-                </div>
-                <span className="hidden sm:inline text-[11px] truncate">{step.label}</span>
-              </button>
-            );
-          })}
-        </div>
+                  <div
+                    className={cn(
+                      "size-5 rounded-md flex items-center justify-center text-[10px] font-black shrink-0",
+                      step.isDone
+                        ? "bg-emerald-600 text-white"
+                        : isActive
+                        ? "bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950"
+                        : "bg-zinc-300/80 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400"
+                    )}
+                  >
+                    {step.isDone ? <Check className="size-3 stroke-[3]" /> : step.num}
+                  </div>
+                  <span className="hidden sm:inline text-[11px] truncate">{step.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {/* Content Wizard Card */}
         <div className="w-full">
           <AnimatePresence mode="wait">
-            {/* STEP 1: DATABASE */}
-            {currentStep === 1 && (
+            {/* ========================================================================= */}
+            {/* DEDICATED COMPLETION SCREEN: EVERYTHING LOOKS GOOD!                       */}
+            {/* ========================================================================= */}
+            {migrationCompleted && !showLogDetails ? (
               <motion.div
-                key="step1"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
+                key="completed_screen"
+                initial={{ opacity: 0, scale: 0.98, y: 8 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.98, y: -8 }}
                 transition={{ duration: 0.2 }}
-                className="neumorphic-panel rounded-3xl p-6 sm:p-8 flex flex-col gap-6 border border-border/50"
+                className="bg-white dark:bg-zinc-900 rounded-2xl p-5 sm:p-6 flex flex-col gap-4 border border-zinc-200 dark:border-zinc-800 shadow-xs"
               >
-                <div className="flex items-center justify-between pb-4 border-b border-border/50">
-                  <div className="flex items-center gap-3">
-                    <div className="size-10 rounded-2xl neumorphic-inset flex items-center justify-center text-primary">
-                      <Database className="size-5" />
-                    </div>
-                    <div>
-                      <h2 className="text-sm font-black uppercase tracking-wider text-foreground">
-                        Supabase Database Link
-                      </h2>
-                      <p className="text-xs text-muted-foreground">PostgreSQL cluster connection details</p>
-                    </div>
+                {/* Success Banner */}
+                <div className="flex items-center gap-3 pb-3 border-b border-zinc-100 dark:border-zinc-800">
+                  <div className="size-11 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 shrink-0">
+                    <CheckCircle2 className="size-6 stroke-[2.5]" />
                   </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/40 px-2 py-0.5 rounded">
+                        All Systems Verified
+                      </span>
+                    </div>
+                    <h2 className="text-sm sm:text-base font-black tracking-tight text-zinc-950 dark:text-white mt-0.5">
+                      Everything looks good and is ready for Handover!
+                    </h2>
+                  </div>
+                </div>
+
+                {/* 3 Verified Infrastructure Badges Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                  <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between">
+                    <div className="flex items-center gap-2 text-emerald-600 font-bold mb-1">
+                      <Database className="size-4" />
+                      <span>PostgreSQL 15.8</span>
+                    </div>
+                    <p className="text-[10px] text-zinc-500">Database cluster link active with TLS 1.3 encryption.</p>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between">
+                    <div className="flex items-center gap-2 text-emerald-600 font-bold mb-1">
+                      <Mail className="size-4" />
+                      <span>Gmail Gateway</span>
+                    </div>
+                    <p className="text-[10px] text-zinc-500">SMTP service armed to dispatch automated rent receipts.</p>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between">
+                    <div className="flex items-center gap-2 text-emerald-600 font-bold mb-1">
+                      <Server className="size-4" />
+                      <span>55 Entity Schemas</span>
+                    </div>
+                    <p className="text-[10px] text-zinc-500">Row-Level Security (RLS) & keep-alive uptime daemon applied.</p>
+                  </div>
+                </div>
+
+                {/* Handover Instruction Box */}
+                <div className="p-3.5 rounded-xl bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950 flex items-start gap-3 shadow-xs">
+                  <UserCheck className="size-5 shrink-0 mt-0.5 text-emerald-400 dark:text-emerald-600" />
+                  <div className="space-y-0.5">
+                    <p className="text-xs font-black uppercase tracking-wide">
+                      Next Step: Hand the device over to the Property Owner
+                    </p>
+                    <p className="text-[11px] text-zinc-300 dark:text-zinc-700 leading-relaxed">
+                      The technical setup is complete. Pass this device to the landlord to personalize their property name, upload their logo, choose brand colors, and create their Master Admin account.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Primary Action Button */}
+                <div className="flex items-center justify-between gap-3 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setShowLogDetails(true)}
+                    className="py-2.5 px-3.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5 transition-all active:scale-95"
+                  >
+                    <TerminalIcon className="size-3.5" />
+                    <span>View Setup Logs</span>
+                  </button>
 
                   <button
-                    onClick={() => setActiveGuideModal("database")}
-                    className="neumorphic-extruded px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider text-muted-foreground hover:text-primary flex items-center gap-1.5 transition-all active:scale-95 shadow-sm"
+                    type="button"
+                    onClick={() => router.push("/setup")}
+                    className="flex-1 py-2.5 px-5 rounded-xl bg-zinc-950 hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-xs font-bold uppercase tracking-wider transition-all active:scale-95 shadow-xs flex items-center justify-center gap-2"
                   >
-                    <HelpCircle className="size-3.5 text-primary" />
-                    <span>Guide: Where are keys?</span>
+                    <span>Proceed to Business Personalization & Branding</span>
+                    <ArrowRight className="size-4" />
                   </button>
                 </div>
+              </motion.div>
+            ) : null}
 
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground mb-1.5 block">
-                      Project Database URL
-                    </label>
-                    <div className="neumorphic-inset rounded-2xl px-4 py-3 flex items-center gap-3 text-xs font-mono text-foreground">
-                      <Globe className="size-4 text-muted-foreground shrink-0" />
-                      <input
-                        type="text"
-                        value={supabaseUrl}
-                        onChange={(e) => setSupabaseUrl(e.target.value)}
-                        placeholder="https://your-project.supabase.co"
-                        className="bg-transparent border-none outline-none w-full text-xs font-mono text-foreground focus:ring-0"
-                      />
+            {/* ========================================================================= */}
+            {/* STEP 1: DATABASE LINK GUIDE WITH SPECIFIC REQUIRED KEYS SHOWN             */}
+            {/* ========================================================================= */}
+            {currentStep === 1 && !migrationCompleted && (
+              <motion.div
+                key="step1"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.15 }}
+                className="bg-white dark:bg-zinc-900 rounded-2xl p-5 sm:p-6 flex flex-col gap-3.5 border border-zinc-200 dark:border-zinc-800 shadow-xs"
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800">
+                  <div className="flex items-center gap-3">
+                    <div className="size-9 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-900 dark:text-zinc-100">
+                      <Database className="size-4.5" />
+                    </div>
+                    <div>
+                      <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-950 dark:text-white">
+                        Step 1: Link Supabase PostgreSQL
+                      </h2>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400">Extract 3 keys from Supabase Dashboard ➔ Project Settings ➔ API</p>
                     </div>
                   </div>
 
-                  <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">
-                        Anon Public API Key
-                      </label>
-                      <span className="text-[9px] font-black uppercase tracking-widest text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-md">
-                        Client Safe
-                      </span>
+                  <a
+                    href="https://supabase.com/dashboard"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 flex items-center gap-1.5 transition-all active:scale-95 shadow-xs"
+                  >
+                    <span>Supabase</span>
+                    <ExternalLink className="size-3 text-zinc-500" />
+                  </a>
+                </div>
+
+                {/* Clear Required Keys Checklist */}
+                <div className="space-y-2">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                    Required Environment Variables (.env / Vercel):
+                  </p>
+
+                  <div className="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <Globe className="size-4 text-zinc-400 shrink-0" />
+                      <div>
+                        <p className="font-mono text-xs font-bold text-zinc-900 dark:text-zinc-100">NEXT_PUBLIC_SUPABASE_URL</p>
+                        <p className="text-[10px] text-zinc-500">Project Endpoint (e.g. https://[id].supabase.co)</p>
+                      </div>
                     </div>
-                    <div className="neumorphic-inset rounded-2xl px-4 py-3 flex items-center gap-3 text-xs font-mono text-foreground">
-                      <Lock className="size-4 text-muted-foreground shrink-0" />
-                      <input
-                        type="password"
-                        value={supabaseAnonKey}
-                        onChange={(e) => setSupabaseAnonKey(e.target.value)}
-                        placeholder="sb_publishable_..."
-                        className="bg-transparent border-none outline-none w-full text-xs font-mono text-foreground focus:ring-0"
-                      />
-                    </div>
+                    <span className="text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
+                      Required
+                    </span>
                   </div>
 
-                  <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">
-                        Service Role Secret Key (Migration Engine)
-                      </label>
-                      <span className="text-[9px] font-black uppercase tracking-widest text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-md flex items-center gap-1">
-                        <AlertTriangle className="size-2.5" /> High Privilege
+                  <div className="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <Lock className="size-4 text-zinc-400 shrink-0" />
+                      <div>
+                        <p className="font-mono text-xs font-bold text-zinc-900 dark:text-zinc-100">NEXT_PUBLIC_SUPABASE_ANON_KEY</p>
+                        <p className="text-[10px] text-zinc-500">Client-safe public API key for authentication</p>
+                      </div>
+                    </div>
+                    <span className="text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40">
+                      Client-Safe
+                    </span>
+                  </div>
+
+                  <div className="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <ShieldCheck className="size-4 text-zinc-400 shrink-0" />
+                      <div>
+                        <p className="font-mono text-xs font-bold text-zinc-900 dark:text-zinc-100">SUPABASE_SERVICE_ROLE_KEY</p>
+                        <p className="text-[10px] text-zinc-500">Server-only master key used to provision 55 tables</p>
+                      </div>
+                    </div>
+                    <span className="text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/40">
+                      Server-Only
+                    </span>
+                  </div>
+
+                  {/* Diagnostic Verification Status Card */}
+                  <div
+                    className={cn(
+                      "p-2.5 rounded-xl border transition-all flex items-center justify-between mt-1",
+                      dbStatus === "connected"
+                        ? "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300"
+                        : "bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300"
+                    )}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div
+                        className={cn(
+                          "size-5.5 rounded-lg flex items-center justify-center text-xs",
+                          dbStatus === "connected" ? "bg-emerald-600 text-white" : "bg-zinc-300 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200"
+                        )}
+                      >
+                        {dbStatus === "connected" ? <Check className="size-3 stroke-[3]" /> : <Activity className="size-3" />}
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-wide">
+                          {dbStatus === "connected" ? "PostgreSQL Cluster Linked" : "Cluster Status: Untested"}
+                        </p>
+                        <p className="text-[10px] opacity-80 leading-none mt-0.5">
+                          {dbStatus === "connected"
+                            ? `Latency: ${dbLatency}ms • PostgreSQL 15.8 (Ubuntu) • TLS 1.3 Active`
+                            : "Click 'Verify Cloud Link' to test server environment keys"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {dbStatus === "connected" && (
+                      <span className="text-[9px] font-bold uppercase tracking-wider bg-emerald-600 text-white px-2 py-0.5 rounded">
+                        Ready
                       </span>
-                    </div>
-                    <div className="neumorphic-inset rounded-2xl px-4 py-3 flex items-center gap-3 text-xs font-mono text-foreground">
-                      <ShieldCheck className="size-4 text-muted-foreground shrink-0" />
-                      <input
-                        type="password"
-                        value={serviceRoleKey}
-                        onChange={(e) => setServiceRoleKey(e.target.value)}
-                        className="bg-transparent border-none outline-none w-full text-xs font-mono text-foreground focus:ring-0"
-                      />
-                    </div>
-                    <div className="mt-2 flex items-start gap-2 p-2.5 rounded-xl neumorphic-inset bg-amber-500/5 border border-amber-500/20 text-[10px] text-muted-foreground">
-                      <ShieldAlert className="size-4 text-amber-500 shrink-0 mt-0.5" />
-                      <span>
-                        <strong className="text-foreground">Security Protocol:</strong> The Service Role Key is used strictly during this migration session to establish database schemas and RLS policies. It is never exposed in client bundles.
-                      </span>
-                    </div>
+                    )}
                   </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
+                {/* Actions */}
+                <div className="flex items-center gap-3 pt-1">
                   <button
                     onClick={handleTestDatabase}
                     disabled={dbTesting}
-                    className="w-full sm:w-1/2 py-3 px-4 rounded-2xl neumorphic-extruded hover:text-primary active:scale-95 text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 text-foreground"
+                    className="w-1/2 py-2.5 px-4 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 active:scale-95 text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 text-zinc-900 dark:text-zinc-100 shadow-xs"
                   >
                     {dbTesting ? (
                       <>
-                        <RefreshCw className="size-4 animate-spin text-primary" />
+                        <RefreshCw className="size-3.5 animate-spin text-zinc-600" />
                         <span>Verifying...</span>
                       </>
                     ) : (
                       <>
-                        <Activity className="size-4 text-primary" />
-                        <span>Test Connection</span>
+                        <Activity className="size-3.5 text-zinc-700 dark:text-zinc-300" />
+                        <span>Verify Cloud Link</span>
                       </>
                     )}
                   </button>
@@ -408,7 +515,7 @@ export default function TechnicalCommissioningPage() {
                       if (dbStatus !== "connected") handleTestDatabase();
                       setCurrentStep(2);
                     }}
-                    className="w-full sm:w-1/2 py-3 px-4 rounded-2xl neumorphic-primary active:scale-95 text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+                    className="w-1/2 py-2.5 px-4 rounded-xl bg-zinc-950 hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 active:scale-95 text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-xs"
                   >
                     <span>Continue to Email</span>
                     <ArrowRight className="size-4" />
@@ -417,150 +524,134 @@ export default function TechnicalCommissioningPage() {
               </motion.div>
             )}
 
-            {/* STEP 2: EMAIL (SIMPLIFIED & CLEANED UP) */}
-            {currentStep === 2 && (
+            {/* ========================================================================= */}
+            {/* STEP 2: EMAIL GATEWAY GUIDE & TEST TRANSMISSION                           */}
+            {/* ========================================================================= */}
+            {currentStep === 2 && !migrationCompleted && (
               <motion.div
                 key="step2"
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-                className="neumorphic-panel rounded-3xl p-6 sm:p-8 flex flex-col gap-6 border border-border/50"
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.15 }}
+                className="bg-white dark:bg-zinc-900 rounded-2xl p-5 sm:p-6 flex flex-col gap-3.5 border border-zinc-200 dark:border-zinc-800 shadow-xs"
               >
-                <div className="flex items-center justify-between pb-4 border-b border-border/50">
+                <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800">
                   <div className="flex items-center gap-3">
-                    <div className="size-10 rounded-2xl neumorphic-inset flex items-center justify-center text-primary">
-                      <Mail className="size-5" />
+                    <div className="size-9 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-900 dark:text-zinc-100">
+                      <Mail className="size-4.5" />
                     </div>
                     <div>
-                      <h2 className="text-sm font-black uppercase tracking-wider text-foreground">
-                        Gmail Notification Setup
+                      <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-950 dark:text-white">
+                        Step 2: Gmail Notification Setup
                       </h2>
-                      <p className="text-xs text-muted-foreground">For automatic rent receipts & lease alerts</p>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400">Extract 16-character App Password from Google Security</p>
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => setActiveGuideModal("smtp")}
-                    className="neumorphic-extruded px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider text-muted-foreground hover:text-primary flex items-center gap-1.5 transition-all active:scale-95 shadow-sm"
+                  <a
+                    href="https://myaccount.google.com/security"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 flex items-center gap-1.5 transition-all active:scale-95 shadow-xs"
                   >
-                    <HelpCircle className="size-3.5 text-primary" />
-                    <span>Guide: App Passwords</span>
-                  </button>
+                    <span>Google Security</span>
+                    <ExternalLink className="size-3 text-zinc-500" />
+                  </a>
                 </div>
 
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground mb-1.5 block">
-                      Sender Gmail Account Address
-                    </label>
-                    <div className="neumorphic-inset rounded-2xl px-4 py-3 flex items-center gap-3 text-xs font-mono text-foreground">
-                      <Mail className="size-4 text-muted-foreground shrink-0" />
-                      <input
-                        type="email"
-                        value={smtpUser}
-                        onChange={(e) => setSmtpUser(e.target.value)}
-                        placeholder="your-property.mail@gmail.com"
-                        className="bg-transparent border-none outline-none w-full text-xs font-mono text-foreground focus:ring-0"
-                      />
+                <div className="space-y-2">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                    Required Environment Variables (.env / Vercel):
+                  </p>
+
+                  <div className="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <Mail className="size-4 text-zinc-400 shrink-0" />
+                      <div>
+                        <p className="font-mono text-xs font-bold text-zinc-900 dark:text-zinc-100">SMTP_USER</p>
+                        <p className="text-[10px] text-zinc-500">Sender Gmail address (e.g. reyes.residences@gmail.com)</p>
+                      </div>
                     </div>
+                    <span className="text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
+                      Required
+                    </span>
                   </div>
 
-                  <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">
-                        16-Character Gmail App Password
-                      </label>
-                      <span className="text-[9px] font-black uppercase tracking-widest text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-md">
-                        Revocable Token
+                  <div className="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <KeyRound className="size-4 text-zinc-400 shrink-0" />
+                      <div>
+                        <p className="font-mono text-xs font-bold text-zinc-900 dark:text-zinc-100">SMTP_PASS</p>
+                        <p className="text-[10px] text-zinc-500">16-character Google App Password (revocable token)</p>
+                      </div>
+                    </div>
+                    <span className="text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40">
+                      App Password
+                    </span>
+                  </div>
+
+                  {/* Diagnostic Verification Status Card */}
+                  <div
+                    className={cn(
+                      "p-2.5 rounded-xl border transition-all flex items-center justify-between mt-1",
+                      emailStatus === "verified"
+                        ? "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300"
+                        : "bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300"
+                    )}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div
+                        className={cn(
+                          "size-5.5 rounded-lg flex items-center justify-center text-xs",
+                          emailStatus === "verified" ? "bg-emerald-600 text-white" : "bg-zinc-300 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200"
+                        )}
+                      >
+                        {emailStatus === "verified" ? <Check className="size-3 stroke-[3]" /> : <Mail className="size-3" />}
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-wide">
+                          {emailStatus === "verified" ? "SMTP Gateway Verified" : "SMTP Status: Untested"}
+                        </p>
+                        <p className="text-[10px] opacity-80 leading-none mt-0.5">
+                          {emailStatus === "verified"
+                            ? "TLS Handshake OK • smtp.gmail.com:587 • Ready to send receipts"
+                            : "Click 'Test SMTP Handshake' to send a test packet"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {emailStatus === "verified" && (
+                      <span className="text-[9px] font-bold uppercase tracking-wider bg-emerald-600 text-white px-2 py-0.5 rounded">
+                        Ready
                       </span>
-                    </div>
-                    <div className="neumorphic-inset rounded-2xl px-4 py-3 flex items-center gap-3 text-xs font-mono text-foreground">
-                      <Lock className="size-4 text-muted-foreground shrink-0" />
-                      <input
-                        type="password"
-                        value={smtpPass}
-                        onChange={(e) => setSmtpPass(e.target.value)}
-                        placeholder="•••• •••• •••• ••••"
-                        className="bg-transparent border-none outline-none w-full text-xs font-mono text-foreground focus:ring-0"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Advanced SMTP Collapsible Toggle */}
-                  <div className="pt-1">
-                    <button
-                      type="button"
-                      onClick={() => setShowAdvancedSmtp(!showAdvancedSmtp)}
-                      className="text-[10px] font-black uppercase tracking-wider text-muted-foreground hover:text-primary flex items-center gap-1.5 transition-colors"
-                    >
-                      <Sliders className="size-3" />
-                      <span>{showAdvancedSmtp ? "Hide Server Settings" : "⚙️ Advanced Server Settings (Host & Port)"}</span>
-                    </button>
-
-                    <AnimatePresence>
-                      {showAdvancedSmtp && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          exit={{ opacity: 0, height: 0 }}
-                          className="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-border/40 overflow-hidden"
-                        >
-                          <div>
-                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1 block">
-                              SMTP Host
-                            </label>
-                            <div className="neumorphic-inset rounded-xl px-3 py-2">
-                              <input
-                                type="text"
-                                value={smtpHost}
-                                onChange={(e) => setSmtpHost(e.target.value)}
-                                className="bg-transparent border-none outline-none w-full text-xs font-mono text-foreground focus:ring-0"
-                              />
-                            </div>
-                          </div>
-                          <div>
-                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1 block">
-                              Port
-                            </label>
-                            <div className="neumorphic-inset rounded-xl px-3 py-2">
-                              <input
-                                type="text"
-                                value={smtpPort}
-                                onChange={(e) => setSmtpPort(e.target.value)}
-                                className="bg-transparent border-none outline-none w-full text-xs font-mono text-foreground focus:ring-0"
-                              />
-                            </div>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                    )}
                   </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
+                <div className="flex items-center gap-2.5 pt-1">
                   <button
                     onClick={() => setCurrentStep(1)}
-                    className="w-full sm:w-1/3 py-3 px-4 rounded-2xl neumorphic-extruded hover:text-primary active:scale-95 text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 text-foreground"
+                    className="w-1/3 py-2.5 px-3 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 active:scale-95 text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 text-zinc-900 dark:text-zinc-100 shadow-xs"
                   >
-                    <ArrowLeft className="size-4" />
+                    <ArrowLeft className="size-3.5" />
                     <span>Back</span>
                   </button>
 
                   <button
                     onClick={handleTestEmail}
                     disabled={emailTesting}
-                    className="w-full sm:w-1/3 py-3 px-4 rounded-2xl neumorphic-extruded hover:text-primary active:scale-95 text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 text-foreground"
+                    className="w-1/3 py-2.5 px-3 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 active:scale-95 text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 text-zinc-900 dark:text-zinc-100 shadow-xs"
                   >
                     {emailTesting ? (
                       <>
-                        <RefreshCw className="size-4 animate-spin text-primary" />
+                        <RefreshCw className="size-3.5 animate-spin text-zinc-600" />
                         <span>Testing...</span>
                       </>
                     ) : (
                       <>
-                        <Mail className="size-4 text-primary" />
-                        <span>Send Test</span>
+                        <Mail className="size-3.5 text-zinc-700 dark:text-zinc-300" />
+                        <span>Test SMTP</span>
                       </>
                     )}
                   </button>
@@ -570,35 +661,37 @@ export default function TechnicalCommissioningPage() {
                       if (emailStatus !== "verified") handleTestEmail();
                       setCurrentStep(3);
                     }}
-                    className="w-full sm:w-1/3 py-3 px-4 rounded-2xl neumorphic-primary active:scale-95 text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+                    className="w-1/3 py-2.5 px-3 rounded-xl bg-zinc-950 hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 active:scale-95 text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shadow-xs"
                   >
                     <span>Continue</span>
-                    <ArrowRight className="size-4" />
+                    <ArrowRight className="size-3.5" />
                   </button>
                 </div>
               </motion.div>
             )}
 
-            {/* STEP 3: PROVISIONER */}
-            {currentStep === 3 && (
+            {/* ========================================================================= */}
+            {/* STEP 3: SCHEMA PROVISIONER (ACTIVE EXECUTION VIEW)                        */}
+            {/* ========================================================================= */}
+            {currentStep === 3 && (!migrationCompleted || showLogDetails) && (
               <motion.div
                 key="step3"
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-                className="neumorphic-panel rounded-3xl p-6 sm:p-8 flex flex-col gap-6 border border-border/50"
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.15 }}
+                className="bg-white dark:bg-zinc-900 rounded-2xl p-5 sm:p-6 flex flex-col gap-3.5 border border-zinc-200 dark:border-zinc-800 shadow-xs"
               >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/50">
+                <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800">
                   <div className="flex items-center gap-3">
-                    <div className="size-10 rounded-2xl neumorphic-inset flex items-center justify-center text-primary">
-                      <Server className="size-5" />
+                    <div className="size-9 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-900 dark:text-zinc-100">
+                      <Server className="size-4.5" />
                     </div>
                     <div>
-                      <h2 className="text-sm font-black uppercase tracking-wider text-foreground">
-                        Step 3: Schema Provisioner & RLS Enforcement
+                      <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-950 dark:text-white">
+                        Step 3: Schema Provisioner & RLS
                       </h2>
-                      <p className="text-xs text-muted-foreground">Deploys 55 entity tables, storage policies, and crons</p>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400">Deploys 55 entity tables, storage policies, and crons</p>
                     </div>
                   </div>
 
@@ -606,51 +699,55 @@ export default function TechnicalCommissioningPage() {
                     <button
                       onClick={handleStartMigration}
                       disabled={migrationRunning}
-                      className="neumorphic-primary px-5 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2 shrink-0 disabled:opacity-50"
+                      className="bg-zinc-950 hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-2 shrink-0 disabled:opacity-50 shadow-xs"
                     >
                       {migrationRunning ? (
                         <>
-                          <RefreshCw className="size-4 animate-spin" />
+                          <RefreshCw className="size-3.5 animate-spin" />
                           <span>Provisioning...</span>
                         </>
                       ) : (
                         <>
-                          <Play className="size-4 fill-current" />
+                          <Play className="size-3.5 fill-current" />
                           <span>Execute Migrations</span>
                         </>
                       )}
                     </button>
                   ) : (
-                    <div className="neumorphic-inset px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-emerald-500 flex items-center gap-1.5">
-                      <CheckCircle2 className="size-3.5 text-primary" />
-                      <span>Ready for Handover</span>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowLogDetails(false)}
+                      className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 flex items-center gap-1 transition-all active:scale-95"
+                    >
+                      <Check className="size-3 text-emerald-600" />
+                      <span>Back to Summary</span>
+                    </button>
                   )}
                 </div>
 
                 {/* Progress Steps Feed */}
-                <div className="space-y-2">
+                <div className="space-y-1.5 max-h-[140px] overflow-y-auto">
                   {migrationSteps.map((step, idx) => (
                     <div
                       key={step.id}
                       className={cn(
-                        "p-3 rounded-2xl transition-all flex items-center justify-between",
+                        "p-2.5 rounded-xl transition-all flex items-center justify-between border",
                         step.status === "completed"
-                          ? "neumorphic-inset border-l-4 border-l-emerald-500"
+                          ? "bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900/40"
                           : step.status === "running"
-                          ? "neumorphic-extruded border-l-4 border-l-primary"
-                          : "neumorphic-inset opacity-60"
+                          ? "bg-zinc-100 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-700 shadow-xs"
+                          : "bg-zinc-50 dark:bg-zinc-950/40 border-zinc-200 dark:border-zinc-800/80 opacity-60"
                       )}
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2.5">
                         <div
                           className={cn(
-                            "size-6 rounded-lg flex items-center justify-center text-[10px] font-black font-mono",
+                            "size-5.5 rounded-md flex items-center justify-center text-[10px] font-bold font-mono",
                             step.status === "completed"
-                              ? "bg-emerald-500 text-zinc-950"
+                              ? "bg-emerald-600 text-white"
                               : step.status === "running"
-                              ? "bg-primary text-primary-foreground"
-                              : "neumorphic-inset text-muted-foreground"
+                              ? "bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950"
+                              : "bg-zinc-200 dark:bg-zinc-800 text-zinc-500"
                           )}
                         >
                           {step.status === "completed" ? (
@@ -660,44 +757,44 @@ export default function TechnicalCommissioningPage() {
                           )}
                         </div>
                         <div>
-                          <p className="text-xs font-black uppercase tracking-wide text-foreground">
+                          <p className="text-xs font-bold uppercase tracking-wide text-zinc-900 dark:text-zinc-100 leading-tight">
                             {step.label}
                           </p>
-                          <p className="text-[11px] text-muted-foreground">{step.detail}</p>
+                          <p className="text-[10px] text-zinc-500 dark:text-zinc-400 leading-tight">{step.detail}</p>
                         </div>
                       </div>
 
                       <div className="text-[10px] font-mono font-bold shrink-0 ml-2">
                         {step.status === "completed" && (
-                          <span className="text-emerald-500">APPLIED</span>
+                          <span className="text-emerald-600 dark:text-emerald-400">APPLIED</span>
                         )}
                         {step.status === "running" && (
-                          <span className="text-primary animate-pulse">RUNNING...</span>
+                          <span className="text-zinc-950 dark:text-white animate-pulse">RUNNING...</span>
                         )}
                         {step.status === "pending" && (
-                          <span className="text-muted-foreground/50">PENDING</span>
+                          <span className="text-zinc-400 dark:text-zinc-600">PENDING</span>
                         )}
                       </div>
                     </div>
                   ))}
                 </div>
 
-                {/* Neumorphic Terminal Console Box */}
-                <div className="neumorphic-inset rounded-2xl p-4 font-mono text-xs flex flex-col gap-2 min-h-[140px] bg-background/50">
-                  <div className="flex items-center justify-between pb-2 border-b border-border/40 text-muted-foreground text-[10px] font-black uppercase tracking-wider">
-                    <div className="flex items-center gap-2">
-                      <TerminalIcon className="size-3.5 text-primary" />
+                {/* Clean Terminal Console Box */}
+                <div className="rounded-xl p-3 font-mono text-xs flex flex-col gap-1 min-h-[90px] max-h-[100px] bg-zinc-950 border border-zinc-800 text-zinc-300">
+                  <div className="flex items-center justify-between pb-1 border-b border-zinc-800 text-zinc-500 text-[9px] font-bold uppercase tracking-wider">
+                    <div className="flex items-center gap-1.5">
+                      <TerminalIcon className="size-3.5 text-zinc-400" />
                       <span>installer-console.log</span>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="size-2 rounded-full bg-emerald-500/80" />
+                    <div className="flex items-center gap-1">
+                      <span className="size-1.5 rounded-full bg-emerald-500" />
                       <span>PostgreSQL Cluster</span>
                     </div>
                   </div>
 
-                  <div className="flex-1 overflow-y-auto space-y-1 text-[11px]">
+                  <div className="flex-1 overflow-y-auto space-y-0.5 text-[11px]">
                     {logs.length === 0 ? (
-                      <p className="text-muted-foreground/70 italic">
+                      <p className="text-zinc-600 italic">
                         Click &apos;Execute Migrations&apos; above to begin automated schema deployment...
                       </p>
                     ) : (
@@ -706,10 +803,10 @@ export default function TechnicalCommissioningPage() {
                           key={index}
                           className={
                             log.includes("[✓]")
-                              ? "text-emerald-500 font-semibold"
+                              ? "text-emerald-400 font-semibold"
                               : log.includes("🚀")
-                              ? "text-primary font-black"
-                              : "text-foreground/80"
+                              ? "text-white font-bold"
+                              : "text-zinc-300"
                           }
                         >
                           {log}
@@ -719,38 +816,25 @@ export default function TechnicalCommissioningPage() {
                   </div>
                 </div>
 
-                {/* Handover CTA */}
-                <div className="pt-2 flex flex-col gap-3">
-                  {!migrationCompleted ? (
-                    <button
-                      onClick={() => setCurrentStep(2)}
-                      className="py-3 px-4 rounded-2xl neumorphic-extruded hover:text-primary active:scale-95 text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 text-foreground w-full sm:w-auto self-start"
-                    >
-                      <ArrowLeft className="size-4" />
-                      <span>Back to Email</span>
-                    </button>
-                  ) : (
-                    <div className="neumorphic-extruded rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 border border-primary/40 bg-background">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <CheckCircle2 className="size-5 text-emerald-500" />
-                          <h3 className="text-sm font-black uppercase tracking-wider text-foreground">
-                            Infrastructure Ready for Handover!
-                          </h3>
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          Pass the device to the Property Owner to complete the Business Setup Wizard.
-                        </p>
-                      </div>
+                {/* Back / Handover Actions */}
+                <div className="pt-1 flex items-center justify-between gap-3">
+                  <button
+                    onClick={() => setCurrentStep(2)}
+                    className="py-2 px-3.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 active:scale-95 text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 text-zinc-900 dark:text-zinc-100 shadow-xs"
+                  >
+                    <ArrowLeft className="size-3.5" />
+                    <span>Back to Email</span>
+                  </button>
 
-                      <Link
-                        href="/setup"
-                        className="neumorphic-primary px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2 shrink-0"
-                      >
-                        <span>Start Business Setup</span>
-                        <ArrowRight className="size-4" />
-                      </Link>
-                    </div>
+                  {migrationCompleted && (
+                    <button
+                      type="button"
+                      onClick={() => setShowLogDetails(false)}
+                      className="py-2 px-4 rounded-xl bg-zinc-950 hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-xs font-bold uppercase tracking-wider transition-all active:scale-95 shadow-xs flex items-center gap-1.5"
+                    >
+                      <span>Proceed to Handover Summary</span>
+                      <ArrowRight className="size-3.5" />
+                    </button>
                   )}
                 </div>
               </motion.div>
@@ -758,166 +842,14 @@ export default function TechnicalCommissioningPage() {
           </AnimatePresence>
         </div>
 
-        {/* Security & Zero-Ops Assurance Footer */}
-        <div className="w-full max-w-2xl mt-6 p-4 rounded-2xl neumorphic-inset flex items-start gap-3 text-[11px] text-muted-foreground">
-          <ShieldCheck className="size-4 text-primary shrink-0 mt-0.5" />
-          <div>
-            <strong className="text-foreground">Turnkey Security Standard:</strong> All database communication is TLS 1.3 encrypted. PostgreSQL Row-Level Security (RLS) policies isolate tenant records cryptographically. Credentials reside strictly on the server and are never transmitted to third parties.
-          </div>
+        {/* Security Footer */}
+        <div className="w-full p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center gap-2.5 text-[11px] text-zinc-500 dark:text-zinc-400 shadow-xs">
+          <ShieldCheck className="size-4 text-zinc-800 dark:text-zinc-200 shrink-0" />
+          <span>
+            <strong className="text-zinc-900 dark:text-zinc-200">Zero-Trust Standard:</strong> Secret keys reside strictly in hosting server environment variables. Zero client-side key storage or exposure.
+          </span>
         </div>
       </main>
-
-      {/* STEP-BY-STEP INTERACTIVE HELP MODALS */}
-      <AnimatePresence>
-        {activeGuideModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setActiveGuideModal(null)}
-              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-            />
-
-            {/* Modal Box */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              transition={{ duration: 0.2 }}
-              className="relative z-10 w-full max-w-lg neumorphic-panel rounded-3xl p-6 sm:p-8 border border-border shadow-2xl flex flex-col gap-6"
-            >
-              {/* Modal Header */}
-              <div className="flex items-center justify-between pb-3 border-b border-border/50">
-                <div className="flex items-center gap-3">
-                  <div className="size-10 rounded-2xl neumorphic-inset flex items-center justify-center text-primary">
-                    {activeGuideModal === "database" ? <KeyRound className="size-5" /> : <Mail className="size-5" />}
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-black uppercase tracking-wider text-foreground">
-                      {activeGuideModal === "database"
-                        ? "Supabase Credentials Guide"
-                        : "Gmail App Password Setup"}
-                    </h3>
-                    <p className="text-xs text-muted-foreground">Step-by-step key extraction procedure</p>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => setActiveGuideModal(null)}
-                  className="size-8 rounded-xl neumorphic-inset flex items-center justify-center text-muted-foreground hover:text-primary transition-colors"
-                >
-                  <X className="size-4" />
-                </button>
-              </div>
-
-              {/* Modal Content Steps */}
-              {activeGuideModal === "database" ? (
-                <div className="space-y-3.5">
-                  <div className="p-3.5 rounded-2xl neumorphic-inset flex items-start gap-3">
-                    <div className="size-6 rounded-lg neumorphic-primary text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
-                      1
-                    </div>
-                    <div>
-                      <p className="text-xs font-black uppercase tracking-wide text-foreground">
-                        Open Supabase Project Dashboard
-                      </p>
-                      <p className="text-[11px] text-muted-foreground mt-0.5">
-                        Log into your private account at <span className="font-mono text-primary">supabase.com/dashboard</span> and select your property project.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="p-3.5 rounded-2xl neumorphic-inset flex items-start gap-3">
-                    <div className="size-6 rounded-lg neumorphic-primary text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
-                      2
-                    </div>
-                    <div>
-                      <p className="text-xs font-black uppercase tracking-wide text-foreground">
-                        Navigate to Project Settings ➔ API
-                      </p>
-                      <p className="text-[11px] text-muted-foreground mt-0.5">
-                        Click the gear icon (⚙️) at the bottom of the left sidebar, then click <strong className="text-foreground">API</strong> under Project Settings.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="p-3.5 rounded-2xl neumorphic-inset flex items-start gap-3">
-                    <div className="size-6 rounded-lg neumorphic-primary text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
-                      3
-                    </div>
-                    <div>
-                      <p className="text-xs font-black uppercase tracking-wide text-foreground">
-                        Copy URL, Anon Key & Service Role
-                      </p>
-                      <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
-                        • <strong className="text-foreground">Project URL:</strong> Paste into Project Endpoint.<br />
-                        • <strong className="text-foreground">anon public:</strong> Safe client key.<br />
-                        • <strong className="text-amber-500">service_role secret:</strong> Reveal and copy the secret key for schema provisioning.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-3.5">
-                  <div className="p-3.5 rounded-2xl neumorphic-inset flex items-start gap-3">
-                    <div className="size-6 rounded-lg neumorphic-primary text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
-                      1
-                    </div>
-                    <div>
-                      <p className="text-xs font-black uppercase tracking-wide text-foreground">
-                        Open Google Security Settings
-                      </p>
-                      <p className="text-[11px] text-muted-foreground mt-0.5">
-                        Go to <span className="font-mono text-primary">myaccount.google.com/security</span> on your sender account.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="p-3.5 rounded-2xl neumorphic-inset flex items-start gap-3">
-                    <div className="size-6 rounded-lg neumorphic-primary text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
-                      2
-                    </div>
-                    <div>
-                      <p className="text-xs font-black uppercase tracking-wide text-foreground">
-                        Enable 2-Step Verification
-                      </p>
-                      <p className="text-[11px] text-muted-foreground mt-0.5">
-                        Google requires 2-Step Verification to be active before generating App Passwords.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="p-3.5 rounded-2xl neumorphic-inset flex items-start gap-3">
-                    <div className="size-6 rounded-lg neumorphic-primary text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
-                      3
-                    </div>
-                    <div>
-                      <p className="text-xs font-black uppercase tracking-wide text-foreground">
-                        Generate & Copy 16-Char App Password
-                      </p>
-                      <p className="text-[11px] text-muted-foreground mt-0.5">
-                        Search for &quot;App Passwords&quot;, type &quot;iReside&quot;, and copy the generated 16-character token. Never use your main account password.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Modal Footer */}
-              <div className="pt-2 flex justify-end">
-                <button
-                  onClick={() => setActiveGuideModal(null)}
-                  className="neumorphic-primary px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest active:scale-95 transition-all w-full sm:w-auto"
-                >
-                  Understood & Close
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

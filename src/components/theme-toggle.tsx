@@ -18,6 +18,17 @@ export function ThemeToggle({ variant = "default", dataTourId, className, ...pro
     setMounted(true)
   }, [])
 
+  const handleToggle = () => {
+    const nextTheme = theme === "light" ? "dark" : "light";
+    if (typeof document !== "undefined" && "startViewTransition" in document) {
+      (document as unknown as { startViewTransition: (cb: () => void) => void }).startViewTransition(() => {
+        setTheme(nextTheme);
+      });
+    } else {
+      setTheme(nextTheme);
+    }
+  };
+
   return !mounted ? (
     <div 
       className={cn(
@@ -29,7 +40,7 @@ export function ThemeToggle({ variant = "default", dataTourId, className, ...pro
   ) : (
     <button
       {...props}
-      onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+      onClick={handleToggle}
       className={cn(
         "relative flex size-10 items-center justify-center rounded-xl border transition-all",
         variant === "default" && "border-zinc-200 bg-zinc-50 text-zinc-900 hover:bg-zinc-100 hover:border-zinc-300 dark:border-white/10 dark:bg-white/[0.02] dark:text-white dark:hover:bg-white/[0.08] dark:hover:border-white/20",
