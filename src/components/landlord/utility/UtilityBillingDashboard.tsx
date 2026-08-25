@@ -27,6 +27,8 @@ import { toast } from "sonner";
 import { useProperty } from "@/context/PropertyContext";
 import type { BillingWorkspace } from "@/lib/billing/server";
 import { BillingOperationsPanel } from "@/components/landlord/BillingOperationsPanel";
+import { OfflineStorage } from "@/lib/offline/offlineStorage";
+import { mutationQueue } from "@/lib/offline/mutationQueue";
 
 type ReadingDraft = {
  leaseId: string;
@@ -84,193 +86,312 @@ export function UtilityBillingDashboard() {
  
  const [drafts, setDrafts] = useState<ReadingDraft[]>([]);
 
- const fetchData = useCallback(async () => {
- try {
- setLoading(true);
- const [workspaceRes, readingsRes] = await Promise.all([
- fetch("/api/landlord/payment-settings"),
- fetch(`/api/landlord/utility-readings?month=${selectedMonth}`)
- ]);
+ 	const fetchData = useCallback(async () => {
+		try {
+			setLoading(true);
 
- if (!workspaceRes.ok || !readingsRes.ok) throw new Error("Failed to load billing data");
+			// Attempt live fetch if online
+			if (typeof navigator !== "undefined" && navigator.onLine) {
+				const [workspaceRes, readingsRes] = await Promise.all([
+					fetch("/api/landlord/payment-settings"),
+					fetch(`/api/landlord/utility-readings?month=${selectedMonth}`)
+				]);
 
- const workspaceData = await workspaceRes.json();
- const readingsData = await readingsRes.json();
- 
- setWorkspace(workspaceData);
+				if (workspaceRes.ok && readingsRes.ok) {
+					const workspaceData = await workspaceRes.json();
+					const readingsData = await readingsRes.json();
+					setWorkspace(workspaceData);
 
- const latestRes = await fetch("/api/landlord/utility-readings");
- const latestData = await latestRes.json();
- const allReadings = latestData.readings || [];
+					const latestRes = await fetch("/api/landlord/utility-readings");
+					const latestData = latestRes.ok ? await latestRes.json() : { readings: [] };
+					const allReadings = latestData.readings || [];
 
- // eslint-disable-next-line @typescript-eslint/no-explicit-any
- const newDrafts: ReadingDraft[] = workspaceData.activeLeases.map((lease: any) => {
- // eslint-disable-next-line @typescript-eslint/no-explicit-any
- const currentWater = readingsData.readings.find((r: any) => r.lease_id === lease.id && r.utility_type === "water");
- // eslint-disable-next-line @typescript-eslint/no-explicit-any
- const currentElec = readingsData.readings.find((r: any) => r.lease_id === lease.id && r.utility_type === "electricity");
- 
- // eslint-disable-next-line @typescript-eslint/no-explicit-any
- const prevWaterReading = allReadings.find((r: any) => 
- r.lease_id === lease.id && 
- r.utility_type === "water" && 
- r.id !== currentWater?.id
- );
- // eslint-disable-next-line @typescript-eslint/no-explicit-any
- const prevElecReading = allReadings.find((r: any) => 
- r.lease_id === lease.id && 
- r.utility_type === "electricity" && 
- r.id !== currentElec?.id
- );
+					// Cache snapshots locally for offline use
+					OfflineStorage.set("utility_workspace", workspaceData, null, "utility");
+					OfflineStorage.set(`utility_readings_${selectedMonth}`, readingsData, null, "utility");
+					OfflineStorage.set("utility_all_readings", latestData, null, "utility");
 
- // Get rates from workspace utilityConfigs
- // eslint-disable-next-line @typescript-eslint/no-explicit-any
- const propertyWaterConfig = workspaceData.utilityConfigs.find((c: any) => c.property_id === lease.property?.id && c.utility_type === "water" && c.unit_id === null);
- // eslint-disable-next-line @typescript-eslint/no-explicit-any
- const unitWaterConfig = workspaceData.utilityConfigs.find((c: any) => c.unit_id === lease.unit?.id && c.utility_type === "water");
- 
- // eslint-disable-next-line @typescript-eslint/no-explicit-any
- const propertyElecConfig = workspaceData.utilityConfigs.find((c: any) => c.property_id === lease.property?.id && c.utility_type === "electricity" && c.unit_id === null);
- // eslint-disable-next-line @typescript-eslint/no-explicit-any
- const unitElecConfig = workspaceData.utilityConfigs.find((c: any) => c.unit_id === lease.unit?.id && c.utility_type === "electricity");
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
+					const newDrafts: ReadingDraft[] = (workspaceData.activeLeases || []).map((lease: any) => {
+						// eslint-disable-next-line @typescript-eslint/no-explicit-any
+						const currentWater = readingsData.readings.find((r: any) => r.lease_id === lease.id && r.utility_type === "water");
+						// eslint-disable-next-line @typescript-eslint/no-explicit-any
+						const currentElec = readingsData.readings.find((r: any) => r.lease_id === lease.id && r.utility_type === "electricity");
 
- return {
- leaseId: lease.id,
- unitName: lease.unit?.name || "Unknown",
- propertyId: lease.property?.id || "",
- rentAmount: lease.monthly_rent || 0,
- water: {
- previous: currentWater ? currentWater.previous_reading : (prevWaterReading?.current_reading || 0),
- current: currentWater ? currentWater.current_reading.toString() : "",
- exists: !!currentWater,
- rate: unitWaterConfig?.rate_per_unit || propertyWaterConfig?.rate_per_unit || 0
- },
- electricity: {
- previous: currentElec ? currentElec.previous_reading : (prevElecReading?.current_reading || 0),
- current: currentElec ? currentElec.current_reading.toString() : "",
- exists: !!currentElec,
- rate: unitElecConfig?.rate_per_unit || propertyElecConfig?.rate_per_unit || 0
- }
- };
- });
+						// eslint-disable-next-line @typescript-eslint/no-explicit-any
+						const prevWaterReading = allReadings.find((r: any) => 
+							r.lease_id === lease.id && 
+							r.utility_type === "water" && 
+							r.id !== currentWater?.id
+						);
+						// eslint-disable-next-line @typescript-eslint/no-explicit-any
+						const prevElecReading = allReadings.find((r: any) => 
+							r.lease_id === lease.id && 
+							r.utility_type === "electricity" && 
+							r.id !== currentElec?.id
+						);
 
- setDrafts(newDrafts);
- } catch (err) {
- console.error(err);
- toast.error("Failed to load billing information");
- } finally {
- setLoading(false);
- }
- }, [selectedMonth]);
+						// eslint-disable-next-line @typescript-eslint/no-explicit-any
+						const propertyWaterConfig = (workspaceData.utilityConfigs || []).find((c: any) => c.property_id === lease.property?.id && c.utility_type === "water" && c.unit_id === null);
+						// eslint-disable-next-line @typescript-eslint/no-explicit-any
+						const unitWaterConfig = (workspaceData.utilityConfigs || []).find((c: any) => c.unit_id === lease.unit?.id && c.utility_type === "water");
 
- useEffect(() => {
- fetchData();
- }, [fetchData]);
+						// eslint-disable-next-line @typescript-eslint/no-explicit-any
+						const propertyElecConfig = (workspaceData.utilityConfigs || []).find((c: any) => c.property_id === lease.property?.id && c.utility_type === "electricity" && c.unit_id === null);
+						// eslint-disable-next-line @typescript-eslint/no-explicit-any
+						const unitElecConfig = (workspaceData.utilityConfigs || []).find((c: any) => c.unit_id === lease.unit?.id && c.utility_type === "electricity");
 
- // Fetch history summaries when history tab is active
- useEffect(() => {
- if (activeTab !== "history") return;
- let alive = true;
- const fetchSummaries = async () => {
- setHistorySummariesLoading(true);
- const months: string[] = [];
- for (let i = 0; i < 9; i++) {
- const d = new Date();
- d.setDate(1);
- d.setMonth(d.getMonth() - i);
- months.push(d.toISOString().slice(0, 7));
- }
- const results: Record<string, MonthSummary> = {};
- await Promise.all(
- months.map(async (m) => {
- try {
- const res = await fetch(`/api/landlord/utility-readings?month=${m}`);
- if (!res.ok) return;
- const json = await res.json();
- const readings: { utility_type: string; previous_reading: number; current_reading: number }[] = json.readings || [];
- let totalElec = 0;
- let totalWater = 0;
- for (const r of readings) {
- const usage = r.current_reading - r.previous_reading;
- if (r.utility_type === "electricity") totalElec += usage;
- else if (r.utility_type === "water") totalWater += usage;
- }
- results[m] = { totalElec, totalWater, readingCount: readings.length };
- } catch {
- results[m] = { totalElec: 0, totalWater: 0, readingCount: 0 };
- }
- })
- );
- if (alive) {
- setHistorySummaries(results);
- setHistorySummariesLoading(false);
- }
- };
- fetchSummaries();
- return () => { alive = false; };
- // eslint-disable-next-line react-hooks/exhaustive-deps
- }, [activeTab]);
+						return {
+							leaseId: lease.id,
+							unitName: lease.unit?.name || "Unknown",
+							propertyId: lease.property?.id || "",
+							rentAmount: lease.monthly_rent || 0,
+							water: {
+								previous: currentWater ? currentWater.previous_reading : (prevWaterReading?.current_reading || 0),
+								current: currentWater ? currentWater.current_reading.toString() : "",
+								exists: !!currentWater,
+								rate: unitWaterConfig?.rate_per_unit || propertyWaterConfig?.rate_per_unit || 0
+							},
+							electricity: {
+								previous: currentElec ? currentElec.previous_reading : (prevElecReading?.current_reading || 0),
+								current: currentElec ? currentElec.current_reading.toString() : "",
+								exists: !!currentElec,
+								rate: unitElecConfig?.rate_per_unit || propertyElecConfig?.rate_per_unit || 0
+							}
+						};
+					});
 
- const filteredDrafts = drafts.filter(d => {
- const matchesProperty = selectedPropertyId === "all" || d.propertyId === selectedPropertyId;
- const matchesSearch = d.unitName.toLowerCase().includes(searchQuery.toLowerCase());
- return matchesProperty && matchesSearch;
- });
+					setDrafts(newDrafts);
+					return;
+				}
+			}
 
- const handleSaveReadings = async () => {
- const toSave: ReadingSaveRequest[] = [];
- const start = `${selectedMonth}-01`;
- const end = new Date(new Date(selectedMonth).getFullYear(), new Date(selectedMonth).getMonth() + 1, 0).toISOString().slice(0, 10);
+			// Offline Fallback Hydration
+			const cachedWorkspace = OfflineStorage.get<BillingWorkspace>("utility_workspace");
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			const cachedReadings = OfflineStorage.get<any>(`utility_readings_${selectedMonth}`);
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			const cachedAllReadings = OfflineStorage.get<any>("utility_all_readings");
 
- drafts.forEach(d => {
- if (!d.water.exists && d.water.current !== "") {
- toSave.push({
- leaseId: d.leaseId,
- utilityType: "water",
- billingPeriodStart: start,
- billingPeriodEnd: end,
- previousReading: d.water.previous,
- currentReading: parseFloat(d.water.current),
- note: ""
- });
- }
- if (!d.electricity.exists && d.electricity.current !== "") {
- toSave.push({
- leaseId: d.leaseId,
- utilityType: "electricity",
- billingPeriodStart: start,
- billingPeriodEnd: end,
- previousReading: d.electricity.previous,
- currentReading: parseFloat(d.electricity.current),
- note: ""
- });
- }
- });
+			if (cachedWorkspace?.data) {
+				const workspaceData = cachedWorkspace.data;
+				const readingsData = cachedReadings?.data || { readings: [] };
+				const allReadings = cachedAllReadings?.data?.readings || [];
 
- if (toSave.length === 0) {
- toast.info("No new readings to save");
- return;
- }
+				setWorkspace(workspaceData);
 
- try {
- setSaving(true);
- const res = await fetch("/api/landlord/utility-readings", {
- method: "POST",
- headers: { "Content-Type": "application/json" },
- body: JSON.stringify(toSave)
- });
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				const newDrafts: ReadingDraft[] = (workspaceData.activeLeases || []).map((lease: any) => {
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
+					const currentWater = readingsData.readings.find((r: any) => r.lease_id === lease.id && r.utility_type === "water");
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
+					const currentElec = readingsData.readings.find((r: any) => r.lease_id === lease.id && r.utility_type === "electricity");
 
- if (!res.ok) throw new Error("Save failed");
- 
- toast.success(`Successfully saved ${toSave.length} readings`);
- fetchData();
- } catch (err) {
- console.error(err);
- toast.error("Failed to save readings");
- } finally {
- setSaving(false);
- }
- };
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
+					const prevWaterReading = allReadings.find((r: any) => 
+						r.lease_id === lease.id && 
+						r.utility_type === "water" && 
+						r.id !== currentWater?.id
+					);
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
+					const prevElecReading = allReadings.find((r: any) => 
+						r.lease_id === lease.id && 
+						r.utility_type === "electricity" && 
+						r.id !== currentElec?.id
+					);
+
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
+					const propertyWaterConfig = (workspaceData.utilityConfigs || []).find((c: any) => c.property_id === lease.property?.id && c.utility_type === "water" && c.unit_id === null);
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
+					const unitWaterConfig = (workspaceData.utilityConfigs || []).find((c: any) => c.unit_id === lease.unit?.id && c.utility_type === "water");
+
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
+					const propertyElecConfig = (workspaceData.utilityConfigs || []).find((c: any) => c.property_id === lease.property?.id && c.utility_type === "electricity" && c.unit_id === null);
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
+					const unitElecConfig = (workspaceData.utilityConfigs || []).find((c: any) => c.unit_id === lease.unit?.id && c.utility_type === "electricity");
+
+					return {
+						leaseId: lease.id,
+						unitName: lease.unit?.name || "Unknown",
+						propertyId: lease.property?.id || "",
+						rentAmount: lease.monthly_rent || 0,
+						water: {
+							previous: currentWater ? currentWater.previous_reading : (prevWaterReading?.current_reading || 0),
+							current: currentWater ? currentWater.current_reading.toString() : "",
+							exists: !!currentWater,
+							rate: unitWaterConfig?.rate_per_unit || propertyWaterConfig?.rate_per_unit || 0
+						},
+						electricity: {
+							previous: currentElec ? currentElec.previous_reading : (prevElecReading?.current_reading || 0),
+							current: currentElec ? currentElec.current_reading.toString() : "",
+							exists: !!currentElec,
+							rate: unitElecConfig?.rate_per_unit || propertyElecConfig?.rate_per_unit || 0
+						}
+					};
+				});
+
+				setDrafts(newDrafts);
+				toast.info("Offline Mode: Hydrated utility records and tariffs from local cache.");
+			} else {
+				toast.error("Failed to load billing information");
+			}
+		} catch (err) {
+			console.error(err);
+			// Fall back to cache on fetch error
+			const cachedWorkspace = OfflineStorage.get<BillingWorkspace>("utility_workspace");
+			if (cachedWorkspace?.data) {
+				setWorkspace(cachedWorkspace.data);
+				toast.info("Loaded cached utility workspace offline.");
+			} else {
+				toast.error("Failed to load billing information");
+			}
+		} finally {
+			setLoading(false);
+		}
+	}, [selectedMonth]);
+
+	useEffect(() => {
+		fetchData();
+	}, [fetchData]);
+
+	// Fetch history summaries when history tab is active
+	useEffect(() => {
+		if (activeTab !== "history") return;
+		let alive = true;
+		const fetchSummaries = async () => {
+			setHistorySummariesLoading(true);
+			const months: string[] = [];
+			for (let i = 0; i < 9; i++) {
+				const d = new Date();
+				d.setDate(1);
+				d.setMonth(d.getMonth() - i);
+				months.push(d.toISOString().slice(0, 7));
+			}
+			const results: Record<string, MonthSummary> = {};
+			await Promise.all(
+				months.map(async (m) => {
+					try {
+						const res = await fetch(`/api/landlord/utility-readings?month=${m}`);
+						if (!res.ok) return;
+						const json = await res.json();
+						const readings: { utility_type: string; previous_reading: number; current_reading: number }[] = json.readings || [];
+						let totalElec = 0;
+						let totalWater = 0;
+						for (const r of readings) {
+							const usage = r.current_reading - r.previous_reading;
+							if (r.utility_type === "electricity") totalElec += usage;
+							else if (r.utility_type === "water") totalWater += usage;
+						}
+						results[m] = { totalElec, totalWater, readingCount: readings.length };
+					} catch {
+						results[m] = { totalElec: 0, totalWater: 0, readingCount: 0 };
+					}
+				})
+			);
+			if (alive) {
+				setHistorySummaries(results);
+				setHistorySummariesLoading(false);
+			}
+		};
+		fetchSummaries();
+		return () => { alive = false; };
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [activeTab]);
+
+	const filteredDrafts = drafts.filter(d => {
+		const matchesProperty = selectedPropertyId === "all" || d.propertyId === selectedPropertyId;
+		const matchesSearch = d.unitName.toLowerCase().includes(searchQuery.toLowerCase());
+		return matchesProperty && matchesSearch;
+	});
+
+	const handleSaveReadings = async () => {
+		const toSave: ReadingSaveRequest[] = [];
+		const start = `${selectedMonth}-01`;
+		const end = new Date(new Date(selectedMonth).getFullYear(), new Date(selectedMonth).getMonth() + 1, 0).toISOString().slice(0, 10);
+
+		drafts.forEach(d => {
+			if (!d.water.exists && d.water.current !== "") {
+				toSave.push({
+					leaseId: d.leaseId,
+					utilityType: "water",
+					billingPeriodStart: start,
+					billingPeriodEnd: end,
+					previousReading: d.water.previous,
+					currentReading: parseFloat(d.water.current),
+					note: ""
+				});
+			}
+			if (!d.electricity.exists && d.electricity.current !== "") {
+				toSave.push({
+					leaseId: d.leaseId,
+					utilityType: "electricity",
+					billingPeriodStart: start,
+					billingPeriodEnd: end,
+					previousReading: d.electricity.previous,
+					currentReading: parseFloat(d.electricity.current),
+					note: ""
+				});
+			}
+		});
+
+		if (toSave.length === 0) {
+			toast.info("No new readings to save");
+			return;
+		}
+
+		// If offline, enqueue and save optimistically
+		if (typeof navigator !== "undefined" && !navigator.onLine) {
+			mutationQueue.enqueue(
+				"SAVE_SUBMETER_READINGS",
+				"/api/landlord/utility-readings",
+				"POST",
+				{ readings: toSave },
+				`Recorded ${toSave.length} sub-meter readings offline`
+			);
+
+			// Mark drafts as locally saved
+			setDrafts(prev => prev.map(d => ({
+				...d,
+				water: { ...d.water, exists: d.water.current !== "" ? true : d.water.exists },
+				electricity: { ...d.electricity, exists: d.electricity.current !== "" ? true : d.electricity.exists },
+			})));
+
+			toast.success(`Saved ${toSave.length} readings locally! They will sync automatically when reconnected.`);
+			return;
+		}
+
+		try {
+			setSaving(true);
+			const res = await fetch("/api/landlord/utility-readings", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(toSave)
+			});
+
+			if (!res.ok) throw new Error("Save failed");
+			
+			toast.success(`Successfully saved ${toSave.length} readings`);
+			fetchData();
+		} catch (err) {
+			console.warn("[UtilityBilling] Online save failed, enqueuing offline:", err);
+			// Enqueue offline fallback
+			mutationQueue.enqueue(
+				"SAVE_SUBMETER_READINGS",
+				"/api/landlord/utility-readings",
+				"POST",
+				{ readings: toSave },
+				`Recorded ${toSave.length} sub-meter readings offline`
+			);
+			setDrafts(prev => prev.map(d => ({
+				...d,
+				water: { ...d.water, exists: d.water.current !== "" ? true : d.water.exists },
+				electricity: { ...d.electricity, exists: d.electricity.current !== "" ? true : d.electricity.exists },
+			})));
+			toast.success(`Saved ${toSave.length} readings offline! Will sync upon reconnection.`);
+		} finally {
+			setSaving(false);
+		}
+	};
 
     const handleApplyToAll = async () => {
         toast.success("Applying property defaults to all units...");
