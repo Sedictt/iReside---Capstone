@@ -34,6 +34,8 @@ import {
  Sparkles,
 } from "lucide-react";
 import { ToolAccessBar } from "./ToolAccessBar";
+import { LeaseOfflineSigner } from "@/lib/offline/leaseOfflineSigner";
+import { toast } from "sonner";
 import dynamic from "next/dynamic";
 
 const WalkInApplicationModal = dynamic(() => import("@/components/landlord/applications/WalkInApplicationModal").then(mod => mod.WalkInApplicationModal), {
@@ -638,18 +640,56 @@ export function RentApplications() {
  };
 
  const handleCountersignLease = async (leaseId: string, landlordSignature: string) => {
- setCountersignState({ loading: true, error: null, message: null });
- try {
- const response = await fetch(`/api/landlord/leases/${leaseId}/sign`, {
- method: "POST",
- headers: { "Content-Type": "application/json" },
- body: JSON.stringify({ landlord_signature: landlordSignature }),
- });
- if (!response.ok) throw new Error("Failed countersign");
- setCountersignState({ loading: false, error: null, message: "Lease signed." });
- setShowCountersignModal(false);
- reloadKey.current += 1;
- } catch (err: any) { setCountersignState({ loading: false, error: err.message, message: null }); }
+  setCountersignState({ loading: true, error: null, message: null });
+
+  // If offline, stage signature envelope locally
+  if (typeof navigator !== "undefined" && !navigator.onLine) {
+   try {
+    await LeaseOfflineSigner.stageOfflineSignature({
+     leaseId,
+     signerRole: "landlord",
+     signerName: "Landlord",
+     signatureDataUrl: landlordSignature,
+    });
+    setCountersignState({ loading: false, error: null, message: "Lease signed offline." });
+    setShowCountersignModal(false);
+    toast.success("Signed offline! Signature envelope is sealed and will sync upon reconnection.");
+    reloadKey.current += 1;
+    return;
+   } catch (err: any) {
+    setCountersignState({ loading: false, error: err.message, message: null });
+    return;
+   }
+  }
+
+  try {
+   const response = await fetch(`/api/landlord/leases/${leaseId}/sign`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ landlord_signature: landlordSignature }),
+   });
+   if (!response.ok) throw new Error("Failed countersign");
+   setCountersignState({ loading: false, error: null, message: "Lease signed." });
+   setShowCountersignModal(false);
+   reloadKey.current += 1;
+  } catch (err: any) {
+   // Fallback to offline staging if network failed
+   console.warn("[RentApplications] Online sign failed, staging offline envelope:", err);
+   try {
+    await LeaseOfflineSigner.stageOfflineSignature({
+     leaseId,
+     signerRole: "landlord",
+     signerName: "Landlord",
+     signatureDataUrl: landlordSignature,
+    });
+    setCountersignState({ loading: false, error: null, message: "Lease signed offline." });
+    setShowCountersignModal(false);
+    toast.success("Network error: Signature saved offline! Will sync automatically.");
+    reloadKey.current += 1;
+   } catch (innerErr: any) {
+    setCountersignState({ loading: false, error: err.message, message: null });
+   }
+  }
  };
 
  const handleCountersignRedirect = async (leaseId: string) => {

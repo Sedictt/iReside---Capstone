@@ -124,52 +124,90 @@ function openBlobDB(): Promise<IDBDatabase> {
   });
 }
 
+const memoryFallbackMap = new Map<string, { id: string; blobData: string | Blob; metadata: Record<string, unknown>; savedAt: number }>();
+
 export const OfflineBlobStorage = {
   /**
-   * Stores a large data blob or base64 file offline in IndexedDB.
+   * Stores a large data blob or base64 file offline in IndexedDB, with LocalStorage/memory fallback.
    */
   async saveBlob(id: string, blobData: string | Blob, metadata?: Record<string, unknown>): Promise<void> {
-    const db = await openBlobDB();
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(IDB_STORE, "readwrite");
-      const store = tx.objectStore(IDB_STORE);
+    try {
+      const db = await openBlobDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(IDB_STORE, "readwrite");
+        const store = tx.objectStore(IDB_STORE);
+        const entry = {
+          id,
+          blobData,
+          metadata: metadata || {},
+          savedAt: Date.now(),
+        };
+        const req = store.put(entry);
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+      });
+    } catch {
+      // Fallback to in-memory / local storage
       const entry = {
         id,
-        blobData,
+        blobData: typeof blobData === "string" ? blobData : "[Binary Blob]",
         metadata: metadata || {},
         savedAt: Date.now(),
       };
-      const req = store.put(entry);
-      req.onsuccess = () => resolve();
-      req.onerror = () => reject(req.error);
-    });
+      memoryFallbackMap.set(id, entry);
+      if (typeof window !== "undefined" && typeof blobData === "string") {
+        try {
+          localStorage.setItem(`ireside_blob_${id}`, JSON.stringify(entry));
+        } catch {
+          // Ignore quota error in fallback
+        }
+      }
+    }
   },
 
   /**
-   * Retrieves a stored offline blob from IndexedDB.
+   * Retrieves a stored offline blob from IndexedDB, with LocalStorage/memory fallback.
    */
   async getBlob(id: string): Promise<{ id: string; blobData: string | Blob; metadata: Record<string, unknown>; savedAt: number } | null> {
-    const db = await openBlobDB();
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(IDB_STORE, "readonly");
-      const store = tx.objectStore(IDB_STORE);
-      const req = store.get(id);
-      req.onsuccess = () => resolve(req.result || null);
-      req.onerror = () => reject(req.error);
-    });
+    try {
+      const db = await openBlobDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(IDB_STORE, "readonly");
+        const store = tx.objectStore(IDB_STORE);
+        const req = store.get(id);
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => reject(req.error);
+      });
+    } catch {
+      if (memoryFallbackMap.has(id)) {
+        return memoryFallbackMap.get(id) || null;
+      }
+      if (typeof window !== "undefined") {
+        const raw = localStorage.getItem(`ireside_blob_${id}`);
+        return raw ? JSON.parse(raw) : null;
+      }
+      return null;
+    }
   },
 
   /**
    * Deletes a stored offline blob from IndexedDB.
    */
   async removeBlob(id: string): Promise<void> {
-    const db = await openBlobDB();
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(IDB_STORE, "readwrite");
-      const store = tx.objectStore(IDB_STORE);
-      const req = store.delete(id);
-      req.onsuccess = () => resolve();
-      req.onerror = () => reject(req.error);
-    });
+    try {
+      const db = await openBlobDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(IDB_STORE, "readwrite");
+        const store = tx.objectStore(IDB_STORE);
+        const req = store.delete(id);
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+      });
+    } catch {
+      memoryFallbackMap.delete(id);
+      if (typeof window !== "undefined") {
+        localStorage.removeItem(`ireside_blob_${id}`);
+      }
+    }
   },
 };
