@@ -3814,7 +3814,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                     top: displayY,
                                                     width: unit.w,
                                                     height: unit.h,
-                                                    zIndex: isDragging ? 40 : 10,
+                                                    zIndex: isDragging ? 40 : (floatingChatUnitId === unit.id || floatingNoteUnitId === unit.id) ? 60 : 10,
                                                 }}
                                                 initial={false}
                                                 animate={{ 
@@ -3925,7 +3925,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                                 : (isDark ? 'text-neutral-200' : 'text-zinc-700')
                                                         }`}>{unit.name}</h4>
 
-                                                        {unit.tenant && (
+                                                        {unit.status === 'occupied' && unit.tenant && (
                                                             <p className={`mt-1 font-mono text-[10px] transition-colors duration-300 ease-out ${
                                                                 isFiltered
                                                                     ? (isDark ? 'text-zinc-400' : 'text-zinc-500')
@@ -4014,7 +4014,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                 )}
 
                                                 {/* Quick Message Bubble (Optional QoL Feature) */}
-                                                {showQuickMessages && Boolean(unit.tenant) && (
+                                                {showQuickMessages && unit.status === 'occupied' && Boolean(unit.tenant) && (
                                                     <motion.button
                                                         type="button"
                                                         data-no-pan="true"
@@ -4047,7 +4047,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
                                                 {/* Floating Quick Messenger Popover */}
                                                 <AnimatePresence>
-                                                    {floatingChatUnitId === unit.id && Boolean(unit.tenant) && !isAnyDragging && (
+                                                    {floatingChatUnitId === unit.id && unit.status === 'occupied' && Boolean(unit.tenant) && !isAnyDragging && (
                                                         <CanvasQuickMessenger
                                                             unitId={unit.id}
                                                             unitName={unit.name}
