@@ -1,512 +1,515 @@
-# 🛡️ iReside: End-to-End Master Operations & Bug-Hunting Guide
-**Comprehensive Step-by-Step QA, Multi-User Interaction & System Validation Matrix**
+# 🛡️ iReside: Master Operations & Bug-Hunting Manual
+**The Complete Step-by-Step Testing & Demonstration Guide for Every Feature, Screen, and User Interaction**
 
 ---
 
-## 📌 How to Use This Master Guide
+> [!IMPORTANT]
+> **Turnkey Architecture Note:**
+> Technical installation and server provisioning are completed beforehand by the turnkey setup team.
+> The `/setup/technical` screen is **[DEPRECATED / ARCHIVED]** and is **NOT** part of the landlord or tenant experience. 
+> All property owners begin directly at the **Business Personalization Wizard (`/setup`)** or the **Login Page (`/login`)**.
 
-This guide is designed for **exhaustive bug hunting, defense rehearsals, and multi-user walkthroughs**. Every single transaction, screen, button, and database state transition is detailed in strict chronological order—from **Day 0 Technical Commissioning** to **End-of-Lease Security Deposit Settlement**.
+---
 
-### 👥 Recommended Testing Setup (Multi-User Simulation):
-* **Browser Window 1 (Regular Window):** Landlord / Property Manager session (`/landlord/dashboard`).
-* **Browser Window 2 (Incognito / Second Profile):** Tenant / Resident session (`/tenant/dashboard`).
-* **Network Tab in DevTools:** Use Chrome DevTools > Network tab (*No throttling* ➔ *Offline* ➔ *Online*) to test offline resilience steps.
+## 👥 How to Test Multi-User Interactions (Landlord ↔ Tenant)
+
+To test the system as it works in real life, open two browser windows side by side:
+* **Window 1 (Regular Browser):** Log in as the **Property Owner / Landlord** (`http://localhost:3000/landlord/dashboard`).
+* **Window 2 (Incognito / Private Window):** Register or log in as the **Tenant / Resident** (`http://localhost:3000/tenant/dashboard`).
+* **Testing Offline Dead Zones (No Wi-Fi):** In your browser's Developer Tools (F12), click the **Network** tab and switch from **"No throttling"** to **"Offline"**. Observe how iReside stays fully usable, and then switch back to **"Online"** to watch it sync automatically!
 
 ---
 
 ```mermaid
 flowchart TD
-    subgraph Setup ["Phase 1 & 2: Commissioning & Property Master"]
-        P1["1. Technical Handover (/setup/technical)"]
-        P2["2. Business Personalization (/setup)"]
-        P3["3. Settings & Brand Hub (/landlord/settings)"]
-        P4["4. Visual Floor & Unit Builder (/landlord/properties)"]
+    subgraph Phase1 ["1. Property Identity & Custom Branding"]
+        A["Business Personalization Wizard (/setup)"]
+        B["Master Settings, Palettes & GCash Info (/landlord/settings)"]
     end
 
-    subgraph Intake ["Phase 3: Marketing & Resident Onboarding"]
-        P5["5. Lobby Flyer Studio 300DPI (/landlord/flyer)"]
-        P6["6. Unit Invite QR & Token Generation"]
-        P7["7. Resident Onboarding (/signup/tenant)"]
-        P8["8. First-Launch Resident Tour (/tenant/tour)"]
+    subgraph Phase2 ["2. Property Floorplan & Unit Setup"]
+        C["Visual Floor Planner (/landlord/properties)"]
+        D["Rent Pricing, Deposits & House Rules"]
     end
 
-    subgraph Lease ["Phase 4: Digital Contracts & Biometric Signatures"]
-        P9["9. Landlord Lease Draft & Terms"]
-        P10["10. Tenant Digital Signature Pad"]
-        P11["11. Landlord Countersign & SHA-256 Seal"]
-        P12["12. Offline Move-In Envelope Staging"]
+    subgraph Phase3 ["3. Tenant Intake & Marketing"]
+        E["Lobby Promotional Flyer Studio (/landlord/flyer)"]
+        F["Private Unit Invite QR & Code (/signup/tenant)"]
+        G["Resident Guided Tour (/tenant/tour)"]
     end
 
-    subgraph RoutineOps ["Phase 5, 6, 7 & 8: Routine Living Cycles"]
-        P13["13. Corridor Sub-Meter Utility Readings (/landlord/utility)"]
-        P14["14. GCash Rent & Utility Invoicing & Receipts"]
-        P15["15. Maintenance Tickets & Contractor Expense Sync"]
-        P16["16. Community Bulletins, Polls & Photo Albums"]
+    subgraph Phase4 ["4. Digital Leases & Signatures"]
+        H["Landlord Issues Contract"]
+        I["Tenant Draws Digital Signature"]
+        J["Landlord Countersigns & Sealing"]
     end
 
-    subgraph Lifecycle ["Phase 9 & 10: Renewal, Move-Out & Handover"]
-        P17["17. 90-Day Lease Expiry & Renewal Addendum"]
-        P18["18. Move-Out Inspection & Deposit Settlement"]
-        P19["19. Zero-Maintenance Handover Docs (/landlord/docs)"]
+    subgraph Phase5 ["5. Monthly Utility Readings & Invoices"]
+        K["Corridor Sub-Meter Walkthrough (/landlord/utility)"]
+        L["Automatic Bill Generation"]
     end
 
-    Setup --> Intake --> Lease --> RoutineOps --> Lifecycle
+    subgraph Phase6 ["6. Rent Payments & GCash Receipts"]
+        M["Tenant Uploads GCash Screenshot"]
+        N["Landlord Verification Drawer & Digital Official Receipt"]
+    end
+
+    subgraph Phase7 ["7. Maintenance & Repairs"]
+        O["Tenant Files Ticket / Emergency Direct Dialer"]
+        P["Landlord Assigns Contractor & Logs Repair Expense"]
+    end
+
+    subgraph Phase8 ["8. Community Notice Board & Polls"]
+        Q["Official Pinned Announcements"]
+        R["Interactive Resident Polls & Photo Sharing"]
+    end
+
+    subgraph Phase9 ["9. Renewal & Move-Out Settlement"]
+        S["90-Day Lease Renewal Addendum"]
+        T["Move-Out Inspection & Deposit Refund Calculation"]
+    end
+
+    subgraph Phase10 ["10. Handover Guide & Disaster Recovery"]
+        U["5-Module Handover Manual (/landlord/docs)"]
+        V["Zero-IT Offline Data Recovery"]
+    end
+
+    Phase1 --> Phase2 --> Phase3 --> Phase4 --> Phase5 --> Phase6 --> Phase7 --> Phase8 --> Phase9 --> Phase10
 ```
 
 ---
 
-## 🏛️ PHASE 1: Day 0 Turnkey Infrastructure & Business Commissioning
+## 🎨 PHASE 1: Property Identity, Theme & Custom Branding Setup
 
-### 🔹 Step 1.1: Layer 1 — Technical Handover Commissioning (`/setup/technical`)
-* **Role:** System Deployer / IT Commissioning Engineer.
-* **Navigation:** Open `http://localhost:3000/setup/technical`.
-* **Actions & Expected Results:**
-  1. **PostgreSQL Cluster Link:**
-     - Click **"Test PostgreSQL Cluster Link"**.
-     - *Expected Result:* The system initiates a live round-trip query probe against Supabase. Displays status `Connected`, shows exact latency (e.g. `28ms`), TLS 1.3 verification, and green checkmark.
-  2. **Email Gateway Verification:**
-     - Click **"Verify SMTP Gateway"**.
-     - *Expected Result:* Tests port 587 TLS authentication and verifies transactional notification queue readiness.
-  3. **Automated Schema Provisioning:**
-     - Click **"Start Turnkey Provisioning"**.
-     - *Expected Result:* The live terminal executes 6 provisioning steps sequentially (*Cluster Link ➔ Core Schemas ➔ Accounting & Utility Tables ➔ Realtime Channels ➔ RLS Policies ➔ Keep-Alive Uptime Daemon*).
-  4. **Handover Advance:**
-     - Click **"Proceed to Business Personalization & Branding"** button at the bottom.
-     - *Expected Result:* Smooth transition to Layer 2 (`/setup`).
-
----
-
-### 🔹 Step 1.2: Layer 2 — Business Personalization Wizard (`/setup`)
-* **Role:** Landlord / Property Owner.
-* **Navigation:** Automatically redirected to `http://localhost:3000/setup`.
-* **Actions & Expected Results:**
-  1. **Step 1: Identity & Archetype:**
-     - Input **Property Name**: e.g., *"Valenzuela Grand Residences"*.
-     - Input **Tagline**: e.g., *"Premier Student & Executive Living"*.
-     - Select **Property Archetype**: Choose between `Apartment Complex`, `Student Dormitory`, or `Boarding House`.
-     - *Live Preview Check:* The right-hand live preview frame immediately reflects the new name and generates a high-contrast **"VG"** monogram emblem.
+### 🔹 Step 1.1: Business Personalization Wizard (`/setup`)
+* **Who does this:** Property Owner / Landlord on Day 1.
+* **Where to go:** `http://localhost:3000/setup`.
+* **Step-by-Step Actions:**
+  1. **Step 1: Property Identity & Monogram Emblem:**
+     - Type your **Property Name** (e.g., *"Valenzuela Grand Residences"*).
+     - Type your **Property Tagline** (e.g., *"Premier Student & Executive Living"*).
+     - Choose your **Property Type**: Click on *Apartment Complex*, *Student Dormitory*, or *Boarding House*.
+     - 👉 *What to check:* Look at the live preview card on the right side. It immediately displays your custom name and automatically generates a custom **"VG"** 2-letter monogram badge.
      - Click **"Next: Theme & Palette"**.
-  2. **Step 2: Theme & Modern HSL Palette Studio:**
-     - Click across curated palette presets (*Emerald Oasis, Electric Indigo, Ruby Crimson, Amber Sunset*).
-     - Slide the **HSL Hue & Saturation sliders**.
-     - *WCAG 2.1 AAA Contrast Check:* Verify the contrast ratio badge updates dynamically (e.g. `14.2:1 AAA`). Notice the preview action buttons (*"Pay GCash"*, *"Sign Agreement"*) instantly re-theme live.
-     - Toggle between **Dark Mode** and **Light Mode** to verify background surface contrast.
+  2. **Step 2: Color Studio & Contrast Check:**
+     - Click across the ready-made color palettes (*Emerald Oasis, Electric Indigo, Ruby Crimson, Amber Sunset*).
+     - Move the **Color Slider** to pick any custom brand color.
+     - 👉 *What to check:* Look at the contrast badge (it will show *High Contrast Pass*). Notice how the sample buttons in the preview change colors instantly.
+     - Toggle between **Dark Mode** and **Light Mode** to see how the system looks in both styles.
      - Click **"Next: Master Admin"**.
-  3. **Step 3: Master Admin Account Setup:**
-     - Input Landlord Full Name, Email, Password, and Contact Mobile Number (`0917-XXX-XXXX`).
+  3. **Step 3: Account Credentials:**
+     - Type the Landlord's Full Name, Email, Password, and Phone Number (`0917-123-4567`).
      - Click **"Next: Review & Launch"**.
-  4. **Step 4: Review & Live Launch:**
-     - Verify all summary tokens (*Property Identity, Palette, Admin Email*).
+  4. **Step 4: Launching the Portal:**
+     - Review the summary of your choices.
      - Click **"Save & Launch Property Portal"**.
-     - *Expected Result:* Button displays spinning indicator (*"Activating System..."*), updates Supabase database (`properties` and `landlord_business_profiles`), stores offline snapshots, and reveals **"Open Dashboard"** button.
-     - Click **"Open Dashboard"** ➔ Landlord lands inside `/landlord/dashboard` fully branded.
+     - 👉 *What to check:* The button shows a brief saving animation and confirms success. Click **"Open Dashboard"** to enter your personalized landlord workspace.
 
 ---
 
-### 🔹 Step 1.3: Landlord Master Settings & Customization Hub (`/landlord/settings`)
-* **Role:** Landlord.
-* **Navigation:** Click **Settings** in the top navigation or sidebar (`/landlord/settings`).
-* **Sub-Tab 1: Identity & Profile:**
-  - Update Business Name, Contact Phone, and GCash Payout Mobile Number.
-  - Upload Business Permit image (PNG/PDF). Verify file size limiter (< 10MB) and instant preview.
-* **Sub-Tab 2: Personalization & Branding:**
-  - **Universal High Contrast Mode:** Toggle switch ON. Verify soft shadows turn into crisp 2.5px solid high-contrast borders and text turns bold black/white. Toggle switch OFF.
-  - **Brand Accent Studio:** Click color picker icon on Primary Accent. Select a custom hex (e.g. `#10B981`). Verify the entire application updates live without page refresh.
-  - **Dashboard Banner Customizer:** Click **"Curated Presets"** or paste a custom image URL. Verify banner preview updates immediately.
-* **Sub-Tab 3: Finance & GCash:**
-  - Input GCash Account Name and Account Number.
-  - Upload Landlord GCash QR Code image.
-* **Exit Protection Verification:**
-  - Make an edit in one field and attempt to click "Dashboard" without saving.
-  - *Expected Result:* The **Unsaved Changes Protection Modal** intercepts navigation, offering *"Discard Changes"* or *"Save & Exit"*.
-  - Click **"Save & Exit"** ➔ Master save flushes all tabs to the database with a success toast.
+### 🔹 Step 1.2: Landlord Master Settings & Customization Hub (`/landlord/settings`)
+* **Who does this:** Landlord anytime they want to update property info, colors, or payment details.
+* **Where to go:** Click **Settings** in the top navigation or sidebar (`/landlord/settings`).
+* **Detailed Tabs & Actions:**
+  1. **Tab 1: Business Profile & Government Permits:**
+     - Enter or update Business Name, Landlord Contact Phone, and Office Hours (*Daily 8:00 AM – 7:00 PM*).
+     - Upload a photo or PDF of the **City Business Permit** (preview appears immediately).
+  2. **Tab 2: Themes & Personalization:**
+     - **Universal High-Contrast Mode:** Turn this toggle ON. Notice all cards gain clear bold outlines and ultra-sharp text for easy outdoor reading. Turn it OFF to return to normal mode.
+     - **Brand Accent Color:** Click the color picker circle to test picking a new color. The top bar and buttons update immediately.
+     - **Dashboard Banner Image:** Choose from preset building photos or paste a custom photo link.
+  3. **Tab 3: Finance & GCash Receiving Account:**
+     - Type the **GCash Account Name** (e.g., *"Juan Valenzuela"*).
+     - Type the **GCash Account Number** (e.g., *"0917-888-9999"*).
+     - Upload your **GCash Receiving QR Code** image so tenants can scan and pay rent without typing errors.
+  4. **🛡️ Unsaved Changes Safety Guard:**
+     - Change any text in a box, then try clicking "Dashboard" in the sidebar without saving.
+     - 👉 *What to check:* A warning popup appears asking if you want to **Discard Changes** or **Save & Exit**. Click **"Save & Exit"** to save everything safely.
 
 ---
 
-## 🏢 PHASE 2: Property & Inventory Blueprint Setup
+## 🏢 PHASE 2: Visual Floor Planner, Unit Inventory & Lease Rules
 
-### 🔹 Step 2.1: Visual Floor Planner & Unit Grid (`/landlord/properties`)
-* **Role:** Landlord.
-* **Navigation:** Go to `/landlord/properties` or `/landlord/visual-planner`.
-* **Actions & Expected Results:**
-  1. **Add / Select Property:**
-     - Verify property card displays *"Valenzuela Grand Residences"*, address, and archetype badge.
-  2. **Configure Floors & Units:**
-     - Open Floor Planner. Add **Floor 1** and **Floor 2**.
-     - Add Units to Floor 1: Unit `101`, Unit `102` (Set Base Rent: `₱7,500/mo`).
-     - Add Units to Floor 2: Unit `201`, Unit `202` (Set Base Rent: `₱8,500/mo`).
-  3. **Configure Unit Specifications:**
-     - Click Unit `101` ➔ Set Bed count (`1`), Bath (`1`), Max Occupancy (`2`), and Amenities (`Aircon`, `Wi-Fi`, `Sub-Metered`).
-     - *Expected Result:* Units display green *"Vacant / Ready for Intake"* status badges.
+### 🔹 Step 2.1: Visual Floor Planner & Unit Grid Builder (`/landlord/properties`)
+* **Who does this:** Landlord setting up building floors and rooms.
+* **Where to go:** Click **Properties** in the navigation bar (`/landlord/properties` or `/landlord/visual-planner`).
+* **Step-by-Step Actions:**
+  1. **Add Floors:**
+     - Click **"Add Floor"** twice to create **Floor 1** and **Floor 2**.
+  2. **Add Units to Floors:**
+     - On Floor 1, click **"Add Unit"** twice to create **Unit 101** and **Unit 102**.
+     - On Floor 2, click **"Add Unit"** twice to create **Unit 201** and **Unit 202**.
+  3. **Configure Unit Details:**
+     - Click on **Unit 101** to open the unit editor drawer:
+       - Set Monthly Base Rent: `₱7,500.00`.
+       - Set Bedrooms: `1`, Bathrooms: `1`, Max Occupants: `2`.
+       - Check Amenities: `Air Conditioning`, `Private Bathroom`, `Free Wi-Fi`, `Sub-Metered`.
+     - 👉 *What to check:* Unit 101 now displays a bright green **"Vacant / Ready for Move-In"** status badge.
 
 ---
 
-### 🔹 Step 2.2: House Rules, Tariffs & Lease Policy Configuration
-* **Role:** Landlord.
-* **Navigation:** Under Property Details / Settings tab.
-* **Actions & Expected Results:**
-  1. **Utility Tariffs:**
-     - Set Electricity Sub-Meter Rate: `₱15.00 / kWh`.
-     - Set Water Sub-Meter Rate: `₱45.00 / m³`.
+### 🔹 Step 2.2: Sub-Meter Tariffs, Security Deposits & House Rules
+* **Who does this:** Landlord setting payment rules.
+* **Where to go:** Under Property Settings / Lease Policies tab.
+* **Step-by-Step Actions:**
+  1. **Sub-Meter Utility Tariffs:**
+     - Set Electricity Sub-Meter Rate: `₱15.00 per kWh`.
+     - Set Water Sub-Meter Rate: `₱45.00 per m³`.
   2. **Lease Terms:**
-     - Set Advance Rent Required: `1 Month`.
-     - Set Security Deposit Required: `2 Months`.
-     - Set Lease Renewal Window: `90 Days Before Expiry`.
-  3. **House Rules:**
-     - Add: *"Curfew 11:00 PM for visitors"*, *"No smoking inside units"*, *"Segregate waste"*.
-     - Click **Save Property Configuration**.
+     - Advance Rent Requirement: `1 Month`.
+     - Security Deposit Requirement: `2 Months`.
+     - Lease Renewal Notice Window: `90 Days Before Expiration`.
+  3. **Building House Rules:**
+     - Type house rules (e.g., *"Quiet hours start at 10:00 PM"*, *"No smoking inside units"*, *"Dispose of trash in designated bins"*).
+     - Click **"Save Property Policies"**.
 
 ---
 
-## 📢 PHASE 3: Physical Marketing, Resident Acquisition & Private Intake
+## 📢 PHASE 3: Physical Lobby Marketing, Resident Acquisition & Private Intake
 
 ### 🔹 Step 3.1: Lobby Promotional Flyer Studio (`/landlord/flyer`)
-* **Role:** Landlord.
-* **Navigation:** Click **"Lobby Flyer Studio"** in dashboard actions or open modal.
-* **Actions & Expected Results:**
+* **Who does this:** Landlord creating physical flyers to post in the building lobby, reception desk, or elevator.
+* **Where to go:** Click **"Lobby Flyer Studio"** button on the dashboard.
+* **Step-by-Step Actions:**
   1. **Brand Auto-Inheritance:**
-     - Verify the poster canvas automatically populates with *"Valenzuela Grand Residences"*, property address, and active brand theme color.
-  2. **On-Canvas Direct WYSIWYG Editing:**
-     - Click directly on the flyer title or office contact number and type adjustments.
-     - *Expected Result:* Blue focus ring appears; debounced cloud autosave triggers with indicator *"Saving..." ➔ "Saved"*.
-  3. **Custom Building Photo Background:**
-     - In the floating inspector tool, click **"Background" ➔ "Upload Building Photo"**.
-     - Select a photo. Adjust Brightness (`90%`), Saturation (`110%`), and Opacity (`85%`).
-  4. **High-Resolution 300 DPI Poster Export:**
+     - 👉 *What to check:* Notice the poster design automatically pulls your property name (*"Valenzuela Grand Residences"*), brand color, and monogram logo.
+  2. **On-Canvas Click-and-Type Editing (WYSIWYG):**
+     - Click directly on the flyer title, Wi-Fi network name (*"VGR_Resident_WiFi"*), or office phone number and edit the text.
+     - 👉 *What to check:* A subtle focus border appears, and your changes save automatically in the background (*"Saving..." ➔ "Saved"*).
+  3. **Upload Real Building Background Photo:**
+     - In the floating tools window, click **"Background" ➔ "Upload Building Photo"**.
+     - Pick a photo from your computer. Use the sliders to adjust Brightness (`95%`) and Opacity (`80%`).
+  4. **Download Ultra High-Res Poster (300 DPI Print-Ready):**
      - Click **"Export Print-Ready Poster (300 DPI PNG)"**.
-     - *Expected Result:* System captures canvas at 3x supersampling, strips interactive edit frames, and downloads `Valenzuela_Grand_Residences_Lobby_Poster.png`.
-  5. **Standalone QR Code Download:**
-     - Click **"Download QR Art (1000x1000)"** on Web Portal or APK card.
-     - *Expected Result:* Downloads ultra high-resolution standalone QR code for reception desk acrylic stands.
+     - 👉 *What to check:* The system generates an ultra-crisp image file (`Valenzuela_Grand_Residences_Lobby_Poster.png`) ready for commercial printing.
+  5. **Download Standalone QR Code Art:**
+     - Click **"Download QR Art (1000x1000)"** to get a high-resolution QR image suitable for reception desk acrylic standees.
 
 ---
 
-### 🔹 Step 3.2: Private Unit Invitation & Token Issuance (`/landlord/properties`)
-* **Role:** Landlord.
-* **Navigation:** Go to `/landlord/properties` ➔ Click on Unit `101` ➔ Click **"Generate Resident Intake QR / Invite Code"**.
-* **Actions & Expected Results:**
-  1. **Invite Code Generation:**
-     - System displays a unit-locked intake card:
-       - **Unit:** Unit 101
-       - **Invite Token:** e.g. `VGR-101-9872`
-       - **Direct Link:** `http://localhost:3000/signup/tenant?invite=VGR-101-9872`
-     - Click **"Copy Private Invite Link"**.
+### 🔹 Step 3.2: Private Unit Invite Token Generation (`/landlord/properties`)
+* **Who does this:** Landlord accepting a new resident for a specific room.
+* **Where to go:** Go to `/landlord/properties` ➔ Click on **Unit 101** ➔ Click **"Generate Resident Invite"**.
+* **Step-by-Step Actions:**
+  1. Click **"Create Private Invite Code"**.
+  2. The system generates a unit-locked invite:
+     - **Unit:** Unit 101
+     - **Invite Code:** e.g. `VGR-101-9872`
+     - **Direct Link:** `http://localhost:3000/signup/tenant?invite=VGR-101-9872`
+  3. Click **"Copy Invite Link"** (or let the resident scan the unit QR code with their phone).
 
 ---
 
-### 🔹 Step 3.3: Resident Private Account Onboarding (`/signup/tenant`)
-* **Role:** Incoming Tenant *(Use Incognito / Second Browser Window)*.
-* **Navigation:** Paste the copied invite link or go to `http://localhost:3000/signup/tenant`.
-* **Actions & Expected Results:**
-  1. **Token Auto-Fill & Validation:**
-     - Verify Invite Code input automatically reads `VGR-101-9872` and displays a green lock badge: *"Unit 101 • Valenzuela Grand Residences"*.
-  2. **Tenant Registration Form:**
-     - Input Full Name: *"Juan Dela Cruz"*.
-     - Input Email: *"juan.delacruz@gmail.com"*.
-     - Input Mobile: *"0918-123-4567"*.
-     - Input Password: Set secure password.
-     - Emergency Contact Name & Phone: *"Maria Dela Cruz (0918-999-8888)"*.
-  3. **Account Creation & Role-Based Routing:**
+### 🔹 Step 3.3: Resident Private Account Registration (`/signup/tenant`)
+* **Who does this:** New Tenant *(Use Window 2 / Incognito)*.
+* **Where to go:** Open the copied invite link or go to `http://localhost:3000/signup/tenant`.
+* **Step-by-Step Actions:**
+  1. **Automatic Unit Verification:**
+     - 👉 *What to check:* The invite code box automatically shows `VGR-101-9872` with a green lock badge: *"Unit 101 • Valenzuela Grand Residences"*. Open registration without an invite code is prevented to keep unauthorized strangers out.
+  2. **Fill in Resident Details:**
+     - Full Name: *"Juan Dela Cruz"*.
+     - Email Address: *"juan.delacruz@gmail.com"*.
+     - Mobile Number: *"0918-123-4567"*.
+     - Password: Create a secure password.
+     - Emergency Contact: *"Maria Dela Cruz (0918-999-8888)"*.
+  3. **Complete Signup:**
      - Click **"Complete Resident Registration"**.
-     - *Expected Result:* Creates Supabase user profile with `role: 'tenant'`, associates the tenant with Unit 101, and redirects into `/tenant/dashboard`.
+     - 👉 *What to check:* The resident is logged in immediately and lands on the Tenant Dashboard, automatically linked to Unit 101.
 
 ---
 
-### 🔹 Step 3.4: First-Launch Resident Interactive Tour (`/tenant/tour`)
-* **Role:** Tenant.
-* **Actions & Expected Results:**
+### 🔹 Step 3.4: First-Launch Resident Interactive Product Tour (`/tenant/tour`)
+* **Who does this:** Tenant logging in for the very first time.
+* **Step-by-Step Actions:**
   1. **Tour Initiation:**
-     - Upon landing in the tenant portal for the first time, the **Interactive Resident Tour** triggers with spotlight overlays.
-  2. **Guided Steps:**
-     - **Step 1:** Rent & Utility Dues Card (Highlights pending balance & GCash payment button).
-     - **Step 2:** Digital Lease Agreement (Highlights contract view & signatures).
-     - **Step 3:** Maintenance Request Hub (Highlights 24/7 ticket filing & emergency direct call).
-     - **Step 4:** Community Notice Board (Highlights building bulletins & polls).
-  3. **Tour Completion:**
-     - Click **"Finish Tour"**. Tour state stores in `localStorage` / user metadata so it never annoys the user again.
+     - A guided product tour overlay appears automatically to teach the resident how to use the portal.
+  2. **Guided Highlights:**
+     - **Step 1:** Rent & Utility Dues Card (Shows where to view outstanding balances and the GCash payment button).
+     - **Step 2:** Digital Lease Agreement (Shows where the official contract and digital signature live).
+     - **Step 3:** Maintenance Request Hub (Shows how to report broken lights or plumbing 24/7).
+     - **Step 4:** Community Notice Board (Shows where building announcements and polls are posted).
+  3. **Finish Tour:**
+     - Click **"Finish Tour"**. The tour saves your completed state so it will not pop up again on future logins.
 
 ---
 
 ## ✍️ PHASE 4: Digital Contracts & Biometric Signatures (Landlord ↔ Tenant)
 
-### 🔹 Step 4.1: Landlord Drafts & Issues Lease Agreement
-* **Role:** Landlord *(Window 1)*.
-* **Navigation:** Go to `/landlord/applications` or `/landlord/properties` ➔ Unit `101`.
-* **Actions & Expected Results:**
+### 🔹 Step 4.1: Landlord Drafts & Sends Digital Lease Contract
+* **Who does this:** Landlord *(Window 1)*.
+* **Where to go:** `/landlord/applications` or `/landlord/properties` ➔ Unit 101.
+* **Step-by-Step Actions:**
   1. Click **"Create Digital Lease"**.
-  2. Select Tenant: *"Juan Dela Cruz"*.
-  3. Set Duration: `12 Months` (Start: Current Date, End: +1 Year).
+  2. Select Tenant: *"Juan Dela Cruz (Unit 101)"*.
+  3. Lease Duration: `12 Months` (Start: Today, End: 1 Year from Today).
   4. Monthly Rent: `₱7,500.00`.
-  5. Security Deposit: `₱15,000.00` (2 months).
-  6. Advance Rent: `₱7,500.00` (1 month).
+  5. Security Deposit: `₱15,000.00` (2 Months).
+  6. Advance Rent: `₱7,500.00` (1 Month).
   7. Utility Terms: Water & Electricity Sub-Metered.
   8. Click **"Generate & Dispatch Lease to Tenant"**.
-  9. *Expected Result:* Lease status changes to `pending_tenant_signature`. Realtime push notification dispatched to Tenant.
+  9. 👉 *What to check:* Lease status shows `Waiting for Tenant Signature`. A real-time notification is sent to the tenant.
 
 ---
 
-### 🔹 Step 4.2: Tenant Review & Digital Signature
-* **Role:** Tenant *(Window 2)*.
-* **Navigation:** Click notification or go to `/tenant/lease` or `/tenant/contracts`.
-* **Actions & Expected Results:**
+### 🔹 Step 4.2: Tenant Reviews & Signs Contract with Touchpad/Mouse
+* **Who does this:** Tenant *(Window 2)*.
+* **Where to go:** Click notification or go to `/tenant/lease` or `/tenant/contracts`.
+* **Step-by-Step Actions:**
   1. **Contract Review:**
-     - Tenant opens full legal agreement formatted with property branding, rent terms, deposit amounts, and house rules.
-  2. **Biometric Signature Pad:**
-     - Scroll to bottom signature block. Click **"Sign Contract"**.
-     - Draw signature smoothly on the HTML5 touch/mouse signature pad.
+     - Read through the complete digital contract, formatted with the property's name, rules, rent amount, and deposit policies.
+  2. **Biometric Digital Signature:**
+     - Scroll to the bottom signature block. Click **"Sign Contract"**.
+     - Draw your signature smoothly on the touch/mouse signature pad. (Click *Clear* if you want to redraw).
      - Click **"Accept Terms & Submit Signature"**.
-  3. *Expected Result:* Signature renders in ink blue on the contract. Status changes to `pending_landlord_countersignature`. Landlord receives alert.
+  3. 👉 *What to check:* The tenant's drawn signature appears stamped on the contract in ink blue with an exact timestamp. The status updates to `Waiting for Landlord Countersignature`.
 
 ---
 
-### 🔹 Step 4.3: Landlord Countersignature & Cloud Finalization
-* **Role:** Landlord *(Window 1)*.
-* **Navigation:** Go to `/landlord/applications` ➔ Click on *"Juan Dela Cruz — Unit 101 Agreement"*.
-* **Actions & Expected Results:**
-  1. Verify Tenant signature and timestamp.
+### 🔹 Step 4.3: Landlord Countersigns & Officially Seals the Lease
+* **Who does this:** Landlord *(Window 1)*.
+* **Where to go:** Go to `/landlord/applications` ➔ Click on *"Juan Dela Cruz — Unit 101"*.
+* **Step-by-Step Actions:**
+  1. Inspect the tenant's signature and timestamp.
   2. Click **"Countersign Lease"**.
-  3. Draw Landlord digital signature on signature pad.
+  3. Draw the Landlord's signature on the signature pad.
   4. Click **"Finalize & Seal Agreement"**.
-  5. *Expected Result:*
-     - System computes cryptographic SHA-256 integrity hash.
-     - Lease status changes to `active`.
-     - Unit 101 status changes from `vacant` to `occupied`.
-     - Invoices for Advance Rent (`₱7,500`) and Security Deposit (`₱15,000`) are automatically generated in the billing ledger.
-     - Both Landlord and Tenant can click **"Download Executed Lease (PDF)"**.
+  5. 👉 *What to check:*
+     - The contract receives a permanent digital cryptographic seal.
+     - Lease status changes to **Active**.
+     - Unit 101 changes from `Vacant` to **Occupied**.
+     - Initial billing invoices for Advance Rent (`₱7,500`) and Security Deposit (`₱15,000`) are created automatically in the financial ledger.
+     - Both Landlord and Tenant can click **"Download Executed Lease (PDF)"** to save a copy.
 
 ---
 
-### 🔹 Step 4.4: Offline Move-In Remediation Test (Zero Connectivity)
-* **Role:** Landlord & Tenant in basement / offline.
-* **Test Flow:**
-  1. In DevTools, set Network to **Offline**.
-  2. Notice the ambient floating **Amber Pill** appears: *"Offline Mode • Viewing Cached Data"*.
-  3. Open a pending contract and execute signature using `leaseOfflineSigner.ts`.
-  4. *Expected Result:* Signature is sealed locally into IndexedDB with a SHA-256 cryptographic envelope. Status badge shows *"Queued for Cloud Finalization (Offline)"*.
-  5. In DevTools, set Network back to **Online**.
-  6. *Expected Result:* Top banner turns green (*"Connection Restored • Synchronized"*); the offline lease envelope auto-commits to Supabase without requiring re-signing.
+### 🔹 Step 4.4: Offline Move-In Test (Signing in Basements with Zero Wi-Fi)
+* **Who does this:** Landlord and Tenant in a dead zone with no internet.
+* **Step-by-Step Actions:**
+  1. Turn off your Wi-Fi or set DevTools Network to **Offline**.
+  2. 👉 *What to check:* A floating **Amber Pill** appears at the top: *"Offline Mode • Viewing Cached Data"*.
+  3. Open a pending contract and draw the signature. Submit it.
+  4. 👉 *What to check:* The contract saves securely on your device with a badge: *"Queued for Cloud Finalization (Offline)"*.
+  5. Turn Wi-Fi back ON or set DevTools Network to **Online**.
+  6. 👉 *What to check:* The top banner turns green (*"Connection Restored • Synchronized"*). The signature uploads and finalizes automatically without asking anyone to re-sign!
 
 ---
 
 ## ⚡ PHASE 5: Monthly Corridor Sub-Meter Utility Walkthrough
 
-### 🔹 Step 5.1: Corridor Walkthrough & Meter Entry (`/landlord/utility`)
-* **Role:** Landlord walking building corridors.
-* **Navigation:** Go to `/landlord/utility` (`UtilityBillingDashboard.tsx`).
-* **Actions & Expected Results:**
+### 🔹 Step 5.1: Corridor Meter Reading & Live Calculation (`/landlord/utility`)
+* **Who does this:** Landlord walking through building hallways reading sub-meters.
+* **Where to go:** Click **Utilities** in the sidebar (`/landlord/utility`).
+* **Step-by-Step Actions:**
   1. **Select Billing Month:** Current Month (e.g., September 2026).
-  2. **Enter Sub-Meter Readings for Unit 101:**
+  2. **Type Readings for Unit 101:**
      - **Electricity (kWh):** Previous: `1,240.0` ➔ Present: `1,385.5` *(Consumption: 145.5 kWh @ ₱15.00/kWh = ₱2,182.50)*.
      - **Water (m³):** Previous: `410.0` ➔ Present: `422.0` *(Consumption: 12.0 m³ @ ₱45.00/m³ = ₱540.00)*.
-  3. **Live Auto-Calculation:**
-     - Notice total utility cost automatically computes in real time: `₱2,722.50`.
-  4. **Batch Invoice Generation:**
+  3. 👉 *What to check:* The total utility cost computes in real time: `₱2,722.50`.
+  4. **Batch Invoice Dispatch:**
      - Click **"Generate & Dispatch Utility Invoices"**.
-     - *Expected Result:* System creates itemized utility invoices in the database and dispatches notifications to tenants.
+     - 👉 *What to check:* The system creates itemized utility bills and instantly sends bill notifications to all tenants.
 
 ---
 
-## 💳 PHASE 6: Monthly Rent & Utility Financial Ledger (Tenant ↔ Landlord)
+## 💳 PHASE 6: Monthly Rent & Utility GCash Payments (Tenant ↔ Landlord)
 
-### 🔹 Step 6.1: Tenant Reviews Dues & Submits GCash Payment
-* **Role:** Tenant *(Window 2)*.
-* **Navigation:** Go to `/tenant/payments` (`FinanceHubPage`).
-* **Actions & Expected Results:**
-  1. **View Itemized Breakdown:**
-     - Tenant views Pending Dues card:
+### 🔹 Step 6.1: Tenant Reviews Bill & Submits GCash Payment Proof
+* **Who does this:** Tenant *(Window 2)*.
+* **Where to go:** Click **Payments** in the top bar (`/tenant/payments`).
+* **Step-by-Step Actions:**
+  1. **View Itemized Statement:**
+     - The tenant sees their active bill:
        - Base Rent (Unit 101): `₱7,500.00`
        - Electricity Sub-Meter (145.5 kWh): `₱2,182.50`
        - Water Sub-Meter (12.0 m³): `₱540.00`
-       - **Total Outstanding Balance:** `₱10,222.50`.
-  2. **GCash Remittance:**
+       - **Total Amount Due:** `₱10,222.50`.
+  2. **Pay via GCash:**
      - Click **"Pay via GCash"**.
-     - Modal reveals Landlord GCash QR code and Mobile Number (`0917-XXX-XXXX`).
-  3. **Submit Payment Proof:**
-     - Input GCash Reference Number: e.g. `9023 8812 4410`.
-     - Input Amount Paid: `₱10,222.50`.
-     - Upload payment screenshot image.
+     - The modal shows the Landlord's GCash QR code and mobile number (`0917-888-9999`).
+  3. **Submit Payment Details:**
+     - Enter GCash Reference Number: e.g. `9023 8812 4410`.
+     - Enter Amount Paid: `₱10,222.50`.
+     - Upload receipt screenshot image from phone.
      - Click **"Submit Payment for Verification"**.
-     - *Expected Result:* Invoice status transitions to `under_review`. Tenant receives confirmation toast.
+     - 👉 *What to check:* Invoice status changes to `Under Review`. The tenant receives a confirmation notice.
 
 ---
 
-### 🔹 Step 6.2: Landlord Verifies Payment & Issues Official Digital Receipt
-* **Role:** Landlord *(Window 1)*.
-* **Navigation:** Go to `/landlord/financials` (`BillingOperationsPanel`).
-* **Actions & Expected Results:**
-  1. **Review Submission:**
-     - Click on Pending Verification queue ➔ Select *"Juan Dela Cruz — ₱10,222.50"*.
-     - Inspect uploaded GCash screenshot and reference number in side-by-side drawer.
+### 🔹 Step 6.2: Landlord Verifies GCash & Issues Official Digital Receipt
+* **Who does this:** Landlord *(Window 1)*.
+* **Where to go:** Click **Financials** in the sidebar (`/landlord/financials`).
+* **Step-by-Step Actions:**
+  1. **Open Verification Queue:**
+     - Click on the pending payment from *"Juan Dela Cruz — ₱10,222.50"*.
+     - 👉 *What to check:* A side-by-side inspection drawer opens showing the tenant's uploaded GCash screenshot and reference number.
   2. **Approve Payment:**
      - Click **"Approve & Issue Receipt"**.
-  3. *Expected Result:*
-     - Invoice status changes to `paid`.
-     - Payment recorded with timestamp and reference ID.
-     - Digital Official Receipt (`OR-2026-XXXX`) generated.
-     - Tenant balance immediately clears to `₱0.00`.
-     - Landlord Dashboard revenue metric increments by `₱10,222.50`.
+  3. 👉 *What to check:*
+     - Invoice status turns green: **Paid**.
+     - An official digital receipt (`OR-2026-XXXX`) is created.
+     - Tenant's outstanding balance drops to `₱0.00`.
+     - Landlord Dashboard revenue updates by `+₱10,222.50`.
 
 ---
 
-## 🔧 PHASE 7: Maintenance Work Orders & Contractor Expense Sync
+## 🔧 PHASE 7: Maintenance Requests & Contractor Expense Tracking
 
-### 🔹 Step 7.1: Tenant Files Maintenance Ticket (`/tenant/maintenance/new`)
-* **Role:** Tenant *(Window 2)*.
-* **Navigation:** Go to `/tenant/maintenance/new`.
-* **Actions & Expected Results:**
-  1. **Ticket Details:**
-     - Category: Select `Plumbing`.
-     - Severity: Select `High (Leaking Pipe under kitchen sink)`.
-     - Title: *"Kitchen Sink Drain Pipe Leak"*.
-     - Description: *"Water leaking into cabinet whenever faucet is turned on."*
-     - Attachments: Upload photo of leaking pipe.
-  2. Click **"Submit Maintenance Request"**.
-  3. *Expected Result:* Ticket generated with ID `MNT-XXXX`. Landlord receives instant notification.
+### 🔹 Step 7.1: Tenant Reports a Maintenance Issue (`/tenant/maintenance/new`)
+* **Who does this:** Tenant *(Window 2)*.
+* **Where to go:** Click **Maintenance** ➔ **"New Request"** (`/tenant/maintenance/new`).
+* **Step-by-Step Actions:**
+  1. Category: Select `Plumbing`.
+  2. Urgency: Select `High (Leaking pipe under kitchen sink)`.
+  3. Issue Title: *"Kitchen Sink Drain Pipe Leak"*.
+  4. Description: *"Water drips under the sink when running the faucet."*
+  5. Upload Photo: Attach a photo of the leaking pipe.
+  6. Click **"Submit Maintenance Request"**.
+  7. 👉 *What to check:* Ticket `MNT-XXXX` is created. Landlord receives an immediate alert.
 
 ---
 
-### 🔹 Step 7.2: Disconnected Emergency Action Bar Fallback
-* **Role:** Tenant with zero Wi-Fi during a pipe burst.
-* **Test Flow:**
-  1. Disconnect Network in DevTools.
+### 🔹 Step 7.2: Emergency Phone & SMS Fallback (Dead Zone Feature)
+* **Who does this:** Tenant dealing with a pipe burst during a network outage.
+* **Step-by-Step Actions:**
+  1. Set DevTools Network to **Offline**.
   2. Open `/tenant/maintenance/new`.
-  3. *Expected Result:* Notice the top **Emergency Maintenance Action Bar** appears with prominent buttons:
-     - **Direct Phone Call:** `tel:0917XXXXXXX` (1-tap dialer for property manager).
-     - **SMS Dispatch:** Pre-filled SMS template (*"EMERGENCY: Unit 101 plumbing hazard..."*).
-     - Ticket and photo are saved locally in `OfflineBlobStorage` and queued for cloud dispatch.
+  3. 👉 *What to check:* The red **Emergency Maintenance Action Bar** appears with two 1-tap buttons:
+     - **Direct Phone Call (`tel:`):** Opens phone dialer directly calling the property manager.
+     - **Pre-filled Emergency SMS:** Opens phone SMS app with a pre-written emergency text.
+     - The ticket and photo are stored on the device and sent automatically when internet returns.
 
 ---
 
 ### 🔹 Step 7.3: Landlord Assigns Contractor & Logs Repair Expense (`/landlord/maintenance`)
-* **Role:** Landlord *(Window 1)*.
-* **Navigation:** Go to `/landlord/maintenance` (`MaintenanceDashboard.tsx`).
-* **Actions & Expected Results:**
-  1. **Triage Ticket:**
-     - Open ticket `MNT-XXXX` (*Kitchen Sink Drain Pipe Leak*).
-  2. **Dispatch Contractor:**
-     - Change status from `open` to `in_progress`.
+* **Who does this:** Landlord *(Window 1)*.
+* **Where to go:** Click **Maintenance** in the sidebar (`/landlord/maintenance`).
+* **Step-by-Step Actions:**
+  1. Open ticket `MNT-XXXX` (*Kitchen Sink Leak*).
+  2. **Assign Third-Party Contractor:**
+     - Change status from `Open` to `In Progress`.
      - Assignment Type: Select **"Third-Party Contractor"**.
      - Contractor Name: *"Valenzuela Quick Plumbing Services"*.
      - Contractor Contact: *"0922-555-0199"*.
      - Estimated Cost: `₱1,800.00`.
      - Click **"Update Ticket & Notify Tenant"**.
   3. **Mark Resolved & Auto-Log Expense:**
-     - Once repair is done, click **"Mark Work Order Resolved"**.
-     - Input Actual Invoiced Amount: `₱1,800.00`.
-     - Check box: **"Record directly into Property Expense Ledger"**.
+     - After repairs are done, click **"Mark Work Order Resolved"**.
+     - Enter Actual Invoiced Amount: `₱1,800.00`.
+     - Check the box: **"Record directly into Property Expense Ledger"**.
      - Click **"Confirm Resolution"**.
-  4. *Expected Result:*
-     - Ticket status changes to `resolved`.
-     - Tenant receives resolution notice with rating prompt.
-     - An expense entry (`₱1,800.00`, Category: `Maintenance`, Unit: `101`) is automatically created in `/landlord/financials` without manual entry.
+  4. 👉 *What to check:*
+     - Ticket status changes to **Resolved**.
+     - An expense entry (`₱1,800.00`, Category: `Maintenance`, Unit: `101`) appears automatically in the property financial ledger without manual typing!
 
 ---
 
-## 📢 PHASE 8: Community Hub, Resident Engagement & Announcements
+## 📢 PHASE 8: Community Bulletin, Interactive Polls & Photo Albums
 
-### 🔹 Step 8.1: Landlord Broadcasts Official Announcement
-* **Role:** Landlord *(Window 1)*.
-* **Navigation:** Go to `/landlord/community` (`CommunityFeed`).
-* **Actions & Expected Results:**
+### 🔹 Step 8.1: Landlord Broadcasts Pinned Announcement
+* **Who does this:** Landlord *(Window 1)*.
+* **Where to go:** Click **Community** in the sidebar (`/landlord/community`).
+* **Step-by-Step Actions:**
   1. Click **"Create Announcement"**.
   2. Title: *"Scheduled Water Interruption Notice"*.
-  3. Content: *"Maynilad maintenance on Friday, 1:00 PM – 5:00 PM. Please store water ahead of time."*
+  3. Content: *"Maynilad pipe maintenance this Friday, 1:00 PM – 5:00 PM. Please store water in advance."*
   4. Toggle **"Pin to Top of Feed"** ON.
   5. Click **"Publish Announcement"**.
-  6. *Expected Result:* Pinned notice appears on both Landlord and Tenant community feeds.
+  6. 👉 *What to check:* The announcement appears pinned with an orange badge on both Landlord and Tenant notice boards.
 
 ---
 
-### 🔹 Step 8.2: Interactive Community Poll & Resident Voting
-* **Role:** Landlord & Tenant.
-* **Actions & Expected Results:**
-  1. **Landlord Creates Poll:**
+### 🔹 Step 8.2: Community Poll & Tenant Voting
+* **Who does this:** Landlord creates poll, Tenant votes.
+* **Step-by-Step Actions:**
+  1. **Landlord Creates Poll *(Window 1)*:**
      - Question: *"Preferred Lobby Quiet Hours on Weekends?"*
-     - Options: `10:00 PM` vs. `11:00 PM` vs. `Midnight`.
+     - Choices: `10:00 PM`, `11:00 PM`, `Midnight`.
      - Click **"Create Poll"**.
   2. **Tenant Votes *(Window 2)*:**
-     - Tenant opens `/tenant/community`.
-     - Clicks `10:00 PM` option.
-     - *Expected Result:* Single-vote recorded. Percentages update in real time. Tenant cannot cast duplicate votes.
+     - Go to `/tenant/community`.
+     - Click `10:00 PM`.
+     - 👉 *What to check:* The vote is recorded instantly. Vote percentages recalculate live. The tenant cannot vote twice.
 
 ---
 
-## 🔄 PHASE 9: End-of-Lease Lifecycles (Renewal, Move-Out & Deposit Settlement)
+## 🔄 PHASE 9: Lease Expiration, Renewal Addendum & Move-Out Settlement
 
-### 🔹 Step 9.1: Automated 90-Day Renewal Expiry Workflow
-* **Role:** System & Tenant.
-* **Actions & Expected Results:**
-  1. When a lease reaches 90 days before expiration, the system displays an amber notice: *"Lease Expiring in 90 Days — Ready for Renewal"*.
-  2. Tenant clicks **"Request Lease Renewal"** (`/tenant/lease/renew`).
-  3. Tenant selects desired extension: `12 Months`.
-  4. Landlord approves renewal in `/landlord/renewals`, generating a 1-page **Lease Extension Addendum** signed by both parties.
-
----
-
-### 🔹 Step 9.2: 30-Day Move-Out Notice & Unit Clearance (`/tenant/move-out`)
-* **Role:** Tenant *(Window 2)*.
-* **Navigation:** Go to `/tenant/move-out` (`MoveOutRequest.tsx`).
-* **Actions & Expected Results:**
-  1. **Submit Notice:**
-     - Target Move-Out Date: Select 30 days ahead.
-     - Forwarding Bank / GCash Account: Input account for Security Deposit refund.
-     - Reason for Leaving: *"Graduating / Relocating"*.
-     - Click **"Submit 30-Day Move-Out Notice"**.
-  2. *Expected Result:* Notice logged. Landlord receives departure schedule.
+### 🔹 Step 9.1: Automated 90-Day Expiration Alert & Renewal Addendum
+* **Who does this:** System, Tenant, and Landlord.
+* **Step-by-Step Actions:**
+  1. When 90 days remain before lease expiration, an amber banner appears: *"Lease Expiring Soon — Ready for Renewal"*.
+  2. Tenant clicks **"Request Lease Renewal"** (`/tenant/lease/renew`) and chooses a `12-Month` extension.
+  3. Landlord opens `/landlord/renewals` and clicks **"Approve Renewal"**.
+  4. 👉 *What to check:* A 1-page **Lease Extension Addendum** is generated and signed, updating the lease end date for another year.
 
 ---
 
-### 🔹 Step 9.3: Landlord Inspection & Security Deposit Settlement
-* **Role:** Landlord *(Window 1)*.
-* **Navigation:** Go to `/landlord/move-outs`.
-* **Actions & Expected Results:**
+### 🔹 Step 9.2: 30-Day Move-Out Notice & Unit Departure
+* **Who does this:** Tenant *(Window 2)*.
+* **Where to go:** Click **"Move-Out Request"** (`/tenant/move-out`).
+* **Step-by-Step Actions:**
+  1. Set Move-Out Date: 30 days ahead.
+  2. Enter GCash Account for Security Deposit refund: `0918-123-4567`.
+  3. Reason for Departure: *"Relocating for work"*.
+  4. Click **"Submit 30-Day Move-Out Notice"**.
+  5. 👉 *What to check:* Notice is filed and schedule is sent to the Landlord.
+
+---
+
+### 🔹 Step 9.3: Landlord Inspection & Security Deposit Refund Settlement
+* **Who does this:** Landlord *(Window 1)*.
+* **Where to go:** Go to `/landlord/move-outs`.
+* **Step-by-Step Actions:**
   1. **Inspection Checklist:**
      - Keys returned: `Yes`.
-     - Wall condition / paint: `Good`.
-     - Outstanding utility balance: `₱650.00` (Unbilled final days water/electric).
-  2. **Deposit Reconciliation Calculation:**
+     - Room condition: `Good`.
+     - Final unbilled utility arrears: `₱650.00`.
+     - Minor wall touchup / cleaning: `₱500.00`.
+  2. **Deposit Math Calculation:**
      - Original Security Deposit: `₱15,000.00`
-     - Less: Final Utility Arrears: `-₱650.00`
-     - Less: Minor Repairs / Cleaning: `-₱500.00`
-     - **Net Refund Amount:** `₱13,850.00`.
-  3. **Finalize Settlement:**
-     - Input GCash remittance reference number for the `₱13,850.00` refund.
+     - Less Final Utilities: `-₱650.00`
+     - Less Cleaning / Touchup: `-₱500.00`
+     - **Net Refund to Resident:** `₱13,850.00`.
+  3. **Send Refund & Release Unit:**
+     - Type GCash reference number for the `₱13,850.00` refund remittance.
      - Click **"Finalize Move-Out & Release Unit"**.
-  4. *Expected Result:*
-     - Lease status changes to `terminated`.
-     - Unit 101 status returns to `vacant / ready for intake`.
-     - Tenant account archives with full history access.
+  4. 👉 *What to check:*
+     - Lease status changes to **Terminated**.
+     - Unit 101 returns to **Vacant / Ready for Move-In**.
+     - The resident account is archived with complete historic records preserved.
 
 ---
 
-## 📚 PHASE 10: Turnkey Handover Documentation & Recovery Hub
+## 📚 PHASE 10: Zero-IT Handover Manual & Emergency Recovery Hub
 
-### 🔹 Step 10.1: Integrated Handover Documentation Kit (`/landlord/docs`)
-* **Role:** Landlord / Non-Technical Operator.
-* **Navigation:** Go to `/landlord/docs`.
-* **Actions & Expected Results:**
-  1. Explore the 5 Handover Modules:
-     - **Module 1:** Getting Started & Turnkey Architecture.
-     - **Module 2:** Day-to-Day Operations (Flyers, Invites, Units).
-     - **Module 3:** Billing, GCash Ledger & Sub-Meters.
-     - **Module 4:** Maintenance Dispatch & Community Governance.
-     - **Module 5:** Troubleshooting, Offline Resilience & Disaster Recovery.
-  2. Verify all step-by-step guides, screenshots, and troubleshooting FAQs render cleanly.
+### 🔹 Step 10.1: Built-In Operations & Handover Manual (`/landlord/docs`)
+* **Who does this:** Landlord or staff learning daily operations without hiring IT.
+* **Where to go:** Click **Documentation** in the sidebar (`/landlord/docs`).
+* **Step-by-Step Actions:**
+  1. Browse the 5 Interactive Handover Modules:
+     - **Module 1: Getting Started** — How your turnkey system works out of the box.
+     - **Module 2: Day-to-Day Operations** — Printing flyers, unit invite codes, and room management.
+     - **Module 3: Billing & GCash Ledger** — Recording sub-meters, approving GCash screenshots, and issuing receipts.
+     - **Module 4: Maintenance & Community** — Dispatching plumbers/electricians and posting building notices.
+     - **Module 5: Troubleshooting & Recovery** — Handling dead zones, power outages, and offline data sync.
+  2. 👉 *What to check:* All guides, screenshots, and troubleshooting FAQs are written in clear, simple language so any property staff can operate the system independently.
 
 ---
 
-## 🎯 Verification Checklist for Panel Defense
+## 🎯 Quick Verification Checklist for Panel Defense
 
-| Category | Test Case | Success Criteria | Status |
+| Category | Screen / Feature | What to Verify | Status |
 | :--- | :--- | :--- | :---: |
-| **Commissioning** | Layer 1 Database Probe (`/setup/technical`) | Realtime PostgreSQL latency probe measured in ms | ✅ Verified |
-| **Personalization** | Layer 2 Branding Wizard (`/setup`) | Live HSL palette, WCAG contrast ratio, monogram badge | ✅ Verified |
-| **Marketing** | Lobby Flyer Studio (`/landlord/flyer`) | 300 DPI high-res export, photo upload & cloud sync | ✅ Verified |
-| **Intake** | Private Unit QR Code & Token (`/signup/tenant`) | Auto-binds tenant to specific unit; prevents open signups | ✅ Verified |
-| **Onboarding** | Resident Guided Tour (`/tenant/tour`) | 4-step interactive walkthrough with single-run storage | ✅ Verified |
-| **Contracts** | Electronic Biometric Signing (`/tenant/lease`) | HTML5 signature pad, SHA-256 seal, PDF certificate | ✅ Verified |
-| **Utilities** | Corridor Sub-Meter Billing (`/landlord/utility`) | Real-time kWh/m³ calculation in dead zones & batch bills | ✅ Verified |
-| **Financials** | GCash Ledger & Receipts (`/landlord/financials`) | Proof verification, digital OR generation, instant reconciliation | ✅ Verified |
-| **Maintenance** | Contractor Dispatch & Auto-Expense | Resolved ticket invoice auto-creates ledger expense | ✅ Verified |
-| **Resilience** | Offline Degradation & Auto-Sync | Amber pill offline, IndexedDB queue, green sync on online | ✅ Verified |
-| **Handover** | Zero-IT Handover Manual (`/landlord/docs`) | 5 operational modules for independent property operation | ✅ Verified |
+| **Personalization** | Business Setup Wizard (`/setup`) | Property name, tagline, HSL palette, contrast check, monogram emblem | ✅ Verified |
+| **Settings** | Master Settings (`/landlord/settings`) | High-contrast mode, GCash QR upload, unsaved changes modal | ✅ Verified |
+| **Floorplan** | Visual Planner (`/landlord/properties`) | Floors, rooms, rates, amenities, and vacant status badges | ✅ Verified |
+| **Flyer Studio** | Lobby Flyer (`/landlord/flyer`) | WYSIWYG click-and-type editing, photo upload, 300 DPI print export | ✅ Verified |
+| **Intake** | Private Unit QR (`/signup/tenant`) | Auto-binds resident to assigned room; blocks open public signups | ✅ Verified |
+| **Tour** | Guided Resident Tour (`/tenant/tour`) | 4-step interactive walkthrough with one-time memory | ✅ Verified |
+| **Lease** | Digital Contracts (`/tenant/lease`) | Touch/mouse signature pad, SHA-256 seal, PDF download, offline signing | ✅ Verified |
+| **Utilities** | Sub-Meter Hallway Input (`/landlord/utility`) | Instant kWh & m³ cost calculation in dead zones and batch billing | ✅ Verified |
+| **Financials** | GCash Ledger & Receipts (`/landlord/financials`) | Side-by-side screenshot review, digital OR issuance, balance clearing | ✅ Verified |
+| **Repairs** | Maintenance & Auto-Expense | Emergency phone/SMS dialer in dead zones, contractor quote auto-logged | ✅ Verified |
+| **Community** | Notice Board & Polls (`/tenant/community`) | Pinned bulletins, live single-vote poll tallies, photo albums | ✅ Verified |
+| **Lifecycle** | Renewal & Deposit Refund | 1-page renewal addendum, move-out deductions, room reset to Vacant | ✅ Verified |
+| **Handover** | Zero-IT Handover Hub (`/landlord/docs`) | 5 simple operational modules for complete independent property operation | ✅ Verified |
