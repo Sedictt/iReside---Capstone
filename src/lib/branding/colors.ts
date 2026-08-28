@@ -125,23 +125,45 @@ export function getMonogramInitials(name: string): string {
 }
 
 /**
+ * Converts a HEX color string to RGB object.
+ */
+export function hexToRgb(hex: string): { r: number; g: number; b: number } {
+  let c = hex.replace("#", "").trim();
+  if (c.length === 3) {
+    c = c.split("").map((x) => x + x).join("");
+  }
+  if (c.length !== 6) {
+    return { r: 196, g: 176, b: 255 };
+  }
+  return {
+    r: parseInt(c.substring(0, 2), 16),
+    g: parseInt(c.substring(2, 4), 16),
+    b: parseInt(c.substring(4, 6), 16),
+  };
+}
+
+/**
  * Injects dynamic CSS variables into document.documentElement.
  */
 export function applyBrandCssVariables(primaryHex: string, secondaryHex?: string): void {
   if (typeof window === "undefined" || typeof document === "undefined") return;
 
-  const hsl = hexToHsl(primaryHex);
-  const fgColor = getContrastTextColor(primaryHex);
+  const validPrimary = primaryHex.startsWith("#") ? primaryHex : `#${primaryHex}`;
+  const hsl = hexToHsl(validPrimary);
+  const rgb = hexToRgb(validPrimary);
+  const fgColor = getContrastTextColor(validPrimary);
   const root = document.documentElement;
 
-  // Set Tailwind standard CSS variables (H S% L%)
-  root.style.setProperty("--primary", `${hsl.h} ${hsl.s}% ${hsl.l}%`);
-  root.style.setProperty("--primary-foreground", fgColor === "#ffffff" ? "0 0% 100%" : "240 10% 4%");
+  // Set direct valid color strings for Tailwind v4 and CSS standards
+  root.style.setProperty("--primary", validPrimary);
+  root.style.setProperty("--primary-foreground", fgColor);
+  root.style.setProperty("--primary-rgb", `${rgb.r}, ${rgb.g}, ${rgb.b}`);
   
   // Set Raw HEX & RGB CSS variables for inline styles & gradients
-  root.style.setProperty("--brand-primary", primaryHex);
+  root.style.setProperty("--brand-primary", validPrimary);
   if (secondaryHex) {
-    root.style.setProperty("--brand-secondary", secondaryHex);
+    const validSecondary = secondaryHex.startsWith("#") ? secondaryHex : `#${secondaryHex}`;
+    root.style.setProperty("--brand-secondary", validSecondary);
   }
 
   // Pre-calculate tints for subtle backgrounds

@@ -23,7 +23,8 @@ export default function TenantLayout({
     const isOnboardingPage = pathname.startsWith("/tenant/onboarding");
     const isUnitMapPage = pathname === "/tenant/unit-map";
     const isSettingsPage = pathname === "/tenant/settings";
-    const useImmersiveLayout = isChatPage || isOnboardingPage || isUnitMapPage || isSettingsPage;
+    const isDocsPage = pathname?.startsWith("/tenant/docs") || pathname?.startsWith("/tenant/manual");
+    const useImmersiveLayout = isChatPage || isOnboardingPage || isUnitMapPage || isSettingsPage || isDocsPage;
 
     return (
         <AuthProvider>

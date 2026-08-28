@@ -23,6 +23,7 @@ import {
     LayoutGrid,
     Sparkles,
     Check,
+    BookOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -90,6 +91,7 @@ const NAV_SECTIONS = [
             { label: "Maintenance", href: "/tenant/maintenance", icon: Wrench },
             { label: "Finance Hub", href: "/tenant/payments", icon: CreditCard },
             { label: "Messages", href: "/tenant/messages", icon: MessageSquare },
+            { label: "User Manual", href: "/tenant/docs", icon: BookOpen },
         ],
     },
 ];
@@ -210,9 +212,9 @@ return (
     return (
         <>
             <header className="md:hidden sticky top-0 z-[90] h-16 border-b border-border/80 bg-background">
-                <div className="h-full px-4 flex items-center justify-between">
-                    <Link href="/tenant/dashboard" className="flex items-center min-w-0">
-                        <BrandLogo size="sm" />
+                <div className="h-full px-4 flex items-center justify-between gap-3">
+                    <Link href="/tenant/dashboard" className="flex items-center min-w-0 flex-1 overflow-hidden">
+                        <BrandLogo size="sm" className="w-full min-w-0" />
                     </Link>
                     <div className="flex items-center gap-3">
                         <div className="relative" ref={mobileNotificationsRef}>
@@ -277,11 +279,11 @@ return (
             </header>
 
             <aside className="hidden md:flex fixed left-0 top-0 z-40 h-screen w-64 flex-col text-foreground neumorphic-panel" data-tour-id="tour-tenant-navigation">
-                <div className="h-20 px-6 border-b border-border/70 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                        <BrandLogo size="md" />
+                <div className="h-20 px-5 border-b border-border/70 flex items-center justify-between gap-2">
+                    <div className="flex items-center min-w-0 flex-1 overflow-hidden">
+                        <BrandLogo size="md" className="w-full min-w-0" />
                     </div>
-                    <ThemeToggle variant="sidebar" dataTourId="tour-theme-toggle" />
+                    <ThemeToggle variant="sidebar" dataTourId="tour-theme-toggle" className="shrink-0" />
                 </div>
 
                 <div className="flex-1 overflow-y-auto px-4 py-8">

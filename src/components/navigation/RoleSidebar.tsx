@@ -77,7 +77,7 @@ function LogoLink({ children }: { children: React.ReactNode }) {
     };
 
     return (
-        <a href={getRedirectPath()} onClick={handleLogoNavigation} className="cursor-pointer">
+        <a href={getRedirectPath()} onClick={handleLogoNavigation} className="cursor-pointer flex items-center min-w-0 flex-1 overflow-hidden">
             {children}
         </a>
     );
@@ -200,16 +200,16 @@ export function RoleSidebar({
                 )}
             >
                 {/* Header */}
-                <div className={cn("flex h-20 items-center justify-between px-6 transition-all duration-300 mb-2", isCollapsed ? "justify-center" : "justify-between")}>
+                <div className={cn("flex h-20 items-center justify-between px-5 transition-all duration-300 mb-2 gap-2", isCollapsed ? "justify-center" : "justify-between")}>
                     {!isCollapsed && (
-                        <div className="flex items-center gap-3 min-w-0">
+                        <div className="flex items-center min-w-0 flex-1 overflow-hidden">
                             <LogoLink>
-                                <BrandLogo size="md" />
+                                <BrandLogo size="md" className="w-full min-w-0" />
                             </LogoLink>
                         </div>
                     )}
-                    <div className="flex items-center gap-2">
-                        {!isCollapsed && <ThemeToggle variant="sidebar" />}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                        {!isCollapsed && <ThemeToggle variant="sidebar" className="shrink-0" />}
                         {showCollapseToggle && !isCollapsed && (
                             <Tooltip content="Collapse sidebar" side="bottom" sideOffset={8}>
                                 <button 

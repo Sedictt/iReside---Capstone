@@ -33,7 +33,7 @@ export function BrandLogo({
   // 1. Custom Uploaded Logo Image
   if (logoUrl) {
     return (
-      <div className={cn("flex items-center gap-3", className)}>
+      <div className={cn("flex items-center gap-2.5 min-w-0 w-full overflow-hidden", className)}>
         <div className={cn("relative overflow-hidden rounded-2xl shrink-0 border border-border/40 shadow-xs", sizeClasses.box, imageClassName)}>
           <Image
             src={logoUrl}
@@ -44,11 +44,11 @@ export function BrandLogo({
           />
         </div>
         {showText && (
-          <div className="flex flex-col min-w-0 text-left">
-            <span className={cn("font-black tracking-tight text-foreground truncate", sizeClasses.text)}>
+          <div className="flex flex-col min-w-0 flex-1 text-left overflow-hidden">
+            <span className={cn("font-black tracking-tight text-foreground truncate block", sizeClasses.text)} title={propertyName}>
               {propertyName}
             </span>
-            <span className={cn("text-muted-foreground font-medium truncate", sizeClasses.subtext)}>
+            <span className={cn("text-muted-foreground font-medium truncate block", sizeClasses.subtext)} title={propertyTagline}>
               {propertyTagline}
             </span>
           </div>
@@ -60,7 +60,7 @@ export function BrandLogo({
   // 2. Monogram Emblem Badge (Custom Property Name without image)
   if (isCustomBranded) {
     return (
-      <div className={cn("flex items-center gap-3", className)}>
+      <div className={cn("flex items-center gap-2.5 min-w-0 w-full overflow-hidden", className)}>
         <div
           className={cn(
             "rounded-2xl flex items-center justify-center shrink-0 border shadow-xs transition-transform active:scale-95",
@@ -78,11 +78,11 @@ export function BrandLogo({
           </span>
         </div>
         {showText && (
-          <div className="flex flex-col min-w-0 text-left">
-            <span className={cn("font-black tracking-tight text-foreground truncate", sizeClasses.text)}>
+          <div className="flex flex-col min-w-0 flex-1 text-left overflow-hidden">
+            <span className={cn("font-black tracking-tight text-foreground truncate block", sizeClasses.text)} title={propertyName}>
               {propertyName}
             </span>
-            <span className={cn("text-muted-foreground font-medium truncate", sizeClasses.subtext)}>
+            <span className={cn("text-muted-foreground font-medium truncate block", sizeClasses.subtext)} title={propertyTagline}>
               {propertyTagline}
             </span>
           </div>
