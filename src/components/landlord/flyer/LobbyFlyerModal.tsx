@@ -38,7 +38,9 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import { useProperty } from "@/context/PropertyContext";
+import { useBrand } from "@/context/BrandContext";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -133,12 +135,13 @@ function getContrastColor(hexColor: string): { text: string; muted: string; bord
 
 export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
   const { selectedProperty } = useProperty();
+  const brand = useBrand();
   const posterRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 1. Header Card Texts
   const [propertyName, setPropertyName] = useState(
-    selectedProperty?.name || "Skyline Lofts"
+    selectedProperty?.name || brand.propertyName || "Skyline Lofts"
   );
   const [address, setAddress] = useState(
     selectedProperty?.address || "456 Gen. T. de Leon Road, Paso de Blas, Valenzuela City"
@@ -148,7 +151,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
   // 2. Banner Texts
   const [bannerHeading, setBannerHeading] = useState("Resident Notice & Access");
   const [tagline, setTagline] = useState(
-    "Official resident portal for GCash payments, utility tracking, and maintenance."
+    brand.propertyTagline || "Official resident portal for GCash payments, utility tracking, and maintenance."
   );
 
   // 3. Android APK Card Texts
@@ -192,7 +195,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
   const [bgPreset, setBgPreset] = useState<BackgroundPreset>("solid_white");
   const [cardColor, setCardColor] = useState<string>("#ffffff");
   const [cardOpacity, setCardOpacity] = useState<number>(95);
-  const [brandColor, setBrandColor] = useState("#8b5cf6");
+  const [brandColor, setBrandColor] = useState(brand.primaryColor || "#8b5cf6");
 
   // Typography Customization States
   const [fontFamily, setFontFamily] = useState<FontFamilyChoice>("modern_sans");
@@ -218,7 +221,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
   const origin =
     typeof window !== "undefined" ? window.location.origin : "https://ireside.ph";
   const [apkUrl, setApkUrl] = useState(`${origin}/download`);
-  const [portalUrl, setPortalUrl] = useState(`${origin}/tenant/register`);
+  const [portalUrl, setPortalUrl] = useState(`${origin}/signup/tenant`);
 
   // High-Resolution Scannable QR Codes
   const apkQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=4&data=${encodeURIComponent(
@@ -1628,8 +1631,9 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                   </div>
 
                   <div className="text-right flex flex-col items-end shrink-0">
-                    <Logo
-                      variant="primary"
+                    <BrandLogo
+                      size="sm"
+                      showText={false}
                       theme={cardContrast.isLight ? "light" : "dark"}
                       className="h-5 w-16"
                     />

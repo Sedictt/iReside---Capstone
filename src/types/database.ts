@@ -547,6 +547,7 @@ export interface Database {
                     is_featured?: boolean
                     created_at?: string
                     updated_at?: string
+                    map_decorations?: Json | null
                     contract_template?: Json | null
                     total_units?: number | null
                     total_floors?: number | null
