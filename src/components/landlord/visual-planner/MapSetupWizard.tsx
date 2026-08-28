@@ -7,7 +7,6 @@ import {
     CheckCircle2,
     AlertCircle,
     Loader2,
-    ChevronRight,
     ArrowRight,
     Layout,
     Equal,
@@ -32,7 +31,6 @@ import {
     type DragEndEvent,
 } from "@dnd-kit/core";
 import {
-    arrayMove,
     sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
 import { cn } from "@/lib/utils";
@@ -48,6 +46,8 @@ interface MapSetupWizardProps {
     propertyName: string;
     onSetupComplete: () => void;
     previewEmptyFloors?: boolean;
+    initialUnits?: DbUnit[];
+    initialFloorConfigs?: FloorConfig[];
 }
 
 const sortUnitsSequential = (unitList: DbUnit[]) => {
@@ -61,13 +61,20 @@ const sortUnitsSequential = (unitList: DbUnit[]) => {
     });
 };
 
-export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, previewEmptyFloors = false }: MapSetupWizardProps) {
+export function MapSetupWizard({ 
+    propertyId, 
+    propertyName, 
+    onSetupComplete, 
+    previewEmptyFloors = false,
+    initialUnits,
+    initialFloorConfigs,
+}: MapSetupWizardProps) {
     const toast = useAppToast();
-    const [units, setUnits] = useState<DbUnit[]>([]);
-    const [floorConfigs, setFloorConfigs] = useState<FloorConfig[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const hasInitialData = Boolean(initialUnits && initialUnits.length > 0 && initialFloorConfigs !== undefined);
+    const [units, setUnits] = useState<DbUnit[]>(initialUnits || []);
+    const [floorConfigs, setFloorConfigs] = useState<FloorConfig[]>(initialFloorConfigs || []);
+    const [isLoading, setIsLoading] = useState(!hasInitialData && !previewEmptyFloors);
     const [error, setError] = useState<string | null>(null);
-    const [placedCount, setPlacedCount] = useState(0);
     const [isSaving, setIsSaving] = useState(false);
     const [activeUnit, setActiveUnit] = useState<DbUnit | null>(null);
     const [isBulkOrganizerOpen, setIsBulkOrganizerOpen] = useState(false);
@@ -77,6 +84,17 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
     const [renumberStyle, setRenumberStyle] = useState<NumberingStyle>("floor_based");
     const [renumberStartingNumber, setRenumberStartingNumber] = useState(101);
     const [isRenumbering, setIsRenumbering] = useState(false);
+
+    // Sync state if initial data arrives later
+    useEffect(() => {
+        if (initialUnits && initialUnits.length > 0) {
+            setUnits(initialUnits);
+            setIsLoading(false);
+        }
+        if (initialFloorConfigs) {
+            setFloorConfigs(initialFloorConfigs);
+        }
+    }, [initialUnits, initialFloorConfigs]);
 
     // Initialize distribution on load
     useEffect(() => {
@@ -104,8 +122,12 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
                 { id: "preview-u5", name: "Unit 202", floor: -1, status: "vacant", beds: 1, baths: 1, sqft: 500, position: null },
             ]);
             setFloorConfigs([]);
-            setPlacedCount(0);
             setIsLoading(false);
+            return;
+        }
+
+        if (hasInitialData) {
+            // Already initialized via props, skip duplicate fetch
             return;
         }
 
@@ -120,7 +142,6 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
             };
             setUnits(data.units);
             setFloorConfigs(data.floorConfigs);
-            setPlacedCount(data.placedCount);
 
             if (data.isSetupComplete) {
                 onSetupComplete();
@@ -130,14 +151,18 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
         } finally {
             setIsLoading(false);
         }
-    }, [propertyId, onSetupComplete, previewEmptyFloors]);
+    }, [propertyId, onSetupComplete, previewEmptyFloors, hasInitialData]);
 
     useEffect(() => {
-        void loadData();
-    }, [loadData]);
+        if (!hasInitialData) {
+            void loadData();
+        }
+    }, [loadData, hasInitialData]);
 
     const totalUnits = units.length;
-    const progress = totalUnits > 0 ? Math.round((placedCount / totalUnits) * 100) : 0;
+    const assignedUnitsCount = units.filter(u => u.floor !== -1 && floorConfigs.some(fc => fc.floor_number === u.floor)).length;
+    const progress = totalUnits > 0 ? Math.round((assignedUnitsCount / totalUnits) * 100) : 0;
+    const isAllAssigned = totalUnits > 0 && assignedUnitsCount === totalUnits && floorConfigs.length > 0;
 
     const handleAddFloor = async (floorNum?: number) => {
         setIsSaving(true);
@@ -148,9 +173,8 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
                     ? Math.max(...floorConfigs.map(fc => fc.floor_number)) + 1 
                     : 1);
             
-            // Optimistic update: add floor to state immediately
             const newFloor: FloorConfig = {
-                id: `temp-${Date.now()}`, // Temporary ID
+                id: `temp-${Date.now()}`,
                 floor_number: nextFloorNumber,
                 floor_key: nextFloorNumber === 0 ? "ground" : `floor${nextFloorNumber}`,
                 display_name: null,
@@ -164,7 +188,6 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
                 return;
             }
 
-            // Send to server
             const res = await fetch("/api/landlord/unit-map/floor-configs", {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
@@ -172,12 +195,11 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
             });
 
             if (!res.ok) {
-                // Rollback on error
                 setFloorConfigs(prev => prev.filter(f => f.id !== newFloor.id));
                 throw new Error("Failed to add floor");
             }
             setError(null);
-        } catch (err) {
+        } catch {
             setError("Failed to add new floor.");
         } finally {
             setIsSaving(false);
@@ -192,32 +214,26 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
 
         setIsSaving(true);
         try {
-            // Save current state for rollback
             const previousFloors = floorConfigs;
-            
-            // Optimistic update: remove floor from state immediately
             setFloorConfigs(prev => prev.filter(f => f.floor_key !== floorKey));
             
-            // Move units on deleted floor to first available floor
             const deletedFloor = floorConfigs.find(f => f.floor_key === floorKey);
             const nextFloor = floorConfigs.find(f => f.floor_key !== floorKey);
             if (deletedFloor && nextFloor) {
                 setUnits(prev => prev.map(u => u.floor === deletedFloor.floor_number ? { ...u, floor: nextFloor.floor_number } : u));
             }
             
-            // Send to server
             const res = await fetch(`/api/landlord/unit-map/floor-configs?propertyId=${propertyId}&floorKey=${floorKey}`, {
                 method: "DELETE",
             });
 
             if (!res.ok) {
-                // Rollback on error
                 setFloorConfigs(previousFloors);
-                await loadData(); // Reload to sync units back
+                await loadData();
                 throw new Error("Failed to remove floor");
             }
             setError(null);
-        } catch (err) {
+        } catch {
             setError("Failed to remove floor.");
         } finally {
             setIsSaving(false);
@@ -327,7 +343,6 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
             }
         }
 
-        // Put remaining units into "Unassigned" state (using -1 as a convention for unassigned)
         while (unitIdx < sortedUnits.length) {
             newUnits.push({ ...sortedUnits[unitIdx], floor: -1 });
             unitIdx++;
@@ -400,7 +415,6 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
             for (const fc of floorConfigs) {
                 const floorUnits = [...units].filter(u => u.floor === fc.floor_number);
                 
-                // Sort units numerically by name (e.g., "101", "102", "201")
                 floorUnits.sort((a, b) => {
                     const numA = parseInt(a.name.replace(/\D/g, "")) || 0;
                     const numB = parseInt(b.name.replace(/\D/g, "")) || 0;
@@ -411,7 +425,6 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
                 const count = floorUnits.length;
                 if (count === 0) continue;
 
-                // Dynamically decide columns based on unit count
                 let cols = 4;
                 if (count <= 2) cols = 2;
                 else if (count <= 6) cols = 3;
@@ -419,11 +432,8 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
                 else if (count <= 24) cols = 5;
                 else cols = 6;
 
-                // Calculate width to fit the blueprint dynamically
                 const availableWidth = BLUEPRINT_WIDTH - (PADDING * 2);
                 const unitW = (availableWidth - (cols - 1) * PADDING) / cols;
-                
-                // Cap height to prevent overly tall units, but keep a reasonable aspect ratio
                 const unitH = Math.min(180, unitW * 0.65);
 
                 floorUnits.forEach((unit, idx) => {
@@ -446,6 +456,7 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
                 body: JSON.stringify({ propertyId, positions }),
             });
 
+            toast.success("Units successfully laid out on map!");
             onSetupComplete();
         } catch {
             setError("Generation failed. Please try placing units manually.");
@@ -466,7 +477,6 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
             const newUnits: DbUnit[] = [];
             let unitIdx = 0;
 
-            // Follow the user's specified counts
             for (const fc of floorConfigs) {
                 const count = floorDistribution[fc.floor_number] || 0;
                 for (let i = 0; i < count; i++) {
@@ -477,7 +487,6 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
                 }
             }
 
-            // If there are leftovers, put them on the last floor
             while (unitIdx < sortedUnits.length) {
                 const lastFloor = floorConfigs[floorConfigs.length - 1].floor_number;
                 newUnits.push({ ...sortedUnits[unitIdx], floor: lastFloor });
@@ -506,36 +515,38 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
 
     if (isLoading) {
         return (
-            <div className="flex-1 flex items-center justify-center bg-[#080808]">
+            <div className="flex-1 flex items-center justify-center bg-background">
                 <div className="flex flex-col items-center gap-4">
                     <Loader2 className="size-10 text-primary animate-spin" />
-                    <p className="text-neutral-500 text-sm font-black uppercase tracking-widest">Building Layout…</p>
+                    <p className="text-muted-foreground text-sm font-black uppercase tracking-widest">Building Layout…</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="flex h-screen flex-col bg-[#050505] text-white">
+        <div className="flex h-screen flex-col bg-background text-foreground">
             {/* Top Navigation / Header */}
-            <header className="flex h-20 shrink-0 items-center justify-between border-b border-white/5 bg-white/[0.02] px-8 backdrop-blur-xl">
-                    <div data-tour-id="tour-wizard-header" className="flex items-center gap-4">
-                        <div className="flex size-10 items-center justify-center rounded-2xl bg-primary text-black">
-                            <Layout className="size-5" />
-                        </div>
-                        <div>
-                            <h1 className="text-lg font-black tracking-tight">{propertyName}</h1>
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-500">Floor Plan Organizer</p>
-                        </div>
+            <header className="flex h-20 shrink-0 items-center justify-between border-b border-border/80 bg-card/60 px-8 backdrop-blur-xl">
+                <div data-tour-id="tour-wizard-header" className="flex items-center gap-4">
+                    <div className="flex size-10 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20 text-primary">
+                        <Layout className="size-5" />
                     </div>
+                    <div>
+                        <h1 className="text-lg font-black tracking-tight text-foreground">{propertyName}</h1>
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Floor Plan Organizer</p>
+                    </div>
+                </div>
 
                 <div className="flex items-center gap-6">
                     <div className="hidden md:flex flex-col items-end gap-1">
                         <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Progress</span>
-                            <span className="text-xs font-black text-primary">{placedCount === totalUnits ? "Ready to Launch" : `${progress}% Assigned`}</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Progress</span>
+                            <span className="text-xs font-black text-primary">
+                                {isAllAssigned ? "100% Ready to Generate" : `${assignedUnitsCount}/${totalUnits} Assigned (${progress}%)`}
+                            </span>
                         </div>
-                        <div className="h-1 w-32 rounded-full bg-white/10 overflow-hidden">
+                        <div className="h-1.5 w-36 rounded-full bg-muted overflow-hidden">
                             <motion.div 
                                 className="h-full bg-primary"
                                 initial={{ width: 0 }}
@@ -544,7 +555,7 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2.5">
                         <button
                             data-tour-id="tour-wizard-bulk"
                             onClick={() => setIsBulkOrganizerOpen(!isBulkOrganizerOpen)}
@@ -553,8 +564,8 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
                             className={cn(
                                 "flex size-11 items-center justify-center rounded-2xl border transition-all active:scale-95 disabled:opacity-50",
                                 isBulkOrganizerOpen 
-                                    ? "bg-primary border-primary text-black" 
-                                    : "bg-white/5 border-white/10 text-white hover:bg-white/10"
+                                    ? "bg-primary border-primary text-primary-foreground" 
+                                    : "bg-card border-border hover:bg-muted text-foreground"
                             )}
                         >
                             <SlidersHorizontal className="size-4" />
@@ -563,11 +574,18 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
                         <button
                             data-tour-id="tour-wizard-generate"
                             onClick={handleAutoPlace}
-                            disabled={isSaving}
-                            className="group relative flex items-center gap-2 overflow-hidden rounded-2xl bg-primary px-6 py-3 text-sm font-black uppercase tracking-widest text-black transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+                            disabled={isSaving || floorConfigs.length === 0 || totalUnits === 0}
+                            className={cn(
+                                "group relative flex items-center gap-2.5 overflow-hidden rounded-2xl px-6 py-2.5 text-xs font-black uppercase tracking-wider transition-all duration-300 shadow-xl active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed bg-primary text-primary-foreground hover:brightness-110 shadow-primary/25",
+                                isAllAssigned && "ring-2 ring-primary/40"
+                            )}
                         >
-                            {isSaving ? <Loader2 className="size-4 animate-spin" /> : <ArrowRight className="size-4" />}
-                            Generate Map
+                            {isSaving ? (
+                                <Loader2 className="size-4 animate-spin" />
+                            ) : (
+                                <ArrowRight className="size-4 group-hover:translate-x-0.5 transition-transform" />
+                            )}
+                            <span>Generate Map</span>
                         </button>
                     </div>
                 </div>
@@ -598,22 +616,22 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
                 >
                     <div className="flex h-full gap-8 p-8">
                         {/* Floor Boards Section */}
-                        <div className="flex-1 overflow-y-auto no-scrollbar rounded-[2.5rem] bg-white/[0.01] border border-white/5 p-8">
+                        <div className="flex-1 overflow-y-auto no-scrollbar rounded-[2.5rem] bg-card/40 border border-border/80 p-8 shadow-xs">
                             <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
                                 <div className="max-w-xl">
-                                    <h2 className="text-2xl lg:text-3xl font-black tracking-tight text-white">Organize Units by Floor</h2>
-                                    <p className="mt-1 text-xs text-neutral-400 font-medium leading-relaxed">
+                                    <h2 className="text-2xl lg:text-3xl font-black tracking-tight text-foreground">Organize Units by Floor</h2>
+                                    <p className="mt-1 text-xs text-muted-foreground font-medium leading-relaxed">
                                         Drag and drop units into their respective floors to configure your building layout.
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-3 shrink-0">
                                     {/* Action Group */}
-                                    <div className="flex items-center rounded-2xl border border-white/10 bg-white/[0.03] p-1 shadow-inner backdrop-blur-md">
+                                    <div className="flex items-center rounded-2xl border border-border bg-muted/40 p-1 shadow-xs">
                                         <button
                                             type="button"
                                             onClick={() => setIsRenumberModalOpen(true)}
                                             disabled={isSaving || units.length === 0}
-                                            className="flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold text-neutral-300 hover:text-white hover:bg-white/10 transition-all active:scale-95 disabled:opacity-40"
+                                            className="flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-card transition-all active:scale-95 disabled:opacity-40"
                                         >
                                             <Hash className="size-3.5 text-primary" />
                                             <span>Renumber</span>
@@ -621,12 +639,12 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
 
                                         {floorConfigs.length > 1 && (
                                             <>
-                                                <div className="h-4 w-px bg-white/10" />
+                                                <div className="h-4 w-px bg-border" />
                                                 <button
                                                     type="button"
                                                     onClick={handleDistributeEvenly}
                                                     disabled={isSaving}
-                                                    className="flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold text-neutral-300 hover:text-white hover:bg-white/10 transition-all active:scale-95 disabled:opacity-40"
+                                                    className="flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-card transition-all active:scale-95 disabled:opacity-40"
                                                 >
                                                     <Equal className="size-3.5 text-primary" />
                                                     <span>Distribute Evenly</span>
@@ -639,7 +657,7 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
                                         data-tour-id="tour-wizard-add-floor"
                                         onClick={() => handleAddFloor()}
                                         disabled={isSaving}
-                                        className="group flex items-center gap-2 rounded-2xl border border-primary/30 bg-primary/10 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-primary hover:bg-primary hover:text-black transition-all active:scale-95 shadow-lg shadow-primary/5 disabled:opacity-50"
+                                        className="group flex items-center gap-2 rounded-2xl border border-primary/30 bg-primary/10 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-primary hover:bg-primary hover:text-primary-foreground transition-all active:scale-95 shadow-sm disabled:opacity-50"
                                     >
                                         <Plus className="size-4 stroke-[2.5]" />
                                         <span>Add Floor</span>
@@ -647,7 +665,7 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
                                 </div>
                             </div>
 
-                            <div data-tour-id="tour-wizard-lanes" className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                            <div data-tour-id="tour-wizard-lanes" className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                                 {/* Holding Area for Unassigned Units */}
                                 {units.some(u => u.floor === -1) && (
                                     <div className="col-span-1 lg:col-span-2 mb-4">
@@ -668,29 +686,29 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
                                             </div>
                                         </div>
 
-                                        <h3 className="text-xl font-black tracking-tight text-white mb-2">
+                                        <h3 className="text-xl font-black tracking-tight text-foreground mb-2">
                                             No Floors Created Yet
                                         </h3>
-                                        <p className="max-w-md text-xs font-medium leading-relaxed text-neutral-400 mb-8">
+                                        <p className="max-w-md text-xs font-medium leading-relaxed text-muted-foreground mb-8">
                                             Your building needs at least one floor level before units can be placed on the architectural map. Add your property&apos;s levels below to begin.
                                         </p>
 
                                         {/* Step Guide Cards */}
                                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-xl mb-8 text-left">
-                                            <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-4">
+                                            <div className="rounded-2xl border border-border/70 bg-card p-4 shadow-xs">
                                                 <div className="flex size-6 items-center justify-center rounded-lg bg-primary/10 text-primary text-[11px] font-black mb-2">1</div>
-                                                <p className="text-xs font-black text-white">Create Levels</p>
-                                                <p className="text-[10px] text-neutral-400 leading-relaxed mt-1">Add Ground Floor, Floor 1, Floor 2, etc.</p>
+                                                <p className="text-xs font-black text-foreground">Create Levels</p>
+                                                <p className="text-[10px] text-muted-foreground leading-relaxed mt-1">Add Ground Floor, Floor 1, Floor 2, etc.</p>
                                             </div>
-                                            <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-4">
-                                                <div className="flex size-6 items-center justify-center rounded-lg bg-white/10 text-neutral-300 text-[11px] font-black mb-2">2</div>
-                                                <p className="text-xs font-black text-white">Assign Units</p>
-                                                <p className="text-[10px] text-neutral-400 leading-relaxed mt-1">Drag units from the pool to their floors.</p>
+                                            <div className="rounded-2xl border border-border/70 bg-card p-4 shadow-xs">
+                                                <div className="flex size-6 items-center justify-center rounded-lg bg-muted text-muted-foreground text-[11px] font-black mb-2">2</div>
+                                                <p className="text-xs font-black text-foreground">Assign Units</p>
+                                                <p className="text-[10px] text-muted-foreground leading-relaxed mt-1">Drag units from the pool to their floors.</p>
                                             </div>
-                                            <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-4">
-                                                <div className="flex size-6 items-center justify-center rounded-lg bg-white/10 text-neutral-300 text-[11px] font-black mb-2">3</div>
-                                                <p className="text-xs font-black text-white">Generate Map</p>
-                                                <p className="text-[10px] text-neutral-400 leading-relaxed mt-1">Auto-build your high-fidelity canvas layout.</p>
+                                            <div className="rounded-2xl border border-border/70 bg-card p-4 shadow-xs">
+                                                <div className="flex size-6 items-center justify-center rounded-lg bg-muted text-muted-foreground text-[11px] font-black mb-2">3</div>
+                                                <p className="text-xs font-black text-foreground">Generate Map</p>
+                                                <p className="text-[10px] text-muted-foreground leading-relaxed mt-1">Auto-build your high-fidelity canvas layout.</p>
                                             </div>
                                         </div>
 
@@ -699,7 +717,7 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
                                             <button
                                                 onClick={() => handleAddFloor(1)}
                                                 disabled={isSaving}
-                                                className="flex items-center gap-2 rounded-2xl bg-primary px-6 py-3 text-xs font-black uppercase tracking-widest text-black transition-all hover:scale-105 active:scale-95 disabled:opacity-50 shadow-lg shadow-primary/20"
+                                                className="flex items-center gap-2 rounded-2xl bg-primary px-6 py-3 text-xs font-black uppercase tracking-widest text-primary-foreground transition-all hover:brightness-110 active:scale-95 disabled:opacity-50 shadow-lg shadow-primary/20"
                                             >
                                                 {isSaving ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4 stroke-[3px]" />}
                                                 Add First Floor (Floor 1)
@@ -707,7 +725,7 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
                                             <button
                                                 onClick={() => handleAddFloor(0)}
                                                 disabled={isSaving}
-                                                className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-white/10 active:scale-95 disabled:opacity-50"
+                                                className="flex items-center gap-2 rounded-2xl border border-border bg-card px-5 py-3 text-xs font-black uppercase tracking-widest text-foreground transition-all hover:bg-muted active:scale-95 disabled:opacity-50"
                                             >
                                                 <Plus className="size-4" />
                                                 Add Ground Floor
@@ -725,48 +743,39 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
                                     ))
                                 )}
                             </div>
+
                         </div>
 
                         {/* Sidebar / Instructions */}
                         <div className="hidden xl:flex w-80 shrink-0 flex-col gap-6">
-                            <div className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-6">
+                            <div className="rounded-[2rem] border border-border/80 bg-card/70 p-6 shadow-xs">
                                 <h4 className="text-xs font-black uppercase tracking-[0.2em] text-primary">Instructions</h4>
                                 <ul className="mt-6 space-y-6">
                                     <li className="flex gap-4">
-                                        <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-white/10 text-[10px] font-black text-white">1</div>
-                                        <p className="text-xs font-medium leading-relaxed text-neutral-400">
+                                        <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-black text-foreground">1</div>
+                                        <p className="text-xs font-medium leading-relaxed text-muted-foreground">
                                             Verify that each unit is assigned to its correct floor.
                                         </p>
                                     </li>
                                     <li className="flex gap-4">
-                                        <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-white/10 text-[10px] font-black text-white">2</div>
-                                        <p className="text-xs font-medium leading-relaxed text-neutral-400">
+                                        <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-black text-foreground">2</div>
+                                        <p className="text-xs font-medium leading-relaxed text-muted-foreground">
                                             Drag units between floor boards to reassign them instantly.
                                         </p>
                                     </li>
                                     <li className="flex gap-4">
-                                        <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-white/10 text-[10px] font-black text-white">3</div>
-                                        <p className="text-xs font-medium leading-relaxed text-neutral-400">
-                                            Click <span className="font-black text-white">&quot;Generate Map&quot;</span> to auto-layout your unit map.
+                                        <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary text-[10px] font-black">3</div>
+                                        <p className="text-xs font-medium leading-relaxed text-muted-foreground">
+                                            Click <span className="font-black text-foreground">&quot;Generate Map&quot;</span> in the top bar to auto-layout your canvas.
                                         </p>
                                     </li>
                                 </ul>
                             </div>
 
-                            <div className="mt-auto rounded-[2rem] border border-white/10 bg-white/[0.03] p-6">
-                                <div className="flex items-center gap-3">
-                                    <div className="size-2 rounded-full bg-primary animate-pulse" />
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400">System Ready</p>
-                                </div>
-                                <p className="mt-3 text-xs font-medium text-neutral-500">
-                                    All assignments are saved in real-time. You can always refine layouts on the canvas later.
-                                </p>
-                            </div>
-
                             {error && (
-                                <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-4 flex items-start gap-3">
-                                    <AlertCircle className="size-4 text-red-400 shrink-0 mt-0.5" />
-                                    <p className="text-[10px] font-black text-red-200 uppercase leading-normal">{error}</p>
+                                <div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 p-4 flex items-start gap-3 mt-auto">
+                                    <AlertCircle className="size-4 text-rose-500 shrink-0 mt-0.5" />
+                                    <p className="text-[10px] font-black text-rose-500 uppercase leading-normal">{error}</p>
                                 </div>
                             )}
                         </div>
@@ -791,12 +800,12 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
             {/* Batch Renumber & Rename Modal */}
             <AnimatePresence>
                 {isRenumberModalOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-in fade-in duration-200">
                         <motion.div
                             initial={{ scale: 0.95, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.95, opacity: 0 }}
-                            className="relative w-full max-w-lg rounded-[2.5rem] border border-white/10 bg-[#0a0a0a] p-8 shadow-2xl space-y-6"
+                            className="relative w-full max-w-lg rounded-[2.5rem] border border-border bg-card p-8 shadow-2xl space-y-6 text-card-foreground"
                         >
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
@@ -804,13 +813,13 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
                                         <Hash className="size-5" />
                                     </div>
                                     <div>
-                                        <h3 className="text-lg font-black text-white">Customize Unit Numbering</h3>
-                                        <p className="text-xs text-neutral-400 font-medium">Batch renumber and label all units</p>
+                                        <h3 className="text-lg font-black text-foreground">Customize Unit Numbering</h3>
+                                        <p className="text-xs text-muted-foreground font-medium">Batch renumber and label all units</p>
                                     </div>
                                 </div>
                                 <button
                                     onClick={() => setIsRenumberModalOpen(false)}
-                                    className="flex size-8 items-center justify-center rounded-xl bg-white/5 text-neutral-400 hover:bg-white/10 hover:text-white transition-all"
+                                    className="flex size-8 items-center justify-center rounded-xl bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all"
                                 >
                                     <X className="size-4" />
                                 </button>
@@ -819,18 +828,19 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
                             <div className="space-y-4">
                                 {/* Prefix */}
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-wider text-neutral-400">Unit Prefix / Label</label>
+                                    <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Unit Prefix / Label</label>
                                     <div className="flex flex-wrap gap-2">
                                         {["Unit", "Room", "Studio", "Apt", "Suite", "Villa", "Bed"].map((preset) => (
                                             <button
                                                 key={preset}
                                                 type="button"
                                                 onClick={() => setRenumberPrefix(preset)}
-                                                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
+                                                className={cn(
+                                                    "px-3 py-1.5 rounded-xl text-xs font-black transition-all",
                                                     renumberPrefix === preset
-                                                        ? "bg-primary text-black"
-                                                        : "bg-white/5 text-white/70 hover:bg-white/10"
-                                                }`}
+                                                        ? "bg-primary text-primary-foreground shadow-xs"
+                                                        : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+                                                )}
                                             >
                                                 {preset}
                                             </button>
@@ -841,57 +851,59 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
                                         value={renumberPrefix}
                                         onChange={(e) => setRenumberPrefix(e.target.value)}
                                         placeholder="Or type custom prefix (e.g. Tower A-)"
-                                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3 text-xs font-black text-white outline-none focus:border-primary/50"
+                                        className="w-full bg-background border border-border rounded-2xl px-5 py-3 text-xs font-black text-foreground outline-none focus:border-primary/50"
                                     />
                                 </div>
 
                                 {/* Scheme */}
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-wider text-neutral-400">Numbering Pattern</label>
+                                    <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Numbering Pattern</label>
                                     <div className="grid grid-cols-2 gap-2">
                                         <button
                                             type="button"
                                             onClick={() => setRenumberStyle("floor_based")}
-                                            className={`p-3.5 rounded-2xl border text-left transition-all ${
+                                            className={cn(
+                                                "p-3.5 rounded-2xl border text-left transition-all",
                                                 renumberStyle === "floor_based"
-                                                    ? "bg-primary/10 border-primary/50 text-white"
-                                                    : "bg-white/5 border-white/5 text-white/60 hover:bg-white/10"
-                                            }`}
+                                                    ? "bg-primary/10 border-primary/50 text-foreground ring-1 ring-primary/30"
+                                                    : "bg-muted/40 border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+                                            )}
                                         >
                                             <p className="text-xs font-black">Floor-Based</p>
-                                            <p className="text-[10px] text-neutral-400 mt-0.5">101, 102 / 201, 202</p>
+                                            <p className="text-[10px] text-muted-foreground mt-0.5">101, 102 / 201, 202</p>
                                         </button>
 
                                         <button
                                             type="button"
                                             onClick={() => setRenumberStyle("sequential")}
-                                            className={`p-3.5 rounded-2xl border text-left transition-all ${
+                                            className={cn(
+                                                "p-3.5 rounded-2xl border text-left transition-all",
                                                 renumberStyle === "sequential"
-                                                    ? "bg-primary/10 border-primary/50 text-white"
-                                                    : "bg-white/5 border-white/5 text-white/60 hover:bg-white/10"
-                                            }`}
+                                                    ? "bg-primary/10 border-primary/50 text-foreground ring-1 ring-primary/30"
+                                                    : "bg-muted/40 border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+                                            )}
                                         >
                                             <p className="text-xs font-black">Sequential</p>
-                                            <p className="text-[10px] text-neutral-400 mt-0.5">1, 2, 3... or custom start</p>
+                                            <p className="text-[10px] text-muted-foreground mt-0.5">1, 2, 3... or custom start</p>
                                         </button>
                                     </div>
 
                                     {renumberStyle === "sequential" && (
                                         <div className="pt-1">
-                                            <label className="text-[9px] font-black uppercase tracking-wider text-neutral-400">Starting Number</label>
+                                            <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Starting Number</label>
                                             <input
                                                 type="number"
                                                 value={renumberStartingNumber}
                                                 onChange={(e) => setRenumberStartingNumber(parseInt(e.target.value) || 1)}
-                                                className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-2.5 text-xs font-black text-white outline-none focus:border-primary/50 mt-1"
+                                                className="w-full bg-background border border-border rounded-2xl px-5 py-2.5 text-xs font-black text-foreground outline-none focus:border-primary/50 mt-1"
                                             />
                                         </div>
                                     )}
                                 </div>
 
                                 {/* Preview */}
-                                <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-4 space-y-2">
-                                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-neutral-400">
+                                <div className="rounded-2xl border border-border/80 bg-muted/20 p-4 space-y-2">
+                                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
                                         <Eye className="size-3.5 text-primary" />
                                         <span>Preview ({units.length} total units):</span>
                                     </div>
@@ -910,7 +922,7 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
                                             </span>
                                         ))}
                                         {units.length > 6 && (
-                                            <span className="text-[10px] font-bold text-neutral-500">
+                                            <span className="text-[10px] font-bold text-muted-foreground">
                                                 +{units.length - 6} more
                                             </span>
                                         )}
@@ -924,7 +936,7 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
                                     type="button"
                                     onClick={() => setIsRenumberModalOpen(false)}
                                     disabled={isRenumbering}
-                                    className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-xs font-black uppercase tracking-widest text-white hover:bg-white/10 transition-all disabled:opacity-50"
+                                    className="rounded-2xl border border-border bg-muted px-5 py-3 text-xs font-black uppercase tracking-widest text-foreground hover:bg-muted/80 transition-all disabled:opacity-50"
                                 >
                                     Cancel
                                 </button>
@@ -932,7 +944,7 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
                                     type="button"
                                     onClick={handleApplyRenumber}
                                     disabled={isRenumbering}
-                                    className="flex items-center gap-2 rounded-2xl bg-primary px-6 py-3 text-xs font-black uppercase tracking-widest text-black transition-all hover:scale-105 active:scale-95 disabled:opacity-50 shadow-lg shadow-primary/20"
+                                    className="flex items-center gap-2 rounded-2xl bg-primary px-6 py-3 text-xs font-black uppercase tracking-widest text-primary-foreground transition-all hover:brightness-110 active:scale-95 disabled:opacity-50 shadow-lg shadow-primary/20"
                                 >
                                     {isRenumbering ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />}
                                     Apply & Save
@@ -945,5 +957,3 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete, prev
         </div>
     );
 }
-
-

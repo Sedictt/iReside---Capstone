@@ -35,10 +35,12 @@ import {
 } from "./types";
 
 
+import { useBrand } from "@/context/BrandContext";
 import { 
     UNIT_SIZE_BY_BEDS, unitTypeFromBeds, dbUnitToCanvasUnit, 
     parseFloorNumber, getFloorDisplayLabel, formatFloorWatermark, 
-    QUICK_ACTIONS_BY_STATUS, QUICK_ACTION_META, evaluateQuickAction 
+    QUICK_ACTIONS_BY_STATUS, QUICK_ACTION_META, evaluateQuickAction,
+    getUnitDimensions
 } from "./utils";
 import { 
     INITIAL_UNITS, LEGEND_VISIBILITY_STORAGE_KEY, FLOOR_LAYOUTS_STORAGE_KEY, 
@@ -50,6 +52,7 @@ import { TransferRequestModal } from "./components/TransferRequestModal";
 import { FloorSelector } from "./components/FloorSelector";
 import { LeasePreviewModal } from "./components/LeasePreviewModal";
 import { VisualPlannerSkeleton } from "./components/VisualPlannerSkeleton";
+import { CanvasQuickMessenger } from "./components/CanvasQuickMessenger";
 import { MapSetupWizard } from "./MapSetupWizard";
 import { MaintenanceRequestModal } from "@/components/landlord/maintenance/MaintenanceRequestModal";
 import type { MaintenanceRequest } from "@/components/landlord/maintenance/MaintenanceDashboard";
@@ -555,6 +558,19 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const [isRenamingFloor, setIsRenamingFloor] = useState(false);
     const [isNotesPanelOpen, setIsNotesPanelOpen] = useState(false);
     const [unitNotes, setUnitNotes] = useState<UnitNotesState>(EMPTY_OBJECT);
+    const [floatingNoteUnitId, setFloatingNoteUnitId] = useState<string | null>(null);
+    const [showQuickMessages, setShowQuickMessages] = useState<boolean>(() => {
+        if (typeof window === "undefined") return false;
+        try {
+            return window.localStorage.getItem("ireside.visualPlanner.showQuickMessages") === "true";
+        } catch {
+            return false;
+        }
+    });
+    const [floatingChatUnitId, setFloatingChatUnitId] = useState<string | null>(null);
+    const brand = useBrand();
+    const primaryColor = brand?.primaryColor || "#3b82f6";
+    const secondaryColor = brand?.secondaryColor || "#8b5cf6";
     const [isWalkInModalOpen, setIsWalkInModalOpen] = useState(false);
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
     const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
@@ -645,16 +661,116 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     }, [demoMode, units.length]);
 
     // ---------------------------------------------------------------
-    // Load real data from DB when a property is selected
+    // Load real data from DB when a property is selected (SWR Instant Cache)
     // ---------------------------------------------------------------
     useEffect(() => {
         if (demoMode) return;
         if (!selectedPropertyId || selectedPropertyId === "all") return;
 
         const controller = new AbortController();
-        setIsLoadingMap(true);
+        const cacheKey = `ireside.mapCache.${selectedPropertyId}`;
+
+        // Helper to process & apply data payload
+        const applyMapData = (data: {
+            floorConfigs: FloorConfig[];
+            units: DbUnit[];
+            mapDecorations: Record<string, { corridors?: Corridor[]; structures?: Structure[] }>;
+            isSetupComplete: boolean;
+            placedCount: number;
+            totalUnits: number;
+        }) => {
+            const unplaced = data.units.filter((u: DbUnit) => u.position === null);
+            const newFloorLayouts: Record<FloorId, FloorLayout> = {};
+            
+            for (const fc of data.floorConfigs) {
+                newFloorLayouts[fc.floor_key] = {
+                    name: fc.display_name ?? undefined,
+                    units: [],
+                    corridors: (data.mapDecorations[fc.floor_key]?.corridors ?? []) as Corridor[],
+                    structures: (data.mapDecorations[fc.floor_key]?.structures ?? []) as Structure[],
+                };
+            }
+            if (Object.keys(newFloorLayouts).length === 0) {
+                newFloorLayouts["floor1"] = { units: [], corridors: [], structures: [] };
+            }
+            for (const dbUnit of data.units) {
+                if (!dbUnit.position) continue;
+                const fk = dbUnit.position.floor_key;
+                if (!newFloorLayouts[fk]) newFloorLayouts[fk] = { units: [], corridors: [], structures: [] };
+                newFloorLayouts[fk].units.push(dbUnitToCanvasUnit(dbUnit));
+            }
+            
+            const storedActiveFloor = typeof window !== "undefined"
+                ? window.localStorage.getItem(SCOPED_ACTIVE_FLOOR_KEY)
+                : null;
+            const orderedFloorKeys = Array.from(new Set([
+                ...data.floorConfigs.map((fc) => fc.floor_key),
+                ...Object.keys(newFloorLayouts),
+            ]));
+            const firstPopulatedFloorKey = orderedFloorKeys.find((floorKey) => {
+                const layout = newFloorLayouts[floorKey];
+                return Boolean(layout) && (layout.units.length > 0 || layout.corridors.length > 0 || layout.structures.length > 0);
+            });
+            const initialFloorKey = (
+                storedActiveFloor && newFloorLayouts[storedActiveFloor]
+                    ? storedActiveFloor
+                    : firstPopulatedFloorKey
+                        ?? data.floorConfigs[0]?.floor_key
+                        ?? orderedFloorKeys[0]
+                        ?? "floor1"
+            );
+            
+            const initialUnits = newFloorLayouts[initialFloorKey]?.units ?? [];
+            const initialCorridors = newFloorLayouts[initialFloorKey]?.corridors ?? [];
+            const initialStructures = newFloorLayouts[initialFloorKey]?.structures ?? [];
+
+            setDbUnits(data.units);
+            setFloorConfigs(data.floorConfigs);
+            setIsSetupComplete(data.isSetupComplete);
+            setPlacedCount(data.placedCount);
+            setTotalDbUnits(data.totalUnits);
+            setUnplacedDbUnits(unplaced);
+            setFloorLayouts(newFloorLayouts);
+            setActiveFloor(initialFloorKey);
+            setUnits(initialUnits);
+            setCorridors(initialCorridors);
+            setStructures(initialStructures);
+            setHasHydratedFloorState(true);
+
+            isUndoingRef.current = true;
+            historyRef.current = [{
+                units: initialUnits,
+                corridors: initialCorridors,
+                structures: initialStructures,
+            }];
+            historyIndexRef.current = 0;
+            setUndoAvailable(false);
+        };
+
+        // 1. Instant Cache Hydration (0ms)
+        let hasCache = false;
+        if (typeof window !== "undefined") {
+            try {
+                const rawCache = window.sessionStorage.getItem(cacheKey) || window.localStorage.getItem(cacheKey);
+                if (rawCache) {
+                    const parsed = JSON.parse(rawCache);
+                    if (parsed && Array.isArray(parsed.units) && Array.isArray(parsed.floorConfigs)) {
+                        applyMapData(parsed);
+                        setIsLoadingMap(false);
+                        hasCache = true;
+                    }
+                }
+            } catch (e) {
+                console.warn("[VisualBuilder] Cache parse error:", e);
+            }
+        }
+
+        if (!hasCache) {
+            setIsLoadingMap(true);
+        }
         setMapLoadError(null);
 
+        // 2. Background Revalidation
         const load = async () => {
             try {
                 const endpoint = readOnly 
@@ -677,75 +793,16 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                     totalUnits: number;
                 };
 
-                // Prepare all data first, then batch state updates
-                const unplaced = data.units.filter((u: DbUnit) => u.position === null);
-                const newFloorLayouts: Record<FloorId, FloorLayout> = {};
-                
-                for (const fc of data.floorConfigs) {
-                    newFloorLayouts[fc.floor_key] = {
-                        name: fc.display_name ?? undefined,
-                        units: [],
-                        corridors: (data.mapDecorations[fc.floor_key]?.corridors ?? []) as Corridor[],
-                        structures: (data.mapDecorations[fc.floor_key]?.structures ?? []) as Structure[],
-                    };
-                }
-                if (Object.keys(newFloorLayouts).length === 0) {
-                    newFloorLayouts["floor1"] = { units: [], corridors: [], structures: [] };
-                }
-                for (const dbUnit of data.units) {
-                    if (!dbUnit.position) continue;
-                    const fk = dbUnit.position.floor_key;
-                    if (!newFloorLayouts[fk]) newFloorLayouts[fk] = { units: [], corridors: [], structures: [] };
-                    newFloorLayouts[fk].units.push(dbUnitToCanvasUnit(dbUnit));
-                }
-                
-                const storedActiveFloor = typeof window !== "undefined"
-                    ? window.localStorage.getItem(SCOPED_ACTIVE_FLOOR_KEY)
-                    : null;
-                const orderedFloorKeys = Array.from(new Set([
-                    ...data.floorConfigs.map((fc) => fc.floor_key),
-                    ...Object.keys(newFloorLayouts),
-                ]));
-                const firstPopulatedFloorKey = orderedFloorKeys.find((floorKey) => {
-                    const layout = newFloorLayouts[floorKey];
-                    return Boolean(layout) && (layout.units.length > 0 || layout.corridors.length > 0 || layout.structures.length > 0);
-                });
-                const initialFloorKey = (
-                    storedActiveFloor && newFloorLayouts[storedActiveFloor]
-                        ? storedActiveFloor
-                        : firstPopulatedFloorKey
-                            ?? data.floorConfigs[0]?.floor_key
-                            ?? orderedFloorKeys[0]
-                            ?? "floor1"
-                );
-                
-                const initialUnits = newFloorLayouts[initialFloorKey]?.units ?? [];
-                const initialCorridors = newFloorLayouts[initialFloorKey]?.corridors ?? [];
-                const initialStructures = newFloorLayouts[initialFloorKey]?.structures ?? [];
+                // Apply fresh data
+                applyMapData(data);
 
-                // Batch all state updates
-                setDbUnits(data.units);
-                setFloorConfigs(data.floorConfigs);
-                setIsSetupComplete(data.isSetupComplete);
-                setPlacedCount(data.placedCount);
-                setTotalDbUnits(data.totalUnits);
-                setUnplacedDbUnits(unplaced);
-                setFloorLayouts(newFloorLayouts);
-                setActiveFloor(initialFloorKey);
-                setUnits(initialUnits);
-                setCorridors(initialCorridors);
-                setStructures(initialStructures);
-                setHasHydratedFloorState(true);
-
-                // Set loaded state as baseline session history so undo cannot revoke below loaded state
-                isUndoingRef.current = true;
-                historyRef.current = [{
-                    units: initialUnits,
-                    corridors: initialCorridors,
-                    structures: initialStructures,
-                }];
-                historyIndexRef.current = 0;
-                setUndoAvailable(false);
+                // Save to cache for next instant load
+                if (typeof window !== "undefined") {
+                    try {
+                        window.sessionStorage.setItem(cacheKey, JSON.stringify(data));
+                        window.localStorage.setItem(cacheKey, JSON.stringify(data));
+                    } catch {}
+                }
             } catch (err) {
                 if ((err as Error).name === "AbortError") return;
                 setMapLoadError((err as Error).message);
@@ -753,6 +810,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                 if (!controller.signal.aborted) setIsLoadingMap(false);
             }
         };
+
         void load();
         return () => controller.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -784,6 +842,27 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     }, [unitNotes, SCOPED_UNIT_NOTES_KEY]);
     const [editingFloorName, setEditingFloorName] = useState("");
     const scaleRef = useRef(scale);
+    const positionRef = useRef(position);
+    useEffect(() => {
+        scaleRef.current = scale;
+    }, [scale]);
+    useEffect(() => {
+        positionRef.current = position;
+    }, [position]);
+
+    const [activeDragItem, setActiveDragItem] = useState<{
+        kind: CanvasItemKind;
+        id: string;
+        startPointerX: number;
+        startPointerY: number;
+        startItemX: number;
+        startItemY: number;
+        currentX: number;
+        currentY: number;
+        w: number;
+        h: number;
+    } | null>(null);
+
     const dragPointerOffsetRef = useRef<DragPointerOffsetState | null>(null);
     const trashRef = useRef<HTMLDivElement>(null);
     const historyRef = useRef<FloorLayout[]>([]);
@@ -936,6 +1015,15 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
             if (key === 's' && !e.ctrlKey && !e.metaKey) {
                 setIsSidebarVisible(prev => !prev);
             }
+            // Quick Messages toggle (M)
+            if (key === 'm' && !e.ctrlKey && !e.metaKey) {
+                setShowQuickMessages(prev => {
+                    const next = !prev;
+                    try { window.localStorage.setItem("ireside.visualPlanner.showQuickMessages", String(next)); } catch {}
+                    toast.info(next ? "Canvas Quick Messages Enabled" : "Canvas Quick Messages Disabled");
+                    return next;
+                });
+            }
             // Hotkeys hint (?)
             if (e.key === '?' || (e.key === '/' && e.shiftKey)) {
                 setShowHotkeys(prev => !prev);
@@ -986,7 +1074,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const updateCanvasDimensions = useCallback((
         activeItem?: { kind: CanvasItemKind; id: string; x: number; y: number; w: number; h: number }
     ) => {
-        const padding = 100;
+        const padding = 200;
         const MIN_BLUEPRINT_WIDTH = Math.max(420, viewportSize.width - BLUEPRINT_MARGIN * 2);
         const MIN_BLUEPRINT_HEIGHT = Math.max(320, viewportSize.height - BLUEPRINT_MARGIN * 2);
 
@@ -1015,8 +1103,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
             consider(activeItem.x, activeItem.y, activeItem.w, activeItem.h);
         }
 
-        const newExtraW = Math.max(0, maxX + padding - MIN_BLUEPRINT_WIDTH);
-        const newExtraH = Math.max(0, maxY + padding - MIN_BLUEPRINT_HEIGHT);
+        const newExtraW = Math.max(0, Math.ceil((maxX + padding - MIN_BLUEPRINT_WIDTH) / 50) * 50);
+        const newExtraH = Math.max(0, Math.ceil((maxY + padding - MIN_BLUEPRINT_HEIGHT) / 50) * 50);
 
         if (newExtraW !== extraDimensionsRef.current.width || newExtraH !== extraDimensionsRef.current.height) {
             setExtraDimensions({ width: newExtraW, height: newExtraH });
@@ -1024,14 +1112,14 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     }, [units, corridors, structures, viewportSize]);
 
     const snapToGrid = (value: number) => Math.round(value / GRID_SIZE) * GRID_SIZE;
-    const clampUnitAxis = (value: number, size: number, maxSize: number) => Math.max(0, Math.min(maxSize - size, value));
+    const clampUnitAxis = (value: number, size: number, maxSize: number) => Math.max(0, value);
     const MAGNETIC_SNAP_DISTANCE = Math.max(12, Math.round(GRID_SIZE * 0.8));
     const getSnappedRectPosition = (rawX: number, rawY: number, width: number, height: number) => {
-        const snappedX = snapToGrid(rawX);
-        const snappedY = snapToGrid(rawY);
+        const snappedX = Math.max(0, snapToGrid(rawX));
+        const snappedY = Math.max(0, snapToGrid(rawY));
         return {
-            x: clampUnitAxis(snappedX, width, BLUEPRINT_WIDTH),
-            y: clampUnitAxis(snappedY, height, BLUEPRINT_HEIGHT),
+            x: snappedX,
+            y: snappedY,
         };
     };
     const getWorldPointFromClientPoint = useCallback((clientX: number, clientY: number) => {
@@ -1039,12 +1127,14 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         if (!container) return null;
 
         const containerRect = container.getBoundingClientRect();
+        const currentScale = scaleRef.current || 1;
+        const currentPos = positionRef.current;
         
-        const worldX = (clientX - containerRect.left - position.x) / scale - BLUEPRINT_MARGIN;
-        const worldY = (clientY - containerRect.top - position.y) / scale - BLUEPRINT_MARGIN;
+        const worldX = (clientX - containerRect.left - currentPos.x) / currentScale - BLUEPRINT_MARGIN;
+        const worldY = (clientY - containerRect.top - currentPos.y) / currentScale - BLUEPRINT_MARGIN;
         
         return { x: worldX, y: worldY };
-    }, [scale, position]);
+    }, [BLUEPRINT_MARGIN]);
 
     const setDragPointerAnchor = useCallback(
         (kind: CanvasItemKind, id: string, itemX: number, itemY: number, pointerX: number, pointerY: number) => {
@@ -1223,6 +1313,169 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
             isValid,
             isMagnetic: false,
         };
+    };
+
+    const handleItemPointerDown = (
+        kind: CanvasItemKind,
+        id: string,
+        itemX: number,
+        itemY: number,
+        itemW: number,
+        itemH: number
+    ) => (e: React.PointerEvent<HTMLDivElement>) => {
+        if (readOnly || isLayoutLocked || e.button !== 0) return;
+        if (resizingCorridorId !== null) return;
+
+        const target = e.target as HTMLElement;
+        if (target.closest('[data-resize-handle="true"]') || target.closest('button') || target.closest('input')) {
+            return;
+        }
+
+        e.preventDefault();
+        e.stopPropagation();
+        setSelectedItem({ kind, id });
+        setFloatingNoteUnitId(null);
+        setFloatingChatUnitId(null);
+        if (kind === "unit") setDraggingUnitId(id);
+        else if (kind === "corridor") setDraggingCorridorId(id);
+        else setDraggingStructureId(id);
+
+        setIsTrashHot(false);
+
+        const startPointerX = e.clientX;
+        const startPointerY = e.clientY;
+        const startItemX = itemX;
+        const startItemY = itemY;
+
+        setDragPointerAnchor(kind, id, itemX, itemY, startPointerX, startPointerY);
+        setDragPlacementIndicator(kind, id, true, false);
+
+        setActiveDragItem({
+            kind,
+            id,
+            startPointerX,
+            startPointerY,
+            startItemX,
+            startItemY,
+            currentX: startItemX,
+            currentY: startItemY,
+            w: itemW,
+            h: itemH,
+        });
+
+        const onPointerMove = (moveEvt: PointerEvent) => {
+            const currentScale = scaleRef.current || 1;
+            const deltaX = (moveEvt.clientX - startPointerX) / currentScale;
+            const deltaY = (moveEvt.clientY - startPointerY) / currentScale;
+            const rawX = startItemX + deltaX;
+            const rawY = startItemY + deltaY;
+
+            const placement = resolveDragPlacement(
+                kind,
+                id,
+                itemW,
+                itemH,
+                moveEvt.clientX,
+                moveEvt.clientY,
+                rawX,
+                rawY
+            );
+
+            updateTrashHotState(moveEvt.clientX, moveEvt.clientY);
+            setDragPlacementIndicator(kind, id, placement.isValid, placement.isMagnetic);
+
+            // Auto-expand canvas bounds smoothly if moving near or beyond edges
+            if (rawX + itemW > BLUEPRINT_WIDTH - 100 || rawY + itemH > BLUEPRINT_HEIGHT - 100) {
+                updateCanvasDimensions({
+                    kind,
+                    id,
+                    x: rawX,
+                    y: rawY,
+                    w: itemW,
+                    h: itemH,
+                });
+            }
+
+            setActiveDragItem(prev => prev && prev.id === id && prev.kind === kind ? {
+                ...prev,
+                currentX: placement.isMagnetic ? placement.x : rawX,
+                currentY: placement.isMagnetic ? placement.y : rawY,
+            } : prev);
+        };
+
+        const onPointerUp = (upEvt: PointerEvent) => {
+            window.removeEventListener("pointermove", onPointerMove);
+            window.removeEventListener("pointerup", onPointerUp);
+            window.removeEventListener("pointercancel", onPointerUp);
+
+            const shouldDelete = isPointerNearTrash(upEvt.clientX, upEvt.clientY);
+            if (shouldDelete) {
+                requestDeleteItem({ kind, id }, "trash");
+                setDragPlacement(null);
+                if (kind === "unit") setDraggingUnitId(null);
+                else if (kind === "corridor") setDraggingCorridorId(null);
+                else setDraggingStructureId(null);
+                clearDragPointerAnchor(kind, id);
+                setIsTrashHot(false);
+                setActiveDragItem(null);
+                return;
+            }
+
+            const currentScale = scaleRef.current || 1;
+            const deltaX = (upEvt.clientX - startPointerX) / currentScale;
+            const deltaY = (upEvt.clientY - startPointerY) / currentScale;
+            const rawX = startItemX + deltaX;
+            const rawY = startItemY + deltaY;
+
+            const placement = resolveDragPlacement(
+                kind,
+                id,
+                itemW,
+                itemH,
+                upEvt.clientX,
+                upEvt.clientY,
+                rawX,
+                rawY
+            );
+
+            if (!placement.isValid) {
+                triggerOverlapToast();
+            } else {
+                updateCanvasDimensions({
+                    kind,
+                    id,
+                    x: placement.x,
+                    y: placement.y,
+                    w: itemW,
+                    h: itemH,
+                });
+                if (kind === "unit") {
+                    setUnits(prev => prev.map(existing => (
+                        existing.id === id ? { ...existing, x: placement.x, y: placement.y } : existing
+                    )));
+                } else if (kind === "corridor") {
+                    setCorridors(prev => prev.map(existing => (
+                        existing.id === id ? { ...existing, x: placement.x, y: placement.y } : existing
+                    )));
+                } else {
+                    setStructures(prev => prev.map(existing => (
+                        existing.id === id ? { ...existing, x: placement.x, y: placement.y } : existing
+                    )));
+                }
+            }
+
+            setDragPlacement(null);
+            if (kind === "unit") setDraggingUnitId(null);
+            else if (kind === "corridor") setDraggingCorridorId(null);
+            else setDraggingStructureId(null);
+            clearDragPointerAnchor(kind, id);
+            setIsTrashHot(false);
+            setActiveDragItem(null);
+        };
+
+        window.addEventListener("pointermove", onPointerMove);
+        window.addEventListener("pointerup", onPointerUp);
+        window.addEventListener("pointercancel", onPointerUp);
     };
 
     const doesOverlap = (
@@ -1558,6 +1811,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
         setSelectedItem(null);
         setTooltipUnit(null);
+        setFloatingNoteUnitId(null);
+        setFloatingChatUnitId(null);
 
         isPanningRef.current = true;
         setIsPanning(true);
@@ -1595,34 +1850,79 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
     useEffect(() => {
         const container = containerRef.current;
-        if (!container) return;
 
         const handleWheel = (e: WheelEvent) => {
             const isZoomGesture = e.ctrlKey || e.metaKey;
             if (isZoomGesture) {
                 e.preventDefault();
                 setScale(prevScale => {
-                    const nextScale = prevScale - e.deltaY * 0.001;
+                    const nextScale = prevScale - e.deltaY * 0.0015;
                     return Math.min(Math.max(nextScale, 0.5), 3);
                 });
                 return;
             }
 
-            e.preventDefault();
-            const horizontalDelta = e.shiftKey && e.deltaX === 0 ? e.deltaY : e.deltaX;
-            const verticalDelta = e.shiftKey && e.deltaX === 0 ? 0 : e.deltaY;
-            setPosition(prev => clampPosition(
-                prev.x - horizontalDelta,
-                prev.y - verticalDelta,
-                scaleRef.current
-            ));
+            if (container && (container === e.target || container.contains(e.target as Node))) {
+                e.preventDefault();
+                const horizontalDelta = e.shiftKey && e.deltaX === 0 ? e.deltaY : e.deltaX;
+                const verticalDelta = e.shiftKey && e.deltaX === 0 ? 0 : e.deltaY;
+                setPosition(prev => clampPosition(
+                    prev.x - horizontalDelta,
+                    prev.y - verticalDelta,
+                    scaleRef.current
+                ));
+            }
         };
 
-        // Add non-passive event listener to allow preventing default
-        container.addEventListener("wheel", handleWheel, { passive: false });
+        // Window-level Ctrl/Cmd + Wheel interceptor to completely stop browser UI scaling
+        const handleWindowWheel = (e: WheelEvent) => {
+            if (e.ctrlKey || e.metaKey) {
+                e.preventDefault();
+                setScale(prevScale => {
+                    const nextScale = prevScale - e.deltaY * 0.0015;
+                    return Math.min(Math.max(nextScale, 0.5), 3);
+                });
+            }
+        };
+
+        // Keyboard zoom interceptor (Ctrl + +, Ctrl + -, Ctrl + 0)
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.ctrlKey || e.metaKey) {
+                if (e.key === "+" || e.key === "=" || e.key === "Add") {
+                    e.preventDefault();
+                    setScale(prev => Math.min(prev + 0.15, 3));
+                } else if (e.key === "-" || e.key === "_" || e.key === "Subtract") {
+                    e.preventDefault();
+                    setScale(prev => Math.max(prev - 0.15, 0.5));
+                } else if (e.key === "0") {
+                    e.preventDefault();
+                    setScale(1);
+                    setPosition({ x: 0, y: 0 });
+                }
+            }
+        };
+
+        // Trackpad pinch-to-zoom prevention
+        const handleGesture = (e: Event) => {
+            e.preventDefault();
+        };
+
+        if (container) {
+            container.addEventListener("wheel", handleWheel, { passive: false });
+        }
+        window.addEventListener("wheel", handleWindowWheel, { passive: false });
+        window.addEventListener("keydown", handleKeyDown);
+        window.addEventListener("gesturestart", handleGesture as any, { passive: false });
+        window.addEventListener("gesturechange", handleGesture as any, { passive: false });
 
         return () => {
-            container.removeEventListener("wheel", handleWheel);
+            if (container) {
+                container.removeEventListener("wheel", handleWheel);
+            }
+            window.removeEventListener("wheel", handleWindowWheel);
+            window.removeEventListener("keydown", handleKeyDown);
+            window.removeEventListener("gesturestart", handleGesture as any);
+            window.removeEventListener("gesturechange", handleGesture as any);
         };
     }, []);
 
@@ -2108,14 +2408,14 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     }, [selectedItem, units, corridors, structures, performUndo, rotateSelectedItem, readOnly]);
 
     const handleSidebarBlockDragStart = (blockType: SidebarBlockType, dbUnitId?: string) => (e: React.DragEvent<HTMLDivElement>) => {
-        const payload = blockType === "studio"
+        let payload = blockType === "studio"
             ? { blockType, label: "Studio", unitType: "Studio" as const, w: 180, h: 120 }
             : blockType === "1br"
                 ? { blockType, label: "1 BR Std", unitType: "1BR" as const, w: 200, h: 140 }
                 : blockType === "2br"
                     ? { blockType, label: "2 BR Corner", unitType: "2BR" as const, w: 220, h: 140 }
                     : blockType === "3br"
-                        ? { blockType, label: "3 BR Suite", unitType: "3BR" as const, w: 280, h: 140 }
+                        ? { blockType, label: "3 BR Suite", unitType: "3BR" as const, w: 240, h: 140 }
                         : blockType === "corridor"
                             ? { blockType, label: "Corridor", w: 260, h: 60 }
                             : blockType === "elevator"
@@ -2131,6 +2431,15 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                 : blockType === "facility-function"
                                                     ? { blockType, label: "Function Room", w: 240, h: 180, variant: "function-room" }
                                                     : { blockType, label: "Studio Facility", w: 200, h: 160, variant: "studio" };
+
+        if (dbUnitId) {
+            const dbUnit = dbUnits.find(u => u.id === dbUnitId);
+            if (dbUnit) {
+                const dims = getUnitDimensions(dbUnit.beds);
+                payload = { ...payload, w: dims.w, h: dims.h };
+            }
+        }
+
         activeSidebarDragRef.current = { ...payload, dbUnitId };
         e.dataTransfer.setData(SIDEBAR_BLOCK_DRAG_TYPE, JSON.stringify({ ...payload, dbUnitId }));
         e.dataTransfer.effectAllowed = "copy";
@@ -2143,8 +2452,9 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
     const handleUnplacedUnitClick = (dbUnit: DbUnit) => {
         if (readOnly) return;
-        const w = dbUnit.beds === 0 ? 180 : dbUnit.beds === 2 ? 220 : dbUnit.beds >= 3 ? 280 : 200;
-        const h = dbUnit.beds === 0 ? 120 : 140;
+        const dims = getUnitDimensions(dbUnit.beds);
+        const w = dims.w;
+        const h = dims.h;
         let x = 50;
         let y = 50;
         const MAX_ATTEMPTS = 20;
@@ -2159,7 +2469,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                 id: dbUnit.id,
                 dbId: dbUnit.id,
                 name: dbUnit.name,
-                type: (dbUnit.beds === 0 ? "Studio" : dbUnit.beds === 2 ? "2BR" : dbUnit.beds >= 3 ? "3BR" : "1BR") as Unit["type"],
+                type: unitTypeFromBeds(dbUnit.beds),
                 status: (dbUnit.status as Unit["status"]) ?? "vacant",
                 x, y, w, h,
                 floor: dbUnit.floor,
@@ -2383,204 +2693,320 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         const newUnits: Unit[] = [];
         const newCorridors: Corridor[] = [];
         
-        // 1. Collect ALL units belonging to this floor
-        const floorPool: DbUnit[] = [];
-        const activeFloorNum = parseFloorNumber(activeFloor);
-        
-        // Add current canvas units (they might be DB units)
-        units.forEach(u => {
-            const dbRef = dbUnits.find(dbu => dbu.id === (u.dbId || u.id));
-            if (dbRef) {
-                floorPool.push(dbRef);
-            }
-        });
-        
-        // Add unplaced units belonging to this floor
-        const otherUnplaced: DbUnit[] = [];
-        unplacedDbUnits.forEach(dbu => {
-            if (dbu.floor === activeFloorNum) {
-                floorPool.push(dbu);
-            } else {
-                otherUnplaced.push(dbu);
+        // 1. Collect ALL units belonging to this floor uniquely
+        const activeFloorConfig = floorConfigs.find(fc => fc.floor_key === activeFloor);
+        const activeFloorNum = activeFloorConfig ? activeFloorConfig.floor_number : (parseFloorNumber(activeFloor) ?? 1);
+        const poolMap = new Map<string, DbUnit>();
+
+        // Collect from dbUnits for this floor (or all if floor not assigned)
+        dbUnits.forEach(dbu => {
+            if (dbu.floor === activeFloorNum || !dbu.floor || (dbu.floor === 1 && activeFloorNum === 1)) {
+                poolMap.set(dbu.id, dbu);
             }
         });
 
-        // Sort pool for consistent layout (numerically by name)
+        // Collect from current canvas units
+        units.forEach(u => {
+            const dbId = u.dbId || u.id;
+            if (!poolMap.has(dbId)) {
+                const found = dbUnits.find(d => d.id === dbId);
+                if (found) {
+                    poolMap.set(found.id, found);
+                } else {
+                    poolMap.set(u.id, {
+                        id: u.id,
+                        name: u.name,
+                        floor: activeFloorNum ?? 1,
+                        status: u.status,
+                        beds: u.bedrooms ?? (u.type === "Studio" ? 0 : u.type === "2BR" ? 2 : u.type === "3BR" ? 3 : 1),
+                        baths: u.baths ?? 1,
+                        sqft: u.areaSqm ? Math.round(u.areaSqm / 0.092903) : null,
+                        rent_amount: u.rentAmount ?? 0,
+                        position: null,
+                    });
+                }
+            }
+        });
+
+        // Collect unplaced for this floor
+        unplacedDbUnits.forEach(dbu => {
+            if (dbu.floor === activeFloorNum || !dbu.floor || (dbu.floor === 1 && activeFloorNum === 1)) {
+                poolMap.set(dbu.id, dbu);
+            }
+        });
+
+        const floorPool = Array.from(poolMap.values());
+
+        // Sort pool numerically by unit name
         floorPool.sort((a, b) => {
-            const numA = parseInt(a.name.replace(/\D/g, "")) || 0;
-            const numB = parseInt(b.name.replace(/\D/g, "")) || 0;
+            const numA = parseInt(a.name.replace(/\D/g, ""), 10) || 0;
+            const numB = parseInt(b.name.replace(/\D/g, ""), 10) || 0;
             if (numA !== numB) return numA - numB;
             return a.name.localeCompare(b.name, undefined, { numeric: true });
         });
 
         let unitIdx = 0;
-        
-        const getNextFromPool = () => {
-            if (unitIdx < floorPool.length) {
-                return floorPool[unitIdx++];
-            }
+        const getNextUnit = () => {
+            if (unitIdx < floorPool.length) return floorPool[unitIdx++];
             return null;
         };
 
-        const createUnitFromPool = (x: number, y: number, w: number, h: number): Unit | null => {
-            const dbUnit = getNextFromPool();
-            if (!dbUnit) return null;
+        const createUnit = (x: number, y: number, overrideW?: number, overrideH?: number): Unit | null => {
+            const dbu = getNextUnit();
+            if (!dbu) return null;
+            const dims = getUnitDimensions(dbu.beds);
+            const w = overrideW ?? dims.w;
+            const h = overrideH ?? dims.h;
             return {
-                    id: dbUnit.id,
-                    dbId: dbUnit.id,
-                    name: dbUnit.name,
-                    type: (dbUnit.beds === 0 ? "Studio" : dbUnit.beds === 2 ? "2BR" : dbUnit.beds >= 3 ? "3BR" : "1BR") as Unit["type"],
-                    status: (dbUnit.status as Unit["status"]) ?? "vacant",
-                    x, y, w, h,
-                    floor: dbUnit.floor,
-                };
+                id: dbu.id,
+                dbId: dbu.id,
+                name: dbu.name,
+                type: unitTypeFromBeds(dbu.beds),
+                status: (dbu.status as Unit["status"]) ?? "vacant",
+                tenant: dbu.tenant_name,
+                tenantAvatarUrl: dbu.tenant_avatar_url,
+                tenantAvatarBgColor: dbu.tenant_avatar_bg_color,
+                bedrooms: dbu.beds,
+                baths: dbu.baths,
+                areaSqm: dbu.sqft ? Math.round(dbu.sqft * 0.092903) : undefined,
+                rentAmount: dbu.rent_amount,
+                x,
+                y,
+                w,
+                h,
+                floor: dbu.floor ?? activeFloorNum,
+            };
         };
 
-        const cy = 200;
-
-            
-
-
-
-
-
-
-
-
-
-
-
-
-        const cx = 300;
-
-        const UNIT_W = 200;
-        const UNIT_H = 140;
-        const PADDING = 20;
-
-
+        const GAP = 20;
+        const CORRIDOR_H = 80;
 
         if (presetType === "double-loaded") {
-            const unitsPerSide = Math.ceil(floorPool.length / 2);
-            const totalWidth = unitsPerSide * (UNIT_W + PADDING) + PADDING;
-            const corridorW = Math.max(900, totalWidth);
-            
-            newCorridors.push({ 
-                id: `corridor-${Date.now()}`, 
-                label: "Central Corridor", 
-                x: cx, 
-                y: cy + UNIT_H, 
-                w: corridorW, 
-                h: 80 
+            const count = floorPool.length;
+            const topCount = Math.ceil(count / 2);
+            const bottomCount = count - topCount;
+
+            let topRowW = 0;
+            for (let i = 0; i < topCount; i++) {
+                const dims = getUnitDimensions(floorPool[i]?.beds);
+                topRowW += dims.w + (i > 0 ? GAP : 0);
+            }
+            let bottomRowW = 0;
+            for (let i = topCount; i < count; i++) {
+                const dims = getUnitDimensions(floorPool[i]?.beds);
+                bottomRowW += dims.w + (i > topCount ? GAP : 0);
+            }
+            const contentW = Math.max(topRowW, bottomRowW, 800);
+            const corridorW = contentW + 80;
+            const startX = 60;
+            const corridorX = startX - 40;
+
+            const maxUnitH = 140;
+            const startY = 60;
+
+            // Top row
+            let curTopX = startX;
+            for (let i = 0; i < topCount; i++) {
+                const dbu = floorPool[i];
+                const dims = getUnitDimensions(dbu?.beds);
+                const u = createUnit(curTopX, startY, dims.w, dims.h);
+                if (u) newUnits.push(u);
+                curTopX += dims.w + GAP;
+            }
+
+            // Central corridor
+            const corridorY = startY + maxUnitH + GAP;
+            newCorridors.push({
+                id: `corridor-${Date.now()}`,
+                label: "Central Corridor",
+                x: corridorX,
+                y: corridorY,
+                w: corridorW,
+                h: CORRIDOR_H,
             });
 
-            // Top Row
-            for (let i = 0; i < unitsPerSide; i++) {
-                const u = createUnitFromPool(cx + PADDING + i * (UNIT_W + PADDING), cy, UNIT_W, UNIT_H);
+            // Bottom row
+            let curBottomX = startX;
+            for (let i = topCount; i < count; i++) {
+                const dbu = floorPool[i];
+                const dims = getUnitDimensions(dbu?.beds);
+                const u = createUnit(curBottomX, corridorY + CORRIDOR_H + GAP, dims.w, dims.h);
                 if (u) newUnits.push(u);
+                curBottomX += dims.w + GAP;
             }
-            // Bottom Row
-            for (let i = 0; i < unitsPerSide; i++) {
-                const u = createUnitFromPool(cx + PADDING + i * (UNIT_W + PADDING), cy + UNIT_H + 80, UNIT_W, UNIT_H);
-                if (u) newUnits.push(u);
-            }
-
-
-
-
-
-
-
-
-
-
-
-            
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         } else if (presetType === "single-loaded") {
-            const totalWidth = floorPool.length * (UNIT_W + PADDING) + PADDING;
-            const corridorW = Math.max(900, totalWidth);
-            
-            newCorridors.push({ 
-                id: `corridor-${Date.now()}`, 
-                label: "Main Corridor", 
-                x: cx, 
-                y: cy + UNIT_H, 
-                w: corridorW, 
-                h: 80 
+            const count = floorPool.length;
+            let rowW = 0;
+            for (let i = 0; i < count; i++) {
+                const dims = getUnitDimensions(floorPool[i]?.beds);
+                rowW += dims.w + (i > 0 ? GAP : 0);
+            }
+            const contentW = Math.max(rowW, 800);
+            const corridorW = contentW + 80;
+            const startX = 60;
+            const corridorX = startX - 40;
+            const startY = 80;
+
+            let curX = startX;
+            for (let i = 0; i < count; i++) {
+                const dbu = floorPool[i];
+                const dims = getUnitDimensions(dbu?.beds);
+                const u = createUnit(curX, startY, dims.w, dims.h);
+                if (u) newUnits.push(u);
+                curX += dims.w + GAP;
+            }
+
+            newCorridors.push({
+                id: `corridor-${Date.now()}`,
+                label: "Main Corridor",
+                x: corridorX,
+                y: startY + 140 + GAP,
+                w: corridorW,
+                h: CORRIDOR_H,
+            });
+        } else if (presetType === "u-shape") {
+            const count = floorPool.length;
+            const nTop = Math.max(1, Math.ceil(count / 3));
+            const nLeft = Math.max(1, Math.floor((count - nTop) / 2));
+            const nRight = Math.max(0, count - nTop - nLeft);
+
+            let topW = 0;
+            for (let i = 0; i < nTop; i++) {
+                const dims = getUnitDimensions(floorPool[i]?.beds);
+                topW += dims.w + (i > 0 ? GAP : 0);
+            }
+
+            const startX = 240;
+            const startY = 60;
+            const topCorridorX = startX - 40;
+            const topCorridorY = startY + 140 + GAP;
+            const topCorridorW = topW + 80;
+
+            // Top row
+            let curTopX = startX;
+            for (let i = 0; i < nTop; i++) {
+                const dbu = floorPool[i];
+                const dims = getUnitDimensions(dbu?.beds);
+                const u = createUnit(curTopX, startY, dims.w, dims.h);
+                if (u) newUnits.push(u);
+                curTopX += dims.w + GAP;
+            }
+
+            // Top Corridor
+            newCorridors.push({
+                id: `corridor-top-${Date.now()}`,
+                label: "North Wing",
+                x: topCorridorX,
+                y: topCorridorY,
+                w: topCorridorW,
+                h: CORRIDOR_H,
             });
 
-            for (let i = 0; i < floorPool.length; i++) {
-                const u = createUnitFromPool(cx + PADDING + i * (UNIT_W + PADDING), cy, UNIT_W, UNIT_H);
-                if (u) newUnits.push(u);
-            }
-        } else if (presetType === "u-shape" || presetType === "l-shape") {
-            const unitsPerSegment = Math.ceil(floorPool.length / 3);
-            
-            newCorridors.push({ 
-                id: `corridor-center-${Date.now()}`, 
-                label: "Central Wing", 
-                x: cx + 100, 
-                y: cy + 100, 
-                w: 600, 
-                h: 80 
+            // West Wing
+            const leftCorridorX = topCorridorX - CORRIDOR_H;
+            const leftCorridorY = topCorridorY;
+            const leftCorridorH = Math.max(nLeft * 160 + 40, 420);
+            newCorridors.push({
+                id: `corridor-left-${Date.now()}`,
+                label: "West Wing",
+                x: leftCorridorX,
+                y: leftCorridorY,
+                w: CORRIDOR_H,
+                h: leftCorridorH,
             });
+            for (let i = 0; i < nLeft; i++) {
+                const u = createUnit(leftCorridorX - 140 - GAP, leftCorridorY + 40 + i * 160, 140, 140);
+                if (u) newUnits.push(u);
+            }
 
-            for (let i = 0; i < unitsPerSegment; i++) {
-                const u = createUnitFromPool(cx + 100 + i * (UNIT_W + PADDING), cy - 40, UNIT_W, UNIT_H);
-                if (u) newUnits.push(u);
-            }
-            for (let i = 0; i < unitsPerSegment; i++) {
-                const u = createUnitFromPool(cx - 100, cy + 100 + i * (UNIT_H + PADDING), UNIT_W, UNIT_H);
-                if (u) newUnits.push(u);
-            }
-            if (presetType === "u-shape") {
-                for (let i = 0; i < unitsPerSegment; i++) {
-                    const u = createUnitFromPool(cx + 700, cy + 100 + i * (UNIT_H + PADDING), UNIT_W, UNIT_H);
+            // East Wing
+            if (nRight > 0) {
+                const rightCorridorX = topCorridorX + topCorridorW;
+                const rightCorridorY = topCorridorY;
+                const rightCorridorH = Math.max(nRight * 160 + 40, 420);
+                newCorridors.push({
+                    id: `corridor-right-${Date.now()}`,
+                    label: "East Wing",
+                    x: rightCorridorX,
+                    y: rightCorridorY,
+                    w: CORRIDOR_H,
+                    h: rightCorridorH,
+                });
+                for (let i = 0; i < nRight; i++) {
+                    const u = createUnit(rightCorridorX + CORRIDOR_H + GAP, rightCorridorY + 40 + i * 160, 140, 140);
                     if (u) newUnits.push(u);
                 }
+            }
+        } else if (presetType === "l-shape") {
+            const count = floorPool.length;
+            const nTop = Math.max(1, Math.ceil(count / 2));
+            const nLeft = Math.max(1, count - nTop);
+
+            let topW = 0;
+            for (let i = 0; i < nTop; i++) {
+                const dims = getUnitDimensions(floorPool[i]?.beds);
+                topW += dims.w + (i > 0 ? GAP : 0);
+            }
+
+            const startX = 240;
+            const startY = 60;
+            const topCorridorX = startX - 40;
+            const topCorridorY = startY + 140 + GAP;
+            const topCorridorW = topW + 80;
+
+            let curTopX = startX;
+            for (let i = 0; i < nTop; i++) {
+                const dbu = floorPool[i];
+                const dims = getUnitDimensions(dbu?.beds);
+                const u = createUnit(curTopX, startY, dims.w, dims.h);
+                if (u) newUnits.push(u);
+                curTopX += dims.w + GAP;
+            }
+
+            newCorridors.push({
+                id: `corridor-top-${Date.now()}`,
+                label: "Main Wing",
+                x: topCorridorX,
+                y: topCorridorY,
+                w: topCorridorW,
+                h: CORRIDOR_H,
+            });
+
+            const leftCorridorX = topCorridorX - CORRIDOR_H;
+            const leftCorridorY = topCorridorY;
+            const leftCorridorH = Math.max(nLeft * 160 + 40, 420);
+            newCorridors.push({
+                id: `corridor-left-${Date.now()}`,
+                label: "Side Wing",
+                x: leftCorridorX,
+                y: leftCorridorY,
+                w: CORRIDOR_H,
+                h: leftCorridorH,
+            });
+            for (let i = 0; i < nLeft; i++) {
+                const u = createUnit(leftCorridorX - 140 - GAP, leftCorridorY + 40 + i * 160, 140, 140);
+                if (u) newUnits.push(u);
             }
         }
 
         setUnits(newUnits);
         setCorridors(newCorridors);
         setStructures([]);
+
+        // Calculate and apply expanded canvas dimensions
+        let maxX = 0;
+        let maxY = 0;
+        newUnits.forEach(u => { maxX = Math.max(maxX, u.x + u.w); maxY = Math.max(maxY, u.y + u.h); });
+        newCorridors.forEach(c => { maxX = Math.max(maxX, c.x + c.w); maxY = Math.max(maxY, c.y + c.h); });
+        const neededExtraW = Math.max(0, Math.ceil((maxX + 300 - Math.max(420, viewportSize.width - BLUEPRINT_MARGIN * 2)) / 50) * 50);
+        const neededExtraH = Math.max(0, Math.ceil((maxY + 300 - Math.max(320, viewportSize.height - BLUEPRINT_MARGIN * 2)) / 50) * 50);
+        setExtraDimensions({ width: neededExtraW, height: neededExtraH });
+
         // Ensure unplaced pool reflects the changes
         const placedIds = new Set(newUnits.map(u => u.dbId || u.id));
+        const otherUnplaced = unplacedDbUnits.filter(dbu => dbu.floor !== activeFloorNum && dbu.floor !== null && dbu.floor !== undefined);
         const unplacedLeftovers = floorPool.filter(dbu => !placedIds.has(dbu.id));
-        
         setUnplacedDbUnits([...otherUnplaced, ...unplacedLeftovers]);
-
-        
         isUndoingRef.current = false;
     };
 
@@ -2784,6 +3210,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                 <MapSetupWizard
                     propertyId={selectedPropertyId}
                     propertyName={selectedProperty?.name ?? "Your Property"}
+                    initialUnits={dbUnits}
+                    initialFloorConfigs={floorConfigs}
                     onSetupComplete={() => {
                         setIsSetupComplete(true);
                         setRefreshKey((prev) => prev + 1);
@@ -3081,96 +3509,33 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                 )}
 
                                 {/* Units */}
-                                {corridors.map((corridor) => (
-                                    <motion.div
-                                        key={corridor.id}
-                                        data-corridor-card="true"
-                                        className={`absolute group cursor-pointer ${
-                                            draggingCorridorId === corridor.id
-                                                ? dragPlacement?.kind === "corridor" && dragPlacement.id === corridor.id && !dragPlacement.isValid
-                                                    ? 'ring-2 ring-red-500/80 ring-offset-2 ring-offset-background'
-                                                    : 'ring-2 ring-emerald-500/80 ring-offset-2 ring-offset-background'
-                                                : selectedItem?.kind === "corridor" && selectedItem.id === corridor.id
-                                                    ? 'ring-2 ring-primary ring-offset-1 ring-offset-background'
-                                                    : ''
-                                        }`}
-                                        style={{
-                                            left: corridor.x,
-                                            top: corridor.y,
-                                            width: corridor.w,
-                                            height: corridor.h,
-                                            zIndex: draggingCorridorId === corridor.id ? 35 : 8,
-                                        }}
-                                        drag={!readOnly && resizingCorridorId === null && !isLayoutLocked}
-                                        dragConstraints={blueprintRef}
-                                        dragElastic={0}
-                                        dragMomentum={false}
-                                        dragSnapToOrigin
-                                        transition={{ duration: 0 }}
-                                        onPointerDown={readOnly ? undefined : (e) => {
-                                            e.stopPropagation();
-                                            setSelectedItem({ kind: "corridor", id: corridor.id });
-                                        }}
-                                        onDragStart={(event, info) => {
-                                            const pointer = getClientPointFromDragEvent(event) ?? info.point;
-                                            setSelectedItem({ kind: "corridor", id: corridor.id });
-                                            setDraggingCorridorId(corridor.id);
-                                            setIsTrashHot(false);
-                                            setDragPointerAnchor("corridor", corridor.id, corridor.x, corridor.y, pointer.x, pointer.y);
-                                            setDragPlacementIndicator("corridor", corridor.id, true, false);
-                                        }}
-                                        onDrag={(event, info) => {
-                                            const pointer = getClientPointFromDragEvent(event) ?? info.point;
-                                            const placement = resolveDragPlacement(
-                                                "corridor",
-                                                corridor.id,
-                                                corridor.w,
-                                                corridor.h,
-                                                pointer.x,
-                                                pointer.y,
-                                                corridor.x,
-                                                corridor.y
-                                            );
-                                            updateTrashHotState(pointer.x, pointer.y);
-                                            setDragPlacementIndicator("corridor", corridor.id, placement.isValid, placement.isMagnetic);
-                                        }}
-                                        onDragEnd={(event, info) => {
-                                            const pointer = getClientPointFromDragEvent(event) ?? info.point;
-                                            const shouldDelete = isPointerNearTrash(pointer.x, pointer.y);
-                                            if (shouldDelete) {
-                                                requestDeleteItem({ kind: "corridor", id: corridor.id }, "trash");
-                                                setDragPlacement(null);
-                                                setDraggingCorridorId(current => current === corridor.id ? null : current);
-                                                clearDragPointerAnchor("corridor", corridor.id);
-                                                setIsTrashHot(false);
-                                                return;
-                                            }
+                                 {corridors.map((corridor) => {
+                                     const isDragging = activeDragItem?.kind === "corridor" && activeDragItem?.id === corridor.id;
+                                     const displayX = isDragging ? activeDragItem.currentX : corridor.x;
+                                     const displayY = isDragging ? activeDragItem.currentY : corridor.y;
 
-                                            const placement = resolveDragPlacement(
-                                                "corridor",
-                                                corridor.id,
-                                                corridor.w,
-                                                corridor.h,
-                                                pointer.x,
-                                                pointer.y,
-                                                corridor.x,
-                                                corridor.y
-                                            );
-                                            if (!placement.isValid) {
-                                                triggerOverlapToast();
-                                            } else {
-                                                setCorridors(prev => prev.map((existing) => (
-                                                    existing.id === corridor.id
-                                                        ? { ...existing, x: placement.x, y: placement.y }
-                                                        : existing
-                                                )));
-                                            }
-                                            setDragPlacement(null);
-                                            setDraggingCorridorId(current => current === corridor.id ? null : current);
-                                            clearDragPointerAnchor("corridor", corridor.id);
-                                            setIsTrashHot(false);
-                                        }}
-                                        >
+                                     return (
+                                     <motion.div
+                                         key={corridor.id}
+                                         data-corridor-card="true"
+                                         className={`absolute group cursor-pointer ${
+                                             draggingCorridorId === corridor.id
+                                                 ? dragPlacement?.kind === "corridor" && dragPlacement.id === corridor.id && !dragPlacement.isValid
+                                                     ? 'ring-2 ring-red-500/80 ring-offset-2 ring-offset-background'
+                                                     : 'ring-2 ring-emerald-500/80 ring-offset-2 ring-offset-background'
+                                                 : selectedItem?.kind === "corridor" && selectedItem.id === corridor.id
+                                                     ? 'ring-2 ring-primary ring-offset-1 ring-offset-background'
+                                                     : ''
+                                         }`}
+                                         style={{
+                                             left: displayX,
+                                             top: displayY,
+                                             width: corridor.w,
+                                             height: corridor.h,
+                                             zIndex: isDragging ? 35 : 8,
+                                         }}
+                                         onPointerDown={readOnly ? undefined : handleItemPointerDown("corridor", corridor.id, corridor.x, corridor.y, corridor.w, corridor.h)}
+                                     >
                                             <div className={`w-full h-full relative shadow-sm overflow-hidden select-none rounded-[1px] ${isDark ? 'bg-neutral-800' : 'bg-white'}`}>
                                                 <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-zinc-400'}`}></div>
                                                 <div className={`absolute inset-[4px] border ${isDark ? 'border-neutral-600' : 'border-zinc-300'}`}></div>
@@ -3191,35 +3556,43 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                             {!readOnly && selectedItem?.kind === "corridor" && selectedItem.id === corridor.id && (
                                                 <>
                                                     <div
+                                                        data-resize-handle="true"
                                                         className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 h-4 w-12 cursor-ns-resize"
                                                         onPointerDown={handleCorridorResizeStart(corridor, "n")}
                                                     />
                                                     <div
+                                                        data-resize-handle="true"
                                                         className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 z-30 h-4 w-12 cursor-ns-resize"
                                                         onPointerDown={handleCorridorResizeStart(corridor, "s")}
                                                     />
                                                     <div
+                                                        data-resize-handle="true"
                                                         className="absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 z-30 h-12 w-4 cursor-ew-resize"
                                                         onPointerDown={handleCorridorResizeStart(corridor, "w")}
                                                     />
                                                     <div
+                                                        data-resize-handle="true"
                                                         className="absolute right-0 top-1/2 translate-x-1/2 -translate-y-1/2 z-30 h-12 w-4 cursor-ew-resize"
                                                         onPointerDown={handleCorridorResizeStart(corridor, "e")}
                                                     />
 
                                                     <div
+                                                        data-resize-handle="true"
                                                         className="absolute left-0 top-0 -translate-x-1/2 -translate-y-1/2 z-30 size-4 cursor-nwse-resize rounded-full border border-white bg-primary"
                                                         onPointerDown={handleCorridorResizeStart(corridor, "nw")}
                                                     />
                                                     <div
+                                                        data-resize-handle="true"
                                                         className="absolute right-0 top-0 translate-x-1/2 -translate-y-1/2 z-30 size-4 cursor-nesw-resize rounded-full border border-white bg-primary"
                                                         onPointerDown={handleCorridorResizeStart(corridor, "ne")}
                                                     />
                                                     <div
+                                                        data-resize-handle="true"
                                                         className="absolute left-0 bottom-0 -translate-x-1/2 translate-y-1/2 z-30 size-4 cursor-nesw-resize rounded-full border border-white bg-primary"
                                                         onPointerDown={handleCorridorResizeStart(corridor, "sw")}
                                                     />
                                                     <div
+                                                        data-resize-handle="true"
                                                         className="absolute right-0 bottom-0 translate-x-1/2 translate-y-1/2 z-30 size-4 cursor-nwse-resize rounded-full border border-white bg-primary"
                                                         onPointerDown={handleCorridorResizeStart(corridor, "se")}
                                                     />
@@ -3237,98 +3610,36 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                             </>
                                         )}
                                     </motion.div>
-                                ))}
+                                    );
+                                })}
 
-                                {structures.map((structure) => (
-                                    <motion.div
-                                        key={structure.id}
-                                        data-structure-card="true"
-                                        className={`absolute group cursor-pointer ${
-                                            draggingStructureId === structure.id
-                                                ? dragPlacement?.kind === "structure" && dragPlacement.id === structure.id && !dragPlacement.isValid
-                                                    ? 'ring-2 ring-red-500/80 ring-offset-2 ring-offset-background'
-                                                    : 'ring-2 ring-emerald-500/80 ring-offset-2 ring-offset-background'
-                                                : selectedItem?.kind === "structure" && selectedItem.id === structure.id
-                                                    ? 'ring-2 ring-primary ring-offset-1 ring-offset-background'
-                                                    : ''
-                                        }`}
-                                        style={{
-                                            left: structure.x,
-                                            top: structure.y,
-                                            width: structure.w,
-                                            height: structure.h,
-                                            zIndex: draggingStructureId === structure.id ? 35 : 9,
-                                        }}
-                                        drag={!readOnly && !isLayoutLocked}
-                                        dragConstraints={blueprintRef}
-                                        dragElastic={0}
-                                        dragMomentum={false}
-                                        dragSnapToOrigin
-                                        transition={{ duration: 0 }}
-                                        onPointerDown={readOnly ? undefined : (e) => {
-                                            e.stopPropagation();
-                                            setSelectedItem({ kind: "structure", id: structure.id });
-                                        }}
-                                        onDragStart={(event, info) => {
-                                            const pointer = getClientPointFromDragEvent(event) ?? info.point;
-                                            setSelectedItem({ kind: "structure", id: structure.id });
-                                            setDraggingStructureId(structure.id);
-                                            setIsTrashHot(false);
-                                            setDragPointerAnchor("structure", structure.id, structure.x, structure.y, pointer.x, pointer.y);
-                                            setDragPlacementIndicator("structure", structure.id, true, false);
-                                        }}
-                                        onDrag={(event, info) => {
-                                            const pointer = getClientPointFromDragEvent(event) ?? info.point;
-                                            const placement = resolveDragPlacement(
-                                                "structure",
-                                                structure.id,
-                                                structure.w,
-                                                structure.h,
-                                                pointer.x,
-                                                pointer.y,
-                                                structure.x,
-                                                structure.y
-                                            );
-                                            updateTrashHotState(pointer.x, pointer.y);
-                                            setDragPlacementIndicator("structure", structure.id, placement.isValid, placement.isMagnetic);
-                                        }}
-                                        onDragEnd={(event, info) => {
-                                            const pointer = getClientPointFromDragEvent(event) ?? info.point;
-                                            const shouldDelete = isPointerNearTrash(pointer.x, pointer.y);
-                                            if (shouldDelete) {
-                                                requestDeleteItem({ kind: "structure", id: structure.id }, "trash");
-                                                setDragPlacement(null);
-                                                setDraggingStructureId(current => current === structure.id ? null : current);
-                                                clearDragPointerAnchor("structure", structure.id);
-                                                setIsTrashHot(false);
-                                                return;
-                                            }
+                                {structures.map((structure) => {
+                                const isDragging = activeDragItem?.kind === "structure" && activeDragItem?.id === structure.id;
+                                const displayX = isDragging ? activeDragItem.currentX : structure.x;
+                                const displayY = isDragging ? activeDragItem.currentY : structure.y;
 
-                                            const placement = resolveDragPlacement(
-                                                "structure",
-                                                structure.id,
-                                                structure.w,
-                                                structure.h,
-                                                pointer.x,
-                                                pointer.y,
-                                                structure.x,
-                                                structure.y
-                                            );
-                                            if (!placement.isValid) {
-                                                triggerOverlapToast();
-                                            } else {
-                                                setStructures(prev => prev.map((existing) => (
-                                                    existing.id === structure.id
-                                                        ? { ...existing, x: placement.x, y: placement.y }
-                                                        : existing
-                                                )));
-                                            }
-                                            setDragPlacement(null);
-                                            setDraggingStructureId(current => current === structure.id ? null : current);
-                                            clearDragPointerAnchor("structure", structure.id);
-                                            setIsTrashHot(false);
-                                        }}
-                                    >
+                                     return (
+                                     <motion.div
+                                         key={structure.id}
+                                         data-structure-card="true"
+                                         className={`absolute group cursor-pointer ${
+                                             draggingStructureId === structure.id
+                                                 ? dragPlacement?.kind === "structure" && dragPlacement.id === structure.id && !dragPlacement.isValid
+                                                     ? 'ring-2 ring-red-500/80 ring-offset-2 ring-offset-background'
+                                                     : 'ring-2 ring-emerald-500/80 ring-offset-2 ring-offset-background'
+                                                 : selectedItem?.kind === "structure" && selectedItem.id === structure.id
+                                                     ? 'ring-2 ring-primary ring-offset-1 ring-offset-background'
+                                                     : ''
+                                         }`}
+                                         style={{
+                                             left: displayX,
+                                             top: displayY,
+                                             width: structure.w,
+                                             height: structure.h,
+                                             zIndex: isDragging ? 35 : 9,
+                                         }}
+                                         onPointerDown={readOnly ? undefined : handleItemPointerDown("structure", structure.id, structure.x, structure.y, structure.w, structure.h)}
+                                     >
                                         {structure.type === "elevator" ? (
                                             <div className={`w-full h-full relative shadow-sm overflow-hidden select-none rounded-[1px] ${isDark ? 'bg-neutral-800' : 'bg-white'}`}>
                                                 <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-zinc-400'}`}></div>
@@ -3472,10 +3783,18 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                             </>
                                         )}
                                     </motion.div>
-                                ))}
+                                    );
+                                })}
 
 {units.map((unit) => {
                                         const isFiltered = !statusFilters.includes(unit.status);
+                                        const isDragging = activeDragItem?.kind === "unit" && activeDragItem?.id === unit.id;
+                                        const displayX = isDragging ? activeDragItem.currentX : unit.x;
+                                        const displayY = isDragging ? activeDragItem.currentY : unit.y;
+                                        const unitNoteText = unitNotes[unit.id]?.trim();
+                                        const hasNote = Boolean(unitNoteText && unitNoteText.length > 0);
+                                        const isAnyDragging = Boolean(activeDragItem || draggingUnitId || draggingCorridorId || draggingStructureId || isPanning || sidebarBlockGhost);
+
                                         return (
                                             <motion.div
                                                 key={unit.id}
@@ -3491,11 +3810,11 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                             : ''
                                                 }`}
                                                 style={{
-                                                    left: unit.x,
-                                                    top: unit.y,
+                                                    left: displayX,
+                                                    top: displayY,
                                                     width: unit.w,
                                                     height: unit.h,
-                                                    zIndex: draggingUnitId === unit.id ? 40 : 10,
+                                                    zIndex: isDragging ? 40 : 10,
                                                 }}
                                                 initial={false}
                                                 animate={{ 
@@ -3503,90 +3822,10 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                     opacity: isFiltered ? 0.8 : 1,
                                                 }}
                                                 transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                                                drag={!readOnly && !isLayoutLocked}
-                                                dragConstraints={blueprintRef}
-                                                dragElastic={0}
-                                                dragMomentum={false}
-                                                dragSnapToOrigin
-                                                onPointerDown={(e) => {
+                                                onPointerDown={readOnly ? (e) => {
                                                     e.stopPropagation();
-                                                    if (readOnly) {
-                                                        setTooltipUnit(unit);
-                                                    } else {
-                                                        setSelectedItem({ kind: "unit", id: unit.id });
-                                                    }
-                                                }}
-                                                onDragStart={(event, info) => {
-                                                     const pointer = getClientPointFromDragEvent(event) ?? info.point;
-                                                     setSelectedItem({ kind: "unit", id: unit.id });
-                                                     setDraggingUnitId(unit.id);
-                                                     setIsTrashHot(false);
-                                                     setDragPointerAnchor("unit", unit.id, unit.x, unit.y, pointer.x, pointer.y);
-                                                     setDragPlacementIndicator("unit", unit.id, true, false);
-                                                 }}
-                                                 onDrag={(event, info) => {
-                                                     const pointer = getClientPointFromDragEvent(event) ?? info.point;
-                                                     const placement = resolveDragPlacement(
-                                                         "unit",
-                                                         unit.id,
-                                                         unit.w,
-                                                         unit.h,
-                                                         pointer.x,
-                                                         pointer.y,
-                                                         unit.x,
-                                                         unit.y
-                                                     );
-                                                     updateTrashHotState(pointer.x, pointer.y);
-                                                     setDragPlacementIndicator("unit", unit.id, placement.isValid, placement.isMagnetic);
-                                                 }}
-                                                onDragEnd={(event, info) => {
-                                                    const pointer = getClientPointFromDragEvent(event) ?? info.point;
-                                                    const shouldDelete = isPointerNearTrash(pointer.x, pointer.y);
-                                                    if (shouldDelete) {
-                                                        requestDeleteItem({ kind: "unit", id: unit.id }, "trash");
-                                                        setDragPlacement(null);
-                                                        setDraggingUnitId(current => current === unit.id ? null : current);
-                                                        clearDragPointerAnchor("unit", unit.id);
-                                                        setIsTrashHot(false);
-                                                        return;
-                                                    }
-
-                                                    flushSync(() => {
-                                                        setUnits(prevUnits => {
-                                                            const currentUnit = prevUnits.find((u) => u.id === unit.id);
-                                                            if (!currentUnit) return prevUnits;
-
-                                                            const placement = resolveDragPlacement(
-                                                                "unit",
-                                                                currentUnit.id,
-                                                                currentUnit.w,
-                                                                currentUnit.h,
-                                                                pointer.x,
-                                                                pointer.y,
-                                                                currentUnit.x,
-                                                                currentUnit.y
-                                                            );
-                                                            if (!placement.isValid) {
-                                                                triggerOverlapToast();
-                                                                return prevUnits;
-                                                            }
-
-                                                            return prevUnits.map((existingUnit) =>
-                                                                existingUnit.id === unit.id
-                                                                    ? {
-                                                                        ...existingUnit,
-                                                                        x: placement.x,
-                                                                        y: placement.y,
-                                                                    }
-                                                                    : existingUnit
-                                                            );
-                                                        });
-                                                    });
-                                                    setDragPlacement(null);
-                                                    setDraggingUnitId(current => current === unit.id ? null : current);
-                                                    clearDragPointerAnchor("unit", unit.id);
-                                                    setIsTrashHot(false);
-                                                }}
+                                                    setTooltipUnit(unit);
+                                                } : handleItemPointerDown("unit", unit.id, unit.x, unit.y, unit.w, unit.h)}
                                             >
                                                 <div className={`relative h-full w-full overflow-hidden rounded-[1px] select-none transition-all duration-300 ease-out ${
                                                     isDark 
@@ -3735,6 +3974,155 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                         )}
                                                     </>
                                                 )}
+
+                                                {/* Speech Bubble / Unit Note Badge */}
+                                                {hasNote && (
+                                                    <motion.button
+                                                        type="button"
+                                                        data-no-pan="true"
+                                                        initial={{ scale: 0, opacity: 0 }}
+                                                        animate={{ 
+                                                            scale: isAnyDragging ? 0 : 1, 
+                                                            opacity: isAnyDragging ? 0 : 1
+                                                        }}
+                                                        exit={{ scale: 0, opacity: 0 }}
+                                                        transition={{ duration: 0.15, ease: "easeOut" }}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            e.preventDefault();
+                                                            setFloatingNoteUnitId((prev) => prev === unit.id ? null : unit.id);
+                                                            setFloatingChatUnitId(null);
+                                                        }}
+                                                        onPointerDown={(e) => {
+                                                            e.stopPropagation();
+                                                        }}
+                                                        title={`View note for ${unit.name}`}
+                                                        className="absolute top-2 right-2 z-30 flex size-6 items-center justify-center transition-transform hover:scale-115 active:scale-95"
+                                                    >
+                                                        <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" className="size-full">
+                                                            <path
+                                                                d="M18 4C9.716 4 3 10.044 3 17.5C3 20.627 4.144 23.493 6.074 25.756C5.584 27.784 4.417 29.562 3.167 30.583C5.75 30.5 9.167 29.5 11.583 27.667C13.567 28.528 15.733 29 18 29C26.284 29 33 22.956 33 17.5C33 10.044 26.284 4 18 4Z"
+                                                                fill={floatingNoteUnitId === unit.id ? primaryColor : "#ffffff"}
+                                                                stroke={floatingNoteUnitId === unit.id ? primaryColor : (isDark ? "#27272a" : "#cbd5e1")}
+                                                                strokeWidth="1.5"
+                                                            />
+                                                            <circle cx="11.5" cy="16.5" r="2" fill={floatingNoteUnitId === unit.id ? "#ffffff" : "#0f172a"} />
+                                                            <circle cx="18" cy="16.5" r="2" fill={floatingNoteUnitId === unit.id ? "#ffffff" : "#0f172a"} />
+                                                            <circle cx="24.5" cy="16.5" r="2" fill={floatingNoteUnitId === unit.id ? "#ffffff" : "#0f172a"} />
+                                                        </svg>
+                                                    </motion.button>
+                                                )}
+
+                                                {/* Quick Message Bubble (Optional QoL Feature) */}
+                                                {showQuickMessages && Boolean(unit.tenant) && (
+                                                    <motion.button
+                                                        type="button"
+                                                        data-no-pan="true"
+                                                        initial={{ scale: 0, opacity: 0 }}
+                                                        animate={{ 
+                                                            scale: isAnyDragging ? 0 : 1, 
+                                                            opacity: isAnyDragging ? 0 : 1
+                                                        }}
+                                                        exit={{ scale: 0, opacity: 0 }}
+                                                        transition={{ duration: 0.15, ease: "easeOut" }}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            e.preventDefault();
+                                                            setFloatingChatUnitId((prev) => prev === unit.id ? null : unit.id);
+                                                            setFloatingNoteUnitId(null);
+                                                        }}
+                                                        onPointerDown={(e) => {
+                                                            e.stopPropagation();
+                                                        }}
+                                                        title={`Quick message with ${unit.tenant} (${unit.name})`}
+                                                        className={`absolute top-2 left-2 z-30 flex size-6 items-center justify-center rounded-full border transition-transform hover:scale-115 active:scale-95 ${
+                                                            floatingChatUnitId === unit.id
+                                                                ? "bg-primary text-white border-white dark:border-zinc-900 ring-2 ring-primary/40"
+                                                                : "bg-blue-600 text-white border-white/80 dark:border-zinc-900"
+                                                        }`}
+                                                    >
+                                                        <span className="material-icons-round text-xs pointer-events-none">chat</span>
+                                                    </motion.button>
+                                                )}
+
+                                                {/* Floating Quick Messenger Popover */}
+                                                <AnimatePresence>
+                                                    {floatingChatUnitId === unit.id && Boolean(unit.tenant) && !isAnyDragging && (
+                                                        <CanvasQuickMessenger
+                                                            unitId={unit.id}
+                                                            unitName={unit.name}
+                                                            tenantName={unit.tenant || "Resident"}
+                                                            unitY={unit.y}
+                                                            primaryColor={primaryColor}
+                                                            onClose={() => setFloatingChatUnitId(null)}
+                                                        />
+                                                    )}
+                                                </AnimatePresence>
+
+                                                {/* Floating Note Popover */}
+                                                <AnimatePresence>
+                                                    {floatingNoteUnitId === unit.id && hasNote && !isAnyDragging && (
+                                                        <motion.div
+                                                            data-no-pan="true"
+                                                            initial={{ opacity: 0, y: unit.y < 220 ? -10 : 10, scale: 0.94 }}
+                                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                            exit={{ opacity: 0, y: unit.y < 220 ? -10 : 10, scale: 0.94 }}
+                                                            transition={{ duration: 0.16, ease: "easeOut" }}
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            onPointerDown={(e) => e.stopPropagation()}
+                                                            className={`absolute ${unit.y < 220 ? 'top-[calc(100%+14px)]' : 'bottom-[calc(100%+14px)]'} left-1/2 -translate-x-1/2 z-50 w-72 max-w-[90vw] cursor-default select-text rounded-2xl border border-amber-300 bg-amber-50 p-4 shadow-2xl dark:border-zinc-700 dark:bg-zinc-900`}
+                                                            style={{ opacity: 1 }}
+                                                        >
+                                                            {/* Arrow Notch */}
+                                                            <div className={`absolute left-1/2 -translate-x-1/2 size-4 rotate-45 ${unit.y < 220 ? '-top-2 border-t border-l border-amber-300 bg-amber-50 dark:border-zinc-700 dark:bg-zinc-900' : '-bottom-2 border-b border-r border-amber-300 bg-amber-50 dark:border-zinc-700 dark:bg-zinc-900'}`} />
+                                                            
+                                                            {/* Header */}
+                                                            <div className="flex items-center justify-between gap-2 border-b border-amber-200/60 pb-2.5 dark:border-white/10">
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="flex size-6 items-center justify-center rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400">
+                                                                        <span className="material-icons-round text-xs">sticky_note_2</span>
+                                                                    </div>
+                                                                    <p className="text-[11px] font-black tracking-tight text-zinc-900 dark:text-white">
+                                                                        Note • {unit.name}
+                                                                    </p>
+                                                                </div>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setFloatingNoteUnitId(null);
+                                                                    }}
+                                                                    className="flex size-6 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-200/50 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+                                                                >
+                                                                    <span className="material-icons-round text-sm">close</span>
+                                                                </button>
+                                                            </div>
+
+                                                            {/* Content */}
+                                                            <div className="mt-2.5 max-h-44 overflow-y-auto pr-1 text-xs font-medium leading-relaxed text-zinc-700 dark:text-zinc-300 custom-scrollbar">
+                                                                <p className="whitespace-pre-wrap">{unitNoteText}</p>
+                                                            </div>
+
+                                                            {/* Footer */}
+                                                            <div className="mt-3 flex items-center justify-between border-t border-amber-200/40 pt-2 dark:border-white/5">
+                                                                <span className="text-[9px] font-black uppercase tracking-wider text-amber-600/70 dark:text-amber-400/60">Pinned Note</span>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setSelectedItem({ kind: "unit", id: unit.id });
+                                                                        setIsNotesPanelOpen(true);
+                                                                        setFloatingNoteUnitId(null);
+                                                                    }}
+                                                                    className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-primary hover:underline"
+                                                                >
+                                                                    <span className="material-icons-round text-xs">edit</span>
+                                                                    Edit Full Note
+                                                                </button>
+                                                            </div>
+                                                        </motion.div>
+                                                    )}
+                                                </AnimatePresence>
                                             </motion.div>
                                         );
                                     })}
@@ -4073,14 +4461,26 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                     </button>
                                     <div className="h-px bg-white/10 my-1 mx-1.5" />
                                     <button 
-                                        onClick={() => setShowHotkeys(true)}
-                                        className="size-10 rounded-xl flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 active:scale-95 transition-all"
-                                        title="Hotkeys Hint (?)"
+                                    onClick={() => setShowHotkeys(true)}
+                                    className="size-10 rounded-xl flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 active:scale-95 transition-all"
+                                    title="Hotkeys Hint (?)"
                                     >
-                                        <span className="material-icons-round text-xl">help_outline</span>
+                                    <span className="material-icons-round text-xl">help_outline</span>
                                     </button>
                                     <button 
-                                        onClick={() => setIsSidebarVisible(!isSidebarVisible)}
+                                    onClick={() => {
+                                             const next = !showQuickMessages;
+                                             setShowQuickMessages(next);
+                                             try { window.localStorage.setItem("ireside.visualPlanner.showQuickMessages", String(next)); } catch {}
+                                             toast.info(next ? "Canvas Quick Messages Enabled" : "Canvas Quick Messages Disabled");
+                                         }}
+                                         className={`size-10 rounded-xl flex items-center justify-center transition-all ${showQuickMessages ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' : 'text-white/70 hover:text-white hover:bg-white/10 active:scale-95'}`}
+                                         title={showQuickMessages ? "Disable Quick Messages on Canvas" : "Enable Quick Messages on Canvas"}
+                                     >
+                                         <span className="material-icons-round text-xl">{showQuickMessages ? 'chat' : 'chat_bubble_outline'}</span>
+                                     </button>
+                                     <button 
+                                         onClick={() => setIsSidebarVisible(!isSidebarVisible)}
                                         className={`size-10 rounded-xl flex items-center justify-center transition-all ${isSidebarVisible ? 'text-white/70 hover:text-white hover:bg-white/10 active:scale-95' : 'bg-primary text-white shadow-lg shadow-primary/20'}`}
                                         title={isSidebarVisible ? "Hide Sidebar (S)" : "Show Sidebar (S)"}
                                     >
@@ -4582,6 +4982,9 @@ const UnitDetailsPanel = ({
     const [quickActionError, setQuickActionError] = useState<string | null>(null);
     const [pendingQuickAction, setPendingQuickAction] = useState<QuickActionType | null>(null);
     const [nowMs, setNowMs] = useState(() => new Date().getTime());
+    const brand = useBrand();
+    const primaryColor = brand?.primaryColor || "#3b82f6";
+    const secondaryColor = brand?.secondaryColor || "#8b5cf6";
 
     useEffect(() => {
         const intervalId = window.setInterval(() => {
@@ -4628,7 +5031,7 @@ const UnitDetailsPanel = ({
             ? `Overdue by ${Math.abs(daysRemaining)} day${Math.abs(daysRemaining) === 1 ? "" : "s"}`
             : `${daysRemaining} day${daysRemaining === 1 ? "" : "s"} left`;
     const leaseMilestoneText = daysRemaining === null
-        ? "Set lease end date to track countdown."
+        ? "Awaiting active lease agreement in database."
         : daysRemaining <= 7
             ? "Milestone: lease action needed this week."
             : daysRemaining <= 30
@@ -4816,10 +5219,6 @@ const UnitDetailsPanel = ({
                                     <label className="text-[10px] font-black uppercase tracking-wider text-zinc-500">Baths</label>
                                     <input type="number" value={unit.baths || ""} onChange={(e) => onUpdate({ baths: Number(e.target.value) })} className="mt-1 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-zinc-700 dark:bg-zinc-800" />
                                 </div>
-                            </div>
-                            <div>
-                                <label className="text-[10px] font-black uppercase tracking-wider text-zinc-500">Kitchens</label>
-                                <input type="number" value={unit.kitchens || ""} onChange={(e) => onUpdate({ kitchens: Number(e.target.value) })} className="mt-1 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-zinc-700 dark:bg-zinc-800" />
                             </div>
                         </div>
                     </section>
@@ -5019,64 +5418,93 @@ const UnitDetailsPanel = ({
                                 </div>
                                 
                                 <div className="flex flex-col items-center">
-                                    <div className="relative h-44 w-72">
-                                        <svg className="h-full w-full" viewBox="0 0 200 100">
-                                            <path
-                                                d="M 20 100 A 80 80 0 0 1 180 100"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="10"
-                                                strokeLinecap="round"
-                                                className="text-zinc-100 dark:text-white/5"
-                                            />
-                                            <motion.path
-                                                initial={{ strokeDashoffset: 251.2 }}
-                                                animate={{ strokeDashoffset: 251.2 - ((() => {
-                                                    if (!unit.leaseStart || !unit.leaseEnd) return 0;
-                                                    const start = new Date(unit.leaseStart).getTime();
-                                                    const end = new Date(unit.leaseEnd).getTime();
-                                                    const total = end - start;
-                                                    const elapsed = nowMs - start;
-                                                    const percent = Math.min(100, Math.max(0, (elapsed / total) * 100));
-                                                    return (percent / 100) * 251.2;
-                                                })()) }}
-                                                d="M 20 100 A 80 80 0 0 1 180 100"
-                                                fill="none"
-                                                stroke="url(#leaseGradient)"
-                                                strokeWidth="10"
-                                                strokeLinecap="round"
-                                                strokeDasharray="251.2"
-                                                transition={{ duration: 1.5, ease: "easeOut" }}
-                                            />
-                                            <defs>
-                                                <linearGradient id="leaseGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                                    <stop offset="0%" stopColor="#4f46e5" />
-                                                    <stop offset="100%" stopColor="#c026d3" />
-                                                </linearGradient>
-                                            </defs>
-                                        </svg>
-                                        
-                                        <div className="absolute inset-x-0 bottom-0 flex flex-col items-center text-center">
-                                            <p className="text-3xl font-black tracking-tighter text-zinc-900 dark:text-white">
-                                                {daysRemaining !== null ? `${Math.abs(daysRemaining)}` : "--"}
-                                            </p>
-                                            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
-                                                DAYS {daysRemaining && daysRemaining < 0 ? "OVERDUE" : "REMAINING"}
-                                            </p>
-                                        </div>
-                                    </div>
+                                    {(() => {
+                                        const startMs = unit.leaseStart ? new Date(unit.leaseStart).getTime() : null;
+                                        const endMs = unit.leaseEnd ? new Date(unit.leaseEnd).getTime() : null;
+                                        const hasValidDates = Boolean(startMs && endMs && !isNaN(startMs) && !isNaN(endMs));
 
-                                    <div className="mt-8 flex w-full items-center justify-between gap-4">
-                                        <div className="flex-1 space-y-1">
-                                            <p className="text-[10px] font-black text-zinc-400">Lease Commenced</p>
-                                            <p className="text-xs font-black text-zinc-800 dark:text-zinc-100">{unit.leaseStart ? <ClientOnlyDate date={unit.leaseStart} format={{ month: 'short', day: 'numeric', year: 'numeric' }} /> : "--"}</p>
-                                        </div>
-                                        <div className="h-8 w-px bg-zinc-100 dark:bg-white/5" />
-                                        <div className="flex-1 text-right space-y-1">
-                                            <p className="text-[10px] font-black text-zinc-400">Renewal Window</p>
-                                            <p className="text-xs font-black text-zinc-800 dark:text-zinc-100">{unit.leaseEnd ? <ClientOnlyDate date={unit.leaseEnd} format={{ month: 'short', day: 'numeric', year: 'numeric' }} /> : "--"}</p>
-                                        </div>
-                                    </div>
+                                        let percentElapsed = 0;
+                                        let daysLeft: number | null = null;
+
+                                        if (hasValidDates && startMs && endMs) {
+                                            const total = Math.max(1, endMs - startMs);
+                                            const elapsed = nowMs - startMs;
+                                            percentElapsed = Math.min(100, Math.max(0, (elapsed / total) * 100));
+                                            daysLeft = Math.ceil((endMs - nowMs) / (1000 * 60 * 60 * 24));
+                                        }
+
+                                        const arcPerimeter = 251.327; // pi * 80
+                                        const activeProgress = hasValidDates ? Math.min(1, Math.max(0, percentElapsed / 100)) : 0;
+                                        const strokeOffset = arcPerimeter * (1 - activeProgress);
+
+                                        const knobAngle = Math.PI - (activeProgress * Math.PI);
+                                        const knobX = 100 + 80 * Math.cos(knobAngle);
+                                        const knobY = 100 - 80 * Math.sin(knobAngle);
+
+                                        return (
+                                            <>
+                                                <div className="relative h-44 w-72">
+                                                    <svg className="h-full w-full" viewBox="0 0 200 110">
+                                                        <defs>
+                                                            <linearGradient id={`leaseGradient-${unit.id}`} x1="0%" y1="0%" x2="100%" y2="0%">
+                                                                <stop offset="0%" stopColor={primaryColor} />
+                                                                <stop offset="100%" stopColor={secondaryColor || primaryColor} />
+                                                            </linearGradient>
+                                                        </defs>
+                                                        <path
+                                                            d="M 20 100 A 80 80 0 0 1 180 100"
+                                                            fill="none"
+                                                            stroke="currentColor"
+                                                            strokeWidth="10"
+                                                            strokeLinecap="round"
+                                                            className="text-zinc-200 dark:text-white/10"
+                                                        />
+                                                        <motion.path
+                                                            initial={{ strokeDashoffset: arcPerimeter }}
+                                                            animate={{ strokeDashoffset: strokeOffset }}
+                                                            d="M 20 100 A 80 80 0 0 1 180 100"
+                                                            fill="none"
+                                                            stroke={`url(#leaseGradient-${unit.id})`}
+                                                            strokeWidth="10"
+                                                            strokeLinecap="round"
+                                                            strokeDasharray={arcPerimeter}
+                                                            transition={{ duration: 1.2, ease: "easeOut" }}
+                                                        />
+                                                        <motion.circle
+                                                            initial={{ cx: 20, cy: 100 }}
+                                                            animate={{ cx: knobX, cy: knobY }}
+                                                            transition={{ duration: 1.2, ease: "easeOut" }}
+                                                            r="6"
+                                                            fill={primaryColor}
+                                                            stroke="#ffffff"
+                                                            strokeWidth="2"
+                                                        />
+                                                    </svg>
+                                                    
+                                                    <div className="absolute inset-x-0 bottom-0 flex flex-col items-center text-center">
+                                                        <p className="text-3xl font-black tracking-tighter text-zinc-900 dark:text-white" style={{ color: daysLeft !== null && daysLeft <= 14 ? undefined : primaryColor }}>
+                                                            {daysLeft !== null ? `${Math.abs(daysLeft)}` : "--"}
+                                                        </p>
+                                                        <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                                                            DAYS {daysLeft !== null && daysLeft < 0 ? "OVERDUE" : "REMAINING"}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="mt-8 flex w-full items-center justify-between gap-4">
+                                                    <div className="flex-1 space-y-1">
+                                                        <p className="text-[10px] font-black text-zinc-400">Lease Commenced</p>
+                                                        <p className="text-xs font-black text-zinc-800 dark:text-zinc-100">{unit.leaseStart ? <ClientOnlyDate date={unit.leaseStart} format={{ month: 'short', day: 'numeric', year: 'numeric' }} /> : "--"}</p>
+                                                    </div>
+                                                    <div className="h-8 w-px bg-zinc-100 dark:bg-white/5" />
+                                                    <div className="flex-1 text-right space-y-1">
+                                                        <p className="text-[10px] font-black text-zinc-400">Renewal Window</p>
+                                                        <p className="text-xs font-black text-zinc-800 dark:text-zinc-100">{unit.leaseEnd ? <ClientOnlyDate date={unit.leaseEnd} format={{ month: 'short', day: 'numeric', year: 'numeric' }} /> : "--"}</p>
+                                                    </div>
+                                                </div>
+                                            </>
+                                        );
+                                    })()}
 
                                     <div className="mt-6 w-full rounded-2xl bg-zinc-50 p-4 dark:bg-black/20">
                                         <div className="flex items-center gap-3">

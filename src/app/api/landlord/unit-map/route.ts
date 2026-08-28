@@ -42,46 +42,51 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: "propertyId is required" }, { status: 400 });
     }
 
-    // Verify ownership
-    const { data: property, error: propError } = await supabase
-        .from("properties")
-        .select("id, name, type, total_units, total_floors, base_rent_amount, map_decorations" as any)
-        .eq("id", propertyId)
-        .eq("landlord_id", userId)
-        .maybeSingle() as any;
+    // Fetch property, floor configs, and units concurrently
+    const [
+        { data: property, error: propError },
+        { data: initialFloorConfigs, error: floorError },
+        { data: initialUnits, error: unitsError }
+    ] = await Promise.all([
+        supabase
+            .from("properties")
+            .select("id, name, type, total_units, total_floors, base_rent_amount, map_decorations" as any)
+            .eq("id", propertyId)
+            .eq("landlord_id", userId)
+            .maybeSingle() as any,
+        supabase
+            .from("property_floor_configs" as any)
+            .select("id, floor_number, floor_key, display_name, sort_order")
+            .eq("property_id", propertyId)
+            .order("sort_order", { ascending: true })
+            .order("floor_number", { ascending: true }) as any,
+        supabase
+            .from("units")
+            .select("id, name, floor, status, rent_amount, beds, baths, sqft")
+            .eq("property_id", propertyId)
+            .order("created_at", { ascending: true })
+    ]);
 
     if (propError || !property) {
         return NextResponse.json({ error: "Property not found or access denied" }, { status: 404 });
     }
+
+    if (floorError) {
+        return NextResponse.json({ error: "Failed to fetch floor configs" }, { status: 500 });
+    }
+
+    if (unitsError) {
+        return NextResponse.json({ error: "Failed to fetch units" }, { status: 500 });
+    }
+
+    let floorConfigs = initialFloorConfigs;
+    let units = initialUnits;
 
     const admin = createServiceRoleSupabaseClient();
     const targetFloors = Math.max(1, Number(property.total_floors) || 1);
     const targetUnits = Math.max(1, Number(property.total_units) || 1);
     const targetRent = Number(property.base_rent_amount) || 0;
     const propType = property.type || "apartment";
-
-    // Fetch floor configs ordered by sort_order / floor_number
-    let { data: floorConfigs, error: floorError } = await (supabase
-        .from("property_floor_configs" as any)
-        .select("id, floor_number, floor_key, display_name, sort_order")
-        .eq("property_id", propertyId)
-        .order("sort_order", { ascending: true })
-        .order("floor_number", { ascending: true }) as any);
-
-    if (floorError) {
-        return NextResponse.json({ error: "Failed to fetch floor configs" }, { status: 500 });
-    }
-
-    // Fetch units with their map positions
-    let { data: units, error: unitsError } = await supabase
-        .from("units")
-        .select("id, name, floor, status, rent_amount, beds, baths, sqft")
-        .eq("property_id", propertyId)
-        .order("created_at", { ascending: true });
-
-    if (unitsError) {
-        return NextResponse.json({ error: "Failed to fetch units" }, { status: 500 });
-    }
 
     // Auto-heal / sync missing floor configs
     const existingFloorNumbers = new Set((floorConfigs ?? []).map((f: any) => f.floor_number));
@@ -256,6 +261,10 @@ export async function GET(request: NextRequest) {
         isSetupComplete,
         placedCount,
         totalUnits: enrichedUnits.length,
+    }, {
+        headers: {
+            "Cache-Control": "private, max-age=3, stale-while-revalidate=30",
+        }
     });
 }
 

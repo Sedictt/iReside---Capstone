@@ -3,9 +3,17 @@ import { Unit, DbUnit, QuickActionType, QuickActionGuardResult, FloorId } from "
 /** Size in pixels for newly placed units by DB bed-count */
 export const UNIT_SIZE_BY_BEDS: Record<number, { w: number; h: number }> = {
     0: { w: 180, h: 120 }, // Studio
-    1: { w: 200, h: 140 },
-    2: { w: 220, h: 140 },
-    3: { w: 280, h: 140 },
+    1: { w: 200, h: 140 }, // 1BR
+    2: { w: 220, h: 140 }, // 2BR
+    3: { w: 240, h: 140 }, // 3BR
+};
+
+export const getUnitDimensions = (beds?: number, type?: Unit["type"]): { w: number; h: number } => {
+    const bedroomCount = beds !== undefined ? beds : (type === "Studio" ? 0 : type === "2BR" ? 2 : type === "3BR" ? 3 : 1);
+    if (bedroomCount === 0) return { w: 180, h: 120 };
+    if (bedroomCount === 2) return { w: 220, h: 140 };
+    if (bedroomCount >= 3) return { w: 240, h: 140 };
+    return { w: 200, h: 140 };
 };
 
 /** Derive a canvas Unit type from DB beds count */
@@ -49,8 +57,11 @@ export const dbUnitToCanvasUnit = (dbUnit: DbUnit): Unit => {
     };
 };
 
-export const parseFloorNumber = (floorId: FloorId) => {
-    const match = /^floor(\d+)$/i.exec(floorId);
+export const parseFloorNumber = (floorId: FloorId): number | null => {
+    if (!floorId) return null;
+    const lower = String(floorId).toLowerCase();
+    if (lower === "ground") return 1;
+    const match = /(?:floor|level|f|l)?[_-]?(\d+)/i.exec(lower);
     if (!match) return null;
     const parsed = Number.parseInt(match[1], 10);
     return Number.isFinite(parsed) ? parsed : null;
