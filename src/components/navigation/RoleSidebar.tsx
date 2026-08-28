@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/Logo";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Tooltip, TooltipProvider } from "@/components/ui/tooltip";
 import { m as motion, AnimatePresence } from "framer-motion";
@@ -201,9 +202,9 @@ export function RoleSidebar({
                 {/* Header */}
                 <div className={cn("flex h-20 items-center justify-between px-6 transition-all duration-300 mb-2", isCollapsed ? "justify-center" : "justify-between")}>
                     {!isCollapsed && (
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
                             <LogoLink>
-                                <Logo className="h-24 w-28" />
+                                <BrandLogo size="md" />
                             </LogoLink>
                         </div>
                     )}

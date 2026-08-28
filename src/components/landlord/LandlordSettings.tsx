@@ -70,6 +70,8 @@ import { useHighContrast } from "@/hooks/useHighContrast";
 import { CURATED_BANNER_PRESETS, DEFAULT_BANNER_URL } from "@/components/landlord/dashboard/BannerCustomizerModal";
 import { ColorPickerModal } from "@/components/ui/ColorPickerModal";
 import { UnsavedChangesModal } from "@/components/ui/UnsavedChangesModal";
+import { useBrand } from "@/context/BrandContext";
+import { applyBrandCssVariables } from "@/lib/branding/colors";
 import Link from "next/link";
 
 // --- Types ---
@@ -240,16 +242,17 @@ export function LandlordSettings() {
     // Theme & High Contrast
     const { theme, setTheme, resolvedTheme } = useTheme();
     const { isHighContrast, toggleHighContrast } = useHighContrast();
+    const brand = useBrand();
 
     // Personalization & Branding State
     const [bannerUrl, setBannerUrl] = useState<string>(DEFAULT_BANNER_URL);
     const [customBannerInput, setCustomBannerInput] = useState<string>("");
-    const [propertyTradeName, setPropertyTradeName] = useState<string>("Skyline Lofts");
-    const [propertyTagline, setPropertyTagline] = useState<string>("Modern Urban Residences & Studios");
-    const [propertyLogoUrl, setPropertyLogoUrl] = useState<string | null>(null);
-    const [rentalArchetype, setRentalArchetype] = useState<string>("apartments");
-    const [brandPrimaryHex, setBrandPrimaryHex] = useState<string>("#c4b0ff");
-    const [brandSecondaryHex, setBrandSecondaryHex] = useState<string>("#06b6d4");
+    const [propertyTradeName, setPropertyTradeName] = useState<string>(brand.propertyName || "Skyline Lofts");
+    const [propertyTagline, setPropertyTagline] = useState<string>(brand.propertyTagline || "Modern Urban Residences & Studios");
+    const [propertyLogoUrl, setPropertyLogoUrl] = useState<string | null>(brand.logoUrl);
+    const [rentalArchetype, setRentalArchetype] = useState<string>(brand.rentalArchetype || "apartments");
+    const [brandPrimaryHex, setBrandPrimaryHex] = useState<string>(brand.primaryColor || "#c4b0ff");
+    const [brandSecondaryHex, setBrandSecondaryHex] = useState<string>(brand.secondaryColor || "#06b6d4");
     const [isPrimaryColorPickerOpen, setIsPrimaryColorPickerOpen] = useState(false);
     const [isSecondaryColorPickerOpen, setIsSecondaryColorPickerOpen] = useState(false);
     const [isUnsavedModalOpen, setIsUnsavedModalOpen] = useState(false);
@@ -695,22 +698,18 @@ export function LandlordSettings() {
                 }
             }
 
-            // 2. Personalization & Branding (LocalStorage & Events)
+            // 2. Personalization & Branding (API, LocalStorage & CSS Variables)
+            await brand.updateBranding({
+                propertyName: propertyTradeName,
+                propertyTagline,
+                rentalArchetype: (rentalArchetype === "boarding_house" ? "boarding_house" : rentalArchetype === "dormitory" ? "dormitory" : "apartment"),
+                primaryColor: brandPrimaryHex,
+                secondaryColor: brandSecondaryHex,
+                logoUrl: propertyLogoUrl,
+                bannerUrl,
+            }, true);
+
             if (typeof window !== "undefined") {
-                localStorage.setItem("ireside_property_name", propertyTradeName);
-                localStorage.setItem("ireside_property_tagline", propertyTagline);
-                localStorage.setItem("ireside_rental_archetype", rentalArchetype);
-                localStorage.setItem("ireside_brand_primary", brandPrimaryHex);
-                localStorage.setItem("ireside_brand_secondary", brandSecondaryHex);
-                if (propertyLogoUrl) {
-                    localStorage.setItem("ireside_property_logo", propertyLogoUrl);
-                } else {
-                    localStorage.removeItem("ireside_property_logo");
-                }
-                if (bannerUrl) {
-                    localStorage.setItem("ireside_landlord_custom_banner_url", bannerUrl);
-                }
-                window.dispatchEvent(new CustomEvent("property-branding-updated"));
                 window.dispatchEvent(new CustomEvent("banner-updated", { detail: bannerUrl }));
             }
 
@@ -1243,6 +1242,7 @@ export function LandlordSettings() {
                                             onClick={() => {
                                                 setBrandPrimaryHex(preset.primary);
                                                 setBrandSecondaryHex(preset.secondary);
+                                                applyBrandCssVariables(preset.primary, preset.secondary);
                                                 toast.success(`Applied ${preset.name} palette`);
                                             }}
                                             className="px-3 py-1.5 rounded-xl border border-border/60 hover:border-primary/60 bg-surface-2 text-xs font-bold text-foreground flex items-center gap-2 transition-all active:scale-95"
@@ -2254,6 +2254,7 @@ export function LandlordSettings() {
                     color={brandPrimaryHex}
                     onChange={(newColor) => {
                         setBrandPrimaryHex(newColor);
+                        applyBrandCssVariables(newColor, brandSecondaryHex);
                     }}
                 />
 
@@ -2265,6 +2266,7 @@ export function LandlordSettings() {
                     color={brandSecondaryHex}
                     onChange={(newColor) => {
                         setBrandSecondaryHex(newColor);
+                        applyBrandCssVariables(brandPrimaryHex, newColor);
                     }}
                 />
 

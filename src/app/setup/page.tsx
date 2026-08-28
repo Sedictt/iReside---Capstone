@@ -38,6 +38,8 @@ import { useHighContrast } from "@/hooks/useHighContrast";
 import { HighContrastToggle } from "@/components/ui/HighContrastToggle";
 import { Logo } from "@/components/ui/Logo";
 import { cn } from "@/lib/utils";
+import { useBrand } from "@/context/BrandContext";
+import { applyBrandCssVariables } from "@/lib/branding/colors";
 
 // HSL to HEX helper
 function hslToHex(h: number, s: number, l: number): string {
@@ -124,12 +126,14 @@ export default function BusinessPersonalizationWizardPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
 
+  const brand = useBrand();
+
   // Step 1: Identity, Archetype & Logo
-  const [propertyName, setPropertyName] = useState("Reyes Residences");
-  const [tagline, setTagline] = useState("Premier Student & Residential Living in Valenzuela");
-  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [propertyName, setPropertyName] = useState(brand.propertyName || "Reyes Residences");
+  const [tagline, setTagline] = useState(brand.propertyTagline || "Premier Student & Residential Living in Valenzuela");
+  const [logoUrl, setLogoUrl] = useState<string | null>(brand.logoUrl);
   const [propertyArchetype, setPropertyArchetype] = useState<"apartment" | "dormitory" | "boarding_house">(
-    "apartment"
+    brand.rentalArchetype || "apartment"
   );
   const [totalUnits, setTotalUnits] = useState("16");
   const [propertyAddress, setPropertyAddress] = useState("Karuhatan, Valenzuela City");
@@ -155,8 +159,8 @@ export default function BusinessPersonalizationWizardPage() {
   const [saturation, setSaturation] = useState(90);
   const [lightness, setLightness] = useState(62);
 
-  const [primaryColor, setPrimaryColor] = useState("#8b5cf6");
-  const [secondaryColor, setSecondaryColor] = useState("#06b6d4");
+  const [primaryColor, setPrimaryColor] = useState(brand.primaryColor || "#8b5cf6");
+  const [secondaryColor, setSecondaryColor] = useState(brand.secondaryColor || "#06b6d4");
 
   // Step 3: Master Admin Account
   const [adminName, setAdminName] = useState("Roberto Reyes");
@@ -198,8 +202,10 @@ export default function BusinessPersonalizationWizardPage() {
     const hex = hslToHex(newH, newS, newL);
     if (colorTarget === "primary") {
       setPrimaryColor(hex);
+      applyBrandCssVariables(hex, secondaryColor);
     } else {
       setSecondaryColor(hex);
+      applyBrandCssVariables(primaryColor, hex);
     }
   };
 
@@ -219,6 +225,7 @@ export default function BusinessPersonalizationWizardPage() {
   ) => {
     setSelectedHarmonyRule(rule);
     setSecondaryColor(hex);
+    applyBrandCssVariables(primaryColor, hex);
     if (colorTarget === "secondary") {
       const hsl = hexToHsl(hex);
       setHue(hsl.h);
@@ -251,7 +258,8 @@ export default function BusinessPersonalizationWizardPage() {
 
     const reader = new FileReader();
     reader.onload = (event) => {
-      setLogoUrl(event.target?.result as string);
+      const result = event.target?.result as string;
+      setLogoUrl(result);
       toast.success("Property logo uploaded successfully!");
     };
     reader.readAsDataURL(file);
@@ -263,15 +271,29 @@ export default function BusinessPersonalizationWizardPage() {
     toast.info("Logo reset to auto-generated monogram badge.");
   };
 
-  const handleLaunchPortal = () => {
+  const handleLaunchPortal = async () => {
     setIsLaunching(true);
-    setTimeout(() => {
-      setIsLaunching(false);
+    try {
+      await brand.updateBranding(
+        {
+          propertyName,
+          propertyTagline: tagline,
+          rentalArchetype: propertyArchetype,
+          primaryColor,
+          secondaryColor,
+          logoUrl,
+        },
+        true
+      );
       setIsLaunched(true);
       toast.success("Property Portal White-Labeled & Initialized!", {
-        description: `Branded as ${propertyName}. Master Admin account created for ${adminEmail}.`,
+        description: `Branded as ${propertyName}. Master Admin configuration saved.`,
       });
-    }, 1200);
+    } catch (err: any) {
+      toast.error("Failed to save branding: " + (err?.message || "Unknown error"));
+    } finally {
+      setIsLaunching(false);
+    }
   };
 
   const getInitials = (name: string) => {

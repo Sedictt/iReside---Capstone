@@ -10,6 +10,7 @@ import { DashboardDigitalClock } from "./DashboardDigitalClock";
 import { DashboardBackground } from "./DashboardBackground";
 import { BannerCustomizerModal, DEFAULT_BANNER_URL } from "./BannerCustomizerModal";
 import { useAuth } from "@/hooks/useAuth";
+import { useBrand } from "@/context/BrandContext";
 
 interface DashboardBannerProps {
     title?: string;
@@ -32,15 +33,20 @@ export function DashboardBanner({
     onCreateInvite,
     onOpenFlyer
 }: DashboardBannerProps) {
+    const brand = useBrand();
     const getManilaTime = () => new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Manila" }));
     const [time, setTime] = useState<Date>(() => getManilaTime());
     const [isQuestPanelOpen, setIsQuestPanelOpen] = useState(false);
     const [isCustomizerOpen, setIsCustomizerOpen] = useState(false);
 
-    // Active Banner with LocalStorage Persistence
-    const [activeBanner, setActiveBanner] = useState<string>(image);
+    // Active Banner with BrandContext & LocalStorage Persistence
+    const [activeBanner, setActiveBanner] = useState<string>(brand.bannerUrl || image);
 
     useEffect(() => {
+        if (brand.bannerUrl) {
+            setActiveBanner(brand.bannerUrl);
+            return;
+        }
         try {
             const saved = localStorage.getItem("ireside_landlord_custom_banner_url");
             if (saved) {
@@ -58,7 +64,7 @@ export function DashboardBanner({
 
         window.addEventListener("banner-updated" as any, handleBannerUpdated);
         return () => window.removeEventListener("banner-updated" as any, handleBannerUpdated);
-    }, []);
+    }, [brand.bannerUrl]);
     
     const { profile, user, loading: authLoading } = useAuth();
     const rawName = profile?.full_name || user?.user_metadata?.full_name || user?.user_metadata?.name || "";

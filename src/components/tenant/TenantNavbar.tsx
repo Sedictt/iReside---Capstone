@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { Logo } from "@/components/ui/Logo";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import {
     Bell,
     User,
@@ -210,8 +211,8 @@ return (
         <>
             <header className="md:hidden sticky top-0 z-[90] h-16 border-b border-border/80 bg-background">
                 <div className="h-full px-4 flex items-center justify-between">
-                    <Link href="/tenant/dashboard" className="flex items-center">
-                        <Logo className="h-30 w-66" />
+                    <Link href="/tenant/dashboard" className="flex items-center min-w-0">
+                        <BrandLogo size="sm" />
                     </Link>
                     <div className="flex items-center gap-3">
                         <div className="relative" ref={mobileNotificationsRef}>
@@ -277,8 +278,8 @@ return (
 
             <aside className="hidden md:flex fixed left-0 top-0 z-40 h-screen w-64 flex-col text-foreground neumorphic-panel" data-tour-id="tour-tenant-navigation">
                 <div className="h-20 px-6 border-b border-border/70 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                        <Logo className="h-30 w-36" />
+                    <div className="flex items-center gap-3 min-w-0">
+                        <BrandLogo size="md" />
                     </div>
                     <ThemeToggle variant="sidebar" dataTourId="tour-theme-toggle" />
                 </div>
@@ -399,8 +400,8 @@ return (
                     )}
                 >
                     <div className="mb-6 flex items-center justify-between">
-                        <Link href="/tenant/dashboard" className="flex items-center" onClick={() => setIsMobileOpen(false)}>
-                            <Logo className="h-9 w-28" />
+                        <Link href="/tenant/dashboard" className="flex items-center min-w-0" onClick={() => setIsMobileOpen(false)}>
+                            <BrandLogo size="md" />
                         </Link>
                         <button
                             type="button"
