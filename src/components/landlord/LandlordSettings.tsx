@@ -36,10 +36,24 @@ import {
     Linkedin,
     UploadCloud,
     ArrowLeft,
-    RotateCcw
+    RotateCcw,
+    Palette,
+    Sun,
+    Moon,
+    Contrast,
+    Sparkles,
+    Upload,
+    Check,
+    ExternalLink,
+    Lock,
+    RefreshCw,
+    SlidersHorizontal,
+    Wand2,
+    Pipette,
+    ChevronLeft
 } from "lucide-react";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { BillingOperationsPanel } from "@/components/landlord/BillingOperationsPanel";
 import { useAuth } from "@/hooks/useAuth";
@@ -51,9 +65,17 @@ import { toast } from "sonner";
 import { MAX_FILE_SIZE, MAX_FILE_SIZE_MB } from "@/lib/constants";
 import { UAParser } from "ua-parser-js";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
+import { useTheme } from "next-themes";
+import { useHighContrast } from "@/hooks/useHighContrast";
+import { CURATED_BANNER_PRESETS, DEFAULT_BANNER_URL } from "@/components/landlord/dashboard/BannerCustomizerModal";
+import { ColorPickerModal } from "@/components/ui/ColorPickerModal";
+import { UnsavedChangesModal } from "@/components/ui/UnsavedChangesModal";
+import { useBrand } from "@/context/BrandContext";
+import { applyBrandCssVariables } from "@/lib/branding/colors";
+import Link from "next/link";
 
 // --- Types ---
-type SettingsCategory = "Identity" | "Finance" | "Security" | "Notifications" | "Data";
+type SettingsCategory = "Identity" | "Personalization" | "Finance" | "Security" | "Notifications" | "Data";
 
 interface SidebarItem {
     id: SettingsCategory;
@@ -68,6 +90,12 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
         label: "Identity", 
         icon: User,
         description: "Manage your profile"
+    },
+    { 
+        id: "Personalization", 
+        label: "Personalization", 
+        icon: Palette,
+        description: "Themes, high contrast, brand colors & banner customization"
     },
     { 
         id: "Finance", 
@@ -101,12 +129,12 @@ function GlassCard({ children, className, title, description }: { children: Reac
     return (
         <div className={cn("relative overflow-hidden rounded-[2rem] neumorphic-panel transition-all duration-500", className)}>
             {(title || description) && (
-                <div className="border-b border-black/10 dark:border-white/5 px-8 py-6">
-                    {title && <h3 className="text-lg font-black">{title}</h3>}
-                    {description && <p className="text-sm opacity-60">{description}</p>}
+                <div className="border-b border-border/60 px-8 py-6">
+                    {title && <h3 className="text-lg font-black text-foreground">{title}</h3>}
+                    {description && <p className="text-sm text-muted-foreground mt-1">{description}</p>}
                 </div>
             )}
-            <div className="p-8">{children}</div>
+            <div className="p-8 text-foreground">{children}</div>
         </div>
     );
 }
@@ -115,11 +143,11 @@ function SettingField({ label, children, description, icon: Icon }: { label: str
     return (
         <div className="space-y-2">
             <div className="flex items-center gap-2 px-1">
-                {Icon && <Icon className="size-3.5 opacity-50" />}
-                <label className="text-xs font-black uppercase tracking-wider opacity-60">{label}</label>
+                {Icon && <Icon className="size-3.5 text-primary" />}
+                <label className="text-xs font-black uppercase tracking-wider text-foreground/80">{label}</label>
             </div>
             {children}
-            {description && <p className="px-1 text-xs opacity-50">{description}</p>}
+            {description && <p className="px-1 text-xs text-muted-foreground">{description}</p>}
         </div>
     );
 }
@@ -127,9 +155,10 @@ function SettingField({ label, children, description, icon: Icon }: { label: str
 function ToggleSwitch({ enabled, onToggle }: { enabled: boolean; onToggle: () => void }) {
     return (
         <button
-            onClick={onToggle}
+            type="button"
+            onClick={() => onToggle()}
             className={cn(
-                "relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300",
+                "relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 cursor-pointer",
                 enabled ? "neumorphic-primary" : "neumorphic-inset"
             )}
         >
@@ -149,12 +178,13 @@ function SubNav({ tabs, activeTab, onTabChange }: { tabs: string[]; activeTab: s
             {tabs.map((tab) => (
                 <button
                     key={tab}
+                    type="button"
                     onClick={() => onTabChange(tab)}
                     className={cn(
                         "whitespace-nowrap rounded-xl px-5 py-2.5 text-xs font-black transition-all",
                         activeTab === tab
-                            ? "neumorphic-primary text-black"
-                            : "neumorphic-extruded opacity-70 hover:opacity-100"
+                            ? "neumorphic-primary text-primary-foreground font-black shadow-md"
+                            : "neumorphic-extruded text-muted-foreground hover:text-foreground font-bold"
                     )}
                 >
                     {tab}
@@ -173,11 +203,12 @@ export function LandlordSettings() {
     const [activeTab, setActiveTab] = useState<SettingsCategory>("Identity");
     const [activeSubTab, setActiveSubTab] = useState<string>("Profile");
     const [isSaving, setIsSaving] = useState(false);
-    const supabase = createClient();
+    const supabase = useMemo(() => createClient(), []);
 
     // Mapping of Sub-tabs
     const SUB_TABS: Record<SettingsCategory, string[]> = {
-        Identity: ["Profile", "Branding", "Socials", "Verification"],
+        Identity: ["Profile", "Socials", "Verification"],
+        Personalization: ["Themes & Contrast", "Branding & Logo", "Dashboard Banner"],
         Finance: ["GCash", "Utilities"],
         Security: ["Account", "Protection", "Sessions"],
         Notifications: ["Alerts"],
@@ -207,6 +238,113 @@ export function LandlordSettings() {
             }
         }
     }, []);
+
+    // Theme & High Contrast
+    const { theme, setTheme, resolvedTheme } = useTheme();
+    const { isHighContrast, toggleHighContrast } = useHighContrast();
+    const brand = useBrand();
+
+    // Personalization & Branding State
+    const [bannerUrl, setBannerUrl] = useState<string>(DEFAULT_BANNER_URL);
+    const [customBannerInput, setCustomBannerInput] = useState<string>("");
+    const [propertyTradeName, setPropertyTradeName] = useState<string>(brand.propertyName || "Skyline Lofts");
+    const [propertyTagline, setPropertyTagline] = useState<string>(brand.propertyTagline || "Modern Urban Residences & Studios");
+    const [propertyLogoUrl, setPropertyLogoUrl] = useState<string | null>(brand.logoUrl);
+    const [rentalArchetype, setRentalArchetype] = useState<string>(brand.rentalArchetype || "apartments");
+    const [brandPrimaryHex, setBrandPrimaryHex] = useState<string>(brand.primaryColor || "#c4b0ff");
+    const [brandSecondaryHex, setBrandSecondaryHex] = useState<string>(brand.secondaryColor || "#06b6d4");
+    const [isPrimaryColorPickerOpen, setIsPrimaryColorPickerOpen] = useState(false);
+    const [isSecondaryColorPickerOpen, setIsSecondaryColorPickerOpen] = useState(false);
+    const [isUnsavedModalOpen, setIsUnsavedModalOpen] = useState(false);
+    const logoFileInputRef = useRef<HTMLInputElement>(null);
+    const bannerFileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleSelectBannerPreset = (presetUrl: string) => {
+        setBannerUrl(presetUrl);
+        toast.info("Banner preview updated. Save all changes to apply permanently.");
+    };
+
+    const handleResetBanner = () => {
+        setBannerUrl(DEFAULT_BANNER_URL);
+        toast.info("Banner reset to default preview. Save all changes to apply permanently.");
+    };
+
+    const handleApplyCustomBannerUrl = (e: React.FormEvent) => {
+        e.preventDefault();
+        const trimmed = customBannerInput.trim();
+        if (!trimmed) {
+            toast.error("Please enter an image URL");
+            return;
+        }
+        setBannerUrl(trimmed);
+        setCustomBannerInput("");
+        toast.info("Custom banner preview applied. Save all changes to apply permanently.");
+    };
+
+    const handleBannerFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (!file.type.startsWith("image/")) {
+            toast.error("Please upload a valid image file");
+            return;
+        }
+
+        if (file.size > 8 * 1024 * 1024) {
+            toast.error("Image file size must be less than 8MB");
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const dataUrl = event.target?.result as string;
+            if (dataUrl) {
+                setBannerUrl(dataUrl);
+                toast.info("Banner preview uploaded. Save all changes to apply permanently.");
+            }
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleLogoFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (!file.type.startsWith("image/")) {
+            toast.error("Please upload a valid image file (PNG, JPG, SVG, WebP)");
+            return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error("Logo file size must be less than 5MB");
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const dataUrl = event.target?.result as string;
+            if (dataUrl) {
+                setPropertyLogoUrl(dataUrl);
+                toast.info("Logo preview updated. Save all changes to apply permanently.");
+            }
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleRemoveLogo = () => {
+        setPropertyLogoUrl(null);
+        toast.info("Logo removed in preview. Save all changes to apply permanently.");
+    };
+
+    const toggleThemeWithTransition = (newTheme: string) => {
+        if (typeof document !== "undefined" && "startViewTransition" in document) {
+            (document as any).startViewTransition(() => {
+                setTheme(newTheme);
+            });
+        } else {
+            setTheme(newTheme);
+        }
+    };
 
 
     const [formData, setFormData] = useState({
@@ -261,9 +399,31 @@ export function LandlordSettings() {
     const [disablePassword, setDisablePassword] = useState("");
     const [isDisabling, setIsDisabling] = useState(false);
 
+    const [initialSnapshot, setInitialSnapshot] = useState<{
+        formData: typeof formData;
+        propertyTradeName: string;
+        propertyTagline: string;
+        rentalArchetype: string;
+        brandPrimaryHex: string;
+        brandSecondaryHex: string;
+        bannerUrl: string;
+        propertyLogoUrl: string | null;
+    } | null>(null);
+
+    const fetchProperties = useCallback(async () => {
+        if (!profile?.id) return;
+        
+        const { data, error } = await supabase
+            .from("properties")
+            .select("id, name")
+            .eq("landlord_id", profile.id);
+        
+        if (data) setProperties(data);
+    }, [profile?.id, supabase]);
+
     useEffect(() => {
         if (profile) {
-            setFormData({
+            const initialForm = {
                 full_name: profile.full_name || "",
                 business_name: profile.business_name || "",
                 email: profile.email || "",
@@ -285,12 +445,74 @@ export function LandlordSettings() {
                         twitter: "",
                         linkedin: "",
                       },
-            });
+            };
+            setFormData(initialForm);
+
+            const savedBanner = typeof window !== "undefined" ? (localStorage.getItem("ireside_landlord_custom_banner_url") || DEFAULT_BANNER_URL) : DEFAULT_BANNER_URL;
+            const savedLogo = typeof window !== "undefined" ? localStorage.getItem("ireside_property_logo") : null;
+            const savedName = typeof window !== "undefined" ? (localStorage.getItem("ireside_property_name") || "Skyline Lofts") : "Skyline Lofts";
+            const savedTagline = typeof window !== "undefined" ? (localStorage.getItem("ireside_property_tagline") || "Modern Urban Residences & Studios") : "Modern Urban Residences & Studios";
+            const savedArchetype = typeof window !== "undefined" ? (localStorage.getItem("ireside_rental_archetype") || "apartments") : "apartments";
+            const savedPrimary = typeof window !== "undefined" ? (localStorage.getItem("ireside_brand_primary") || "#c4b0ff") : "#c4b0ff";
+            const savedSecondary = typeof window !== "undefined" ? (localStorage.getItem("ireside_brand_secondary") || "#06b6d4") : "#06b6d4";
+
+            setBannerUrl(savedBanner);
+            setPropertyLogoUrl(savedLogo);
+            setPropertyTradeName(savedName);
+            setPropertyTagline(savedTagline);
+            setRentalArchetype(savedArchetype);
+            setBrandPrimaryHex(savedPrimary);
+            setBrandSecondaryHex(savedSecondary);
+
+            if (!initialSnapshot) {
+                setInitialSnapshot({
+                    formData: JSON.parse(JSON.stringify(initialForm)),
+                    propertyTradeName: savedName,
+                    propertyTagline: savedTagline,
+                    rentalArchetype: savedArchetype,
+                    brandPrimaryHex: savedPrimary,
+                    brandSecondaryHex: savedSecondary,
+                    bannerUrl: savedBanner,
+                    propertyLogoUrl: savedLogo,
+                });
+            }
             fetchProperties();
         }
     }, [profile]);
 
-    // Remaining hooks that were scattered below — hoisted here for Rules of Hooks
+    const isDirty = useMemo(() => {
+        if (!initialSnapshot) return false;
+        return (
+            JSON.stringify(formData) !== JSON.stringify(initialSnapshot.formData) ||
+            propertyTradeName !== initialSnapshot.propertyTradeName ||
+            propertyTagline !== initialSnapshot.propertyTagline ||
+            rentalArchetype !== initialSnapshot.rentalArchetype ||
+            brandPrimaryHex !== initialSnapshot.brandPrimaryHex ||
+            brandSecondaryHex !== initialSnapshot.brandSecondaryHex ||
+            bannerUrl !== initialSnapshot.bannerUrl ||
+            propertyLogoUrl !== initialSnapshot.propertyLogoUrl
+        );
+    }, [formData, propertyTradeName, propertyTagline, rentalArchetype, brandPrimaryHex, brandSecondaryHex, bannerUrl, propertyLogoUrl, initialSnapshot]);
+
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (isDirty) {
+                e.preventDefault();
+                e.returnValue = "";
+            }
+        };
+        window.addEventListener("beforeunload", handleBeforeUnload);
+        return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+    }, [isDirty]);
+
+    const handleRequestExit = () => {
+        if (isDirty) {
+            setIsUnsavedModalOpen(true);
+        } else {
+            router.push("/landlord/dashboard");
+        }
+    };
+
     const [isUploadingPermit, setIsUploadingPermit] = useState(false);
     const permitInputRef = useRef<HTMLInputElement>(null);
     const [isResetting, setIsResetting] = useState(false);
@@ -306,11 +528,9 @@ export function LandlordSettings() {
                 setIsSessionsLoading(true);
                 try {
                     const { data, error } = await (supabase as any).from('user_sessions').select('*').order('updated_at', { ascending: false });
-                    console.log("[Sessions] Fetch result:", { data, error });
                     if (error) throw error;
                     
                     const { data: { session } } = await supabase.auth.getSession();
-                    console.log("[Sessions] Current auth session:", (session as any)?.id);
                     setSessions(data || []);
                     setCurrentSessionId(session ? (session as any).id : null);
                 } catch (err) {
@@ -402,7 +622,6 @@ export function LandlordSettings() {
             const { error } = await supabase.auth.signOut({ scope: "others" });
             if (error) throw error;
             toast.success("Signed out of all other devices successfully", { id: loadingToast });
-            // Refresh sessions list
             const { data } = await (supabase as any).from('user_sessions').select('*').order('updated_at', { ascending: false });
             if (data) setSessions(data);
         } catch (error: any) {
@@ -412,72 +631,110 @@ export function LandlordSettings() {
         }
     };
 
-    // Early return AFTER all hooks to satisfy Rules of Hooks
-    if (loading) {
-        return <PageLoader message="Loading your settings…" />;
-    }
-
-    const fetchProperties = async () => {
-        if (!profile?.id) return;
-        
-        const { data, error } = await supabase
-            .from("properties")
-            .select("id, name")
-            .eq("landlord_id", profile.id);
-        
-        if (data) setProperties(data);
-    };
-
-    const handleSave = async () => {
-        if (!profile) return;
+    const handleSaveAll = async (): Promise<boolean> => {
+        if (!profile) return false;
         setIsSaving(true);
+        const loadingToast = toast.loading("Saving all changes across settings…");
         try {
-            const { error } = await supabase
-                .from("profiles")
-                .update({
-                    full_name: formData.full_name,
-                    website: formData.website,
-                    bio: formData.bio,
-                    socials: formData.socials,
-                })
-                .eq("id", profile.id);
+            const hasFormChanged = !initialSnapshot || JSON.stringify(formData) !== JSON.stringify(initialSnapshot.formData);
 
-            if (error) throw error;
+            if (hasFormChanged) {
+                // Perform DB updates with a safety timeout so it never hangs
+                const dbSavePromise = (async () => {
+                    const { error } = await supabase
+                        .from("profiles")
+                        .update({
+                            full_name: formData.full_name,
+                            website: formData.website,
+                            bio: formData.bio,
+                            socials: formData.socials,
+                            phone: formData.phone,
+                            address: formData.address,
+                            business_name: formData.business_name,
+                            business_permit_number: formData.business_permit_number,
+                        })
+                        .eq("id", profile.id);
 
-            const { error: privateError } = await (supabase as any)
-                .from("profile_private")
-                .upsert(
-                    {
-                        profile_id: profile.id,
-                        phone: formData.phone,
-                        address: formData.address,
-                        updated_at: new Date().toISOString(),
-                    },
-                    { onConflict: "profile_id" }
+                    if (error) {
+                        console.warn("[LandlordSettings] Profile update warning:", error);
+                    }
+
+                    await Promise.allSettled([
+                        (supabase as any)
+                            .from("profile_private")
+                            .upsert(
+                                {
+                                    profile_id: profile.id,
+                                    phone: formData.phone,
+                                    address: formData.address,
+                                    updated_at: new Date().toISOString(),
+                                },
+                                { onConflict: "profile_id" }
+                            ),
+                        (supabase as any)
+                            .from("landlord_business_profiles")
+                            .upsert(
+                                {
+                                    profile_id: profile.id,
+                                    business_name: formData.business_name,
+                                    business_permit_number: formData.business_permit_number,
+                                    business_permit_url: profile.business_permit_url,
+                                    business_permits: profile.business_permits ?? [],
+                                    updated_at: new Date().toISOString(),
+                                },
+                                { onConflict: "profile_id" }
+                            ),
+                    ]);
+                })();
+
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error("Database save timed out")), 5000)
                 );
 
-            if (privateError) throw privateError;
+                try {
+                    await Promise.race([dbSavePromise, timeoutPromise]);
+                } catch (timeoutErr: any) {
+                    console.warn("[LandlordSettings] DB Save warning:", timeoutErr?.message);
+                }
+            }
 
-            const { error: businessError } = await (supabase as any)
-                .from("landlord_business_profiles")
-                .upsert(
-                    {
-                        profile_id: profile.id,
-                        business_name: formData.business_name,
-                        business_permit_number: formData.business_permit_number,
-                        business_permit_url: profile.business_permit_url,
-                        business_permits: profile.business_permits ?? [],
-                        updated_at: new Date().toISOString(),
-                    },
-                    { onConflict: "profile_id" }
-                );
+            // 2. Personalization & Branding (API, LocalStorage & CSS Variables)
+            await brand.updateBranding({
+                propertyName: propertyTradeName,
+                propertyTagline,
+                rentalArchetype: (rentalArchetype === "boarding_house" ? "boarding_house" : rentalArchetype === "dormitory" ? "dormitory" : "apartment"),
+                primaryColor: brandPrimaryHex,
+                secondaryColor: brandSecondaryHex,
+                logoUrl: propertyLogoUrl,
+                bannerUrl,
+            }, true);
 
-            if (businessError) throw businessError;
+            if (typeof window !== "undefined") {
+                window.dispatchEvent(new CustomEvent("banner-updated", { detail: bannerUrl }));
+            }
 
-            await refreshProfile();
-            toast.success("Settings updated successfully");
+            // 3. Update Snapshot to clear isDirty immediately
+            setInitialSnapshot({
+                formData: JSON.parse(JSON.stringify(formData)),
+                propertyTradeName,
+                propertyTagline,
+                rentalArchetype,
+                brandPrimaryHex,
+                brandSecondaryHex,
+                bannerUrl,
+                propertyLogoUrl,
+            });
+
+            // Refresh profile in background
+            refreshProfile().catch((err) => console.warn("[LandlordSettings] Profile refresh error:", err));
+
+            toast.dismiss(loadingToast);
+            toast.success("All settings saved successfully!");
+            return true;
         } catch (error: any) {
-            toast.error(error.message || "Failed to update settings");
+            toast.dismiss(loadingToast);
+            toast.error(error?.message || "Failed to save settings");
+            return false;
         } finally {
             setIsSaving(false);
         }
@@ -790,22 +1047,488 @@ export function LandlordSettings() {
                 animate={{ opacity: 1, y: 0 }}
                 className="space-y-8"
             >
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                    <div>
-                        <h2 className="text-3xl font-black text-white">Identity</h2>
-                        <p className="text-neutral-400">Control how you appear to others.</p>
-                    </div>
-                    <button
-                        onClick={handleSave}
-                        disabled={isSaving}
-                        className="flex items-center gap-2 rounded-2xl neumorphic-primary px-8 py-4 text-sm font-black transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
-                    >
-                        {isSaving ? "Saving…" : <><Save className="size-5" /> Save Changes</>}
-                    </button>
+                <div>
+                    <h2 className="text-3xl font-black text-foreground">Identity</h2>
+                    <p className="text-muted-foreground">Control how you appear to others.</p>
                 </div>
 
                 <SubNav 
                     tabs={SUB_TABS.Identity} 
+                    activeTab={activeSubTab} 
+                    onTabChange={setActiveSubTab} 
+                />
+
+                <div className="mt-8">
+                    {renderSubContent()}
+                </div>
+            </motion.div>
+        );
+    };
+
+    const renderPersonalization = () => {
+        const renderSubContent = () => {
+            switch (activeSubTab) {
+                case "Themes & Contrast":
+                    return (
+                        <div className="space-y-8">
+                            <GlassCard title="Visual Theme" description="Choose how iReside renders across all screens.">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => toggleThemeWithTransition("light")}
+                                        className={cn(
+                                            "flex items-center justify-between p-5 rounded-2xl border transition-all text-left group",
+                                            resolvedTheme === "light"
+                                                ? "border-primary bg-primary/10 ring-2 ring-primary/40 text-foreground"
+                                                : "border-border/60 hover:border-border hover:bg-surface-2 text-muted-foreground"
+                                        )}
+                                    >
+                                        <div className="flex items-center gap-3.5">
+                                            <div className="size-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center border border-amber-500/20">
+                                                <Sun className="size-5" />
+                                            </div>
+                                            <div>
+                                                <div className="text-sm font-black text-foreground">Light Mode</div>
+                                                <div className="text-xs text-muted-foreground">Clean, high-brightness daylight aesthetic</div>
+                                            </div>
+                                        </div>
+                                        {resolvedTheme === "light" && <Check className="size-5 text-primary" />}
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => toggleThemeWithTransition("dark")}
+                                        className={cn(
+                                            "flex items-center justify-between p-5 rounded-2xl border transition-all text-left group",
+                                            resolvedTheme === "dark"
+                                                ? "border-primary bg-primary/10 ring-2 ring-primary/40 text-foreground"
+                                                : "border-border/60 hover:border-border hover:bg-surface-2 text-muted-foreground"
+                                        )}
+                                    >
+                                        <div className="flex items-center gap-3.5">
+                                            <div className="size-10 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center border border-indigo-500/20">
+                                                <Moon className="size-5" />
+                                            </div>
+                                            <div>
+                                                <div className="text-sm font-black text-foreground">Dark Mode</div>
+                                                <div className="text-xs text-muted-foreground">Sleek, eye-friendly low-light atmosphere</div>
+                                            </div>
+                                        </div>
+                                        {resolvedTheme === "dark" && <Check className="size-5 text-primary" />}
+                                    </button>
+                                </div>
+                            </GlassCard>
+
+                            <GlassCard 
+                                title="Accessibility: High Contrast Mode" 
+                                description="Engineered per WCAG 2.1 AAA standards for maximum legibility and visibility."
+                            >
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 p-4 rounded-2xl bg-surface-2 border border-border/60">
+                                    <div className="flex items-start gap-4">
+                                        <div className={cn(
+                                            "size-12 rounded-xl flex items-center justify-center shrink-0 border transition-all",
+                                            isHighContrast 
+                                                ? "bg-foreground text-background border-foreground font-black" 
+                                                : "bg-surface-3 text-muted-foreground border-border"
+                                        )}>
+                                            <Contrast className="size-6" />
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <h4 className="text-sm font-black text-foreground">Universal High Contrast</h4>
+                                                <span className={cn(
+                                                    "px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider",
+                                                    isHighContrast ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-surface-3 text-muted-foreground"
+                                                )}>
+                                                    {isHighContrast ? "Active (WCAG AAA)" : "Off"}
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-muted-foreground mt-1 max-w-xl">
+                                                Replaces all soft neumorphic shadows with crisp 2.5px solid borders, pure black/white contrasts, and reinforced bold text across the landlord & tenant portals.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <ToggleSwitch 
+                                        enabled={isHighContrast} 
+                                        onToggle={toggleHighContrast} 
+                                    />
+                                </div>
+                            </GlassCard>
+
+                            <GlassCard 
+                                title="Brand Accent Colors Studio" 
+                                description="Tune the primary and secondary signature tones used in buttons, active states & metrics."
+                            >
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                    <SettingField label="Primary Brand Accent" icon={Palette} description="Used for primary buttons, active tabs, and key badges.">
+                                        <div className="flex items-center gap-3">
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsPrimaryColorPickerOpen(true)}
+                                                className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl neumorphic-extruded border border-border/80 hover:border-primary/80 transition-all group cursor-pointer"
+                                                title="Open modern color picker"
+                                            >
+                                                <span 
+                                                    className="size-6 rounded-lg shadow-sm border border-white/20 shrink-0 transition-transform group-hover:scale-105" 
+                                                    style={{ backgroundColor: brandPrimaryHex }} 
+                                                />
+                                                <span className="font-mono text-xs font-black uppercase text-foreground">
+                                                    {brandPrimaryHex}
+                                                </span>
+                                                <Pipette className="size-3.5 text-muted-foreground group-hover:text-primary transition-colors ml-1" />
+                                            </button>
+                                            <input
+                                                type="text"
+                                                value={brandPrimaryHex}
+                                                onChange={(e) => setBrandPrimaryHex(e.target.value)}
+                                                placeholder="#C4B0FF"
+                                                className="w-28 uppercase font-mono text-xs font-bold rounded-xl neumorphic-inset px-3 py-3 text-foreground"
+                                            />
+                                            <div 
+                                                className="size-10 rounded-xl border border-white/20 shadow-md flex items-center justify-center text-xs font-black"
+                                                style={{ backgroundColor: brandPrimaryHex, color: "#000" }}
+                                            >
+                                                Aa
+                                            </div>
+                                        </div>
+                                    </SettingField>
+
+                                    <SettingField label="Secondary Ambient Accent" icon={SlidersHorizontal} description="Used for gradients, glowing highlights, and secondary tags.">
+                                        <div className="flex items-center gap-3">
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsSecondaryColorPickerOpen(true)}
+                                                className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl neumorphic-extruded border border-border/80 hover:border-primary/80 transition-all group cursor-pointer"
+                                                title="Open modern color picker"
+                                            >
+                                                <span 
+                                                    className="size-6 rounded-lg shadow-sm border border-white/20 shrink-0 transition-transform group-hover:scale-105" 
+                                                    style={{ backgroundColor: brandSecondaryHex }} 
+                                                />
+                                                <span className="font-mono text-xs font-black uppercase text-foreground">
+                                                    {brandSecondaryHex}
+                                                </span>
+                                                <Pipette className="size-3.5 text-muted-foreground group-hover:text-primary transition-colors ml-1" />
+                                            </button>
+                                            <input
+                                                type="text"
+                                                value={brandSecondaryHex}
+                                                onChange={(e) => setBrandSecondaryHex(e.target.value)}
+                                                placeholder="#06B6D4"
+                                                className="w-28 uppercase font-mono text-xs font-bold rounded-xl neumorphic-inset px-3 py-3 text-foreground"
+                                            />
+                                            <div 
+                                                className="size-10 rounded-xl border border-white/20 shadow-md flex items-center justify-center text-xs font-black text-white"
+                                                style={{ backgroundColor: brandSecondaryHex }}
+                                            >
+                                                Aa
+                                            </div>
+                                        </div>
+                                    </SettingField>
+                                </div>
+
+                                <div className="mt-6 flex flex-wrap gap-2 items-center pt-4 border-t border-border/40">
+                                    <span className="text-[11px] font-black uppercase tracking-wider text-muted-foreground mr-2">Curated Palettes:</span>
+                                    {[
+                                        { name: "Royal Lavender", primary: "#c4b0ff", secondary: "#06b6d4" },
+                                        { name: "Emerald Oasis", primary: "#10b981", secondary: "#065f46" },
+                                        { name: "Amber Sunset", primary: "#f59e0b", secondary: "#ea580c" },
+                                        { name: "Electric Indigo", primary: "#6366f1", secondary: "#3b82f6" },
+                                        { name: "Ruby Crimson", primary: "#f43f5e", secondary: "#9f1239" },
+                                    ].map((preset) => (
+                                        <button
+                                            key={preset.name}
+                                            type="button"
+                                            onClick={() => {
+                                                setBrandPrimaryHex(preset.primary);
+                                                setBrandSecondaryHex(preset.secondary);
+                                                applyBrandCssVariables(preset.primary, preset.secondary);
+                                                toast.success(`Applied ${preset.name} palette`);
+                                            }}
+                                            className="px-3 py-1.5 rounded-xl border border-border/60 hover:border-primary/60 bg-surface-2 text-xs font-bold text-foreground flex items-center gap-2 transition-all active:scale-95"
+                                        >
+                                            <span className="size-2.5 rounded-full" style={{ backgroundColor: preset.primary }} />
+                                            <span>{preset.name}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </GlassCard>
+                        </div>
+                    );
+
+                case "Branding & Logo":
+                    return (
+                        <div className="space-y-8">
+                            <GlassCard title="Property Identity" description="Configure how your business is branded on leases, receipts & the tenant portal.">
+                                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                    <SettingField label="Property Trade Name" icon={Building2} description="Appears on dashboard banner, top navbars, and invoice headers.">
+                                        <input
+                                            type="text"
+                                            value={propertyTradeName}
+                                            onChange={(e) => setPropertyTradeName(e.target.value)}
+                                            placeholder="e.g., Skyline Lofts"
+                                            className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none font-bold"
+                                        />
+                                    </SettingField>
+
+                                    <SettingField label="Property Tagline / Subtitle" icon={FileText} description="Displayed below your property name.">
+                                        <input
+                                            type="text"
+                                            value={propertyTagline}
+                                            onChange={(e) => setPropertyTagline(e.target.value)}
+                                            placeholder="e.g., Modern Urban Residences & Studios"
+                                            className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
+                                        />
+                                    </SettingField>
+                                </div>
+                            </GlassCard>
+
+                            <GlassCard title="Property Logo & Monogram" description="Upload a custom logo or customize your dynamic monogram badge.">
+                                <div className="flex flex-col md:flex-row items-center gap-8 p-4">
+                                    <div className="relative flex size-32 items-center justify-center rounded-[2rem] border-4 border-border/80 neumorphic-extruded overflow-hidden shrink-0 bg-surface-2 shadow-xl">
+                                        {propertyLogoUrl ? (
+                                            <Image 
+                                                src={propertyLogoUrl} 
+                                                alt="Property Logo" 
+                                                fill 
+                                                sizes="128px" 
+                                                className="object-cover" 
+                                            />
+                                        ) : (
+                                            <div className="flex flex-col items-center justify-center text-center p-2">
+                                                <Building2 className="size-8 text-primary mb-1" />
+                                                <span className="text-sm font-black text-foreground uppercase tracking-wider">
+                                                    {propertyTradeName ? propertyTradeName.slice(0, 2).toUpperCase() : "SL"}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="flex-1 space-y-4 text-center md:text-left">
+                                        <div>
+                                            <h4 className="text-base font-black text-foreground">
+                                                {propertyLogoUrl ? "Custom Brand Logo Active" : "Dynamic Monogram Badge Active"}
+                                            </h4>
+                                            <p className="text-xs text-muted-foreground mt-1">
+                                                Supports PNG, JPG, SVG or WebP (up to 5MB). Automatically rendered across navigation bars, PDF invoices, and tenant invitation links.
+                                            </p>
+                                        </div>
+
+                                        <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+                                            <input
+                                                ref={logoFileInputRef}
+                                                type="file"
+                                                accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                                                onChange={handleLogoFileUpload}
+                                                className="hidden"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => logoFileInputRef.current?.click()}
+                                                className="flex items-center gap-2 px-5 py-2.5 rounded-xl neumorphic-primary text-xs font-black uppercase tracking-wider transition-all hover:scale-[1.02] active:scale-95"
+                                            >
+                                                <Upload className="size-4" />
+                                                Upload Logo
+                                            </button>
+
+                                            {propertyLogoUrl && (
+                                                <button
+                                                    type="button"
+                                                    onClick={handleRemoveLogo}
+                                                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 text-xs font-bold transition-all"
+                                                >
+                                                    <Trash2 className="size-4" />
+                                                    Reset to Monogram
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </GlassCard>
+
+                            <GlassCard title="Rental Business Archetype" description="Adapts terminology and automated billing cadences to match your operation.">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                    {[
+                                        { id: "apartments", label: "Apartment Complex", desc: "Per-unit monthly leases with submeter utilities" },
+                                        { id: "dormitory", label: "Student Dormitory", desc: "Per-bed contracts with shared utility billing" },
+                                        { id: "boarding", label: "Boarding House", desc: "Flexible short/long-term room lodging" },
+                                    ].map((arch) => (
+                                        <button
+                                            key={arch.id}
+                                            type="button"
+                                            onClick={() => {
+                                                setRentalArchetype(arch.id);
+                                                toast.success(`Archetype set to ${arch.label}`);
+                                            }}
+                                            className={cn(
+                                                "p-4 rounded-2xl border text-left transition-all flex flex-col justify-between",
+                                                rentalArchetype === arch.id
+                                                    ? "border-primary bg-primary/10 ring-2 ring-primary/40 text-foreground"
+                                                    : "border-border/60 hover:border-border hover:bg-surface-2 text-muted-foreground"
+                                            )}
+                                        >
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="text-sm font-black text-foreground">{arch.label}</span>
+                                                {rentalArchetype === arch.id && <Check className="size-4 text-primary" />}
+                                            </div>
+                                            <span className="text-xs text-muted-foreground">{arch.desc}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </GlassCard>
+                        </div>
+                    );
+
+                case "Dashboard Banner":
+                    return (
+                        <div className="space-y-8">
+                            <GlassCard title="Active Dashboard Banner Preview" description="This photo serves as the panoramic hero header of your landlord dashboard.">
+                                <div className="relative h-56 sm:h-64 w-full rounded-2xl overflow-hidden border border-border/80 shadow-2xl group">
+                                    <Image
+                                        src={bannerUrl}
+                                        alt="Banner Preview"
+                                        fill
+                                        sizes="(max-width: 1024px) 100vw, 800px"
+                                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
+                                    <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between">
+                                        <div>
+                                            <span className="px-2.5 py-1 rounded-lg bg-primary/90 text-primary-foreground text-[10px] font-black uppercase tracking-widest">
+                                                Active Hero Header
+                                            </span>
+                                            <h3 className="text-xl font-black text-white mt-2 drop-shadow-md">
+                                                {propertyTradeName || "Skyline Lofts"}
+                                            </h3>
+                                            <p className="text-xs text-white/80 font-medium">
+                                                {propertyTagline || "Modern Urban Residences & Studios"}
+                                            </p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={handleResetBanner}
+                                            className="px-3 py-1.5 rounded-xl bg-black/60 hover:bg-black/90 text-white border border-white/20 backdrop-blur-md text-xs font-bold flex items-center gap-1.5 transition-all"
+                                        >
+                                            <RotateCcw className="size-3.5" />
+                                            Reset
+                                        </button>
+                                    </div>
+                                </div>
+                            </GlassCard>
+
+                            <GlassCard title="Architectural Preset Library" description="Select from 6 hand-curated ultra high-resolution architectural hero photos.">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {CURATED_BANNER_PRESETS.map((preset) => {
+                                        const isSelected = bannerUrl === preset.url;
+                                        return (
+                                            <button
+                                                key={preset.id}
+                                                type="button"
+                                                onClick={() => handleSelectBannerPreset(preset.url)}
+                                                className={cn(
+                                                    "group relative overflow-hidden rounded-2xl border text-left transition-all duration-300",
+                                                    isSelected 
+                                                        ? "border-primary ring-2 ring-primary/50 shadow-lg" 
+                                                        : "border-border/60 hover:border-border hover:shadow-md"
+                                                )}
+                                            >
+                                                <div className="relative h-28 w-full">
+                                                    <Image
+                                                        src={preset.url}
+                                                        alt={preset.name}
+                                                        fill
+                                                        sizes="(max-width: 768px) 100vw, 300px"
+                                                        className="object-cover transition-transform duration-500 group-hover:scale-110"
+                                                    />
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                                                    {isSelected && (
+                                                        <div className="absolute top-2 right-2 size-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg">
+                                                            <Check className="size-3.5 stroke-[3]" />
+                                                        </div>
+                                                    )}
+                                                    <div className="absolute bottom-2 left-3 right-3">
+                                                        <span className="text-[10px] font-black uppercase tracking-wider text-primary">
+                                                            {preset.category}
+                                                        </span>
+                                                        <h4 className="text-xs font-bold text-white truncate">
+                                                            {preset.name}
+                                                        </h4>
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </GlassCard>
+
+                            <GlassCard title="Custom Photo Upload or URL" description="Provide your property's real exterior or interior photography.">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                    <div className="p-6 rounded-2xl border border-dashed border-border flex flex-col items-center justify-center text-center gap-3">
+                                        <div className="size-12 rounded-2xl bg-surface-2 flex items-center justify-center text-primary border border-border">
+                                            <Upload className="size-6" />
+                                        </div>
+                                        <div>
+                                            <h4 className="text-sm font-black text-foreground">Upload Photo File</h4>
+                                            <p className="text-xs text-muted-foreground mt-1">PNG, JPG or WebP up to 8MB</p>
+                                        </div>
+                                        <input
+                                            ref={bannerFileInputRef}
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handleBannerFileUpload}
+                                            className="hidden"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => bannerFileInputRef.current?.click()}
+                                            className="mt-2 px-5 py-2.5 rounded-xl neumorphic-primary text-xs font-black uppercase tracking-wider transition-all"
+                                        >
+                                            Browse Device
+                                        </button>
+                                    </div>
+
+                                    <form onSubmit={handleApplyCustomBannerUrl} className="flex flex-col justify-between p-6 rounded-2xl bg-surface-2 border border-border/60">
+                                        <div>
+                                            <h4 className="text-sm font-black text-foreground">Direct Image Link</h4>
+                                            <p className="text-xs text-muted-foreground mt-1">Paste a public Unsplash, Cloudinary, or CDN URL</p>
+                                            <input
+                                                type="url"
+                                                value={customBannerInput}
+                                                onChange={(e) => setCustomBannerInput(e.target.value)}
+                                                placeholder="https://images.unsplash.com/..."
+                                                className="mt-4 w-full rounded-xl neumorphic-inset px-4 py-3 text-xs font-medium focus:outline-none"
+                                            />
+                                        </div>
+                                        <button
+                                            type="submit"
+                                            className="mt-4 w-full py-2.5 rounded-xl neumorphic-extruded hover:text-primary text-xs font-black uppercase tracking-wider transition-all"
+                                        >
+                                            Apply Image URL
+                                        </button>
+                                    </form>
+                                </div>
+                            </GlassCard>
+                        </div>
+                    );
+
+                default:
+                    return null;
+            }
+        };
+
+        return (
+            <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-8"
+            >
+                <div>
+                    <h2 className="text-3xl font-black text-foreground">Personalization</h2>
+                    <p className="text-muted-foreground">Customize branding, themes, banner imagery & accessibility.</p>
+                </div>
+
+                <SubNav 
+                    tabs={SUB_TABS.Personalization} 
                     activeTab={activeSubTab} 
                     onTabChange={setActiveSubTab} 
                 />
@@ -875,8 +1598,8 @@ export function LandlordSettings() {
             >
                 <div className="flex flex-col md:flex-row md:items-center gap-4">
                     <div className="flex-1">
-                        <h2 className="text-3xl font-black text-white">Finance & Utilities</h2>
-                        <p className="text-neutral-400">Configure how you receive payments and manage utility rates.</p>
+                        <h2 className="text-3xl font-black text-foreground">Finance & Utilities</h2>
+                        <p className="text-muted-foreground">Configure how you receive payments and manage utility rates.</p>
                     </div>
                     
                     {/* Property Selector */}
@@ -884,17 +1607,17 @@ export function LandlordSettings() {
                         <div className="flex items-center gap-3 rounded-2xl neumorphic-panel p-1">
                             <div className="flex items-center gap-2 px-3 py-1">
                                 <Building2 className="size-4 text-primary" />
-                                <span className="text-xs font-black text-white whitespace-nowrap">Property:</span>
+                                <span className="text-xs font-black text-foreground whitespace-nowrap">Property:</span>
                             </div>
                             <select
                                 value={selectedPropertyId}
                                 onChange={(e) => setSelectedPropertyId(e.target.value)}
-                                className="bg-transparent text-sm font-black text-white outline-none pr-8 py-2 cursor-pointer appearance-none"
-                                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.5rem center', backgroundSize: '1rem' }}
+                                className="bg-transparent text-sm font-black text-foreground outline-none pr-8 py-2 cursor-pointer appearance-none"
+                                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.5rem center', backgroundSize: '1rem' }}
                             >
-                                <option value="all" className="bg-[#171717]">All Properties</option>
+                                <option value="all" className="bg-surface-1 text-foreground">All Properties</option>
                                 {properties.map(p => (
-                                    <option key={p.id} value={p.id} className="bg-[#171717]">{p.name}</option>
+                                    <option key={p.id} value={p.id} className="bg-surface-1 text-foreground">{p.name}</option>
                                 ))}
                             </select>
                         </div>
@@ -1237,8 +1960,8 @@ export function LandlordSettings() {
                 className="space-y-8"
             >
                 <div>
-                    <h2 className="text-3xl font-black text-white">Security & Login</h2>
-                    <p className="text-neutral-400">Protect your account and manage active sessions.</p>
+                    <h2 className="text-3xl font-black text-foreground">Security & Login</h2>
+                    <p className="text-muted-foreground">Protect your account and manage active sessions.</p>
                 </div>
 
                 <SubNav 
@@ -1261,8 +1984,8 @@ export function LandlordSettings() {
             className="space-y-8"
         >
             <div>
-                <h2 className="text-3xl font-black text-white">Notifications</h2>
-                <p className="text-neutral-400">Choose how and when you want to be alerted.</p>
+                <h2 className="text-3xl font-black text-foreground">Notifications</h2>
+                <p className="text-muted-foreground">Choose how and when you want to be alerted.</p>
             </div>
 
             <SubNav 
@@ -1275,14 +1998,14 @@ export function LandlordSettings() {
                 <GlassCard className="!p-0 overflow-hidden">
                     <table className="w-full text-left">
                         <thead>
-                            <tr className="border-b border-white/5 bg-white/[0.02]">
-                                <th className="px-8 py-5 text-xs font-black uppercase tracking-widest text-neutral-500">Activity Type</th>
-                                <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-neutral-500">Email</th>
-                                <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-neutral-500">Push</th>
-                                <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-neutral-500">SMS</th>
+                            <tr className="border-b border-border/60 bg-surface-2/50">
+                                <th className="px-8 py-5 text-xs font-black uppercase tracking-widest text-muted-foreground">Activity Type</th>
+                                <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-muted-foreground">Email</th>
+                                <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-muted-foreground">Push</th>
+                                <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-muted-foreground">SMS</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-white/5">
+                        <tbody className="divide-y divide-border/40">
                             {[
                                 { label: "New Lease Applications", desc: "When a prospective tenant submits an application." },
                                 { label: "Maintenance Requests", desc: "Urgent notifications for unit repairs." },
@@ -1290,10 +2013,10 @@ export function LandlordSettings() {
                                 { label: "Direct Messages", desc: "Messages from active or prospective tenants." },
                                 { label: "System Announcements", desc: "Product updates and platform news." },
                             ].map((item) => (
-                                <tr key={item.label} className="transition-colors hover:bg-white/[0.01]">
+                                <tr key={item.label} className="transition-colors hover:bg-surface-2/50">
                                     <td className="px-8 py-6">
-                                        <h4 className="text-sm font-black text-white">{item.label}</h4>
-                                        <p className="text-xs text-neutral-500">{item.desc}</p>
+                                        <h4 className="text-sm font-black text-foreground">{item.label}</h4>
+                                        <p className="text-xs text-muted-foreground">{item.desc}</p>
                                     </td>
                                     <td className="px-4 py-6 text-center"><ToggleSwitch enabled={true} onToggle={() => {}} /></td>
                                     <td className="px-4 py-6 text-center"><ToggleSwitch enabled={true} onToggle={() => {}} /></td>
@@ -1302,9 +2025,8 @@ export function LandlordSettings() {
                             ))}
                         </tbody>
                     </table>
-                    <div className="flex items-center justify-end gap-3 border-t border-white/5 p-6 bg-white/[0.02]">
-                        <button className="text-xs font-black text-neutral-400 hover:text-white transition-colors">Reset to Defaults</button>
-                        <button className="rounded-xl neumorphic-extruded px-4 py-2 text-xs font-black transition-all hover:text-primary">Save Preferences</button>
+                    <div className="flex items-center justify-end gap-3 border-t border-border/60 p-6 bg-surface-2/30">
+                        <button className="text-xs font-black text-muted-foreground hover:text-foreground transition-colors">Reset to Defaults</button>
                     </div>
                 </GlassCard>
             </div>
@@ -1318,8 +2040,8 @@ export function LandlordSettings() {
                     return (
                         <GlassCard title="Data Export" description="Download a copy of your records in JSON or CSV format.">
                             <div className="space-y-4 max-w-lg">
-                                <p className="text-xs text-neutral-400">This includes your properties, tenant history, and financial ledgers.</p>
-                                <button className="flex items-center gap-2 rounded-2xl neumorphic-extruded px-6 py-3 text-sm font-black transition-all hover:text-primary">
+                                <p className="text-xs text-muted-foreground">This includes your properties, tenant history, and financial ledgers.</p>
+                                <button className="flex items-center gap-2 rounded-2xl neumorphic-extruded px-6 py-3 text-sm font-black transition-all text-foreground hover:text-primary">
                                     <Download className="size-4" /> Request Data Export
                                 </button>
                             </div>
@@ -1331,8 +2053,8 @@ export function LandlordSettings() {
                             <div className="space-y-6 max-w-lg">
                                 <div className="flex items-center justify-between">
                                     <div className="space-y-1">
-                                        <h4 className="text-sm font-black text-white">Show Completed Quests</h4>
-                                        <p className="text-xs text-neutral-400">Keep the mastery board visible even after completion.</p>
+                                        <h4 className="text-sm font-black text-foreground">Show Completed Quests</h4>
+                                        <p className="text-xs text-muted-foreground">Keep the mastery board visible even after completion.</p>
                                     </div>
                                     <ToggleSwitch 
                                         enabled={!!tourState?.metadata?.show_completed_quests} 
@@ -1340,9 +2062,9 @@ export function LandlordSettings() {
                                     />
                                 </div>
                                 
-                                <div className="pt-6 border-t border-white/5">
-                                    <h4 className="text-sm font-black text-white">Hard Reset</h4>
-                                    <p className="mt-1 text-xs text-neutral-400">This will wipe all tour progress and event logs, allowing you to start all quests from zero.</p>
+                                <div className="pt-6 border-t border-border/60">
+                                    <h4 className="text-sm font-black text-foreground">Hard Reset</h4>
+                                    <p className="mt-1 text-xs text-muted-foreground">This will wipe all tour progress and event logs, allowing you to start all quests from zero.</p>
                                     <button 
                                         onClick={handleHardResetTour}
                                         disabled={isResetting}
@@ -1377,8 +2099,8 @@ export function LandlordSettings() {
                 className="space-y-8"
             >
                 <div>
-                    <h2 className="text-3xl font-black text-white">Data & Privacy</h2>
-                    <p className="text-neutral-400">Manage your data and account longevity.</p>
+                    <h2 className="text-3xl font-black text-foreground">Data & Privacy</h2>
+                    <p className="text-muted-foreground">Manage your data and account longevity.</p>
                 </div>
 
                 <SubNav 
@@ -1397,6 +2119,7 @@ export function LandlordSettings() {
     const renderContent = () => {
         switch (activeTab) {
             case "Identity": return renderIdentity();
+            case "Personalization": return renderPersonalization();
             case "Finance": return renderFinance();
             case "Security": return renderSecurity();
             case "Notifications": return renderNotifications();
@@ -1406,76 +2129,165 @@ export function LandlordSettings() {
     };
 
     return (
-        <div className="min-h-[80vh] flex flex-col lg:flex-row gap-12">
-            {/* Sidebar */}
-            <div className="w-full lg:w-80 flex-shrink-0 space-y-6">
-                <div className="flex items-center gap-4 px-4">
-                    <div className="flex size-12 items-center justify-center rounded-[1.2rem] bg-primary/20 text-primary border border-primary/20">
-                        <Layout className="size-6" />
+        <div className="space-y-10">
+            {/* Top Navigation & Unified Global Save Action Bar */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border/40">
+                <button
+                    type="button"
+                    onClick={handleRequestExit}
+                    className="flex items-center gap-2.5 text-muted-foreground hover:text-primary transition-colors group cursor-pointer w-fit"
+                >
+                    <div className="size-8 rounded-full neumorphic-extruded flex items-center justify-center transition-all group-hover:scale-105 group-hover:text-primary">
+                        <ChevronLeft className="size-4" />
                     </div>
-                    <div>
-                        <h1 className="text-xl font-black text-white">Settings</h1>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Control Center</p>
-                    </div>
-                </div>
+                    <span className="text-sm font-black tracking-wide">Back to Dashboard</span>
+                </button>
 
-                <nav className="space-y-2">
-                    {SIDEBAR_ITEMS.map((item) => {
-                        const Icon = item.icon;
-                        const isActive = activeTab === item.id;
-                        return (
-                            <button
-                                key={item.id}
-                                onClick={() => setActiveTab(item.id)}
-                                className={cn(
-                                    "group relative flex w-full flex-col items-start rounded-[1.5rem] px-6 py-5 transition-all duration-500",
-                                    isActive 
-                                        ? "neumorphic-panel text-primary" 
-                                        : "neumorphic-extruded opacity-70 hover:opacity-100 hover:text-primary"
-                                )}
-                            >
-                                <div className="flex w-full items-center justify-between">
-                                    <Icon className={cn("size-5 transition-transform duration-500", isActive && "scale-110")} />
-                                    {isActive && (
-                                        <motion.div 
-                                            layoutId="active-indicator"
-                                            className="size-1.5 rounded-full bg-primary" 
-                                        />
-                                    )}
-                                </div>
-                                <span className="mt-3 text-sm font-black">{item.label}</span>
-                                <span className="text-[10px] font-medium opacity-60">{item.description}</span>
-                            </button>
-                        );
-                    })}
-                </nav>
+                {/* Global Unified Save Button with Dirty Indicator */}
+                <div className="flex items-center gap-3">
+                    {isDirty && (
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/30 text-xs font-black animate-pulse">
+                            <span className="size-2 rounded-full bg-amber-500" />
+                            <span>Unsaved Changes</span>
+                        </div>
+                    )}
+
+                    <button
+                        type="button"
+                        onClick={handleSaveAll}
+                        disabled={isSaving || !isDirty}
+                        className={cn(
+                            "flex items-center gap-2 rounded-2xl px-6 py-3 text-xs font-black uppercase tracking-wider transition-all shadow-md",
+                            isDirty 
+                                ? "neumorphic-primary text-primary-foreground hover:scale-[1.02] active:scale-95 shadow-primary/20 cursor-pointer"
+                                : "neumorphic-extruded text-muted-foreground opacity-50 cursor-not-allowed"
+                        )}
+                    >
+                        <Save className="size-4" />
+                        <span>{isSaving ? "Saving All…" : isDirty ? "Save All Changes" : "All Changes Saved"}</span>
+                    </button>
+                </div>
             </div>
 
-            {/* Content Area */}
-            <main className="flex-1 min-w-0">
-                <AnimatePresence mode="wait">
-                    <motion.div
-                        key={activeTab}
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        transition={{ duration: 0.3, ease: "easeOut" }}
-                    >
-                        {renderContent()}
-                    </motion.div>
-                </AnimatePresence>
-            </main>
+            <div className="min-h-[80vh] flex flex-col lg:flex-row gap-12">
+                {/* Sidebar */}
+                <div className="w-full lg:w-80 flex-shrink-0 space-y-6">
+                    <div className="flex items-center gap-4 px-4">
+                        <div className="flex size-12 items-center justify-center rounded-[1.2rem] bg-primary/20 text-primary border border-primary/20">
+                            <Layout className="size-6" />
+                        </div>
+                        <div>
+                            <h1 className="text-xl font-black text-foreground">Settings</h1>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Control Center</p>
+                        </div>
+                    </div>
 
-            {isAvatarPickerOpen && (
-                <AvatarPicker 
-                    key={avatarPickerKey}
-                    isOpen={isAvatarPickerOpen}
-                    onClose={() => setIsAvatarPickerOpen(false)}
-                    currentAvatarUrl={profile?.avatar_url || null}
-                    currentBgColor={profile?.avatar_bg_color || null}
-                    onProfileUpdate={handleAvatarPickerUpdate}
+                    <nav className="space-y-2">
+                        {SIDEBAR_ITEMS.map((item) => {
+                            const Icon = item.icon;
+                            const isActive = activeTab === item.id;
+                            return (
+                                <button
+                                    key={item.id}
+                                    type="button"
+                                    onClick={() => setActiveTab(item.id)}
+                                    className={cn(
+                                        "group relative flex w-full flex-col items-start rounded-[1.5rem] px-6 py-5 transition-all duration-300 text-left cursor-pointer",
+                                        isActive 
+                                            ? "neumorphic-panel text-primary font-black shadow-md border-primary/30" 
+                                            : "neumorphic-extruded text-muted-foreground hover:text-foreground"
+                                    )}
+                                >
+                                    <div className="flex w-full items-center justify-between">
+                                        <Icon className={cn("size-5 transition-transform duration-300", isActive ? "scale-110 text-primary" : "text-muted-foreground group-hover:text-foreground")} />
+                                        {isActive && (
+                                            <motion.div 
+                                                layoutId="active-indicator"
+                                                className="size-1.5 rounded-full bg-primary" 
+                                            />
+                                        )}
+                                    </div>
+                                    <span className={cn("mt-3 text-sm font-black transition-colors", isActive ? "text-primary" : "text-foreground group-hover:text-primary")}>
+                                        {item.label}
+                                    </span>
+                                    <span className="text-[10px] font-medium text-muted-foreground mt-0.5">
+                                        {item.description}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </nav>
+                </div>
+
+                {/* Content Area */}
+                <main className="flex-1 min-w-0">
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={activeTab}
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ duration: 0.3, ease: "easeOut" }}
+                        >
+                            {renderContent()}
+                        </motion.div>
+                    </AnimatePresence>
+                </main>
+
+                {isAvatarPickerOpen && (
+                    <AvatarPicker 
+                        key={avatarPickerKey}
+                        isOpen={isAvatarPickerOpen}
+                        onClose={() => setIsAvatarPickerOpen(false)}
+                        currentAvatarUrl={profile?.avatar_url || null}
+                        currentBgColor={profile?.avatar_bg_color || null}
+                        onProfileUpdate={handleAvatarPickerUpdate}
+                    />
+                )}
+
+                {/* Modern Color Picker Modals */}
+                <ColorPickerModal
+                    isOpen={isPrimaryColorPickerOpen}
+                    onClose={() => setIsPrimaryColorPickerOpen(false)}
+                    title="Primary Brand Accent"
+                    subtitle="Used for primary buttons, active tabs, and key interactive elements"
+                    color={brandPrimaryHex}
+                    onChange={(newColor) => {
+                        setBrandPrimaryHex(newColor);
+                        applyBrandCssVariables(newColor, brandSecondaryHex);
+                    }}
                 />
-            )}
+
+                <ColorPickerModal
+                    isOpen={isSecondaryColorPickerOpen}
+                    onClose={() => setIsSecondaryColorPickerOpen(false)}
+                    title="Secondary Ambient Tone"
+                    subtitle="Used for gradients, glowing highlights, and secondary tags"
+                    color={brandSecondaryHex}
+                    onChange={(newColor) => {
+                        setBrandSecondaryHex(newColor);
+                        applyBrandCssVariables(brandPrimaryHex, newColor);
+                    }}
+                />
+
+                {/* Unsaved Changes Exit Protection Modal */}
+                <UnsavedChangesModal
+                    isOpen={isUnsavedModalOpen}
+                    onClose={() => setIsUnsavedModalOpen(false)}
+                    isSaving={isSaving}
+                    onConfirmDiscard={() => {
+                        setIsUnsavedModalOpen(false);
+                        router.push("/landlord/dashboard");
+                    }}
+                    onSaveAndExit={async () => {
+                        const success = await handleSaveAll();
+                        if (success) {
+                            setIsUnsavedModalOpen(false);
+                            router.push("/landlord/dashboard");
+                        }
+                    }}
+                />
+            </div>
         </div>
     );
 }

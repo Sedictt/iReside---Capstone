@@ -288,7 +288,7 @@ export default function RentApplicationPage() {
                                 </div>
                                 <div className="space-y-1 text-right">
                                     <p className="text-[10px] text-white/30 uppercase font-black tracking-widest leading-none">Refundable</p>
-                                    <p className="text-lg font-black text-primary">â‚±25K</p>
+                                    <p className="text-lg font-black text-primary">₱25K</p>
                                 </div>
                             </div>
                         </div>
@@ -382,7 +382,7 @@ export default function RentApplicationPage() {
                                                 <FormField label="Current Vocation" value={formData.occupation} onChange={(v: string) => setFormData(prev => ({ ...prev, occupation: v }))} placeholder="e.g. Senior Creative Director" />
                                             </div>
                                             <FormField label="Company Name" value={formData.employer} onChange={(v: string) => setFormData(prev => ({ ...prev, employer: v }))} placeholder="e.g. Apple Inc." />
-                                            <FormField label="Monthly Gross (â‚±)" value={formData.monthlyIncome} onChange={(v: string) => setFormData(prev => ({ ...prev, monthlyIncome: v }))} type="number" placeholder="0.00" />
+                                            <FormField label="Monthly Gross (₱)" value={formData.monthlyIncome} onChange={(v: string) => setFormData(prev => ({ ...prev, monthlyIncome: v }))} type="number" placeholder="0.00" />
                                             
                                             <div className="md:col-span-2">
                                                 <div className="flex items-center gap-2 mb-4">
@@ -391,7 +391,7 @@ export default function RentApplicationPage() {
                                                     <div className="h-px flex-1 bg-white/10" />
                                                 </div>
                                                 <p className="text-[10px] text-amber-400 font-black uppercase tracking-wider mb-2 text-center opacity-60">
-                                                    To avoid future problems and unpaid rent â€” References will be contacted, this is mandatory.
+                                                    To avoid future problems and unpaid rent — References will be contacted, this is mandatory.
                                                 </p>
                                             </div>
                                             <FormField label="Reference Person" value={formData.referenceName} onChange={(v: string) => setFormData(prev => ({ ...prev, referenceName: v }))} placeholder="Employer or Previous Landlord" />
@@ -468,7 +468,7 @@ export default function RentApplicationPage() {
                                                         <p className="text-white/40 text-sm leading-relaxed">
                                                             I acknowledge that completion of this form does not guarantee residency. Moving in requires <span className="text-amber-500 font-black italic underline decoration-amber-500/30">Upfront Payment (1 Month Advance & 2 Months Security Deposit)</span>. 
                                                             <br />
-                                                            <span className="text-red-400 font-black text-xs">âŒ No Installments. No "pay later" arrangements.</span>
+                                                            <span className="text-red-400 font-black text-xs">❌ No Installments. No "pay later" arrangements.</span>
                                                         </p>
                                                     </div>
                                                 </div>
@@ -559,29 +559,29 @@ export default function RentApplicationPage() {
 
 const PROPERTY_UNITS: Record<string, any[]> = {
     "1": [ // Skyline Lofts
-        { id: "101", name: "Unit 101", floor: "1st Floor", status: "Available", price: "-â‚±1,500" },
-        { id: "201", name: "Unit 201", floor: "2nd Floor", status: "Available", price: "+â‚±0" },
-        { id: "305", name: "Unit 305", floor: "3rd Floor", status: "Available", price: "+â‚±1,200" },
-        { id: "412", name: "Unit 412", floor: "4th Floor", status: "Limited", price: "+â‚±2,000" },
-        { id: "508", name: "Unit 508", floor: "5th Floor", status: "Available", price: "+â‚±4,500" }
+        { id: "101", name: "Unit 101", floor: "1st Floor", status: "Available", price: "-₱1,500" },
+        { id: "201", name: "Unit 201", floor: "2nd Floor", status: "Available", price: "+₱0" },
+        { id: "305", name: "Unit 305", floor: "3rd Floor", status: "Available", price: "+₱1,200" },
+        { id: "412", name: "Unit 412", floor: "4th Floor", status: "Limited", price: "+₱2,000" },
+        { id: "508", name: "Unit 508", floor: "5th Floor", status: "Available", price: "+₱4,500" }
     ],
     "2": [ // The Garden Residences
-        { id: "G1", name: "Unit G1", floor: "Ground Floor", status: "Available", price: "+â‚±0" },
-        { id: "G2", name: "Unit G2", floor: "Ground Floor", status: "Limited", price: "+â‚±500" },
-        { id: "T3", name: "Unit T3", floor: "Top Floor", status: "Available", price: "+â‚±1,000" }
+        { id: "G1", name: "Unit G1", floor: "Ground Floor", status: "Available", price: "+₱0" },
+        { id: "G2", name: "Unit G2", floor: "Ground Floor", status: "Limited", price: "+₱500" },
+        { id: "T3", name: "Unit T3", floor: "Top Floor", status: "Available", price: "+₱1,000" }
     ],
     "3": [ // Metro Studio B
-        { id: "B1", name: "Unit B1", floor: "Basement", status: "Available", price: "+â‚±0" },
-        { id: "B4", name: "Unit B4", floor: "2nd Floor", status: "Available", price: "+â‚±300" }
+        { id: "B1", name: "Unit B1", floor: "Basement", status: "Available", price: "+₱0" },
+        { id: "B4", name: "Unit B4", floor: "2nd Floor", status: "Available", price: "+₱300" }
     ],
     "4": [ // Lakeside Villa
-        { id: "V1", name: "Villa 1", floor: "Main Wing", status: "Available", price: "+â‚±0" },
-        { id: "V3", name: "Villa 3", floor: "East Wing", status: "Limited", price: "+â‚±2,500" }
+        { id: "V1", name: "Villa 1", floor: "Main Wing", status: "Available", price: "+₱0" },
+        { id: "V3", name: "Villa 3", floor: "East Wing", status: "Limited", price: "+₱2,500" }
     ],
     "5": [ // Downtown Apartment
-        { id: "D101", name: "Unit 101", floor: "1st Floor", status: "Available", price: "+â‚±0" },
-        { id: "D105", name: "Unit 105", floor: "1st Floor", status: "Available", price: "+â‚±800" },
-        { id: "D203", name: "Unit 203", floor: "2nd Floor", status: "Available", price: "+â‚±1,500" }
+        { id: "D101", name: "Unit 101", floor: "1st Floor", status: "Available", price: "+₱0" },
+        { id: "D105", name: "Unit 105", floor: "1st Floor", status: "Available", price: "+₱800" },
+        { id: "D203", name: "Unit 203", floor: "2nd Floor", status: "Available", price: "+₱1,500" }
     ]
 };
 

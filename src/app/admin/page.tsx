@@ -1,5 +1,10 @@
+/**
+ * @deprecated [DEPRECATED - Turnkey Architecture]
+ * Legacy admin root route.
+ * Redirects to /landlord/dashboard.
+ */
 import { redirect } from "next/navigation";
 
 export default function AdminPage() {
-    redirect("/admin/dashboard");
+    redirect("/landlord/dashboard");
 }

@@ -1,14 +1,13 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import VisualBuilder from "@/components/landlord/visual-planner/VisualBuilder";
 import { MapSetupWizard } from "@/components/landlord/visual-planner/MapSetupWizard";
 import { PropertySelectorHub } from "@/components/landlord/community/PropertySelectorHub";
 import { useProperty } from "@/context/PropertyContext";
 import { Map } from "lucide-react";
-
-type MapState = "loading" | "no-property" | "setup" | "ready";
+import { VisualPlannerSkeleton } from "@/components/landlord/visual-planner/components/VisualPlannerSkeleton";
 
 function UnitMapContent() {
     const searchParams = useSearchParams();
@@ -16,49 +15,6 @@ function UnitMapContent() {
     const isPreviewEmptyFloor = preview === "empty-floor" || preview === "setup" || preview === "true";
 
     const { selectedPropertyId, selectedProperty, loading, properties } = useProperty();
-    const [mapState, setMapState] = useState<MapState>("loading");
-    const [setupKey, setSetupKey] = useState(0);
-
-    useEffect(() => {
-        if (isPreviewEmptyFloor) {
-            setMapState("setup");
-            return;
-        }
-
-        if (loading && properties.length === 0) {
-            setMapState("loading");
-            return;
-        }
-
-        if (!selectedPropertyId || selectedPropertyId === "all") {
-            setMapState("no-property");
-            return;
-        }
-
-        // Check if the map has been set up for this property
-        const checkSetup = async () => {
-            setMapState("loading");
-            try {
-                const res = await fetch(`/api/landlord/unit-map?propertyId=${selectedPropertyId}`);
-                if (!res.ok) {
-                    setMapState("ready"); // fallback to canvas
-                    return;
-                }
-                const data = await res.json() as { isSetupComplete: boolean; totalUnits: number };
-                
-                // If no units exist yet (property just created) or all are placed, go to canvas
-                if (data.totalUnits === 0 || data.isSetupComplete) {
-                    setMapState("ready");
-                } else {
-                    setMapState("setup");
-                }
-            } catch {
-                setMapState("ready"); // fallback on error
-            }
-        };
-
-        void checkSetup();
-    }, [selectedPropertyId, loading, properties.length, setupKey, isPreviewEmptyFloor]);
 
     if (isPreviewEmptyFloor) {
         return (
@@ -67,17 +23,17 @@ function UnitMapContent() {
                     propertyId="preview-property"
                     propertyName="Skyline Residences (Preview)"
                     previewEmptyFloors={true}
-                    onSetupComplete={() => setMapState("ready")}
+                    onSetupComplete={() => {}}
                 />
             </div>
         );
     }
 
-    if (mapState === "loading") {
-        return null;
+    if (loading && properties.length === 0) {
+        return <VisualPlannerSkeleton />;
     }
 
-    if (mapState === "no-property") {
+    if (!selectedPropertyId || selectedPropertyId === "all") {
         return (
             <PropertySelectorHub 
                 title="Visual Planner"
@@ -89,28 +45,16 @@ function UnitMapContent() {
         );
     }
 
-    if (mapState === "setup" && selectedPropertyId && selectedPropertyId !== "all") {
-        return (
-            <div className="flex flex-col h-full">
-                <MapSetupWizard
-                    propertyId={selectedPropertyId}
-                    propertyName={selectedProperty?.name ?? "Your Property"}
-                    onSetupComplete={() => setMapState("ready")}
-                />
-            </div>
-        );
-    }
-
     return (
         <div data-tour-id="tour-unit-map" className="h-full">
-            <VisualBuilder />
+            <VisualBuilder key={selectedPropertyId} propertyId={selectedPropertyId} />
         </div>
     );
 }
 
 export default function UnitMapPage() {
     return (
-        <Suspense fallback={null}>
+        <Suspense fallback={<VisualPlannerSkeleton />}>
             <UnitMapContent />
         </Suspense>
     );

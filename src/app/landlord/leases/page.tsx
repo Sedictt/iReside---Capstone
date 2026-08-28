@@ -413,193 +413,191 @@ function LeasesContent() {
  }
 
  return (
- <div className="mx-auto max-w-7xl space-y-8 px-4 py-8 md:px-8">
- <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
- <div className="space-y-1">
- <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">
- Lease Hub
- </h1>
- <p className="text-sm text-muted-foreground">
- Monitor and manage all tenancy agreements across your portfolio.
- </p>
- </div>
+    <div className="mx-auto max-w-7xl space-y-6 px-4 py-8 md:px-8">
+      {/* ─── Page Header ─────────────────────────────────────────── */}
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">
+            Lease Hub
+          </h1>
+          <p className="text-sm font-medium text-neutral-400">
+            Monitor and manage all tenancy agreements across your portfolio.
+          </p>
+        </div>
 
- <div className="flex flex-wrap items-center gap-3">
- <button 
- onClick={() => window.location.reload()}
- className="group flex h-12 items-center gap-2 rounded-2xl neumorphic-panel px-4 text-xs font-black uppercase tracking-widest text-muted-foreground transition-all hover:border-primary hover:text-primary active:scale-95"
- >
- <RefreshCw className="size-4 transition-transform group-hover:rotate-180 duration-500" />
- Refresh
- </button>
- 
- <button 
- className="flex h-12 items-center gap-2 rounded-2xl neumorphic-primary px-6 text-xs font-black uppercase tracking-widest shadow-primary/20 transition-all hover:bg-primary/90 hover:shadow-xl active:scale-95"
- >
- <Plus className="size-4" />
- New Lease
- </button>
- </div>
- </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <button 
+            onClick={() => window.location.reload()}
+            className="group flex h-11 items-center gap-2 rounded-2xl neumorphic-panel px-4 text-xs font-black uppercase tracking-widest text-neutral-400 transition-all hover:border-primary/30 hover:neumorphic-inset hover:text-white active:scale-95 cursor-pointer"
+          >
+            <RefreshCw className="size-4 transition-transform group-hover:rotate-180 duration-500" />
+            Refresh
+          </button>
+          
+          <button 
+            onClick={() => push("/landlord/applications?action=walk-in")}
+            className="flex h-11 items-center gap-2 rounded-2xl bg-primary px-6 text-xs font-black uppercase tracking-widest text-primary-foreground shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 cursor-pointer"
+          >
+            <Plus className="size-4" />
+            New Lease
+          </button>
+        </div>
+      </div>
 
- {/* Filter & Search Bar */}
- <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
- <div className="relative flex-1 max-w-md">
- <Search className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
- <input 
- type="text" 
- placeholder="Search by tenant name or unit..." 
- className="h-12 w-full rounded-2xl neumorphic-panel pl-11 pr-4 text-sm focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all"
- value={searchQuery}
- onChange={(e) => setSearchQuery(e.target.value)}
- />
- </div>
- 
- <div className="flex items-center gap-3">
- <div className="flex h-12 items-center gap-2 rounded-2xl neumorphic-panel px-4 text-sm font-bold text-foreground">
- <Building2 className="size-4 text-muted-foreground" />
- <select 
- value={selectedPropertyId}
- onChange={(e) => setSelectedPropertyId(e.target.value as any)}
- className="bg-transparent focus:outline-none cursor-pointer"
- >
- <option value="all">All Properties</option>
- {properties.map(p => (
- <option key={p.id} value={p.id}>{p.name}</option>
- ))}
- </select>
- </div>
- 
- <DropdownMenu>
- <DropdownMenuTrigger asChild>
- <button className="flex h-12 size-12 items-center justify-center rounded-2xl neumorphic-panel text-muted-foreground hover:border-primary hover:text-primary transition-all cursor-pointer">
- <Filter className="size-5" />
- </button>
- </DropdownMenuTrigger>
- <DropdownMenuContent align="end" className="w-64 p-2">
- <div className="px-3 py-2">
- <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">
- Refine Results
- </p>
- </div>
- <DropdownMenuSeparator className="mx-2 bg-border/40" />
- 
- <div className="mt-2 px-3 pb-1">
- <p className="text-[11px] font-bold text-muted-foreground/70">Sort by Rent</p>
- </div>
- <DropdownMenuItem 
- onClick={() => setSortBy("rent-desc")}
- className={cn("gap-3", sortBy === "rent-desc" && "bg-primary/5 text-primary")}
- >
- <div className={cn("flex size-8 items-center justify-center rounded-lg transition-colors", sortBy === "rent-desc" ? "bg-primary/20" : "bg-primary/10 text-primary")}>
- <ArrowUp01 className="size-4" />
- </div>
- <div className="flex flex-col">
- <span className="font-semibold">High to Low</span>
- <span className="text-[10px] text-muted-foreground">Highest rent first</span>
- </div>
- </DropdownMenuItem>
- <DropdownMenuItem 
- onClick={() => setSortBy("rent-asc")}
- className={cn("gap-3", sortBy === "rent-asc" && "bg-primary/5 text-primary")}
- >
- <div className={cn("flex size-8 items-center justify-center rounded-lg transition-colors", sortBy === "rent-asc" ? "bg-primary/20" : "neumorphic-inset text-muted-foreground")}>
- <ArrowDown10 className="size-4" />
- </div>
- <div className="flex flex-col">
- <span className="font-semibold">Low to High</span>
- <span className="text-[10px] text-muted-foreground">Lowest rent first</span>
- </div>
- </DropdownMenuItem>
+      {/* ─── Unified Command Bar ──────────────────────────────────── */}
+      <div className="flex flex-col items-center justify-between gap-4 border border-white/5 neumorphic-panel p-3 md:p-4 rounded-3xl backdrop-blur-xl xl:flex-row">
+        {/* Segmented Pill Tabs */}
+        <div className="flex items-center gap-1 rounded-2xl neumorphic-extruded p-1 w-full sm:w-auto overflow-x-auto">
+          {[
+            { id: "active", label: "Active", icon: ShieldCheck },
+            { id: "renewals", label: "Renewals", icon: RefreshCw },
+            { id: "history", label: "Archive", icon: History },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={cn(
+                "flex items-center gap-2 rounded-xl px-5 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap cursor-pointer",
+                activeTab === tab.id
+                  ? "neumorphic-panel text-white ring-1 ring-border shadow-sm"
+                  : "text-neutral-400 hover:neumorphic-inset hover:text-white"
+              )}
+            >
+              <tab.icon className={cn("size-3.5", activeTab === tab.id ? "text-primary" : "text-neutral-400")} />
+              {tab.label}
+            </button>
+          ))}
+        </div>
 
- <DropdownMenuSeparator className="mx-2 my-2 bg-border/40" />
- 
- <div className="px-3 pb-1">
- <p className="text-[11px] font-bold text-muted-foreground/70">Lease Expiry</p>
- </div>
- <DropdownMenuItem 
- onClick={() => setSortBy("date-asc")}
- className={cn("gap-3", sortBy === "date-asc" && "bg-amber-500/5 text-amber-500")}
- >
- <div className={cn("flex size-8 items-center justify-center rounded-lg transition-colors", sortBy === "date-asc" ? "bg-amber-500/20" : "bg-amber-500/10 text-amber-500")}>
- <CalendarRange className="size-4" />
- </div>
- <div className="flex flex-col">
- <span className="font-semibold">Soonest First</span>
- <span className="text-[10px] text-muted-foreground">Urgent renewals top</span>
- </div>
- </DropdownMenuItem>
+        {/* Search, Scope, and Refine Controls */}
+        <div className="flex w-full items-center gap-3 xl:w-auto">
+          <div className="relative flex-1 xl:w-72">
+            <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-neutral-400" />
+            <input 
+              type="text" 
+              placeholder="Search tenant or unit..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-11 w-full rounded-2xl neumorphic-extruded pl-10 pr-4 text-xs font-black text-white focus:border-primary/50 focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all placeholder:text-neutral-500"
+            />
+          </div>
 
- <DropdownMenuSeparator className="mx-2 my-2 bg-border/40" />
- 
- <DropdownMenuItem 
- onClick={() => setSortBy("default")}
- className="gap-3 text-destructive focus:bg-destructive/10 focus:text-destructive"
- >
- <div className="flex size-8 items-center justify-center rounded-lg bg-destructive/10">
- <RotateCcw className="size-4" />
- </div>
- <span className="font-bold uppercase tracking-wider text-[11px]">Reset All Filters</span>
- </DropdownMenuItem>
- </DropdownMenuContent>
- </DropdownMenu>
- </div>
- </div>
+          <div className="flex h-11 items-center gap-2 rounded-2xl neumorphic-extruded px-3.5 text-xs font-black uppercase tracking-wider text-neutral-300">
+            <Building2 className="size-4 text-neutral-400 shrink-0" />
+            <select 
+              value={selectedPropertyId}
+              onChange={(e) => setSelectedPropertyId(e.target.value as any)}
+              className="bg-transparent text-xs font-black text-white focus:outline-none cursor-pointer pr-1"
+            >
+              <option value="all" className="bg-zinc-900 text-white">All Properties</option>
+              {properties.map(p => (
+                <option key={p.id} value={p.id} className="bg-zinc-900 text-white">{p.name}</option>
+              ))}
+            </select>
+          </div>
 
- <div className="flex items-center gap-1 border-b border-white/5/60">
- {[
- { id: "active", label: "Active", icon: ShieldCheck },
- { id: "renewals", label: "Renewals", icon: RefreshCw },
- { id: "history", label: "Archive", icon: History },
- ].map((tab) => (
- <button
- key={tab.id}
- onClick={() => setActiveTab(tab.id as any)}
- className={cn(
- "relative flex items-center gap-2.5 px-6 py-4 text-[13px] font-bold transition-all",
- activeTab === tab.id
- ? "text-primary"
- : "text-muted-foreground hover:text-foreground",
- )}
- >
- <tab.icon className={cn("size-4", activeTab === tab.id ? "text-primary" : "text-muted-foreground/60")} />
- {tab.label}
- {activeTab === tab.id && (
- <motion.div
- layoutId="activeHubTab"
- className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
- transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
- />
- )}
- </button>
- ))}
- </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex size-11 shrink-0 items-center justify-center rounded-2xl neumorphic-extruded text-neutral-400 hover:neumorphic-inset hover:text-white transition-all cursor-pointer">
+                <Filter className="size-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64 p-2 rounded-2xl neumorphic-panel border border-white/10">
+              <div className="px-3 py-2">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">
+                  Refine Results
+                </p>
+              </div>
+              <DropdownMenuSeparator className="mx-2 bg-white/10" />
+              
+              <div className="mt-2 px-3 pb-1">
+                <p className="text-[11px] font-bold text-muted-foreground/70">Sort by Rent</p>
+              </div>
+              <DropdownMenuItem 
+                onClick={() => setSortBy("rent-desc")}
+                className={cn("gap-3 rounded-xl cursor-pointer", sortBy === "rent-desc" && "bg-primary/10 text-primary font-bold")}
+              >
+                <div className={cn("flex size-8 items-center justify-center rounded-lg transition-colors", sortBy === "rent-desc" ? "bg-primary/20" : "bg-primary/10 text-primary")}>
+                  <ArrowUp01 className="size-4" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-semibold text-xs">High to Low</span>
+                  <span className="text-[9px] text-muted-foreground">Highest rent first</span>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => setSortBy("rent-asc")}
+                className={cn("gap-3 rounded-xl cursor-pointer", sortBy === "rent-asc" && "bg-primary/10 text-primary font-bold")}
+              >
+                <div className={cn("flex size-8 items-center justify-center rounded-lg transition-colors", sortBy === "rent-asc" ? "bg-primary/20" : "neumorphic-inset text-muted-foreground")}>
+                  <ArrowDown10 className="size-4" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-semibold text-xs">Low to High</span>
+                  <span className="text-[9px] text-muted-foreground">Lowest rent first</span>
+                </div>
+              </DropdownMenuItem>
 
- <div className="mt-6">
- {activeTab === "renewals" ? (
- <LandlordRenewalReview searchQuery={searchQuery} />
- ) : activeTab === "active" ? (
- <ActiveLeasesTab 
- searchQuery={searchQuery} 
- sortBy={sortBy}
- onClearSearch={() => {
- setSearchQuery("");
- setSortBy("default");
- }} 
- />
- ) : (
- <ArchiveTab 
- searchQuery={searchQuery} 
- sortBy={sortBy}
- onClearSearch={() => {
- setSearchQuery("");
- setSortBy("default");
- }} 
- />
- )}
- </div>
- </div>
- );
+              <DropdownMenuSeparator className="mx-2 my-2 bg-white/10" />
+              
+              <div className="px-3 pb-1">
+                <p className="text-[11px] font-bold text-muted-foreground/70">Lease Expiry</p>
+              </div>
+              <DropdownMenuItem 
+                onClick={() => setSortBy("date-asc")}
+                className={cn("gap-3 rounded-xl cursor-pointer", sortBy === "date-asc" && "bg-amber-500/10 text-amber-500 font-bold")}
+              >
+                <div className={cn("flex size-8 items-center justify-center rounded-lg transition-colors", sortBy === "date-asc" ? "bg-amber-500/20" : "bg-amber-500/10 text-amber-500")}>
+                  <CalendarRange className="size-4" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-semibold text-xs">Soonest First</span>
+                  <span className="text-[9px] text-muted-foreground">Urgent renewals top</span>
+                </div>
+              </DropdownMenuItem>
+
+              <DropdownMenuSeparator className="mx-2 my-2 bg-white/10" />
+              
+              <DropdownMenuItem 
+                onClick={() => setSortBy("default")}
+                className="gap-3 rounded-xl text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer"
+              >
+                <div className="flex size-8 items-center justify-center rounded-lg bg-destructive/10">
+                  <RotateCcw className="size-4" />
+                </div>
+                <span className="font-black uppercase tracking-wider text-[10px]">Reset All Filters</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+
+      {/* ─── Tab Content Views ────────────────────────────────────── */}
+      <div className="mt-4">
+        {activeTab === "renewals" ? (
+          <LandlordRenewalReview searchQuery={searchQuery} />
+        ) : activeTab === "active" ? (
+          <ActiveLeasesTab 
+            searchQuery={searchQuery} 
+            sortBy={sortBy}
+            onClearSearch={() => {
+              setSearchQuery("");
+              setSortBy("default");
+            }} 
+          />
+        ) : (
+          <ArchiveTab 
+            searchQuery={searchQuery} 
+            sortBy={sortBy}
+            onClearSearch={() => {
+              setSearchQuery("");
+              setSortBy("default");
+            }} 
+          />
+        )}
+      </div>
+    </div>
+  );
 }
 
 

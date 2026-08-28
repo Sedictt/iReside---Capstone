@@ -17,7 +17,8 @@ import {
     Zap,
     ShieldCheck,
     FileText,
-    Calendar
+    Calendar,
+    BookOpen
 } from "lucide-react";
 import { signOut } from "@/lib/supabase/client-auth";
 import { RoleSidebar, type SidebarNavSection } from "@/components/navigation/RoleSidebar";
@@ -187,6 +188,12 @@ export function Sidebar({
                     href: "/landlord/settings", 
                     icon: Settings,
                     description: "Payout bank accounts, notification preferences & security settings"
+                },
+                { 
+                    label: "Documentation", 
+                    href: "/landlord/docs", 
+                    icon: BookOpen,
+                    description: "User manual, FAQs, troubleshooting & IT handover runbook"
                 },
             ]
         },

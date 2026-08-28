@@ -15,10 +15,11 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const propertyId = searchParams.get("propertyId") ?? undefined;
   const status = searchParams.get("status") ?? undefined;
+  const unitId = searchParams.get("unitId") ?? undefined;
 
   try {
     const leaseService = new LeaseService(supabase);
-    const leases = await leaseService.listLeasesForLandlord(userId, { propertyId, status });
+    const leases = await leaseService.listLeasesForLandlord(userId, { propertyId, status, unitId });
     return NextResponse.json(leases || []);
   } catch (error) {
     console.error("[landlord-leases] Unexpected error:", error);

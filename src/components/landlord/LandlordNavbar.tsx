@@ -4,7 +4,7 @@ import { Bell, Building2, LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Logo } from "@/components/ui/Logo";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import { useAuth } from "@/hooks/useAuth";
 import { signOut } from "@/lib/supabase/client-auth";
 import { ProfileWidget } from "./ProfileWidget";
@@ -29,10 +29,10 @@ export function LandlordNavbar() {
             <div className="flex items-center gap-6 md:gap-8">
                 <Link 
                     href="/landlord/dashboard" 
-                    className="flex items-center transition-transform hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xl p-1 shrink-0"
-                    aria-label="iReside Dashboard Home"
+                    className="flex items-center transition-transform hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xl p-1 max-w-[220px] sm:max-w-xs overflow-hidden"
+                    aria-label="Dashboard Home"
                 >
-                    <Logo className="h-10 w-32" aria-hidden="true" />
+                    <BrandLogo size="md" className="w-full min-w-0" />
                 </Link>
                 <div className="hidden md:flex items-center gap-4 pl-2 lg:pl-4" role="menubar">
                     {NAV_ITEMS.map((item) => {

@@ -36,6 +36,8 @@ import type { InvoiceListItem, InvoiceReadingDetail } from "@/lib/billing/server
 import { formatPhpCurrency } from "@/lib/billing/utils";
 import { cn } from "@/lib/utils";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
+import { OfflineStorage } from "@/lib/offline/offlineStorage";
+import { toast } from "sonner";
 
 type EnrichedInvoice = InvoiceListItem & { 
     paymentItems?: Array<{ id: string; label: string; amount: number; category: string }>;
@@ -75,12 +77,31 @@ export default function FinanceHubPage() {
         let alive = true;
         const load = async () => {
             try {
-                const response = await fetch("/api/tenant/payments", { cache: "no-store" });
-                if (!response.ok) throw new Error();
-                const paymentsData = (await response.json()) as PaymentsPayload;
-                if (alive) setPayload(paymentsData);
+                if (typeof navigator !== "undefined" && navigator.onLine) {
+                    const response = await fetch("/api/tenant/payments", { cache: "no-store" });
+                    if (response.ok) {
+                        const paymentsData = (await response.json()) as PaymentsPayload;
+                        if (alive) {
+                            setPayload(paymentsData);
+                            OfflineStorage.set("tenant_payments_payload", paymentsData, null, "payments");
+                        }
+                        return;
+                    }
+                }
+
+                // Offline fallback
+                const cached = OfflineStorage.get<PaymentsPayload>("tenant_payments_payload");
+                if (cached?.data && alive) {
+                    setPayload(cached.data);
+                    toast.info("Offline Mode: Loaded billing ledger and invoices from local cache.");
+                }
             } catch (error) {
-                console.error("Error fetching finance data:", error);
+                console.warn("[FinanceHub] Online fetch failed, checking offline cache:", error);
+                const cached = OfflineStorage.get<PaymentsPayload>("tenant_payments_payload");
+                if (cached?.data && alive) {
+                    setPayload(cached.data);
+                    toast.info("Loaded cached billing ledger offline.");
+                }
             } finally {
                 if (alive) setLoading(false);
             }

@@ -239,6 +239,11 @@ export class LeaseService {
       query = query.eq("unit.property_id", filters.propertyId);
     }
 
+    // Apply unit filter if provided
+    if (filters.unitId) {
+      query = query.eq("unit_id", filters.unitId);
+    }
+
     // Apply status filter (supports comma-separated values)
     if (filters.status) {
       const statuses = filters.status

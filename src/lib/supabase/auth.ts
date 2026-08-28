@@ -4,9 +4,9 @@ import { redirect } from 'next/navigation'
 import { createClient } from './server'
 
 const getDashboardPathForRole = (role: string) => {
-    if (role === 'admin') return '/admin/dashboard'
-    if (role === 'landlord') return '/landlord/dashboard'
-    return '/tenant/dashboard'
+    if (role === 'tenant') return '/tenant/dashboard'
+    // Both landlord and legacy admin roles map to turnkey landlord dashboard
+    return '/landlord/dashboard'
 }
 
 // eslint-disable-next-line react-doctor/server-auth-actions

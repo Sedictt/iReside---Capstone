@@ -96,12 +96,12 @@ export function VisualCanvas({
                     key={unit.id}
                     className={`absolute border-2 rounded-lg cursor-pointer transition-all hover:shadow-lg ${
                         unit.status === 'occupied' 
-                            ? 'bg-emerald-500/20 border-emerald-500/50' 
+                            ? 'bg-blue-500/20 border-blue-500/50' 
                             : unit.status === 'vacant'
-                            ? 'bg-blue-500/20 border-blue-500/50'
+                            ? 'bg-emerald-500/20 border-emerald-500/50'
                             : unit.status === 'maintenance'
-                            ? 'bg-amber-500/20 border-amber-500/50'
-                            : 'bg-rose-500/20 border-rose-500/50'
+                            ? 'bg-rose-500/20 border-rose-500/50'
+                            : 'bg-amber-500/20 border-amber-500/50'
                     }`}
                     style={{
                         left: `${unit.x}px`,

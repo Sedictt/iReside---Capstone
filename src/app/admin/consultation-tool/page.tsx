@@ -1,3 +1,9 @@
+/**
+ * @deprecated [DEPRECATED - Turnkey Architecture]
+ * Legacy multi-tenant admin consultation tool page.
+ * Retained for non-destructive technical reference only.
+ * Excluded from active turnkey system architecture, documentation, and diagrams.
+ */
 "use client";
 
 import dynamic from 'next/dynamic';

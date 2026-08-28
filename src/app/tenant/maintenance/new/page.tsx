@@ -26,6 +26,11 @@ import {
 import { cn } from "@/lib/utils";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { MAINTENANCE_CATEGORIES } from "@/lib/constants/maintenance-categories";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import { mutationQueue } from "@/lib/offline/mutationQueue";
+import { OfflineBlobStorage } from "@/lib/offline/offlineStorage";
+import { toast } from "sonner";
+import { WifiOff, MessageSquare } from "lucide-react";
 export default function NewMaintenanceRequest() {
     const router = useRouter();
     const [title, setTitle] = useState("");
@@ -65,6 +70,8 @@ export default function NewMaintenanceRequest() {
         setPreviews(newPreviews);
     };
 
+    const { isOnline } = useNetworkStatus();
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!title || !description || !category) {
@@ -74,6 +81,40 @@ export default function NewMaintenanceRequest() {
 
         setIsSubmitting(true);
         setError(null);
+
+        // Offline Fallback Handler
+        if (typeof navigator !== "undefined" && !navigator.onLine) {
+            try {
+                // Save images locally
+                const stagedImageIds: string[] = [];
+                for (let i = 0; i < previews.length; i++) {
+                    const blobId = `maint_${Date.now()}_${i}`;
+                    await OfflineBlobStorage.saveBlob(blobId, previews[i], { title, category });
+                    stagedImageIds.push(blobId);
+                }
+
+                mutationQueue.enqueue(
+                    "SUBMIT_MAINTENANCE_TICKET",
+                    "/api/tenant/maintenance",
+                    "POST",
+                    {
+                        title,
+                        description,
+                        category,
+                        fixItMyself,
+                        stagedImageIds,
+                        offlineReportedAt: Date.now(),
+                    },
+                    `Maintenance: ${title} (Offline Staged)`
+                );
+
+                toast.success("Request saved offline! It will be dispatched automatically once your device reconnects.");
+                router.push("/tenant/dashboard?maintenance=queued");
+                return;
+            } catch (err) {
+                console.error("Offline staging error:", err);
+            }
+        }
 
         try {
             let imageUrls: string[] = [];
@@ -118,13 +159,64 @@ export default function NewMaintenanceRequest() {
             router.push("/tenant/dashboard?maintenance=success");
             router.refresh();
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Something went wrong.");
+            console.warn("[NewMaintenanceRequest] Online submit failed, enqueuing offline:", err);
+            // Fallback to offline queue
+            mutationQueue.enqueue(
+                "SUBMIT_MAINTENANCE_TICKET",
+                "/api/tenant/maintenance",
+                "POST",
+                {
+                    title,
+                    description,
+                    category,
+                    fixItMyself,
+                    offlineReportedAt: Date.now(),
+                },
+                `Maintenance: ${title} (Offline Staged)`
+            );
+            toast.success("Network interrupted: Request saved locally and queued for dispatch!");
+            router.push("/tenant/dashboard?maintenance=queued");
+        } finally {
             setIsSubmitting(false);
         }
     };
 
     return (
         <div className="flex-1 w-full max-w-4xl mx-auto">
+            {/* OFFLINE EMERGENCY ACTION BAR */}
+            {!isOnline && (
+                <div className="mb-6 rounded-2xl bg-amber-500/10 border border-amber-500/30 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="size-10 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                            <WifiOff className="size-5" />
+                        </div>
+                        <div>
+                            <h3 className="text-sm font-black text-foreground">You are currently offline</h3>
+                            <p className="text-xs text-muted-foreground">
+                                For urgent hazards (burst pipes, electrical sparks), use direct contact below:
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <a
+                            href="tel:09171234567"
+                            className="flex-1 sm:flex-initial h-9 px-3.5 rounded-xl bg-primary text-primary-foreground font-black text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-transform"
+                        >
+                            <Phone className="size-3.5" />
+                            Direct Call
+                        </a>
+                        <a
+                            href={`sms:09171234567?body=URGENT%20Maintenance%20Request:%20${encodeURIComponent(title || 'Property Issue')}`}
+                            className="flex-1 sm:flex-initial h-9 px-3.5 rounded-xl neumorphic-extruded text-foreground font-black text-xs flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+                        >
+                            <MessageSquare className="size-3.5" />
+                            SMS Dispatch
+                        </a>
+                    </div>
+                </div>
+            )}
+
             <div className="mb-8 flex items-center justify-between">
                 <div>
                     <button

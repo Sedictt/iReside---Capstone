@@ -27,6 +27,8 @@ import { toast } from "sonner";
 import { useProperty } from "@/context/PropertyContext";
 import type { BillingWorkspace } from "@/lib/billing/server";
 import { BillingOperationsPanel } from "@/components/landlord/BillingOperationsPanel";
+import { OfflineStorage } from "@/lib/offline/offlineStorage";
+import { mutationQueue } from "@/lib/offline/mutationQueue";
 
 type ReadingDraft = {
  leaseId: string;
@@ -84,287 +86,401 @@ export function UtilityBillingDashboard() {
  
  const [drafts, setDrafts] = useState<ReadingDraft[]>([]);
 
- const fetchData = useCallback(async () => {
- try {
- setLoading(true);
- const [workspaceRes, readingsRes] = await Promise.all([
- fetch("/api/landlord/payment-settings"),
- fetch(`/api/landlord/utility-readings?month=${selectedMonth}`)
- ]);
+ 	const fetchData = useCallback(async () => {
+		try {
+			setLoading(true);
 
- if (!workspaceRes.ok || !readingsRes.ok) throw new Error("Failed to load billing data");
+			// Attempt live fetch if online
+			if (typeof navigator !== "undefined" && navigator.onLine) {
+				const [workspaceRes, readingsRes] = await Promise.all([
+					fetch("/api/landlord/payment-settings"),
+					fetch(`/api/landlord/utility-readings?month=${selectedMonth}`)
+				]);
 
- const workspaceData = await workspaceRes.json();
- const readingsData = await readingsRes.json();
- 
- setWorkspace(workspaceData);
+				if (workspaceRes.ok && readingsRes.ok) {
+					const workspaceData = await workspaceRes.json();
+					const readingsData = await readingsRes.json();
+					setWorkspace(workspaceData);
 
- const latestRes = await fetch("/api/landlord/utility-readings");
- const latestData = await latestRes.json();
- const allReadings = latestData.readings || [];
+					const latestRes = await fetch("/api/landlord/utility-readings");
+					const latestData = latestRes.ok ? await latestRes.json() : { readings: [] };
+					const allReadings = latestData.readings || [];
 
- // eslint-disable-next-line @typescript-eslint/no-explicit-any
- const newDrafts: ReadingDraft[] = workspaceData.activeLeases.map((lease: any) => {
- // eslint-disable-next-line @typescript-eslint/no-explicit-any
- const currentWater = readingsData.readings.find((r: any) => r.lease_id === lease.id && r.utility_type === "water");
- // eslint-disable-next-line @typescript-eslint/no-explicit-any
- const currentElec = readingsData.readings.find((r: any) => r.lease_id === lease.id && r.utility_type === "electricity");
- 
- // eslint-disable-next-line @typescript-eslint/no-explicit-any
- const prevWaterReading = allReadings.find((r: any) => 
- r.lease_id === lease.id && 
- r.utility_type === "water" && 
- r.id !== currentWater?.id
- );
- // eslint-disable-next-line @typescript-eslint/no-explicit-any
- const prevElecReading = allReadings.find((r: any) => 
- r.lease_id === lease.id && 
- r.utility_type === "electricity" && 
- r.id !== currentElec?.id
- );
+					// Cache snapshots locally for offline use
+					OfflineStorage.set("utility_workspace", workspaceData, null, "utility");
+					OfflineStorage.set(`utility_readings_${selectedMonth}`, readingsData, null, "utility");
+					OfflineStorage.set("utility_all_readings", latestData, null, "utility");
 
- // Get rates from workspace utilityConfigs
- // eslint-disable-next-line @typescript-eslint/no-explicit-any
- const propertyWaterConfig = workspaceData.utilityConfigs.find((c: any) => c.property_id === lease.property?.id && c.utility_type === "water" && c.unit_id === null);
- // eslint-disable-next-line @typescript-eslint/no-explicit-any
- const unitWaterConfig = workspaceData.utilityConfigs.find((c: any) => c.unit_id === lease.unit?.id && c.utility_type === "water");
- 
- // eslint-disable-next-line @typescript-eslint/no-explicit-any
- const propertyElecConfig = workspaceData.utilityConfigs.find((c: any) => c.property_id === lease.property?.id && c.utility_type === "electricity" && c.unit_id === null);
- // eslint-disable-next-line @typescript-eslint/no-explicit-any
- const unitElecConfig = workspaceData.utilityConfigs.find((c: any) => c.unit_id === lease.unit?.id && c.utility_type === "electricity");
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
+					const newDrafts: ReadingDraft[] = (workspaceData.activeLeases || []).map((lease: any) => {
+						// eslint-disable-next-line @typescript-eslint/no-explicit-any
+						const currentWater = readingsData.readings.find((r: any) => r.lease_id === lease.id && r.utility_type === "water");
+						// eslint-disable-next-line @typescript-eslint/no-explicit-any
+						const currentElec = readingsData.readings.find((r: any) => r.lease_id === lease.id && r.utility_type === "electricity");
 
- return {
- leaseId: lease.id,
- unitName: lease.unit?.name || "Unknown",
- propertyId: lease.property?.id || "",
- rentAmount: lease.monthly_rent || 0,
- water: {
- previous: currentWater ? currentWater.previous_reading : (prevWaterReading?.current_reading || 0),
- current: currentWater ? currentWater.current_reading.toString() : "",
- exists: !!currentWater,
- rate: unitWaterConfig?.rate_per_unit || propertyWaterConfig?.rate_per_unit || 0
- },
- electricity: {
- previous: currentElec ? currentElec.previous_reading : (prevElecReading?.current_reading || 0),
- current: currentElec ? currentElec.current_reading.toString() : "",
- exists: !!currentElec,
- rate: unitElecConfig?.rate_per_unit || propertyElecConfig?.rate_per_unit || 0
- }
- };
- });
+						// eslint-disable-next-line @typescript-eslint/no-explicit-any
+						const prevWaterReading = allReadings.find((r: any) => 
+							r.lease_id === lease.id && 
+							r.utility_type === "water" && 
+							r.id !== currentWater?.id
+						);
+						// eslint-disable-next-line @typescript-eslint/no-explicit-any
+						const prevElecReading = allReadings.find((r: any) => 
+							r.lease_id === lease.id && 
+							r.utility_type === "electricity" && 
+							r.id !== currentElec?.id
+						);
 
- setDrafts(newDrafts);
- } catch (err) {
- console.error(err);
- toast.error("Failed to load billing information");
- } finally {
- setLoading(false);
- }
- }, [selectedMonth]);
+						// eslint-disable-next-line @typescript-eslint/no-explicit-any
+						const propertyWaterConfig = (workspaceData.utilityConfigs || []).find((c: any) => c.property_id === lease.property?.id && c.utility_type === "water" && c.unit_id === null);
+						// eslint-disable-next-line @typescript-eslint/no-explicit-any
+						const unitWaterConfig = (workspaceData.utilityConfigs || []).find((c: any) => c.unit_id === lease.unit?.id && c.utility_type === "water");
 
- useEffect(() => {
- fetchData();
- }, [fetchData]);
+						// eslint-disable-next-line @typescript-eslint/no-explicit-any
+						const propertyElecConfig = (workspaceData.utilityConfigs || []).find((c: any) => c.property_id === lease.property?.id && c.utility_type === "electricity" && c.unit_id === null);
+						// eslint-disable-next-line @typescript-eslint/no-explicit-any
+						const unitElecConfig = (workspaceData.utilityConfigs || []).find((c: any) => c.unit_id === lease.unit?.id && c.utility_type === "electricity");
 
- // Fetch history summaries when history tab is active
- useEffect(() => {
- if (activeTab !== "history") return;
- let alive = true;
- const fetchSummaries = async () => {
- setHistorySummariesLoading(true);
- const months: string[] = [];
- for (let i = 0; i < 9; i++) {
- const d = new Date();
- d.setDate(1);
- d.setMonth(d.getMonth() - i);
- months.push(d.toISOString().slice(0, 7));
- }
- const results: Record<string, MonthSummary> = {};
- await Promise.all(
- months.map(async (m) => {
- try {
- const res = await fetch(`/api/landlord/utility-readings?month=${m}`);
- if (!res.ok) return;
- const json = await res.json();
- const readings: { utility_type: string; previous_reading: number; current_reading: number }[] = json.readings || [];
- let totalElec = 0;
- let totalWater = 0;
- for (const r of readings) {
- const usage = r.current_reading - r.previous_reading;
- if (r.utility_type === "electricity") totalElec += usage;
- else if (r.utility_type === "water") totalWater += usage;
- }
- results[m] = { totalElec, totalWater, readingCount: readings.length };
- } catch {
- results[m] = { totalElec: 0, totalWater: 0, readingCount: 0 };
- }
- })
- );
- if (alive) {
- setHistorySummaries(results);
- setHistorySummariesLoading(false);
- }
- };
- fetchSummaries();
- return () => { alive = false; };
- // eslint-disable-next-line react-hooks/exhaustive-deps
- }, [activeTab]);
+						return {
+							leaseId: lease.id,
+							unitName: lease.unit?.name || "Unknown",
+							propertyId: lease.property?.id || "",
+							rentAmount: lease.monthly_rent || 0,
+							water: {
+								previous: currentWater ? currentWater.previous_reading : (prevWaterReading?.current_reading || 0),
+								current: currentWater ? currentWater.current_reading.toString() : "",
+								exists: !!currentWater,
+								rate: unitWaterConfig?.rate_per_unit || propertyWaterConfig?.rate_per_unit || 0
+							},
+							electricity: {
+								previous: currentElec ? currentElec.previous_reading : (prevElecReading?.current_reading || 0),
+								current: currentElec ? currentElec.current_reading.toString() : "",
+								exists: !!currentElec,
+								rate: unitElecConfig?.rate_per_unit || propertyElecConfig?.rate_per_unit || 0
+							}
+						};
+					});
 
- const filteredDrafts = drafts.filter(d => {
- const matchesProperty = selectedPropertyId === "all" || d.propertyId === selectedPropertyId;
- const matchesSearch = d.unitName.toLowerCase().includes(searchQuery.toLowerCase());
- return matchesProperty && matchesSearch;
- });
+					setDrafts(newDrafts);
+					return;
+				}
+			}
 
- const handleSaveReadings = async () => {
- const toSave: ReadingSaveRequest[] = [];
- const start = `${selectedMonth}-01`;
- const end = new Date(new Date(selectedMonth).getFullYear(), new Date(selectedMonth).getMonth() + 1, 0).toISOString().slice(0, 10);
+			// Offline Fallback Hydration
+			const cachedWorkspace = OfflineStorage.get<BillingWorkspace>("utility_workspace");
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			const cachedReadings = OfflineStorage.get<any>(`utility_readings_${selectedMonth}`);
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			const cachedAllReadings = OfflineStorage.get<any>("utility_all_readings");
 
- drafts.forEach(d => {
- if (!d.water.exists && d.water.current !== "") {
- toSave.push({
- leaseId: d.leaseId,
- utilityType: "water",
- billingPeriodStart: start,
- billingPeriodEnd: end,
- previousReading: d.water.previous,
- currentReading: parseFloat(d.water.current),
- note: ""
- });
- }
- if (!d.electricity.exists && d.electricity.current !== "") {
- toSave.push({
- leaseId: d.leaseId,
- utilityType: "electricity",
- billingPeriodStart: start,
- billingPeriodEnd: end,
- previousReading: d.electricity.previous,
- currentReading: parseFloat(d.electricity.current),
- note: ""
- });
- }
- });
+			if (cachedWorkspace?.data) {
+				const workspaceData = cachedWorkspace.data;
+				const readingsData = cachedReadings?.data || { readings: [] };
+				const allReadings = cachedAllReadings?.data?.readings || [];
 
- if (toSave.length === 0) {
- toast.info("No new readings to save");
- return;
- }
+				setWorkspace(workspaceData);
 
- try {
- setSaving(true);
- const res = await fetch("/api/landlord/utility-readings", {
- method: "POST",
- headers: { "Content-Type": "application/json" },
- body: JSON.stringify(toSave)
- });
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				const newDrafts: ReadingDraft[] = (workspaceData.activeLeases || []).map((lease: any) => {
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
+					const currentWater = readingsData.readings.find((r: any) => r.lease_id === lease.id && r.utility_type === "water");
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
+					const currentElec = readingsData.readings.find((r: any) => r.lease_id === lease.id && r.utility_type === "electricity");
 
- if (!res.ok) throw new Error("Save failed");
- 
- toast.success(`Successfully saved ${toSave.length} readings`);
- fetchData();
- } catch (err) {
- console.error(err);
- toast.error("Failed to save readings");
- } finally {
- setSaving(false);
- }
- };
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
+					const prevWaterReading = allReadings.find((r: any) => 
+						r.lease_id === lease.id && 
+						r.utility_type === "water" && 
+						r.id !== currentWater?.id
+					);
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
+					const prevElecReading = allReadings.find((r: any) => 
+						r.lease_id === lease.id && 
+						r.utility_type === "electricity" && 
+						r.id !== currentElec?.id
+					);
 
- const handleApplyToAll = async () => {
- toast.success("Applying property defaults to all units...");
- setIsApplyAllOpen(false);
- };
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
+					const propertyWaterConfig = (workspaceData.utilityConfigs || []).find((c: any) => c.property_id === lease.property?.id && c.utility_type === "water" && c.unit_id === null);
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
+					const unitWaterConfig = (workspaceData.utilityConfigs || []).find((c: any) => c.unit_id === lease.unit?.id && c.utility_type === "water");
 
- const activeDraft = drafts.find(d => d.leaseId === selectedLeaseId);
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
+					const propertyElecConfig = (workspaceData.utilityConfigs || []).find((c: any) => c.property_id === lease.property?.id && c.utility_type === "electricity" && c.unit_id === null);
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
+					const unitElecConfig = (workspaceData.utilityConfigs || []).find((c: any) => c.unit_id === lease.unit?.id && c.utility_type === "electricity");
 
- if (loading && !workspace) {
- return (
- <div className="flex h-[60vh] flex-col items-center justify-center space-y-4">
- <Loader2 className="size-10 animate-spin text-primary" />
- <p className="text-sm font-medium text-muted-foreground">Loading utility data...</p>
- </div>
- );
- }
+					return {
+						leaseId: lease.id,
+						unitName: lease.unit?.name || "Unknown",
+						propertyId: lease.property?.id || "",
+						rentAmount: lease.monthly_rent || 0,
+						water: {
+							previous: currentWater ? currentWater.previous_reading : (prevWaterReading?.current_reading || 0),
+							current: currentWater ? currentWater.current_reading.toString() : "",
+							exists: !!currentWater,
+							rate: unitWaterConfig?.rate_per_unit || propertyWaterConfig?.rate_per_unit || 0
+						},
+						electricity: {
+							previous: currentElec ? currentElec.previous_reading : (prevElecReading?.current_reading || 0),
+							current: currentElec ? currentElec.current_reading.toString() : "",
+							exists: !!currentElec,
+							rate: unitElecConfig?.rate_per_unit || propertyElecConfig?.rate_per_unit || 0
+						}
+					};
+				});
 
- return (
- <div className="flex flex-col space-y-8 pb-20 max-w-7xl mx-auto">
- {/* Page Header */}
- <div className="space-y-2">
- <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-[0.2em]">
- <Building2 className="size-3" />
- Property Management
- </div>
- <h1 className="text-4xl font-black tracking-tight text-foreground">Utility Billing</h1>
- <p className="text-sm text-muted-foreground font-medium">
- Centralized command for meter readings, billing strategies, and automated recovery.
- </p>
- </div>
+				setDrafts(newDrafts);
+				toast.info("Offline Mode: Hydrated utility records and tariffs from local cache.");
+			} else {
+				toast.error("Failed to load billing information");
+			}
+		} catch (err) {
+			console.error(err);
+			// Fall back to cache on fetch error
+			const cachedWorkspace = OfflineStorage.get<BillingWorkspace>("utility_workspace");
+			if (cachedWorkspace?.data) {
+				setWorkspace(cachedWorkspace.data);
+				toast.info("Loaded cached utility workspace offline.");
+			} else {
+				toast.error("Failed to load billing information");
+			}
+		} finally {
+			setLoading(false);
+		}
+	}, [selectedMonth]);
 
- {/* Navigation & Global Filters */}
- <div className="flex flex-col gap-8">
- <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-white/5/50">
- <div className="flex gap-2 overflow-x-auto no-scrollbar">
- {[
- { id: "readings", label: "Meter Readings", icon: Zap },
- { id: "rates", label: "Billing Settings", icon: Settings2 },
- { id: "payments", label: "GCash Payments", icon: DollarSign },
- { id: "history", label: "History", icon: History }
- ].map((tab) => (
- <button
- key={tab.id}
- onClick={() => setActiveTab(tab.id as "readings" | "rates" | "payments" | "history")}
- className={cn(
- "relative flex items-center gap-2.5 px-6 py-4 text-[10px] font-black uppercase tracking-[0.15em] transition-all border-b-2 whitespace-nowrap",
- activeTab === tab.id 
- ? "border-primary text-primary" 
- : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
- )}
- >
- <tab.icon className={cn("size-4", activeTab === tab.id ? "text-primary" : "text-muted-foreground/50")} />
- {tab.label}
- {activeTab === tab.id && (
- <motion.div 
- layoutId="activeTab"
- className="absolute inset-0 bg-primary/5 -z-10"
- transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
- />
- )}
- </button>
- ))}
- </div>
+	useEffect(() => {
+		fetchData();
+	}, [fetchData]);
 
- <div className="flex items-center gap-3 pb-4 md:pb-0">
- <div className="px-4 py-2 rounded-2xl neumorphic-inset text-[10px] font-black uppercase tracking-widest text-muted-foreground">
- Latest Cycle
- </div>
- </div>
- </div>
+	// Fetch history summaries when history tab is active
+	useEffect(() => {
+		if (activeTab !== "history") return;
+		let alive = true;
+		const fetchSummaries = async () => {
+			setHistorySummariesLoading(true);
+			const months: string[] = [];
+			for (let i = 0; i < 9; i++) {
+				const d = new Date();
+				d.setDate(1);
+				d.setMonth(d.getMonth() - i);
+				months.push(d.toISOString().slice(0, 7));
+			}
+			const results: Record<string, MonthSummary> = {};
+			await Promise.all(
+				months.map(async (m) => {
+					try {
+						const res = await fetch(`/api/landlord/utility-readings?month=${m}`);
+						if (!res.ok) return;
+						const json = await res.json();
+						const readings: { utility_type: string; previous_reading: number; current_reading: number }[] = json.readings || [];
+						let totalElec = 0;
+						let totalWater = 0;
+						for (const r of readings) {
+							const usage = r.current_reading - r.previous_reading;
+							if (r.utility_type === "electricity") totalElec += usage;
+							else if (r.utility_type === "water") totalWater += usage;
+						}
+						results[m] = { totalElec, totalWater, readingCount: readings.length };
+					} catch {
+						results[m] = { totalElec: 0, totalWater: 0, readingCount: 0 };
+					}
+				})
+			);
+			if (alive) {
+				setHistorySummaries(results);
+				setHistorySummariesLoading(false);
+			}
+		};
+		fetchSummaries();
+		return () => { alive = false; };
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [activeTab]);
 
- {activeTab === "readings" && (
- <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
- <div className="relative flex-1 max-w-md">
- <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
- <input 
- placeholder="Search units or tenants..." 
- value={searchQuery}
- onChange={(e) => setSearchQuery(e.target.value)}
- className="h-11 w-full rounded-2xl neumorphic-panel pl-10 pr-4 text-sm outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/10 "
- />
- </div>
+	const filteredDrafts = drafts.filter(d => {
+		const matchesProperty = selectedPropertyId === "all" || d.propertyId === selectedPropertyId;
+		const matchesSearch = d.unitName.toLowerCase().includes(searchQuery.toLowerCase());
+		return matchesProperty && matchesSearch;
+	});
 
- <button 
- onClick={handleSaveReadings}
- disabled={saving}
- className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-8 py-3 text-sm font-black text-white shadow-primary/20 transition-all hover:bg-primary/90 hover:scale-[1.02] active:scale-95 disabled:opacity-50"
- >
- {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
- Save All Readings
- </button>
- </div>
- )}
- </div>
+	const handleSaveReadings = async () => {
+		const toSave: ReadingSaveRequest[] = [];
+		const start = `${selectedMonth}-01`;
+		const end = new Date(new Date(selectedMonth).getFullYear(), new Date(selectedMonth).getMonth() + 1, 0).toISOString().slice(0, 10);
+
+		drafts.forEach(d => {
+			if (!d.water.exists && d.water.current !== "") {
+				toSave.push({
+					leaseId: d.leaseId,
+					utilityType: "water",
+					billingPeriodStart: start,
+					billingPeriodEnd: end,
+					previousReading: d.water.previous,
+					currentReading: parseFloat(d.water.current),
+					note: ""
+				});
+			}
+			if (!d.electricity.exists && d.electricity.current !== "") {
+				toSave.push({
+					leaseId: d.leaseId,
+					utilityType: "electricity",
+					billingPeriodStart: start,
+					billingPeriodEnd: end,
+					previousReading: d.electricity.previous,
+					currentReading: parseFloat(d.electricity.current),
+					note: ""
+				});
+			}
+		});
+
+		if (toSave.length === 0) {
+			toast.info("No new readings to save");
+			return;
+		}
+
+		// If offline, enqueue and save optimistically
+		if (typeof navigator !== "undefined" && !navigator.onLine) {
+			mutationQueue.enqueue(
+				"SAVE_SUBMETER_READINGS",
+				"/api/landlord/utility-readings",
+				"POST",
+				{ readings: toSave },
+				`Recorded ${toSave.length} sub-meter readings offline`
+			);
+
+			// Mark drafts as locally saved
+			setDrafts(prev => prev.map(d => ({
+				...d,
+				water: { ...d.water, exists: d.water.current !== "" ? true : d.water.exists },
+				electricity: { ...d.electricity, exists: d.electricity.current !== "" ? true : d.electricity.exists },
+			})));
+
+			toast.success(`Saved ${toSave.length} readings locally! They will sync automatically when reconnected.`);
+			return;
+		}
+
+		try {
+			setSaving(true);
+			const res = await fetch("/api/landlord/utility-readings", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(toSave)
+			});
+
+			if (!res.ok) throw new Error("Save failed");
+			
+			toast.success(`Successfully saved ${toSave.length} readings`);
+			fetchData();
+		} catch (err) {
+			console.warn("[UtilityBilling] Online save failed, enqueuing offline:", err);
+			// Enqueue offline fallback
+			mutationQueue.enqueue(
+				"SAVE_SUBMETER_READINGS",
+				"/api/landlord/utility-readings",
+				"POST",
+				{ readings: toSave },
+				`Recorded ${toSave.length} sub-meter readings offline`
+			);
+			setDrafts(prev => prev.map(d => ({
+				...d,
+				water: { ...d.water, exists: d.water.current !== "" ? true : d.water.exists },
+				electricity: { ...d.electricity, exists: d.electricity.current !== "" ? true : d.electricity.exists },
+			})));
+			toast.success(`Saved ${toSave.length} readings offline! Will sync upon reconnection.`);
+		} finally {
+			setSaving(false);
+		}
+	};
+
+    const handleApplyToAll = async () => {
+        toast.success("Applying property defaults to all units...");
+        setIsApplyAllOpen(false);
+    };
+
+    const activeDraft = drafts.find(d => d.leaseId === selectedLeaseId);
+
+    if (loading && !workspace) {
+        return (
+            <div className="flex h-[60vh] flex-col items-center justify-center space-y-4">
+                <Loader2 className="size-10 animate-spin text-primary" />
+                <p className="text-sm font-medium text-muted-foreground">Loading utility data...</p>
+            </div>
+        );
+    }
+
+    return (
+    <div className="flex flex-col space-y-6 pb-20 max-w-7xl mx-auto px-4 md:px-8">
+        {/* Page Header */}
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+            <div className="space-y-1">
+                <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">
+                    Utility Billing
+                </h1>
+                <p className="text-sm font-medium text-neutral-400">
+                    Centralized command for meter readings, billing strategies, and automated recovery.
+                </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+                {activeTab === "readings" && (
+                    <button 
+                        onClick={handleSaveReadings}
+                        disabled={saving}
+                        className="flex h-11 items-center gap-2 rounded-2xl bg-primary px-6 text-xs font-black uppercase tracking-widest text-primary-foreground shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-50 cursor-pointer"
+                    >
+                        {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+                        Save All Readings
+                    </button>
+                )}
+            </div>
+        </div>
+
+        {/* Unified Command Bar */}
+        <div className="flex flex-col items-center justify-between gap-4 border border-white/5 neumorphic-panel p-3 md:p-4 rounded-3xl backdrop-blur-xl xl:flex-row">
+            {/* Segmented Pill Tabs */}
+            <div className="flex items-center gap-1 rounded-2xl neumorphic-extruded p-1 w-full sm:w-auto overflow-x-auto">
+                {[
+                    { id: "readings", label: "Meter Readings", icon: Zap },
+                    { id: "rates", label: "Billing Settings", icon: Settings2 },
+                    { id: "payments", label: "GCash Payments", icon: DollarSign },
+                    { id: "history", label: "History", icon: History }
+                ].map((tab) => (
+                    <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id as any)}
+                        className={cn(
+                            "flex items-center gap-2 rounded-xl px-5 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap cursor-pointer",
+                            activeTab === tab.id
+                                ? "neumorphic-panel text-white ring-1 ring-border shadow-sm"
+                                : "text-neutral-400 hover:neumorphic-inset hover:text-white"
+                        )}
+                    >
+                        <tab.icon className={cn("size-3.5", activeTab === tab.id ? "text-primary" : "text-neutral-400")} />
+                        {tab.label}
+                    </button>
+                ))}
+            </div>
+
+            {/* Search & Cycle Info */}
+            <div className="flex w-full items-center gap-3 xl:w-auto">
+                {activeTab === "readings" && (
+                    <div className="relative flex-1 xl:w-72">
+                        <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-neutral-400" />
+                        <input 
+                            placeholder="Search units or tenants..." 
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="h-11 w-full rounded-2xl neumorphic-extruded pl-10 pr-4 text-xs font-black text-white focus:border-primary/50 focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all placeholder:text-neutral-500"
+                        />
+                    </div>
+                )}
+
+                <div className="flex h-11 items-center gap-2 rounded-2xl neumorphic-extruded px-4 text-[10px] font-black uppercase tracking-widest text-neutral-400 shrink-0">
+                    Latest Cycle
+                </div>
+            </div>
+        </div>
 
  {/* Content Area */}
  <AnimatePresence mode="wait">

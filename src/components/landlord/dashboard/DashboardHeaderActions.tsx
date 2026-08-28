@@ -1,16 +1,39 @@
-"use client";
-
-import React, { useState, useRef, useEffect } from "react";
-import { Search, Bell, Settings, MessageSquare, CreditCard, Home, AlertCircle, Sparkles, Check } from "lucide-react";
+import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { 
+    Search, 
+    Bell, 
+    Settings, 
+    MessageSquare, 
+    CreditCard, 
+    Home, 
+    AlertCircle, 
+    Sparkles, 
+    Check, 
+    FileText, 
+    Wrench, 
+    Users, 
+    PlusCircle, 
+    Activity, 
+    ShieldCheck, 
+    MapPin, 
+    Zap, 
+    Building2, 
+    KeyRound, 
+    QrCode,
+    Compass,
+    SlidersHorizontal,
+    FileCheck2,
+    CalendarClock,
+    Palette
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useNotifications } from "@/context/NotificationContext";
 import { ProfileWidget } from "@/components/landlord/ProfileWidget";
-import { LandlordQuestBoard } from "@/components/landlord/dashboard/LandlordQuestBoard";
 import { MissionTriggerButton } from "@/components/landlord/dashboard/MissionTriggerButton";
 
-type SearchResultType = "property" | "tenant" | "maintenance" | "page" | "invoice" | "document";
+type SearchResultType = "action" | "page" | "setting" | "property" | "unit" | "maintenance" | "tenant" | "invoice";
 
 interface SearchResult {
     id: string;
@@ -19,7 +42,278 @@ interface SearchResult {
     subtitle: string;
     href: string;
     icon: React.ElementType;
+    keywords?: string[];
+    badge?: string;
 }
+
+// ─── Static Feature & Action Index ────────────────────────────────────
+const FEATURE_INDEX: SearchResult[] = [
+    // ── Quick Actions ──
+    {
+        id: "action-walk-in",
+        type: "action",
+        title: "New Lease / Walk-in Intake",
+        subtitle: "Fast applicant registration and contract generation",
+        href: "/landlord/applications?action=walk-in",
+        icon: PlusCircle,
+        badge: "Action",
+        keywords: ["new lease", "create lease", "walk in", "intake", "contract", "tenant", "apply", "onboard"]
+    },
+    {
+        id: "action-invite",
+        type: "action",
+        title: "Invite Prospective Tenant",
+        subtitle: "Generate digital application invite link or QR",
+        href: "/landlord/applications",
+        icon: QrCode,
+        badge: "Action",
+        keywords: ["invite", "manager", "link", "qr", "onboard", "share", "applicant"]
+    },
+    {
+        id: "action-meter-readings",
+        type: "action",
+        title: "Record Meter Readings",
+        subtitle: "Input water and electricity measurements for units",
+        href: "/landlord/utility-billing",
+        icon: Zap,
+        badge: "Action",
+        keywords: ["meter", "water", "electricity", "readings", "kwh", "cubic", "utility", "bill"]
+    },
+    {
+        id: "action-gcash",
+        type: "action",
+        title: "Configure GCash Payments",
+        subtitle: "Setup GCash number and tenant payment QR code",
+        href: "/landlord/settings?category=Finance",
+        icon: CreditCard,
+        badge: "Action",
+        keywords: ["gcash", "qr", "payment", "transfer", "finance", "receive", "payout"]
+    },
+    {
+        id: "action-new-maintenance",
+        type: "action",
+        title: "Log Repair Ticket",
+        subtitle: "Create a new maintenance work order",
+        href: "/landlord/maintenance",
+        icon: Wrench,
+        badge: "Action",
+        keywords: ["repair", "fix", "ticket", "maintenance", "work order", "issue", "plumbing", "electrical"]
+    },
+    {
+        id: "action-floorplan",
+        type: "action",
+        title: "Visual Floor Planner",
+        subtitle: "Interactive blueprint editor and room arrangement",
+        href: "/landlord/unit-map",
+        icon: Compass,
+        badge: "Action",
+        keywords: ["map", "unit map", "floor", "canvas", "blueprint", "visual", "editor", "drag", "layout"]
+    },
+
+    // ── Pages & Portals ──
+    {
+        id: "page-dashboard",
+        type: "page",
+        title: "Dashboard Overview",
+        subtitle: "Revenue stats, occupancy health & quick actions",
+        href: "/landlord/dashboard",
+        icon: Home,
+        badge: "Page",
+        keywords: ["dashboard", "home", "stats", "overview", "analytics", "summary", "revenue"]
+    },
+    {
+        id: "page-properties",
+        type: "page",
+        title: "Properties Directory",
+        subtitle: "Manage buildings, portfolio addresses & inventory",
+        href: "/landlord/properties",
+        icon: Building2,
+        badge: "Page",
+        keywords: ["properties", "buildings", "real estate", "portfolio", "units", "complex"]
+    },
+    {
+        id: "page-unit-map",
+        type: "page",
+        title: "Unit Map & Blueprints",
+        subtitle: "Live floor layouts, status markers & space utilization",
+        href: "/landlord/unit-map",
+        icon: Compass,
+        badge: "Page",
+        keywords: ["unit map", "floor plan", "blueprint", "rooms", "layout", "visual planner"]
+    },
+    {
+        id: "page-leases",
+        type: "page",
+        title: "Lease Hub",
+        subtitle: "Active leases, renewals, signing status & archives",
+        href: "/landlord/leases",
+        icon: FileCheck2,
+        badge: "Page",
+        keywords: ["leases", "lease hub", "contracts", "agreements", "tenancy", "renewals", "archive"]
+    },
+    {
+        id: "page-applications",
+        type: "page",
+        title: "Rent Applications",
+        subtitle: "Review prospective tenants, screening & KYC compliance",
+        href: "/landlord/applications",
+        icon: Users,
+        badge: "Page",
+        keywords: ["applications", "applicants", "screening", "intake", "kyc", "verification"]
+    },
+    {
+        id: "page-tenants",
+        type: "page",
+        title: "Tenants Directory",
+        subtitle: "Resident contacts, payment history & unit assignments",
+        href: "/landlord/tenants",
+        icon: Users,
+        badge: "Page",
+        keywords: ["tenants", "residents", "directory", "occupants", "contacts", "people"]
+    },
+    {
+        id: "page-maintenance",
+        type: "page",
+        title: "Maintenance Operations",
+        subtitle: "Track repairs, work orders, priority triage & dispatch",
+        href: "/landlord/maintenance",
+        icon: Wrench,
+        badge: "Page",
+        keywords: ["maintenance", "repairs", "tickets", "work orders", "contractors", "issues", "fixes"]
+    },
+    {
+        id: "page-utility-billing",
+        type: "page",
+        title: "Utility Billing Hub",
+        subtitle: "Automated utility recovery, submetering & invoice logs",
+        href: "/landlord/utility-billing",
+        icon: Zap,
+        badge: "Page",
+        keywords: ["utility billing", "utilities", "meters", "water", "electricity", "submeter", "rates"]
+    },
+    {
+        id: "page-facilities",
+        type: "page",
+        title: "Property Facilities",
+        subtitle: "Amenity schedules, clubhouse bookings & reservations",
+        href: "/landlord/facilities",
+        icon: CalendarClock,
+        badge: "Page",
+        keywords: ["facilities", "amenities", "pool", "gym", "clubhouse", "reservations", "bookings"]
+    },
+    {
+        id: "page-invoices",
+        type: "page",
+        title: "Invoices & Payments",
+        subtitle: "Track rent payments, late fees & payment ledger",
+        href: "/landlord/invoices",
+        icon: CreditCard,
+        badge: "Page",
+        keywords: ["invoices", "payments", "rent", "billing", "receipts", "collections", "ledger"]
+    },
+    {
+        id: "page-analytics",
+        type: "page",
+        title: "Financial Analytics",
+        subtitle: "Revenue trends, yield performance & occupancy reports",
+        href: "/landlord/analytics",
+        icon: Activity,
+        badge: "Page",
+        keywords: ["analytics", "reports", "revenue", "trends", "financials", "occupancy", "yield"]
+    },
+    {
+        id: "page-documents",
+        type: "page",
+        title: "Document Vault",
+        subtitle: "Signed tenancy contracts, certificates & templates",
+        href: "/landlord/documents",
+        icon: FileText,
+        badge: "Page",
+        keywords: ["documents", "vault", "files", "pdf", "contracts", "templates", "signatures"]
+    },
+    {
+        id: "page-messages",
+        type: "page",
+        title: "Messages & Inbox",
+        subtitle: "Tenant communication channels & announcements",
+        href: "/landlord/messages",
+        icon: MessageSquare,
+        badge: "Page",
+        keywords: ["messages", "inbox", "chat", "conversations", "support", "communication"]
+    },
+    {
+        id: "page-community",
+        type: "page",
+        title: "Community Hub",
+        subtitle: "Property announcements & resident social board",
+        href: "/landlord/community",
+        icon: Users,
+        badge: "Page",
+        keywords: ["community", "forum", "announcements", "bulletin", "social", "board"]
+    },
+
+    // ── Settings ──
+    {
+        id: "setting-identity",
+        type: "setting",
+        title: "Public Identity Settings",
+        subtitle: "Avatar, business permit & contact details",
+        href: "/landlord/settings?category=Identity",
+        icon: Settings,
+        badge: "Settings",
+        keywords: ["profile", "identity", "name", "permit", "phone", "email", "business", "avatar"]
+    },
+    {
+        id: "setting-personalization",
+        type: "setting",
+        title: "Personalization & Branding",
+        subtitle: "Themes, high contrast, brand colors, property logo & banner photos",
+        href: "/landlord/settings?category=Personalization",
+        icon: Palette,
+        badge: "Settings",
+        keywords: ["personalization", "customization", "theme", "dark mode", "light mode", "high contrast", "banner", "logo", "branding", "colors"]
+    },
+    {
+        id: "setting-finance",
+        type: "setting",
+        title: "Finance & Rates Configuration",
+        subtitle: "GCash settings, bank accounts & default utility charges",
+        href: "/landlord/settings?category=Finance",
+        icon: SlidersHorizontal,
+        badge: "Settings",
+        keywords: ["finance", "gcash", "bank", "rates", "utility rates", "fees", "penalties"]
+    },
+    {
+        id: "setting-security",
+        type: "setting",
+        title: "Security & Login",
+        subtitle: "Password update, 2FA authentication & active sessions",
+        href: "/landlord/settings?category=Security",
+        icon: KeyRound,
+        badge: "Settings",
+        keywords: ["security", "password", "2fa", "two factor", "otp", "login", "auth"]
+    },
+    {
+        id: "setting-notifications",
+        type: "setting",
+        title: "Notification Preferences",
+        subtitle: "Email alerts, in-app sounds & dispatch triggers",
+        href: "/landlord/settings?category=Notifications",
+        icon: Bell,
+        badge: "Settings",
+        keywords: ["notifications", "alerts", "email alerts", "sounds", "push"]
+    },
+    {
+        id: "setting-data",
+        type: "setting",
+        title: "Data & Privacy Controls",
+        subtitle: "Data export, privacy agreements & audit logs",
+        href: "/landlord/settings?category=Data",
+        icon: ShieldCheck,
+        badge: "Settings",
+        keywords: ["data", "privacy", "export", "backup", "audit", "compliance"]
+    }
+];
 
 function formatTimeAgo(value: string) {
     const timestamp = new Date(value);
@@ -68,10 +362,14 @@ export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActi
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+    const [selectedIndex, setSelectedIndex] = useState(0);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [searchLoading, setSearchLoading] = useState(false);
+    
     const searchRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+    const abortControllerRef = useRef<AbortController | null>(null);
+    const searchCacheRef = useRef<Map<string, SearchResult[]>>(new Map());
     
     const { 
         notifications, 
@@ -83,101 +381,105 @@ export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActi
         refresh
     } = useNotifications();
 
-    const pageIndex = [
-        { title: "Dashboard", href: "/landlord/dashboard", subtitle: "Overview & stats" },
-        { title: "Properties", href: "/landlord/properties", subtitle: "Property management" },
-        { title: "Tenants", href: "/landlord/tenants", subtitle: "Tenant management" },
-        { title: "Messages", href: "/landlord/messages", subtitle: "Communications" },
-        { title: "Invoices", href: "/landlord/invoices", subtitle: "Billing & payments" },
-        { title: "Maintenance", href: "/landlord/maintenance", subtitle: "Repair requests" },
-        { title: "Applications", href: "/landlord/applications", subtitle: "Tenant applications" },
-        { title: "Unit Map", href: "/landlord/unit-map", subtitle: "Property map" },
-        { title: "Documents", href: "/landlord/documents", subtitle: "File manager" },
-        { title: "Analytics", href: "/landlord/analytics", subtitle: "Insights" },
-        { title: "Settings", href: "/landlord/settings", subtitle: "Account settings" },
-        { title: "Profile", href: "/landlord/profile", subtitle: "Your profile" },
-        { title: "Utilities", href: "/landlord/utilities", subtitle: "Utility tracking" },
-        { title: "Utility Billing", href: "/landlord/utility-billing", subtitle: "Billing setup" },
-        { title: "Community", href: "/landlord/community", subtitle: "Landlord network" },
-    ];
+    // Fast synchronous index search
+    const getLocalMatches = useCallback((query: string): SearchResult[] => {
+        const cleanQuery = query.trim().toLowerCase();
+        if (!cleanQuery) return [];
 
-    const settingsIndex = [
-        { title: "Public Identity", href: "/landlord/settings?category=Identity", subtitle: "Profile & public presence" },
-        { title: "Finance & Utilities", href: "/landlord/settings?category=Finance", subtitle: "Payment & utility rates" },
-        { title: "Security & Login", href: "/landlord/settings?category=Security", subtitle: "Password, 2FA, sessions" },
-        { title: "Notifications", href: "/landlord/settings?category=Notifications", subtitle: "Alerts & communication" },
-        { title: "Data & Privacy", href: "/landlord/settings?category=Data", subtitle: "Export & account deletion" },
-    ];
+        const terms = cleanQuery.split(/\s+/).filter(Boolean);
 
-    const performSearch = async (query: string) => {
-        if (!query.trim()) {
+        return FEATURE_INDEX.filter((item) => {
+            const titleMatch = item.title.toLowerCase();
+            const subtitleMatch = item.subtitle.toLowerCase();
+            const keywords = item.keywords || [];
+
+            return terms.every((term) => 
+                titleMatch.includes(term) || 
+                subtitleMatch.includes(term) || 
+                keywords.some(k => k.toLowerCase().includes(term))
+            );
+        });
+    }, []);
+
+    // Perform dual-tier fast search
+    const performSearch = useCallback(async (query: string) => {
+        const trimmed = query.trim();
+        if (!trimmed) {
             setSearchResults([]);
+            setSearchLoading(false);
             return;
         }
 
-        const results: SearchResult[] = [];
+        // 1. Instant local indexed matches (0ms response)
+        const localMatches = getLocalMatches(trimmed);
+        setSearchResults(localMatches);
+        setSelectedIndex(0);
 
-        const matchedPages = pageIndex.filter(p => 
-            p.title.toLowerCase().includes(query.toLowerCase()) || p.subtitle.toLowerCase().includes(query.toLowerCase())
-        );
-        matchedPages.forEach(p => {
-            results.push({
-                id: `page-${p.title}`,
-                type: "page",
-                title: p.title,
-                subtitle: p.subtitle,
-                href: p.href,
-                icon: p.title === "Settings" ? Settings : p.title === "Messages" ? MessageSquare : p.title === "Invoices" ? CreditCard : Home
+        // 2. Check client-side memory cache for database results
+        const cacheKey = trimmed.toLowerCase();
+        if (searchCacheRef.current.has(cacheKey)) {
+            const cachedServerResults = searchCacheRef.current.get(cacheKey) || [];
+            // Merge local and cached
+            const merged = [...localMatches];
+            cachedServerResults.forEach(serverItem => {
+                if (!merged.some(m => m.id === serverItem.id)) {
+                    merged.push(serverItem);
+                }
             });
-        });
+            setSearchResults(merged);
+            return;
+        }
 
-        const matchedSettings = settingsIndex.filter(s => 
-            s.title.toLowerCase().includes(query.toLowerCase()) || s.subtitle.toLowerCase().includes(query.toLowerCase())
-        );
-        matchedSettings.forEach(s => {
-            results.push({
-                id: `setting-${s.title}`,
-                type: "page",
-                title: s.title,
-                subtitle: s.subtitle,
-                href: s.href,
-                icon: Settings
-            });
-        });
+        // 3. Cancel previous fetch in flight
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
 
         try {
             setSearchLoading(true);
-            const res = await fetch(`/api/landlord/search?q=${encodeURIComponent(query)}`);
+            const res = await fetch(`/api/landlord/search?q=${encodeURIComponent(trimmed)}`, {
+                signal: controller.signal
+            });
+            if (!res.ok) throw new Error("Search failed");
             const data = await res.json();
-            
-            if (data.results) {
-                data.results.forEach((p: { id: string; type: string; title: string; subtitle: string; href: string }) => {
-                    results.push({
-                        ...p,
-                        type: p.type as SearchResultType,
-                        icon: Home
+
+            if (!controller.signal.aborted && Array.isArray(data.results)) {
+                const serverResults: SearchResult[] = data.results.map((p: any) => ({
+                    id: p.id,
+                    type: p.type as SearchResultType,
+                    title: p.title,
+                    subtitle: p.subtitle,
+                    href: p.href,
+                    badge: p.type === "property" ? "Property" : p.type === "unit" ? "Unit" : "Issue",
+                    icon: p.type === "property" ? Building2 : p.type === "unit" ? MapPin : Wrench
+                }));
+
+                // Cache server results
+                searchCacheRef.current.set(cacheKey, serverResults);
+
+                // Merge without duplicates
+                setSearchResults(prev => {
+                    const combined = [...localMatches];
+                    serverResults.forEach(item => {
+                        if (!combined.some(c => c.id === item.id)) {
+                            combined.push(item);
+                        }
                     });
+                    return combined;
                 });
             }
-        } catch (e) {
-            console.error("Search error:", e);
+        } catch (e: any) {
+            if (e.name !== "AbortError") {
+                // Keep local matches if network fails
+            }
         } finally {
-            setSearchLoading(false);
+            if (!controller.signal.aborted) {
+                setSearchLoading(false);
+            }
         }
-
-        if (results.length === 0) {
-            results.push({
-                id: "no-results",
-                type: "page",
-                title: "No results found",
-                subtitle: `Try a different search term for "${query}"`,
-                href: "#",
-                icon: Search
-            });
-        }
-
-        setSearchResults(results);
-    };
+    }, [getLocalMatches]);
 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
@@ -189,19 +491,53 @@ export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActi
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
+    // Fast keystroke handler with 100ms debounce
     useEffect(() => {
-        const debounce = setTimeout(() => {
-            performSearch(searchQuery);
-        }, 200);
-        return () => clearTimeout(debounce);
-    }, [searchQuery]);
+        if (!searchQuery.trim()) {
+            setSearchResults([]);
+            return;
+        }
+
+        // Instant local preview on keystroke
+        const instantMatches = getLocalMatches(searchQuery);
+        if (instantMatches.length > 0) {
+            setSearchResults(instantMatches);
+        }
+
+        const timer = setTimeout(() => {
+            void performSearch(searchQuery);
+        }, 100);
+
+        return () => clearTimeout(timer);
+    }, [searchQuery, getLocalMatches, performSearch]);
 
     const handleResultClick = (result: SearchResult) => {
-        if (result.href !== "#") {
+        if (result.href && result.href !== "#") {
             router.push(result.href);
         }
         setIsSearchOpen(false);
         setSearchQuery("");
+    };
+
+    // Keyboard navigation (Up / Down / Enter / Esc)
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (!isSearchOpen || searchResults.length === 0) return;
+
+        if (e.key === "ArrowDown") {
+            e.preventDefault();
+            setSelectedIndex((prev) => (prev + 1) % searchResults.length);
+        } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            setSelectedIndex((prev) => (prev - 1 + searchResults.length) % searchResults.length);
+        } else if (e.key === "Enter") {
+            e.preventDefault();
+            const currentItem = searchResults[selectedIndex];
+            if (currentItem) {
+                handleResultClick(currentItem);
+            }
+        } else if (e.key === "Escape") {
+            setIsSearchOpen(false);
+        }
     };
 
     const handleClearAll = async () => {
@@ -252,11 +588,11 @@ export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActi
 
     return (
         <>
-            <div className="absolute top-3 right-3 sm:top-4 sm:right-4 md:top-8 md:right-8 z-20 flex items-center gap-1.5 sm:gap-2 md:gap-4">
+            <div className="absolute top-3 right-3 sm:top-4 sm:right-4 md:top-8 md:right-8 z-50 flex items-center gap-1.5 sm:gap-2 md:gap-4">
                 {/* Mission Control Trigger */}
                 <MissionTriggerButton onOpen={onQuestPanelOpen} />
 
-                {/* Search Bar */}
+                {/* Fast Omni-Search Bar */}
                 <div className="relative group hidden sm:block" ref={searchRef}>
                     <Search className="absolute left-4 top-1/2 z-10 size-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
                     <input
@@ -268,50 +604,71 @@ export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActi
                             setSearchQuery(e.target.value);
                             setIsSearchOpen(true);
                         }}
-                        onFocus={() => setIsSearchOpen(true)}
-                        className="w-64 rounded-2xl neumorphic-inset bg-background/50 py-2.5 pl-11 pr-4 text-sm text-foreground transition-all placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/40"
+                        onFocus={() => {
+                            if (searchQuery.trim()) {
+                                setIsSearchOpen(true);
+                            }
+                        }}
+                        onKeyDown={handleKeyDown}
+                        className="w-64 rounded-2xl neumorphic-inset bg-background/50 py-2.5 pl-11 pr-4 text-sm text-foreground transition-all placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:w-80"
                     />
                     
                     {isSearchOpen && searchQuery.trim() && (
-                        <div className="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-2xl neumorphic-panel animate-in fade-in zoom-in-95 duration-200">
-                            <div className="max-h-80 overflow-y-auto custom-scrollbar-premium">
-                                {searchLoading ? (
-                                    <div className="px-4 py-4 space-y-3">
-                                        {[1, 2, 3].map((i) => (
-                                            <div key={`search-skeleton-${i}`} className="flex items-center gap-3">
-                                                <Skeleton className="size-8 rounded-lg" />
-                                                <div className="flex-1 space-y-2">
-                                                    <Skeleton className="h-3 w-24 rounded-full" />
-                                                    <Skeleton className="h-2 w-32 rounded-full opacity-60" />
-                                                </div>
-                                            </div>
-                                        ))}
+                        <div className="absolute right-0 top-full z-50 mt-2 w-96 overflow-hidden rounded-3xl border border-white/10 neumorphic-panel shadow-2xl backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-150">
+                            {/* Search Header Info */}
+                            <div className="flex items-center justify-between border-b border-white/5 px-4 py-2.5 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                                <span>Fast Search</span>
+                                {searchLoading && <span className="text-primary animate-pulse">Scanning live records…</span>}
+                            </div>
+
+                            <div className="max-h-96 overflow-y-auto custom-scrollbar-premium p-1.5 space-y-1">
+                                {searchResults.length === 0 && !searchLoading ? (
+                                    <div className="px-6 py-8 text-center text-muted-foreground">
+                                        <Search className="size-8 mx-auto mb-2 opacity-30" />
+                                        <p className="text-xs font-black text-foreground">No matches found</p>
+                                        <p className="text-[10px] mt-0.5">Try searching for &quot;leases&quot;, &quot;walk-in&quot;, &quot;meters&quot;, or unit numbers.</p>
                                     </div>
                                 ) : (
-                                    searchResults.slice(0, 6).map((result) => (
-                                        <button
-                                            key={result.id}
-                                            onClick={() => handleResultClick(result)}
-                                            className="w-full flex items-center gap-3 px-4 py-3 text-left transition-all hover:bg-white/5"
-                                        >
-                                            <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10">
-                                                <result.icon className="size-4 text-primary" />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-black text-foreground truncate">{result.title}</p>
-                                                <p className="text-xs text-muted-foreground truncate">{result.subtitle}</p>
-                                            </div>
-                                        </button>
-                                    ))
+                                    searchResults.map((result, idx) => {
+                                        const isSelected = idx === selectedIndex;
+                                        return (
+                                            <button
+                                                key={`${result.type}-${result.id}-${idx}`}
+                                                onClick={() => handleResultClick(result)}
+                                                onMouseEnter={() => setSelectedIndex(idx)}
+                                                className={cn(
+                                                    "w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-left transition-all cursor-pointer group",
+                                                    isSelected ? "neumorphic-inset bg-primary/10 text-white" : "hover:bg-white/5 text-neutral-300"
+                                                )}
+                                            >
+                                                <div className={cn(
+                                                    "flex size-9 shrink-0 items-center justify-center rounded-xl transition-colors",
+                                                    isSelected ? "bg-primary text-primary-foreground shadow-sm" : "bg-primary/10 text-primary"
+                                                )}>
+                                                    <result.icon className="size-4" />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="text-xs font-black text-foreground truncate">{result.title}</p>
+                                                        {result.badge && (
+                                                            <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md bg-white/5 border border-white/10 text-neutral-400">
+                                                                {result.badge}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-[10px] text-muted-foreground truncate">{result.subtitle}</p>
+                                                </div>
+                                            </button>
+                                        );
+                                    })
                                 )}
                             </div>
-                            {searchResults.length > 6 && (
-                                <div className="border-t border-white/5 px-4 py-2">
-                                    <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
-                                        {searchResults.length} results - press enter for more
-                                    </p>
-                                </div>
-                            )}
+
+                            {/* Shortcut footer */}
+                            <div className="border-t border-white/5 bg-white/[0.02] px-4 py-2 flex items-center justify-between text-[9px] font-bold text-neutral-500">
+                                <span>Navigate with ↑ ↓</span>
+                                <span>Press <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-white font-mono">↵</kbd> to jump</span>
+                            </div>
                         </div>
                     )}
                 </div>
@@ -320,13 +677,11 @@ export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActi
                 <div className="relative">
                     <button
                         onClick={() => {
-                            setIsNotificationsOpen((current) => {
-                                const next = !current;
-                                if (next) {
-                                    void refresh();
-                                }
-                                return next;
-                            });
+                            const next = !isNotificationsOpen;
+                            setIsNotificationsOpen(next);
+                            if (next) {
+                                void refresh();
+                            }
                         }}
                         className="group relative flex size-11 items-center justify-center rounded-2xl neumorphic-extruded active:scale-95"
                     >
@@ -348,84 +703,80 @@ export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActi
                             <div className="max-h-[360px] overflow-y-auto custom-scrollbar-premium py-2">
                                 {notificationsLoading ? (
                                     <div className="px-6 py-4 space-y-4">
-                                        {['skeleton-1', 'skeleton-2', 'skeleton-3'].map((skeletonKey) => (
-                                            <div key={skeletonKey} className="space-y-2">
-                                                <Skeleton className="h-4 w-3/4 rounded-full" />
-                                                <Skeleton className="h-3 w-full rounded-full opacity-60" />
-                                                <Skeleton className="h-2 w-16 rounded-full opacity-40 mt-2" />
+                                        {[1, 2, 3].map((i) => (
+                                            <div key={`notif-skeleton-${i}`} className="flex items-center gap-3">
+                                                <Skeleton className="size-10 rounded-2xl" />
+                                                <div className="flex-1 space-y-2">
+                                                    <Skeleton className="h-3 w-32 rounded-full" />
+                                                    <Skeleton className="h-2 w-48 rounded-full opacity-60" />
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
-                                ) : notificationsError ? (
-                                    <div className="px-6 py-8 text-center text-red-400">
-                                        <p className="text-sm">{notificationsError}</p>
-                                    </div>
                                 ) : notifications.length === 0 ? (
                                     <div className="px-6 py-12 text-center text-muted-foreground">
-                                        <Sparkles className="size-8 mx-auto mb-3 opacity-20" />
-                                        <p className="text-sm font-medium">All caught up!</p>
+                                        <Bell className="size-10 mx-auto mb-2 opacity-20" />
+                                        <p className="text-xs font-black uppercase tracking-widest text-foreground">All Caught Up</p>
+                                        <p className="text-xs">No unread notifications at this time.</p>
                                     </div>
                                 ) : (
-                                    notifications.map((notification) => (
-                                        <div 
-                                            key={notification.id} 
-                                            onClick={() => handleNotificationClick(notification)}
-                                            className={cn(
-                                                "group/item relative mx-3 my-2 px-4 py-3.5 rounded-2xl transition-all duration-300 cursor-pointer",
-                                                !notification.read 
-                                                    ? "neumorphic-extruded border border-primary/5 hover:brightness-105 active:scale-[0.98]" 
-                                                    : "bg-surface-3/10 hover:bg-surface-3/30 border border-transparent"
-                                            )}
-                                        >
-                                            <div className="flex items-start justify-between gap-4">
+                                    <div className="divide-y divide-white/5">
+                                        {notifications.map((n) => (
+                                            <div 
+                                                key={n.id}
+                                                onClick={() => handleNotificationClick(n)}
+                                                className={cn(
+                                                    "flex items-start gap-3 px-6 py-3.5 transition-colors cursor-pointer hover:bg-white/5",
+                                                    !n.read && "bg-primary/[0.03]"
+                                                )}
+                                            >
+                                                <div className={cn(
+                                                    "flex size-9 shrink-0 items-center justify-center rounded-xl",
+                                                    n.type === "payment" ? "bg-emerald-500/10 text-emerald-500" :
+                                                    n.type === "maintenance" ? "bg-amber-500/10 text-amber-500" :
+                                                    n.type === "application" ? "bg-blue-500/10 text-blue-500" :
+                                                    n.type === "lease" ? "bg-purple-500/10 text-purple-500" :
+                                                    "bg-primary/10 text-primary"
+                                                )}>
+                                                    <Sparkles className="size-4" />
+                                                </div>
+                                                
                                                 <div className="flex-1 min-w-0">
-                                                    <p className={cn(
-                                                        "text-sm font-black transition-colors truncate",
-                                                        !notification.read ? "text-foreground group-hover/item:text-primary" : "text-muted-foreground group-hover/item:text-foreground"
-                                                    )}>{notification.title}</p>
-                                                    <p className={cn(
-                                                        "mt-1 text-xs leading-relaxed line-clamp-2",
-                                                        !notification.read ? "text-muted-foreground" : "text-muted-foreground/60"
-                                                    )}>{notification.message}</p>
-                                                    <p className="mt-2 text-[10px] font-medium uppercase tracking-tight text-muted-foreground/60">{formatTimeAgo(notification.created_at)}</p>
+                                                    <p className="text-xs font-black text-foreground truncate">{n.title}</p>
+                                                    <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{n.message}</p>
+                                                    <span className="text-[10px] text-muted-foreground/60 mt-1 block font-mono">{formatTimeAgo(n.created_at || (n as any).createdAt || new Date().toISOString())}</span>
                                                 </div>
-                                                <div className="flex items-center justify-center size-8 shrink-0">
-                                                    {!notification.read ? (
-                                                        <div className="relative flex items-center justify-center size-8">
-                                                            <span className="size-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),0.6)] group-hover/item:scale-0 transition-transform duration-300" />
-                                                            <button
-                                                                onClick={(e) => handleMarkAsRead(e, notification.id)}
-                                                                title="Mark as read"
-                                                                className="absolute inset-0 z-10 flex items-center justify-center opacity-0 group-hover/item:opacity-100 bg-primary/20 rounded-full text-primary hover:bg-primary/30 transition-all duration-300 transform scale-50 group-hover/item:scale-100"
-                                                            >
-                                                                <Check className="size-4 stroke-[3px]" />
-                                                            </button>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="size-2 rounded-full border border-white/10" />
-                                                    )}
-                                                </div>
+
+                                                {!n.read && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => handleMarkAsRead(e, n.id)}
+                                                        className="size-2 rounded-full bg-primary mt-1.5 shrink-0 hover:scale-150 transition-transform"
+                                                        title="Mark as read"
+                                                    />
+                                                )}
                                             </div>
-                                        </div>
-                                    ))
+                                        ))}
+                                    </div>
                                 )}
                             </div>
-                            <div className="border-t border-white/5 p-3">
-                                <button 
-                                    onClick={handleClearAll}
-                                    className="w-full rounded-xl py-2.5 text-[11px] font-black uppercase tracking-widest text-muted-foreground transition-all neumorphic-extruded active:scale-95 hover:text-foreground"
-                                >
-                                    Mark all as read
-                                </button>
-                            </div>
+
+                            {notifications.length > 0 && (
+                                <div className="border-t border-white/5 p-3 bg-white/[0.02]">
+                                    <button 
+                                        onClick={handleClearAll}
+                                        className="w-full py-2 rounded-xl text-center text-xs font-black uppercase tracking-widest text-primary hover:bg-primary/10 transition-colors"
+                                    >
+                                        Mark all as read
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
 
-                {/* Profile Widget */}
-                <div className="hidden md:flex items-center gap-3 border-l border-white/10 pl-4">
-                    <ProfileWidget />
-                </div>
+                {/* Landlord Profile */}
+                <ProfileWidget />
             </div>
         </>
     );

@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { UserPlus, QrCode, Wrench, Map } from "lucide-react";
+import { UserPlus, QrCode, Wrench, Map, Printer, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface DashboardMainContentProps {
@@ -11,6 +11,7 @@ interface DashboardMainContentProps {
     time: Date;
     onNewWalkIn?: () => void;
     onCreateInvite?: () => void;
+    onOpenFlyer?: () => void;
 }
 
 export function DashboardMainContent({
@@ -18,7 +19,8 @@ export function DashboardMainContent({
     subtitle,
     time,
     onNewWalkIn,
-    onCreateInvite
+    onCreateInvite,
+    onOpenFlyer
 }: DashboardMainContentProps) {
     const applicationsCtaClassName = "group relative flex items-center justify-center gap-3 overflow-hidden rounded-2xl neumorphic-primary landlord-applications-cta px-8 py-4 w-auto";
 
@@ -75,6 +77,23 @@ export function DashboardMainContent({
                                 <QrCode className="size-5 text-primary" />
                             </button>
                         )}
+                        {onOpenFlyer ? (
+                            <button
+                                onClick={onOpenFlyer}
+                                title="Lobby QR Code Flyer Poster"
+                                className="flex h-14 w-14 items-center justify-center rounded-2xl neumorphic-extruded active:scale-95 shrink-0 text-foreground hover:text-primary transition-colors"
+                            >
+                                <Printer className="size-5" />
+                            </button>
+                        ) : (
+                            <Link
+                                href="/landlord/flyer"
+                                title="Lobby QR Code Flyer Poster"
+                                className="flex h-14 w-14 items-center justify-center rounded-2xl neumorphic-extruded active:scale-95 shrink-0 text-foreground hover:text-primary transition-colors"
+                            >
+                                <Printer className="size-5" />
+                            </Link>
+                        )}
                         <Link 
                             href="/landlord/maintenance" 
                             title="Maintenance Queue"
@@ -85,9 +104,16 @@ export function DashboardMainContent({
                         <Link 
                             href="/landlord/unit-map" 
                             title="Unit Map"
-                            className="flex h-14 w-14 items-center justify-center rounded-2xl neumorphic-extruded active:scale-95 shrink-0"
+                            className="flex h-14 w-14 items-center justify-center rounded-2xl neumorphic-extruded active:scale-95 shrink-0 text-foreground hover:text-rose-500 transition-colors"
                         >
                             <Map className="size-5 text-rose-500" />
+                        </Link>
+                        <Link 
+                            href="/landlord/docs" 
+                            title="Help & User Manual"
+                            className="flex h-14 w-14 items-center justify-center rounded-2xl neumorphic-extruded active:scale-95 shrink-0 text-foreground hover:text-primary transition-colors"
+                        >
+                            <HelpCircle className="size-5 text-indigo-400" />
                         </Link>
                     </div>
                 </div>
@@ -147,6 +173,23 @@ export function DashboardMainContent({
                                 <QrCode className="size-4 text-primary" />
                             </button>
                         )}
+                        {onOpenFlyer ? (
+                            <button
+                                onClick={onOpenFlyer}
+                                title="Print Lobby Poster"
+                                className="flex h-9 w-9 items-center justify-center rounded-xl neumorphic-extruded active:scale-95 text-foreground hover:text-primary"
+                            >
+                                <Printer className="size-4" />
+                            </button>
+                        ) : (
+                            <Link
+                                href="/landlord/flyer"
+                                title="Print Lobby Poster"
+                                className="flex h-9 w-9 items-center justify-center rounded-xl neumorphic-extruded active:scale-95 text-foreground hover:text-primary"
+                            >
+                                <Printer className="size-4" />
+                            </Link>
+                        )}
                         <Link 
                             href="/landlord/maintenance" 
                             title="Maintenance Queue"
@@ -160,6 +203,13 @@ export function DashboardMainContent({
                             className="flex h-9 w-9 items-center justify-center rounded-xl neumorphic-extruded active:scale-95"
                         >
                             <Map className="size-4 text-rose-500" />
+                        </Link>
+                        <Link 
+                            href="/landlord/docs" 
+                            title="Help & User Manual"
+                            className="flex h-9 w-9 items-center justify-center rounded-xl neumorphic-extruded active:scale-95 text-foreground hover:text-primary"
+                        >
+                            <HelpCircle className="size-4 text-indigo-400" />
                         </Link>
                     </div>
                 </div>

@@ -592,16 +592,29 @@ export function BillingOperationsPanel({
  </div>
 
  <div className="mt-8 flex flex-col sm:flex-row items-center gap-4">
- <div className={cn(
- "flex flex-1 w-full cursor-pointer items-center justify-between rounded-2xl border p-4 transition-all",
+ <div 
+ onClick={() => dispatch({ type: 'UPDATE_PAYMENT', payload: { isEnabled: !isEnabled } })}
+ className={cn(
+ "flex flex-1 w-full cursor-pointer items-center justify-between rounded-2xl border p-4 transition-all select-none",
  isEnabled ? "border-primary/30 bg-primary/5 dark:bg-primary/[0.03]" : "border-border neumorphic-inset dark:bg-white/[0.02]"
- )}>
- <div className="space-y-0.5">
+ )}
+ >
+ <div className="space-y-0.5 pr-3">
  <span className="text-xs font-black text-foreground">Enable Payments</span>
  <p className="text-[10px] text-muted-foreground leading-tight">Allow tenants to use this method</p>
  </div>
- <div className={cn("flex h-6 w-11 items-center rounded-full px-1 transition-all", isEnabled ? "bg-primary" : "neumorphic-inset-foreground/30")}>
- <div className={cn("size-4 rounded-full bg-white transition-all", isEnabled ? "translate-x-5" : "translate-x-0")} />
+ <div
+ className={cn(
+ "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out",
+ isEnabled ? "bg-primary shadow-sm shadow-primary/30" : "bg-zinc-700/60 dark:bg-zinc-800"
+ )}
+ >
+ <span
+ className={cn(
+ "pointer-events-none inline-block size-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out",
+ isEnabled ? "translate-x-5" : "translate-x-0"
+ )}
+ />
  </div>
  <label htmlFor="enable-payments" className="sr-only">Enable Payments</label>
  <input id="enable-payments" type="checkbox" checked={isEnabled} onChange={() => dispatch({ type: 'UPDATE_PAYMENT', payload: { isEnabled: !isEnabled } })} className="hidden" />

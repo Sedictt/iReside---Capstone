@@ -28,6 +28,7 @@ import { TenantInviteManager } from "@/components/landlord/applications/TenantIn
 import { CommandCenter } from "@/components/landlord/dashboard/CommandCenter";
 import { LandlordWelcomeLightbox } from "@/components/landlord/dashboard/LandlordWelcomeLightbox";
 import { MobileMessagesSheet } from "@/components/landlord/dashboard/MobileMessagesSheet";
+import { LobbyFlyerModal } from "@/components/landlord/flyer/LobbyFlyerModal";
 
 type PaymentCategory = "Overdue" | "Near Due" | "Paid";
 
@@ -42,26 +43,7 @@ type PaymentListItem = {
     avatarBgColor: string | null;
 };
 
-type SystemAdvisory = {
-    id: string;
-    title: string;
-    message: string;
-    createdAt: string;
-};
 
-function formatTimeAgo(value: string) {
-    const time = new Date(value).getTime();
-    if (Number.isNaN(time)) return "Recently";
-    const diff = Date.now() - time;
-    const minutes = Math.floor(diff / (1000 * 60));
-    if (minutes < 1) return "Just now";
-    if (minutes < 60) return `${minutes}m ago`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h ago`;
-    const days = Math.floor(hours / 24);
-    if (days < 7) return `${days}d ago`;
-    return new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
 
 const OPEN_UNIT_STATUSES = ["available", "vacant", "open", "listed"];
 const INACTIVE_INVITE_STATUSES = ["expired", "revoked", "inactive", "disabled", "cancelled"];
@@ -135,9 +117,9 @@ export default function LandlordDashboard() {
 
     const [isWalkInModalOpen, setIsWalkInModalOpen] = useState(false);
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+    const [isFlyerModalOpen, setIsFlyerModalOpen] = useState(false);
     const [loadingUnits, setLoadingUnits] = useState(true);
     const [loadingInvites, setLoadingInvites] = useState(true);
-    const [isAdvisoryDismissed, setIsAdvisoryDismissed] = useState(false);
     const [availableUnits, setAvailableUnits] = useState<{
         id: string;
         name: string;
@@ -189,20 +171,7 @@ export default function LandlordDashboard() {
 
     useEffect(() => {
         setMounted(true);
-        if (typeof window !== "undefined") {
-            const dismissed = sessionStorage.getItem("landlord-advisory-dismissed");
-            if (dismissed === "true") {
-                setIsAdvisoryDismissed(true);
-            }
-        }
     }, []);
-
-    const handleDismissAdvisory = () => {
-        setIsAdvisoryDismissed(true);
-        if (typeof window !== "undefined") {
-            sessionStorage.setItem("landlord-advisory-dismissed", "true");
-        }
-    };
 
     // Operational Power Tool Keyboard Accelerators
     useEffect(() => {
@@ -213,6 +182,7 @@ export default function LandlordDashboard() {
                 setOpenPaymentModal(null);
                 setIsWalkInModalOpen(false);
                 setIsInviteModalOpen(false);
+                setIsFlyerModalOpen(false);
             }
             // Ctrl+K/Cmd+K triggers Walk-in Application modal instantly
             if ((e.ctrlKey || e.metaKey) && e.key === "k") {
@@ -274,38 +244,7 @@ export default function LandlordDashboard() {
     }, [selectedPropertyId]);
 
 
-    const [systemAdvisory, setSystemAdvisory] = useState<SystemAdvisory | null>(null);
 
-    useEffect(() => {
-        const controller = new AbortController();
-        const loadSystemAdvisory = async () => {
-            try {
-                const response = await fetch("/api/landlord/system-advisory", {
-                    method: "GET",
-                    signal: controller.signal,
-                });
-
-                if (!response.ok) {
-                    setSystemAdvisory(null);
-                    return;
-                }
-
-                const payload = (await response.json()) as { advisory?: SystemAdvisory | null };
-                setSystemAdvisory(payload.advisory ?? null);
-            } catch (error) {
-                if ((error as Error).name === "AbortError") {
-                    return;
-                }
-                setSystemAdvisory(null);
-            }
-        };
-
-        void loadSystemAdvisory();
-  
-        return () => {
-            controller.abort();
-        };
-    }, []);
   
     useEffect(() => {
         const loadUnits = async () => {
@@ -417,60 +356,10 @@ export default function LandlordDashboard() {
                 <DashboardBanner
                     onNewWalkIn={() => setIsWalkInModalOpen(true)}
                     onCreateInvite={() => setIsInviteModalOpen(true)}
+                    onOpenFlyer={() => setIsFlyerModalOpen(true)}
                 />
 
-                {/* System Advisory - Sleek Neumorphic Glass Alert */}
-                <AnimatePresence>
-                    {systemAdvisory && !isAdvisoryDismissed && (
-                        <motion.div
-                            initial={{ opacity: 0, y: -8, scale: 0.98 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: -8, scale: 0.95, height: 0, marginBottom: 0 }}
-                            transition={{ duration: 0.3, ease: "easeOut" }}
-                            className="group relative w-full shrink-0 overflow-hidden rounded-[2rem] neumorphic-panel border border-amber-500/20 bg-gradient-to-r from-amber-500/10 via-surface-2/60 to-surface-1/80 p-5 sm:p-6 backdrop-blur-xl shadow-lg shadow-amber-500/5"
-                        >
-                            {/* Ambient Subtle Background Glow */}
-                            <div className="absolute -left-10 -top-10 size-36 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
-                            <div className="absolute -right-10 -bottom-10 size-36 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
 
-                            <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                                <div className="flex items-start sm:items-center gap-4 min-w-0 flex-1 pr-6 sm:pr-0">
-                                    <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-400 shadow-inner">
-                                        <AlertTriangle className="size-6 text-amber-400" />
-                                    </div>
-                                    <div className="min-w-0 flex-1 space-y-1">
-                                        <div className="flex items-center gap-2.5 flex-wrap">
-                                            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 border border-amber-500/25 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-amber-400">
-                                                <span className="size-1.5 rounded-full bg-amber-400 animate-pulse" />
-                                                System Advisory
-                                            </span>
-                                            <span className="text-xs text-muted-foreground/60 font-medium">
-                                                {formatTimeAgo(systemAdvisory.createdAt)}
-                                            </span>
-                                        </div>
-                                        <h3 className="text-sm sm:text-base font-black text-foreground tracking-tight">
-                                            {systemAdvisory.title}
-                                        </h3>
-                                        <p className="text-xs sm:text-sm leading-relaxed text-muted-foreground">
-                                            {systemAdvisory.message}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center gap-3 self-end sm:self-center shrink-0">
-                                    <button
-                                        onClick={handleDismissAdvisory}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider text-muted-foreground hover:text-foreground hover:bg-white/10 transition-all neumorphic-extruded active:scale-95"
-                                        aria-label="Dismiss advisory alert"
-                                    >
-                                        <X className="size-3.5" />
-                                        <span>Dismiss</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
 
 
                 {/* Primary Hub */}
@@ -663,6 +552,12 @@ export default function LandlordDashboard() {
                 </div>
             )}
 
+            {/* Lobby QR Code Flyer Generator Modal */}
+            <LobbyFlyerModal
+                isOpen={isFlyerModalOpen}
+                onClose={() => setIsFlyerModalOpen(false)}
+            />
+
             <AnimatePresence>
                 {selectedActionPayment && (
                     <div className="fixed inset-0 z-[150] pointer-events-none">
@@ -834,31 +729,31 @@ function PaymentCard({ payment, fallbackAvatar, onClick }: { payment: PaymentLis
             type="button"
             onClick={onClick}
             aria-label={`View payment details for ${tenant}, Unit ${unit}. Amount: PHP ${amount}.`}
-            className="group relative flex w-full cursor-pointer items-center justify-between overflow-hidden rounded-2xl p-4 neumorphic-extruded active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all text-left"
+            className="group relative flex w-full cursor-pointer items-center justify-between overflow-hidden rounded-2xl p-3 sm:p-3.5 neumorphic-extruded active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all text-left"
         >
-            <div className="flex items-center gap-4 relative z-10 w-full">
+            <div className="flex items-center gap-2.5 sm:gap-3 relative z-10 min-w-0 flex-1 mr-2">
                 <div className="relative shrink-0">
                     <div
-                        className="relative size-12 rounded-full border-2 border-background/50 overflow-hidden transition-all duration-500 group-hover:scale-110 shadow-sm"
+                        className="relative size-10 sm:size-11 rounded-full border-2 border-background/50 overflow-hidden transition-all duration-500 group-hover:scale-105 shadow-xs"
                         style={{ backgroundColor: (payment as any).avatarBgColor || '#171717' }}
                     >
-                        <Image src={avatar || fallbackAvatar} alt="" fill sizes="48px" className="object-cover" aria-hidden="true" />
+                        <Image src={avatar || fallbackAvatar} alt="" fill sizes="44px" className="object-cover" aria-hidden="true" />
                     </div>
                     <div className={cn(
-                        "absolute -bottom-0.5 -right-0.5 size-4 rounded-full border-2 border-background",
+                        "absolute -bottom-0.5 -right-0.5 size-3.5 rounded-full border-2 border-background",
                         isPaid ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : isNearDue ? "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]"
                     )} aria-hidden="true" />
                 </div>
                 <div className="min-w-0 flex-1">
-                    <h4 className="truncate text-sm font-black text-foreground group-hover:text-primary transition-colors">{tenant}</h4>
-                    <p className="text-xs font-semibold text-muted-foreground">Unit {unit}</p>
+                    <h4 className="truncate text-xs sm:text-sm font-black text-foreground group-hover:text-primary transition-colors">{tenant}</h4>
+                    <p className="text-[11px] font-semibold text-muted-foreground truncate">Unit {unit}</p>
                 </div>
             </div>
 
-            <div className="text-right relative z-10 flex flex-col items-end shrink-0 pl-4">
-                <h4 className="mb-0.5 text-sm font-black text-foreground">PHP {amount.toLocaleString()}</h4>
-                <div className="flex items-center justify-end gap-1.5 mt-1">
-                    <span className="text-xs font-semibold text-muted-foreground">{date}</span>
+            <div className="text-right relative z-10 flex flex-col items-end shrink-0">
+                <h4 className="text-xs sm:text-sm font-black text-foreground whitespace-nowrap">PHP {amount.toLocaleString()}</h4>
+                <div className="flex items-center justify-end gap-1 mt-0.5">
+                    <span className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground whitespace-nowrap">{date}</span>
                 </div>
             </div>
 

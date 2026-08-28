@@ -16,20 +16,20 @@ export function LeaseDocument(leaseDataProps: LeaseData) {
     } = leaseDataProps;
 
     const parties = {
-        landlord: landlord.full_name,
-        tenant: tenant.full_name
+        landlord: landlord?.full_name || "Property Owner",
+        tenant: tenant?.full_name || "Valued Resident"
     };
 
     const property = {
-        unit: unit.name,
-        street: unit.property.address,
-        city: unit.property.city,
+        unit: unit?.name || "Unit",
+        street: unit?.property?.address || "Main Street",
+        city: unit?.property?.city || "Metro Manila",
         zip: "" // Optional if not in DB
     };
 
     const term = {
-        start: start_date,
-        end: end_date
+        start: start_date || "--",
+        end: end_date || "--"
     };
 
 
@@ -44,12 +44,12 @@ export function LeaseDocument(leaseDataProps: LeaseData) {
     };
 
 const rentDetails = {
-        monthly: monthly_rent,
+        monthly: monthly_rent || 0,
         due: leaseDataProps.terms?.rent_due_day ? `${leaseDataProps.terms.rent_due_day}${getOrdinalSuffix(leaseDataProps.terms.rent_due_day)} of the month` : "1st of the month"
     };
 
 
-    const deposit = security_deposit;
+    const deposit = security_deposit || 0;
     const currentDate = new Date().toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',
@@ -139,7 +139,7 @@ return (
                     <h2 className="text-[12px] font-black uppercase tracking-widest text-zinc-950 border-b border-zinc-200 pb-0.5">
                         6. UTILITIES AND SERVICES
                     </h2>
-                    {leaseDataProps.unit.property.house_rules?.includes("strategy:inclusive") ? (
+                    {Array.isArray(leaseDataProps.unit?.property?.house_rules) && leaseDataProps.unit.property.house_rules.includes("strategy:inclusive") ? (
                         <p className="text-zinc-800">
                             The monthly rent is <span className="font-black">INCLUSIVE</span> of standard essential utilities (Water and Electricity).
                         </p>
@@ -155,7 +155,7 @@ return (
                         7. AMENITIES AND FACILITIES
                     </h2>
                     <p className="text-zinc-800">
-                        Access provided as part of residency: <span className="italic font-black text-zinc-950">{leaseDataProps.unit.property.amenities.length > 0 ? leaseDataProps.unit.property.amenities.map(amenityItem => amenityItem.name).join(", ") + "." : "Standard residential access."}</span>
+                        Access provided as part of residency: <span className="italic font-black text-zinc-950">{Array.isArray(leaseDataProps.unit?.property?.amenities) && leaseDataProps.unit.property.amenities.length > 0 ? leaseDataProps.unit.property.amenities.map(amenityItem => amenityItem.name).join(", ") + "." : "Standard residential access."}</span>
                     </p>
                 </div>
 
@@ -166,9 +166,11 @@ return (
                     <p className="text-zinc-800 leading-tight">
                         Compliance required for:{" "}
                         <span className="font-black text-zinc-950">
-                            {leaseDataProps.unit.property.house_rules
-                                ?.filter(ruleItem => !ruleItem.startsWith("strategy:"))
-                                .join(", ") || "Standard residential conduct"}
+                            {(Array.isArray(leaseDataProps.unit?.property?.house_rules)
+                                ? leaseDataProps.unit.property.house_rules
+                                    .filter(ruleItem => !ruleItem.startsWith("strategy:"))
+                                    .join(", ")
+                                : "") || "Standard residential conduct"}
                         </span>. 
                         Violations may constitute a material breach of this Agreement.
                     </p>

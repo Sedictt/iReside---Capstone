@@ -1,12 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { Settings, User, LogOut, CreditCard, Pencil } from "lucide-react";
+import { Settings, User, LogOut, Pencil, Contrast } from "lucide-react";
 import { signOut } from "@/lib/supabase/client-auth";
 import { useState, useRef, useEffect } from "react";
 import { AnimatePresence, m as motion } from "framer-motion";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
+import { useHighContrast } from "@/hooks/useHighContrast";
 import { RoleBadge } from "@/components/profile/RoleBadge";
 import { ProfileCardTrigger } from "@/components/ui/ProfileCardTrigger";
 import { cn } from "@/lib/utils";
@@ -43,6 +44,7 @@ export function ProfileWidget() {
     const containerRef = useRef<HTMLDivElement>(null);
     const [avatarFailed, setAvatarFailed] = useState(false);
     const { user, profile } = useAuth();
+    const { isHighContrast, toggleHighContrast } = useHighContrast();
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -128,7 +130,7 @@ export function ProfileWidget() {
                             damping: 25,
                             mass: 0.5
                         }}
-                        className="absolute right-0 top-12 z-50 w-64 origin-top overflow-hidden rounded-[2rem] neumorphic-panel"
+                        className="absolute right-0 top-12 z-50 w-64 origin-top overflow-hidden rounded-[2rem] neumorphic-panel bg-white/95 dark:bg-neutral-900/95 backdrop-blur-2xl shadow-2xl"
                         style={{ transformStyle: "preserve-3d" }}
                     >
                         {/* User Info Header */}
@@ -196,13 +198,23 @@ export function ProfileWidget() {
                                 <Settings className="size-4 group-hover:text-primary transition-colors" />
                                 <span>Settings</span>
                             </Link>
-                            <Link
-                                href="/landlord/billing"
-                                className="group flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-black transition-all hover:neumorphic-inset-card active:scale-[0.98] text-muted-foreground hover:text-primary border border-transparent"
+
+                            <button
+                                type="button"
+                                onClick={() => toggleHighContrast()}
+                                className="flex w-full items-center justify-between rounded-2xl px-4 py-2.5 text-sm font-black transition-all hover:neumorphic-inset-card active:scale-[0.98] text-muted-foreground hover:text-primary group text-left border border-transparent cursor-pointer"
                             >
-                                <CreditCard className="size-4 group-hover:text-primary transition-colors" />
-                                <span>Billing & Plans</span>
-                            </Link>
+                                <div className="flex items-center gap-3">
+                                    <Contrast className="size-4 group-hover:text-primary transition-colors" />
+                                    <span>High Contrast</span>
+                                </div>
+                                <span className={cn(
+                                    "text-[9px] uppercase font-mono font-bold px-2 py-0.5 rounded-md",
+                                    isHighContrast ? "bg-primary text-primary-foreground" : "bg-white/10 text-muted-foreground"
+                                )}>
+                                    {isHighContrast ? "ON" : "OFF"}
+                                </span>
+                            </button>
 
                             <div className="my-1.5 h-px bg-white/5"></div>
 

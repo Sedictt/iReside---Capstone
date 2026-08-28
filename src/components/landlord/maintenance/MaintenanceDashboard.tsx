@@ -15,7 +15,6 @@ import {
  Zap,
  Image as ImageIcon,
  ArrowUpDown,
- Sparkles,
  Filter
 } from "lucide-react";
 import { MaintenanceRequestModal } from "./MaintenanceRequestModal";
@@ -272,19 +271,13 @@ export function MaintenanceDashboard() {
 
  {/* Header Section */}
  <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
- <div>
- <div className="flex items-center gap-3 mb-2">
- <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
+ <div className="space-y-1">
+ <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3 sm:text-4xl">
  <Wrench className="size-8 text-primary" />
  Maintenance Operations
  </h1>
- <div className="bg-primary/10 border border-primary/20 px-3 py-1 rounded-full flex items-center gap-1.5 ">
- <Sparkles className="size-3.5 text-primary" />
- <span className="text-[10px] font-black uppercase tracking-widest text-primary">Smart Triage Active</span>
- </div>
- </div>
  <p className="text-muted-foreground font-medium text-sm max-w-2xl">
- Coordinate, assign, and track property repairs. IRIS AI automatically prioritizes urgent requests for faster resolution.
+ Coordinate, assign, and track property repairs and work orders across your portfolio.
  </p>
  </div>
  </div>

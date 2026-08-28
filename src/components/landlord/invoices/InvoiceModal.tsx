@@ -1124,7 +1124,7 @@ function WizardFlow({
                             <div className="space-y-2">
                                 <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">Actual Amount Received</p>
                                 <div className="relative group">
-                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-text-disabled group-focus-within:text-primary transition-colors font-black text-sm">â‚±</div>
+                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-text-disabled group-focus-within:text-primary transition-colors font-black text-sm">₱</div>
                                     <input 
                                         type="number"
                                         value={receivedAmount}
@@ -1284,7 +1284,7 @@ function WizardFlow({
                                     onChange={(event) => setRejectionReason(event.target.value)} 
                                     rows={3} 
                                     className="w-full resize-none rounded-2xl border border-white/10 bg-surface-2 px-5 py-4 text-sm text-text-high placeholder:text-text-disabled focus:border-amber-500/50 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all shadow-inner" 
-                                    placeholder="Add a reason for the tenant (e.g. 'The receipt is unreadable' or 'The amount is missing â‚±100')" 
+                                    placeholder="Add a reason for the tenant (e.g. 'The receipt is unreadable' or 'The amount is missing ₱100')" 
                                 />
                                 <div className="absolute right-4 bottom-4 opacity-30 group-focus-within:opacity-100 transition-opacity">
                                     <MessageSquare className="size-4 text-amber-500" />

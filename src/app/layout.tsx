@@ -31,6 +31,9 @@ import { AuthProvider } from "@/context/AuthContext";
 import { GlobalLoadingProvider } from "@/context/GlobalLoadingContext";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { GlobalTooltipManager } from "@/components/ui/GlobalTooltipManager";
+import { ServiceWorkerProvider } from "@/components/providers/ServiceWorkerProvider";
+import { OfflineBanner } from "@/components/ui/OfflineBanner";
+import { BrandProvider } from "@/context/BrandContext";
 
 
 export default function RootLayout({
@@ -60,40 +63,45 @@ export default function RootLayout({
         suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} bg-background text-foreground antialiased`}
       >
-        <AuthProvider>
-          <GlobalLoadingProvider>
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="light"
-              enableSystem={true}
-              disableTransitionOnChange
-              storageKey="ireside-theme"
-            >
-              <PageTransitionProvider>
-                <FramerMotionProvider>
-                  <TooltipProvider delayDuration={200} skipDelayDuration={150}>
-                    <GlobalTooltipManager />
-                    <GlobalClickSpark>
-                      {children}
-                      <Toaster
-                        position="top-right"
-                        richColors
-                        closeButton
-                        expand={true}
-                        theme="system"
-                        className="ireside-toaster"
-                        toastOptions={{
-                          className: 'ireside-toast',
-                        }}
-                      />
-                      <CookieConsent />
-                    </GlobalClickSpark>
-                  </TooltipProvider>
-                </FramerMotionProvider>
-              </PageTransitionProvider>
-            </ThemeProvider>
-          </GlobalLoadingProvider>
-        </AuthProvider>
+        <ServiceWorkerProvider>
+          <AuthProvider>
+            <BrandProvider>
+              <GlobalLoadingProvider>
+                <ThemeProvider
+                  attribute="class"
+                  defaultTheme="light"
+                  enableSystem={true}
+                  disableTransitionOnChange
+                  storageKey="ireside-theme"
+                >
+                  <PageTransitionProvider>
+                    <FramerMotionProvider>
+                      <TooltipProvider delayDuration={200} skipDelayDuration={150}>
+                        <GlobalTooltipManager />
+                        <OfflineBanner />
+                        <GlobalClickSpark>
+                          {children}
+                          <Toaster
+                            position="top-right"
+                            richColors
+                            closeButton
+                            expand={true}
+                            theme="system"
+                            className="ireside-toaster"
+                            toastOptions={{
+                              className: 'ireside-toast',
+                            }}
+                          />
+                          <CookieConsent />
+                        </GlobalClickSpark>
+                      </TooltipProvider>
+                    </FramerMotionProvider>
+                  </PageTransitionProvider>
+                </ThemeProvider>
+              </GlobalLoadingProvider>
+            </BrandProvider>
+          </AuthProvider>
+        </ServiceWorkerProvider>
       </body>
     </html>
   );
