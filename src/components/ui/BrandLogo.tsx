@@ -25,9 +25,9 @@ export function BrandLogo({
   const { propertyName, propertyTagline, logoUrl, monogramInitials, isCustomBranded, primaryColor } = useBrand();
 
   const sizeClasses = {
-    sm: { box: "size-8", text: "text-xs", subtext: "text-[9px]", font: "text-xs" },
-    md: { box: "size-10 sm:size-11", text: "text-sm sm:text-base", subtext: "text-[10px] sm:text-xs", font: "text-sm font-black" },
-    lg: { box: "size-14 sm:size-16", text: "text-xl sm:text-2xl", subtext: "text-xs", font: "text-lg font-black" },
+    sm: { box: "size-7 shrink-0", text: "text-xs font-black", subtext: "text-[9px]", font: "text-[11px] font-black" },
+    md: { box: "size-8 sm:size-9 shrink-0", text: "text-xs font-black leading-tight", subtext: "text-[10px] leading-tight", font: "text-xs font-black" },
+    lg: { box: "size-12 sm:size-14 shrink-0", text: "text-lg sm:text-xl font-black", subtext: "text-xs", font: "text-base font-black" },
   }[size];
 
   // 1. Custom Uploaded Logo Image
