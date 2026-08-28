@@ -1,7 +1,11 @@
 # iReside — User Manual
 
 > Property Management Platform  
-> Version 1.0 | May 2026
+> Version 1.0 | May 2026  
+> 
+> 📖 **Role-Specific Dedicated Manuals:**
+> - [iReside Tenant User Manual](file:///c:/Users/JV/Documents/GitHub/iReside/docs/iReside-Tenant-User-Manual.md)
+> - [iReside Landlord User Manual](file:///c:/Users/JV/Documents/GitHub/iReside/docs/iReside-Landlord-User-Manual.md)
 
 ---
 

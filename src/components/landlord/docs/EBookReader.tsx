@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useRef, forwardRef } from "react";
 import dynamic from "next/dynamic";
-import Image from "next/image";
+import { usePathname } from "next/navigation";
 import {
   ChevronLeft,
   ChevronRight,
@@ -13,6 +13,8 @@ import {
   Maximize2,
   Minimize2,
   BookOpen,
+  Building2,
+  Home,
   Sparkles,
   ExternalLink,
   Search,
@@ -48,6 +50,7 @@ interface EBookReaderProps {
   onAudienceChange: (aud: DocAudience) => void;
   onNavigateTab?: (tabId: string) => void;
   className?: string;
+  defaultBackHref?: string;
 }
 
 // Preloaded Web Audio Context & In-Memory Buffer for Zero-Latency Sound
@@ -78,12 +81,11 @@ let lastAudioPlayTime = 0;
 // 0ms Zero-Latency Page Turn Audio (Single-Shot Throttle Guard)
 function playPageFlipSound(isMuted: boolean, mode: "realistic" | "fast" = "realistic") {
   try {
-    // Silenced when muted or when animations are OFF for fast, instantaneous browsing
     if (isMuted || mode === "fast" || typeof window === "undefined") return;
 
     const now = Date.now();
     if (now - lastAudioPlayTime < 450) {
-      return; // Prevent duplicate trigger
+      return;
     }
     lastAudioPlayTime = now;
 
@@ -101,7 +103,6 @@ function playPageFlipSound(isMuted: boolean, mode: "realistic" | "fast" = "reali
       return;
     }
 
-    // Fast fallback
     const audio = new Audio("/audios/pageturn.mp3");
     audio.volume = 0.6;
     audio.currentTime = 0;
@@ -135,7 +136,6 @@ const BookPage = forwardRef<
       )}
     >
       <div className="w-full h-full flex flex-col justify-between overflow-hidden relative">
-        {/* Subtle Micro Paper Texture */}
         <div className="absolute inset-0 bg-[radial-gradient(#00000004_1px,transparent_1px)] [background-size:10px_10px] pointer-events-none" />
         <div className="relative z-10 w-full h-full flex flex-col justify-between">
           {children}
@@ -151,7 +151,9 @@ export function EBookReader({
   onAudienceChange,
   onNavigateTab,
   className,
+  defaultBackHref,
 }: EBookReaderProps) {
+  const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
@@ -170,10 +172,15 @@ export function EBookReader({
     setMounted(true);
   }, []);
 
+  const targetAudience: "tenant" | "landlord" | "it" = useMemo(() => {
+    if (audience === "user") return "landlord";
+    return audience as "tenant" | "landlord" | "it";
+  }, [audience]);
+
   // Filter articles pool for current audience
   const articles = useMemo(() => {
-    return DOCS_ARTICLES.filter((a) => a.audience === audience);
-  }, [audience]);
+    return DOCS_ARTICLES.filter((a) => a.audience === targetAudience);
+  }, [targetAudience]);
 
   // Total pages = Cover (0) + TOC (1) + Articles (N) + Support (1) + Quick Reference (1) + Back Cover (1)
   const totalBookPages = useMemo(() => {
@@ -182,8 +189,24 @@ export function EBookReader({
 
   // Search Results
   const searchResponse = useMemo(() => {
-    return searchDocs(searchQuery, { audience });
-  }, [searchQuery, audience]);
+    return searchDocs(searchQuery, { audience: targetAudience });
+  }, [searchQuery, targetAudience]);
+
+  // Back href calculation
+  const backHref = useMemo(() => {
+    if (defaultBackHref) return defaultBackHref;
+    if (pathname?.startsWith("/tenant") || targetAudience === "tenant") {
+      return "/tenant/dashboard";
+    }
+    return "/landlord/dashboard";
+  }, [defaultBackHref, pathname, targetAudience]);
+
+  const backLabel = useMemo(() => {
+    if (pathname?.startsWith("/tenant") || targetAudience === "tenant") {
+      return "Back to Resident Portal";
+    }
+    return "Back to Dashboard";
+  }, [pathname, targetAudience]);
 
   // Turn Next with Anti-Spam Animation Guard
   const handleTurnNext = () => {
@@ -285,7 +308,7 @@ export function EBookReader({
         id: "handover-kit",
       });
 
-      await generateDocsPdf(audience);
+      await generateDocsPdf(targetAudience);
 
       toast.success("PDF Guide downloaded successfully!", { id: "handover-kit" });
     } catch {
@@ -314,49 +337,72 @@ export function EBookReader({
         className
       )}
     >
-      {/* 1. High-Resolution Architectural Photo Background with Gentle Center Fade */}
+      {/* 1. Background Visual Accent */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center scale-105"
           style={{ backgroundImage: "url('/images/ebook_workspace_bg.jpg')" }}
         />
-        {/* Soft Luminous White Vignette (bright & clearly visible around perimeter, gentle focus in center) */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.85)_0%,rgba(255,255,255,0.60)_45%,rgba(255,255,255,0.25)_75%,rgba(255,255,255,0.08)_100%)] backdrop-blur-[1.5px]" />
       </div>
 
       {/* =================================================================== */}
-      {/* 1. TOP HEADER (Clean White Minimalist Header)                       */}
+      {/* 1. TOP HEADER                                                       */}
       {/* =================================================================== */}
-      <header className="shrink-0 relative w-full h-14 px-6 flex items-center justify-between z-30 bg-white/80 backdrop-blur-xl border-b border-zinc-200/80 shadow-xs">
-        {/* Left: Back to Dashboard */}
+      <header className="shrink-0 relative w-full h-14 px-4 sm:px-6 flex items-center justify-between z-30 bg-white/80 backdrop-blur-xl border-b border-zinc-200/80 shadow-xs">
+        {/* Left: Back Link */}
         <div className="flex items-center">
           <Link
-            href="/landlord/dashboard"
+            href={backHref}
             className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-zinc-100/90 hover:bg-zinc-200 text-xs font-semibold text-zinc-800 border border-zinc-200/80 transition-all shadow-xs"
           >
             <ArrowLeft className="size-3.5 text-zinc-600" />
-            <span>Back to Dashboard</span>
+            <span className="hidden md:inline">{backLabel}</span>
+            <span className="md:hidden">Back</span>
           </Link>
         </div>
 
-        {/* Center: Audience Selector (Visually & Mathematically Centered) */}
+        {/* Center: Dedicated Audience Tabs (Tenant vs Landlord vs IT) */}
         <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 p-1 rounded-xl bg-zinc-100 border border-zinc-200/80 flex items-center shadow-xs">
+          {/* Tenant Manual Tab */}
           <button
             type="button"
             onClick={() => {
-              onAudienceChange("user");
+              onAudienceChange("tenant");
               handleJumpToPage(0);
             }}
             className={cn(
-              "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-2",
-              audience === "user"
+              "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5",
+              targetAudience === "tenant"
                 ? "bg-zinc-900 text-white shadow-xs font-bold"
                 : "text-zinc-600 hover:text-zinc-950"
             )}
           >
-            <BookOpen className="size-3.5" />
-            <span>Landlord Guide</span>
+            <Home className="size-3.5" />
+            <span className="hidden sm:inline">Tenant</span>
+            <span className="sm:hidden">Tenant</span>
           </button>
+
+          {/* Landlord Manual Tab */}
+          <button
+            type="button"
+            onClick={() => {
+              onAudienceChange("landlord");
+              handleJumpToPage(0);
+            }}
+            className={cn(
+              "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5",
+              targetAudience === "landlord"
+                ? "bg-zinc-900 text-white shadow-xs font-bold"
+                : "text-zinc-600 hover:text-zinc-950"
+            )}
+          >
+            <Building2 className="size-3.5" />
+            <span className="hidden sm:inline">Landlord</span>
+            <span className="sm:hidden">Owner</span>
+          </button>
+
+          {/* Technical Guide Tab */}
           <button
             type="button"
             onClick={() => {
@@ -364,26 +410,27 @@ export function EBookReader({
               handleJumpToPage(0);
             }}
             className={cn(
-              "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-2",
-              audience === "it"
+              "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5",
+              targetAudience === "it"
                 ? "bg-zinc-900 text-white shadow-xs font-bold"
                 : "text-zinc-600 hover:text-zinc-950"
             )}
           >
             <Server className="size-3.5" />
-            <span>Technical Guide</span>
+            <span className="hidden sm:inline">Technical</span>
+            <span className="sm:hidden">IT</span>
           </button>
         </div>
 
         {/* Right Actions */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => setShowSearchModal(true)}
             className="h-8 px-3 rounded-lg bg-zinc-100/90 hover:bg-zinc-200 text-xs text-zinc-700 border border-zinc-200/80 flex items-center gap-2 transition-all shadow-xs"
           >
             <Search className="size-3.5 text-zinc-500" />
-            <span className="hidden sm:inline">Search (e.g. GCash, rent)...</span>
+            <span className="hidden lg:inline">Search (e.g. GCash, rent)...</span>
           </button>
 
           <button
@@ -393,7 +440,7 @@ export function EBookReader({
             className="h-8 px-3.5 rounded-lg bg-zinc-950 hover:bg-zinc-800 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 transition-all"
           >
             <Download className="size-3.5" />
-            <span className="hidden sm:inline">Download Guide</span>
+            <span className="hidden sm:inline">PDF</span>
           </button>
         </div>
       </header>
@@ -405,7 +452,7 @@ export function EBookReader({
         type="button"
         onClick={handleTurnPrev}
         title="Previous Page"
-        className="absolute left-4 sm:left-8 top-1/2 -translate-y-1/2 z-30 size-12 rounded-full bg-white/90 hover:bg-white active:scale-95 text-zinc-700 hover:text-zinc-950 backdrop-blur-md flex items-center justify-center transition-all shadow-xl border border-zinc-200 group"
+        className="absolute left-3 sm:left-8 top-1/2 -translate-y-1/2 z-30 size-11 sm:size-12 rounded-full bg-white/90 hover:bg-white active:scale-95 text-zinc-700 hover:text-zinc-950 backdrop-blur-md flex items-center justify-center transition-all shadow-xl border border-zinc-200 group"
       >
         <ChevronLeft className="size-6 group-hover:-translate-x-0.5 transition-transform" />
       </button>
@@ -414,7 +461,7 @@ export function EBookReader({
         type="button"
         onClick={handleTurnNext}
         title="Next Page"
-        className="absolute right-4 sm:right-8 top-1/2 -translate-y-1/2 z-30 size-12 rounded-full bg-white/90 hover:bg-white active:scale-95 text-zinc-700 hover:text-zinc-950 backdrop-blur-md flex items-center justify-center transition-all shadow-xl border border-zinc-200 group"
+        className="absolute right-3 sm:right-8 top-1/2 -translate-y-1/2 z-30 size-11 sm:size-12 rounded-full bg-white/90 hover:bg-white active:scale-95 text-zinc-700 hover:text-zinc-950 backdrop-blur-md flex items-center justify-center transition-all shadow-xl border border-zinc-200 group"
       >
         <ChevronRight className="size-6 group-hover:translate-x-0.5 transition-transform" />
       </button>
@@ -438,7 +485,7 @@ export function EBookReader({
           >
             {/* @ts-ignore */}
             <HTMLFlipBook
-              key={`${audience}-${flipAnimationMode}`}
+              key={`${targetAudience}-${flipAnimationMode}`}
               ref={flipBookRef}
               width={440}
               height={580}
@@ -465,7 +512,7 @@ export function EBookReader({
                 setCurrentPage(e.data);
                 setTimeout(() => {
                   isFlippingRef.current = false;
-                }, 40);
+                }, 400);
               }}
               className="drop-shadow-[0_25px_50px_rgba(0,0,0,0.18)]"
               style={{ margin: "0 auto" }}
@@ -485,7 +532,11 @@ export function EBookReader({
                     </span>
                   </div>
                   <span className="text-[10px] text-zinc-500 font-semibold uppercase">
-                    User Manual
+                    {targetAudience === "tenant"
+                      ? "Resident User Manual"
+                      : targetAudience === "landlord"
+                      ? "Landlord Operations Guide"
+                      : "Technical Manual"}
                   </span>
                 </div>
 
@@ -493,10 +544,16 @@ export function EBookReader({
                 <div className="space-y-5 my-auto">
                   <div className="space-y-2">
                     <div className="inline-block px-2.5 py-1 bg-zinc-900 text-white text-[10px] font-bold uppercase tracking-wide">
-                      {audience === "user" ? "Step-by-Step Guide" : "Technical Documentation"}
+                      {targetAudience === "tenant"
+                        ? "Resident Living Guide"
+                        : targetAudience === "landlord"
+                        ? "Property Manager Guide"
+                        : "Technical Documentation"}
                     </div>
                     <h1 className="text-2xl sm:text-3xl font-black text-zinc-950 tracking-tight leading-tight font-serif">
-                      {audience === "user"
+                      {targetAudience === "tenant"
+                        ? "How to Live Seamlessly with iReside"
+                        : targetAudience === "landlord"
                         ? "How to Manage Your Property with iReside"
                         : "Technical Setup & Developer Guide"}
                     </h1>
@@ -505,9 +562,11 @@ export function EBookReader({
                   <div className="h-0.5 w-12 bg-zinc-950" />
 
                   <p className="text-xs text-zinc-600 leading-relaxed font-normal max-w-sm">
-                    {audience === "user"
-                      ? "A simple, easy-to-follow guide to adding rental units, collecting GCash payments, inviting tenants, and handling repairs."
-                      : "Clear instructions for setting up the database, security rules, email sending, and maintenance tools."}
+                    {targetAudience === "tenant"
+                      ? "A simple, step-by-step guide to paying rent online via GCash/Card, signing digital leases, reporting maintenance issues, and connecting with your community."
+                      : targetAudience === "landlord"
+                      ? "A complete guide to adding rental units, collecting GCash payments, inviting tenants, submeter billing, and handling repairs."
+                      : "Clear instructions for setting up the database, security rules, email sending, serverless crons, and maintenance tools."}
                   </p>
                 </div>
 
@@ -521,7 +580,7 @@ export function EBookReader({
                     <button
                       type="button"
                       onClick={handleTurnNext}
-                      className="px-5 py-2.5 bg-zinc-950 hover:bg-zinc-850 text-white text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 shadow-sm active:scale-95"
+                      className="px-5 py-2.5 bg-zinc-950 hover:bg-zinc-800 text-white text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 shadow-sm active:scale-95"
                     >
                       <span>Open Guide</span>
                       <ChevronRight className="size-4" />
@@ -544,7 +603,11 @@ export function EBookReader({
 
                   <div>
                     <h2 className="text-xl font-black text-zinc-950 font-serif">
-                      {audience === "user" ? "Topics & Chapters" : "Technical Topics"}
+                      {targetAudience === "tenant"
+                        ? "Resident Chapters"
+                        : targetAudience === "landlord"
+                        ? "Landlord Operations"
+                        : "Technical Topics"}
                     </h2>
                     <p className="text-[11px] text-zinc-500 mt-0.5">
                       Click any topic below to turn directly to that page.
@@ -578,7 +641,7 @@ export function EBookReader({
                 </div>
 
                 <div className="pt-3 border-t border-zinc-200 flex items-center justify-between text-[9px] text-zinc-400">
-                  <span>iReside User Guide</span>
+                  <span>iReside Guide</span>
                   <span>Contents</span>
                 </div>
               </BookPage>
@@ -665,7 +728,15 @@ export function EBookReader({
 
                     {/* Footer Button */}
                     <div className="pt-2 border-t border-zinc-200 flex items-center justify-between text-xs">
-                      {article.actionShortcut ? (
+                      {article.actionShortcut?.href ? (
+                        <Link
+                          href={article.actionShortcut.href}
+                          className="px-2.5 py-1 bg-zinc-900 hover:bg-zinc-800 text-white text-[9.5px] font-bold uppercase tracking-wider transition-colors flex items-center gap-1.5"
+                        >
+                          <span>{article.actionShortcut.label}</span>
+                          <ExternalLink className="size-2.5" />
+                        </Link>
+                      ) : article.actionShortcut?.tabId && onNavigateTab ? (
                         <button
                           type="button"
                           onClick={() => {
@@ -711,16 +782,18 @@ export function EBookReader({
 
                   <div className="space-y-2.5 pt-1">
                     <div className="p-3 bg-zinc-50 border border-zinc-200 space-y-1">
-                      <span className="text-[10px] uppercase text-zinc-900 font-bold block">1. System Health Check</span>
+                      <span className="text-[10px] uppercase text-zinc-900 font-bold block">1. 24/7 Digital Assistant</span>
                       <p className="text-[10.5px] text-zinc-600">
-                        Check if your email and database connections are working properly at /setup/technical.
+                        {targetAudience === "tenant"
+                          ? "Use the floating iRis assistant widget in the bottom right corner for instant answers about house rules and lease dates."
+                          : "Verify system connections and test email mailers via the Technical Commissioning Doctor."}
                       </p>
                     </div>
 
                     <div className="p-3 bg-zinc-50 border border-zinc-200 space-y-1">
-                      <span className="text-[10px] uppercase text-zinc-900 font-bold block">2. Your Data is Protected</span>
+                      <span className="text-[10px] uppercase text-zinc-900 font-bold block">2. Privacy & Record Protection</span>
                       <p className="text-[10.5px] text-zinc-600">
-                        Each landlord's property records, tenant data, and billing history are kept strictly private and secure.
+                        All official payment receipts, signed lease contracts, and resident records are encrypted and securely stored.
                       </p>
                     </div>
                   </div>
@@ -732,7 +805,7 @@ export function EBookReader({
                 </div>
               </BookPage>
 
-              {/* PAGE N+3: QUICK REFERENCE (Right Page) */}
+              {/* PAGE N+3: QUICK KEYBOARD CONTROLS */}
               <BookPage
                 density="soft"
                 isRightPage
@@ -798,12 +871,16 @@ export function EBookReader({
                       iReside System
                     </h2>
                     <p className="text-xs text-zinc-500">
-                      Simple property management made easy.
+                      {targetAudience === "tenant"
+                        ? "Seamless residential living and rent management."
+                        : "Simple property management made easy."}
                     </p>
                   </div>
 
                   <p className="text-[11px] text-zinc-600 max-w-xs mx-auto leading-relaxed">
-                    Designed for property owners, landlords, and residents.
+                    {targetAudience === "tenant"
+                      ? "Designed for tenants and resident communities."
+                      : "Designed for property owners, landlords, and managers."}
                   </p>
                 </div>
 
@@ -811,7 +888,7 @@ export function EBookReader({
                   <button
                     type="button"
                     onClick={() => handleJumpToPage(0)}
-                    className="px-4 py-2 bg-zinc-950 hover:bg-primary text-white text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+                    className="px-4 py-2 bg-zinc-950 hover:bg-zinc-800 text-white text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
                   >
                     <RotateCcw className="size-3.5" />
                     <span>Back to Front</span>
@@ -828,9 +905,9 @@ export function EBookReader({
       </main>
 
       {/* =================================================================== */}
-      {/* 4. BOTTOM CONTROL DOCK (Clean White Glass Dock)                     */}
+      {/* 4. BOTTOM CONTROL DOCK                                              */}
       {/* =================================================================== */}
-      <footer className="shrink-0 relative w-full h-12 bg-white/85 backdrop-blur-xl border-t border-zinc-200/80 px-6 flex items-center justify-between z-30 text-xs text-zinc-700 shadow-xs">
+      <footer className="shrink-0 relative w-full h-12 bg-white/85 backdrop-blur-xl border-t border-zinc-200/80 px-4 sm:px-6 flex items-center justify-between z-30 text-xs text-zinc-700 shadow-xs">
         {/* Left Tools: Zoom & TOC */}
         <div className="flex items-center gap-2">
           <button
@@ -858,7 +935,7 @@ export function EBookReader({
         </div>
 
         {/* Center: Flip Controls & Page Label */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-3">
           <button
             type="button"
             onClick={() => handleJumpToPage(0)}
@@ -877,7 +954,7 @@ export function EBookReader({
             <ChevronLeft className="size-4" />
           </button>
 
-          <div className="px-3 py-0.5 rounded-md bg-zinc-100 font-mono text-xs font-semibold text-zinc-800 select-none border border-zinc-200/80">
+          <div className="px-2.5 sm:px-3 py-0.5 rounded-md bg-zinc-100 font-mono text-[11px] sm:text-xs font-semibold text-zinc-800 select-none border border-zinc-200/80">
             {pageLabel}
           </div>
 
@@ -915,13 +992,13 @@ export function EBookReader({
             }}
             title={flipAnimationMode === "realistic" ? "Turn animation off" : "Turn animation on"}
             className={cn(
-              "hidden sm:flex px-3 py-1 rounded-lg border text-xs font-semibold items-center transition-all shadow-xs",
+              "hidden sm:flex px-2.5 py-1 rounded-lg border text-xs font-semibold items-center transition-all shadow-xs",
               flipAnimationMode === "realistic"
                 ? "bg-zinc-900 text-white border-zinc-900"
                 : "bg-zinc-100 hover:bg-zinc-200 border-zinc-200 text-zinc-700"
             )}
           >
-            <span>{flipAnimationMode === "realistic" ? "Animation: ON" : "Animation: OFF"}</span>
+            <span>{flipAnimationMode === "realistic" ? "Anim: ON" : "Anim: OFF"}</span>
           </button>
 
           <button
@@ -945,7 +1022,7 @@ export function EBookReader({
       </footer>
 
       {/* =================================================================== */}
-      {/* 5. SEARCH MODAL POPUP (Clean Light Modal)                           */}
+      {/* 5. SEARCH MODAL POPUP                                               */}
       {/* =================================================================== */}
       {showSearchModal && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
@@ -970,7 +1047,7 @@ export function EBookReader({
                 autoFocus
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search topics (e.g. GCash, rent, meter reading)..."
+                placeholder="Search topics (e.g. GCash, rent, lease, maintenance)..."
                 className="w-full h-10 pl-4 pr-10 rounded-lg bg-zinc-50 border border-zinc-200 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-900"
               />
               {searchQuery && (
@@ -1011,7 +1088,7 @@ export function EBookReader({
       )}
 
       {/* =================================================================== */}
-      {/* 6. TABLE OF CONTENTS POPUP DRAWER (Clean Light Drawer)              */}
+      {/* 6. TABLE OF CONTENTS POPUP DRAWER                                   */}
       {/* =================================================================== */}
       {showTOC && (
         <div className="absolute bottom-14 left-4 sm:left-8 z-50 w-80 max-h-[460px] rounded-xl bg-white border border-zinc-200 p-4 shadow-2xl backdrop-blur-xl overflow-y-auto custom-scrollbar-premium space-y-2">

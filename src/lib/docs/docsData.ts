@@ -1,12 +1,27 @@
-export type DocAudience = "user" | "it";
+export type DocAudience = "tenant" | "landlord" | "it" | "user";
 
 export type DocCategory =
+  // Tenant Categories
+  | "tenant_onboarding"
+  | "tenant_leasing"
+  | "tenant_payments"
+  | "tenant_maintenance"
+  | "tenant_utilities"
+  | "tenant_community"
+  | "tenant_messaging"
+  | "tenant_moveout"
+  | "tenant_faqs"
+  // Landlord Categories
   | "property_setup"
   | "billing_payments"
   | "tenants_leases"
   | "maintenance_tickets"
+  | "visual_unit_map"
+  | "marketing_flyers"
+  | "move_out_deposit"
   | "mobile_pwa"
   | "troubleshooting_faqs"
+  // IT / Technical Categories
   | "architecture_cloud"
   | "environment_security"
   | "database_schema"
@@ -15,7 +30,7 @@ export type DocCategory =
 
 export interface DocArticle {
   id: string;
-  audience: DocAudience;
+  audience: "tenant" | "landlord" | "it";
   category: DocCategory;
   categoryLabel: string;
   title: string;
@@ -40,44 +55,121 @@ export interface DocArticle {
 
 export const CATEGORY_DEFINITIONS: Record<
   DocCategory,
-  { label: string; iconName: string; audience: DocAudience; description: string }
+  { label: string; iconName: string; audience: "tenant" | "landlord" | "it"; description: string }
 > = {
+  // Tenant Categories
+  tenant_onboarding: {
+    label: "Getting Started & Profile",
+    iconName: "Smartphone",
+    audience: "tenant",
+    description: "Account access, mobile PWA installation, and managing emergency contacts.",
+  },
+  tenant_leasing: {
+    label: "Lease & E-Signatures",
+    iconName: "FileText",
+    audience: "tenant",
+    description: "Reviewing lease terms, digital signature signing, and downloading signed contracts.",
+  },
+  tenant_payments: {
+    label: "Payments & Receipts",
+    iconName: "CreditCard",
+    audience: "tenant",
+    description: "Paying rent via GCash/Card, tracking billing history, and downloading Official Receipts.",
+  },
+  tenant_maintenance: {
+    label: "Maintenance & Repairs",
+    iconName: "Wrench",
+    audience: "tenant",
+    description: "Submitting repair tickets with photos, self-repair options, and rating completed work.",
+  },
+  tenant_utilities: {
+    label: "Utilities & Submeters",
+    iconName: "Zap",
+    audience: "tenant",
+    description: "Tracking electricity and water meter readings, tariffs, and monthly consumption trends.",
+  },
+  tenant_community: {
+    label: "Community & House Rules",
+    iconName: "Users",
+    audience: "tenant",
+    description: "Building notice board, neighbor discussions, and reviewing community house rules.",
+  },
+  tenant_messaging: {
+    label: "Direct Messaging",
+    iconName: "MessageSquare",
+    audience: "tenant",
+    description: "Communicating directly with property management and file attachments.",
+  },
+  tenant_moveout: {
+    label: "Move-Out & Deposits",
+    iconName: "Home",
+    audience: "tenant",
+    description: "Notice of intent to vacate, move-out inspections, and security deposit settlements.",
+  },
+  tenant_faqs: {
+    label: "Resident FAQs & Help",
+    iconName: "HelpCircle",
+    audience: "tenant",
+    description: "Frequently asked questions for residents and quick troubleshooting.",
+  },
+
+  // Landlord Categories
   property_setup: {
     label: "Property & Unit Setup",
     iconName: "Building2",
-    audience: "user",
-    description: "Adding units, pricing, custom branding, and lobby flyer posters.",
+    audience: "landlord",
+    description: "Adding properties, floor configurations, pricing, and unit amenities.",
   },
   billing_payments: {
     label: "GCash & Billing",
     iconName: "CreditCard",
-    audience: "user",
-    description: "GCash QR setup, utility readings, invoicing, and rent receipts.",
+    audience: "landlord",
+    description: "GCash QR setup, utility submeter readings, invoicing, and rent receipts.",
   },
   tenants_leases: {
     label: "Tenants & Leases",
     iconName: "Users",
-    audience: "user",
-    description: "Tenant onboarding magic links, digital contracts, and move-in/out.",
+    audience: "landlord",
+    description: "Tenant onboarding magic links, digital contracts, and lease administration.",
   },
   maintenance_tickets: {
     label: "Maintenance & Repairs",
     iconName: "Wrench",
-    audience: "user",
+    audience: "landlord",
     description: "Managing repair requests, assigning vendors, and photo proofs.",
+  },
+  visual_unit_map: {
+    label: "Interactive Unit Map",
+    iconName: "Map",
+    audience: "landlord",
+    description: "2D color-coded floorplans and 3D visual building explorer.",
+  },
+  marketing_flyers: {
+    label: "Marketing & Posters",
+    iconName: "Sparkles",
+    audience: "landlord",
+    description: "Generating QR lobby posters and social media vacancy flyers.",
+  },
+  move_out_deposit: {
+    label: "Move-Out Settlement",
+    iconName: "ShieldCheck",
+    audience: "landlord",
+    description: "Move-out inspections, photo checklists, itemized deductions, and refunds.",
   },
   mobile_pwa: {
     label: "Mobile App & Portal",
     iconName: "Smartphone",
-    audience: "user",
-    description: "Installing the resident app on iOS/Android and push notifications.",
+    audience: "landlord",
+    description: "Installing the resident and landlord app on iOS/Android.",
   },
   troubleshooting_faqs: {
     label: "Troubleshooting & FAQs",
     iconName: "HelpCircle",
-    audience: "user",
-    description: "Instant solutions to common landlord and resident questions.",
+    audience: "landlord",
+    description: "Instant solutions to common landlord operational questions.",
   },
+
+  // IT Categories
   architecture_cloud: {
     label: "Architecture & Hosting",
     iconName: "Server",
@@ -112,16 +204,246 @@ export const CATEGORY_DEFINITIONS: Record<
 
 export const DOCS_ARTICLES: DocArticle[] = [
   // =========================================================================
-  // USER MANUAL - NON-TECHNICAL
+  // 1. TENANT DEDICATED MANUAL
+  // =========================================================================
+  {
+    id: "tenant-sign-lease",
+    audience: "tenant",
+    category: "tenant_leasing",
+    categoryLabel: "Lease & E-Signatures",
+    title: "How to review and sign your digital lease agreement",
+    summary: "Step-by-step guide to reviewing lease terms and drawing your legally binding electronic signature.",
+    difficulty: "beginner",
+    readTime: "3 min",
+    keywords: ["lease", "sign", "signature", "contract", "tenant", "rent", "agreement", "pdf"],
+    actionShortcut: {
+      label: "Open Lease Signing Page",
+      href: "/tenant/sign-lease",
+    },
+    relatedArticleIds: ["tenant-pay-rent-online", "tenant-download-lease-pdf"],
+    steps: [
+      {
+        title: "Access Pending Lease",
+        description: "Click 'Sign Lease' in your dashboard banner or navigate to Leases from the sidebar.",
+      },
+      {
+        title: "Review Lease Terms & Clauses",
+        description: "Carefully inspect your monthly rental amount, payment due day, security deposit, and house rules.",
+      },
+      {
+        title: "Draw Your Digital Signature",
+        description: "Use your finger (on mobile/tablet) or mouse (on desktop) to draw your signature in the signature box.",
+        tip: "You can click 'Clear Signature' anytime to redraw before confirming.",
+      },
+      {
+        title: "Confirm & Submit",
+        description: "Check the legal acknowledgment checkbox and click 'Confirm & Sign Lease'. A copy is instantly saved to your vault.",
+      },
+    ],
+  },
+  {
+    id: "tenant-pay-rent-online",
+    audience: "tenant",
+    category: "tenant_payments",
+    categoryLabel: "Payments & Receipts",
+    title: "How to pay rent and utility bills online (GCash, Maya, Cards)",
+    summary: "Learn how to pay your active invoices online, upload payment screenshots, and receive official receipts.",
+    difficulty: "beginner",
+    readTime: "2 min",
+    keywords: ["pay", "payment", "rent", "gcash", "maya", "card", "invoice", "receipt", "billing"],
+    actionShortcut: {
+      label: "Open Payments Hub",
+      href: "/tenant/payments",
+    },
+    relatedArticleIds: ["tenant-download-receipt", "tenant-utility-readings"],
+    steps: [
+      {
+        title: "Navigate to Finance Hub",
+        description: "Open the Payments section in the sidebar to view all outstanding and pending invoices.",
+      },
+      {
+        title: "Select Invoice & Click 'Pay Now'",
+        description: "Choose the active monthly invoice and click 'Pay Now' to launch the payment checkout.",
+      },
+      {
+        title: "Scan GCash QR or Pay via Card",
+        description: "Scan the landlord's official GCash QR code, or authenticate with Maya, QR Ph, or Debit/Credit Card.",
+      },
+      {
+        title: "Instant Verification & Receipt",
+        description: "Upon settlement, your invoice updates to 'Paid' immediately and an Official Receipt PDF is issued.",
+      },
+    ],
+  },
+  {
+    id: "tenant-submit-maintenance",
+    audience: "tenant",
+    category: "tenant_maintenance",
+    categoryLabel: "Maintenance & Repairs",
+    title: "How to submit repair requests and upload damage photos",
+    summary: "Quickly report plumbing, electrical, or appliance issues with photos to get prompt technician service.",
+    difficulty: "beginner",
+    readTime: "2 min",
+    keywords: ["maintenance", "repair", "plumbing", "leak", "electric", "ac", "ticket", "photo"],
+    actionShortcut: {
+      label: "New Maintenance Ticket",
+      href: "/tenant/maintenance",
+    },
+    relatedArticleIds: ["tenant-direct-messaging", "tenant-faqs-repairs"],
+    steps: [
+      {
+        title: "Open Maintenance in Sidebar",
+        description: "Go to Maintenance > Click '+ New Maintenance Request'.",
+      },
+      {
+        title: "Select Category & Urgency",
+        description: "Choose Plumbing, Electrical, Appliance, or Structural, and mark urgency (Low, Medium, High, Emergency).",
+      },
+      {
+        title: "Upload Photos of the Issue",
+        description: "Take clear photos of the damaged fixture or leak so the technician brings the exact replacement parts.",
+      },
+      {
+        title: "Track Status in Real Time",
+        description: "Watch your ticket progress from 'Pending' to 'In Progress' to 'Resolved', and rate technician performance upon completion.",
+      },
+    ],
+  },
+  {
+    id: "tenant-utility-readings",
+    audience: "tenant",
+    category: "tenant_utilities",
+    categoryLabel: "Utilities & Submeters",
+    title: "Understanding your electric & water submeter readings",
+    summary: "View monthly meter consumption logs, tariff rate calculations, and meter dial verification photos.",
+    difficulty: "beginner",
+    readTime: "2 min",
+    keywords: ["utilities", "electric", "water", "meter", "submeter", "consumption", "kwh", "cubic meter"],
+    actionShortcut: {
+      label: "View Facilities & Utilities",
+      href: "/tenant/utilities",
+    },
+    relatedArticleIds: ["tenant-pay-rent-online"],
+    steps: [
+      {
+        title: "Open Facilities & Utilities",
+        description: "Navigate to Facilities in the sidebar to review your unit's meter history.",
+      },
+      {
+        title: "Check Current vs. Previous Reading",
+        description: "See your start reading, end reading, and total consumed units (kWh for electricity, m³ for water).",
+      },
+      {
+        title: "Verify Calculation Formula",
+        description: "iReside multiplies your net consumption by the property rate: (Current Reading - Previous Reading) × Tariff Rate.",
+      },
+    ],
+  },
+  {
+    id: "tenant-community-rules",
+    audience: "tenant",
+    category: "tenant_community",
+    categoryLabel: "Community & House Rules",
+    title: "Building notice board, house rules & community feed",
+    summary: "Stay informed about building advisories, power interruptions, amenity schedules, and connect with neighbors.",
+    difficulty: "beginner",
+    readTime: "2 min",
+    keywords: ["community", "announcement", "rules", "pool", "gym", "garbage", "quiet hours", "neighbor"],
+    actionShortcut: {
+      label: "Open Community Hub",
+      href: "/tenant/community",
+    },
+    relatedArticleIds: ["tenant-direct-messaging"],
+    steps: [
+      {
+        title: "Check Pinned Announcements",
+        description: "Important advisories (tank cleaning, elevator maintenance, holiday hours) are pinned at the top.",
+      },
+      {
+        title: "Review House Rules",
+        description: "Click 'House Rules' to review quiet hours (e.g. 10 PM - 7 AM), visitor policies, and trash disposal schedules.",
+      },
+      {
+        title: "Engage with Neighbors",
+        description: "Share positive updates, ask for local recommendations, or RSVP to building events in the feed.",
+      },
+    ],
+  },
+  {
+    id: "tenant-move-out-settlement",
+    audience: "tenant",
+    category: "tenant_moveout",
+    categoryLabel: "Move-Out & Deposits",
+    title: "Notice to vacate, inspection checklist & security deposit refund",
+    summary: "The complete guide to submitting move-out notices, passing walkthrough inspections, and receiving your deposit.",
+    difficulty: "intermediate",
+    readTime: "3 min",
+    keywords: ["move out", "vacate", "deposit", "inspection", "refund", "checklist", "keys", "settlement"],
+    actionShortcut: {
+      label: "View Move-Out Guide",
+      href: "/tenant/lease",
+    },
+    relatedArticleIds: ["tenant-sign-lease"],
+    steps: [
+      {
+        title: "Submit 30-Day Notice of Intent",
+        description: "Notify management at least 30 days prior to your target departure date via the tenant portal.",
+      },
+      {
+        title: "Prepare Unit with Move-Out Checklist",
+        description: "Clean the unit, remove all personal items, repair tenant-caused wall holes, and collect all keys/keycards.",
+      },
+      {
+        title: "Conduct Walkthrough Inspection",
+        description: "Inspect the unit with property staff and record final electricity and water meter readings.",
+      },
+      {
+        title: "Receive Itemized Deposit Refund",
+        description: "Review your final settlement statement with any unpaid utility deductions, and receive your net refund via bank transfer.",
+      },
+    ],
+  },
+  {
+    id: "tenant-install-app",
+    audience: "tenant",
+    category: "tenant_onboarding",
+    categoryLabel: "Getting Started & Profile",
+    title: "Installing iReside as an App on iPhone & Android (PWA)",
+    summary: "Install iReside directly to your smartphone home screen without searching through app stores.",
+    difficulty: "beginner",
+    readTime: "2 min",
+    keywords: ["app", "install", "ios", "iphone", "android", "pwa", "download", "homescreen"],
+    actionShortcut: {
+      label: "Open Download Page",
+      href: "/download",
+    },
+    relatedArticleIds: ["tenant-sign-lease"],
+    steps: [
+      {
+        title: "For iPhone Users (Safari)",
+        description: "Open iReside in Safari > Tap the 'Share' icon (box with upward arrow) > Tap 'Add to Home Screen' > Tap 'Add'.",
+      },
+      {
+        title: "For Android Users (Chrome)",
+        description: "Open iReside in Chrome > Tap the 3-dot menu or click the 'Install App' banner > Tap 'Install'.",
+      },
+      {
+        title: "Enable Instant Push Alerts",
+        description: "Launch the app from your home screen and allow notifications for instant payment receipts and repair updates.",
+      },
+    ],
+  },
+
+  // =========================================================================
+  // 2. LANDLORD DEDICATED MANUAL
   // =========================================================================
   {
     id: "setup-gcash-qr",
-    audience: "user",
+    audience: "landlord",
     category: "billing_payments",
     categoryLabel: "GCash & Billing",
     title: "How to set up your GCash QR code and payment details",
-    summary:
-      "Upload your merchant or personal GCash QR code and configure your account number so residents can pay rent directly.",
+    summary: "Upload your merchant or personal GCash QR code and configure your account number so residents can pay rent directly.",
     difficulty: "beginner",
     readTime: "2 min",
     keywords: ["gcash", "qr", "payment", "bank", "billing", "account", "rent", "money", "merchant"],
@@ -152,12 +474,11 @@ export const DOCS_ARTICLES: DocArticle[] = [
   },
   {
     id: "generate-lobby-flyer",
-    audience: "user",
-    category: "property_setup",
-    categoryLabel: "Property & Unit Setup",
+    audience: "landlord",
+    category: "marketing_flyers",
+    categoryLabel: "Marketing & Posters",
     title: "How to customize and download lobby QR posters for residents",
-    summary:
-      "Generate high-resolution printable posters with Wi-Fi details, property contacts, and resident portal QR codes.",
+    summary: "Generate high-resolution printable posters with Wi-Fi details, property contacts, and resident portal QR codes.",
     difficulty: "beginner",
     readTime: "3 min",
     keywords: ["flyer", "poster", "qr", "print", "download", "lobby", "wifi", "building", "photo", "canvas"],
@@ -187,12 +508,11 @@ export const DOCS_ARTICLES: DocArticle[] = [
   },
   {
     id: "invite-tenants-magic-link",
-    audience: "user",
+    audience: "landlord",
     category: "tenants_leases",
     categoryLabel: "Tenants & Leases",
     title: "How to invite new residents using magic registration links",
-    summary:
-      "Connect new residents to their specific unit without manual account registration or complicated paperwork.",
+    summary: "Connect new residents to their specific unit without manual account registration or complicated paperwork.",
     difficulty: "beginner",
     readTime: "2 min",
     keywords: ["invite", "tenant", "resident", "onboarding", "magic link", "register", "unit", "email"],
@@ -218,18 +538,17 @@ export const DOCS_ARTICLES: DocArticle[] = [
   },
   {
     id: "issue-monthly-invoices",
-    audience: "user",
+    audience: "landlord",
     category: "billing_payments",
     categoryLabel: "GCash & Billing",
     title: "Understanding automated rent invoicing & utility charges",
-    summary:
-      "Learn how iReside calculates submetered water and electricity, issues invoices, and verifies payment receipts.",
+    summary: "Learn how iReside calculates submetered water and electricity, issues invoices, and verifies payment receipts.",
     difficulty: "intermediate",
     readTime: "3 min",
     keywords: ["invoice", "bill", "electricity", "water", "utilities", "receipt", "rent", "ledger"],
     actionShortcut: {
       label: "Open Invoices Ledger",
-      href: "/landlord/billing",
+      href: "/landlord/invoices",
     },
     relatedArticleIds: ["setup-gcash-qr", "partial-payments-guide"],
     steps: [
@@ -249,12 +568,11 @@ export const DOCS_ARTICLES: DocArticle[] = [
   },
   {
     id: "partial-payments-guide",
-    audience: "user",
+    audience: "landlord",
     category: "billing_payments",
     categoryLabel: "GCash & Billing",
     title: "How to allow or disallow partial rent installments",
-    summary:
-      "Configure whether tenants can pay in split installments or must settle the full balance in one payment.",
+    summary: "Configure whether tenants can pay in split installments or must settle the full balance in one payment.",
     difficulty: "beginner",
     readTime: "2 min",
     keywords: ["partial", "installment", "split", "billing", "downpayment", "balance", "policy"],
@@ -280,12 +598,11 @@ export const DOCS_ARTICLES: DocArticle[] = [
   },
   {
     id: "manage-maintenance-tickets",
-    audience: "user",
+    audience: "landlord",
     category: "maintenance_tickets",
     categoryLabel: "Maintenance & Repairs",
     title: "How to manage maintenance tickets and repair requests",
-    summary:
-      "Track plumbing, electrical, and structural repair requests submitted by residents with photo attachments.",
+    summary: "Track plumbing, electrical, and structural repair requests submitted by residents with photo attachments.",
     difficulty: "beginner",
     readTime: "3 min",
     keywords: ["maintenance", "repairs", "ticket", "plumbing", "electrician", "leak", "work order"],
@@ -311,12 +628,11 @@ export const DOCS_ARTICLES: DocArticle[] = [
   },
   {
     id: "install-mobile-app",
-    audience: "user",
+    audience: "landlord",
     category: "mobile_pwa",
     categoryLabel: "Mobile App & Portal",
-    title: "How tenants install the iReside App on iPhone & Android",
-    summary:
-      "Step-by-step instructions for residents to add iReside directly to their phone's home screen without app store downloads.",
+    title: "How landlords and tenants install the iReside App on iPhone & Android",
+    summary: "Step-by-step instructions to add iReside directly to your phone's home screen without app store downloads.",
     difficulty: "beginner",
     readTime: "2 min",
     keywords: ["app", "download", "pwa", "install", "iphone", "ios", "android", "homescreen", "safari", "chrome"],
@@ -343,12 +659,11 @@ export const DOCS_ARTICLES: DocArticle[] = [
   },
   {
     id: "troubleshoot-notifications",
-    audience: "user",
+    audience: "landlord",
     category: "troubleshooting_faqs",
     categoryLabel: "Troubleshooting & FAQs",
     title: "Troubleshooting: Why am I or my tenants not receiving emails?",
-    summary:
-      "Quick fixes for email delivery issues, spam folder checks, and Gmail SMTP sender verification.",
+    summary: "Quick fixes for email delivery issues, spam folder checks, and Gmail SMTP sender verification.",
     difficulty: "intermediate",
     readTime: "3 min",
     keywords: ["email", "smtp", "notifications", "spam", "password", "alerts", "troubleshoot"],
@@ -374,7 +689,7 @@ export const DOCS_ARTICLES: DocArticle[] = [
   },
 
   // =========================================================================
-  // IT PERSONNEL & FREELANCER DOCUMENTATION
+  // 3. IT PERSONNEL & TECHNICAL GUIDE
   // =========================================================================
   {
     id: "it-system-architecture",
@@ -382,8 +697,7 @@ export const DOCS_ARTICLES: DocArticle[] = [
     category: "architecture_cloud",
     categoryLabel: "Architecture & Hosting",
     title: "System Architecture: Next.js 16, Vercel & Supabase Cloud",
-    summary:
-      "High-level technical architecture overview, serverless request lifecycle, real-time WebSocket subscriptions, and edge CDN.",
+    summary: "High-level technical architecture overview, serverless request lifecycle, real-time WebSocket subscriptions, and edge CDN.",
     difficulty: "intermediate",
     readTime: "5 min",
     keywords: ["architecture", "nextjs", "vercel", "supabase", "serverless", "edge", "database", "it"],
@@ -434,8 +748,7 @@ export const DOCS_ARTICLES: DocArticle[] = [
     category: "environment_security",
     categoryLabel: "Env Secrets & Auth",
     title: "Environment Variables Inventory & Secret Keys Configuration",
-    summary:
-      "Complete inventory of required and optional environment variables in .env.local and Vercel Project Settings.",
+    summary: "Complete inventory of required and optional environment variables in .env.local and Vercel Project Settings.",
     difficulty: "advanced",
     readTime: "4 min",
     keywords: ["env", "environment", "variables", "secrets", "api key", "supabase", "smtp", "vercel"],
@@ -468,8 +781,7 @@ export const DOCS_ARTICLES: DocArticle[] = [
     category: "database_schema",
     categoryLabel: "Database & RLS Policies",
     title: "PostgreSQL Database Schema & Row-Level Security (RLS)",
-    summary:
-      "Database tables structure, relational foreign keys, RLS security policies, and migration runbook using source-of-truth-db.sql.",
+    summary: "Database tables structure, relational foreign keys, RLS security policies, and migration runbook using source-of-truth-db.sql.",
     difficulty: "advanced",
     readTime: "6 min",
     keywords: ["database", "schema", "postgres", "sql", "rls", "security", "migrations", "supabase"],
@@ -495,8 +807,7 @@ export const DOCS_ARTICLES: DocArticle[] = [
     category: "cron_maintenance",
     categoryLabel: "Cron & Keep-Alive",
     title: "Automated Crons & Supabase Free-Tier Keep-Alive Engine",
-    summary:
-      "How Vercel cron jobs handle monthly recurring invoice generation and automated pings to prevent database sleep.",
+    summary: "How Vercel cron jobs handle monthly recurring invoice generation and automated pings to prevent database sleep.",
     difficulty: "intermediate",
     readTime: "3 min",
     keywords: ["cron", "keep-alive", "automation", "invoice", "schedule", "vercel", "sleep"],
@@ -522,8 +833,7 @@ export const DOCS_ARTICLES: DocArticle[] = [
     category: "environment_security",
     categoryLabel: "Env Secrets & Auth",
     title: "Configuring Gmail SMTP or Custom Domain Mailer",
-    summary:
-      "Guide to generating Gmail App Passwords or wiring SendGrid/Resend SMTP for automated system email delivery.",
+    summary: "Guide to generating Gmail App Passwords or wiring SendGrid/Resend SMTP for automated system email delivery.",
     difficulty: "intermediate",
     readTime: "4 min",
     keywords: ["smtp", "gmail", "email", "app password", "sendgrid", "resend", "notifications"],
@@ -553,8 +863,7 @@ export const DOCS_ARTICLES: DocArticle[] = [
     category: "disaster_recovery",
     categoryLabel: "Backup & Recovery",
     title: "Database Backup, Disaster Recovery & Client Handover Runbook",
-    summary:
-      "Step-by-step recovery guide for exporting SQL dumps, rehydrating databases, and transferring Vercel project ownership.",
+    summary: "Step-by-step recovery guide for exporting SQL dumps, rehydrating databases, and transferring Vercel project ownership.",
     difficulty: "advanced",
     readTime: "5 min",
     keywords: ["backup", "restore", "disaster recovery", "handover", "dump", "export", "transfer", "it"],

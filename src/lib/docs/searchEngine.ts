@@ -9,6 +9,10 @@ export const COMMON_DOC_TERMS: string[] = [
   "invoicing",
   "tenant",
   "resident",
+  "landlord",
+  "lease",
+  "signing",
+  "signature",
   "poster",
   "flyer",
   "wifi",
@@ -38,6 +42,8 @@ export const COMMON_DOC_TERMS: string[] = [
   "utilities",
   "submeter",
   "partial payments",
+  "move out",
+  "deposit",
 ];
 
 // Levenshtein Distance for typo matching
@@ -114,13 +120,14 @@ export function searchDocs(
   }
 ): SearchResponse {
   const cleanQuery = query.toLowerCase().trim();
-  const audience = options?.audience;
+  const rawAudience = options?.audience;
+  const targetAudience = rawAudience === "user" ? "landlord" : rawAudience;
   const category = options?.category && options.category !== "all" ? options.category : null;
 
   // Filter pool by audience and category
   let pool = DOCS_ARTICLES;
-  if (audience) {
-    pool = pool.filter((a) => a.audience === audience);
+  if (targetAudience) {
+    pool = pool.filter((a) => a.audience === targetAudience);
   }
   if (category) {
     pool = pool.filter((a) => a.category === category);
