@@ -200,21 +200,25 @@ export function RoleSidebar({
                 )}
             >
                 {/* Header */}
-                <div className={cn("flex h-20 items-center justify-between px-5 transition-all duration-300 mb-2 gap-2", isCollapsed ? "justify-center" : "justify-between")}>
+                <div className={cn("flex h-20 items-center justify-between px-4 transition-all duration-300 mb-2 gap-2", isCollapsed ? "justify-center" : "justify-between")}>
                     {!isCollapsed && (
-                        <div className="flex items-center min-w-0 flex-1 overflow-hidden">
+                        <div className="flex items-center min-w-0 flex-1 overflow-hidden pr-1">
                             <LogoLink>
                                 <BrandLogo size="md" className="w-full min-w-0" />
                             </LogoLink>
                         </div>
                     )}
-                    <div className="flex items-center gap-1.5 shrink-0">
-                        {!isCollapsed && <ThemeToggle variant="sidebar" className="shrink-0" />}
+                    <div className="flex items-center gap-1 shrink-0">
+                        {!isCollapsed && (
+                            <Tooltip content="Toggle theme" side="bottom" sideOffset={8}>
+                                <ThemeToggle variant="sidebar" className="size-8 shrink-0" />
+                            </Tooltip>
+                        )}
                         {showCollapseToggle && !isCollapsed && (
                             <Tooltip content="Collapse sidebar" side="bottom" sideOffset={8}>
                                 <button 
                                     onClick={onToggleCollapse}
-                                    className="flex size-8 items-center justify-center rounded-xl bg-background shadow-[3px_3px_6px_rgba(163,177,198,0.25),-3px_-3px_6px_rgba(255,255,255,0.8)] dark:shadow-[3px_3px_6px_rgba(0,0,0,0.4),-3px_-3px_6px_rgba(255,255,255,0.04)] border border-white/20 dark:border-white/03 text-muted-foreground hover:text-foreground transition-all active:shadow-[inset_2px_2px_4px_rgba(163,177,198,0.3),inset_-2px_-2px_4px_rgba(255,255,255,0.8)] dark:active:shadow-[inset_2px_2px_4px_rgba(0,0,0,0.4),inset_-2px_-2px_4px_rgba(255,255,255,0.04)]"
+                                    className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-background shadow-[3px_3px_6px_rgba(163,177,198,0.25),-3px_-3px_6px_rgba(255,255,255,0.8)] dark:shadow-[3px_3px_6px_rgba(0,0,0,0.4),-3px_-3px_6px_rgba(255,255,255,0.04)] border border-white/20 dark:border-white/03 text-muted-foreground hover:text-foreground transition-all active:shadow-[inset_2px_2px_4px_rgba(163,177,198,0.3),inset_-2px_-2px_4px_rgba(255,255,255,0.8)] dark:active:shadow-[inset_2px_2px_4px_rgba(0,0,0,0.4),inset_-2px_-2px_4px_rgba(255,255,255,0.04)]"
                                     aria-label="Collapse sidebar"
                                 >
                                     <PanelLeftClose className="size-4" />
