@@ -138,6 +138,7 @@ export function RoleSidebar({
             >
                 <Link
                     href={item.href}
+                    prefetch={true}
                     data-tour-id={item.tourId}
                     aria-current={isActive ? "page" : undefined}
                     className={cn(

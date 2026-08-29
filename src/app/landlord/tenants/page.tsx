@@ -12,6 +12,7 @@ import { TenantDirectory } from "@/components/landlord/tenants/TenantDirectory";
 import { TenantProfileView } from "@/components/landlord/tenants/TenantProfileView";
 import { Tenant } from "@/components/landlord/tenants/TenantCard";
 import { createOrGetDirectConversation } from "@/lib/messages/client";
+import { useInstantData } from "@/lib/hooks/useInstantData";
 
 function TenantsContent() {
  const searchParams = useSearchParams();
@@ -33,9 +34,28 @@ function TenantsContent() {
  }, [searchParams, rawTenantId, push]);
 
  const { selectedPropertyId } = useProperty();
- const [tenants, setTenants] = useState<Tenant[]>([]);
- const [loading, setLoading] = useState(true);
- const [error, setError] = useState<string | null>(null);
+ const {
+     data: tenantsData,
+     isLoading: loading,
+     error: fetchError,
+     refetch: loadTenants,
+ } = useInstantData<Tenant[]>({
+     key: `landlord_tenants_${selectedPropertyId || "all"}`,
+     fetcher: async (signal) => {
+         const params = new URLSearchParams({ propertyId: selectedPropertyId });
+         const response = await fetch(`/api/landlord/tenants?${params.toString()}`, {
+             method: "GET",
+             signal,
+         });
+         if (!response.ok) throw new Error("Failed to load tenants");
+         const payload = (await response.json()) as { tenants?: Tenant[] };
+         return Array.isArray(payload.tenants) ? payload.tenants : [];
+     },
+     initialData: [],
+ });
+
+ const tenants = tenantsData ?? [];
+ const error = fetchError?.message ?? null;
  const [isModalOpen, setIsModalOpen] = useState(false);
 
  const setTab = (tab: string) => {
@@ -66,50 +86,6 @@ function TenantsContent() {
  params.delete("tenantId");
  push(`/landlord/tenants?${params.toString()}`);
  };
-
- const loadTenants = useCallback(async (controller?: AbortController) => {
- setLoading(true);
- setError(null);
-
- try {
- const params = new URLSearchParams({ propertyId: selectedPropertyId });
- const response = await fetch(`/api/landlord/tenants?${params.toString()}`, {
- method: "GET",
- signal: controller?.signal,
- });
-
- if (!response.ok) {
- throw new Error("Failed to load tenants");
- }
-
- const payload = (await response.json()) as { tenants?: Tenant[] };
- if (!controller?.signal.aborted) {
- setTenants(Array.isArray(payload.tenants) ? payload.tenants : []);
- }
- } catch (fetchError) {
- if ((fetchError as Error).name === "AbortError") {
- return;
- }
-
- if (!controller?.signal.aborted) {
- setError("Unable to load tenants right now.");
- setTenants([]);
- }
- } finally {
- if (!controller?.signal.aborted) {
- setLoading(false);
- }
- }
- }, [selectedPropertyId]);
-
- useEffect(() => {
- const controller = new AbortController();
- void loadTenants(controller);
-
- return () => {
- controller.abort();
- };
- }, [selectedPropertyId, loadTenants]);
 
  return (
  <LazyMotion features={domAnimation}>

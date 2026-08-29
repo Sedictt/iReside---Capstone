@@ -70,56 +70,37 @@ const getStyleByStatus = (status: PropertyStatus) => {
     };
 };
 
+import { useInstantData } from "@/lib/hooks/useInstantData";
+
 export function PropertiesDashboard() {
-    const [properties, setProperties] = useState<PropertyCard[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [loadError, setLoadError] = useState<string | null>(null);
+    const {
+        data: propertiesData,
+        isLoading,
+        error: fetchError,
+        mutate: mutateProperties,
+    } = useInstantData<PropertyCard[]>({
+        key: "landlord_properties_overview",
+        fetcher: async (signal) => {
+            const response = await fetch("/api/landlord/properties/overview", {
+                method: "GET",
+                signal,
+            });
+            const payload = (await response.json()) as { properties?: PropertyCard[]; error?: string };
+            if (!response.ok) {
+                throw new Error(payload.error || "Failed to load properties.");
+            }
+            return payload.properties ?? [];
+        },
+        initialData: [],
+    });
+
+    const properties = propertiesData ?? [];
+    const loadError = fetchError?.message ?? null;
     const [searchQuery, setSearchQuery] = useState("");
     const [activeTab, setActiveTab] = useState<typeof FILTER_TABS[number]>(FILTER_TABS[0]);
     const [hubModalId, setHubModalId] = useState<string | null>(null);
     const [tenantsModalProperty, setTenantsModalProperty] = useState<PropertyCard | null>(null);
     const [maintenanceModalProperty, setMaintenanceModalProperty] = useState<PropertyCard | null>(null);
-
-    const loadProperties = useCallback(async (signal?: AbortSignal) => {
-        setIsLoading(true);
-        setLoadError(null);
-
-        try {
-            const response = await fetch("/api/landlord/properties/overview", {
-                method: "GET",
-                cache: "no-store",
-                signal,
-            });
-
-            const payload = (await response.json()) as { properties?: PropertyCard[]; error?: string };
-
-            if (!response.ok) {
-                throw new Error(payload.error || "Failed to load properties.");
-            }
-
-            if (!signal?.aborted) {
-                setProperties(payload.properties ?? []);
-            }
-        } catch (error) {
-            if ((error as Error).name === "AbortError") return;
-            if (!signal?.aborted) {
-                setLoadError(error instanceof Error ? error.message : "Failed to load properties.");
-            }
-        } finally {
-            if (!signal?.aborted) {
-                setIsLoading(false);
-            }
-        }
-    }, []);
-
-    useEffect(() => {
-        const controller = new AbortController();
-        void loadProperties(controller.signal);
-
-        return () => {
-            controller.abort();
-        };
-    }, [loadProperties]);
 
     const filteredProperties = useMemo(() => {
         return properties.filter((prop) => {
@@ -201,7 +182,7 @@ export function PropertiesDashboard() {
                         <h3 className="mb-2 text-xl font-black text-foreground">Failed to load portfolio</h3>
                         <p className="mb-6 text-sm text-red-600 dark:text-red-300">{loadError}</p>
                         <button
-                            onClick={() => loadProperties()}
+                            onClick={() => void mutateProperties()}
                             className="neumorphic-extruded h-11 rounded-xl px-5 font-medium text-foreground transition-colors"
                         >
                             Retry

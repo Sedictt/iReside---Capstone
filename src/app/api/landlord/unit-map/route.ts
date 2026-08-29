@@ -252,13 +252,17 @@ export async function GET(request: NextRequest) {
     }));
 
     const placedCount = enrichedUnits.filter(u => u.position !== null).length;
-    const isSetupComplete = enrichedUnits.length > 0 && placedCount === enrichedUnits.length;
+    // Map setup is initialized if at least 1 unit has been placed on the canvas.
+    // Unplaced units (newly added or detached) appear in the "Unplaced Units" sidebar drawer rather than blocking the canvas.
+    const isSetupComplete = placedCount > 0;
+    const isFullyPlaced = enrichedUnits.length > 0 && placedCount === enrichedUnits.length;
 
     return NextResponse.json({
         floorConfigs: floorConfigs ?? [],
         units: enrichedUnits,
         mapDecorations: property.map_decorations ?? {},
         isSetupComplete,
+        isFullyPlaced,
         placedCount,
         totalUnits: enrichedUnits.length,
     }, {

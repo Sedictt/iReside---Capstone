@@ -25,7 +25,10 @@ export async function GET(request: Request) {
             propertyId
         );
 
-        return NextResponse.json({ requests, metrics });
+        return NextResponse.json(
+            { requests, metrics },
+            { headers: { "Cache-Control": "private, max-age=10, stale-while-revalidate=60" } }
+        );
     } catch (error: any) {
         return NextResponse.json(
             { error: error?.message || "Failed to load maintenance requests." },

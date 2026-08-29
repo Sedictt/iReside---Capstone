@@ -22,6 +22,7 @@ import { ViewToggle } from "@/components/shared/ViewToggle";
 import { useViewMode } from "@/hooks/useViewMode";
 import Link from "next/link";
 import { useProperty } from "@/context/PropertyContext";
+import { useInstantData } from "@/lib/hooks/useInstantData";
 
 type Priority = "Critical" | "High" | "Medium" | "Low";
 type Status = "Pending" | "Assigned" | "In Progress" | "Resolved";
@@ -61,14 +62,9 @@ export function MaintenanceDashboard() {
  const [filter, setFilter] = useState<"All" | Status>("All");
  const [searchQuery, setSearchQuery] = useState(() => searchParams?.get("search") || "");
  const [selectedRequest, setSelectedRequest] = useState<MaintenanceRequest | null>(null);
- const [requests, setRequests] = useState<MaintenanceRequest[]>([]);
  const [previewMode, setPreviewMode] = useState<string | null>(null);
  const [priorityFilter, setPriorityFilter] = useState<"All" | Priority>("All");
  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "priority-desc" | "priority-asc">("priority-desc");
-
-
- const [loading, setLoading] = useState(true);
- const [error, setError] = useState<string | null>(null);
  const [isMobile, setIsMobile] = useState(false);
 
  useEffect(() => {
@@ -81,161 +77,75 @@ export function MaintenanceDashboard() {
  const [view, setView] = useViewMode("ireside:maintenance-view");
  const effectiveView = isMobile ? "list" : view;
 
- useEffect(() => {
- const controller = new AbortController();
-
- const loadRequests = async () => {
- setLoading(true);
- setError(null);
-
- try {
- const response = await fetch(`/api/landlord/maintenance?propertyId=${selectedPropertyId}`, {
- method: "GET",
- signal: controller.signal,
+ const {
+  data: requestsData,
+  isLoading: loading,
+  error: fetchError,
+  mutate: mutateRequests,
+  refetch: refreshRequests,
+ } = useInstantData<MaintenanceRequest[]>({
+  key: `landlord_maintenance_${selectedPropertyId || "all"}`,
+  fetcher: async (signal?: AbortSignal) => {
+   const response = await fetch(`/api/landlord/maintenance?propertyId=${selectedPropertyId}`, {
+    method: "GET",
+    signal,
+   });
+   if (!response.ok) throw new Error("Failed to load maintenance requests");
+   const payload = (await response.json()) as { requests?: MaintenanceRequest[] };
+   return Array.isArray(payload.requests) ? payload.requests : [];
+  },
+  initialData: [],
  });
 
- if (!response.ok) {
- throw new Error("Failed to load maintenance requests");
- }
+ const requests: MaintenanceRequest[] = requestsData ?? [];
+ const error = fetchError?.message ?? null;
 
- const payload = (await response.json()) as {
- requests?: MaintenanceRequest[];
- };
-
- let fetchedRequests = Array.isArray(payload.requests) ? payload.requests : [];
-
- // --- PREVIEW SCENARIOS OVERRIDE ---
- if (typeof window !== "undefined") {
- const params = new URLSearchParams(window.location.search);
- const preview = params.get("preview");
- setPreviewMode(preview);
-
- if (preview && fetchedRequests.length > 0) {
- fetchedRequests = [...fetchedRequests];
- if (preview === "self_repair_photo") {
- fetchedRequests[0] = {
- ...fetchedRequests[0],
- status: "In Progress",
- selfRepairRequested: true,
- selfRepairDecision: "approved",
- photoRequested: true,
- tenantRepairStatus: "done",
- tenantProvidedPhotos: [
- "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?auto=format&fit=crop&w=300&q=80"
- ]
- };
- } else if (preview === "tenant_repairing") {
- fetchedRequests[0] = {
- ...fetchedRequests[0],
- status: "In Progress",
- selfRepairRequested: true,
- selfRepairDecision: "approved",
- tenantRepairStatus: "repairing"
- };
- } else if (preview === "tenant_done") {
- fetchedRequests[0] = {
- ...fetchedRequests[0],
- status: "In Progress",
- selfRepairRequested: true,
- selfRepairDecision: "approved",
- tenantRepairStatus: "done"
- };
- } else if (preview === "resolved") {
- fetchedRequests[0] = {
- ...fetchedRequests[0],
- status: "Resolved",
- selfRepairRequested: false,
- repairMethod: "landlord",
- tenantRepairStatus: "done"
- };
- } else if (preview === "third_party_tenant_done") {
- fetchedRequests[0] = {
- ...fetchedRequests[0],
- status: "In Progress",
- selfRepairRequested: false,
- repairMethod: "third_party",
- thirdPartyName: "John's Plumbing Co.",
- tenantRepairStatus: "done",
- tenantProvidedPhotos: [
- "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?auto=format&fit=crop&w=300&q=80"
- ]
- };
- }
- }
- }
-
- if (!controller.signal.aborted) {
- setRequests(fetchedRequests);
- // Handle deep linking via ?id=
- const deepLinkId = searchParams?.get("id");
- if (deepLinkId) {
- const targetRequest = fetchedRequests.find(r => r.id === deepLinkId);
- if (targetRequest) {
- setSelectedRequest(targetRequest);
- }
- }
- }
- } catch (fetchError) {
- if ((fetchError as Error).name === "AbortError") {
- return;
- }
-
- if (!controller.signal.aborted) {
- setError("Unable to load maintenance requests right now.");
- setRequests([]);
- }
- } finally {
- if (!controller.signal.aborted) {
- setLoading(false);
- }
- }
- };
-
- void loadRequests();
-
- return () => {
- controller.abort();
- };
- }, [selectedPropertyId]);
+ useEffect(() => {
+  const deepLinkId = searchParams?.get("id");
+  if (deepLinkId && requests.length > 0) {
+   const target = requests.find((r: MaintenanceRequest) => r.id === deepLinkId);
+   if (target) setSelectedRequest(target);
+  }
+ }, [searchParams, requests]);
 
  const normalizedSearch = searchQuery.trim().toLowerCase();
- const filteredRequests = requests.filter((req) => {
- const matchesStatus = filter === "All" || req.status === filter;
- const matchesPriority = priorityFilter === "All" || req.priority === priorityFilter;
- 
- if (!normalizedSearch) {
- return matchesStatus && matchesPriority;
- }
+ const filteredRequests = requests.filter((req: MaintenanceRequest) => {
+  const matchesStatus = filter === "All" || req.status === filter;
+  const matchesPriority = priorityFilter === "All" || req.priority === priorityFilter;
 
- const haystack = [req.id, req.tenant, req.unit, req.property, req.title]
- .filter((value) => typeof value === "string")
- .join(" ")
- .toLowerCase();
+  if (!normalizedSearch) {
+   return matchesStatus && matchesPriority;
+  }
 
- return matchesStatus && matchesPriority && haystack.includes(normalizedSearch);
+  const haystack = [req.id, req.tenant, req.unit, req.property, req.title]
+   .filter((value): value is string => typeof value === "string")
+   .join(" ")
+   .toLowerCase();
+
+  return matchesStatus && matchesPriority && haystack.includes(normalizedSearch);
  });
 
- const sortedRequests = [...filteredRequests].sort((a, b) => {
- if (sortBy === "newest") {
- return new Date(b.reportedAt).getTime() - new Date(a.reportedAt).getTime();
- }
- if (sortBy === "oldest") {
- return new Date(a.reportedAt).getTime() - new Date(b.reportedAt).getTime();
- }
- if (sortBy === "priority-desc") {
- const priorityMap = { Critical: 3, High: 2, Medium: 1, Low: 0 };
- return priorityMap[b.priority] - priorityMap[a.priority];
- }
- if (sortBy === "priority-asc") {
- const priorityMap = { Critical: 3, High: 2, Medium: 1, Low: 0 };
- return priorityMap[a.priority] - priorityMap[b.priority];
- }
- return 0;
+ const sortedRequests = [...filteredRequests].sort((a: MaintenanceRequest, b: MaintenanceRequest) => {
+  if (sortBy === "newest") {
+   return new Date(b.reportedAt).getTime() - new Date(a.reportedAt).getTime();
+  }
+  if (sortBy === "oldest") {
+   return new Date(a.reportedAt).getTime() - new Date(b.reportedAt).getTime();
+  }
+  if (sortBy === "priority-desc") {
+   const priorityMap: Record<Priority, number> = { Critical: 3, High: 2, Medium: 1, Low: 0 };
+   return (priorityMap[b.priority] ?? 0) - (priorityMap[a.priority] ?? 0);
+  }
+  if (sortBy === "priority-asc") {
+   const priorityMap: Record<Priority, number> = { Critical: 3, High: 2, Medium: 1, Low: 0 };
+   return (priorityMap[a.priority] ?? 0) - (priorityMap[b.priority] ?? 0);
+  }
+  return 0;
  });
 
  const handleLandlordRequestUpdate = (updated: MaintenanceRequest) => {
- setSelectedRequest(updated);
- setRequests((current) => current.map((req) => (req.id === updated.id ? updated : req)));
+  setSelectedRequest(updated);
+  void mutateRequests((current) => (current ?? []).map((req: MaintenanceRequest) => (req.id === updated.id ? updated : req)), false);
  };
 
  return (

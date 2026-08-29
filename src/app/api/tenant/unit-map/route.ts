@@ -105,7 +105,8 @@ export async function GET() {
     }
 
     const placedCount = unitsWithPositions.filter(u => u.position !== null).length;
-    const isSetupComplete = unitsWithPositions.length > 0 && placedCount === unitsWithPositions.length;
+    const isSetupComplete = placedCount > 0;
+    const isFullyPlaced = unitsWithPositions.length > 0 && placedCount === unitsWithPositions.length;
 
     return NextResponse.json({
         property,
@@ -119,6 +120,7 @@ export async function GET() {
         floorConfigs: floorConfigs ?? [],
         mapDecorations: (property as any).map_decorations ?? {},
         isSetupComplete,
+        isFullyPlaced,
         placedCount,
         totalUnits: unitsWithPositions.length
     });

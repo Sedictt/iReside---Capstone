@@ -26,12 +26,27 @@ const TOUR_AUTO_START_ROUTE_PREFIXES = [
     "/tenant/messages",
 ];
 
-const resolveRole = async (supabase: any, user: any): Promise<string> => {
+const ROLE_COOKIE_NAME = "x-user-role";
+const ROLE_COOKIE_MAX_AGE = 60 * 60; // 1 hour — re-resolve from DB after this
+
+const resolveRole = async (
+    supabase: any,
+    user: any,
+    request: NextRequest,
+): Promise<string> => {
+    // 1. Fast path: check user_metadata (set during signup/login)
     const metadataRole = user?.user_metadata?.role;
     if (typeof metadataRole === "string" && metadataRole.length > 0) {
         return metadataRole;
     }
 
+    // 2. Fast path: check cached cookie (avoids DB call on every request)
+    const cachedRole = request.cookies.get(ROLE_COOKIE_NAME)?.value;
+    if (cachedRole && cachedRole.length > 0) {
+        return cachedRole;
+    }
+
+    // 3. Slow path: query DB (only on first request after login / cookie expiry)
     const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
     return profile?.role ?? "tenant";
 };
@@ -92,7 +107,22 @@ export async function updateSession(request: NextRequest) {
 
     let role: string | null = null;
     if (user) {
-        role = await resolveRole(supabase as any, user);
+        role = await resolveRole(supabase as any, user, request);
+
+        // Cache the resolved role in a cookie so subsequent requests skip the DB call
+        const existingCookie = request.cookies.get(ROLE_COOKIE_NAME)?.value;
+        if (existingCookie !== role) {
+            supabaseResponse.cookies.set(ROLE_COOKIE_NAME, role, {
+                path: "/",
+                httpOnly: true,
+                sameSite: "lax",
+                maxAge: ROLE_COOKIE_MAX_AGE,
+                secure: process.env.NODE_ENV === "production",
+            });
+        }
+    } else {
+        // Clear role cookie when user is not authenticated (logout)
+        supabaseResponse.cookies.delete(ROLE_COOKIE_NAME);
     }
 
     // Let API route handlers return structured JSON auth errors (401/403).

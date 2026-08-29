@@ -31,7 +31,10 @@ export async function GET(request: Request) {
             })),
         }));
 
-        return NextResponse.json({ properties: formatted });
+        return NextResponse.json(
+            { properties: formatted },
+            { headers: { "Cache-Control": "private, max-age=10, stale-while-revalidate=60" } }
+        );
     } catch (error: any) {
         console.error("[property-units GET] Error:", error);
         return NextResponse.json(
