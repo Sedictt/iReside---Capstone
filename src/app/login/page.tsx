@@ -38,38 +38,44 @@ function LoginContent() {
         setError(null);
         setLoading(true);
 
-        const formData = new FormData(e.currentTarget);
-        const email = (formData.get("email") as string | null)?.trim() ?? "";
-        const password = (formData.get("password") as string | null) ?? "";
+        try {
+            const formData = new FormData(e.currentTarget);
+            const email = (formData.get("email") as string | null)?.trim() ?? "";
+            const password = (formData.get("password") as string | null) ?? "";
 
-        const supabase = createClient();
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        });
+            const supabase = createClient();
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
 
-        if (error) {
-            if (error.message?.toLowerCase().includes("schema")) {
-                setError("Login failed due to a Supabase auth schema issue. Please contact support.");
-            } else {
-                setError(error.message);
+            if (error) {
+                if (error.message?.toLowerCase().includes("schema")) {
+                    setError("Login failed due to a Supabase auth schema issue. Please contact support.");
+                } else {
+                    setError(error.message);
+                }
+                return;
             }
+
+            let role = data.user?.user_metadata?.role;
+            if (!role && data.user?.id) {
+                const { data: profile } = await supabase
+                    .from("profiles")
+                    .select("role")
+                    .eq("id", data.user.id)
+                    .single();
+                role = profile?.role;
+            }
+
+            const target = role === "tenant" ? "/tenant/dashboard" : "/landlord/dashboard";
+            window.location.href = redirectUrl || target;
+        } catch (err) {
+            console.error('[Login] Unexpected error:', err);
+            setError(err instanceof Error ? err.message : "An unexpected error occurred. Please try again.");
+        } finally {
             setLoading(false);
-            return;
         }
-
-        let role = data.user?.user_metadata?.role;
-        if (!role && data.user?.id) {
-            const { data: profile } = await supabase
-                .from("profiles")
-                .select("role")
-                .eq("id", data.user.id)
-                .single();
-            role = profile?.role;
-        }
-
-        const target = role === "tenant" ? "/tenant/dashboard" : "/landlord/dashboard";
-        router.push(redirectUrl || target);
     };
 
     const handleGoogleLogin = async () => {
