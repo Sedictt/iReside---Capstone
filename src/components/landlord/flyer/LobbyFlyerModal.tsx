@@ -1601,13 +1601,13 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                     >
                       <Building2 className="size-4 text-white" />
                     </div>
-                    <div className="min-w-0 flex-1 flex flex-col justify-center overflow-hidden">
+                    <div className="min-w-0 flex-1">
                       <h1
                         contentEditable={isEditingActive}
                         suppressContentEditableWarning
                         onBlur={(e) => setPropertyName(e.currentTarget.textContent || "")}
                         className={cn(
-                          "text-base font-black leading-tight block transition-all m-0 p-0 truncate",
+                          "text-base font-black leading-tight block transition-all",
                           titleTransform === "uppercase" ? "uppercase" : "normal-case",
                           trackingClass,
                           editableClass
@@ -1621,7 +1621,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                         suppressContentEditableWarning
                         onBlur={(e) => setAddress(e.currentTarget.textContent || "")}
                         className={cn(
-                          "text-[10px] font-medium leading-normal block truncate mt-0.5 m-0 p-0",
+                          "text-[10px] font-medium leading-tight block truncate",
                           editableClass
                         )}
                         style={{ color: cardContrast.muted }}
