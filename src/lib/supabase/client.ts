@@ -1,35 +1,29 @@
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { createBrowserClient } from '@supabase/ssr'
 import type { Database } from '@/types/database'
 
-let browserClient: ReturnType<typeof createSupabaseClient<Database>> | null = null;
+let browserClient: ReturnType<typeof createBrowserClient<Database>> | null = null;
 
 /**
  * Creates a Supabase client for use in Browser/Client Components.
  *
- * Uses a module-level singleton so only one instance exists per page load.
- * 
- * IMPORTANT: We use `@supabase/supabase-js` `createClient` directly instead of
- * `@supabase/ssr` `createBrowserClient` because the SSR wrapper has its own
- * internal singleton cache that can return a stale client instance created
- * without our custom lock option. By using the base client directly and
- * configuring cookie storage ourselves, we ensure the custom lock is always
- * applied and navigator.locks (which deadlocks under React Strict Mode
- * double-mounting) is never used.
+ * Uses @supabase/ssr createBrowserClient so cookies are automatically synced
+ * with document.cookie for Next.js App Router and middleware.
+ * Bypasses navigator.locks by providing an immediate execution lock function
+ * to prevent deadlocks in React Strict Mode.
  */
 export function createBrowserSupabaseClient() {
     if (!browserClient) {
-        browserClient = createSupabaseClient<Database>(
+        browserClient = createBrowserClient<Database>(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
             {
+                isSingleton: false,
                 auth: {
                     flowType: 'pkce',
                     autoRefreshToken: true,
                     detectSessionInUrl: true,
                     persistSession: true,
-                    // Bypass navigator.locks entirely to prevent deadlocks caused by
-                    // React Strict Mode double-mounting (orphaned locks from unmounted effects)
-                    // and recursive lock acquisition within the same sign-in flow.
+                    // Direct non-blocking lock to eliminate navigator.locks deadlock
                     lock: async (_name: string, _acquireTimeout: number, fn: () => Promise<any>) => {
                         return await fn();
                     },
