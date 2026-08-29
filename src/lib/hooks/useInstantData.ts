@@ -1,13 +1,25 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useSyncExternalStore } from "react";
 
 // Global in-memory cache shared across the entire client session
 const memoryCache = new Map<string, { data: any; timestamp: number }>();
 const pendingFetches = new Map<string, Promise<any>>();
+const cacheListeners = new Set<() => void>();
+
+function notifyCacheChange() {
+    cacheListeners.forEach((l) => l());
+}
+
+function subscribeToCache(callback: () => void) {
+    cacheListeners.add(callback);
+    return () => {
+        cacheListeners.delete(callback);
+    };
+}
 
 export interface UseInstantDataOptions<T> {
-    /** Cache key uniquely identifying this query (e.g. `landlord-tenants-prop123`) */
+    /** Cache key uniquely identifying this query (e.g. `landlord_tenants_prop123`) */
     key: string | null;
     /** Async fetcher function */
     fetcher: (signal?: AbortSignal) => Promise<T>;
@@ -31,8 +43,8 @@ export interface UseInstantDataResult<T> {
 }
 
 /**
- * High-performance Stale-While-Revalidate (SWR) hook designed for instant (0ms)
- * tab transitions without jarring skeleton flashes.
+ * High-performance Stale-While-Revalidate (SWR) hook powered by useSyncExternalStore
+ * to guarantee 0ms instant tab transitions without React hydration mismatches (Error #418).
  */
 export function useInstantData<T>({
     key,
@@ -42,8 +54,7 @@ export function useInstantData<T>({
     persistSession = true,
     enabled = true,
 }: UseInstantDataOptions<T>): UseInstantDataResult<T> {
-    // 1. Synchronously read from memory cache or sessionStorage on initial mount (0ms)
-    const getCachedData = useCallback((): T | undefined => {
+    const getClientSnapshot = useCallback((): T | undefined => {
         if (!key || typeof window === "undefined") return initialData;
 
         // Check memory cache first
@@ -56,7 +67,6 @@ export function useInstantData<T>({
                 const raw = window.sessionStorage.getItem(`ireside_cache_${key}`);
                 if (raw) {
                     const parsed = JSON.parse(raw);
-                    // Hydrate memory cache
                     memoryCache.set(key, { data: parsed, timestamp: Date.now() });
                     return parsed as T;
                 }
@@ -68,12 +78,16 @@ export function useInstantData<T>({
         return initialData;
     }, [key, initialData, persistSession]);
 
-    const cachedSnapshot = getCachedData();
-    const [data, setData] = useState<T | undefined>(cachedSnapshot);
+    const getServerSnapshot = useCallback((): T | undefined => {
+        return initialData;
+    }, [initialData]);
+
+    // useSyncExternalStore guarantees zero hydration mismatch between server and client
+    const cachedData = useSyncExternalStore(subscribeToCache, getClientSnapshot, getServerSnapshot);
+
     const [error, setError] = useState<Error | null>(null);
     const [isRevalidating, setIsRevalidating] = useState(false);
-    // Only show loading if we have NO data (neither memory nor initialData)
-    const [isLoading, setIsLoading] = useState<boolean>(!cachedSnapshot && enabled && Boolean(key));
+    const [isLoading, setIsLoading] = useState<boolean>(!cachedData && enabled && Boolean(key));
 
     const fetcherRef = useRef(fetcher);
     fetcherRef.current = fetcher;
@@ -86,7 +100,6 @@ export function useInstantData<T>({
             const isFresh = existing && Date.now() - existing.timestamp < staleTimeMs;
 
             if (isFresh && !force && existing.data !== undefined) {
-                setData(existing.data as T);
                 setIsLoading(false);
                 setIsRevalidating(false);
                 return;
@@ -109,6 +122,7 @@ export function useInstantData<T>({
                                 // Ignore storage quota exceptions
                             }
                         }
+                        notifyCacheChange();
                         return result;
                     } finally {
                         pendingFetches.delete(key);
@@ -118,9 +132,8 @@ export function useInstantData<T>({
             }
 
             try {
-                const freshResult = await fetchPromise;
+                await fetchPromise;
                 if (!signal?.aborted) {
-                    setData(freshResult);
                     setError(null);
                 }
             } catch (err: any) {
@@ -141,43 +154,35 @@ export function useInstantData<T>({
     useEffect(() => {
         if (!key || !enabled) return;
 
-        // Synchronously sync state with cache if key changed
-        const snap = getCachedData();
-        if (snap !== undefined) {
-            setData(snap);
-            setIsLoading(false);
-        } else {
-            setIsLoading(true);
-        }
-
         const controller = new AbortController();
         void performFetch(controller.signal);
 
         return () => {
             controller.abort();
         };
-    }, [key, enabled, getCachedData, performFetch]);
+    }, [key, enabled, performFetch]);
 
     const mutate = useCallback(
         async (newData?: T | ((prev?: T) => T), shouldRevalidate = true) => {
             if (!key) return;
 
             if (newData !== undefined) {
-                const resolved = typeof newData === "function" ? (newData as any)(data) : newData;
-                setData(resolved);
+                const currentData = memoryCache.get(key)?.data ?? cachedData;
+                const resolved = typeof newData === "function" ? (newData as any)(currentData) : newData;
                 memoryCache.set(key, { data: resolved, timestamp: Date.now() });
                 if (persistSession && typeof window !== "undefined") {
                     try {
                         window.sessionStorage.setItem(`ireside_cache_${key}`, JSON.stringify(resolved));
                     } catch {}
                 }
+                notifyCacheChange();
             }
 
             if (shouldRevalidate) {
                 await performFetch(undefined, true);
             }
         },
-        [key, data, persistSession, performFetch]
+        [key, cachedData, persistSession, performFetch]
     );
 
     const refetch = useCallback(async () => {
@@ -185,7 +190,7 @@ export function useInstantData<T>({
     }, [performFetch]);
 
     return {
-        data,
+        data: cachedData,
         isLoading,
         isRevalidating,
         error,
@@ -206,4 +211,5 @@ export function invalidateInstantCache(keyPrefix: string) {
             }
         }
     }
+    notifyCacheChange();
 }
