@@ -75,7 +75,31 @@ const resolveTenantTourRedirectSource = (reason: string) => {
     return "auto_portal_entry";
 };
 
+const withTimeout = <T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> => {
+    let timeoutId: NodeJS.Timeout;
+    const timeoutPromise = new Promise<T>((resolve) => {
+        timeoutId = setTimeout(() => resolve(fallback), ms);
+    });
+    return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId));
+};
+
 export async function updateSession(request: NextRequest) {
+    // 1. Fast Path: API routes handle their own auth; bypass middleware to avoid timeouts
+    if (request.nextUrl.pathname.startsWith("/api")) {
+        return NextResponse.next({ request });
+    }
+
+    const pathname = request.nextUrl.pathname;
+    const allCookies = request.cookies.getAll();
+    const hasAuthCookie = allCookies.some(
+        (c) => c.name.includes("-auth-token") || c.name.startsWith("sb-") || c.name === "supabase-auth-token"
+    );
+
+    // 2. Fast Path: Unauthenticated visitors on public routes (e.g. /, /login, /about, /docs)
+    if (!hasAuthCookie && isPublicRoute(pathname, request)) {
+        return NextResponse.next({ request });
+    }
+
     let supabaseResponse = NextResponse.next({
         request,
     });
@@ -99,19 +123,28 @@ export async function updateSession(request: NextRequest) {
         }
     );
 
-    // IMPORTANT: DO NOT REMOVE auth.getUser()
-    // This refreshes the session token if expired.
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
+    // 3. Resilient auth check with 3.5s timeout protection (avoids 504 GATEWAY_TIMEOUT on Edge)
+    const userResult = hasAuthCookie
+        ? await withTimeout(
+              supabase.auth.getUser(),
+              3500,
+              { data: { user: null }, error: new Error("Auth timeout") } as any
+          )
+        : { data: { user: null }, error: null };
+
+    const user = userResult?.data?.user ?? null;
 
     let role: string | null = null;
     if (user) {
-        role = await resolveRole(supabase as any, user, request);
+        role = await withTimeout(
+            resolveRole(supabase as any, user, request),
+            2000,
+            user?.user_metadata?.role || "tenant"
+        );
 
         // Cache the resolved role in a cookie so subsequent requests skip the DB call
         const existingCookie = request.cookies.get(ROLE_COOKIE_NAME)?.value;
-        if (existingCookie !== role) {
+        if (role && existingCookie !== role) {
             supabaseResponse.cookies.set(ROLE_COOKIE_NAME, role, {
                 path: "/",
                 httpOnly: true,
@@ -123,11 +156,6 @@ export async function updateSession(request: NextRequest) {
     } else {
         // Clear role cookie when user is not authenticated (logout)
         supabaseResponse.cookies.delete(ROLE_COOKIE_NAME);
-    }
-
-    // Let API route handlers return structured JSON auth errors (401/403).
-    if (request.nextUrl.pathname.startsWith("/api")) {
-        return supabaseResponse;
     }
 
     // Deprecate /admin routes - redirect all admin portal attempts to landlord dashboard (or login).
