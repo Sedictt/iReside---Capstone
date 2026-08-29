@@ -51,7 +51,6 @@ function TenantsContent() {
          const payload = (await response.json()) as { tenants?: Tenant[] };
          return Array.isArray(payload.tenants) ? payload.tenants : [];
      },
-     initialData: [],
  });
 
  const tenants = tenantsData ?? [];
