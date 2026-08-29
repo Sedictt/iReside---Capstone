@@ -69,7 +69,7 @@ export function CommandCenter({
             label: "Overdue",
             value: overdueCount,
             isLoading: loadingPayments,
-            href: "/landlord/invoices",
+            href: "/landlord/invoices?tab=invoices&status=overdue",
             toneClass: "text-red-400",
             icon: Zap
         },
@@ -77,7 +77,7 @@ export function CommandCenter({
             label: "Near Due",
             value: nearDueCount,
             isLoading: loadingPayments,
-            href: "/landlord/invoices",
+            href: "/landlord/invoices?tab=invoices&status=pending",
             toneClass: "text-amber-400",
             icon: TrendingUp
         },
@@ -105,7 +105,7 @@ export function CommandCenter({
                 id: "overdue",
                 title: "Collect overdue rent",
                 detail: `${overdueCount} overdue payment${overdueCount === 1 ? "" : "s"} need follow-up.`,
-                href: "/landlord/invoices",
+                href: "/landlord/invoices?tab=invoices&status=overdue",
                 cta: "Open invoices",
                 urgency: "high",
             }
@@ -113,7 +113,7 @@ export function CommandCenter({
                 id: "health",
                 title: "System check: Healthy",
                 detail: "Every account is up to date. Excellent operations.",
-                href: "/landlord/invoices",
+                href: "/landlord/invoices?tab=invoices",
                 cta: "Review ledger",
                 urgency: "low",
             },
