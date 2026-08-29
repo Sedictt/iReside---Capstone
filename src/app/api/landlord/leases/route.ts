@@ -20,7 +20,10 @@ export async function GET(request: Request) {
   try {
     const leaseService = new LeaseService(supabase);
     const leases = await leaseService.listLeasesForLandlord(userId, { propertyId, status, unitId });
-    return NextResponse.json(leases || []);
+    return NextResponse.json(
+      leases || [],
+      { headers: { "Cache-Control": "private, max-age=10, stale-while-revalidate=60" } }
+    );
   } catch (error) {
     console.error("[landlord-leases] Unexpected error:", error);
     return NextResponse.json(

@@ -212,6 +212,6 @@ export async function GET() {
 
     return NextResponse.json(
         { properties: result },
-        { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } }
+        { headers: { "Cache-Control": "private, max-age=10, stale-while-revalidate=60" } }
     );
 }

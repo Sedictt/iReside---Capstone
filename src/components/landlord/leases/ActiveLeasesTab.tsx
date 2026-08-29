@@ -16,6 +16,8 @@ import { LeaseCard, type LeaseCardData } from "./LeaseCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
+import { useInstantData } from "@/lib/hooks/useInstantData";
+
 interface ActiveLeasesTabProps {
  searchQuery: string;
  sortBy: string;
@@ -26,33 +28,29 @@ export default function ActiveLeasesTab({ searchQuery, sortBy, onClearSearch }: 
  const router = useRouter();
  const { selectedPropertyId } = useProperty();
 
- const [leases, setLeases] = useState<LeaseCardData[]>([]);
- const [loading, setLoading] = useState(true);
- const [error, setError] = useState<string | null>(null);
+ const {
+  data: leasesData,
+  isLoading: loading,
+  error: fetchError,
+  refetch: fetchLeases,
+ } = useInstantData<LeaseCardData[]>({
+  key: `landlord_leases_active_${selectedPropertyId || "all"}`,
+  fetcher: async (signal) => {
+   const params = new URLSearchParams();
+   params.set("status", "active");
+   if (selectedPropertyId && selectedPropertyId !== "all") {
+    params.set("propertyId", selectedPropertyId);
+   }
+   const res = await fetch(`/api/landlord/leases?${params.toString()}`, { signal });
+   if (!res.ok) throw new Error("Failed to fetch active leases");
+   const activeLeases = await res.json();
+   return Array.isArray(activeLeases) ? (activeLeases as LeaseCardData[]) : [];
+  },
+  initialData: [],
+ });
 
- const fetchLeases = useCallback(async () => {
- setLoading(true);
- setError(null);
- try {
- const params = new URLSearchParams();
- params.set("status", "active");
- if (selectedPropertyId && selectedPropertyId !== "all") {
- params.set("propertyId", selectedPropertyId);
- }
- const res = await fetch(`/api/landlord/leases?${params.toString()}`);
- if (!res.ok) throw new Error("Failed to fetch active leases");
- const activeLeases = await res.json();
- setLeases(activeLeases as LeaseCardData[]);
- } catch (err: any) {
- setError(err.message);
- } finally {
- setLoading(false);
- }
- }, [selectedPropertyId]);
-
- useEffect(() => {
- void fetchLeases();
- }, [fetchLeases]);
+ const leases = leasesData ?? [];
+ const error = fetchError?.message ?? null;
 
  const filteredLeases = useMemo(() => {
  let result = [...leases];

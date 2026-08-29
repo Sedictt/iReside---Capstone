@@ -212,5 +212,8 @@ export async function GET(request: Request) {
     grouped.Overdue.sort((a, b) => (a.date > b.date ? -1 : 1));
     grouped["Near Due"].sort((a, b) => (a.date > b.date ? 1 : -1));
 
-    return NextResponse.json({ payments: grouped });
+    return NextResponse.json(
+        { payments: grouped },
+        { headers: { "Cache-Control": "private, max-age=10, stale-while-revalidate=60" } }
+    );
 }
