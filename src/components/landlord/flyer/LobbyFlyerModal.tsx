@@ -1939,7 +1939,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                     </span>
                   </div>
                 </div>
-
+              </div>
 
               {/* Bottom Main Step-by-Step Ribbon (Horizontal 1 -> 2 -> 3) */}
               <div className="relative z-10 bg-[#0c111a] text-white px-5 py-2.5 flex items-center justify-between border-t border-zinc-800">
