@@ -95,43 +95,6 @@ function getContrastColor(hex: string): { text: string; muted: string; border: s
   }
 }
 
-// Draw crisp Vector iReside Hexagon Logo
-function drawBrandLogo(ctx: CanvasRenderingContext2D, x: number, y: number, isLight: boolean) {
-  ctx.save();
-  // Outer Hexagon
-  const size = 18;
-  ctx.beginPath();
-  for (let i = 0; i < 6; i++) {
-    const angle = (Math.PI / 3) * i - Math.PI / 6;
-    const px = x + size * Math.cos(angle);
-    const py = y + size * Math.sin(angle);
-    if (i === 0) ctx.moveTo(px, py);
-    else ctx.lineTo(px, py);
-  }
-  ctx.closePath();
-  ctx.fillStyle = "#10b981";
-  ctx.fill();
-
-  // Inner roof icon
-  ctx.strokeStyle = "#ffffff";
-  ctx.lineWidth = 2.5;
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-  ctx.beginPath();
-  ctx.moveTo(x - 7, y + 2);
-  ctx.lineTo(x, y - 6);
-  ctx.lineTo(x + 7, y + 2);
-  ctx.stroke();
-
-  // "iReside" Text
-  ctx.fillStyle = isLight ? "#09090b" : "#ffffff";
-  ctx.font = "900 24px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-  ctx.textAlign = "left";
-  ctx.textBaseline = "middle";
-  ctx.fillText("iReside", x + 24, y);
-  ctx.restore();
-}
-
 /**
  * High-Precision 1:1 Visual Canvas Poster Renderer
  * Generates an exact, perfectly proportioned A4 print-quality bitmap (1000 x 1414)
@@ -288,14 +251,6 @@ export async function renderPosterToCanvas(options: PosterRenderOptions): Promis
   ctx.fillStyle = cardContrast.muted;
   ctx.font = `500 20px ${fontFam}`;
   ctx.fillText(options.address, PADDING_X + 118, currentY + 70);
-
-  // Logo + Resident Portal Subtitle on Right
-  drawBrandLogo(ctx, PADDING_X + CONTENT_W - 170, currentY + 45, cardContrast.isLight);
-  ctx.fillStyle = cardContrast.muted;
-  ctx.font = `800 16px ${fontFam}`;
-  ctx.textAlign = "right";
-  ctx.textBaseline = "top";
-  ctx.fillText(options.portalSubheading.toUpperCase(), PADDING_X + CONTENT_W - 20, currentY + 74);
   ctx.restore();
 
   currentY += headerH + 24;
@@ -326,7 +281,7 @@ export async function renderPosterToCanvas(options: PosterRenderOptions): Promis
   }
 
   // ----------------------------------------------------
-  // 3. Dual High-Resolution QR Cards
+  // 3. Dual High-Resolution QR Cards (Distinctly Differentiated)
   // ----------------------------------------------------
   const qrCardW = (CONTENT_W - 24) / 2;
   const qrCardH = 490;
@@ -341,16 +296,28 @@ export async function renderPosterToCanvas(options: PosterRenderOptions): Promis
   drawCard(leftX, currentY, qrCardW, qrCardH, 20);
 
   ctx.save();
+  // Option 1 Header Pill
+  ctx.fillStyle = options.brandColor;
+  ctx.beginPath();
+  ctx.roundRect(leftX + (qrCardW - 190) / 2, currentY + 18, 190, 32, 16);
+  ctx.fill();
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = `900 14px ${fontFam}`;
   ctx.textAlign = "center";
-  ctx.textBaseline = "top";
+  ctx.textBaseline = "middle";
+  ctx.fillText("📱  OPTION 1 · MOBILE APP", leftX + qrCardW / 2, currentY + 34);
+
+  // Title
   ctx.fillStyle = cardContrast.text;
-  ctx.font = `900 22px ${fontFam}`;
-  ctx.fillText(`📱  ${options.apkCardTitle}`, leftX + qrCardW / 2, currentY + 24);
+  ctx.font = `900 21px ${fontFam}`;
+  ctx.textBaseline = "top";
+  ctx.fillText(options.apkCardTitle, leftX + qrCardW / 2, currentY + 58);
 
   // QR Frame Box
-  const qrBoxSize = 270;
+  const qrBoxSize = 250;
   const qrX = leftX + (qrCardW - qrBoxSize) / 2;
-  const qrY = currentY + 68;
+  const qrY = currentY + 95;
   ctx.fillStyle = "#ffffff";
   ctx.strokeStyle = "#e4e4e7";
   ctx.lineWidth = 2;
@@ -366,19 +333,20 @@ export async function renderPosterToCanvas(options: PosterRenderOptions): Promis
   // Button Badge
   ctx.fillStyle = options.brandColor;
   ctx.beginPath();
-  ctx.roundRect(leftX + (qrCardW - 200) / 2, currentY + 365, 200, 44, 22);
+  ctx.roundRect(leftX + 24, currentY + 365, qrCardW - 48, 46, 12);
   ctx.fill();
 
   ctx.fillStyle = "#ffffff";
-  ctx.font = `900 18px ${fontFam}`;
+  ctx.font = `900 17px ${fontFam}`;
+  ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(options.apkCardBadge.toUpperCase(), leftX + qrCardW / 2, currentY + 387);
+  ctx.fillText(`⬇️  ${options.apkCardBadge.toUpperCase()}`, leftX + qrCardW / 2, currentY + 388);
 
   // Subtitle
   ctx.fillStyle = cardContrast.muted;
-  ctx.font = `500 18px ${fontFam}`;
+  ctx.font = `600 16px ${fontFam}`;
   ctx.textBaseline = "top";
-  ctx.fillText(options.apkCardSubtitle, leftX + qrCardW / 2, currentY + 426);
+  ctx.fillText(options.apkCardSubtitle, leftX + qrCardW / 2, currentY + 424);
   ctx.restore();
 
   // --- Right: Instant Web Portal Card ---
@@ -386,11 +354,23 @@ export async function renderPosterToCanvas(options: PosterRenderOptions): Promis
   drawCard(rightX, currentY, qrCardW, qrCardH, 20);
 
   ctx.save();
+  // Option 2 Header Pill
+  ctx.fillStyle = "#059669";
+  ctx.beginPath();
+  ctx.roundRect(rightX + (qrCardW - 190) / 2, currentY + 18, 190, 32, 16);
+  ctx.fill();
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = `900 14px ${fontFam}`;
   ctx.textAlign = "center";
-  ctx.textBaseline = "top";
+  ctx.textBaseline = "middle";
+  ctx.fillText("🌐  OPTION 2 · INSTANT WEB", rightX + qrCardW / 2, currentY + 34);
+
+  // Title
   ctx.fillStyle = cardContrast.text;
-  ctx.font = `900 22px ${fontFam}`;
-  ctx.fillText(`🌐  ${options.webCardTitle}`, rightX + qrCardW / 2, currentY + 24);
+  ctx.font = `900 21px ${fontFam}`;
+  ctx.textBaseline = "top";
+  ctx.fillText(options.webCardTitle, rightX + qrCardW / 2, currentY + 58);
 
   // QR Frame Box
   const rightQrX = rightX + (qrCardW - qrBoxSize) / 2;
@@ -409,19 +389,20 @@ export async function renderPosterToCanvas(options: PosterRenderOptions): Promis
   // Button Badge
   ctx.fillStyle = cardContrast.isLight ? "#09090b" : "#ffffff";
   ctx.beginPath();
-  ctx.roundRect(rightX + (qrCardW - 210) / 2, currentY + 365, 210, 44, 22);
+  ctx.roundRect(rightX + 24, currentY + 365, qrCardW - 48, 46, 12);
   ctx.fill();
 
   ctx.fillStyle = cardContrast.isLight ? "#ffffff" : "#09090b";
-  ctx.font = `900 18px ${fontFam}`;
+  ctx.font = `900 17px ${fontFam}`;
+  ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(options.webCardBadge.toUpperCase(), rightX + qrCardW / 2, currentY + 387);
+  ctx.fillText(`⚡  ${options.webCardBadge.toUpperCase()}`, rightX + qrCardW / 2, currentY + 388);
 
   // Subtitle
   ctx.fillStyle = cardContrast.muted;
-  ctx.font = `500 18px ${fontFam}`;
+  ctx.font = `600 16px ${fontFam}`;
   ctx.textBaseline = "top";
-  ctx.fillText(options.webCardSubtitle, rightX + qrCardW / 2, currentY + 426);
+  ctx.fillText(options.webCardSubtitle, rightX + qrCardW / 2, currentY + 424);
   ctx.restore();
 
   currentY += qrCardH + 24;

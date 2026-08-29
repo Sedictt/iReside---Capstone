@@ -38,7 +38,6 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
-import { BrandLogo } from "@/components/ui/BrandLogo";
 import { useProperty } from "@/context/PropertyContext";
 import { useBrand } from "@/context/BrandContext";
 import { toast } from "sonner";
@@ -155,14 +154,14 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
   );
 
   // 3. Android APK Card Texts
-  const [apkCardTitle, setApkCardTitle] = useState("Android Mobile App");
-  const [apkCardBadge, setApkCardBadge] = useState("Download APK");
-  const [apkCardSubtitle, setApkCardSubtitle] = useState("Track bills & get push alerts");
+  const [apkCardTitle, setApkCardTitle] = useState("Download Mobile App");
+  const [apkCardBadge, setApkCardBadge] = useState("Download APK (Android)");
+  const [apkCardSubtitle, setApkCardSubtitle] = useState("Direct install · Push alerts & offline receipts");
 
   // 4. Web Portal Card Texts
-  const [webCardTitle, setWebCardTitle] = useState("Instant Web Portal");
-  const [webCardBadge, setWebCardBadge] = useState("Open in Browser");
-  const [webCardSubtitle, setWebCardSubtitle] = useState("Instant access on any device");
+  const [webCardTitle, setWebCardTitle] = useState("Instant Web Signup");
+  const [webCardBadge, setWebCardBadge] = useState("Scan to Register (Browser)");
+  const [webCardSubtitle, setWebCardSubtitle] = useState("No download needed · Works on iOS & Android");
 
   // 5. 3-Step Guide Texts
   const [stepsHeading, setStepsHeading] = useState("Get Started in 3 Easy Steps");
@@ -681,12 +680,12 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
     setPortalSubheading("Resident Portal");
     setBannerHeading("Resident Notice & Access");
     setTagline("Official resident portal for GCash payments, utility tracking, and maintenance.");
-    setApkCardTitle("Android Mobile App");
-    setApkCardBadge("Download APK");
-    setApkCardSubtitle("Track bills & get push alerts");
-    setWebCardTitle("Instant Web Portal");
-    setWebCardBadge("Open in Browser");
-    setWebCardSubtitle("Instant access on any device");
+    setApkCardTitle("Download Mobile App");
+    setApkCardBadge("Download APK (Android)");
+    setApkCardSubtitle("Direct install · Push alerts & offline receipts");
+    setWebCardTitle("Instant Web Signup");
+    setWebCardBadge("Scan to Register (Browser)");
+    setWebCardSubtitle("No download needed · Works on iOS & Android");
     setStepsHeading("Get Started in 3 Easy Steps");
     setStep1Title("Scan QR");
     setStep1Desc("Open with camera or browser");
@@ -1586,7 +1585,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
               <div className="relative z-10 flex flex-col justify-between gap-3.5 h-full">
                 {/* 1. Header Card (Uses Custom Card Color & Opacity + Auto-Contrast Text) */}
                 <div
-                  className="p-3 rounded-xl flex items-center justify-between shadow-sm backdrop-blur-md transition-colors"
+                  className="p-3.5 rounded-xl flex items-center justify-between shadow-sm backdrop-blur-md transition-colors"
                   style={{
                     backgroundColor: cardRgbaBackground,
                     borderColor: cardContrast.border,
@@ -1594,12 +1593,12 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                     color: cardContrast.text,
                   }}
                 >
-                  <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-3">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
                     <div
-                      className="size-9 rounded-lg flex items-center justify-center font-black text-xs text-white shadow-sm shrink-0"
+                      className="size-10 rounded-lg flex items-center justify-center font-black text-xs text-white shadow-sm shrink-0"
                       style={{ backgroundColor: brandColor }}
                     >
-                      <Building2 className="size-4 text-white" />
+                      <Building2 className="size-5 text-white" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <h1
@@ -1621,7 +1620,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                         suppressContentEditableWarning
                         onBlur={(e) => setAddress(e.currentTarget.textContent || "")}
                         className={cn(
-                          "text-[10px] font-medium leading-tight block truncate",
+                          "text-[10px] font-medium leading-tight block truncate mt-0.5",
                           editableClass
                         )}
                         style={{ color: cardContrast.muted }}
@@ -1629,27 +1628,6 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                         {address}
                       </p>
                     </div>
-                  </div>
-
-                  <div className="text-right flex flex-col items-end shrink-0">
-                    <BrandLogo
-                      size="sm"
-                      showText={false}
-                      theme={cardContrast.isLight ? "light" : "dark"}
-                      className="h-5 w-16"
-                    />
-                    <span
-                      contentEditable={isEditingActive}
-                      suppressContentEditableWarning
-                      onBlur={(e) => setPortalSubheading(e.currentTarget.textContent || "")}
-                      className={cn(
-                        "text-[8px] font-bold uppercase tracking-widest mt-0.5",
-                        editableClass
-                      )}
-                      style={{ color: cardContrast.muted }}
-                    >
-                      {portalSubheading}
-                    </span>
                   </div>
                 </div>
 
@@ -1688,20 +1666,28 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                   </div>
                 )}
 
-                {/* 3. Dual High-Resolution QR Cards */}
+                {/* 3. Dual High-Resolution QR Cards (Instantly Differentiated) */}
                 <div className="grid grid-cols-2 gap-3">
-                  {/* Left: Android App */}
+                  {/* Left: Android Mobile App */}
                   <div
-                    className="p-3 rounded-xl flex flex-col items-center text-center gap-2 relative group shadow-sm backdrop-blur-md transition-colors"
+                    className="p-3 rounded-xl flex flex-col items-center text-center gap-2 relative group shadow-sm backdrop-blur-md transition-colors border-t-2"
                     style={{
                       backgroundColor: cardRgbaBackground,
                       borderColor: cardContrast.border,
-                      borderWidth: "1px",
+                      borderTopColor: brandColor,
                       color: cardContrast.text,
                     }}
                   >
-                    <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider">
-                      <Smartphone className="size-3" style={{ color: brandColor }} />
+                    {/* Visual Option Header Pill */}
+                    <div
+                      className="px-2 py-0.5 rounded-full text-[7.5px] font-black uppercase tracking-wider text-white shadow-xs inline-flex items-center gap-1"
+                      style={{ backgroundColor: brandColor }}
+                    >
+                      <Smartphone className="size-2.5" />
+                      <span>Option 1 · Mobile App</span>
+                    </div>
+
+                    <div className="flex items-center gap-1 text-[10.5px] font-black uppercase tracking-wide">
                       <span
                         contentEditable={isEditingActive}
                         suppressContentEditableWarning
@@ -1713,7 +1699,8 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                       </span>
                     </div>
 
-                    <div className="size-24 sm:size-26 rounded-lg bg-white p-1 border border-zinc-200 shadow-inner flex items-center justify-center relative">
+                    {/* QR Code Container (100% Unobstructed for Instant Scanning) */}
+                    <div className="size-24 sm:size-26 rounded-lg bg-white p-1.5 border border-zinc-200 shadow-inner flex items-center justify-center relative">
                       <img
                         src={apkQrUrl}
                         crossOrigin="anonymous"
@@ -1731,21 +1718,23 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                           )
                         }
                         title="Download high-res PNG (1000px)"
-                        className="absolute inset-0 bg-black/75 rounded-lg text-white text-[9px] font-bold flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-xs print:hidden"
+                        className="absolute inset-0 bg-black/75 rounded-lg text-white text-[9px] font-bold flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-xs print:hidden z-20"
                       >
                         <Download className="size-4 text-emerald-400" />
                         <span>Save PNG</span>
                       </button>
                     </div>
 
-                    <div>
+                    {/* Action Button & Subtitle */}
+                    <div className="w-full">
                       <span
                         className={cn(
-                          "px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider text-white shadow-xs inline-flex items-center justify-center transition-all",
+                          "w-full px-2 py-1 rounded-lg text-[8.5px] font-black uppercase tracking-wider text-white shadow-xs inline-flex items-center justify-center gap-1 transition-all",
                           isEditingActive && "ring-1 ring-dashed ring-white/80 cursor-text"
                         )}
                         style={{ backgroundColor: brandColor }}
                       >
+                        <Download className="size-2.5" />
                         <span
                           contentEditable={isEditingActive}
                           suppressContentEditableWarning
@@ -1759,7 +1748,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                         contentEditable={isEditingActive}
                         suppressContentEditableWarning
                         onBlur={(e) => setApkCardSubtitle(e.currentTarget.textContent || "")}
-                        className={cn("text-[8px] mt-0.5 font-medium", editableClass)}
+                        className={cn("text-[7.5px] mt-1 font-medium leading-tight", editableClass)}
                         style={{ color: cardContrast.muted }}
                       >
                         {apkCardSubtitle}
@@ -1767,18 +1756,23 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                     </div>
                   </div>
 
-                  {/* Right: Instant Web Portal */}
+                  {/* Right: Instant Web Portal / Registration */}
                   <div
-                    className="p-3 rounded-xl flex flex-col items-center text-center gap-2 relative group shadow-sm backdrop-blur-md transition-colors"
+                    className="p-3 rounded-xl flex flex-col items-center text-center gap-2 relative group shadow-sm backdrop-blur-md transition-colors border-t-2"
                     style={{
                       backgroundColor: cardRgbaBackground,
                       borderColor: cardContrast.border,
-                      borderWidth: "1px",
+                      borderTopColor: "#059669",
                       color: cardContrast.text,
                     }}
                   >
-                    <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider">
-                      <Globe className="size-3" style={{ color: brandColor }} />
+                    {/* Visual Option Header Pill */}
+                    <div className="px-2 py-0.5 rounded-full text-[7.5px] font-black uppercase tracking-wider bg-emerald-600 text-white shadow-xs inline-flex items-center gap-1">
+                      <Globe className="size-2.5" />
+                      <span>Option 2 · Instant Web</span>
+                    </div>
+
+                    <div className="flex items-center gap-1 text-[10.5px] font-black uppercase tracking-wide">
                       <span
                         contentEditable={isEditingActive}
                         suppressContentEditableWarning
@@ -1790,7 +1784,8 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                       </span>
                     </div>
 
-                    <div className="size-24 sm:size-26 rounded-lg bg-white p-1 border border-zinc-200 shadow-inner flex items-center justify-center relative">
+                    {/* QR Code Container (100% Unobstructed for Instant Scanning) */}
+                    <div className="size-24 sm:size-26 rounded-lg bg-white p-1.5 border border-zinc-200 shadow-inner flex items-center justify-center relative">
                       <img
                         src={portalQrUrl}
                         crossOrigin="anonymous"
@@ -1808,21 +1803,23 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                           )
                         }
                         title="Download high-res PNG (1000px)"
-                        className="absolute inset-0 bg-black/75 rounded-lg text-white text-[9px] font-bold flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-xs print:hidden"
+                        className="absolute inset-0 bg-black/75 rounded-lg text-white text-[9px] font-bold flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-xs print:hidden z-20"
                       >
                         <Download className="size-4 text-emerald-400" />
                         <span>Save PNG</span>
                       </button>
                     </div>
 
-                    <div>
+                    {/* Action Button & Subtitle */}
+                    <div className="w-full">
                       <span
                         className={cn(
-                          "px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider shadow-xs inline-flex items-center justify-center transition-all",
+                          "w-full px-2 py-1 rounded-lg text-[8.5px] font-black uppercase tracking-wider shadow-xs inline-flex items-center justify-center gap-1 transition-all",
                           cardContrast.isLight ? "bg-zinc-900 text-white" : "bg-white text-zinc-950",
                           isEditingActive && "ring-1 ring-dashed ring-primary/80 cursor-text"
                         )}
                       >
+                        <Globe className="size-2.5" />
                         <span
                           contentEditable={isEditingActive}
                           suppressContentEditableWarning
@@ -1836,7 +1833,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                         contentEditable={isEditingActive}
                         suppressContentEditableWarning
                         onBlur={(e) => setWebCardSubtitle(e.currentTarget.textContent || "")}
-                        className={cn("text-[8px] mt-0.5 font-medium", editableClass)}
+                        className={cn("text-[7.5px] mt-1 font-medium leading-tight", editableClass)}
                         style={{ color: cardContrast.muted }}
                       >
                         {webCardSubtitle}
