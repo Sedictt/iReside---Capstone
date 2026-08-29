@@ -46,7 +46,6 @@ export default function ActiveLeasesTab({ searchQuery, sortBy, onClearSearch }: 
    const activeLeases = await res.json();
    return Array.isArray(activeLeases) ? (activeLeases as LeaseCardData[]) : [];
   },
-  initialData: [],
  });
 
  const leases = leasesData ?? [];

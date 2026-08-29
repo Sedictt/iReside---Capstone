@@ -21,7 +21,7 @@ export function createBrowserSupabaseClient() {
                     // Serialized in-memory mutex to prevent 409 concurrent token refreshes without navigator.locks abort errors
                     lock: async (_name, _acquireTimeout, fn) => {
                         const prev = authLockPromise;
-                        let release: () => void = () => {};
+                        let release: (value?: any) => void = () => {};
                         authLockPromise = new Promise((res) => {
                             release = res;
                         });

@@ -91,7 +91,6 @@ export function PropertiesDashboard() {
             }
             return payload.properties ?? [];
         },
-        initialData: [],
     });
 
     const properties = propertiesData ?? [];

@@ -94,7 +94,6 @@ export function MaintenanceDashboard() {
    const payload = (await response.json()) as { requests?: MaintenanceRequest[] };
    return Array.isArray(payload.requests) ? payload.requests : [];
   },
-  initialData: [],
  });
 
  const requests: MaintenanceRequest[] = requestsData ?? [];
