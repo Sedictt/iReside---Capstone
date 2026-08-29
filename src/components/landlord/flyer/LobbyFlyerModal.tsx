@@ -36,6 +36,9 @@ import {
   GripVertical,
   Layers,
   Image as ImageIcon,
+  ChevronRight,
+  UserPlus,
+  CheckCircle2,
 } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { useProperty } from "@/context/PropertyContext";
@@ -148,20 +151,20 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
   const [portalSubheading, setPortalSubheading] = useState("Resident Portal");
 
   // 2. Banner Texts
-  const [bannerHeading, setBannerHeading] = useState("Resident Notice & Access");
+  const [bannerHeading, setBannerHeading] = useState("ACCESS MADE EASY");
   const [tagline, setTagline] = useState(
-    brand.propertyTagline || "Official resident portal for GCash payments, utility tracking, and maintenance."
+    "Resident portal for cash payments, utility tracking, and maintenance."
   );
 
   // 3. Android APK Card Texts
-  const [apkCardTitle, setApkCardTitle] = useState("Download Mobile App");
-  const [apkCardBadge, setApkCardBadge] = useState("Download APK (Android)");
-  const [apkCardSubtitle, setApkCardSubtitle] = useState("Direct install · Push alerts & offline receipts");
+  const [apkCardTitle, setApkCardTitle] = useState("DOWNLOAD MOBILE APP");
+  const [apkCardBadge, setApkCardBadge] = useState("FOR APP INSTALLATION");
+  const [apkCardSubtitle, setApkCardSubtitle] = useState("Install the app on your Android device.");
 
   // 4. Web Portal Card Texts
-  const [webCardTitle, setWebCardTitle] = useState("Instant Web Signup");
-  const [webCardBadge, setWebCardBadge] = useState("Scan to Register (Browser)");
-  const [webCardSubtitle, setWebCardSubtitle] = useState("No download needed · Works on iOS & Android");
+  const [webCardTitle, setWebCardTitle] = useState("REGISTER / ACCESS PORTAL");
+  const [webCardBadge, setWebCardBadge] = useState("FOR PORTAL ACCESS");
+  const [webCardSubtitle, setWebCardSubtitle] = useState("Open in your browser to register or access the portal.");
 
   // 5. 3-Step Guide Texts
   const [stepsHeading, setStepsHeading] = useState("Get Started in 3 Easy Steps");
@@ -170,18 +173,18 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
   const [step2Title, setStep2Title] = useState("Create Account");
   const [step2Desc, setStep2Desc] = useState("Sign up & connect to your unit");
   const [step3Title, setStep3Title] = useState("Pay & Request");
-  const [step3Desc, setStep3Desc] = useState("GCash rent & maintenance tickets");
+  const [step3Desc, setStep3Desc] = useState("Quick pay & submit maintenance tickets");
 
   // 6. Wi-Fi & Office Info Texts
-  const [wifiHeader, setWifiHeader] = useState("Lobby Wi-Fi");
+  const [wifiHeader, setWifiHeader] = useState("LOBBY WI-FI");
   const [wifiSsid, setWifiSsid] = useState("SkylineLofts_Resident");
-  const [wifiPassword, setWifiPassword] = useState("Skyline@2026");
-  const [officeHeader, setOfficeHeader] = useState("Property Office");
-  const [contactPhone, setContactPhone] = useState("0917-890-1234");
-  const [officeHours, setOfficeHours] = useState("Daily 8:00 AM – 7:00 PM");
+  const [wifiPassword, setWifiPassword] = useState("Pass: Skyline2025");
+  const [officeHeader, setOfficeHeader] = useState("PROPERTY OFFICE");
+  const [contactPhone, setContactPhone] = useState("0927-090-1234");
+  const [officeHours, setOfficeHours] = useState("Daily: 8:00 AM – 7:00 PM");
 
   // 7. Footer Stamp Texts
-  const [footerBadge, setFooterBadge] = useState("Official Notice");
+  const [footerBadge, setFooterBadge] = useState("Official Resident Notice");
 
   // Direct Edit Mode Toggle
   const [isDirectEditMode, setIsDirectEditMode] = useState(true);
@@ -678,28 +681,28 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
     setPropertyName(selectedProperty?.name || "Skyline Lofts");
     setAddress(selectedProperty?.address || "456 Gen. T. de Leon Road, Paso de Blas, Valenzuela City");
     setPortalSubheading("Resident Portal");
-    setBannerHeading("Resident Notice & Access");
-    setTagline("Official resident portal for GCash payments, utility tracking, and maintenance.");
-    setApkCardTitle("Download Mobile App");
-    setApkCardBadge("Download APK (Android)");
-    setApkCardSubtitle("Direct install · Push alerts & offline receipts");
-    setWebCardTitle("Instant Web Signup");
-    setWebCardBadge("Scan to Register (Browser)");
-    setWebCardSubtitle("No download needed · Works on iOS & Android");
+    setBannerHeading("ACCESS MADE EASY");
+    setTagline("Resident portal for cash payments, utility tracking, and maintenance.");
+    setApkCardTitle("DOWNLOAD MOBILE APP");
+    setApkCardBadge("FOR APP INSTALLATION");
+    setApkCardSubtitle("Install the app on your Android device.");
+    setWebCardTitle("REGISTER / ACCESS PORTAL");
+    setWebCardBadge("FOR PORTAL ACCESS");
+    setWebCardSubtitle("Open in your browser to register or access the portal.");
     setStepsHeading("Get Started in 3 Easy Steps");
     setStep1Title("Scan QR");
     setStep1Desc("Open with camera or browser");
     setStep2Title("Create Account");
     setStep2Desc("Sign up & connect to your unit");
     setStep3Title("Pay & Request");
-    setStep3Desc("GCash rent & maintenance tickets");
-    setWifiHeader("Lobby Wi-Fi");
+    setStep3Desc("Quick pay & submit maintenance tickets");
+    setWifiHeader("LOBBY WI-FI");
     setWifiSsid("SkylineLofts_Resident");
-    setWifiPassword("Skyline@2026");
-    setOfficeHeader("Property Office");
-    setContactPhone("0917-890-1234");
-    setOfficeHours("Daily 8:00 AM – 7:00 PM");
-    setFooterBadge("Official Notice");
+    setWifiPassword("Pass: Skyline2025");
+    setOfficeHeader("PROPERTY OFFICE");
+    setContactPhone("0927-090-1234");
+    setOfficeHours("Daily: 8:00 AM – 7:00 PM");
+    setFooterBadge("Official Resident Notice");
     setBrandColor("#8b5cf6");
     setBgPreset("solid_white");
     setCardColor("#ffffff");
@@ -1554,12 +1557,12 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
               </button>
             </div>
 
-            {/* AUTHENTIC A4 CANVAS SHEET (Spacious & Clean) */}
+            {/* AUTHENTIC A4 LANDSCAPE POSTER CANVAS */}
             <div
               ref={posterRef}
               id="lobby-poster-canvas"
               className={cn(
-                "w-full max-w-[500px] shadow-[0_15px_40px_rgba(0,0,0,0.35)] p-5 sm:p-6 flex flex-col justify-between gap-3.5 border rounded-2xl transition-all duration-200 relative overflow-hidden print:shadow-none print:border-none print:rounded-none print:p-6 print:w-full print:max-w-none print:h-auto",
+                "w-full max-w-[820px] shadow-[0_20px_50px_rgba(0,0,0,0.35)] flex flex-col justify-between border border-zinc-200/90 rounded-2xl transition-all duration-200 relative overflow-hidden bg-white text-zinc-900 select-none print:shadow-none print:border-none print:rounded-none print:p-0 print:w-full print:max-w-none print:h-auto",
                 getPosterBgClass()
               )}
               style={{
@@ -1581,134 +1584,148 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                 />
               )}
 
-              {/* Poster Content Layers */}
-              <div className="relative z-10 flex flex-col justify-between gap-3.5 h-full">
-                {/* 1. Header Card (Uses Custom Card Color & Opacity + Auto-Contrast Text) */}
-                <div
-                  className="p-3.5 rounded-xl flex items-center justify-between shadow-sm backdrop-blur-md transition-colors"
-                  style={{
-                    backgroundColor: cardRgbaBackground,
-                    borderColor: cardContrast.border,
-                    borderWidth: "1px",
-                    color: cardContrast.text,
-                  }}
-                >
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
+              {/* Upper Main Section: 3-Part Layout (Hero + Dual QR + Dark Sidebar) */}
+              <div className="relative z-10 grid grid-cols-12 min-h-[360px] bg-white">
+                {/* 1. Left Hero & Branding Column (Col 4) */}
+                <div className="col-span-4 p-5 flex flex-col justify-between border-r border-zinc-200/80 relative overflow-hidden bg-gradient-to-b from-white via-zinc-50/40 to-purple-50/20">
+                  {/* Property Header */}
+                  <div className="flex items-center gap-2.5">
                     <div
-                      className="size-10 rounded-lg flex items-center justify-center font-black text-xs text-white shadow-sm shrink-0"
+                      className="size-9 rounded-xl flex items-center justify-center font-black text-xs text-white shadow-xs shrink-0"
                       style={{ backgroundColor: brandColor }}
                     >
                       <Building2 className="size-5 text-white" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h1
+                      <h2
                         contentEditable={isEditingActive}
                         suppressContentEditableWarning
                         onBlur={(e) => setPropertyName(e.currentTarget.textContent || "")}
                         className={cn(
-                          "text-base font-black leading-tight block transition-all",
-                          titleTransform === "uppercase" ? "uppercase" : "normal-case",
-                          trackingClass,
+                          "text-xs font-black leading-tight block truncate uppercase tracking-wide",
                           editableClass
                         )}
-                        style={{ color: cardContrast.text }}
                       >
                         {propertyName}
-                      </h1>
+                      </h2>
                       <p
                         contentEditable={isEditingActive}
                         suppressContentEditableWarning
                         onBlur={(e) => setAddress(e.currentTarget.textContent || "")}
                         className={cn(
-                          "text-[10px] font-medium leading-tight block truncate mt-0.5",
+                          "text-[9px] text-zinc-500 font-medium leading-tight block truncate mt-0.5",
                           editableClass
                         )}
-                        style={{ color: cardContrast.muted }}
                       >
                         {address}
                       </p>
                     </div>
                   </div>
-                </div>
 
-                {/* 2. Welcome Banner (Clean Announcement) */}
-                {showBanner && (
-                  <div
-                    className="p-2.5 rounded-xl text-center text-white relative overflow-hidden shadow-sm"
-                    style={{
-                      backgroundColor: brandColor,
-                    }}
-                  >
-                    <div className="flex items-center justify-center gap-1.5 text-[9px] font-black uppercase tracking-wider mb-0.5">
-                      <Megaphone className="size-2.5" />
-                      <span
-                        contentEditable={isEditingActive}
-                        suppressContentEditableWarning
-                        onBlur={(e) => setBannerHeading(e.currentTarget.textContent || "")}
-                        className={cn(editableClass)}
-                      >
-                        {bannerHeading}
-                      </span>
-                    </div>
+                  {/* Hero Announcement Headline */}
+                  <div className="my-auto py-2">
+                    <h1
+                      contentEditable={isEditingActive}
+                      suppressContentEditableWarning
+                      onBlur={(e) => setBannerHeading(e.currentTarget.textContent || "")}
+                      className={cn(
+                        "text-2xl font-black uppercase tracking-tight text-zinc-950 leading-tight",
+                        editableClass
+                      )}
+                    >
+                      {bannerHeading}
+                    </h1>
                     <p
                       contentEditable={isEditingActive}
                       suppressContentEditableWarning
                       onBlur={(e) => setTagline(e.currentTarget.textContent || "")}
                       className={cn(
-                        "text-[10px] text-white/95 leading-tight block max-w-sm mx-auto",
-                        isEditingActive
-                          ? "outline-dashed outline-1 outline-white/50 hover:outline-white hover:bg-white/10 rounded px-1 transition-all cursor-text"
-                          : "outline-none"
+                        "text-[10px] text-zinc-600 font-medium leading-snug mt-1.5 block max-w-[210px]",
+                        editableClass
                       )}
                     >
                       {tagline}
                     </p>
                   </div>
-                )}
 
-                {/* 3. Dual High-Resolution QR Cards (Instantly Differentiated) */}
-                <div className="grid grid-cols-2 gap-3">
-                  {/* Left: Android Mobile App */}
-                  <div
-                    className="p-3 rounded-xl flex flex-col items-center text-center gap-2 relative group shadow-sm backdrop-blur-md transition-colors border-t-2"
-                    style={{
-                      backgroundColor: cardRgbaBackground,
-                      borderColor: cardContrast.border,
-                      borderTopColor: brandColor,
-                      color: cardContrast.text,
-                    }}
-                  >
-                    {/* Visual Option Header Pill */}
-                    <div
-                      className="px-2 py-0.5 rounded-full text-[7.5px] font-black uppercase tracking-wider text-white shadow-xs inline-flex items-center gap-1"
+                  {/* Minimalist Skyline Vector Silhouette */}
+                  <div className="w-full pt-2 opacity-50 pointer-events-none">
+                    <svg viewBox="0 0 200 50" fill="none" className="w-full h-10 text-purple-400">
+                      <path
+                        d="M10 50V25H25V50H35V15H50V50H65V22H80V50H95V8H115V50H130V20H145V50H160V28H175V50H190V50H10Z"
+                        fill="currentColor"
+                        opacity="0.3"
+                      />
+                      <path
+                        d="M0 50V35H15V50H30V20H42V50H55V30H70V50H85V12H102V50H120V24H135V50H150V38H165V50H200V50H0Z"
+                        fill="currentColor"
+                        opacity="0.6"
+                      />
+                    </svg>
+                  </div>
+                </div>
+
+                {/* 2. Center Dual QR Cards Column with Floating OR Badge (Col 5) */}
+                <div className="col-span-5 p-3 flex items-center justify-center gap-2 relative bg-zinc-50/50 border-r border-zinc-200/80">
+                  {/* Floating OR Separator Badge */}
+                  <div className="absolute z-20 size-7 rounded-full bg-white border-2 border-zinc-300 shadow-md flex items-center justify-center text-[8.5px] font-black text-zinc-700 uppercase pointer-events-none">
+                    OR
+                  </div>
+
+                  {/* Left: Mobile App Card (Purple Theme) */}
+                  <div className="flex-1 h-full bg-[#f8f5ff] border border-purple-200/80 rounded-xl p-2.5 flex flex-col items-center justify-between text-center shadow-xs">
+                    <span
+                      className={cn(
+                        "px-2 py-0.5 rounded-full text-[7.5px] font-black uppercase tracking-wider text-white shadow-xs",
+                        isEditingActive && "ring-1 ring-dashed ring-white/80 cursor-text"
+                      )}
                       style={{ backgroundColor: brandColor }}
                     >
-                      <Smartphone className="size-2.5" />
-                      <span>Option 1 · Mobile App</span>
-                    </div>
-
-                    <div className="flex items-center gap-1 text-[10.5px] font-black uppercase tracking-wide">
                       <span
                         contentEditable={isEditingActive}
                         suppressContentEditableWarning
-                        onBlur={(e) => setApkCardTitle(e.currentTarget.textContent || "")}
-                        className={cn(editableClass)}
-                        style={{ color: cardContrast.text }}
+                        onBlur={(e) => setApkCardBadge(e.currentTarget.textContent || "")}
+                        className="outline-none"
                       >
-                        {apkCardTitle}
+                        {apkCardBadge}
                       </span>
+                    </span>
+
+                    <h3
+                      contentEditable={isEditingActive}
+                      suppressContentEditableWarning
+                      onBlur={(e) => setApkCardTitle(e.currentTarget.textContent || "")}
+                      className={cn(
+                        "text-[10.5px] font-black uppercase tracking-tight mt-1 leading-tight",
+                        editableClass
+                      )}
+                      style={{ color: brandColor }}
+                    >
+                      {apkCardTitle}
+                    </h3>
+
+                    <div className="flex items-center gap-1.5 my-1 text-left w-full px-0.5">
+                      <div className="size-6 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center shrink-0">
+                        <Smartphone className="size-3.5" />
+                      </div>
+                      <p
+                        contentEditable={isEditingActive}
+                        suppressContentEditableWarning
+                        onBlur={(e) => setApkCardSubtitle(e.currentTarget.textContent || "")}
+                        className={cn("text-[7.5px] text-zinc-600 font-medium leading-tight", editableClass)}
+                      >
+                        {apkCardSubtitle}
+                      </p>
                     </div>
 
-                    {/* QR Code Container (100% Unobstructed for Instant Scanning) */}
-                    <div className="size-24 sm:size-26 rounded-lg bg-white p-1.5 border border-zinc-200 shadow-inner flex items-center justify-center relative">
+                    {/* QR Code Container (100% Unobstructed) */}
+                    <div className="size-22 rounded-lg bg-white p-1 border border-purple-200 shadow-inner flex items-center justify-center relative group">
                       <img
                         src={apkQrUrl}
                         crossOrigin="anonymous"
                         alt="Android APK QR Code"
                         className="size-full object-contain"
                       />
-
-                      {/* Hover Download PNG Button */}
                       <button
                         type="button"
                         onClick={() =>
@@ -1725,75 +1742,73 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                       </button>
                     </div>
 
-                    {/* Action Button & Subtitle */}
-                    <div className="w-full">
-                      <span
-                        className={cn(
-                          "w-full px-2 py-1 rounded-lg text-[8.5px] font-black uppercase tracking-wider text-white shadow-xs inline-flex items-center justify-center gap-1 transition-all",
-                          isEditingActive && "ring-1 ring-dashed ring-white/80 cursor-text"
-                        )}
-                        style={{ backgroundColor: brandColor }}
-                      >
+                    {/* Bottom Action Banner Button */}
+                    <div
+                      className="w-full mt-1.5 py-1.5 px-1 text-white rounded-lg shadow-xs text-center flex flex-col items-center justify-center leading-tight"
+                      style={{ backgroundColor: brandColor }}
+                    >
+                      <div className="flex items-center justify-center gap-1 text-[8px] font-black uppercase tracking-wider">
                         <Download className="size-2.5" />
-                        <span
-                          contentEditable={isEditingActive}
-                          suppressContentEditableWarning
-                          onBlur={(e) => setApkCardBadge(e.currentTarget.textContent || "")}
-                          className="outline-none"
-                        >
-                          {apkCardBadge}
-                        </span>
+                        <span>SCAN TO DOWNLOAD</span>
+                      </div>
+                      <span className="text-[6.5px] font-bold opacity-90 tracking-wider">
+                        ANDROID (APK)
                       </span>
-                      <p
-                        contentEditable={isEditingActive}
-                        suppressContentEditableWarning
-                        onBlur={(e) => setApkCardSubtitle(e.currentTarget.textContent || "")}
-                        className={cn("text-[7.5px] mt-1 font-medium leading-tight", editableClass)}
-                        style={{ color: cardContrast.muted }}
-                      >
-                        {apkCardSubtitle}
-                      </p>
                     </div>
                   </div>
 
-                  {/* Right: Instant Web Portal / Registration */}
-                  <div
-                    className="p-3 rounded-xl flex flex-col items-center text-center gap-2 relative group shadow-sm backdrop-blur-md transition-colors border-t-2"
-                    style={{
-                      backgroundColor: cardRgbaBackground,
-                      borderColor: cardContrast.border,
-                      borderTopColor: "#059669",
-                      color: cardContrast.text,
-                    }}
-                  >
-                    {/* Visual Option Header Pill */}
-                    <div className="px-2 py-0.5 rounded-full text-[7.5px] font-black uppercase tracking-wider bg-emerald-600 text-white shadow-xs inline-flex items-center gap-1">
-                      <Globe className="size-2.5" />
-                      <span>Option 2 · Instant Web</span>
-                    </div>
-
-                    <div className="flex items-center gap-1 text-[10.5px] font-black uppercase tracking-wide">
+                  {/* Right: Web Portal Card (Emerald Theme) */}
+                  <div className="flex-1 h-full bg-[#f0fdf4] border border-emerald-200/80 rounded-xl p-2.5 flex flex-col items-center justify-between text-center shadow-xs">
+                    <span
+                      className={cn(
+                        "px-2 py-0.5 rounded-full text-[7.5px] font-black uppercase tracking-wider text-white shadow-xs bg-emerald-600",
+                        isEditingActive && "ring-1 ring-dashed ring-white/80 cursor-text"
+                      )}
+                    >
                       <span
                         contentEditable={isEditingActive}
                         suppressContentEditableWarning
-                        onBlur={(e) => setWebCardTitle(e.currentTarget.textContent || "")}
-                        className={cn(editableClass)}
-                        style={{ color: cardContrast.text }}
+                        onBlur={(e) => setWebCardBadge(e.currentTarget.textContent || "")}
+                        className="outline-none"
                       >
-                        {webCardTitle}
+                        {webCardBadge}
                       </span>
+                    </span>
+
+                    <h3
+                      contentEditable={isEditingActive}
+                      suppressContentEditableWarning
+                      onBlur={(e) => setWebCardTitle(e.currentTarget.textContent || "")}
+                      className={cn(
+                        "text-[10.5px] font-black text-emerald-900 uppercase tracking-tight mt-1 leading-tight",
+                        editableClass
+                      )}
+                    >
+                      {webCardTitle}
+                    </h3>
+
+                    <div className="flex items-center gap-1.5 my-1 text-left w-full px-0.5">
+                      <div className="size-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                        <Globe className="size-3.5" />
+                      </div>
+                      <p
+                        contentEditable={isEditingActive}
+                        suppressContentEditableWarning
+                        onBlur={(e) => setWebCardSubtitle(e.currentTarget.textContent || "")}
+                        className={cn("text-[7.5px] text-zinc-600 font-medium leading-tight", editableClass)}
+                      >
+                        {webCardSubtitle}
+                      </p>
                     </div>
 
-                    {/* QR Code Container (100% Unobstructed for Instant Scanning) */}
-                    <div className="size-24 sm:size-26 rounded-lg bg-white p-1.5 border border-zinc-200 shadow-inner flex items-center justify-center relative">
+                    {/* QR Code Container (100% Unobstructed) */}
+                    <div className="size-22 rounded-lg bg-white p-1 border border-emerald-200 shadow-inner flex items-center justify-center relative group">
                       <img
                         src={portalQrUrl}
                         crossOrigin="anonymous"
                         alt="Web Resident Portal QR Code"
                         className="size-full object-contain"
                       />
-
-                      {/* Hover Download PNG Button */}
                       <button
                         type="button"
                         onClick={() =>
@@ -1810,289 +1825,184 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                       </button>
                     </div>
 
-                    {/* Action Button & Subtitle */}
-                    <div className="w-full">
-                      <span
-                        className={cn(
-                          "w-full px-2 py-1 rounded-lg text-[8.5px] font-black uppercase tracking-wider shadow-xs inline-flex items-center justify-center gap-1 transition-all",
-                          cardContrast.isLight ? "bg-zinc-900 text-white" : "bg-white text-zinc-950",
-                          isEditingActive && "ring-1 ring-dashed ring-primary/80 cursor-text"
-                        )}
-                      >
+                    {/* Bottom Action Banner Button */}
+                    <div className="w-full mt-1.5 py-1.5 px-1 bg-emerald-700 text-white rounded-lg shadow-xs text-center flex flex-col items-center justify-center leading-tight">
+                      <div className="flex items-center justify-center gap-1 text-[8px] font-black uppercase tracking-wider">
                         <Globe className="size-2.5" />
-                        <span
-                          contentEditable={isEditingActive}
-                          suppressContentEditableWarning
-                          onBlur={(e) => setWebCardBadge(e.currentTarget.textContent || "")}
-                          className="outline-none"
-                        >
-                          {webCardBadge}
-                        </span>
+                        <span>SCAN TO REGISTER</span>
+                      </div>
+                      <span className="text-[6.5px] font-bold opacity-90 tracking-wider">
+                        INSTANT WEB ACCESS
                       </span>
-                      <p
-                        contentEditable={isEditingActive}
-                        suppressContentEditableWarning
-                        onBlur={(e) => setWebCardSubtitle(e.currentTarget.textContent || "")}
-                        className={cn("text-[7.5px] mt-1 font-medium leading-tight", editableClass)}
-                        style={{ color: cardContrast.muted }}
-                      >
-                        {webCardSubtitle}
-                      </p>
                     </div>
                   </div>
                 </div>
 
-                {/* 4. 3-Step Guided Instructions */}
-                {showSteps && (
-                  <div
-                    className="p-2.5 rounded-xl shadow-sm backdrop-blur-md transition-colors"
-                    style={{
-                      backgroundColor: cardRgbaBackground,
-                      borderColor: cardContrast.border,
-                      borderWidth: "1px",
-                      color: cardContrast.text,
-                    }}
-                  >
+                {/* 3. Right Dark Utility Sidebar Column (Col 3) */}
+                <div className="col-span-3 bg-[#161d2b] text-white p-3.5 flex flex-col justify-between text-center">
+                  {/* Wi-Fi Info */}
+                  <div>
+                    <div className="size-7 rounded-full border border-zinc-600 flex items-center justify-center mx-auto mb-1 text-zinc-300">
+                      <Wifi className="size-3.5 text-zinc-200" />
+                    </div>
                     <p
                       contentEditable={isEditingActive}
                       suppressContentEditableWarning
-                      onBlur={(e) => setStepsHeading(e.currentTarget.textContent || "")}
-                      className={cn(
-                        "text-[8px] font-black uppercase tracking-widest text-center mb-1.5",
-                        editableClass
-                      )}
-                      style={{ color: cardContrast.muted }}
+                      onBlur={(e) => setWifiHeader(e.currentTarget.textContent || "")}
+                      className={cn("text-[8px] font-black uppercase tracking-wider text-zinc-400", editableClass)}
                     >
-                      {stepsHeading}
+                      {wifiHeader}
                     </p>
-                    <div className="grid grid-cols-3 gap-1.5 text-center">
-                      <div className="flex flex-col items-center gap-0.5">
-                        <div
-                          className="size-5 rounded-md flex items-center justify-center text-white text-[9px] font-black shadow-xs"
-                          style={{ backgroundColor: brandColor }}
-                        >
-                          1
-                        </div>
-                        <p
-                          contentEditable={isEditingActive}
-                          suppressContentEditableWarning
-                          onBlur={(e) => setStep1Title(e.currentTarget.textContent || "")}
-                          className={cn("text-[10px] font-bold leading-tight", editableClass)}
-                          style={{ color: cardContrast.text }}
-                        >
-                          {step1Title}
-                        </p>
-                        <p
-                          contentEditable={isEditingActive}
-                          suppressContentEditableWarning
-                          onBlur={(e) => setStep1Desc(e.currentTarget.textContent || "")}
-                          className={cn("text-[8px] leading-tight", editableClass)}
-                          style={{ color: cardContrast.muted }}
-                        >
-                          {step1Desc}
-                        </p>
-                      </div>
+                    <p
+                      contentEditable={isEditingActive}
+                      suppressContentEditableWarning
+                      onBlur={(e) => setWifiSsid(e.currentTarget.textContent || "")}
+                      className={cn("text-[10px] font-bold text-white leading-tight mt-0.5 block truncate", editableClass)}
+                    >
+                      {wifiSsid}
+                    </p>
+                    <p
+                      contentEditable={isEditingActive}
+                      suppressContentEditableWarning
+                      onBlur={(e) => setWifiPassword(e.currentTarget.textContent || "")}
+                      className={cn("text-[8.5px] font-mono text-zinc-400 block truncate", editableClass)}
+                    >
+                      {wifiPassword}
+                    </p>
+                  </div>
 
-                      <div className="flex flex-col items-center gap-0.5">
-                        <div
-                          className="size-5 rounded-md flex items-center justify-center text-white text-[9px] font-black shadow-xs"
-                          style={{ backgroundColor: brandColor }}
-                        >
-                          2
-                        </div>
-                        <p
-                          contentEditable={isEditingActive}
-                          suppressContentEditableWarning
-                          onBlur={(e) => setStep2Title(e.currentTarget.textContent || "")}
-                          className={cn("text-[10px] font-bold leading-tight", editableClass)}
-                          style={{ color: cardContrast.text }}
-                        >
-                          {step2Title}
-                        </p>
-                        <p
-                          contentEditable={isEditingActive}
-                          suppressContentEditableWarning
-                          onBlur={(e) => setStep2Desc(e.currentTarget.textContent || "")}
-                          className={cn("text-[8px] leading-tight", editableClass)}
-                          style={{ color: cardContrast.muted }}
-                        >
-                          {step2Desc}
-                        </p>
-                      </div>
+                  <div className="w-full h-px bg-zinc-700/60 my-1" />
 
-                      <div className="flex flex-col items-center gap-0.5">
-                        <div
-                          className="size-5 rounded-md flex items-center justify-center text-white text-[9px] font-black shadow-xs"
-                          style={{ backgroundColor: brandColor }}
-                        >
-                          3
-                        </div>
-                        <p
-                          contentEditable={isEditingActive}
-                          suppressContentEditableWarning
-                          onBlur={(e) => setStep3Title(e.currentTarget.textContent || "")}
-                          className={cn("text-[10px] font-bold leading-tight", editableClass)}
-                          style={{ color: cardContrast.text }}
-                        >
-                          {step3Title}
-                        </p>
-                        <p
-                          contentEditable={isEditingActive}
-                          suppressContentEditableWarning
-                          onBlur={(e) => setStep3Desc(e.currentTarget.textContent || "")}
-                          className={cn("text-[8px] leading-tight", editableClass)}
-                          style={{ color: cardContrast.muted }}
-                        >
-                          {step3Desc}
-                        </p>
-                      </div>
+                  {/* Office Info */}
+                  <div>
+                    <div className="size-7 rounded-full border border-zinc-600 flex items-center justify-center mx-auto mb-1 text-zinc-300">
+                      <Phone className="size-3.5 text-zinc-200" />
                     </div>
+                    <p
+                      contentEditable={isEditingActive}
+                      suppressContentEditableWarning
+                      onBlur={(e) => setOfficeHeader(e.currentTarget.textContent || "")}
+                      className={cn("text-[8px] font-black uppercase tracking-wider text-zinc-400", editableClass)}
+                    >
+                      {officeHeader}
+                    </p>
+                    <p
+                      contentEditable={isEditingActive}
+                      suppressContentEditableWarning
+                      onBlur={(e) => setContactPhone(e.currentTarget.textContent || "")}
+                      className={cn("text-[10px] font-bold font-mono text-white leading-tight mt-0.5 block truncate", editableClass)}
+                    >
+                      {contactPhone}
+                    </p>
+                    <p
+                      contentEditable={isEditingActive}
+                      suppressContentEditableWarning
+                      onBlur={(e) => setOfficeHours(e.currentTarget.textContent || "")}
+                      className={cn("text-[8px] text-zinc-400 block truncate", editableClass)}
+                    >
+                      {officeHours}
+                    </p>
                   </div>
-                )}
 
-                {/* 5. Wi-Fi & Management Info */}
-                {(showWifi || showOffice) && (
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    {showWifi && (
-                      <div
-                        className="flex items-center gap-2 p-2 rounded-xl shadow-sm backdrop-blur-md transition-colors"
-                        style={{
-                          backgroundColor: cardRgbaBackground,
-                          borderColor: cardContrast.border,
-                          borderWidth: "1px",
-                          color: cardContrast.text,
-                        }}
-                      >
-                        <Wifi className="size-3.5 text-emerald-500 shrink-0" />
-                        <div className="min-w-0 flex-1">
-                          <p
-                            contentEditable={isEditingActive}
-                            suppressContentEditableWarning
-                            onBlur={(e) => setWifiHeader(e.currentTarget.textContent || "")}
-                            className={cn(
-                              "text-[8px] font-black uppercase tracking-wider leading-none",
-                              editableClass
-                            )}
-                            style={{ color: cardContrast.muted }}
-                          >
-                            {wifiHeader}
-                          </p>
-                          <p
-                            contentEditable={isEditingActive}
-                            suppressContentEditableWarning
-                            onBlur={(e) => setWifiSsid(e.currentTarget.textContent || "")}
-                            className={cn(
-                              "text-[10px] font-bold truncate mt-0.5 block",
-                              editableClass
-                            )}
-                            style={{ color: cardContrast.text }}
-                          >
-                            {wifiSsid}
-                          </p>
-                          <p
-                            className="text-[8px] font-mono flex items-center gap-1"
-                            style={{ color: cardContrast.muted }}
-                          >
-                            <span>Pass:</span>
-                            <span
-                              contentEditable={isEditingActive}
-                              suppressContentEditableWarning
-                              onBlur={(e) =>
-                                setWifiPassword(e.currentTarget.textContent || "")
-                              }
-                              className={cn("font-bold", editableClass)}
-                              style={{ color: cardContrast.text }}
-                            >
-                              {wifiPassword}
-                            </span>
-                          </p>
-                        </div>
-                      </div>
-                    )}
+                  <div className="w-full h-px bg-zinc-700/60 my-1" />
 
-                    {showOffice && (
-                      <div
-                        className="flex items-center gap-2 p-2 rounded-xl shadow-sm backdrop-blur-md transition-colors"
-                        style={{
-                          backgroundColor: cardRgbaBackground,
-                          borderColor: cardContrast.border,
-                          borderWidth: "1px",
-                          color: cardContrast.text,
-                        }}
-                      >
-                        <Phone className="size-3.5 text-indigo-400 shrink-0" />
-                        <div className="min-w-0 flex-1">
-                          <p
-                            contentEditable={isEditingActive}
-                            suppressContentEditableWarning
-                            onBlur={(e) => setOfficeHeader(e.currentTarget.textContent || "")}
-                            className={cn(
-                              "text-[8px] font-black uppercase tracking-wider leading-none",
-                              editableClass
-                            )}
-                            style={{ color: cardContrast.muted }}
-                          >
-                            {officeHeader}
-                          </p>
-                          <p
-                            contentEditable={isEditingActive}
-                            suppressContentEditableWarning
-                            onBlur={(e) =>
-                              setContactPhone(e.currentTarget.textContent || "")
-                            }
-                            className={cn(
-                              "text-[10px] font-bold font-mono truncate mt-0.5 block",
-                              editableClass
-                            )}
-                            style={{ color: cardContrast.text }}
-                          >
-                            {contactPhone}
-                          </p>
-                          <p
-                            contentEditable={isEditingActive}
-                            suppressContentEditableWarning
-                            onBlur={(e) =>
-                              setOfficeHours(e.currentTarget.textContent || "")
-                            }
-                            className={cn(
-                              "text-[8px] truncate block",
-                              editableClass
-                            )}
-                            style={{ color: cardContrast.muted }}
-                          >
-                            {officeHours}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* 6. Footer Stamp */}
-                <div
-                  className={cn(
-                    "flex items-center justify-between text-[8px] font-medium pt-0.5",
-                    customBgImage ? "text-white/80" : isDarkCanvas ? "text-zinc-400" : "text-zinc-500"
-                  )}
-                >
-                  <span
-                    contentEditable={isEditingActive}
-                    suppressContentEditableWarning
-                    className={cn(editableClass)}
-                  >
-                    © {new Date().getFullYear()} {propertyName} · Resident Portal
-                  </span>
-                  <span className="flex items-center gap-1 font-mono font-bold">
-                    <ShieldCheck className="size-2.5 text-emerald-500" />
+                  {/* Verification Notice Stamp */}
+                  <div className="flex flex-col items-center justify-center gap-0.5">
+                    <ShieldCheck className="size-4 text-emerald-400" />
                     <span
                       contentEditable={isEditingActive}
                       suppressContentEditableWarning
                       onBlur={(e) => setFooterBadge(e.currentTarget.textContent || "")}
-                      className={cn(editableClass)}
+                      className={cn("text-[7.5px] font-bold text-zinc-300 uppercase tracking-wide", editableClass)}
                     >
                       {footerBadge}
                     </span>
-                  </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Main Step-by-Step Ribbon (Horizontal 1 -> 2 -> 3) */}
+              <div className="relative z-10 bg-[#0c111a] text-white px-5 py-2.5 flex items-center justify-between border-t border-zinc-800">
+                {/* Step 1 */}
+                <div className="flex items-center gap-2">
+                  <div className="size-5 rounded-full bg-white text-zinc-950 flex items-center justify-center text-[10px] font-black shrink-0">
+                    1
+                  </div>
+                  <QrCode className="size-4 text-zinc-300 shrink-0" />
+                  <div className="text-left">
+                    <span
+                      contentEditable={isEditingActive}
+                      suppressContentEditableWarning
+                      onBlur={(e) => setStep1Title(e.currentTarget.textContent || "")}
+                      className={cn("text-[9.5px] font-bold block leading-tight", editableClass)}
+                    >
+                      {step1Title}
+                    </span>
+                    <span
+                      contentEditable={isEditingActive}
+                      suppressContentEditableWarning
+                      onBlur={(e) => setStep1Desc(e.currentTarget.textContent || "")}
+                      className={cn("text-[7.5px] text-zinc-400 block leading-tight", editableClass)}
+                    >
+                      {step1Desc}
+                    </span>
+                  </div>
+                </div>
+
+                <ChevronRight className="size-3.5 text-zinc-600 shrink-0" />
+
+                {/* Step 2 */}
+                <div className="flex items-center gap-2">
+                  <div className="size-5 rounded-full bg-white text-zinc-950 flex items-center justify-center text-[10px] font-black shrink-0">
+                    2
+                  </div>
+                  <UserPlus className="size-4 text-zinc-300 shrink-0" />
+                  <div className="text-left">
+                    <span
+                      contentEditable={isEditingActive}
+                      suppressContentEditableWarning
+                      onBlur={(e) => setStep2Title(e.currentTarget.textContent || "")}
+                      className={cn("text-[9.5px] font-bold block leading-tight", editableClass)}
+                    >
+                      {step2Title}
+                    </span>
+                    <span
+                      contentEditable={isEditingActive}
+                      suppressContentEditableWarning
+                      onBlur={(e) => setStep2Desc(e.currentTarget.textContent || "")}
+                      className={cn("text-[7.5px] text-zinc-400 block leading-tight", editableClass)}
+                    >
+                      {step2Desc}
+                    </span>
+                  </div>
+                </div>
+
+                <ChevronRight className="size-3.5 text-zinc-600 shrink-0" />
+
+                {/* Step 3 */}
+                <div className="flex items-center gap-2">
+                  <div className="size-5 rounded-full bg-white text-zinc-950 flex items-center justify-center text-[10px] font-black shrink-0">
+                    3
+                  </div>
+                  <CheckCircle2 className="size-4 text-zinc-300 shrink-0" />
+                  <div className="text-left">
+                    <span
+                      contentEditable={isEditingActive}
+                      suppressContentEditableWarning
+                      onBlur={(e) => setStep3Title(e.currentTarget.textContent || "")}
+                      className={cn("text-[9.5px] font-bold block leading-tight", editableClass)}
+                    >
+                      {step3Title}
+                    </span>
+                    <span
+                      contentEditable={isEditingActive}
+                      suppressContentEditableWarning
+                      onBlur={(e) => setStep3Desc(e.currentTarget.textContent || "")}
+                      className={cn("text-[7.5px] text-zinc-400 block leading-tight", editableClass)}
+                    >
+                      {step3Desc}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
