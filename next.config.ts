@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Skip rebundling heavy Node.js packages — reduces Turbopack compile time
+  serverExternalPackages: ['sharp', 'puppeteer', 'nodemailer', 'jsonwebtoken', 'pdfjs-dist'],
   images: {
     remotePatterns: [
       {

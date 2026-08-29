@@ -16,6 +16,38 @@ export const getUnitDimensions = (beds?: number, type?: Unit["type"]): { w: numb
     return { w: 200, h: 140 };
 };
 
+/** Get dimensions for a unit being placed, adapting to existing units on the active floor layout */
+export const getPlacementDimensions = (
+    dbUnit?: DbUnit | { beds?: number },
+    placedUnits?: Unit[]
+): { w: number; h: number } => {
+    const beds = dbUnit?.beds;
+
+    // 1. If units already exist on the floor, check for an existing unit with the same bedroom count
+    if (placedUnits && placedUnits.length > 0) {
+        if (beds !== undefined) {
+            const matchingUnit = placedUnits.find(u => {
+                const uBeds = u.bedrooms ?? (u.type === "Studio" ? 0 : u.type === "2BR" ? 2 : u.type === "3BR" ? 3 : 1);
+                return uBeds === beds && u.w > 0 && u.h > 0;
+            });
+            if (matchingUnit) {
+                return { w: matchingUnit.w, h: matchingUnit.h };
+            }
+        }
+
+        // 2. Otherwise adapt to the average dimensions of existing units on this floor
+        const validUnits = placedUnits.filter(u => u.w > 0 && u.h > 0);
+        if (validUnits.length > 0) {
+            const avgW = Math.round(validUnits.reduce((sum, u) => sum + u.w, 0) / validUnits.length);
+            const avgH = Math.round(validUnits.reduce((sum, u) => sum + u.h, 0) / validUnits.length);
+            return { w: avgW, h: avgH };
+        }
+    }
+
+    // 3. Fallback to default dimensions
+    return getUnitDimensions(beds);
+};
+
 /** Derive a canvas Unit type from DB beds count */
 export const unitTypeFromBeds = (beds: number): Unit["type"] => {
     if (beds === 0) return "Studio";

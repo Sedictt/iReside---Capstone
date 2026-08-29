@@ -40,7 +40,7 @@ import {
     UNIT_SIZE_BY_BEDS, unitTypeFromBeds, dbUnitToCanvasUnit, 
     parseFloorNumber, getFloorDisplayLabel, formatFloorWatermark, 
     QUICK_ACTIONS_BY_STATUS, QUICK_ACTION_META, evaluateQuickAction,
-    getUnitDimensions
+    getUnitDimensions, getPlacementDimensions
 } from "./utils";
 import { 
     INITIAL_UNITS, LEGEND_VISIBILITY_STORAGE_KEY, FLOOR_LAYOUTS_STORAGE_KEY, 
@@ -2435,7 +2435,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         if (dbUnitId) {
             const dbUnit = dbUnits.find(u => u.id === dbUnitId);
             if (dbUnit) {
-                const dims = getUnitDimensions(dbUnit.beds);
+                const dims = getPlacementDimensions(dbUnit, units);
                 payload = { ...payload, w: dims.w, h: dims.h };
             }
         }
@@ -2452,7 +2452,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
     const handleUnplacedUnitClick = (dbUnit: DbUnit) => {
         if (readOnly) return;
-        const dims = getUnitDimensions(dbUnit.beds);
+        const dims = getPlacementDimensions(dbUnit, units);
         const w = dims.w;
         const h = dims.h;
         let x = 50;
@@ -3204,7 +3204,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         return <VisualPlannerSkeleton propertyName={selectedProperty?.name} />;
     }
 
-    if (!readOnly && isSetupComplete === false && totalDbUnits > 0 && selectedPropertyId && selectedPropertyId !== "all") {
+    if (!readOnly && isSetupComplete === false && totalDbUnits > 0 && placedCount === 0 && selectedPropertyId && selectedPropertyId !== "all") {
         return (
             <div className="flex flex-col h-full">
                 <MapSetupWizard

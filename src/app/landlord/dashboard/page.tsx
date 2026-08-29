@@ -199,26 +199,56 @@ export default function LandlordDashboard() {
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, []);
 
+    // ─── Parallel data loading: payments + units + invites ───
     useEffect(() => {
         const controller = new AbortController();
 
-        const loadPayments = async () => {
+        const loadAll = async () => {
             dispatchPayments({ type: "LOAD_START" });
+            setLoadingUnits(true);
+            setLoadingInvites(true);
 
-            try {
-                const response = await fetch(`/api/landlord/payments/overview?propertyId=${selectedPropertyId}`, {
-                    method: "GET",
+            const [paymentsResult, unitsResult, invitesResult] = await Promise.allSettled([
+                fetch(`/api/landlord/payments/overview?propertyId=${selectedPropertyId}`, {
                     signal: controller.signal,
-                });
+                }).then(async (res) => {
+                    if (!res.ok) throw new Error("Failed to load payment overview");
+                    return res.json() as Promise<{
+                        payments?: Record<PaymentCategory, PaymentListItem[]>;
+                    }>;
+                }),
 
-                if (!response.ok) {
-                    throw new Error("Failed to load payment overview");
-                }
+                fetch("/api/landlord/property-units", {
+                    signal: controller.signal,
+                }).then(async (res) => {
+                    if (!res.ok) throw new Error("Failed to load units");
+                    return res.json() as Promise<{
+                        properties?: Array<{
+                            id: string;
+                            name: string;
+                            units?: Array<{
+                                id: string;
+                                name: string;
+                                status?: string;
+                                rentAmount?: number;
+                            }>;
+                        }>;
+                    }>;
+                }),
 
-                const payload = (await response.json()) as {
-                    payments?: Record<PaymentCategory, PaymentListItem[]>;
-                };
+                fetch("/api/landlord/invites", {
+                    signal: controller.signal,
+                }).then(async (res) => {
+                    if (!res.ok) throw new Error("Failed to load invites");
+                    return res.json() as Promise<{
+                        invites?: typeof tenantInvites;
+                    }>;
+                }),
+            ]);
 
+            // Process payments
+            if (paymentsResult.status === "fulfilled") {
+                const payload = paymentsResult.value;
                 dispatchPayments({
                     type: "LOAD_SUCCESS",
                     payload: {
@@ -227,45 +257,13 @@ export default function LandlordDashboard() {
                         Paid: payload.payments?.Paid ?? [],
                     },
                 });
-            } catch (error) {
-                if ((error as Error).name === "AbortError") {
-                    return;
-                }
-
+            } else if (paymentsResult.reason?.name !== "AbortError") {
                 dispatchPayments({ type: "LOAD_ERROR", error: "Unable to load payments right now." });
             }
-        };
 
-        void loadPayments();
-
-        return () => {
-            controller.abort();
-        };
-    }, [selectedPropertyId]);
-
-
-
-  
-    useEffect(() => {
-        const loadUnits = async () => {
-            setLoadingUnits(true);
-            try {
-                const res = await fetch("/api/landlord/property-units");
-                if (!res.ok) return;
-
-                const data = (await res.json()) as {
-                    properties?: Array<{
-                        id: string;
-                        name: string;
-                        units?: Array<{
-                            id: string;
-                            name: string;
-                            status?: string;
-                            rentAmount?: number;
-                        }>;
-                    }>;
-                };
-
+            // Process units
+            if (unitsResult.status === "fulfilled") {
+                const data = unitsResult.value;
                 const options = Array.isArray(data.properties) ? data.properties : [];
                 const unitsList: typeof availableUnits = options.flatMap((property) => {
                     const units = Array.isArray(property.units) ? property.units : [];
@@ -278,52 +276,26 @@ export default function LandlordDashboard() {
                         status: unit.status,
                     }));
                 });
-
                 setAvailableUnits(unitsList);
-            } catch { /* fail silently */ } finally {
-                setLoadingUnits(false);
             }
-        };
-        void loadUnits();
-    }, []);
+            setLoadingUnits(false);
 
-    useEffect(() => {
-        const controller = new AbortController();
-
-        const loadInvites = async () => {
-            setLoadingInvites(true);
-            try {
-                const response = await fetch("/api/landlord/invites", {
-                    method: "GET",
-                    signal: controller.signal,
-                });
-
-                if (!response.ok) {
-                    return;
-                }
-
-                const payload = (await response.json()) as {
-                    invites?: typeof tenantInvites;
-                };
-
+            // Process invites
+            if (invitesResult.status === "fulfilled") {
+                const payload = invitesResult.value;
                 setTenantInvites(Array.isArray(payload.invites) ? payload.invites : []);
-            } catch (error) {
-                if ((error as Error).name === "AbortError") {
-                    return;
-                }
-
+            } else if (invitesResult.reason?.name !== "AbortError") {
                 setTenantInvites([]);
-            } finally {
-                setLoadingInvites(false);
             }
+            setLoadingInvites(false);
         };
 
-        void loadInvites();
+        void loadAll();
 
         return () => {
             controller.abort();
         };
-    }, []);
+    }, [selectedPropertyId]);
 
     const [selectedActionPayment, setSelectedActionPayment] = useState<PaymentListItem | null>(null);
     const [popoutPosition, setPopoutPosition] = useState<{ x: number; y: number } | null>(null);
