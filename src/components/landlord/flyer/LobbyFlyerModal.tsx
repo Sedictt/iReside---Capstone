@@ -1334,12 +1334,12 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.98, y: 10 }}
           transition={{ duration: 0.2 }}
-          className="relative z-10 w-full max-w-4xl max-h-[96vh] neumorphic-panel rounded-2xl border border-border/50 flex flex-col overflow-hidden shadow-2xl print:border-none print:shadow-none print:rounded-none print:w-full print:max-h-none print:m-0"
+          className="relative z-10 w-full max-w-[1060px] max-h-[96vh] neumorphic-panel rounded-2xl border border-border/50 flex flex-col overflow-hidden shadow-2xl print:border-none print:shadow-none print:rounded-none print:w-full print:max-h-none print:m-0"
         >
           {/* Main Top Navigation Header - Premium & Modern */}
           <div className="h-13 px-3.5 sm:px-5 border-b border-border/50 flex items-center justify-between bg-background/95 backdrop-blur-md shrink-0 print:hidden">
             {/* Left: Studio Branding & Property Context */}
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2">
               <div
                 className="size-7 rounded-lg flex items-center justify-center font-bold shadow-xs"
                 style={{ backgroundColor: `${brandColor}18`, color: brandColor }}
@@ -1351,14 +1351,14 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                   Lobby Poster Studio
                 </span>
                 {propertyName && (
-                  <span className="text-[10px] font-medium text-muted-foreground px-2 py-0.5 rounded-md bg-muted/40 hidden md:inline truncate max-w-[140px]">
+                  <span className="text-[10px] font-medium text-muted-foreground px-2 py-0.5 rounded-md bg-muted/40 hidden md:inline truncate max-w-[130px]">
                     {propertyName}
                   </span>
                 )}
               </div>
 
               {/* Segmented Mode Switcher */}
-              <div className="flex items-center p-0.5 rounded-lg bg-muted/40 border border-border/40 ml-2">
+              <div className="flex items-center p-0.5 rounded-lg bg-muted/40 border border-border/40 ml-1.5">
                 <button
                   type="button"
                   onClick={() => setIsDirectEditMode(false)}
@@ -1383,6 +1383,70 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                 >
                   <Edit3 className="size-3" />
                   <span>Edit</span>
+                </button>
+              </div>
+
+              {/* Studio Quick Customization Toolbar (Integrated into Header) */}
+              <div className="flex items-center p-0.5 rounded-lg bg-muted/40 border border-border/40 ml-1.5 gap-0.5">
+                <button
+                  type="button"
+                  title="Colors & Branding"
+                  onClick={() =>
+                    setActiveFloatingTool(activeFloatingTool === "colors" ? null : "colors")
+                  }
+                  className={cn(
+                    "size-7 rounded-md flex items-center justify-center transition-all",
+                    activeFloatingTool === "colors"
+                      ? "bg-primary text-white shadow-xs"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  )}
+                >
+                  <Palette className="size-3.5" />
+                </button>
+                <button
+                  type="button"
+                  title="Title Panel Background Photo"
+                  onClick={() =>
+                    setActiveFloatingTool(activeFloatingTool === "background" ? null : "background")
+                  }
+                  className={cn(
+                    "size-7 rounded-md flex items-center justify-center transition-all",
+                    activeFloatingTool === "background"
+                      ? "bg-primary text-white shadow-xs"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  )}
+                >
+                  <ImageIcon className="size-3.5" />
+                </button>
+                <button
+                  type="button"
+                  title="Typography & Fonts"
+                  onClick={() =>
+                    setActiveFloatingTool(activeFloatingTool === "typography" ? null : "typography")
+                  }
+                  className={cn(
+                    "size-7 rounded-md flex items-center justify-center transition-all",
+                    activeFloatingTool === "typography"
+                      ? "bg-primary text-white shadow-xs"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  )}
+                >
+                  <CaseSensitive className="size-3.5" />
+                </button>
+                <button
+                  type="button"
+                  title="Sections Visibility"
+                  onClick={() =>
+                    setActiveFloatingTool(activeFloatingTool === "sections" ? null : "sections")
+                  }
+                  className={cn(
+                    "size-7 rounded-md flex items-center justify-center transition-all",
+                    activeFloatingTool === "sections"
+                      ? "bg-primary text-white shadow-xs"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  )}
+                >
+                  <Layers className="size-3.5" />
                 </button>
               </div>
             </div>
@@ -1459,7 +1523,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
             </div>
           </div>
 
-          {/* Main Poster Canvas Viewport + Floating Tool Dock */}
+          {/* Main Poster Canvas Viewport */}
           <div className="flex-1 p-3 sm:p-6 overflow-y-auto custom-scrollbar-premium flex items-center justify-center bg-muted/20 relative print:p-0 print:bg-white print:overflow-visible">
             {/* PERSISTENT FLOATING OFFLINE NOTIFICATION BADGE */}
             <AnimatePresence>
@@ -1486,110 +1550,64 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
               )}
             </AnimatePresence>
 
-            {/* FLOATING FIGMA-STYLE TOOL DOCK (Left Side) */}
-            <div className="absolute left-4 top-6 z-30 flex flex-col gap-2 neumorphic-panel rounded-2xl p-1.5 border border-border/50 shadow-xl bg-background/90 backdrop-blur-md print:hidden">
-              {/* Tool 1: Colors & Card Opacity */}
-              <button
-                type="button"
-                title="Colors & Card Opacity"
-                onClick={() =>
-                  setActiveFloatingTool(activeFloatingTool === "colors" ? null : "colors")
-                }
-                className={cn(
-                  "size-9 rounded-xl flex items-center justify-center transition-all active:scale-95",
-                  activeFloatingTool === "colors"
-                    ? "bg-primary text-white shadow-md"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-                )}
-              >
-                <Palette className="size-4" />
-              </button>
-
-              {/* Tool 2: Canvas Background & Photo Adjustments */}
-              <button
-                type="button"
-                title="Canvas Background & Photo Adjustments"
-                onClick={() =>
-                  setActiveFloatingTool(activeFloatingTool === "background" ? null : "background")
-                }
-                className={cn(
-                  "size-9 rounded-xl flex items-center justify-center transition-all active:scale-95",
-                  activeFloatingTool === "background"
-                    ? "bg-primary text-white shadow-md"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-                )}
-              >
-                <ImageIcon className="size-4" />
-              </button>
-
-              {/* Tool 3: Typography & Spacing */}
-              <button
-                type="button"
-                title="Typography & Letter Spacing"
-                onClick={() =>
-                  setActiveFloatingTool(activeFloatingTool === "typography" ? null : "typography")
-                }
-                className={cn(
-                  "size-9 rounded-xl flex items-center justify-center transition-all active:scale-95",
-                  activeFloatingTool === "typography"
-                    ? "bg-primary text-white shadow-md"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-                )}
-              >
-                <CaseSensitive className="size-4" />
-              </button>
-
-              {/* Tool 4: Section Toggles */}
-              <button
-                type="button"
-                title="Visible Sections"
-                onClick={() =>
-                  setActiveFloatingTool(activeFloatingTool === "sections" ? null : "sections")
-                }
-                className={cn(
-                  "size-9 rounded-xl flex items-center justify-center transition-all active:scale-95",
-                  activeFloatingTool === "sections"
-                    ? "bg-primary text-white shadow-md"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-                )}
-              >
-                <Layers className="size-4" />
-              </button>
-            </div>
-
             {/* AUTHENTIC A4 LANDSCAPE POSTER CANVAS */}
             <div
               ref={posterRef}
               id="lobby-poster-canvas"
               className={cn(
-                "w-full max-w-[820px] shadow-[0_20px_50px_rgba(0,0,0,0.35)] flex flex-col justify-between border border-zinc-200/90 rounded-2xl transition-all duration-200 relative overflow-hidden bg-white text-zinc-900 select-none print:shadow-none print:border-none print:rounded-none print:p-0 print:w-full print:max-w-none print:h-auto",
+                "w-full max-w-[940px] shadow-[0_20px_50px_rgba(0,0,0,0.35)] flex flex-col justify-between border border-zinc-200/90 rounded-2xl transition-all duration-200 relative overflow-hidden bg-white text-zinc-900 select-none print:shadow-none print:border-none print:rounded-none print:p-0 print:w-full print:max-w-none print:h-auto",
                 getPosterBgClass()
               )}
               style={{
                 fontFamily: selectedFontCss,
-                backgroundColor: customBgImage ? "#09090b" : undefined,
               }}
             >
-              {/* Custom Photo Layer with Real-Time CSS Filters */}
-              {customBgImage && (
-                <div
-                  className="absolute inset-0 pointer-events-none transition-all"
-                  style={{
-                    backgroundImage: `url(${customBgImage})`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                    opacity: photoOpacity / 100,
-                    filter: `brightness(${photoBrightness}%) saturate(${photoSaturation}%)`,
-                  }}
-                />
-              )}
-
               {/* Upper Main Section: 3-Part Layout (Hero + Dual QR + Dark Sidebar) */}
-              <div className="relative z-10 grid grid-cols-12 min-h-[360px] bg-white">
-                {/* 1. Left Hero & Branding Column (Col 4) */}
-                <div className="col-span-4 p-5 flex flex-col justify-between border-r border-zinc-200/80 relative overflow-hidden bg-gradient-to-b from-white via-zinc-50/40 to-purple-50/20">
+              <div className="relative z-10 grid grid-cols-12 min-h-[380px] bg-white">
+                {/* 1. Left Hero & Branding Column (Col 4) with Custom Photo Support */}
+                <div className="col-span-4 p-5 flex flex-col justify-between border-r border-zinc-200/80 relative overflow-hidden group/hero">
+                  {/* Custom Hero Panel Background Photo with Subtle Legibility Overlay */}
+                  {customBgImage ? (
+                    <>
+                      <div
+                        className="absolute inset-0 bg-cover bg-center transition-all duration-300 pointer-events-none"
+                        style={{
+                          backgroundImage: `url(${customBgImage})`,
+                          opacity: photoOpacity / 100,
+                          filter: `brightness(${photoBrightness}%) saturate(${photoSaturation}%)`,
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-white via-white/85 to-white/70 pointer-events-none" />
+                    </>
+                  ) : (
+                    <div className="absolute inset-0 bg-gradient-to-b from-white via-zinc-50/40 to-purple-50/20 pointer-events-none" />
+                  )}
+
+                  {/* Hero Panel Quick Change/Upload Photo Controls */}
+                  <div className="absolute top-3 right-3 flex items-center gap-1 opacity-0 group-hover/hero:opacity-100 transition-opacity z-30 print:hidden">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="h-6 px-2 rounded-md bg-black/60 hover:bg-black/80 text-white flex items-center gap-1 backdrop-blur-md shadow-xs text-[9px] font-bold"
+                      title="Upload building photo for title panel"
+                    >
+                      <Upload className="size-2.5" />
+                      <span>{customBgImage ? "Replace" : "Photo"}</span>
+                    </button>
+                    {customBgImage && (
+                      <button
+                        type="button"
+                        onClick={() => setCustomBgImage(null)}
+                        className="size-6 rounded-md bg-red-600/80 hover:bg-red-600 text-white flex items-center justify-center backdrop-blur-md shadow-xs"
+                        title="Remove title panel photo"
+                      >
+                        <Trash2 className="size-2.5" />
+                      </button>
+                    )}
+                  </div>
+
                   {/* Property Header */}
-                  <div className="flex items-center gap-2.5">
+                  <div className="relative z-10 flex items-center gap-2.5">
                     <div
                       className="size-9 rounded-xl flex items-center justify-center font-black text-xs text-white shadow-xs shrink-0"
                       style={{ backgroundColor: brandColor }}
@@ -1613,7 +1631,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                         suppressContentEditableWarning
                         onBlur={(e) => setAddress(e.currentTarget.textContent || "")}
                         className={cn(
-                          "text-[9px] text-zinc-500 font-medium leading-tight block truncate mt-0.5",
+                          "text-[9px] text-zinc-600 font-medium leading-tight block truncate mt-0.5",
                           editableClass
                         )}
                       >
@@ -1623,13 +1641,13 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                   </div>
 
                   {/* Hero Announcement Headline */}
-                  <div className="my-auto py-2">
+                  <div className="relative z-10 my-auto py-3">
                     <h1
                       contentEditable={isEditingActive}
                       suppressContentEditableWarning
                       onBlur={(e) => setBannerHeading(e.currentTarget.textContent || "")}
                       className={cn(
-                        "text-2xl font-black uppercase tracking-tight text-zinc-950 leading-tight",
+                        "text-2xl sm:text-[26px] font-black uppercase tracking-tight text-zinc-950 leading-tight",
                         editableClass
                       )}
                     >
@@ -1640,7 +1658,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                       suppressContentEditableWarning
                       onBlur={(e) => setTagline(e.currentTarget.textContent || "")}
                       className={cn(
-                        "text-[10px] text-zinc-600 font-medium leading-snug mt-1.5 block max-w-[210px]",
+                        "text-[10.5px] text-zinc-700 font-medium leading-snug mt-2 block max-w-[220px]",
                         editableClass
                       )}
                     >
@@ -1648,35 +1666,37 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                     </p>
                   </div>
 
-                  {/* Minimalist Skyline Vector Silhouette */}
-                  <div className="w-full pt-2 opacity-50 pointer-events-none">
-                    <svg viewBox="0 0 200 50" fill="none" className="w-full h-10 text-purple-400">
-                      <path
-                        d="M10 50V25H25V50H35V15H50V50H65V22H80V50H95V8H115V50H130V20H145V50H160V28H175V50H190V50H10Z"
-                        fill="currentColor"
-                        opacity="0.3"
-                      />
-                      <path
-                        d="M0 50V35H15V50H30V20H42V50H55V30H70V50H85V12H102V50H120V24H135V50H150V38H165V50H200V50H0Z"
-                        fill="currentColor"
-                        opacity="0.6"
-                      />
-                    </svg>
-                  </div>
+                  {/* Minimalist Skyline Vector Silhouette (Shows when no photo) */}
+                  {!customBgImage && (
+                    <div className="relative z-10 w-full pt-2 opacity-50 pointer-events-none">
+                      <svg viewBox="0 0 200 50" fill="none" className="w-full h-10 text-purple-400">
+                        <path
+                          d="M10 50V25H25V50H35V15H50V50H65V22H80V50H95V8H115V50H130V20H145V50H160V28H175V50H190V50H10Z"
+                          fill="currentColor"
+                          opacity="0.3"
+                        />
+                        <path
+                          d="M0 50V35H15V50H30V20H42V50H55V30H70V50H85V12H102V50H120V24H135V50H150V38H165V50H200V50H0Z"
+                          fill="currentColor"
+                          opacity="0.6"
+                        />
+                      </svg>
+                    </div>
+                  )}
                 </div>
 
-                {/* 2. Center Dual QR Cards Column with Floating OR Badge (Col 5) */}
-                <div className="col-span-5 p-3 flex items-center justify-center gap-2 relative bg-zinc-50/50 border-r border-zinc-200/80">
+                {/* 2. Center Dual QR Cards Column with Floating OR Badge (Col 5) - Spacious */}
+                <div className="col-span-5 p-3.5 flex items-center justify-center gap-2.5 relative bg-zinc-50/60 border-r border-zinc-200/80">
                   {/* Floating OR Separator Badge */}
                   <div className="absolute z-20 size-7 rounded-full bg-white border-2 border-zinc-300 shadow-md flex items-center justify-center text-[8.5px] font-black text-zinc-700 uppercase pointer-events-none">
                     OR
                   </div>
 
                   {/* Left: Mobile App Card (Purple Theme) */}
-                  <div className="flex-1 h-full bg-[#f8f5ff] border border-purple-200/80 rounded-xl p-2.5 flex flex-col items-center justify-between text-center shadow-xs">
+                  <div className="flex-1 h-full bg-[#f8f5ff] border border-purple-200/80 rounded-xl p-3 flex flex-col items-center justify-between text-center shadow-xs">
                     <span
                       className={cn(
-                        "px-2 py-0.5 rounded-full text-[7.5px] font-black uppercase tracking-wider text-white shadow-xs",
+                        "px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider text-white shadow-xs",
                         isEditingActive && "ring-1 ring-dashed ring-white/80 cursor-text"
                       )}
                       style={{ backgroundColor: brandColor }}
@@ -1696,7 +1716,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                       suppressContentEditableWarning
                       onBlur={(e) => setApkCardTitle(e.currentTarget.textContent || "")}
                       className={cn(
-                        "text-[10.5px] font-black uppercase tracking-tight mt-1 leading-tight",
+                        "text-xs font-black uppercase tracking-tight mt-1 leading-tight",
                         editableClass
                       )}
                       style={{ color: brandColor }}
@@ -1712,14 +1732,14 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                         contentEditable={isEditingActive}
                         suppressContentEditableWarning
                         onBlur={(e) => setApkCardSubtitle(e.currentTarget.textContent || "")}
-                        className={cn("text-[7.5px] text-zinc-600 font-medium leading-tight", editableClass)}
+                        className={cn("text-[8px] text-zinc-600 font-medium leading-tight", editableClass)}
                       >
                         {apkCardSubtitle}
                       </p>
                     </div>
 
-                    {/* QR Code Container (100% Unobstructed) */}
-                    <div className="size-22 rounded-lg bg-white p-1 border border-purple-200 shadow-inner flex items-center justify-center relative group">
+                    {/* QR Code Container (Large & 100% Unobstructed) */}
+                    <div className="size-28 sm:size-32 rounded-xl bg-white p-1.5 border border-purple-200 shadow-inner flex items-center justify-center relative group">
                       <img
                         src={apkQrUrl}
                         crossOrigin="anonymous"
@@ -1735,7 +1755,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                           )
                         }
                         title="Download high-res PNG (1000px)"
-                        className="absolute inset-0 bg-black/75 rounded-lg text-white text-[9px] font-bold flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-xs print:hidden z-20"
+                        className="absolute inset-0 bg-black/75 rounded-xl text-white text-[9px] font-bold flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-xs print:hidden z-20"
                       >
                         <Download className="size-4 text-emerald-400" />
                         <span>Save PNG</span>
@@ -1744,24 +1764,24 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
 
                     {/* Bottom Action Banner Button */}
                     <div
-                      className="w-full mt-1.5 py-1.5 px-1 text-white rounded-lg shadow-xs text-center flex flex-col items-center justify-center leading-tight"
+                      className="w-full mt-2 py-2 px-1.5 text-white rounded-lg shadow-xs text-center flex flex-col items-center justify-center leading-tight"
                       style={{ backgroundColor: brandColor }}
                     >
-                      <div className="flex items-center justify-center gap-1 text-[8px] font-black uppercase tracking-wider">
+                      <div className="flex items-center justify-center gap-1 text-[8.5px] font-black uppercase tracking-wider">
                         <Download className="size-2.5" />
                         <span>SCAN TO DOWNLOAD</span>
                       </div>
-                      <span className="text-[6.5px] font-bold opacity-90 tracking-wider">
+                      <span className="text-[7px] font-bold opacity-90 tracking-wider">
                         ANDROID (APK)
                       </span>
                     </div>
                   </div>
 
                   {/* Right: Web Portal Card (Emerald Theme) */}
-                  <div className="flex-1 h-full bg-[#f0fdf4] border border-emerald-200/80 rounded-xl p-2.5 flex flex-col items-center justify-between text-center shadow-xs">
+                  <div className="flex-1 h-full bg-[#f0fdf4] border border-emerald-200/80 rounded-xl p-3 flex flex-col items-center justify-between text-center shadow-xs">
                     <span
                       className={cn(
-                        "px-2 py-0.5 rounded-full text-[7.5px] font-black uppercase tracking-wider text-white shadow-xs bg-emerald-600",
+                        "px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider text-white shadow-xs bg-emerald-600",
                         isEditingActive && "ring-1 ring-dashed ring-white/80 cursor-text"
                       )}
                     >
@@ -1780,7 +1800,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                       suppressContentEditableWarning
                       onBlur={(e) => setWebCardTitle(e.currentTarget.textContent || "")}
                       className={cn(
-                        "text-[10.5px] font-black text-emerald-900 uppercase tracking-tight mt-1 leading-tight",
+                        "text-xs font-black text-emerald-900 uppercase tracking-tight mt-1 leading-tight",
                         editableClass
                       )}
                     >
@@ -1795,14 +1815,14 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                         contentEditable={isEditingActive}
                         suppressContentEditableWarning
                         onBlur={(e) => setWebCardSubtitle(e.currentTarget.textContent || "")}
-                        className={cn("text-[7.5px] text-zinc-600 font-medium leading-tight", editableClass)}
+                        className={cn("text-[8px] text-zinc-600 font-medium leading-tight", editableClass)}
                       >
                         {webCardSubtitle}
                       </p>
                     </div>
 
-                    {/* QR Code Container (100% Unobstructed) */}
-                    <div className="size-22 rounded-lg bg-white p-1 border border-emerald-200 shadow-inner flex items-center justify-center relative group">
+                    {/* QR Code Container (Large & 100% Unobstructed) */}
+                    <div className="size-28 sm:size-32 rounded-xl bg-white p-1.5 border border-emerald-200 shadow-inner flex items-center justify-center relative group">
                       <img
                         src={portalQrUrl}
                         crossOrigin="anonymous"
@@ -1818,7 +1838,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                           )
                         }
                         title="Download high-res PNG (1000px)"
-                        className="absolute inset-0 bg-black/75 rounded-lg text-white text-[9px] font-bold flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-xs print:hidden z-20"
+                        className="absolute inset-0 bg-black/75 rounded-xl text-white text-[9px] font-bold flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-xs print:hidden z-20"
                       >
                         <Download className="size-4 text-emerald-400" />
                         <span>Save PNG</span>
@@ -1826,12 +1846,12 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                     </div>
 
                     {/* Bottom Action Banner Button */}
-                    <div className="w-full mt-1.5 py-1.5 px-1 bg-emerald-700 text-white rounded-lg shadow-xs text-center flex flex-col items-center justify-center leading-tight">
-                      <div className="flex items-center justify-center gap-1 text-[8px] font-black uppercase tracking-wider">
+                    <div className="w-full mt-2 py-2 px-1.5 bg-emerald-700 text-white rounded-lg shadow-xs text-center flex flex-col items-center justify-center leading-tight">
+                      <div className="flex items-center justify-center gap-1 text-[8.5px] font-black uppercase tracking-wider">
                         <Globe className="size-2.5" />
                         <span>SCAN TO REGISTER</span>
                       </div>
-                      <span className="text-[6.5px] font-bold opacity-90 tracking-wider">
+                      <span className="text-[7px] font-bold opacity-90 tracking-wider">
                         INSTANT WEB ACCESS
                       </span>
                     </div>
@@ -1857,7 +1877,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                       contentEditable={isEditingActive}
                       suppressContentEditableWarning
                       onBlur={(e) => setWifiSsid(e.currentTarget.textContent || "")}
-                      className={cn("text-[10px] font-bold text-white leading-tight mt-0.5 block truncate", editableClass)}
+                      className={cn("text-[10.5px] font-bold text-white leading-tight mt-0.5 block truncate", editableClass)}
                     >
                       {wifiSsid}
                     </p>
@@ -1890,7 +1910,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                       contentEditable={isEditingActive}
                       suppressContentEditableWarning
                       onBlur={(e) => setContactPhone(e.currentTarget.textContent || "")}
-                      className={cn("text-[10px] font-bold font-mono text-white leading-tight mt-0.5 block truncate", editableClass)}
+                      className={cn("text-[10.5px] font-bold font-mono text-white leading-tight mt-0.5 block truncate", editableClass)}
                     >
                       {contactPhone}
                     </p>
@@ -1919,7 +1939,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                     </span>
                   </div>
                 </div>
-              </div>
+
 
               {/* Bottom Main Step-by-Step Ribbon (Horizontal 1 -> 2 -> 3) */}
               <div className="relative z-10 bg-[#0c111a] text-white px-5 py-2.5 flex items-center justify-between border-t border-zinc-800">

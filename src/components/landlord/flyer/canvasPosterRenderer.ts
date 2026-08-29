@@ -76,20 +76,6 @@ export async function renderPosterToCanvas(options: PosterRenderOptions): Promis
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, W, H);
 
-  // Custom Photo Background if provided
-  if (options.customBgImage) {
-    try {
-      const bgImg = await loadImage(options.customBgImage);
-      ctx.save();
-      ctx.globalAlpha = options.photoOpacity / 100;
-      ctx.filter = `brightness(${options.photoBrightness}%) saturate(${options.photoSaturation}%)`;
-      ctx.drawImage(bgImg, 0, 0, W, H);
-      ctx.restore();
-    } catch (err) {
-      console.warn("Could not render custom background photo:", err);
-    }
-  }
-
   // Pre-load QR images
   const [apkQrImg, portalQrImg] = await Promise.all([
     loadImage(options.apkQrUrl).catch(() => null),
@@ -116,17 +102,42 @@ export async function renderPosterToCanvas(options: PosterRenderOptions): Promis
   ctx.fillRect(mainX, mainY, MAIN_W, UPPER_H);
 
   // ----------------------------------------------------
-  // COLUMN 1: Hero & Branding (Left 33%)
+  // COLUMN 1: Hero & Branding (Left 33%) with Custom Photo
   // ----------------------------------------------------
   const col1W = MAIN_W * 0.33;
   
-  // Left soft gradient background
+  // Left base gradient background
   const leftGrad = ctx.createLinearGradient(mainX, mainY, mainX, mainY + UPPER_H);
   leftGrad.addColorStop(0, "#ffffff");
   leftGrad.addColorStop(0.5, "#fafafa");
   leftGrad.addColorStop(1, "#f5f3ff");
   ctx.fillStyle = leftGrad;
   ctx.fillRect(mainX, mainY, col1W, UPPER_H);
+
+  // Custom Photo on Hero panel if provided
+  if (options.customBgImage) {
+    try {
+      const bgImg = await loadImage(options.customBgImage);
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(mainX, mainY, col1W, UPPER_H);
+      ctx.clip();
+      ctx.globalAlpha = options.photoOpacity / 100;
+      ctx.filter = `brightness(${options.photoBrightness}%) saturate(${options.photoSaturation}%)`;
+      ctx.drawImage(bgImg, mainX, mainY, col1W, UPPER_H);
+      ctx.restore();
+
+      // Soft overlay gradient for text legibility
+      const heroOverlay = ctx.createLinearGradient(mainX, mainY, mainX, mainY + UPPER_H);
+      heroOverlay.addColorStop(0, "rgba(255,255,255,0.72)");
+      heroOverlay.addColorStop(0.5, "rgba(255,255,255,0.86)");
+      heroOverlay.addColorStop(1, "rgba(255,255,255,0.96)");
+      ctx.fillStyle = heroOverlay;
+      ctx.fillRect(mainX, mainY, col1W, UPPER_H);
+    } catch (err) {
+      console.warn("Could not render custom hero photo:", err);
+    }
+  }
 
   // Divider line after Col 1
   ctx.strokeStyle = "#e5e7eb";
@@ -173,8 +184,8 @@ export async function renderPosterToCanvas(options: PosterRenderOptions): Promis
   const propName = options.titleTransform === "uppercase" ? options.propertyName.toUpperCase() : options.propertyName;
   ctx.fillText(propName, mainX + 110, mainY + 40);
 
-  ctx.fillStyle = "#71717a";
-  ctx.font = `500 14px ${fontFam}`;
+  ctx.fillStyle = "#52525b";
+  ctx.font = `600 14px ${fontFam}`;
   ctx.fillText(options.address, mainX + 110, mainY + 70);
 
   // Hero Headline
@@ -183,8 +194,8 @@ export async function renderPosterToCanvas(options: PosterRenderOptions): Promis
   ctx.fillText(options.bannerHeading.toUpperCase(), mainX + 35, mainY + 180);
 
   // Tagline / Subtitle
-  ctx.fillStyle = "#52525b";
-  ctx.font = `500 22px ${fontFam}`;
+  ctx.fillStyle = "#3f3f46";
+  ctx.font = `600 22px ${fontFam}`;
   const words = options.tagline.split(" ");
   let line = "";
   let tagY = mainY + 250;
@@ -236,17 +247,17 @@ export async function renderPosterToCanvas(options: PosterRenderOptions): Promis
   // Top Pill Tag
   ctx.fillStyle = options.brandColor;
   ctx.beginPath();
-  ctx.roundRect(card1X + (qrCardW - 170) / 2, qrCardY + 20, 170, 30, 15);
+  ctx.roundRect(card1X + (qrCardW - 180) / 2, qrCardY + 20, 180, 32, 16);
   ctx.fill();
   ctx.fillStyle = "#ffffff";
   ctx.font = `900 13px ${fontFam}`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(options.apkCardBadge.toUpperCase(), card1X + qrCardW / 2, qrCardY + 35);
+  ctx.fillText(options.apkCardBadge.toUpperCase(), card1X + qrCardW / 2, qrCardY + 36);
 
   // Card Title
   ctx.fillStyle = options.brandColor;
-  ctx.font = `900 20px ${fontFam}`;
+  ctx.font = `900 21px ${fontFam}`;
   ctx.fillText(options.apkCardTitle.toUpperCase(), card1X + qrCardW / 2, qrCardY + 80);
 
   // Icon & Subtitle
@@ -254,20 +265,20 @@ export async function renderPosterToCanvas(options: PosterRenderOptions): Promis
   ctx.font = `600 14px ${fontFam}`;
   ctx.fillText(`📱  ${options.apkCardSubtitle}`, card1X + qrCardW / 2, qrCardY + 115);
 
-  // QR Code Frame
-  const qrBoxSize = 240;
+  // QR Code Frame (Large 260px)
+  const qrBoxSize = 260;
   const qrBoxX = card1X + (qrCardW - qrBoxSize) / 2;
-  const qrBoxY = qrCardY + 145;
+  const qrBoxY = qrCardY + 140;
   ctx.fillStyle = "#ffffff";
   ctx.strokeStyle = "#e4e4e7";
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.roundRect(qrBoxX, qrBoxY, qrBoxSize, qrBoxSize, 16);
+  ctx.roundRect(qrBoxX, qrBoxY, qrBoxSize, qrBoxSize, 18);
   ctx.fill();
   ctx.stroke();
 
   if (apkQrImg) {
-    ctx.drawImage(apkQrImg, qrBoxX + 12, qrBoxY + 12, qrBoxSize - 24, qrBoxSize - 24);
+    ctx.drawImage(apkQrImg, qrBoxX + 14, qrBoxY + 14, qrBoxSize - 28, qrBoxSize - 28);
   }
 
   // Bottom Banner Button
@@ -296,17 +307,17 @@ export async function renderPosterToCanvas(options: PosterRenderOptions): Promis
   // Top Pill Tag
   ctx.fillStyle = "#059669";
   ctx.beginPath();
-  ctx.roundRect(card2X + (qrCardW - 170) / 2, qrCardY + 20, 170, 30, 15);
+  ctx.roundRect(card2X + (qrCardW - 180) / 2, qrCardY + 20, 180, 32, 16);
   ctx.fill();
   ctx.fillStyle = "#ffffff";
   ctx.font = `900 13px ${fontFam}`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(options.webCardBadge.toUpperCase(), card2X + qrCardW / 2, qrCardY + 35);
+  ctx.fillText(options.webCardBadge.toUpperCase(), card2X + qrCardW / 2, qrCardY + 36);
 
   // Card Title
   ctx.fillStyle = "#065f46";
-  ctx.font = `900 20px ${fontFam}`;
+  ctx.font = `900 21px ${fontFam}`;
   ctx.fillText(options.webCardTitle.toUpperCase(), card2X + qrCardW / 2, qrCardY + 80);
 
   // Icon & Subtitle
@@ -314,18 +325,18 @@ export async function renderPosterToCanvas(options: PosterRenderOptions): Promis
   ctx.font = `600 14px ${fontFam}`;
   ctx.fillText(`🌐  ${options.webCardSubtitle}`, card2X + qrCardW / 2, qrCardY + 115);
 
-  // QR Code Frame
+  // QR Code Frame (Large 260px)
   const qrBox2X = card2X + (qrCardW - qrBoxSize) / 2;
   ctx.fillStyle = "#ffffff";
   ctx.strokeStyle = "#e4e4e7";
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.roundRect(qrBox2X, qrBoxY, qrBoxSize, qrBoxSize, 16);
+  ctx.roundRect(qrBox2X, qrBoxY, qrBoxSize, qrBoxSize, 18);
   ctx.fill();
   ctx.stroke();
 
   if (portalQrImg) {
-    ctx.drawImage(portalQrImg, qrBox2X + 12, qrBoxY + 12, qrBoxSize - 24, qrBoxSize - 24);
+    ctx.drawImage(portalQrImg, qrBox2X + 14, qrBoxY + 14, qrBoxSize - 28, qrBoxSize - 28);
   }
 
   // Bottom Banner Button
