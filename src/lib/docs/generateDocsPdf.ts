@@ -179,15 +179,25 @@ export async function generateDocsPdf(audience: DocAudience = "landlord"): Promi
 
   y += 10;
   articles.forEach((art, idx) => {
+    if (y > pageHeight - margin - 20) {
+      drawRunningFooter("iReside User Guide", "Contents");
+      doc.addPage();
+      drawRunningHeader("Table of Contents (Cont.)", "Page 1b");
+      y = margin + 18;
+    }
+
     doc.setFont("courier", "bold");
     doc.setFontSize(9.5);
     doc.setTextColor(120, 120, 120);
     doc.text((idx + 1).toString().padStart(2, "0"), margin, y + 4);
 
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
+    doc.setFontSize(9.5);
     doc.setTextColor(0, 0, 0);
-    doc.text(art.title, margin + 10, y + 4);
+    // Shorten title if too long to prevent overlapping page number
+    const maxTitleWidth = contentWidth - 25;
+    const titleText = doc.splitTextToSize(art.title, maxTitleWidth)[0] || art.title;
+    doc.text(titleText, margin + 10, y + 4);
 
     doc.setFont("courier", "bold");
     doc.setFontSize(9);
@@ -196,11 +206,11 @@ export async function generateDocsPdf(audience: DocAudience = "landlord"): Promi
       align: "right",
     });
 
-    y += 7;
+    y += 5.5;
     doc.setDrawColor(240, 240, 243);
     doc.setLineWidth(0.2);
     doc.line(margin, y, pageWidth - margin, y);
-    y += 5;
+    y += 4;
   });
 
   drawRunningFooter("iReside User Guide", "Contents");
@@ -235,7 +245,9 @@ export async function generateDocsPdf(audience: DocAudience = "landlord"): Promi
     if (art.steps && art.steps.length > 0) {
       art.steps.forEach((step, sIdx) => {
         const descLines = doc.splitTextToSize(step.description, contentWidth - 16);
-        const cardHeight = Math.max(16, descLines.length * 4 + (step.codeSnippet ? 20 : 12));
+        const tipLines = step.tip ? doc.splitTextToSize(`TIP: ${step.tip}`, contentWidth - 18) : [];
+        const extraTipHeight = step.tip ? tipLines.length * 3.5 + 4 : 0;
+        const cardHeight = Math.max(16, descLines.length * 4 + (step.codeSnippet ? 20 : 12) + extraTipHeight);
 
         // Card Container Box
         doc.setFillColor(250, 250, 250);
@@ -264,9 +276,23 @@ export async function generateDocsPdf(audience: DocAudience = "landlord"): Promi
         doc.setTextColor(80, 80, 80);
         doc.text(descLines, margin + 12, y + 13);
 
+        // Step Tip Callout
+        if (step.tip) {
+          const tipY = y + descLines.length * 4 + 13;
+          doc.setFillColor(254, 243, 199);
+          doc.rect(margin + 12, tipY, contentWidth - 15, tipLines.length * 3.5 + 3, "F");
+          doc.setDrawColor(245, 158, 11);
+          doc.setLineWidth(0.2);
+          doc.rect(margin + 12, tipY, contentWidth - 15, tipLines.length * 3.5 + 3, "S");
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(7.5);
+          doc.setTextColor(180, 83, 9);
+          doc.text(tipLines, margin + 14, tipY + 3.5);
+        }
+
         // Code Snippet (Black block with monospace text)
         if (step.codeSnippet) {
-          const codeY = y + descLines.length * 4 + 14;
+          const codeY = y + descLines.length * 4 + 14 + extraTipHeight;
           doc.setFillColor(0, 0, 0);
           doc.rect(margin + 12, codeY, contentWidth - 15, 8, "F");
           doc.setFont("courier", "bold");

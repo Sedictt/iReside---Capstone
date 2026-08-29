@@ -487,13 +487,13 @@ export function EBookReader({
             <HTMLFlipBook
               key={`${targetAudience}-${flipAnimationMode}`}
               ref={flipBookRef}
-              width={440}
-              height={580}
+              width={470}
+              height={610}
               size="stretch"
               minWidth={280}
-              maxWidth={540}
-              minHeight={400}
-              maxHeight={660}
+              maxWidth={560}
+              minHeight={440}
+              maxHeight={700}
               maxShadowOpacity={0.25}
               showCover={true}
               usePortrait={false}
@@ -520,9 +520,9 @@ export function EBookReader({
               {/* ============================================================ */}
               {/* PAGE 0: FRONT COVER                                          */}
               {/* ============================================================ */}
-              <BookPage isCover className="p-8 sm:p-12 flex flex-col justify-between bg-white border-r-2 border-zinc-300">
+              <BookPage isCover className="p-7 sm:p-10 flex flex-col justify-between bg-white border-r-2 border-zinc-300">
                 {/* Header Spine */}
-                <div className="flex items-center justify-between border-b-2 border-zinc-900 pb-4">
+                <div className="flex items-center justify-between border-b-2 border-zinc-900 pb-3">
                   <div className="flex items-center gap-2">
                     <div className="size-6 bg-zinc-900 text-white font-black text-[10px] flex items-center justify-center">
                       iR
@@ -541,9 +541,9 @@ export function EBookReader({
                 </div>
 
                 {/* Title & Description */}
-                <div className="space-y-5 my-auto">
-                  <div className="space-y-2">
-                    <div className="inline-block px-2.5 py-1 bg-zinc-900 text-white text-[10px] font-bold uppercase tracking-wide">
+                <div className="space-y-4 my-auto">
+                  <div className="space-y-1.5">
+                    <div className="inline-block px-2 py-0.5 bg-zinc-900 text-white text-[9.5px] font-bold uppercase tracking-wide">
                       {targetAudience === "tenant"
                         ? "Resident Living Guide"
                         : targetAudience === "landlord"
@@ -571,7 +571,7 @@ export function EBookReader({
                 </div>
 
                 {/* Footer Button */}
-                <div className="space-y-4 pt-6 border-t border-zinc-200">
+                <div className="space-y-3 pt-4 border-t border-zinc-200">
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="text-[9px] uppercase text-zinc-400 block font-semibold">Official Manual</span>
@@ -580,7 +580,7 @@ export function EBookReader({
                     <button
                       type="button"
                       onClick={handleTurnNext}
-                      className="px-5 py-2.5 bg-zinc-950 hover:bg-zinc-800 text-white text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 shadow-sm active:scale-95"
+                      className="px-4 py-2 bg-zinc-950 hover:bg-zinc-800 text-white text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 shadow-sm active:scale-95"
                     >
                       <span>Open Guide</span>
                       <ChevronRight className="size-4" />
@@ -592,57 +592,59 @@ export function EBookReader({
               {/* ============================================================ */}
               {/* PAGE 1: TABLE OF CONTENTS                                    */}
               {/* ============================================================ */}
-              <BookPage density="soft" isLeftPage className="p-7 sm:p-9 flex flex-col justify-between bg-white">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between border-b-2 border-zinc-900 pb-2.5">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-900">
-                      Table of Contents
-                    </span>
-                    <span className="text-[10px] font-mono text-zinc-400">Page 1</span>
-                  </div>
-
+              <BookPage density="soft" isLeftPage className="p-6 sm:p-7 flex flex-col justify-between bg-white">
+                <div className="flex-1 min-h-0 flex flex-col justify-between space-y-2">
                   <div>
-                    <h2 className="text-xl font-black text-zinc-950 font-serif">
-                      {targetAudience === "tenant"
-                        ? "Resident Chapters"
-                        : targetAudience === "landlord"
-                        ? "Landlord Operations"
-                        : "Technical Topics"}
-                    </h2>
-                    <p className="text-[11px] text-zinc-500 mt-0.5">
-                      Click any topic below to turn directly to that page.
-                    </p>
+                    <div className="flex items-center justify-between border-b-2 border-zinc-900 pb-1.5 mb-2">
+                      <span className="text-[9.5px] font-bold uppercase tracking-wider text-zinc-900">
+                        Table of Contents
+                      </span>
+                      <span className="text-[9.5px] font-mono text-zinc-400">Page 1</span>
+                    </div>
+
+                    <div>
+                      <h2 className="text-lg font-black text-zinc-950 font-serif leading-tight">
+                        {targetAudience === "tenant"
+                          ? "Resident Chapters"
+                          : targetAudience === "landlord"
+                          ? "Landlord Operations"
+                          : "Technical Topics"}
+                      </h2>
+                      <p className="text-[10px] text-zinc-500 mt-0.5">
+                        Click any topic below to turn directly to that page.
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="space-y-1.5 pt-2">
+                  <div className="space-y-0.5 py-1 flex-1 overflow-y-auto max-h-[390px] pr-1">
                     {articles.map((art, idx) => (
                       <button
                         key={art.id}
                         type="button"
                         onClick={() => handleJumpToArticle(art.id)}
-                        className="w-full py-1.5 px-2 hover:bg-zinc-50 border-b border-zinc-100 flex items-center justify-between text-left group transition-colors"
+                        className="w-full py-0.5 px-1 hover:bg-zinc-100/70 border-b border-zinc-100 flex items-center justify-between text-left group transition-colors rounded"
                       >
-                        <div className="flex items-baseline gap-2.5 min-w-0 pr-2">
-                          <span className="font-mono text-[10px] font-bold text-zinc-400 group-hover:text-zinc-950">
+                        <div className="flex items-baseline gap-1.5 min-w-0 pr-2">
+                          <span className="font-mono text-[9px] font-bold text-zinc-400 group-hover:text-zinc-950 shrink-0">
                             {(idx + 1).toString().padStart(2, "0")}
                           </span>
-                          <span className="text-xs font-semibold text-zinc-800 group-hover:text-zinc-950 truncate">
+                          <span className="text-[10px] font-semibold text-zinc-800 group-hover:text-zinc-950 truncate">
                             {art.title}
                           </span>
                         </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <span className="text-[9px] font-mono text-zinc-400 group-hover:text-zinc-950 font-bold">
+                        <div className="flex items-center gap-1 shrink-0">
+                          <span className="text-[8.5px] font-mono text-zinc-400 group-hover:text-zinc-950 font-bold">
                             p.{(idx + 2).toString().padStart(2, "0")}
                           </span>
                         </div>
                       </button>
                     ))}
                   </div>
-                </div>
 
-                <div className="pt-3 border-t border-zinc-200 flex items-center justify-between text-[9px] text-zinc-400">
-                  <span>iReside Guide</span>
-                  <span>Contents</span>
+                  <div className="pt-2 border-t border-zinc-200 flex items-center justify-between text-[9px] text-zinc-400">
+                    <span>iReside Guide</span>
+                    <span>Contents</span>
+                  </div>
                 </div>
               </BookPage>
 
@@ -659,103 +661,111 @@ export function EBookReader({
                     density="soft"
                     isLeftPage={isLeft}
                     isRightPage={isRight}
-                    className="p-7 sm:p-9 flex flex-col justify-between bg-white"
+                    className="p-6 sm:p-7 flex flex-col justify-between bg-white"
                   >
-                    <div className="space-y-3.5">
-                      {/* Header */}
-                      <div className="flex items-center justify-between border-b border-zinc-200 pb-2 text-[9px] uppercase tracking-wider text-zinc-400">
-                        <span className="font-bold text-zinc-900">
-                          {article.categoryLabel}
-                        </span>
-                        <span>
-                          Page {(idx + 2).toString().padStart(2, "0")}
-                        </span>
-                      </div>
+                    <div className="flex-1 min-h-0 flex flex-col justify-between space-y-2.5">
+                      <div className="space-y-2.5 flex-1 overflow-y-auto max-h-[470px] pr-1">
+                        {/* Header */}
+                        <div className="flex items-center justify-between border-b border-zinc-200 pb-1.5 text-[8.5px] uppercase tracking-wider text-zinc-400">
+                          <span className="font-bold text-zinc-900">
+                            {article.categoryLabel}
+                          </span>
+                          <span>
+                            Page {(idx + 2).toString().padStart(2, "0")}
+                          </span>
+                        </div>
 
-                      {/* Title & Simple Summary */}
-                      <div className="space-y-1">
-                        <h3 className="text-lg sm:text-xl font-black text-zinc-950 font-serif leading-snug tracking-tight">
-                          {article.title}
-                        </h3>
-                        <p className="text-[11px] text-zinc-600 leading-relaxed">
-                          {article.summary}
-                        </p>
-                      </div>
+                        {/* Title & Simple Summary */}
+                        <div className="space-y-0.5">
+                          <h3 className="text-base sm:text-lg font-black text-zinc-950 font-serif leading-snug tracking-tight">
+                            {article.title}
+                          </h3>
+                          <p className="text-[10.5px] text-zinc-600 leading-relaxed">
+                            {article.summary}
+                          </p>
+                        </div>
 
-                      {/* Step-by-Step Instructions */}
-                      {article.steps && article.steps.length > 0 && (
-                        <div className="space-y-2 pt-1">
-                          {article.steps.map((step, sIdx) => (
-                            <div
-                              key={sIdx}
-                              className="p-2.5 bg-zinc-50 border border-zinc-200/80 space-y-1 text-xs"
-                            >
-                              <div className="flex items-center gap-2">
-                                <span className="size-4 bg-zinc-900 text-white font-mono text-[9px] font-bold flex items-center justify-center shrink-0">
-                                  {sIdx + 1}
-                                </span>
-                                <h5 className="font-bold text-zinc-900 text-[11px] tracking-tight">{step.title}</h5>
-                              </div>
-                              <p className="text-[10.5px] text-zinc-600 pl-6 leading-relaxed">
-                                {step.description}
-                              </p>
-                              {step.codeSnippet && (
-                                <div className="ml-6 mt-1 relative group bg-zinc-950 text-zinc-200 p-2 text-[9.5px] font-mono overflow-x-auto border border-zinc-800">
-                                  <code>{step.codeSnippet}</code>
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      handleCopyCode(step.codeSnippet!, `${article.id}-${sIdx}`)
-                                    }
-                                    className="absolute right-1.5 top-1 px-1.5 py-0.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[8px] font-bold uppercase transition-colors"
-                                  >
-                                    {copiedCodeId === `${article.id}-${sIdx}` ? "Copied" : "Copy"}
-                                  </button>
+                        {/* Step-by-Step Instructions */}
+                        {article.steps && article.steps.length > 0 && (
+                          <div className="space-y-1.5 pt-0.5">
+                            {article.steps.map((step, sIdx) => (
+                              <div
+                                key={sIdx}
+                                className="p-2 bg-zinc-50 border border-zinc-200/80 space-y-0.5 text-xs rounded-sm"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <span className="size-3.5 bg-zinc-900 text-white font-mono text-[8.5px] font-bold flex items-center justify-center shrink-0">
+                                    {sIdx + 1}
+                                  </span>
+                                  <h5 className="font-bold text-zinc-900 text-[10.5px] tracking-tight">{step.title}</h5>
                                 </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                                <p className="text-[10px] text-zinc-600 pl-5.5 leading-relaxed">
+                                  {step.description}
+                                </p>
+                                {step.tip && (
+                                  <div className="ml-5.5 mt-0.5 flex items-start gap-1 p-1 bg-amber-500/10 border border-amber-500/20 text-[9px] text-amber-800 rounded leading-snug">
+                                    <span className="font-bold shrink-0">💡 TIP:</span>
+                                    <span>{step.tip}</span>
+                                  </div>
+                                )}
+                                {step.codeSnippet && (
+                                  <div className="ml-5.5 mt-1 relative group bg-zinc-950 text-zinc-200 p-1.5 text-[9px] font-mono overflow-x-auto border border-zinc-800">
+                                    <code>{step.codeSnippet}</code>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleCopyCode(step.codeSnippet!, `${article.id}-${sIdx}`)
+                                      }
+                                      className="absolute right-1 top-1 px-1.5 py-0.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[7.5px] font-bold uppercase transition-colors"
+                                    >
+                                      {copiedCodeId === `${article.id}-${sIdx}` ? "Copied" : "Copy"}
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
 
-                      {/* Technical Markdown Block */}
-                      {article.contentMarkdown && (
-                        <div className="bg-zinc-950 text-zinc-300 p-3 border border-zinc-800 text-[10px] font-mono whitespace-pre overflow-x-auto">
-                          {article.contentMarkdown.trim()}
-                        </div>
-                      )}
-                    </div>
+                        {/* Technical Markdown Block */}
+                        {article.contentMarkdown && (
+                          <div className="bg-zinc-950 text-zinc-300 p-2.5 border border-zinc-800 text-[9.5px] font-mono whitespace-pre overflow-x-auto">
+                            {article.contentMarkdown.trim()}
+                          </div>
+                        )}
+                      </div>
 
-                    {/* Footer Button */}
-                    <div className="pt-2 border-t border-zinc-200 flex items-center justify-between text-xs">
-                      {article.actionShortcut?.href ? (
-                        <Link
-                          href={article.actionShortcut.href}
-                          className="px-2.5 py-1 bg-zinc-900 hover:bg-zinc-800 text-white text-[9.5px] font-bold uppercase tracking-wider transition-colors flex items-center gap-1.5"
-                        >
-                          <span>{article.actionShortcut.label}</span>
-                          <ExternalLink className="size-2.5" />
-                        </Link>
-                      ) : article.actionShortcut?.tabId && onNavigateTab ? (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (article.actionShortcut?.tabId && onNavigateTab) {
-                              onNavigateTab(article.actionShortcut.tabId);
-                            }
-                          }}
-                          className="px-2.5 py-1 bg-zinc-900 hover:bg-zinc-800 text-white text-[9.5px] font-bold uppercase tracking-wider transition-colors flex items-center gap-1.5"
-                        >
-                          <span>{article.actionShortcut.label}</span>
-                          <ExternalLink className="size-2.5" />
-                        </button>
-                      ) : (
-                        <span className="text-[9px] text-zinc-400">iReside Guide</span>
-                      )}
+                      {/* Footer Button */}
+                      <div className="pt-2 border-t border-zinc-200 flex items-center justify-between text-xs shrink-0">
+                        {article.actionShortcut?.href ? (
+                          <Link
+                            href={article.actionShortcut.href}
+                            className="px-2.5 py-1 bg-zinc-900 hover:bg-zinc-800 text-white text-[9px] font-bold uppercase tracking-wider transition-colors flex items-center gap-1.5"
+                          >
+                            <span>{article.actionShortcut.label}</span>
+                            <ExternalLink className="size-2.5" />
+                          </Link>
+                        ) : article.actionShortcut?.tabId && onNavigateTab ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (article.actionShortcut?.tabId && onNavigateTab) {
+                                onNavigateTab(article.actionShortcut.tabId);
+                              }
+                            }}
+                            className="px-2.5 py-1 bg-zinc-900 hover:bg-zinc-800 text-white text-[9px] font-bold uppercase tracking-wider transition-colors flex items-center gap-1.5"
+                          >
+                            <span>{article.actionShortcut.label}</span>
+                            <ExternalLink className="size-2.5" />
+                          </button>
+                        ) : (
+                          <span className="text-[9px] text-zinc-400">iReside Guide</span>
+                        )}
 
-                      <span className="font-mono text-[9px] text-zinc-400 font-bold">
-                        {(idx + 2).toString().padStart(2, "0")}
-                      </span>
+                        <span className="font-mono text-[9px] text-zinc-400 font-bold">
+                          {(idx + 2).toString().padStart(2, "0")}
+                        </span>
+                      </div>
                     </div>
                   </BookPage>
                 );

@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const propertyId = searchParams.get("propertyId") || "default";
 
-    // 1. Try to load from property map_decorations if propertyId provided
+    // 1. Try to load from specific property map_decorations if propertyId provided
     if (propertyId && propertyId !== "default") {
       const { data: property } = await supabase
         .from("properties")
@@ -27,7 +27,23 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // 2. Fallback to user metadata
+    // 2. Try to load from any property belonging to the landlord
+    const { data: landlordProps } = await supabase
+      .from("properties")
+      .select("map_decorations")
+      .eq("landlord_id", userId)
+      .limit(5);
+
+    if (landlordProps && landlordProps.length > 0) {
+      for (const prop of landlordProps) {
+        const propTemplate = (prop?.map_decorations as Record<string, unknown>)?.flyer_template;
+        if (propTemplate) {
+          return NextResponse.json({ template: propTemplate });
+        }
+      }
+    }
+
+    // 3. Fallback to user metadata (legacy)
     const {
       data: { user },
       error,
@@ -60,40 +76,40 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Template data is required." }, { status: 400 });
     }
 
-    // Retrieve existing user metadata
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      return NextResponse.json({ error: "User not authenticated." }, { status: 401 });
-    }
-
-    const existingTemplates = user.user_metadata?.flyer_templates || {};
     const updatedTemplateWithDate = {
       ...template,
       updatedAt: new Date().toISOString(),
     };
 
-    const updatedTemplates = {
-      ...existingTemplates,
-      [propertyId]: updatedTemplateWithDate,
-    };
+    // 1. Persist to properties.map_decorations
+    let targetPropertyId = propertyId;
+    if (targetPropertyId === "default") {
+      const { data: firstProp } = await supabase
+        .from("properties")
+        .select("id, map_decorations")
+        .eq("landlord_id", userId)
+        .limit(1)
+        .maybeSingle();
 
-    // 1. Update user metadata in Supabase Auth
-    await supabase.auth.updateUser({
-      data: {
-        flyer_templates: updatedTemplates,
-      },
-    });
-
-    // 2. Also persist to properties.map_decorations if valid property
-    if (propertyId && propertyId !== "default") {
+      if (firstProp?.id) {
+        targetPropertyId = firstProp.id;
+        const currentDecorations = (firstProp.map_decorations as Record<string, unknown>) || {};
+        await supabase
+          .from("properties")
+          .update({
+            map_decorations: {
+              ...currentDecorations,
+              flyer_template: updatedTemplateWithDate,
+            } as any,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", targetPropertyId);
+      }
+    } else {
       const { data: prop } = await supabase
         .from("properties")
         .select("map_decorations")
-        .eq("id", propertyId)
+        .eq("id", targetPropertyId)
         .maybeSingle();
 
       if (prop) {
@@ -107,8 +123,25 @@ export async function POST(request: NextRequest) {
             } as any,
             updated_at: new Date().toISOString(),
           })
-          .eq("id", propertyId);
+          .eq("id", targetPropertyId);
       }
+    }
+
+    // 2. Clean up legacy flyer_templates from auth user_metadata so JWT cookie doesn't exceed 8KB/16KB limit (HTTP 431)
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user?.user_metadata?.flyer_templates) {
+        await supabase.auth.updateUser({
+          data: {
+            flyer_templates: null,
+          },
+        });
+      }
+    } catch {
+      // Non-blocking cleanup
     }
 
     return NextResponse.json({ success: true, template: updatedTemplateWithDate });

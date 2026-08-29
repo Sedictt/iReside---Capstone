@@ -28,6 +28,14 @@ describe("Flyer Template API", () => {
     (requireAuthenticatedUser as any).mockResolvedValue({
       userId: "user-123",
       supabase: {
+        from: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+              maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+            }),
+          }),
+        }),
         auth: {
           getUser: vi.fn().mockResolvedValue({ data: { user: mockUser }, error: null }),
         },
@@ -48,14 +56,35 @@ describe("Flyer Template API", () => {
       user_metadata: {},
     };
 
-    const mockUpdateUser = vi.fn().mockResolvedValue({ data: {}, error: null });
+    const mockUpdate = vi.fn().mockReturnValue({
+      eq: vi.fn().mockResolvedValue({ data: null, error: null }),
+    });
+
+    const mockFrom = vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          maybeSingle: vi.fn().mockResolvedValue({
+            data: { id: "prop-1", map_decorations: {} },
+            error: null,
+          }),
+          limit: vi.fn().mockReturnValue({
+            maybeSingle: vi.fn().mockResolvedValue({
+              data: { id: "prop-1", map_decorations: {} },
+              error: null,
+            }),
+          }),
+        }),
+      }),
+      update: mockUpdate,
+    });
 
     (requireAuthenticatedUser as any).mockResolvedValue({
       userId: "user-123",
       supabase: {
+        from: mockFrom,
         auth: {
           getUser: vi.fn().mockResolvedValue({ data: { user: mockUser }, error: null }),
-          updateUser: mockUpdateUser,
+          updateUser: vi.fn().mockResolvedValue({ data: {}, error: null }),
         },
       },
     });
@@ -76,7 +105,7 @@ describe("Flyer Template API", () => {
 
     expect(res.status).toBe(200);
     expect(data.success).toBe(true);
-    expect(mockUpdateUser).toHaveBeenCalled();
+    expect(mockFrom).toHaveBeenCalledWith("properties");
   });
 
   it("returns 400 when template is missing on POST", async () => {
