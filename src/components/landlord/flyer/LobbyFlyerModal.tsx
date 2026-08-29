@@ -584,7 +584,8 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
         document.activeElement.blur();
       }
 
-      await new Promise((r) => setTimeout(r, 120));
+      // Allow React state to settle (disables contentEditable & edit bounding outlines)
+      await new Promise((r) => setTimeout(r, 200));
 
       const { domToPng } = await import("modern-screenshot");
 
@@ -1600,13 +1601,13 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                     >
                       <Building2 className="size-4 text-white" />
                     </div>
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-0 flex-1 flex flex-col justify-center overflow-hidden">
                       <h1
-                        contentEditable={isDirectEditMode}
+                        contentEditable={isEditingActive}
                         suppressContentEditableWarning
                         onBlur={(e) => setPropertyName(e.currentTarget.textContent || "")}
                         className={cn(
-                          "text-base font-black leading-tight block transition-all",
+                          "text-base font-black leading-tight block transition-all m-0 p-0 truncate",
                           titleTransform === "uppercase" ? "uppercase" : "normal-case",
                           trackingClass,
                           editableClass
@@ -1616,11 +1617,11 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                         {propertyName}
                       </h1>
                       <p
-                        contentEditable={isDirectEditMode}
+                        contentEditable={isEditingActive}
                         suppressContentEditableWarning
                         onBlur={(e) => setAddress(e.currentTarget.textContent || "")}
                         className={cn(
-                          "text-[10px] font-medium leading-tight block truncate",
+                          "text-[10px] font-medium leading-normal block truncate mt-0.5 m-0 p-0",
                           editableClass
                         )}
                         style={{ color: cardContrast.muted }}
@@ -1638,7 +1639,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                       className="h-5 w-16"
                     />
                     <span
-                      contentEditable={isDirectEditMode}
+                      contentEditable={isEditingActive}
                       suppressContentEditableWarning
                       onBlur={(e) => setPortalSubheading(e.currentTarget.textContent || "")}
                       className={cn(
@@ -1663,7 +1664,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                     <div className="flex items-center justify-center gap-1.5 text-[9px] font-black uppercase tracking-wider mb-0.5">
                       <Megaphone className="size-2.5" />
                       <span
-                        contentEditable={isDirectEditMode}
+                        contentEditable={isEditingActive}
                         suppressContentEditableWarning
                         onBlur={(e) => setBannerHeading(e.currentTarget.textContent || "")}
                         className={cn(editableClass)}
@@ -1672,7 +1673,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                       </span>
                     </div>
                     <p
-                      contentEditable={isDirectEditMode}
+                      contentEditable={isEditingActive}
                       suppressContentEditableWarning
                       onBlur={(e) => setTagline(e.currentTarget.textContent || "")}
                       className={cn(
@@ -1702,7 +1703,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                     <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider">
                       <Smartphone className="size-3" style={{ color: brandColor }} />
                       <span
-                        contentEditable={isDirectEditMode}
+                        contentEditable={isEditingActive}
                         suppressContentEditableWarning
                         onBlur={(e) => setApkCardTitle(e.currentTarget.textContent || "")}
                         className={cn(editableClass)}
@@ -1746,7 +1747,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                         style={{ backgroundColor: brandColor }}
                       >
                         <span
-                          contentEditable={isDirectEditMode}
+                          contentEditable={isEditingActive}
                           suppressContentEditableWarning
                           onBlur={(e) => setApkCardBadge(e.currentTarget.textContent || "")}
                           className="outline-none"
@@ -1755,7 +1756,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                         </span>
                       </span>
                       <p
-                        contentEditable={isDirectEditMode}
+                        contentEditable={isEditingActive}
                         suppressContentEditableWarning
                         onBlur={(e) => setApkCardSubtitle(e.currentTarget.textContent || "")}
                         className={cn("text-[8px] mt-0.5 font-medium", editableClass)}
@@ -1779,7 +1780,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                     <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider">
                       <Globe className="size-3" style={{ color: brandColor }} />
                       <span
-                        contentEditable={isDirectEditMode}
+                        contentEditable={isEditingActive}
                         suppressContentEditableWarning
                         onBlur={(e) => setWebCardTitle(e.currentTarget.textContent || "")}
                         className={cn(editableClass)}
@@ -1823,7 +1824,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                         )}
                       >
                         <span
-                          contentEditable={isDirectEditMode}
+                          contentEditable={isEditingActive}
                           suppressContentEditableWarning
                           onBlur={(e) => setWebCardBadge(e.currentTarget.textContent || "")}
                           className="outline-none"
@@ -1832,7 +1833,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                         </span>
                       </span>
                       <p
-                        contentEditable={isDirectEditMode}
+                        contentEditable={isEditingActive}
                         suppressContentEditableWarning
                         onBlur={(e) => setWebCardSubtitle(e.currentTarget.textContent || "")}
                         className={cn("text-[8px] mt-0.5 font-medium", editableClass)}
@@ -1856,7 +1857,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                     }}
                   >
                     <p
-                      contentEditable={isDirectEditMode}
+                      contentEditable={isEditingActive}
                       suppressContentEditableWarning
                       onBlur={(e) => setStepsHeading(e.currentTarget.textContent || "")}
                       className={cn(
@@ -1876,7 +1877,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                           1
                         </div>
                         <p
-                          contentEditable={isDirectEditMode}
+                          contentEditable={isEditingActive}
                           suppressContentEditableWarning
                           onBlur={(e) => setStep1Title(e.currentTarget.textContent || "")}
                           className={cn("text-[10px] font-bold leading-tight", editableClass)}
@@ -1885,7 +1886,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                           {step1Title}
                         </p>
                         <p
-                          contentEditable={isDirectEditMode}
+                          contentEditable={isEditingActive}
                           suppressContentEditableWarning
                           onBlur={(e) => setStep1Desc(e.currentTarget.textContent || "")}
                           className={cn("text-[8px] leading-tight", editableClass)}
@@ -1903,7 +1904,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                           2
                         </div>
                         <p
-                          contentEditable={isDirectEditMode}
+                          contentEditable={isEditingActive}
                           suppressContentEditableWarning
                           onBlur={(e) => setStep2Title(e.currentTarget.textContent || "")}
                           className={cn("text-[10px] font-bold leading-tight", editableClass)}
@@ -1912,7 +1913,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                           {step2Title}
                         </p>
                         <p
-                          contentEditable={isDirectEditMode}
+                          contentEditable={isEditingActive}
                           suppressContentEditableWarning
                           onBlur={(e) => setStep2Desc(e.currentTarget.textContent || "")}
                           className={cn("text-[8px] leading-tight", editableClass)}
@@ -1930,7 +1931,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                           3
                         </div>
                         <p
-                          contentEditable={isDirectEditMode}
+                          contentEditable={isEditingActive}
                           suppressContentEditableWarning
                           onBlur={(e) => setStep3Title(e.currentTarget.textContent || "")}
                           className={cn("text-[10px] font-bold leading-tight", editableClass)}
@@ -1939,7 +1940,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                           {step3Title}
                         </p>
                         <p
-                          contentEditable={isDirectEditMode}
+                          contentEditable={isEditingActive}
                           suppressContentEditableWarning
                           onBlur={(e) => setStep3Desc(e.currentTarget.textContent || "")}
                           className={cn("text-[8px] leading-tight", editableClass)}
@@ -1968,7 +1969,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                         <Wifi className="size-3.5 text-emerald-500 shrink-0" />
                         <div className="min-w-0 flex-1">
                           <p
-                            contentEditable={isDirectEditMode}
+                            contentEditable={isEditingActive}
                             suppressContentEditableWarning
                             onBlur={(e) => setWifiHeader(e.currentTarget.textContent || "")}
                             className={cn(
@@ -1980,7 +1981,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                             {wifiHeader}
                           </p>
                           <p
-                            contentEditable={isDirectEditMode}
+                            contentEditable={isEditingActive}
                             suppressContentEditableWarning
                             onBlur={(e) => setWifiSsid(e.currentTarget.textContent || "")}
                             className={cn(
@@ -1997,7 +1998,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                           >
                             <span>Pass:</span>
                             <span
-                              contentEditable={isDirectEditMode}
+                              contentEditable={isEditingActive}
                               suppressContentEditableWarning
                               onBlur={(e) =>
                                 setWifiPassword(e.currentTarget.textContent || "")
@@ -2025,7 +2026,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                         <Phone className="size-3.5 text-indigo-400 shrink-0" />
                         <div className="min-w-0 flex-1">
                           <p
-                            contentEditable={isDirectEditMode}
+                            contentEditable={isEditingActive}
                             suppressContentEditableWarning
                             onBlur={(e) => setOfficeHeader(e.currentTarget.textContent || "")}
                             className={cn(
@@ -2037,7 +2038,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                             {officeHeader}
                           </p>
                           <p
-                            contentEditable={isDirectEditMode}
+                            contentEditable={isEditingActive}
                             suppressContentEditableWarning
                             onBlur={(e) =>
                               setContactPhone(e.currentTarget.textContent || "")
@@ -2051,7 +2052,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                             {contactPhone}
                           </p>
                           <p
-                            contentEditable={isDirectEditMode}
+                            contentEditable={isEditingActive}
                             suppressContentEditableWarning
                             onBlur={(e) =>
                               setOfficeHours(e.currentTarget.textContent || "")
@@ -2078,7 +2079,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                   )}
                 >
                   <span
-                    contentEditable={isDirectEditMode}
+                    contentEditable={isEditingActive}
                     suppressContentEditableWarning
                     className={cn(editableClass)}
                   >
@@ -2087,7 +2088,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                   <span className="flex items-center gap-1 font-mono font-bold">
                     <ShieldCheck className="size-2.5 text-emerald-500" />
                     <span
-                      contentEditable={isDirectEditMode}
+                      contentEditable={isEditingActive}
                       suppressContentEditableWarning
                       onBlur={(e) => setFooterBadge(e.currentTarget.textContent || "")}
                       className={cn(editableClass)}
