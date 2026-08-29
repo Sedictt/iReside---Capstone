@@ -3,8 +3,6 @@ import type { Database } from '@/types/database'
 
 let browserClient: ReturnType<typeof createBrowserClient<Database>> | null = null;
 
-let authLockPromise: Promise<any> = Promise.resolve();
-
 /**
  * Creates a Supabase client for use in Browser/Client Components.
  *
@@ -18,19 +16,9 @@ export function createBrowserSupabaseClient() {
             process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
             {
                 auth: {
-                    // Serialized in-memory mutex to prevent 409 concurrent token refreshes without navigator.locks abort errors
+                    // Direct non-blocking execution to eliminate recursive lock deadlocks and navigator.locks aborts
                     lock: async (_name, _acquireTimeout, fn) => {
-                        const prev = authLockPromise;
-                        let release: (value?: any) => void = () => {};
-                        authLockPromise = new Promise((res) => {
-                            release = res;
-                        });
-                        try {
-                            await prev.catch(() => {});
-                            return await fn();
-                        } finally {
-                            release();
-                        }
+                        return await fn();
                     },
                 },
             }

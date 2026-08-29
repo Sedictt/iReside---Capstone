@@ -104,7 +104,10 @@ self.addEventListener("fetch", (event) => {
       .catch(async () => {
         const cached = await caches.match(request);
         if (cached) return cached;
-        throw new Error("Network offline and resource not in cache");
+        return new Response("Network offline and resource not in cache", {
+          status: 503,
+          headers: { "Content-Type": "text/plain" },
+        });
       })
   );
 });
