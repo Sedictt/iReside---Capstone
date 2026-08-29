@@ -20,9 +20,6 @@ export function DashboardBackground({ image, className }: DashboardBackgroundPro
                 className="object-cover transition-transform duration-[2000ms] group-hover:scale-110 opacity-60 dark:opacity-40"
             />
             
-            {/* Noise Texture Overlay */}
-            <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
-
             {/* Progressive Gradients */}
             <div className="absolute inset-0 bg-gradient-to-tr from-background via-background/90 to-background/20" />
             <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-background/95 to-transparent" />
