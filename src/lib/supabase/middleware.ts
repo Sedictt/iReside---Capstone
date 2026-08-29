@@ -90,7 +90,12 @@ export async function updateSession(request: NextRequest) {
     }
 
     const pathname = request.nextUrl.pathname;
-    const allCookies = request.cookies.getAll();
+    let allCookies: Array<{ name: string; value: string }> = [];
+    try {
+        allCookies = request.cookies.getAll();
+    } catch {
+        allCookies = [];
+    }
     const hasAuthCookie = allCookies.some(
         (c) => c.name.includes("-auth-token") || c.name.startsWith("sb-") || c.name === "supabase-auth-token"
     );
@@ -110,14 +115,22 @@ export async function updateSession(request: NextRequest) {
         {
             cookies: {
                 getAll() {
-                    return request.cookies.getAll();
+                    try {
+                        return request.cookies.getAll();
+                    } catch {
+                        return [];
+                    }
                 },
                 setAll(cookiesToSet) {
-                    cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-                    supabaseResponse = NextResponse.next({
-                        request,
-                    });
-                    cookiesToSet.forEach(({ name, value, options }) => supabaseResponse.cookies.set(name, value, options));
+                    try {
+                        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+                        supabaseResponse = NextResponse.next({
+                            request,
+                        });
+                        cookiesToSet.forEach(({ name, value, options }) => supabaseResponse.cookies.set(name, value, options));
+                    } catch (e) {
+                        console.warn("[Middleware] Failed setting response cookies:", e);
+                    }
                 },
             },
         }
