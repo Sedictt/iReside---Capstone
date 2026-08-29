@@ -13,7 +13,15 @@ export function createBrowserSupabaseClient() {
     if (!browserClient) {
         browserClient = createBrowserClient<Database>(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            {
+                auth: {
+                    // Custom lock handler to prevent browser Web Locks API "Lock broken by another request with the 'steal' option" AbortErrors
+                    lock: async (_name, _acquireTimeout, fn) => {
+                        return await fn();
+                    },
+                },
+            }
         );
     }
     return browserClient;
