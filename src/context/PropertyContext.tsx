@@ -47,20 +47,23 @@ const PropertyContext = createContext<PropertyContextValue | undefined>(undefine
 /* ------------------------------------------------------------------ */
 
 export function PropertyProvider({ children }: { children: ReactNode }) {
-    const { user, profile } = useAuth()
-    const [properties, setProperties] = useState<Property[]>([])
-    const [selectedPropertyId, setSelectedPropertyIdState] = useState<string | 'all'>('all')
-    const [loading, setLoading] = useState(true)
-
-    // Load selected property from localStorage on mount
-    useEffect(() => {
+    const { user, profile, loading: authLoading } = useAuth()
+    const [properties, setProperties] = useState<Property[]>(() => {
         if (typeof window !== 'undefined') {
-            const saved = localStorage.getItem('iReside_selected_property')
-            if (saved) {
-                setSelectedPropertyIdState(saved)
-            }
+            try {
+                const cached = localStorage.getItem('iReside_cached_properties')
+                if (cached) return JSON.parse(cached)
+            } catch {}
         }
-    }, [])
+        return []
+    })
+    const [selectedPropertyId, setSelectedPropertyIdState] = useState<string | 'all'>(() => {
+        if (typeof window !== 'undefined') {
+            return localStorage.getItem('iReside_selected_property') || 'all'
+        }
+        return 'all'
+    })
+    const [loading, setLoading] = useState(true)
 
     const setSelectedPropertyId = useCallback((id: string | 'all') => {
         setSelectedPropertyIdState(id)
@@ -70,13 +73,15 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
     }, [])
 
     const fetchProperties = useCallback(async () => {
+        // Wait until initial auth check has resolved
+        if (authLoading) return
+
         if (!user || profile?.role !== 'landlord') {
             setProperties([])
             setLoading(false)
             return
         }
 
-        setLoading(true)
         try {
             const res = await fetch('/api/landlord/property-units')
             if (!res.ok) throw new Error('Failed to fetch properties')
@@ -85,19 +90,37 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
             const options = (data.properties || []) as Property[]
             setProperties(options)
 
-            // Auto-select if only one property exists
-            if (options.length === 1) {
-                setSelectedPropertyId(options[0].id)
-            } else if (selectedPropertyId !== 'all' && !options.find(p => p.id === selectedPropertyId)) {
-                // If selected property is not in the list anymore (and not 'all'), reset to 'all'
-                setSelectedPropertyId('all')
+            if (typeof window !== 'undefined') {
+                try {
+                    localStorage.setItem('iReside_cached_properties', JSON.stringify(options))
+                } catch {}
             }
+
+            // Auto-select or validate existing selection
+            setSelectedPropertyIdState(currentId => {
+                if (options.length === 0) return 'all'
+                if (options.length === 1) {
+                    if (typeof window !== 'undefined') {
+                        localStorage.setItem('iReside_selected_property', options[0].id)
+                    }
+                    return options[0].id
+                }
+                if (currentId !== 'all' && !options.some(p => p.id === currentId)) {
+                    // Current saved property ID no longer exists, default to first property or 'all'
+                    const nextId = options[0]?.id || 'all'
+                    if (typeof window !== 'undefined') {
+                        localStorage.setItem('iReside_selected_property', nextId)
+                    }
+                    return nextId
+                }
+                return currentId
+            })
         } catch (error) {
             console.error('[PropertyContext] Error fetching properties:', error)
         } finally {
             setLoading(false)
         }
-    }, [user, profile?.role, selectedPropertyId, setSelectedPropertyId])
+    }, [user?.id, profile?.role, authLoading])
 
     useEffect(() => {
         void fetchProperties()
@@ -105,7 +128,7 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
 
     const selectedProperty = selectedPropertyId === 'all' 
         ? null 
-        : properties.find(p => p.id === selectedPropertyId) || null
+        : (properties.find(p => p.id === selectedPropertyId) || (properties.length > 0 ? properties[0] : null))
 
     const value: PropertyContextValue = {
         properties,

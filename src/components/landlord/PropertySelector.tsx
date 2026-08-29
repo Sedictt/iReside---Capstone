@@ -67,7 +67,9 @@ export function PropertySelector({ isCollapsed = false }: { isCollapsed?: boolea
                 {!isCollapsed && (
                     <div className="flex min-w-0 flex-1 items-center gap-2">
                         <span className="truncate text-[11px] font-black uppercase tracking-widest text-foreground">
-                            {selectedPropertyId === 'all' ? 'All Properties' : (selectedProperty?.name || 'Loading…')}
+                            {selectedPropertyId === 'all' 
+                                ? 'All Properties' 
+                                : (selectedProperty?.name || (loading ? 'Loading…' : (properties.length > 0 ? properties[0].name : 'Select Property')))}
                         </span>
                         <ChevronDown className={cn(
                             "size-4 text-muted-foreground transition-transform duration-300 ml-auto",
