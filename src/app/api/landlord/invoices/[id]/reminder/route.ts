@@ -9,6 +9,7 @@ import {
 } from "@/lib/billing/workflow";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
+import { logUserActivity } from "@/lib/audit/audit-logger";
 
 type RouteContext = {
     params: Promise<{ id: string }>;
@@ -107,6 +108,23 @@ export async function POST(request: Request, context: RouteContext) {
                 payNowPath,
             },
         });
+
+        await logUserActivity({
+            userId,
+            userRole: "landlord",
+            action: "INVOICE_REMINDER_SENT",
+            category: "billing",
+            title: "Rent Invoice & Reminder Dispatched",
+            description: `Dispatched payment notice & Pay Now link for invoice ${updatedPayment.invoice_number || updatedPayment.id}.`,
+            severity: "info",
+            targetId: updatedPayment.id,
+            targetType: "invoice",
+            metadata: {
+                invoiceNumber: updatedPayment.invoice_number,
+                tenantId: updatedPayment.tenant_id,
+            },
+            userAgent: request.headers.get("user-agent"),
+        }, adminClient);
 
         return NextResponse.json({ ok: true, remindedAt: nowIso });
     } catch (error) {
