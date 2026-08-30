@@ -1,25 +1,66 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Loader2, KeyRound, AlertCircle } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ArrowLeft, ArrowRight, Loader2, KeyRound, AlertCircle, Building2 } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { m as motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-export default function ApplyPage() {
+function ApplyForm() {
     const router = useRouter();
-    const [inviteCode, setInviteCode] = useState("");
+    const searchParams = useSearchParams();
+    const unitParam = searchParams.get("unit") || searchParams.get("unitId");
+    const codeParam = searchParams.get("code") || searchParams.get("token");
+
+    const [inviteCode, setInviteCode] = useState(codeParam || "");
     const [loading, setLoading] = useState(false);
+    const [isResolving, setIsResolving] = useState(Boolean(unitParam));
     const [error, setError] = useState<string | null>(null);
     const [mounted, setMounted] = useState(false);
 
-    // Suppress hydration warning
-    if (typeof window !== "undefined" && !mounted) {
+    useEffect(() => {
         setMounted(true);
-    }
+    }, []);
+
+    // If a unit ID is provided in the URL, automatically resolve it into a direct application link
+    useEffect(() => {
+        if (!unitParam) return;
+
+        let isCancelled = false;
+        const autoResolveUnit = async () => {
+            setIsResolving(true);
+            try {
+                const res = await fetch(`/api/invites/resolve?unitId=${encodeURIComponent(unitParam)}`);
+                const data = await res.json();
+                if (!isCancelled) {
+                    if (data.ok && data.token) {
+                        router.replace(`/apply/${encodeURIComponent(data.token)}`);
+                        return;
+                    }
+                    if (data.error) {
+                        setError(data.error);
+                    }
+                }
+            } catch {
+                if (!isCancelled) {
+                    setError("Unable to automatically load the application for this unit. Please enter your invite code below.");
+                }
+            } finally {
+                if (!isCancelled) {
+                    setIsResolving(false);
+                }
+            }
+        };
+
+        autoResolveUnit();
+
+        return () => {
+            isCancelled = true;
+        };
+    }, [unitParam, router]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -51,8 +92,22 @@ export default function ApplyPage() {
         }
     };
 
-    if (typeof window === "undefined" || !mounted) {
+    if (!mounted) {
         return null;
+    }
+
+    if (isResolving) {
+        return (
+            <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center gap-4">
+                <div className="size-16 rounded-3xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shadow-lg">
+                    <Building2 className="size-8 animate-pulse" />
+                </div>
+                <div className="flex items-center gap-2 text-sm font-bold text-foreground">
+                    <Loader2 className="size-4 animate-spin text-primary" />
+                    <span>Loading unit application...</span>
+                </div>
+            </div>
+        );
     }
 
     return (
@@ -197,5 +252,17 @@ export default function ApplyPage() {
                 </div>
             </main>
         </div>
+    );
+}
+
+export default function ApplyPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center gap-4">
+                <Loader2 className="size-8 animate-spin text-primary" />
+            </div>
+        }>
+            <ApplyForm />
+        </Suspense>
     );
 }

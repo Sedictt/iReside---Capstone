@@ -10,7 +10,6 @@ import {
     Calendar, 
     Building2, 
     AlertCircle, 
-    Sparkles, 
     Banknote, 
     Loader2, 
     RefreshCw, 
@@ -425,9 +424,8 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                             <div className="flex flex-col items-center justify-center py-12 text-center space-y-6 animate-in zoom-in-95 duration-300">
                                 <div className="relative">
                                     <div className="size-20 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-500 shadow-[0_0_30px_rgba(16,185,129,0.3)]">
-                                        <CheckCircle2 className="size-10 animate-bounce" />
+                                        <CheckCircle2 className="size-10" />
                                     </div>
-                                    <Sparkles className="absolute -top-1 -right-1 size-6 text-amber-400 animate-pulse" />
                                 </div>
 
                                 <div className="space-y-1">
