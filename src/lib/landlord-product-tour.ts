@@ -110,15 +110,15 @@ export const LANDLORD_PRODUCT_TOUR_STEPS = [
     },
 ] as const;
 
-export type LandlordQuestId = "unit_map" | "properties" | "tenants" | "finance";
+export type LandlordQuestId = "dashboard" | "properties" | "unit_map" | "tenants" | "finance" | "operations";
 
 export const LANDLORD_QUESTS = [
     {
-        id: "unit_map",
-        title: "Your Unit Map",
-        description: "Set up your building layout and organize your units visually.",
-        icon: "map",
-        stepIds: ["nav_unit_map", "unit_map_setup", "wizard_lanes", "wizard_bulk", "wizard_generate", "unit_map_visual"],
+        id: "dashboard",
+        title: "Dashboard & Navigation",
+        description: "Master your command center, sidebar tools, and essential shortcuts.",
+        icon: "dashboard",
+        stepIds: ["welcome", "nav_unit_map"],
     },
     {
         id: "properties",
@@ -126,6 +126,13 @@ export const LANDLORD_QUESTS = [
         description: "Learn how to add properties and manage your portfolio.",
         icon: "business",
         stepIds: ["nav_properties", "properties_portfolio"],
+    },
+    {
+        id: "unit_map",
+        title: "Your Unit Map",
+        description: "Set up your building layout and organize your units visually.",
+        icon: "map",
+        stepIds: ["nav_unit_map", "unit_map_setup", "wizard_lanes", "wizard_bulk", "wizard_generate", "unit_map_visual"],
     },
     {
         id: "tenants",
@@ -140,6 +147,13 @@ export const LANDLORD_QUESTS = [
         description: "Track revenue, manage invoices, and monitor utility billing.",
         icon: "payments",
         stepIds: ["nav_finance", "finance_hub"],
+    },
+    {
+        id: "operations",
+        title: "Maintenance & Operations",
+        description: "Handle repairs, post announcements, and manage tenant chat.",
+        icon: "operations",
+        stepIds: ["welcome"],
     },
 ] as const;
 
