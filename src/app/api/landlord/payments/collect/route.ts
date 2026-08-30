@@ -4,11 +4,12 @@ import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { upsertPaymentReceipt, generateNextMonthInvoice } from "@/lib/billing/server";
 import { insertPaymentAuditEvent, sendPaymentNotifications } from "@/lib/billing/workflow";
+import { logUserActivity } from "@/lib/audit/audit-logger";
 
 const collectPaymentSchema = z.object({
     invoiceId: z.string().uuid(),
     amount: z.number().positive(),
-    method: z.enum(["cash", "gcash", "bank_transfer", "check", "other"]).default("cash"),
+    method: z.enum(["cash", "gcash", "bank_transfer"]).default("cash"),
     referenceNumber: z.string().max(100).optional().nullable(),
     paymentDate: z.string().optional(),
     note: z.string().max(500).optional().nullable(),
@@ -126,6 +127,27 @@ export async function POST(request: Request) {
                     referenceNumber: referenceNumber || null,
                 },
             });
+
+            await logUserActivity({
+                userId,
+                userRole: "landlord",
+                action: "PAYMENT_COLLECTED",
+                category: "billing",
+                title: `Rent Payment Collected (₱${amount.toLocaleString()})`,
+                description: `Recorded ${method.toUpperCase()} collection of ₱${amount.toLocaleString()} (Receipt #${receipt.receipt_number}).`,
+                severity: "info",
+                targetId: payment.id,
+                targetType: "payment",
+                metadata: {
+                    amount,
+                    method,
+                    referenceNumber: referenceNumber || null,
+                    receiptNumber: receipt.receipt_number,
+                    isFullyPaid: isFull,
+                    invoiceNumber: payment.invoice_number,
+                },
+                userAgent: request.headers.get("user-agent"),
+            }, adminClient);
         } catch (auditError) {
             console.error("[Collect Payment API] Audit event logging error:", auditError);
         }
@@ -135,7 +157,7 @@ export async function POST(request: Request) {
             await sendPaymentNotifications(adminClient, [payment.tenant_id], {
                 title: "Payment Receipt Confirmed",
                 message: `Your landlord recorded a payment of ₱${amount.toLocaleString()} (Receipt #${receipt.receipt_number}).`,
-                type: "payment_approved",
+                type: "payment",
                 data: {
                     paymentId: payment.id,
                     receiptNumber: receipt.receipt_number,
