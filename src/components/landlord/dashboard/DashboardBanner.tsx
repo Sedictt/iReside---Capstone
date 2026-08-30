@@ -19,6 +19,7 @@ interface DashboardBannerProps {
     className?: string;
     simplifiedMode?: boolean;
     onNewWalkIn?: () => void;
+    onCollectPayment?: () => void;
     onCreateInvite?: () => void;
     onOpenFlyer?: () => void;
 }
@@ -30,6 +31,7 @@ export function DashboardBanner({
     className,
     simplifiedMode = false,
     onNewWalkIn,
+    onCollectPayment,
     onCreateInvite,
     onOpenFlyer
 }: DashboardBannerProps) {
@@ -117,6 +119,7 @@ export function DashboardBanner({
                         subtitle={displaySubtitle}
                         time={time}
                         onNewWalkIn={onNewWalkIn}
+                        onCollectPayment={onCollectPayment}
                         onCreateInvite={onCreateInvite}
                         onOpenFlyer={onOpenFlyer}
                     />

@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { PaymentModal } from "@/components/landlord/dashboard/PaymentModal";
+import { CollectPaymentModal } from "@/components/landlord/dashboard/CollectPaymentModal";
 import { ActionRequired } from "@/components/landlord/dashboard/ActionRequired";
 import { WalkInApplicationModal } from "@/components/landlord/applications/WalkInApplicationModal";
 import { TenantInviteManager } from "@/components/landlord/applications/TenantInviteManager";
@@ -118,6 +119,7 @@ export default function LandlordDashboard() {
     const [isWalkInModalOpen, setIsWalkInModalOpen] = useState(false);
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
     const [isFlyerModalOpen, setIsFlyerModalOpen] = useState(false);
+    const [isCollectPaymentModalOpen, setIsCollectPaymentModalOpen] = useState(false);
     const [loadingUnits, setLoadingUnits] = useState(true);
     const [loadingInvites, setLoadingInvites] = useState(true);
     const [availableUnits, setAvailableUnits] = useState<{
@@ -171,6 +173,13 @@ export default function LandlordDashboard() {
 
     useEffect(() => {
         setMounted(true);
+
+        if (typeof window !== "undefined") {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get("action") === "collect-payment") {
+                setIsCollectPaymentModalOpen(true);
+            }
+        }
     }, []);
 
     // Operational Power Tool Keyboard Accelerators
@@ -183,6 +192,7 @@ export default function LandlordDashboard() {
                 setIsWalkInModalOpen(false);
                 setIsInviteModalOpen(false);
                 setIsFlyerModalOpen(false);
+                setIsCollectPaymentModalOpen(false);
             }
             // Ctrl+K/Cmd+K triggers Walk-in Application modal instantly
             if ((e.ctrlKey || e.metaKey) && e.key === "k") {
@@ -193,6 +203,11 @@ export default function LandlordDashboard() {
             if ((e.ctrlKey || e.metaKey) && e.key === "i") {
                 e.preventDefault();
                 setIsInviteModalOpen(prev => !prev);
+            }
+            // Ctrl+P/Cmd+P triggers Collect Payment modal instantly
+            if ((e.ctrlKey || e.metaKey) && e.key === "p") {
+                e.preventDefault();
+                setIsCollectPaymentModalOpen(prev => !prev);
             }
         };
         window.addEventListener("keydown", handleKeyDown);
@@ -327,6 +342,7 @@ export default function LandlordDashboard() {
                 {/* Hero Section */}
                 <DashboardBanner
                     onNewWalkIn={() => setIsWalkInModalOpen(true)}
+                    onCollectPayment={() => setIsCollectPaymentModalOpen(true)}
                     onCreateInvite={() => setIsInviteModalOpen(true)}
                     onOpenFlyer={() => setIsFlyerModalOpen(true)}
                 />
@@ -528,6 +544,30 @@ export default function LandlordDashboard() {
             <LobbyFlyerModal
                 isOpen={isFlyerModalOpen}
                 onClose={() => setIsFlyerModalOpen(false)}
+            />
+
+            {/* Collect / Record Payment Modal */}
+            <CollectPaymentModal
+                isOpen={isCollectPaymentModalOpen}
+                onClose={() => setIsCollectPaymentModalOpen(false)}
+                onPaymentRecorded={() => {
+                    // Refetch payments overview to update stats and recent rent carousel
+                    fetch(`/api/landlord/payments/overview?propertyId=${selectedPropertyId}`)
+                        .then((res) => (res.ok ? res.json() : null))
+                        .then((data) => {
+                            if (data?.payments) {
+                                dispatchPayments({
+                                    type: "LOAD_SUCCESS",
+                                    payload: {
+                                        Overdue: data.payments.Overdue ?? [],
+                                        "Near Due": data.payments["Near Due"] ?? [],
+                                        Paid: data.payments.Paid ?? [],
+                                    },
+                                });
+                            }
+                        })
+                        .catch(() => {});
+                }}
             />
 
             <AnimatePresence>

@@ -24,7 +24,8 @@ import {
     SlidersHorizontal,
     FileCheck2,
     CalendarClock,
-    Palette
+    Palette,
+    Banknote
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
@@ -49,6 +50,16 @@ interface SearchResult {
 // ─── Static Feature & Action Index ────────────────────────────────────
 const FEATURE_INDEX: SearchResult[] = [
     // ── Quick Actions ──
+    {
+        id: "action-collect-payment",
+        type: "action",
+        title: "Record Rent Payment / Collect",
+        subtitle: "Log cash, GCash, or bank rent and issue receipt",
+        href: "/landlord/dashboard?action=collect-payment",
+        icon: Banknote,
+        badge: "Action",
+        keywords: ["collect payment", "record payment", "cash payment", "receive rent", "pay rent", "receipt", "rent collection", "settle balance", "log payment"]
+    },
     {
         id: "action-walk-in",
         type: "action",

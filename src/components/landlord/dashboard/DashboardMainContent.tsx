@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { UserPlus, QrCode, Wrench, Map, Printer, HelpCircle } from "lucide-react";
+import { UserPlus, QrCode, Wrench, Map, Printer, HelpCircle, Banknote } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface DashboardMainContentProps {
@@ -10,6 +10,7 @@ interface DashboardMainContentProps {
     subtitle: string;
     time: Date;
     onNewWalkIn?: () => void;
+    onCollectPayment?: () => void;
     onCreateInvite?: () => void;
     onOpenFlyer?: () => void;
 }
@@ -19,10 +20,12 @@ export function DashboardMainContent({
     subtitle,
     time,
     onNewWalkIn,
+    onCollectPayment,
     onCreateInvite,
     onOpenFlyer
 }: DashboardMainContentProps) {
-    const applicationsCtaClassName = "group relative flex items-center justify-center gap-3 overflow-hidden rounded-2xl neumorphic-primary landlord-applications-cta px-8 py-4 w-auto";
+    const applicationsCtaClassName = "group relative flex items-center justify-center gap-3 overflow-hidden rounded-2xl neumorphic-primary landlord-applications-cta px-6 sm:px-8 py-4 w-auto";
+    const collectPaymentCtaClassName = "group relative flex items-center justify-center gap-3 overflow-hidden rounded-2xl neumorphic-extruded border border-emerald-500/20 hover:border-emerald-500/50 bg-emerald-500/5 hover:bg-emerald-500/10 px-6 py-4 w-auto active:scale-95 transition-all text-foreground hover:text-emerald-400 shrink-0";
 
     return (
         <>
@@ -49,7 +52,7 @@ export function DashboardMainContent({
                 </p>
 
                 {/* Navigation Actions */}
-                <div className="flex sm:flex-row sm:items-center gap-4 mt-8 w-auto">
+                <div className="flex sm:flex-row sm:items-center gap-3 mt-8 w-auto flex-wrap">
                     {onNewWalkIn ? (
                         <button 
                             onClick={onNewWalkIn}
@@ -60,14 +63,30 @@ export function DashboardMainContent({
                             <span className="text-sm font-black uppercase tracking-tight relative z-10">New Application</span>
                         </button>
                     ) : (
-                        <Link href="/landlord/α4?action=tenant-application" className={applicationsCtaClassName}>
+                        <Link href="/landlord/applications?action=tenant-application" className={applicationsCtaClassName}>
                             <div className="absolute inset-0 bg-white/15 opacity-0 transition-opacity duration-300 group-hover:opacity-100 dark:bg-primary-foreground/10" />
                             <UserPlus className="size-4 font-black relative z-10" />
                             <span className="text-sm font-black uppercase tracking-tight relative z-10">New Application</span>
                         </Link>
                     )}
+
+                    {onCollectPayment ? (
+                        <button 
+                            onClick={onCollectPayment}
+                            className={collectPaymentCtaClassName}
+                            title="Record Cash or Offline Rent Collection"
+                        >
+                            <Banknote className="size-4 text-emerald-500 font-black relative z-10" />
+                            <span className="text-sm font-black uppercase tracking-tight relative z-10">Collect Payment</span>
+                        </button>
+                    ) : (
+                        <Link href="/landlord/invoices" className={collectPaymentCtaClassName}>
+                            <Banknote className="size-4 text-emerald-500 font-black relative z-10" />
+                            <span className="text-sm font-black uppercase tracking-tight relative z-10">Collect Payment</span>
+                        </Link>
+                    )}
                     
-                    <div className="flex items-center justify-center gap-3 w-auto">
+                    <div className="flex items-center justify-center gap-2.5 w-auto">
                         {onCreateInvite && (
                             <button
                                 onClick={onCreateInvite}
@@ -144,11 +163,11 @@ export function DashboardMainContent({
                 </div>
 
                 {/* Mobile Quick Action Bar (Unified Single Row) */}
-                <div className="flex flex-row items-center gap-2 mt-2 w-full">
+                <div className="flex flex-row items-center gap-2 mt-2 w-full flex-wrap">
                     {onNewWalkIn ? (
                         <button 
                             onClick={onNewWalkIn}
-                            className="group relative flex flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl neumorphic-primary py-2.5"
+                            className="group relative flex flex-1 items-center justify-center gap-1.5 overflow-hidden rounded-xl neumorphic-primary py-2.5 min-w-[100px]"
                         >
                             <UserPlus className="size-3.5 font-black" />
                             <span className="text-[10px] font-black uppercase tracking-wider">New App</span>
@@ -156,10 +175,28 @@ export function DashboardMainContent({
                     ) : (
                         <Link 
                             href="/landlord/applications?action=tenant-application"
-                            className="group relative flex flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl neumorphic-primary py-2.5"
+                            className="group relative flex flex-1 items-center justify-center gap-1.5 overflow-hidden rounded-xl neumorphic-primary py-2.5 min-w-[100px]"
                         >
                             <UserPlus className="size-3.5 font-black" />
                             <span className="text-[10px] font-black uppercase tracking-wider">New App</span>
+                        </Link>
+                    )}
+
+                    {onCollectPayment ? (
+                        <button 
+                            onClick={onCollectPayment}
+                            className="group relative flex flex-1 items-center justify-center gap-1.5 overflow-hidden rounded-xl neumorphic-extruded border border-emerald-500/20 bg-emerald-500/5 text-emerald-400 py-2.5 min-w-[100px]"
+                        >
+                            <Banknote className="size-3.5 font-black text-emerald-500" />
+                            <span className="text-[10px] font-black uppercase tracking-wider">Collect</span>
+                        </button>
+                    ) : (
+                        <Link 
+                            href="/landlord/invoices"
+                            className="group relative flex flex-1 items-center justify-center gap-1.5 overflow-hidden rounded-xl neumorphic-extruded border border-emerald-500/20 bg-emerald-500/5 text-emerald-400 py-2.5 min-w-[100px]"
+                        >
+                            <Banknote className="size-3.5 font-black text-emerald-500" />
+                            <span className="text-[10px] font-black uppercase tracking-wider">Collect</span>
                         </Link>
                     )}
 
