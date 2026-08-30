@@ -139,8 +139,8 @@ export default function InvoicesPage() {
 
   // Compute status summary counts for one-click pill filters
   const invoiceCounts = useMemo(() => {
-    const overdue = invoices.filter((i) => i.status === "overdue" || i.workflowStatus === "overdue").length;
-    const underReview = invoices.filter((i) => i.status === "under_review" || i.workflowStatus === "under_review" || i.proofStatus === "submitted").length;
+    const overdue = invoices.filter((i) => i.status === "overdue" || (i.workflowStatus as string) === "overdue").length;
+    const underReview = invoices.filter((i) => i.status === "under_review" || (i.workflowStatus as string) === "under_review" || i.proofStatus === "submitted").length;
     const pending = invoices.filter((i) => ["pending", "intent_submitted", "awaiting_in_person"].includes(i.status) || ["pending", "intent_submitted", "awaiting_in_person"].includes(i.workflowStatus || "")).length;
     const paid = invoices.filter((i) => ["paid", "receipted", "confirmed"].includes(i.status) || ["paid", "receipted", "confirmed"].includes(i.workflowStatus || "")).length;
     const total = invoices.length;
