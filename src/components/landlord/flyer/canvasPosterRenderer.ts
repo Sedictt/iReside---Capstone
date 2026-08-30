@@ -1,5 +1,3 @@
-"use client";
-
 export interface PosterRenderOptions {
   propertyName: string;
   address: string;
@@ -30,13 +28,13 @@ export interface PosterRenderOptions {
   cardColor: string;
   cardOpacity: number;
   bgPreset: string;
-  customBgImage: string | null;
+  fontFamily: string;
+  titleTransform: string;
+  letterSpacing: string;
+  customBgImage?: string | null;
   photoBrightness: number;
   photoSaturation: number;
   photoOpacity: number;
-  fontFamily: "modern_sans" | "luxury_serif" | "geometric_grotesk" | "tech_mono";
-  titleTransform: "uppercase" | "none";
-  letterSpacing: "tight" | "normal" | "wide";
   showBanner: boolean;
   showSteps: boolean;
   showWifi: boolean;
@@ -45,101 +43,23 @@ export interface PosterRenderOptions {
   portalQrUrl: string;
 }
 
-// Helper to load an HTML Image
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error(`Failed to load image: ${src}`));
+    img.onerror = (e) => reject(e);
     img.src = src;
   });
 }
 
-// Helper: Convert hex and opacity to rgba
-function hexToRgba(hex: string, opacityPercent: number): string {
-  try {
-    const cleanHex = hex.replace("#", "");
-    const r = parseInt(cleanHex.substring(0, 2), 16) || 0;
-    const g = parseInt(cleanHex.substring(2, 4), 16) || 0;
-    const b = parseInt(cleanHex.substring(4, 6), 16) || 0;
-    const a = Math.max(0.1, Math.min(1, opacityPercent / 100));
-    return `rgba(${r}, ${g}, ${b}, ${a})`;
-  } catch {
-    return hex;
-  }
-}
-
-// Helper: Contrast calculator
-function getContrastColor(hex: string): { text: string; muted: string; border: string; isLight: boolean } {
-  try {
-    const cleanHex = hex.replace("#", "");
-    const r = parseInt(cleanHex.substring(0, 2), 16) || 0;
-    const g = parseInt(cleanHex.substring(2, 4), 16) || 0;
-    const b = parseInt(cleanHex.substring(4, 6), 16) || 0;
-    const yiq = (r * 299 + g * 587 + b * 114) / 1000;
-    const isLight = yiq >= 135;
-    return {
-      isLight,
-      text: isLight ? "#09090b" : "#ffffff",
-      muted: isLight ? "#71717a" : "#a1a1aa",
-      border: isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.12)",
-    };
-  } catch {
-    return {
-      isLight: true,
-      text: "#09090b",
-      muted: "#71717a",
-      border: "rgba(0,0,0,0.08)",
-    };
-  }
-}
-
-// Draw crisp Vector iReside Hexagon Logo
-function drawBrandLogo(ctx: CanvasRenderingContext2D, x: number, y: number, isLight: boolean) {
-  ctx.save();
-  // Outer Hexagon
-  const size = 18;
-  ctx.beginPath();
-  for (let i = 0; i < 6; i++) {
-    const angle = (Math.PI / 3) * i - Math.PI / 6;
-    const px = x + size * Math.cos(angle);
-    const py = y + size * Math.sin(angle);
-    if (i === 0) ctx.moveTo(px, py);
-    else ctx.lineTo(px, py);
-  }
-  ctx.closePath();
-  ctx.fillStyle = "#10b981";
-  ctx.fill();
-
-  // Inner roof icon
-  ctx.strokeStyle = "#ffffff";
-  ctx.lineWidth = 2.5;
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-  ctx.beginPath();
-  ctx.moveTo(x - 7, y + 2);
-  ctx.lineTo(x, y - 6);
-  ctx.lineTo(x + 7, y + 2);
-  ctx.stroke();
-
-  // "iReside" Text
-  ctx.fillStyle = isLight ? "#09090b" : "#ffffff";
-  ctx.font = "900 24px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-  ctx.textAlign = "left";
-  ctx.textBaseline = "middle";
-  ctx.fillText("iReside", x + 24, y);
-  ctx.restore();
-}
-
 /**
- * High-Precision 1:1 Visual Canvas Poster Renderer
- * Generates an exact, perfectly proportioned A4 print-quality bitmap (1000 x 1414)
+ * High-Precision 1:1 Visual Canvas Poster Renderer (A4 Landscape 1414 x 1000)
  */
 export async function renderPosterToCanvas(options: PosterRenderOptions): Promise<HTMLCanvasElement> {
   const canvas = document.createElement("canvas");
-  const W = 1000;
-  const H = 1414; // Standard A4 Aspect Ratio (1 : 1.414)
+  const W = 1414;
+  const H = 1000;
   canvas.width = W;
   canvas.height = H;
 
@@ -149,429 +69,465 @@ export async function renderPosterToCanvas(options: PosterRenderOptions): Promis
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
 
-  // Resolve Font Family
-  let fontFam = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
-  if (options.fontFamily === "luxury_serif") {
-    fontFam = "Georgia, 'Times New Roman', Times, serif";
-  } else if (options.fontFamily === "geometric_grotesk") {
-    fontFam = "'Trebuchet MS', 'Lucida Sans Unicode', sans-serif";
-  } else if (options.fontFamily === "tech_mono") {
-    fontFam = "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace";
-  }
+  // Base font family
+  const fontFam = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
 
-  // 1. Background Fill
-  if (options.bgPreset === "solid_dark") {
-    ctx.fillStyle = "#111115";
-    ctx.fillRect(0, 0, W, H);
-  } else if (options.bgPreset === "warm_ivory") {
-    ctx.fillStyle = "#fafaf6";
-    ctx.fillRect(0, 0, W, H);
-  } else if (options.bgPreset === "dot_pattern") {
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, W, H);
-    ctx.fillStyle = "#9ca3af";
-    for (let x = 20; x < W; x += 32) {
-      for (let y = 20; y < H; y += 32) {
-        ctx.beginPath();
-        ctx.arc(x, y, 1.8, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-  } else if (options.bgPreset === "grid_blueprint") {
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, W, H);
-    ctx.strokeStyle = "#e5e7eb";
-    ctx.lineWidth = 1.2;
-    for (let x = 0; x < W; x += 40) {
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, H);
-      ctx.stroke();
-    }
-    for (let y = 0; y < H; y += 40) {
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(W, y);
-      ctx.stroke();
-    }
-  } else {
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, W, H);
-  }
+  // 1. Canvas Background Fill
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, W, H);
 
-  // Custom Photo Background
-  if (options.customBgImage) {
-    try {
-      const bgImg = await loadImage(options.customBgImage);
-      ctx.save();
-      ctx.globalAlpha = options.photoOpacity / 100;
-      ctx.filter = `brightness(${options.photoBrightness}%) saturate(${options.photoSaturation}%)`;
-      ctx.drawImage(bgImg, 0, 0, W, H);
-      ctx.restore();
-    } catch (err) {
-      console.warn("Could not render custom background photo:", err);
-    }
-  }
-
-  const cardBg = hexToRgba(options.cardColor, options.cardOpacity);
-  const cardContrast = getContrastColor(options.cardColor);
-
-  const PADDING_X = 50;
-  const CONTENT_W = W - PADDING_X * 2;
-  let currentY = 50;
-
-  // Helper: Neumorphic Rounded Card
-  const drawCard = (x: number, y: number, w: number, h: number, r = 20) => {
-    ctx.save();
-    // Soft subtle shadow
-    ctx.shadowColor = "rgba(0, 0, 0, 0.06)";
-    ctx.shadowBlur = 16;
-    ctx.shadowOffsetY = 4;
-
-    ctx.fillStyle = cardBg;
-    ctx.strokeStyle = cardContrast.border;
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.roundRect(x, y, w, h, r);
-    ctx.fill();
-    ctx.shadowColor = "transparent";
-    ctx.stroke();
-    ctx.restore();
-  };
-
-  // ----------------------------------------------------
-  // 1. Header Card
-  // ----------------------------------------------------
-  const headerH = 120;
-  drawCard(PADDING_X, currentY, CONTENT_W, headerH, 20);
-
-  // Property Monogram Icon Box
-  ctx.save();
-  ctx.fillStyle = options.brandColor;
-  ctx.beginPath();
-  ctx.roundRect(PADDING_X + 20, currentY + 20, 80, 80, 16);
-  ctx.fill();
-
-  // Building Icon
-  ctx.strokeStyle = "#ffffff";
-  ctx.lineWidth = 3.5;
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-  const bX = PADDING_X + 20 + 40;
-  const bY = currentY + 20 + 40;
-  ctx.strokeRect(bX - 16, bY - 20, 32, 40);
-  ctx.beginPath();
-  ctx.moveTo(bX - 8, bY - 10);
-  ctx.lineTo(bX - 8, bY - 6);
-  ctx.moveTo(bX + 8, bY - 10);
-  ctx.lineTo(bX + 8, bY - 6);
-  ctx.moveTo(bX - 8, bY + 2);
-  ctx.lineTo(bX - 8, bY + 6);
-  ctx.moveTo(bX + 8, bY + 2);
-  ctx.lineTo(bX + 8, bY + 6);
-  ctx.moveTo(bX - 6, bY + 20);
-  ctx.lineTo(bX - 6, bY + 12);
-  ctx.lineTo(bX + 6, bY + 12);
-  ctx.lineTo(bX + 6, bY + 20);
-  ctx.stroke();
-  ctx.restore();
-
-  // Property Title & Address
-  ctx.save();
-  ctx.fillStyle = cardContrast.text;
-  const propTitle = options.titleTransform === "uppercase" ? options.propertyName.toUpperCase() : options.propertyName;
-  ctx.font = `900 32px ${fontFam}`;
-  ctx.textAlign = "left";
-  ctx.textBaseline = "top";
-  ctx.fillText(propTitle, PADDING_X + 118, currentY + 28);
-
-  ctx.fillStyle = cardContrast.muted;
-  ctx.font = `500 20px ${fontFam}`;
-  ctx.fillText(options.address, PADDING_X + 118, currentY + 70);
-
-  // Logo + Resident Portal Subtitle on Right
-  drawBrandLogo(ctx, PADDING_X + CONTENT_W - 170, currentY + 45, cardContrast.isLight);
-  ctx.fillStyle = cardContrast.muted;
-  ctx.font = `800 16px ${fontFam}`;
-  ctx.textAlign = "right";
-  ctx.textBaseline = "top";
-  ctx.fillText(options.portalSubheading.toUpperCase(), PADDING_X + CONTENT_W - 20, currentY + 74);
-  ctx.restore();
-
-  currentY += headerH + 24;
-
-  // ----------------------------------------------------
-  // 2. Welcome Banner
-  // ----------------------------------------------------
-  if (options.showBanner) {
-    const bannerH = 100;
-    ctx.save();
-    ctx.fillStyle = options.brandColor;
-    ctx.beginPath();
-    ctx.roundRect(PADDING_X, currentY, CONTENT_W, bannerH, 18);
-    ctx.fill();
-
-    ctx.fillStyle = "#ffffff";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "top";
-    ctx.font = `900 18px ${fontFam}`;
-    ctx.fillText(`📢  ${options.bannerHeading.toUpperCase()}`, W / 2, currentY + 20);
-
-    ctx.font = `500 21px ${fontFam}`;
-    ctx.fillStyle = "rgba(255,255,255,0.95)";
-    ctx.fillText(options.tagline, W / 2, currentY + 54);
-    ctx.restore();
-
-    currentY += bannerH + 24;
-  }
-
-  // ----------------------------------------------------
-  // 3. Dual High-Resolution QR Cards
-  // ----------------------------------------------------
-  const qrCardW = (CONTENT_W - 24) / 2;
-  const qrCardH = 490;
-
+  // Pre-load QR images
   const [apkQrImg, portalQrImg] = await Promise.all([
     loadImage(options.apkQrUrl).catch(() => null),
     loadImage(options.portalQrUrl).catch(() => null),
   ]);
 
-  // --- Left: Android APK Card ---
-  const leftX = PADDING_X;
-  drawCard(leftX, currentY, qrCardW, qrCardH, 20);
+  const PADDING = 40;
+  const MAIN_W = W - PADDING * 2;
+  const MAIN_H = H - PADDING * 2;
+  const FOOTER_H = 110;
+  const UPPER_H = MAIN_H - FOOTER_H;
 
+  const mainX = PADDING;
+  const mainY = PADDING;
+
+  // Outer container border & clip
   ctx.save();
-  ctx.textAlign = "center";
-  ctx.textBaseline = "top";
-  ctx.fillStyle = cardContrast.text;
-  ctx.font = `900 22px ${fontFam}`;
-  ctx.fillText(`📱  ${options.apkCardTitle}`, leftX + qrCardW / 2, currentY + 24);
+  ctx.beginPath();
+  ctx.roundRect(mainX, mainY, MAIN_W, MAIN_H, 24);
+  ctx.clip();
 
-  // QR Frame Box
-  const qrBoxSize = 270;
-  const qrX = leftX + (qrCardW - qrBoxSize) / 2;
-  const qrY = currentY + 68;
+  // White base for upper area
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(mainX, mainY, MAIN_W, UPPER_H);
+
+  // ----------------------------------------------------
+  // COLUMN 1: Hero & Branding (Left 33%) with Custom Photo
+  // ----------------------------------------------------
+  const col1W = MAIN_W * 0.33;
+  
+  // Left base gradient background
+  const leftGrad = ctx.createLinearGradient(mainX, mainY, mainX, mainY + UPPER_H);
+  leftGrad.addColorStop(0, "#ffffff");
+  leftGrad.addColorStop(0.5, "#fafafa");
+  leftGrad.addColorStop(1, "#f5f3ff");
+  ctx.fillStyle = leftGrad;
+  ctx.fillRect(mainX, mainY, col1W, UPPER_H);
+
+  // Custom Photo on Hero panel if provided
+  if (options.customBgImage) {
+    try {
+      const bgImg = await loadImage(options.customBgImage);
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(mainX, mainY, col1W, UPPER_H);
+      ctx.clip();
+      ctx.globalAlpha = options.photoOpacity / 100;
+      ctx.filter = `brightness(${options.photoBrightness}%) saturate(${options.photoSaturation}%)`;
+      ctx.drawImage(bgImg, mainX, mainY, col1W, UPPER_H);
+      ctx.restore();
+
+      // Soft overlay gradient for text legibility
+      const heroOverlay = ctx.createLinearGradient(mainX, mainY, mainX, mainY + UPPER_H);
+      heroOverlay.addColorStop(0, "rgba(255,255,255,0.72)");
+      heroOverlay.addColorStop(0.5, "rgba(255,255,255,0.86)");
+      heroOverlay.addColorStop(1, "rgba(255,255,255,0.96)");
+      ctx.fillStyle = heroOverlay;
+      ctx.fillRect(mainX, mainY, col1W, UPPER_H);
+    } catch (err) {
+      console.warn("Could not render custom hero photo:", err);
+    }
+  }
+
+  // Divider line after Col 1
+  ctx.strokeStyle = "#e5e7eb";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(mainX + col1W, mainY);
+  ctx.lineTo(mainX + col1W, mainY + UPPER_H);
+  ctx.stroke();
+
+  // Brand Icon Box
+  ctx.fillStyle = options.brandColor;
+  ctx.beginPath();
+  ctx.roundRect(mainX + 35, mainY + 35, 60, 60, 16);
+  ctx.fill();
+
+  // Building Icon inside box
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = 3;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  const bX = mainX + 35 + 30;
+  const bY = mainY + 35 + 30;
+  ctx.strokeRect(bX - 12, bY - 16, 24, 32);
+  ctx.beginPath();
+  ctx.moveTo(bX - 6, bY - 8);
+  ctx.lineTo(bX - 6, bY - 4);
+  ctx.moveTo(bX + 6, bY - 8);
+  ctx.lineTo(bX + 6, bY - 4);
+  ctx.moveTo(bX - 6, bY + 2);
+  ctx.lineTo(bX - 6, bY + 6);
+  ctx.moveTo(bX + 6, bY + 2);
+  ctx.lineTo(bX + 6, bY + 6);
+  ctx.moveTo(bX - 4, bY + 16);
+  ctx.lineTo(bX - 4, bY + 10);
+  ctx.lineTo(bX + 4, bY + 10);
+  ctx.lineTo(bX + 4, bY + 16);
+  ctx.stroke();
+
+  // Property Title & Address
+  ctx.fillStyle = "#09090b";
+  ctx.font = `900 22px ${fontFam}`;
+  ctx.textAlign = "left";
+  ctx.textBaseline = "top";
+  const propName = options.titleTransform === "uppercase" ? options.propertyName.toUpperCase() : options.propertyName;
+  ctx.fillText(propName, mainX + 110, mainY + 40);
+
+  ctx.fillStyle = "#52525b";
+  ctx.font = `600 14px ${fontFam}`;
+  ctx.fillText(options.address, mainX + 110, mainY + 70);
+
+  // Hero Headline
+  ctx.fillStyle = "#09090b";
+  ctx.font = `900 48px ${fontFam}`;
+  ctx.fillText(options.bannerHeading.toUpperCase(), mainX + 35, mainY + 180);
+
+  // Tagline / Subtitle
+  ctx.fillStyle = "#3f3f46";
+  ctx.font = `600 22px ${fontFam}`;
+  const words = options.tagline.split(" ");
+  let line = "";
+  let tagY = mainY + 250;
+  for (let n = 0; n < words.length; n++) {
+    const testLine = line + words[n] + " ";
+    const metrics = ctx.measureText(testLine);
+    if (metrics.width > col1W - 70 && n > 0) {
+      ctx.fillText(line, mainX + 35, tagY);
+      line = words[n] + " ";
+      tagY += 32;
+    } else {
+      line = testLine;
+    }
+  }
+  ctx.fillText(line, mainX + 35, tagY);
+
+  // ----------------------------------------------------
+  // COLUMN 2: Dual QR Cards + Floating "OR" Badge (Center 42%)
+  // ----------------------------------------------------
+  const col2X = mainX + col1W;
+  const col2W = MAIN_W * 0.42;
+
+  ctx.fillStyle = "#fafafa";
+  ctx.fillRect(col2X, mainY, col2W, UPPER_H);
+
+  // Divider line after Col 2
+  ctx.strokeStyle = "#e5e7eb";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(col2X + col2W, mainY);
+  ctx.lineTo(col2X + col2W, mainY + UPPER_H);
+  ctx.stroke();
+
+  const qrInnerMargin = 20;
+  const qrCardW = (col2W - qrInnerMargin * 3) / 2;
+  const qrCardH = UPPER_H - qrInnerMargin * 2;
+  const qrCardY = mainY + qrInnerMargin;
+
+  // --- Left: Mobile App Card (Purple Theme) ---
+  const card1X = col2X + qrInnerMargin;
+  ctx.fillStyle = "#f5f3ff";
+  ctx.strokeStyle = "#ddd6fe";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.roundRect(card1X, qrCardY, qrCardW, qrCardH, 20);
+  ctx.fill();
+  ctx.stroke();
+
+  // Top Pill Tag
+  ctx.fillStyle = options.brandColor;
+  ctx.beginPath();
+  ctx.roundRect(card1X + (qrCardW - 180) / 2, qrCardY + 20, 180, 32, 16);
+  ctx.fill();
+  ctx.fillStyle = "#ffffff";
+  ctx.font = `900 13px ${fontFam}`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(options.apkCardBadge.toUpperCase(), card1X + qrCardW / 2, qrCardY + 36);
+
+  // Card Title
+  ctx.fillStyle = options.brandColor;
+  ctx.font = `900 21px ${fontFam}`;
+  ctx.fillText(options.apkCardTitle.toUpperCase(), card1X + qrCardW / 2, qrCardY + 80);
+
+  // Icon & Subtitle
+  ctx.fillStyle = "#52525b";
+  ctx.font = `600 14px ${fontFam}`;
+  ctx.fillText(`📱  ${options.apkCardSubtitle}`, card1X + qrCardW / 2, qrCardY + 115);
+
+  // QR Code Frame (Large 260px)
+  const qrBoxSize = 260;
+  const qrBoxX = card1X + (qrCardW - qrBoxSize) / 2;
+  const qrBoxY = qrCardY + 140;
   ctx.fillStyle = "#ffffff";
   ctx.strokeStyle = "#e4e4e7";
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.roundRect(qrX, qrY, qrBoxSize, qrBoxSize, 16);
+  ctx.roundRect(qrBoxX, qrBoxY, qrBoxSize, qrBoxSize, 18);
   ctx.fill();
   ctx.stroke();
 
   if (apkQrImg) {
-    ctx.drawImage(apkQrImg, qrX + 12, qrY + 12, qrBoxSize - 24, qrBoxSize - 24);
+    ctx.drawImage(apkQrImg, qrBoxX + 14, qrBoxY + 14, qrBoxSize - 28, qrBoxSize - 28);
   }
 
-  // Button Badge
+  // Bottom Banner Button
   ctx.fillStyle = options.brandColor;
   ctx.beginPath();
-  ctx.roundRect(leftX + (qrCardW - 200) / 2, currentY + 365, 200, 44, 22);
+  ctx.roundRect(card1X + 16, qrCardY + qrCardH - 85, qrCardW - 32, 65, 16);
   ctx.fill();
 
   ctx.fillStyle = "#ffffff";
-  ctx.font = `900 18px ${fontFam}`;
-  ctx.textBaseline = "middle";
-  ctx.fillText(options.apkCardBadge.toUpperCase(), leftX + qrCardW / 2, currentY + 387);
+  ctx.font = `900 17px ${fontFam}`;
+  ctx.fillText("⬇️  SCAN TO DOWNLOAD", card1X + qrCardW / 2, qrCardY + qrCardH - 58);
+  ctx.font = `800 13px ${fontFam}`;
+  ctx.fillStyle = "rgba(255,255,255,0.9)";
+  ctx.fillText("ANDROID (APK)", card1X + qrCardW / 2, qrCardY + qrCardH - 36);
 
-  // Subtitle
-  ctx.fillStyle = cardContrast.muted;
-  ctx.font = `500 18px ${fontFam}`;
-  ctx.textBaseline = "top";
-  ctx.fillText(options.apkCardSubtitle, leftX + qrCardW / 2, currentY + 426);
-  ctx.restore();
+  // --- Right: Web Portal Card (Emerald Theme) ---
+  const card2X = col2X + qrInnerMargin * 2 + qrCardW;
+  ctx.fillStyle = "#ecfdf5";
+  ctx.strokeStyle = "#a7f3d0";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.roundRect(card2X, qrCardY, qrCardW, qrCardH, 20);
+  ctx.fill();
+  ctx.stroke();
 
-  // --- Right: Instant Web Portal Card ---
-  const rightX = PADDING_X + qrCardW + 24;
-  drawCard(rightX, currentY, qrCardW, qrCardH, 20);
-
-  ctx.save();
+  // Top Pill Tag
+  ctx.fillStyle = "#059669";
+  ctx.beginPath();
+  ctx.roundRect(card2X + (qrCardW - 180) / 2, qrCardY + 20, 180, 32, 16);
+  ctx.fill();
+  ctx.fillStyle = "#ffffff";
+  ctx.font = `900 13px ${fontFam}`;
   ctx.textAlign = "center";
-  ctx.textBaseline = "top";
-  ctx.fillStyle = cardContrast.text;
-  ctx.font = `900 22px ${fontFam}`;
-  ctx.fillText(`🌐  ${options.webCardTitle}`, rightX + qrCardW / 2, currentY + 24);
+  ctx.textBaseline = "middle";
+  ctx.fillText(options.webCardBadge.toUpperCase(), card2X + qrCardW / 2, qrCardY + 36);
 
-  // QR Frame Box
-  const rightQrX = rightX + (qrCardW - qrBoxSize) / 2;
+  // Card Title
+  ctx.fillStyle = "#065f46";
+  ctx.font = `900 21px ${fontFam}`;
+  ctx.fillText(options.webCardTitle.toUpperCase(), card2X + qrCardW / 2, qrCardY + 80);
+
+  // Icon & Subtitle
+  ctx.fillStyle = "#52525b";
+  ctx.font = `600 14px ${fontFam}`;
+  ctx.fillText(`🌐  ${options.webCardSubtitle}`, card2X + qrCardW / 2, qrCardY + 115);
+
+  // QR Code Frame (Large 260px)
+  const qrBox2X = card2X + (qrCardW - qrBoxSize) / 2;
   ctx.fillStyle = "#ffffff";
   ctx.strokeStyle = "#e4e4e7";
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.roundRect(rightQrX, qrY, qrBoxSize, qrBoxSize, 16);
+  ctx.roundRect(qrBox2X, qrBoxY, qrBoxSize, qrBoxSize, 18);
   ctx.fill();
   ctx.stroke();
 
   if (portalQrImg) {
-    ctx.drawImage(portalQrImg, rightQrX + 12, qrY + 12, qrBoxSize - 24, qrBoxSize - 24);
+    ctx.drawImage(portalQrImg, qrBox2X + 14, qrBoxY + 14, qrBoxSize - 28, qrBoxSize - 28);
   }
 
-  // Button Badge
-  ctx.fillStyle = cardContrast.isLight ? "#09090b" : "#ffffff";
+  // Bottom Banner Button
+  ctx.fillStyle = "#047857";
   ctx.beginPath();
-  ctx.roundRect(rightX + (qrCardW - 210) / 2, currentY + 365, 210, 44, 22);
+  ctx.roundRect(card2X + 16, qrCardY + qrCardH - 85, qrCardW - 32, 65, 16);
   ctx.fill();
 
-  ctx.fillStyle = cardContrast.isLight ? "#ffffff" : "#09090b";
+  ctx.fillStyle = "#ffffff";
+  ctx.font = `900 17px ${fontFam}`;
+  ctx.fillText("🌐  SCAN TO REGISTER", card2X + qrCardW / 2, qrCardY + qrCardH - 58);
+  ctx.font = `800 13px ${fontFam}`;
+  ctx.fillStyle = "rgba(255,255,255,0.9)";
+  ctx.fillText("INSTANT WEB ACCESS", card2X + qrCardW / 2, qrCardY + qrCardH - 36);
+
+  // --- Center Floating "OR" Badge ---
+  const orCenterX = col2X + col2W / 2;
+  const orCenterY = mainY + UPPER_H / 2;
+  ctx.fillStyle = "#ffffff";
+  ctx.strokeStyle = "#d1d5db";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(orCenterX, orCenterY, 26, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = "#374151";
+  ctx.font = `900 16px ${fontFam}`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("OR", orCenterX, orCenterY);
+
+  // ----------------------------------------------------
+  // COLUMN 3: Dark Utility Sidebar (Right 25%)
+  // ----------------------------------------------------
+  const col3X = col2X + col2W;
+  const col3W = MAIN_W - col1W - col2W;
+
+  ctx.fillStyle = "#161d2b";
+  ctx.fillRect(col3X, mainY, col3W, UPPER_H);
+
+  // 1. Wi-Fi Section
+  const wifiY = mainY + 70;
+  ctx.strokeStyle = "#475569";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(col3X + col3W / 2, wifiY, 28, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.font = `bold 24px ${fontFam}`;
+  ctx.fillText("📶", col3X + col3W / 2, wifiY);
+
+  ctx.fillStyle = "#94a3b8";
+  ctx.font = `900 16px ${fontFam}`;
+  ctx.fillText(options.wifiHeader.toUpperCase(), col3X + col3W / 2, wifiY + 48);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = `800 20px ${fontFam}`;
+  ctx.fillText(options.wifiSsid, col3X + col3W / 2, wifiY + 76);
+
+  ctx.fillStyle = "#94a3b8";
+  ctx.font = `600 17px ${fontFam}`;
+  ctx.fillText(options.wifiPassword, col3X + col3W / 2, wifiY + 104);
+
+  // Divider 1
+  ctx.strokeStyle = "#334155";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(col3X + 30, wifiY + 140);
+  ctx.lineTo(col3X + col3W - 30, wifiY + 140);
+  ctx.stroke();
+
+  // 2. Office Section
+  const officeY = wifiY + 210;
+  ctx.strokeStyle = "#475569";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(col3X + col3W / 2, officeY, 28, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.font = `bold 24px ${fontFam}`;
+  ctx.fillText("📞", col3X + col3W / 2, officeY);
+
+  ctx.fillStyle = "#94a3b8";
+  ctx.font = `900 16px ${fontFam}`;
+  ctx.fillText(options.officeHeader.toUpperCase(), col3X + col3W / 2, officeY + 48);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = `800 20px ${fontFam}`;
+  ctx.fillText(options.contactPhone, col3X + col3W / 2, officeY + 76);
+
+  ctx.fillStyle = "#94a3b8";
+  ctx.font = `600 16px ${fontFam}`;
+  ctx.fillText(options.officeHours, col3X + col3W / 2, officeY + 104);
+
+  // Divider 2
+  ctx.strokeStyle = "#334155";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(col3X + 30, officeY + 140);
+  ctx.lineTo(col3X + col3W - 30, officeY + 140);
+  ctx.stroke();
+
+  // 3. Verification Notice
+  const stampY = officeY + 200;
+  ctx.font = `bold 28px ${fontFam}`;
+  ctx.fillText("🛡️", col3X + col3W / 2, stampY);
+  ctx.fillStyle = "#cbd5e1";
+  ctx.font = `800 16px ${fontFam}`;
+  ctx.fillText(options.footerBadge.toUpperCase(), col3X + col3W / 2, stampY + 36);
+
+  // ----------------------------------------------------
+  // FOOTER: 3-Step Horizontal Ribbon (Bottom)
+  // ----------------------------------------------------
+  const footerY = mainY + UPPER_H;
+  ctx.fillStyle = "#0c111a";
+  ctx.fillRect(mainX, footerY, MAIN_W, FOOTER_H);
+
+  // Divider line above footer
+  ctx.strokeStyle = "#1e293b";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(mainX, footerY);
+  ctx.lineTo(mainX + MAIN_W, footerY);
+  ctx.stroke();
+
+  const stepW = MAIN_W / 3;
+
+  // Step 1
+  ctx.fillStyle = "#ffffff";
+  ctx.beginPath();
+  ctx.arc(mainX + 60, footerY + FOOTER_H / 2, 18, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#09090b";
   ctx.font = `900 18px ${fontFam}`;
+  ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(options.webCardBadge.toUpperCase(), rightX + qrCardW / 2, currentY + 387);
+  ctx.fillText("1", mainX + 60, footerY + FOOTER_H / 2);
 
-  // Subtitle
-  ctx.fillStyle = cardContrast.muted;
-  ctx.font = `500 18px ${fontFam}`;
-  ctx.textBaseline = "top";
-  ctx.fillText(options.webCardSubtitle, rightX + qrCardW / 2, currentY + 426);
-  ctx.restore();
-
-  currentY += qrCardH + 24;
-
-  // ----------------------------------------------------
-  // 4. 3-Step Guided Instructions
-  // ----------------------------------------------------
-  if (options.showSteps) {
-    const stepsH = 175;
-    drawCard(PADDING_X, currentY, CONTENT_W, stepsH, 20);
-
-    ctx.save();
-    ctx.textAlign = "center";
-    ctx.textBaseline = "top";
-    ctx.fillStyle = cardContrast.muted;
-    ctx.font = `900 16px ${fontFam}`;
-    ctx.fillText(options.stepsHeading.toUpperCase(), W / 2, currentY + 18);
-
-    const stepW = CONTENT_W / 3;
-
-    // Step 1
-    ctx.fillStyle = options.brandColor;
-    ctx.beginPath();
-    ctx.arc(PADDING_X + stepW * 0.5, currentY + 68, 19, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#ffffff";
-    ctx.font = `bold 20px ${fontFam}`;
-    ctx.textBaseline = "middle";
-    ctx.fillText("1", PADDING_X + stepW * 0.5, currentY + 68);
-    ctx.fillStyle = cardContrast.text;
-    ctx.font = `bold 20px ${fontFam}`;
-    ctx.fillText(options.step1Title, PADDING_X + stepW * 0.5, currentY + 106);
-    ctx.fillStyle = cardContrast.muted;
-    ctx.font = `500 17px ${fontFam}`;
-    ctx.fillText(options.step1Desc, PADDING_X + stepW * 0.5, currentY + 132);
-
-    // Step 2
-    ctx.fillStyle = options.brandColor;
-    ctx.beginPath();
-    ctx.arc(PADDING_X + stepW * 1.5, currentY + 68, 19, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#ffffff";
-    ctx.font = `bold 20px ${fontFam}`;
-    ctx.textBaseline = "middle";
-    ctx.fillText("2", PADDING_X + stepW * 1.5, currentY + 68);
-    ctx.fillStyle = cardContrast.text;
-    ctx.font = `bold 20px ${fontFam}`;
-    ctx.fillText(options.step2Title, PADDING_X + stepW * 1.5, currentY + 106);
-    ctx.fillStyle = cardContrast.muted;
-    ctx.font = `500 17px ${fontFam}`;
-    ctx.fillText(options.step2Desc, PADDING_X + stepW * 1.5, currentY + 132);
-
-    // Step 3
-    ctx.fillStyle = options.brandColor;
-    ctx.beginPath();
-    ctx.arc(PADDING_X + stepW * 2.5, currentY + 68, 19, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#ffffff";
-    ctx.font = `bold 20px ${fontFam}`;
-    ctx.textBaseline = "middle";
-    ctx.fillText("3", PADDING_X + stepW * 2.5, currentY + 68);
-    ctx.fillStyle = cardContrast.text;
-    ctx.font = `bold 20px ${fontFam}`;
-    ctx.fillText(options.step3Title, PADDING_X + stepW * 2.5, currentY + 106);
-    ctx.fillStyle = cardContrast.muted;
-    ctx.font = `500 17px ${fontFam}`;
-    ctx.fillText(options.step3Desc, PADDING_X + stepW * 2.5, currentY + 132);
-
-    ctx.restore();
-    currentY += stepsH + 24;
-  }
-
-  // ----------------------------------------------------
-  // 5. Wi-Fi & Office Info
-  // ----------------------------------------------------
-  if (options.showWifi || options.showOffice) {
-    const bottomCardW = options.showWifi && options.showOffice ? (CONTENT_W - 20) / 2 : CONTENT_W;
-    const bottomH = 130;
-
-    if (options.showWifi) {
-      drawCard(PADDING_X, currentY, bottomCardW, bottomH, 18);
-      ctx.save();
-      ctx.textAlign = "left";
-      ctx.textBaseline = "top";
-
-      // Wifi Icon
-      ctx.fillStyle = "#10b981";
-      ctx.font = `bold 32px ${fontFam}`;
-      ctx.fillText("📶", PADDING_X + 22, currentY + 38);
-
-      ctx.fillStyle = cardContrast.muted;
-      ctx.font = `900 16px ${fontFam}`;
-      ctx.fillText(options.wifiHeader.toUpperCase(), PADDING_X + 75, currentY + 22);
-
-      ctx.fillStyle = cardContrast.text;
-      ctx.font = `bold 22px ${fontFam}`;
-      ctx.fillText(options.wifiSsid, PADDING_X + 75, currentY + 48);
-
-      ctx.fillStyle = cardContrast.muted;
-      ctx.font = `500 18px ${fontFam}`;
-      ctx.fillText(`Pass: `, PADDING_X + 75, currentY + 80);
-      ctx.fillStyle = cardContrast.text;
-      ctx.font = `bold 18px ${fontFam}`;
-      ctx.fillText(options.wifiPassword, PADDING_X + 125, currentY + 80);
-      ctx.restore();
-    }
-
-    if (options.showOffice) {
-      const officeX = options.showWifi ? PADDING_X + bottomCardW + 20 : PADDING_X;
-      drawCard(officeX, currentY, bottomCardW, bottomH, 18);
-      ctx.save();
-      ctx.textAlign = "left";
-      ctx.textBaseline = "top";
-
-      // Phone Icon
-      ctx.fillStyle = "#6366f1";
-      ctx.font = `bold 32px ${fontFam}`;
-      ctx.fillText("📞", officeX + 22, currentY + 38);
-
-      ctx.fillStyle = cardContrast.muted;
-      ctx.font = `900 16px ${fontFam}`;
-      ctx.fillText(options.officeHeader.toUpperCase(), officeX + 75, currentY + 22);
-
-      ctx.fillStyle = cardContrast.text;
-      ctx.font = `bold 22px ${fontFam}`;
-      ctx.fillText(options.contactPhone, officeX + 75, currentY + 48);
-
-      ctx.fillStyle = cardContrast.muted;
-      ctx.font = `500 18px ${fontFam}`;
-      ctx.fillText(options.officeHours, officeX + 75, currentY + 80);
-      ctx.restore();
-    }
-
-    currentY += bottomH + 24;
-  }
-
-  // ----------------------------------------------------
-  // 6. Footer Stamp
-  // ----------------------------------------------------
-  ctx.save();
   ctx.textAlign = "left";
-  ctx.textBaseline = "middle";
-  ctx.fillStyle = cardContrast.muted;
-  ctx.font = `500 18px ${fontFam}`;
-  ctx.fillText(`© ${new Date().getFullYear()} ${options.propertyName} · Resident Portal`, PADDING_X, H - 45);
+  ctx.fillStyle = "#ffffff";
+  ctx.font = `900 20px ${fontFam}`;
+  ctx.fillText(options.step1Title, mainX + 95, footerY + FOOTER_H / 2 - 12);
+  ctx.fillStyle = "#94a3b8";
+  ctx.font = `500 15px ${fontFam}`;
+  ctx.fillText(options.step1Desc, mainX + 95, footerY + FOOTER_H / 2 + 14);
 
-  ctx.textAlign = "right";
-  ctx.fillStyle = "#10b981";
-  ctx.font = `bold 18px ${fontFam}`;
-  ctx.fillText(`🛡️ ${options.footerBadge}`, W - PADDING_X, H - 45);
+  // Chevron 1
+  ctx.fillStyle = "#475569";
+  ctx.font = `bold 22px ${fontFam}`;
+  ctx.textAlign = "center";
+  ctx.fillText(">", mainX + stepW, footerY + FOOTER_H / 2);
+
+  // Step 2
+  ctx.fillStyle = "#ffffff";
+  ctx.beginPath();
+  ctx.arc(mainX + stepW + 60, footerY + FOOTER_H / 2, 18, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#09090b";
+  ctx.font = `900 18px ${fontFam}`;
+  ctx.fillText("2", mainX + stepW + 60, footerY + FOOTER_H / 2);
+
+  ctx.textAlign = "left";
+  ctx.fillStyle = "#ffffff";
+  ctx.font = `900 20px ${fontFam}`;
+  ctx.fillText(options.step2Title, mainX + stepW + 95, footerY + FOOTER_H / 2 - 12);
+  ctx.fillStyle = "#94a3b8";
+  ctx.font = `500 15px ${fontFam}`;
+  ctx.fillText(options.step2Desc, mainX + stepW + 95, footerY + FOOTER_H / 2 + 14);
+
+  // Chevron 2
+  ctx.fillStyle = "#475569";
+  ctx.font = `bold 22px ${fontFam}`;
+  ctx.textAlign = "center";
+  ctx.fillText(">", mainX + stepW * 2, footerY + FOOTER_H / 2);
+
+  // Step 3
+  ctx.fillStyle = "#ffffff";
+  ctx.beginPath();
+  ctx.arc(mainX + stepW * 2 + 60, footerY + FOOTER_H / 2, 18, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#09090b";
+  ctx.font = `900 18px ${fontFam}`;
+  ctx.fillText("3", mainX + stepW * 2 + 60, footerY + FOOTER_H / 2);
+
+  ctx.textAlign = "left";
+  ctx.fillStyle = "#ffffff";
+  ctx.font = `900 20px ${fontFam}`;
+  ctx.fillText(options.step3Title, mainX + stepW * 2 + 95, footerY + FOOTER_H / 2 - 12);
+  ctx.fillStyle = "#94a3b8";
+  ctx.font = `500 15px ${fontFam}`;
+  ctx.fillText(options.step3Desc, mainX + stepW * 2 + 95, footerY + FOOTER_H / 2 + 14);
+
   ctx.restore();
 
   return canvas;

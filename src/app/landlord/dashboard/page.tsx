@@ -22,10 +22,12 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { PaymentModal } from "@/components/landlord/dashboard/PaymentModal";
+import { CollectPaymentModal } from "@/components/landlord/dashboard/CollectPaymentModal";
 import { ActionRequired } from "@/components/landlord/dashboard/ActionRequired";
 import { WalkInApplicationModal } from "@/components/landlord/applications/WalkInApplicationModal";
 import { TenantInviteManager } from "@/components/landlord/applications/TenantInviteManager";
 import { CommandCenter } from "@/components/landlord/dashboard/CommandCenter";
+import { VacantUnitsModal } from "@/components/landlord/dashboard/VacantUnitsModal";
 import { LandlordWelcomeLightbox } from "@/components/landlord/dashboard/LandlordWelcomeLightbox";
 import { MobileMessagesSheet } from "@/components/landlord/dashboard/MobileMessagesSheet";
 import { LobbyFlyerModal } from "@/components/landlord/flyer/LobbyFlyerModal";
@@ -116,18 +118,23 @@ export default function LandlordDashboard() {
     });
 
     const [isWalkInModalOpen, setIsWalkInModalOpen] = useState(false);
+    const [isVacantUnitsModalOpen, setIsVacantUnitsModalOpen] = useState(false);
+    const [selectedWalkInUnitId, setSelectedWalkInUnitId] = useState<string | undefined>(undefined);
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
     const [isFlyerModalOpen, setIsFlyerModalOpen] = useState(false);
+    const [isCollectPaymentModalOpen, setIsCollectPaymentModalOpen] = useState(false);
     const [loadingUnits, setLoadingUnits] = useState(true);
     const [loadingInvites, setLoadingInvites] = useState(true);
-    const [availableUnits, setAvailableUnits] = useState<{
+    const [availableUnits, setAvailableUnits] = useState<Array<{
         id: string;
         name: string;
         rent_amount: number;
         property_id: string;
         property_name: string;
+        property_address?: string;
+        property_image?: string | null;
         status?: string;
-    }[]>([]);
+    }>>([]);
     const [tenantInvites, setTenantInvites] = useState<Array<{
         id: string;
         mode: "property" | "unit";
@@ -152,6 +159,14 @@ export default function LandlordDashboard() {
         return availableUnits.filter(u => u.property_id === selectedPropertyId);
     }, [availableUnits, selectedPropertyId]);
 
+    const vacantUnitsList = useMemo(() => {
+        return filteredUnits.filter((unit) => {
+            const normalizedStatus = (unit.status ?? "").toLowerCase();
+            if (!normalizedStatus) return true;
+            return OPEN_UNIT_STATUSES.some((status) => normalizedStatus.includes(status));
+        });
+    }, [filteredUnits]);
+
     const filteredInvites = useMemo(() => {
         if (selectedPropertyId === "all") return tenantInvites;
         return tenantInvites.filter(i => i.propertyId === selectedPropertyId);
@@ -159,11 +174,7 @@ export default function LandlordDashboard() {
 
     const overdueCount = paymentsState.paymentsByCategory.Overdue.length;
     const nearDueCount = paymentsState.paymentsByCategory["Near Due"].length;
-    const openUnitsCount = filteredUnits.filter((unit) => {
-        const normalizedStatus = (unit.status ?? "").toLowerCase();
-        if (!normalizedStatus) return true;
-        return OPEN_UNIT_STATUSES.some((status) => normalizedStatus.includes(status));
-    }).length;
+    const openUnitsCount = vacantUnitsList.length;
     const activeInviteCount = filteredInvites.filter((invite) => {
         const normalizedStatus = invite.status.toLowerCase();
         return !INACTIVE_INVITE_STATUSES.includes(normalizedStatus);
@@ -171,6 +182,13 @@ export default function LandlordDashboard() {
 
     useEffect(() => {
         setMounted(true);
+
+        if (typeof window !== "undefined") {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get("action") === "collect-payment") {
+                setIsCollectPaymentModalOpen(true);
+            }
+        }
     }, []);
 
     // Operational Power Tool Keyboard Accelerators
@@ -181,8 +199,10 @@ export default function LandlordDashboard() {
                 setIsConfirmingAction(false);
                 setOpenPaymentModal(null);
                 setIsWalkInModalOpen(false);
+                setIsVacantUnitsModalOpen(false);
                 setIsInviteModalOpen(false);
                 setIsFlyerModalOpen(false);
+                setIsCollectPaymentModalOpen(false);
             }
             // Ctrl+K/Cmd+K triggers Walk-in Application modal instantly
             if ((e.ctrlKey || e.metaKey) && e.key === "k") {
@@ -193,6 +213,11 @@ export default function LandlordDashboard() {
             if ((e.ctrlKey || e.metaKey) && e.key === "i") {
                 e.preventDefault();
                 setIsInviteModalOpen(prev => !prev);
+            }
+            // Ctrl+P/Cmd+P triggers Collect Payment modal instantly
+            if ((e.ctrlKey || e.metaKey) && e.key === "p") {
+                e.preventDefault();
+                setIsCollectPaymentModalOpen(prev => !prev);
             }
         };
         window.addEventListener("keydown", handleKeyDown);
@@ -226,6 +251,8 @@ export default function LandlordDashboard() {
                         properties?: Array<{
                             id: string;
                             name: string;
+                            address?: string;
+                            image?: string | null;
                             units?: Array<{
                                 id: string;
                                 name: string;
@@ -273,6 +300,8 @@ export default function LandlordDashboard() {
                         rent_amount: Number(unit.rentAmount ?? 0),
                         property_id: property.id,
                         property_name: property.name,
+                        property_address: property.address,
+                        property_image: property.image ?? null,
                         status: unit.status,
                     }));
                 });
@@ -327,6 +356,7 @@ export default function LandlordDashboard() {
                 {/* Hero Section */}
                 <DashboardBanner
                     onNewWalkIn={() => setIsWalkInModalOpen(true)}
+                    onCollectPayment={() => setIsCollectPaymentModalOpen(true)}
                     onCreateInvite={() => setIsInviteModalOpen(true)}
                     onOpenFlyer={() => setIsFlyerModalOpen(true)}
                 />
@@ -344,6 +374,7 @@ export default function LandlordDashboard() {
                         loadingPayments={paymentsState.loading}
                         loadingUnits={loadingUnits}
                         loadingInvites={loadingInvites}
+                        onOpenVacantUnits={() => setIsVacantUnitsModalOpen(true)}
                     />
                 </div>
 
@@ -473,9 +504,25 @@ export default function LandlordDashboard() {
 
             <WalkInApplicationModal 
                 isOpen={isWalkInModalOpen}
-                onClose={() => setIsWalkInModalOpen(false)}
+                onClose={() => {
+                    setIsWalkInModalOpen(false);
+                    setSelectedWalkInUnitId(undefined);
+                }}
                 units={filteredUnits}
-                onSuccess={() => {}}
+                selectedUnitId={selectedWalkInUnitId}
+                onSuccess={() => {
+                    setSelectedWalkInUnitId(undefined);
+                }}
+            />
+
+            <VacantUnitsModal
+                isOpen={isVacantUnitsModalOpen}
+                onClose={() => setIsVacantUnitsModalOpen(false)}
+                units={vacantUnitsList}
+                onStartWalkIn={(unitId) => {
+                    setSelectedWalkInUnitId(unitId);
+                    setIsWalkInModalOpen(true);
+                }}
             />
 
             {isInviteModalOpen && (
@@ -528,6 +575,30 @@ export default function LandlordDashboard() {
             <LobbyFlyerModal
                 isOpen={isFlyerModalOpen}
                 onClose={() => setIsFlyerModalOpen(false)}
+            />
+
+            {/* Collect / Record Payment Modal */}
+            <CollectPaymentModal
+                isOpen={isCollectPaymentModalOpen}
+                onClose={() => setIsCollectPaymentModalOpen(false)}
+                onPaymentRecorded={() => {
+                    // Refetch payments overview to update stats and recent rent carousel
+                    fetch(`/api/landlord/payments/overview?propertyId=${selectedPropertyId}`)
+                        .then((res) => (res.ok ? res.json() : null))
+                        .then((data) => {
+                            if (data?.payments) {
+                                dispatchPayments({
+                                    type: "LOAD_SUCCESS",
+                                    payload: {
+                                        Overdue: data.payments.Overdue ?? [],
+                                        "Near Due": data.payments["Near Due"] ?? [],
+                                        Paid: data.payments.Paid ?? [],
+                                    },
+                                });
+                            }
+                        })
+                        .catch(() => {});
+                }}
             />
 
             <AnimatePresence>

@@ -48,22 +48,23 @@ const PropertyContext = createContext<PropertyContextValue | undefined>(undefine
 
 export function PropertyProvider({ children }: { children: ReactNode }) {
     const { user, profile, loading: authLoading } = useAuth()
-    const [properties, setProperties] = useState<Property[]>(() => {
-        if (typeof window !== 'undefined') {
-            try {
-                const cached = localStorage.getItem('iReside_cached_properties')
-                if (cached) return JSON.parse(cached)
-            } catch {}
-        }
-        return []
-    })
-    const [selectedPropertyId, setSelectedPropertyIdState] = useState<string | 'all'>(() => {
-        if (typeof window !== 'undefined') {
-            return localStorage.getItem('iReside_selected_property') || 'all'
-        }
-        return 'all'
-    })
+    const [properties, setProperties] = useState<Property[]>([])
+    const [selectedPropertyId, setSelectedPropertyIdState] = useState<string | 'all'>('all')
     const [loading, setLoading] = useState(true)
+
+    // Hydrate cached preferences from localStorage after client mount to prevent SSR hydration mismatch
+    useEffect(() => {
+        try {
+            const cached = localStorage.getItem('iReside_cached_properties')
+            if (cached) {
+                setProperties(JSON.parse(cached))
+            }
+            const savedProp = localStorage.getItem('iReside_selected_property')
+            if (savedProp) {
+                setSelectedPropertyIdState(savedProp)
+            }
+        } catch {}
+    }, [])
 
     const setSelectedPropertyId = useCallback((id: string | 'all') => {
         setSelectedPropertyIdState(id)

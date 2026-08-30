@@ -2,11 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
-import { CalendarDays, FileText, Plus, Search, Filter, Download } from "lucide-react";
+import { CalendarDays, FileText, Plus, Search, Filter, Download, AlertCircle, CheckCircle2, Clock } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 import { InvoiceModal } from "@/components/landlord/invoices/InvoiceModal";
 import { RecordExpenseModal } from "@/components/landlord/invoices/RecordExpenseModal";
+import { Tooltip } from "@/components/ui/tooltip";
 import type { InvoiceListItem } from "@/lib/billing/server";
 import { formatPhpCurrency } from "@/lib/billing/utils";
 import { cn } from "@/lib/utils";
@@ -112,12 +113,39 @@ export default function InvoicesPage() {
   }, [loadData]);
 
   useEffect(() => {
-    const invoiceId = searchParams?.get("id");
+    const tabParam = searchParams?.get("tab");
+    if (tabParam === "invoices" || tabParam === "expenses" || tabParam === "ledger") {
+      setActiveTab(tabParam);
+    }
+
+    const statusParam = searchParams?.get("status");
+    if (statusParam) {
+      setFilterStatus(statusParam);
+      setActiveTab("invoices");
+    }
+
+    const searchParam = searchParams?.get("search");
+    if (searchParam) {
+      setSearch(searchParam);
+      setActiveTab("invoices");
+    }
+
+    const invoiceId = searchParams?.get("id") || searchParams?.get("invoiceId");
     if (invoiceId) {
       setSelectedInvoiceId(invoiceId);
       setActiveTab("invoices");
     }
   }, [searchParams]);
+
+  // Compute status summary counts for one-click pill filters
+  const invoiceCounts = useMemo(() => {
+    const overdue = invoices.filter((i) => i.status === "overdue" || (i.workflowStatus as string) === "overdue").length;
+    const underReview = invoices.filter((i) => i.status === "under_review" || (i.workflowStatus as string) === "under_review" || i.proofStatus === "submitted").length;
+    const pending = invoices.filter((i) => ["pending", "intent_submitted", "awaiting_in_person"].includes(i.status) || ["pending", "intent_submitted", "awaiting_in_person"].includes(i.workflowStatus || "")).length;
+    const paid = invoices.filter((i) => ["paid", "receipted", "confirmed"].includes(i.status) || ["paid", "receipted", "confirmed"].includes(i.workflowStatus || "")).length;
+    const total = invoices.length;
+    return { total, overdue, underReview, pending, paid };
+  }, [invoices]);
 
   const processedInvoices = useMemo(() => {
     let filteredInvoices = invoices.filter((invoice) =>
@@ -135,6 +163,18 @@ export default function InvoicesPage() {
     if (filterStatus !== "all") {
       filteredInvoices = filteredInvoices.filter((i) => {
         if (filterStatus === "refund_pending") return i.hasRefundRequest;
+        if (filterStatus === "unpaid_all") {
+          return !["paid", "receipted", "confirmed"].includes(i.status) && !["paid", "receipted", "confirmed"].includes(i.workflowStatus || "");
+        }
+        if (filterStatus === "paid_all" || filterStatus === "paid") {
+          return ["paid", "receipted", "confirmed"].includes(i.status) || ["paid", "receipted", "confirmed"].includes(i.workflowStatus || "");
+        }
+        if (filterStatus === "under_review") {
+          return i.status === "under_review" || i.workflowStatus === "under_review" || i.proofStatus === "submitted";
+        }
+        if (filterStatus === "pending") {
+          return ["pending", "intent_submitted", "awaiting_in_person"].includes(i.status) || ["pending", "intent_submitted", "awaiting_in_person"].includes(i.workflowStatus || "");
+        }
         return i.status === filterStatus || i.workflowStatus === filterStatus;
       });
     }
@@ -198,79 +238,211 @@ export default function InvoicesPage() {
       {message && <div className="rounded-2xl border border-primary/20 bg-primary/10 px-4 py-3 text-sm text-foreground">{message}</div>}
 
       <div className="flex items-center gap-2 overflow-x-auto border-b border-border/50 pb-px">
-        {(["ledger", "invoices", "expenses"] as const).map((tab) => (
+        <Tooltip
+          content="Combined chronological timeline of all collected rent payments and recorded property expenses."
+          side="top"
+        >
           <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
+            onClick={() => setActiveTab("ledger")}
             className={cn(
               "px-6 py-3 text-sm font-black uppercase tracking-wider transition-all border-b-2",
-              activeTab === tab
+              activeTab === "ledger"
                 ? "border-primary text-primary"
                 : "border-transparent text-muted-foreground hover:border-border hover:text-foreground"
             )}
           >
-            {tab === "ledger" && "Unified Ledger"}
-            {tab === "invoices" && "Invoices"}
-            {tab === "expenses" && "Expenses"}
+            Unified Ledger
           </button>
-        ))}
+        </Tooltip>
+
+        <Tooltip
+          content="Track, filter, and review monthly rent dues, verify GCash payment proofs, and manage overdue tenant bills."
+          side="top"
+        >
+          <button
+            onClick={() => setActiveTab("invoices")}
+            className={cn(
+              "px-6 py-3 text-sm font-black uppercase tracking-wider transition-all border-b-2",
+              activeTab === "invoices"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:border-border hover:text-foreground"
+            )}
+          >
+            Invoices
+          </button>
+        </Tooltip>
+
+        <Tooltip
+          content="Log operational costs such as building repairs, maintenance, utility bills, and contractor fees."
+          side="top"
+        >
+          <button
+            onClick={() => setActiveTab("expenses")}
+            className={cn(
+              "px-6 py-3 text-sm font-black uppercase tracking-wider transition-all border-b-2",
+              activeTab === "expenses"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:border-border hover:text-foreground"
+            )}
+          >
+            Expenses
+          </button>
+        </Tooltip>
       </div>
 
       {activeTab === "invoices" && (
-        <div className="flex min-h-[50vh] flex-col rounded-[2.5rem] border border-border/50 bg-card/60 p-8 shadow-xl backdrop-blur-xl animate-in fade-in slide-in-from-bottom-4">
-        <div className="mb-6 flex shrink-0 flex-col gap-4 border-b border-border/50 pb-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-primary">Ledger</p>
-              <h2 className="mt-2 text-2xl font-black text-foreground lg:text-3xl">Issued invoices</h2>
-            </div>
-            <div className="relative w-full md:max-w-xs">
-              <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search records..." className="w-full rounded-full border border-border/50 bg-background/80 py-3 pl-11 pr-4 text-sm font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-2 focus:ring-primary/10 hover:bg-background shadow-sm" />
-            </div>
-          </div>
-          
-          <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-background/40 p-3">
-            <div className="flex items-center gap-2 text-sm font-black text-muted-foreground border-r border-border/50 pr-4">
-              <Filter className="size-4" /> Filters
+        <div className="flex min-h-[50vh] flex-col rounded-[2.5rem] border border-border/50 bg-card/60 p-6 sm:p-8 shadow-xl backdrop-blur-xl animate-in fade-in slide-in-from-bottom-4">
+          <div className="mb-6 flex shrink-0 flex-col gap-4 border-b border-border/50 pb-6">
+            {/* Header Title & Search */}
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-primary">Ledger</p>
+                <h2 className="mt-1 text-2xl font-black text-foreground lg:text-3xl">Issued Invoices</h2>
+              </div>
+              <div className="relative w-full sm:w-72">
+                <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Search tenant, unit, or invoice..."
+                  className="w-full rounded-xl border border-border/50 bg-background/60 py-2.5 pl-10 pr-4 text-xs font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-2 focus:ring-primary/10 hover:bg-background shadow-sm"
+                />
+              </div>
             </div>
             
-            <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="rounded-full border border-border/50 bg-card px-4 py-2 text-xs font-medium text-foreground outline-none transition-all hover:border-border focus:border-primary/50">
-              <option value="all">All Statuses</option>
-              <optgroup label="Actionable">
-                <option value="pending">Pending</option>
-                <option value="under_review">Under Review</option>
-                <option value="intent_submitted">Intent Submitted</option>
-                <option value="awaiting_in_person">Awaiting In-Person</option>
-              </optgroup>
-              <optgroup label="Completed">
-                <option value="paid">Paid</option>
-                <option value="receipted">Receipted</option>
-                <option value="confirmed">Confirmed</option>
-              </optgroup>
-              <optgroup label="Issues">
-                <option value="overdue">Overdue</option>
-                <option value="rejected">Rejected</option>
-                <option value="refund_pending">Refund Pending</option>
-              </optgroup>
-            </select>
+            {/* Unified Filter & Sorting Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+              {/* Sleek Segmented Status Pills */}
+              <div className="inline-flex items-center gap-1 rounded-2xl bg-muted/40 p-1 border border-border/40 backdrop-blur-sm overflow-x-auto max-w-full">
+                <button
+                  type="button"
+                  onClick={() => setFilterStatus("all")}
+                  className={cn(
+                    "px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap",
+                    filterStatus === "all"
+                      ? "bg-background text-foreground shadow-sm font-black"
+                      : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+                  )}
+                >
+                  <span>All</span>
+                  <span className={cn(
+                    "text-[10px] px-1.5 py-0.5 rounded-md font-mono",
+                    filterStatus === "all" ? "bg-primary/15 text-primary font-bold" : "bg-muted text-muted-foreground"
+                  )}>
+                    {invoiceCounts.total}
+                  </span>
+                </button>
 
-            <select value={filterMethod} onChange={(e) => setFilterMethod(e.target.value)} className="rounded-full border border-border/50 bg-card px-4 py-2 text-xs font-medium text-foreground outline-none transition-all hover:border-border focus:border-primary/50">
-              <option value="all">All Payment Methods</option>
-              <option value="gcash">GCash</option>
-              <option value="in_person">Face-to-Face / Cash</option>
-            </select>
+                <button
+                  type="button"
+                  onClick={() => setFilterStatus("overdue")}
+                  className={cn(
+                    "px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap",
+                    filterStatus === "overdue"
+                      ? "bg-rose-500 text-white shadow-sm font-black"
+                      : "text-muted-foreground hover:text-rose-400 hover:bg-rose-500/10"
+                  )}
+                >
+                  <AlertCircle className="size-3.5 shrink-0" />
+                  <span>Overdue</span>
+                  {invoiceCounts.overdue > 0 && (
+                    <span className={cn(
+                      "text-[10px] px-1.5 py-0.5 rounded-md font-mono font-bold",
+                      filterStatus === "overdue" ? "bg-white/20 text-white" : "bg-rose-500/20 text-rose-400"
+                    )}>
+                      {invoiceCounts.overdue}
+                    </span>
+                  )}
+                </button>
 
-            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="ml-auto rounded-full border border-border/50 bg-card px-4 py-2 text-xs font-medium text-foreground outline-none transition-all hover:border-border focus:border-primary/50">
-              <option value="newest">Sort: Newest First</option>
-              <option value="oldest">Sort: Oldest First</option>
-              <option value="tenant_az">Sort: Tenant (A-Z)</option>
-              <option value="tenant_za">Sort: Tenant (Z-A)</option>
-              <option value="highest_amount">Sort: Highest Amount</option>
-              <option value="lowest_amount">Sort: Lowest Amount</option>
-            </select>
+                <button
+                  type="button"
+                  onClick={() => setFilterStatus("under_review")}
+                  className={cn(
+                    "px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap",
+                    filterStatus === "under_review"
+                      ? "bg-amber-500 text-zinc-950 shadow-sm font-black"
+                      : "text-muted-foreground hover:text-amber-400 hover:bg-amber-500/10"
+                  )}
+                >
+                  <Clock className="size-3.5 shrink-0" />
+                  <span>Needs Verification</span>
+                  {invoiceCounts.underReview > 0 && (
+                    <span className={cn(
+                      "text-[10px] px-1.5 py-0.5 rounded-md font-mono font-bold",
+                      filterStatus === "under_review" ? "bg-black/20 text-zinc-950" : "bg-amber-500/20 text-amber-400"
+                    )}>
+                      {invoiceCounts.underReview}
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setFilterStatus("pending")}
+                  className={cn(
+                    "px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap",
+                    filterStatus === "pending"
+                      ? "bg-background text-foreground shadow-sm font-black"
+                      : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+                  )}
+                >
+                  <span>Awaiting</span>
+                  <span className={cn(
+                    "text-[10px] px-1.5 py-0.5 rounded-md font-mono",
+                    filterStatus === "pending" ? "bg-muted-foreground/20 text-foreground font-bold" : "bg-muted text-muted-foreground"
+                  )}>
+                    {invoiceCounts.pending}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setFilterStatus("paid")}
+                  className={cn(
+                    "px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap",
+                    filterStatus === "paid" || filterStatus === "paid_all"
+                      ? "bg-emerald-600 text-white shadow-sm font-black"
+                      : "text-muted-foreground hover:text-emerald-400 hover:bg-emerald-500/10"
+                  )}
+                >
+                  <CheckCircle2 className="size-3.5 shrink-0" />
+                  <span>Paid</span>
+                  <span className={cn(
+                    "text-[10px] px-1.5 py-0.5 rounded-md font-mono font-bold",
+                    filterStatus === "paid" || filterStatus === "paid_all" ? "bg-white/20 text-white" : "bg-emerald-500/20 text-emerald-400"
+                  )}>
+                    {invoiceCounts.paid}
+                  </span>
+                </button>
+              </div>
+
+              {/* Method & Sorting Filters */}
+              <div className="flex items-center gap-2">
+                <select
+                  value={filterMethod}
+                  onChange={(e) => setFilterMethod(e.target.value)}
+                  className="rounded-xl border border-border/50 bg-background/60 px-3 py-1.5 text-xs font-medium text-foreground outline-none transition-all hover:bg-background hover:border-border focus:border-primary/50 shadow-sm"
+                >
+                  <option value="all">All Methods</option>
+                  <option value="gcash">GCash</option>
+                  <option value="in_person">Cash / In-Person</option>
+                </select>
+
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="rounded-xl border border-border/50 bg-background/60 px-3 py-1.5 text-xs font-medium text-foreground outline-none transition-all hover:bg-background hover:border-border focus:border-primary/50 shadow-sm"
+                >
+                  <option value="newest">Newest First</option>
+                  <option value="oldest">Oldest First</option>
+                  <option value="tenant_az">Tenant (A-Z)</option>
+                  <option value="highest_amount">Highest Amount</option>
+                  <option value="lowest_amount">Lowest Amount</option>
+                </select>
+              </div>
+            </div>
           </div>
-        </div>
 
         <div className="custom-scrollbar space-y-5 overflow-y-auto pr-2">
           {loading && <div className="flex flex-col items-center justify-center rounded-[2rem] border border-border/50 bg-background/50 py-16 text-muted-foreground"><LoadingSpinner size="md" className="mb-4 text-primary" /><p className="text-sm font-black uppercase tracking-widest text-foreground">Loading invoices...</p></div>}

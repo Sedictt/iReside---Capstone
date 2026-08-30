@@ -16,7 +16,12 @@ export function PropertySelector({ isCollapsed = false }: { isCollapsed?: boolea
     const { properties, selectedPropertyId, setSelectedPropertyId, selectedProperty, loading } = useProperty()
     const [isOpen, setIsOpen] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
+    const [hasMounted, setHasMounted] = useState(false)
     const dropdownRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        setHasMounted(true)
+    }, [])
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -33,7 +38,7 @@ export function PropertySelector({ isCollapsed = false }: { isCollapsed?: boolea
         p.address.toLowerCase().includes(searchQuery.toLowerCase())
     )
 
-    if (loading && properties.length === 0) {
+    if (!hasMounted || (loading && properties.length === 0)) {
         return (
             <div className="h-12 w-48 animate-pulse rounded-2xl bg-white/5" />
         )

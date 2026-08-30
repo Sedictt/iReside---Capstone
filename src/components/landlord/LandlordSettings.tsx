@@ -50,12 +50,14 @@ import {
     SlidersHorizontal,
     Wand2,
     Pipette,
-    ChevronLeft
+    ChevronLeft,
+    ShieldCheck
 } from "lucide-react";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { BillingOperationsPanel } from "@/components/landlord/BillingOperationsPanel";
+import { AuditLogsSettingsTab } from "@/components/landlord/settings/AuditLogsSettingsTab";
 import { useAuth } from "@/hooks/useAuth";
 import { PageLoader } from "@/components/ui/LoadingSpinner";
 import { AvatarPicker } from "@/components/profile/AvatarPicker";
@@ -75,7 +77,7 @@ import { applyBrandCssVariables } from "@/lib/branding/colors";
 import Link from "next/link";
 
 // --- Types ---
-type SettingsCategory = "Identity" | "Personalization" | "Finance" | "Security" | "Notifications" | "Data";
+type SettingsCategory = "Identity" | "Personalization" | "Finance" | "Security" | "Notifications" | "Data" | "AuditLogs";
 
 interface SidebarItem {
     id: SettingsCategory;
@@ -114,6 +116,12 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
         label: "Notifications", 
         icon: Bell,
         description: "Communication and alert preferences"
+    },
+    { 
+        id: "AuditLogs", 
+        label: "Activity & Audit Logs", 
+        icon: ShieldCheck,
+        description: "Tamper-proof activity trail & security records"
     },
     { 
         id: "Data", 
@@ -212,6 +220,7 @@ export function LandlordSettings() {
         Finance: ["GCash", "Utilities"],
         Security: ["Account", "Protection", "Sessions"],
         Notifications: ["Alerts"],
+        AuditLogs: ["Activity Logs"],
         Data: ["Export", "Tour", "Danger"],
     };
 
@@ -2123,6 +2132,7 @@ export function LandlordSettings() {
             case "Finance": return renderFinance();
             case "Security": return renderSecurity();
             case "Notifications": return renderNotifications();
+            case "AuditLogs": return <AuditLogsSettingsTab />;
             case "Data": return renderData();
             default: return null;
         }

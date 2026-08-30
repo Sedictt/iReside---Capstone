@@ -29,13 +29,15 @@ type CommandCenterProps = {
     loadingPayments?: boolean;
     loadingUnits?: boolean;
     loadingInvites?: boolean;
+    onOpenVacantUnits?: () => void;
 };
 
 type StatCard = {
     label: string;
     value: number;
     isLoading?: boolean;
-    href: string;
+    href?: string;
+    onClick?: () => void;
     toneClass: string;
     icon: LucideIcon;
 };
@@ -44,7 +46,8 @@ type NextMove = {
     id: string;
     title: string;
     detail: string;
-    href: string;
+    href?: string;
+    onClick?: () => void;
     cta: string;
     urgency: "high" | "medium" | "low";
 };
@@ -63,13 +66,14 @@ export function CommandCenter({
     loadingPayments = false,
     loadingUnits = false,
     loadingInvites = false,
+    onOpenVacantUnits,
 }: CommandCenterProps) {
     const statCards: StatCard[] = [
         {
             label: "Overdue",
             value: overdueCount,
             isLoading: loadingPayments,
-            href: "/landlord/invoices",
+            href: "/landlord/invoices?tab=invoices&status=overdue",
             toneClass: "text-red-400",
             icon: Zap
         },
@@ -77,7 +81,7 @@ export function CommandCenter({
             label: "Near Due",
             value: nearDueCount,
             isLoading: loadingPayments,
-            href: "/landlord/invoices",
+            href: "/landlord/invoices?tab=invoices&status=pending",
             toneClass: "text-amber-400",
             icon: TrendingUp
         },
@@ -85,8 +89,9 @@ export function CommandCenter({
             label: "Vacant",
             value: vacantUnitsCount,
             isLoading: loadingUnits,
-            href: "/landlord/properties",
-            toneClass: "text-sky-400",
+            href: onOpenVacantUnits ? undefined : "/landlord/properties",
+            onClick: onOpenVacantUnits,
+            toneClass: "text-sky-400 cursor-pointer hover:border-sky-500/40",
             icon: Building2
         },
         {
@@ -105,7 +110,7 @@ export function CommandCenter({
                 id: "overdue",
                 title: "Collect overdue rent",
                 detail: `${overdueCount} overdue payment${overdueCount === 1 ? "" : "s"} need follow-up.`,
-                href: "/landlord/invoices",
+                href: "/landlord/invoices?tab=invoices&status=overdue",
                 cta: "Open invoices",
                 urgency: "high",
             }
@@ -113,7 +118,7 @@ export function CommandCenter({
                 id: "health",
                 title: "System check: Healthy",
                 detail: "Every account is up to date. Excellent operations.",
-                href: "/landlord/invoices",
+                href: "/landlord/invoices?tab=invoices",
                 cta: "Review ledger",
                 urgency: "low",
             },
@@ -122,8 +127,9 @@ export function CommandCenter({
                 id: "vacancy",
                 title: "Optimize occupancy",
                 detail: `${vacantUnitsCount} unit${vacantUnitsCount === 1 ? "" : "s"} are awaiting new residents.`,
-                href: "/landlord/properties",
-                cta: "Open properties",
+                href: onOpenVacantUnits ? undefined : "/landlord/properties",
+                onClick: onOpenVacantUnits,
+                cta: onOpenVacantUnits ? "Review vacant units" : "Open properties",
                 urgency: "medium",
             }
             : {
@@ -159,27 +165,51 @@ export function CommandCenter({
 
                 {/* Real-time stats pills */}
                 <div className="flex gap-2 overflow-x-auto pb-2 pr-1 w-full sm:w-auto scrollbar-hide">
-                    {statCards.map((stat) => (
-                        <Link
-                            key={stat.label}
-                            href={stat.href}
-                            className={cn(
-                                "neumorphic-extruded group relative flex shrink-0 w-auto items-center gap-2 sm:gap-3 rounded-2xl px-3 sm:px-4 py-2 sm:py-2.5 active:scale-95",
-                                "dark:bento-glass-card dark:hover:bg-white/[0.05] transition-all",
-                                stat.toneClass
-                            )}
-                        >
-                            <stat.icon className="size-4 opacity-80 transition-opacity group-hover:opacity-100" />
-                            <div className="flex flex-col">
-                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{stat.label}</span>
-                                {stat.isLoading ? (
-                                    <div className="h-4 w-8 rounded bg-muted animate-pulse mt-1" />
-                                ) : (
-                                    <span className="text-sm sm:text-base font-black leading-none text-foreground">{stat.value}</span>
-                                )}
-                            </div>
-                        </Link>
-                    ))}
+                    {statCards.map((stat) => {
+                        const content = (
+                            <>
+                                <stat.icon className="size-4 opacity-80 transition-opacity group-hover:opacity-100" />
+                                <div className="flex flex-col text-left">
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{stat.label}</span>
+                                    {stat.isLoading ? (
+                                        <div className="h-4 w-8 rounded bg-muted animate-pulse mt-1" />
+                                    ) : (
+                                        <span className="text-sm sm:text-base font-black leading-none text-foreground">{stat.value}</span>
+                                    )}
+                                </div>
+                            </>
+                        );
+
+                        const cardClass = cn(
+                            "neumorphic-extruded group relative flex shrink-0 w-auto items-center gap-2 sm:gap-3 rounded-2xl px-3 sm:px-4 py-2 sm:py-2.5 active:scale-95",
+                            "dark:bento-glass-card dark:hover:bg-white/[0.05] transition-all cursor-pointer",
+                            stat.toneClass
+                        );
+
+                        if (stat.onClick) {
+                            return (
+                                <button
+                                    key={stat.label}
+                                    type="button"
+                                    onClick={stat.onClick}
+                                    className={cardClass}
+                                    title={`View ${stat.label} units directory`}
+                                >
+                                    {content}
+                                </button>
+                            );
+                        }
+
+                        return (
+                            <Link
+                                key={stat.label}
+                                href={stat.href || "#"}
+                                className={cardClass}
+                            >
+                                {content}
+                            </Link>
+                        );
+                    })}
                 </div>
             </div>
 
@@ -218,55 +248,50 @@ export function CommandCenter({
                                 description: "Manage properties, configure rental units, and review occupancy."
                             },
                             { 
-                                label: "Application Review", 
+                                label: "Rental Applications", 
                                 icon: ClipboardList, 
                                 href: "/landlord/applications", 
+                                color: "text-primary",
+                                description: "Evaluate applicant submissions, verify screening data, and approve leases."
+                            },
+                            { 
+                                label: "Unit Visualizer", 
+                                icon: FolderSearch2, 
+                                href: "/landlord/unit-map", 
                                 color: "text-amber-400",
-                                description: "Review applicant submissions, screening info, and send approvals."
+                                description: "Interactive architectural layout of units, floor maps, and occupancy status."
                             },
                             { 
-                                label: "Utility Billing", 
-                                icon: Zap, 
-                                href: "/landlord/utility-billing", 
-                                color: "text-sky-400",
-                                description: "Calculate, bill, and split electricity, water, and utility fees."
-                            },
-                            { 
-                                label: "Maintenance Logs", 
+                                label: "Maintenance Desk", 
                                 icon: Hammer, 
                                 href: "/landlord/maintenance", 
                                 color: "text-rose-400",
-                                description: "Track unit repair tickets, contractor assignments, and resolution status."
+                                description: "Resolve work orders, track repairs, and communicate with maintenance staff."
                             },
                             { 
-                                label: "Lease Renewals", 
+                                label: "Lease Lifecycle", 
                                 icon: RefreshCw, 
                                 href: "/landlord/tenants?tab=renewals", 
-                                color: "text-cyan-400",
-                                description: "Manage upcoming lease expirations, extensions, and renewal requests."
+                                color: "text-indigo-400",
+                                description: "Monitor ending leases, process contract extensions, and manage renewals."
                             },
                             { 
-                                label: "Document Vault", 
-                                icon: FolderSearch2, 
-                                href: "/landlord/documents", 
-                                color: "text-primary",
-                                description: "Securely store and retrieve signed contracts, IDs, and property permits."
+                                label: "Financial Metrics", 
+                                icon: BarChart3, 
+                                href: "/landlord/analytics", 
+                                color: "text-teal-400",
+                                description: "Deep-dive cash flow, yield tracking, utility usage, and forecast projections."
                             },
                             { 
-                                label: "Account Settings", 
+                                label: "Settings", 
                                 icon: Settings2, 
                                 href: "/landlord/settings", 
-                                color: "text-zinc-400",
-                                description: "Configure system preferences, payment gateways, and security settings."
+                                color: "text-slate-400",
+                                description: "Configure system rules, customize utility pricing, and manage account security."
                             },
                         ].map((action) => (
-                            <Tooltip 
-                                key={action.href} 
-                                content={action.description} 
-                                side="top" 
-                                sideOffset={8}
-                            >
-                                <Link 
+                            <Tooltip key={action.label} content={action.description}>
+                                <Link
                                     href={action.href}
                                     className={cn(
                                         "neumorphic-extruded group flex flex-col items-center text-center gap-1.5 sm:gap-2 rounded-[1.25rem] p-2 sm:p-3",
@@ -321,13 +346,25 @@ export function CommandCenter({
                                 </div>
                                 <h4 className="text-sm font-black text-foreground relative z-10">{move.title}</h4>
                                 <p className="mt-1 text-xs font-medium text-muted-foreground/70 dark:text-white/60 leading-relaxed relative z-10">{move.detail}</p>
-                                <Link
-                                    href={move.href}
-                                    className="mt-4 inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary transition-all hover:gap-3 group/link"
-                                >
-                                    {move.cta}
-                                    <ArrowRight className="size-3.5 transition-transform group-hover/link:translate-x-1" />
-                                </Link>
+                                
+                                {move.onClick ? (
+                                    <button
+                                        type="button"
+                                        onClick={move.onClick}
+                                        className="mt-4 inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary transition-all hover:gap-3 group/link cursor-pointer"
+                                    >
+                                        {move.cta}
+                                        <ArrowRight className="size-3.5 transition-transform group-hover/link:translate-x-1" />
+                                    </button>
+                                ) : (
+                                    <Link
+                                        href={move.href || "#"}
+                                        className="mt-4 inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary transition-all hover:gap-3 group/link"
+                                    >
+                                        {move.cta}
+                                        <ArrowRight className="size-3.5 transition-transform group-hover/link:translate-x-1" />
+                                    </Link>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -336,4 +373,3 @@ export function CommandCenter({
         </section>
     );
 }
-

@@ -24,12 +24,25 @@ import { m as motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 
+import { LayoutDashboard, Building2, Wrench } from "lucide-react";
+
 const ICON_MAP: Record<string, any> = {
+    dashboard: LayoutDashboard,
+    properties: Building2,
+    business: Building2,
     map: Map,
-    business: Home,
     people: Users,
+    tenants: Users,
     payments: CreditCard,
+    finance: CreditCard,
+    operations: Wrench,
 };
+
+import { 
+    getMissionById,
+    type MissionConfig
+} from "@/lib/missions-config";
+import { MissionSlideshowModal } from "@/components/landlord/dashboard/MissionSlideshowModal";
 
 interface LandlordQuestBoardProps {
     isOpen: boolean;
@@ -40,6 +53,8 @@ export function LandlordQuestBoard({ isOpen, onClose }: LandlordQuestBoardProps)
     const router = useRouter();
     const [state, setState] = useState<LandlordProductTourState | null>(null);
     const [loading, setLoading] = useState(true);
+    const [activeMission, setActiveMission] = useState<MissionConfig | null>(null);
+    const [isSlideshowOpen, setIsSlideshowOpen] = useState(false);
 
     const refreshState = useCallback(async () => {
         try {
@@ -61,29 +76,20 @@ export function LandlordQuestBoard({ isOpen, onClose }: LandlordQuestBoardProps)
         }
     }, [isOpen, refreshState]);
 
-    const handleStartQuest = async (questId: string) => {
-        const quest = LANDLORD_QUESTS.find(q => q.id === questId);
-        if (!quest) return;
-
-        try {
-            const res = await fetch("/api/landlord/tour/quest/start", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ questId }),
-            });
-            if (res.ok) {
-                const data = await res.json();
-                if (data.firstStep) {
-                    onClose();
-                    router.push(data.firstStep.route);
-                }
-            }
-        } catch (err) {
-            console.error("Failed to start quest", err);
+    const handleStartQuest = (questId: string) => {
+        const mission = getMissionById(questId);
+        if (mission) {
+            setActiveMission(mission);
+            setIsSlideshowOpen(true);
         }
     };
 
+    const handleMissionCompleted = (missionId: string) => {
+        refreshState();
+    };
+
     return (
+        <>
         <AnimatePresence>
             {isOpen && (
                 <>
@@ -239,5 +245,18 @@ export function LandlordQuestBoard({ isOpen, onClose }: LandlordQuestBoardProps)
                 </>
             )}
         </AnimatePresence>
+
+        <MissionSlideshowModal
+            mission={activeMission}
+            isOpen={isSlideshowOpen}
+            onClose={() => setIsSlideshowOpen(false)}
+            onCompleteMission={handleMissionCompleted}
+            isCompleted={
+                activeMission && state 
+                    ? getQuestProgress(activeMission.id as LandlordQuestId, state) === 100 
+                    : false
+            }
+        />
+        </>
     );
 }
