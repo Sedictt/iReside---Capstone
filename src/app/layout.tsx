@@ -33,6 +33,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { GlobalTooltipManager } from "@/components/ui/GlobalTooltipManager";
 import { ServiceWorkerProvider } from "@/components/providers/ServiceWorkerProvider";
 import { OfflineBanner } from "@/components/ui/OfflineBanner";
+import { OfflineCommandCenterModal } from "@/components/offline/OfflineCommandCenterModal";
 import { BrandProvider } from "@/context/BrandContext";
 
 
@@ -79,6 +80,7 @@ export default function RootLayout({
                       <TooltipProvider delayDuration={200} skipDelayDuration={150}>
                         <GlobalTooltipManager />
                         <OfflineBanner />
+                        <OfflineCommandCenterModal />
                         <GlobalClickSpark>
                           {children}
                           <Toaster

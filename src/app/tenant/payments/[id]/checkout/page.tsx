@@ -9,6 +9,9 @@ import { m as motion, AnimatePresence } from "framer-motion";
 
 import { formatDateLong, formatPhpCurrency } from "@/lib/billing/utils";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { OfflineStorage, OfflineBlobStorage } from "@/lib/offline/offlineStorage";
+import { mutationQueue } from "@/lib/offline/mutationQueue";
 
 type InvoiceDetail = NonNullable<Awaited<ReturnType<typeof import("@/lib/billing/server").getInvoiceDetailForActor>>>;
 
@@ -502,6 +505,56 @@ export default function CheckoutPage() {
         return Math.max(0, totalSelected - invoice.paidAmount);
     }, [invoice, selectedItemIds, selectedReadingIds]);
 
+    const stageOfflinePayment = async (finalAmount: number, isFullPayment: boolean) => {
+        if (!invoice) return;
+
+        let receiptDataUrl: string | null = null;
+        if (receipt) {
+            receiptDataUrl = await new Promise<string>((resolve) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result as string);
+                reader.onerror = () => resolve("");
+                reader.readAsDataURL(receipt);
+            });
+
+            if (receiptDataUrl) {
+                await OfflineBlobStorage.saveBlob(
+                    `payment_receipt_${invoice.id}`,
+                    receiptDataUrl,
+                    {
+                        contentType: receipt.type,
+                        name: receipt.name,
+                        createdAt: new Date().toISOString(),
+                    }
+                );
+            }
+        }
+
+        const payload = {
+            invoiceId: invoice.id,
+            method,
+            referenceNumber,
+            note,
+            selectedItemIds: JSON.stringify(selectedItemIds),
+            selectedReadingIds: JSON.stringify(selectedReadingIds),
+            partialAmount: !isFullPayment || partialAmount ? finalAmount : undefined,
+            receiptBlobKey: receiptDataUrl ? `payment_receipt_${invoice.id}` : null,
+            submittedAt: new Date().toISOString(),
+        };
+
+        OfflineStorage.set(`offline_payment_${invoice.id}`, payload, null, "payments");
+
+        mutationQueue.enqueue(
+            "STAGE_PAYMENT_PROOF",
+            `/api/tenant/payments/${invoice.id}/submit`,
+            "POST",
+            payload,
+            `Offline GCash payment for Invoice #${invoice.invoiceNumber}`
+        );
+
+        toast.success("Payment proof saved offline! It will submit to your Landlord automatically once online.");
+    };
+
     const submitPayment = async () => {
         if (!invoice) return;
         if (method !== "gcash") return;
@@ -513,6 +566,19 @@ export default function CheckoutPage() {
                 return;
             }
 
+            const isFullPayment = invoice.lineItems.length === selectedItemIds.length && 
+                                invoice.readings.length === selectedReadingIds.length && 
+                                !partialAmount;
+            const finalAmount = partialAmount ? Number(partialAmount) : amountDue;
+
+            const isOffline = typeof navigator !== "undefined" && !navigator.onLine;
+
+            if (isOffline) {
+                await stageOfflinePayment(finalAmount, isFullPayment);
+                setSubmitted(true);
+                return;
+            }
+
             const formData = new FormData();
             formData.append("method", method);
             formData.append("referenceNumber", referenceNumber);
@@ -520,21 +586,21 @@ export default function CheckoutPage() {
             formData.append("selectedItemIds", JSON.stringify(selectedItemIds));
             formData.append("selectedReadingIds", JSON.stringify(selectedReadingIds));
             
-            // If the user hasn't selected everything, it's a partial payment
-            const isFullPayment = invoice.lineItems.length === selectedItemIds.length && 
-                                invoice.readings.length === selectedReadingIds.length && 
-                                !partialAmount;
-            
-            const finalAmount = partialAmount ? Number(partialAmount) : amountDue;
             if (!isFullPayment || partialAmount) formData.append("partialAmount", finalAmount.toString());
-            
             if (receipt) formData.append("receipt", receipt);
 
-            const response = await fetch(`/api/tenant/payments/${invoice.id}/submit`, {
-                method: "POST",
-                body: formData,
-            });
-            if (!response.ok) throw new Error();
+            try {
+                const response = await fetch(`/api/tenant/payments/${invoice.id}/submit`, {
+                    method: "POST",
+                    body: formData,
+                });
+                if (!response.ok) {
+                    throw new Error(`Server returned ${response.status}`);
+                }
+            } catch (networkErr) {
+                console.warn("[Checkout] Online submit failed, falling back to offline queue:", networkErr);
+                await stageOfflinePayment(finalAmount, isFullPayment);
+            }
             setSubmitted(true);
         } finally {
             setSubmitting(false);

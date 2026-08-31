@@ -40,6 +40,9 @@ import { CommunityPostCard } from "@/components/community/CommunityPostCard"
 import { CommunityRules } from "@/components/community/CommunityRules"
 import { CommunityAnnouncement } from "@/components/community/CommunityAnnouncement"
 import { CommunityTour } from "@/components/tenant/CommunityTour"
+import { toast } from "sonner"
+import { OfflineStorage, OfflineBlobStorage } from "@/lib/offline/offlineStorage"
+import { mutationQueue } from "@/lib/offline/mutationQueue"
 
 function formatRelative(value: string) {
     const date = new Date(value)
@@ -89,7 +92,13 @@ export default function TenantCommunityHubPage() {
     const [isAnnouncementCollapsed, setIsAnnouncementCollapsed] = useState(false)
     const [activeTab, setActiveTab] = useState<"live" | "mine" | "saved" | "approvals">("live")
     const [searchQuery, setSearchQuery] = useState("")
-    const [posts, setPosts] = useState<CommunityPost[]>([])
+    const [posts, setPosts] = useState<CommunityPost[]>(() => {
+        if (typeof window !== "undefined") {
+            const cached = OfflineStorage.get<CommunityPost[]>("community_posts_default")
+            return cached?.data || []
+        }
+        return []
+    })
     const [savedPostIds, setSavedPostIds] = useState<string[]>([])
     const [openCommentPostId, setOpenCommentPostId] = useState<string | null>(null)
     const [commentsByPost, setCommentsByPost] = useState<Record<string, any[]>>({})
@@ -116,13 +125,35 @@ export default function TenantCommunityHubPage() {
     const loadPosts = async (mode: "replace" | "append") => {
         if (!user?.id) return
         setLoadingFeed(true)
+        const cacheKey = `community_posts_${activePropertyId || "default"}`
         try {
+            if (typeof navigator !== "undefined" && !navigator.onLine) {
+                const cached = OfflineStorage.get<CommunityPost[]>(cacheKey)
+                if (cached?.data) {
+                    setPosts(cached.data)
+                    return
+                }
+            }
+
             const targetCursor = mode === "append" ? cursor || undefined : undefined
             const response = await getCurrentTenantPosts(12, targetCursor, activePropertyId || undefined)
-            setPosts((current) => mode === "replace" ? response.posts : [...current, ...response.posts])
+            setPosts((current) => {
+                const updated = mode === "replace" ? response.posts : [...current, ...response.posts]
+                if (mode === "replace") {
+                    OfflineStorage.set(cacheKey, updated, null, "community")
+                }
+                return updated
+            })
             setCursor(response.nextCursor)
         } catch (err) {
-            setError("Failed to load community feed.")
+            console.warn("[Community] Load failed, checking offline cache:", err)
+            const cached = OfflineStorage.get<CommunityPost[]>(cacheKey)
+            if (cached?.data) {
+                setPosts(cached.data)
+                toast.info("Offline Mode: Showing cached community feed.")
+            } else {
+                setError("Failed to load community feed.")
+            }
         } finally {
             setLoadingFeed(false)
         }
@@ -256,8 +287,75 @@ export default function TenantCommunityHubPage() {
 
     const handleComposerSubmit = (data: { title: string, body: string, type: string, pollOptions: string[], photos: File[] }) => {
         startSubmit(async () => {
+            const isOffline = typeof navigator !== "undefined" && !navigator.onLine
+            const propId = activePropertyId || undefined
+            const effectiveType = data.photos.length > 0 ? "photo_album" : data.type
+
+            if (isOffline) {
+                // Offline Staging
+                const photoBlobKeys: string[] = []
+                for (let i = 0; i < data.photos.length; i++) {
+                    const file = data.photos[i]
+                    const dataUrl = await new Promise<string>((resolve) => {
+                        const reader = new FileReader()
+                        reader.onload = () => resolve(reader.result as string)
+                        reader.onerror = () => resolve("")
+                        reader.readAsDataURL(file)
+                    })
+                    if (dataUrl) {
+                        const key = `post_photo_${Date.now()}_${i}`
+                        await OfflineBlobStorage.saveBlob(key, dataUrl, {
+                            contentType: file.type,
+                            name: file.name,
+                            createdAt: new Date().toISOString(),
+                        })
+                        photoBlobKeys.push(key)
+                    }
+                }
+
+                const optimisticPost: CommunityPost = {
+                    id: `offline_${Date.now()}`,
+                    title: data.title || "Community Update",
+                    content: data.body,
+                    post_type: effectiveType as any,
+                    author: {
+                        id: user?.id || "offline_user",
+                        full_name: profile?.full_name || "You",
+                        avatar_url: profile?.avatar_url || null,
+                        role: (profile?.role || "tenant") as any,
+                    },
+                    created_at: new Date().toISOString(),
+                    reactions: {},
+                    commentCount: 0,
+                    is_pinned: false,
+                    pollVotes: [],
+                    userPollVote: null,
+                    property_id: propId || null,
+                    is_pending: false,
+                } as any
+
+                setPosts((prev) => [optimisticPost, ...prev])
+
+                mutationQueue.enqueue(
+                    "CREATE_COMMUNITY_POST",
+                    "/api/community/posts",
+                    "POST",
+                    {
+                        title: data.title,
+                        content: data.body,
+                        type: effectiveType,
+                        pollOptions: data.pollOptions,
+                        propertyId: propId,
+                        photoBlobKeys,
+                    },
+                    `Offline community post: "${data.title || data.body.substring(0, 30)}"`
+                )
+
+                toast.success("Post saved offline! Will publish to the community feed once reconnected.")
+                return
+            }
+
             try {
-                const propId = activePropertyId || undefined
                 let imageUrls: string[] = []
 
                 if (data.photos.length > 0) {
@@ -272,9 +370,6 @@ export default function TenantCommunityHubPage() {
                     const json = await res.json()
                     imageUrls = json.imageUrls
                 }
-
-                // If photos are present, it must be a photo album post
-                const effectiveType = imageUrls.length > 0 ? "photo_album" : data.type
 
                 if (effectiveType === "photo_album") {
                     await createPhotoAlbumPost({ title: data.title, content: data.body, propertyId: propId, imageUrls })

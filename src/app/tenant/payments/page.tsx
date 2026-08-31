@@ -68,8 +68,20 @@ type TabId = "bill" | "consumption" | "history";
 
 export default function FinanceHubPage() {
     const { push } = useRouter();
-    const [payload, setPayload] = useState<PaymentsPayload | null>(null);
-    const [loading, setLoading] = useState(true);
+    const [payload, setPayload] = useState<PaymentsPayload | null>(() => {
+        if (typeof window !== "undefined") {
+            const cached = OfflineStorage.get<PaymentsPayload>("tenant_payments_payload");
+            return cached?.data || null;
+        }
+        return null;
+    });
+    const [loading, setLoading] = useState(() => {
+        if (typeof window !== "undefined") {
+            const cached = OfflineStorage.get<PaymentsPayload>("tenant_payments_payload");
+            return !cached?.data;
+        }
+        return true;
+    });
     const [creatingAdvance, setCreatingAdvance] = useState(false);
     const [activeTab, setActiveTab] = useState<TabId>("bill");
 
