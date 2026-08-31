@@ -69,7 +69,7 @@ function LoginContent() {
             }
 
             const target = role === "tenant" ? "/tenant/dashboard" : "/landlord/dashboard";
-            window.location.href = redirectUrl || target;
+            router.push(redirectUrl || target);
         } catch (err) {
             console.error('[Login] Unexpected error:', err);
             setError(err instanceof Error ? err.message : "An unexpected error occurred. Please try again.");

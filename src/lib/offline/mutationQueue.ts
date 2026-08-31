@@ -5,6 +5,8 @@
  * automatically replays them in FIFO order once connectivity is restored.
  */
 
+import { OfflineBlobStorage } from "./offlineStorage";
+
 export interface OfflineMutation {
   id: string;
   type: 
@@ -12,6 +14,8 @@ export interface OfflineMutation {
     | "SAVE_SUBMETER_READINGS"
     | "SUBMIT_MAINTENANCE_TICKET"
     | "STAGE_PAYMENT_PROOF"
+    | "CREATE_COMMUNITY_POST"
+    | "RECORD_COMMUNITY_VOTE"
     | "STAGE_OFFLINE_LEASE_SIGNATURE"
     | "SAVE_LANDLORD_SETTINGS";
   endpoint: string;
@@ -100,6 +104,15 @@ class MutationQueueManager {
   }
 
   /**
+   * Helper: Converts base64 DataURL or binary string to a Blob/File.
+   */
+  private async dataUrlToFile(dataUrl: string, fileName: string, mimeType: string): Promise<File> {
+    const res = await fetch(dataUrl);
+    const blob = await res.blob();
+    return new File([blob], fileName, { type: mimeType });
+  }
+
+  /**
    * Processes all queued mutations sequentially.
    */
   public async processQueue(): Promise<{ successful: number; failed: number }> {
@@ -125,15 +138,57 @@ class MutationQueueManager {
         this.notifyListeners(remainingQueue.length + 1, mutation);
 
         try {
-          const response = await fetch(mutation.endpoint, {
-            method: mutation.method,
-            headers: {
-              "Content-Type": "application/json",
-              "X-Offline-Replay": "true",
-              "X-Mutation-Id": mutation.id,
-            },
-            body: JSON.stringify(mutation.payload),
-          });
+          let response: Response;
+
+          // Special Handling: STAGE_PAYMENT_PROOF with Blob receipt
+          if (mutation.type === "STAGE_PAYMENT_PROOF" && mutation.payload.receiptBlobKey) {
+            const blobKey = mutation.payload.receiptBlobKey as string;
+            const blobEntry = await OfflineBlobStorage.getBlob(blobKey);
+
+            const formData = new FormData();
+            formData.append("method", String(mutation.payload.method || "gcash"));
+            formData.append("referenceNumber", String(mutation.payload.referenceNumber || ""));
+            formData.append("note", String(mutation.payload.note || ""));
+            formData.append("selectedItemIds", String(mutation.payload.selectedItemIds || "[]"));
+            formData.append("selectedReadingIds", String(mutation.payload.selectedReadingIds || "[]"));
+            if (mutation.payload.partialAmount) {
+              formData.append("partialAmount", String(mutation.payload.partialAmount));
+            }
+
+            if (blobEntry && typeof blobEntry.blobData === "string") {
+              const file = await this.dataUrlToFile(
+                blobEntry.blobData,
+                String(blobEntry.metadata?.name || "receipt.png"),
+                String(blobEntry.metadata?.contentType || "image/png")
+              );
+              formData.append("receipt", file);
+            }
+
+            response = await fetch(mutation.endpoint, {
+              method: mutation.method,
+              headers: {
+                "X-Offline-Replay": "true",
+                "X-Mutation-Id": mutation.id,
+              },
+              body: formData,
+            });
+
+            // Clean up staged blob on success
+            if (response.ok && blobKey) {
+              await OfflineBlobStorage.removeBlob(blobKey);
+            }
+          } else {
+            // Standard JSON Request
+            response = await fetch(mutation.endpoint, {
+              method: mutation.method,
+              headers: {
+                "Content-Type": "application/json",
+                "X-Offline-Replay": "true",
+                "X-Mutation-Id": mutation.id,
+              },
+              body: JSON.stringify(mutation.payload),
+            });
+          }
 
           if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);

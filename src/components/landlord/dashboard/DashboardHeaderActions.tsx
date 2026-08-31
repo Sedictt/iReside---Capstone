@@ -566,7 +566,7 @@ export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActi
 
         switch (type) {
             case "payment":
-                return `/landlord/payments?id=${id}`;
+                return `/landlord/invoices?id=${id}`;
             case "application":
                 return `/landlord/applications?id=${id}`;
             case "maintenance":

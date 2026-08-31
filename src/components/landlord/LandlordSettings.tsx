@@ -315,7 +315,7 @@ export function LandlordSettings() {
         reader.readAsDataURL(file);
     };
 
-    const handleLogoFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleLogoFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
@@ -329,15 +329,42 @@ export function LandlordSettings() {
             return;
         }
 
+        // 1. Instant local preview
         const reader = new FileReader();
         reader.onload = (event) => {
             const dataUrl = event.target?.result as string;
             if (dataUrl) {
                 setPropertyLogoUrl(dataUrl);
-                toast.info("Logo preview updated. Save all changes to apply permanently.");
             }
         };
         reader.readAsDataURL(file);
+
+        // 2. Upload to Supabase Storage in cloud
+        const uploadToast = toast.loading("Uploading logo to cloud storage...");
+        try {
+            const formData = new FormData();
+            formData.append("file", file);
+
+            const res = await fetch("/api/branding/logo", {
+                method: "POST",
+                body: formData,
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                if (data.logoUrl) {
+                    setPropertyLogoUrl(data.logoUrl);
+                    toast.dismiss(uploadToast);
+                    toast.success("Logo uploaded to cloud! Save changes to apply across all devices.");
+                    return;
+                }
+            }
+            toast.dismiss(uploadToast);
+            toast.info("Logo preview updated locally. Save all changes to apply.");
+        } catch {
+            toast.dismiss(uploadToast);
+            toast.info("Logo preview updated. Save all changes to apply.");
+        }
     };
 
     const handleRemoveLogo = () => {

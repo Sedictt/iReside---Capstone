@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { m as motion, AnimatePresence } from "framer-motion";
 import {
     Bell,
@@ -14,6 +15,7 @@ import {
     ArrowRight
 } from "lucide-react";
 import { useNotifications } from "@/context/NotificationContext";
+import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { playSound } from "@/hooks/useSound";
 
@@ -21,6 +23,9 @@ const ROTATION_INTERVAL = 6000; // 6 seconds
 
 export function NotificationBanner() {
     const { importantNotifications, markAsRead } = useNotifications();
+    const { user, profile } = useAuth();
+    const router = useRouter();
+
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isExpanded, setIsExpanded] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
@@ -30,6 +35,9 @@ export function NotificationBanner() {
 
     const activeNotifications = importantNotifications.slice(0, 5);
     const totalCount = activeNotifications.length;
+
+    const role = profile?.role || user?.user_metadata?.role || (typeof window !== "undefined" && window.location.pathname.startsWith("/landlord") ? "landlord" : "tenant");
+    const isLandlord = role === "landlord" || role === "admin";
 
     // Handle auto-rotation
     useEffect(() => {
@@ -107,6 +115,93 @@ export function NotificationBanner() {
     };
 
     const config = getStatusConfig(current.type);
+
+    const handleTakeAction = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        await markAsRead(current.id);
+
+        const data = (current.data || {}) as any;
+        const id = data.paymentId || data.invoiceId || data.applicationId || data.maintenanceId || data.conversationId || data.leaseId || data.id || current.id;
+        const type = current.type as string;
+
+        if (data.signingUrl) {
+            window.location.href = data.signingUrl;
+            return;
+        }
+
+        if (isLandlord) {
+            switch (type) {
+                case "payment":
+                    router.push(`/landlord/dashboard?paymentId=${id}`);
+                    break;
+                case "maintenance":
+                    router.push(`/landlord/maintenance?id=${id}`);
+                    break;
+                case "lease":
+                case "lease_renewal_request":
+                case "lease_renewal_approved":
+                case "lease_renewal_rejected":
+                case "move_out_approved":
+                case "move_out_denied":
+                case "move_out_inspection_completed":
+                case "move_out_finalized":
+                    router.push(`/landlord/visual-planner?leaseId=${id}`);
+                    break;
+                case "application":
+                    router.push(`/landlord/applications?id=${id}`);
+                    break;
+                case "message":
+                    router.push(`/landlord/messages?conversation=${id}`);
+                    break;
+                case "announcement":
+                    router.push(`/landlord/dashboard`);
+                    break;
+                default:
+                    router.push(`/landlord/dashboard`);
+                    break;
+            }
+        } else {
+            // Tenant routing
+            switch (type) {
+                case "payment":
+                    if (data.paymentId || data.invoiceId) {
+                        router.push(`/tenant/payments/${data.paymentId || data.invoiceId}/checkout`);
+                    } else {
+                        router.push(`/tenant/payments`);
+                    }
+                    break;
+                case "maintenance":
+                    router.push(`/tenant/maintenance?id=${id}`);
+                    break;
+                case "lease":
+                case "lease_renewal_request":
+                case "lease_renewal_approved":
+                case "lease_renewal_rejected":
+                case "move_out_approved":
+                case "move_out_denied":
+                case "move_out_inspection_completed":
+                case "move_out_finalized":
+                    if (data.leaseId) {
+                        router.push(`/tenant/lease/${data.leaseId}`);
+                    } else {
+                        router.push(`/tenant/lease`);
+                    }
+                    break;
+                case "application":
+                    router.push(`/tenant/applications`);
+                    break;
+                case "message":
+                    router.push(`/tenant/messages?conversation=${id}`);
+                    break;
+                case "announcement":
+                    router.push(`/tenant/dashboard`);
+                    break;
+                default:
+                    router.push(`/tenant/dashboard`);
+                    break;
+            }
+        }
+    };
 
     const springTransition = {
         type: "spring" as const,
@@ -223,7 +318,7 @@ export function NotificationBanner() {
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 mb-0.5">
                                         <span className={cn("text-[10px] font-black uppercase tracking-widest", config.text)}>
-                                            {config.label}
+                                             {config.label}
                                         </span>
                                         <div className="size-1 rounded-full bg-border" />
                                         <h4 className="font-black text-sm text-foreground truncate">
@@ -268,7 +363,6 @@ export function NotificationBanner() {
                                         await markAsRead(current.id);
                                         if (totalCount > 1) {
                                             setCurrentIndex((prev) => (prev + 1) % totalCount);
-                                            // Progress reset removed — progress tracking no longer implemented
                                         }
                                     }}
                                     className="hidden lg:flex items-center gap-2 px-3 py-2 rounded-xl text-[11px] font-black opacity-70 hover:opacity-100 transition-all neumorphic-extruded"
@@ -276,15 +370,8 @@ export function NotificationBanner() {
                                     Dismiss
                                 </button>
                                 <button
-                                    onClick={() => {
-                                        const data = current.data as any;
-                                        if (current.type === "payment" && data?.paymentId) {
-                                            window.location.href = `/tenant/payments/${data.paymentId}/checkout`;
-                                        } else if (current.type === "lease" && data?.leaseId) {
-                                            window.location.href = `/tenant/lease/${data.leaseId}`;
-                                        }
-                                    }}
-                                    className="flex items-center gap-2 px-4 py-2 rounded-xl neumorphic-primary text-[11px] font-black transition-all active:scale-95"
+                                    onClick={handleTakeAction}
+                                    className="flex items-center gap-2 px-4 py-2 rounded-xl neumorphic-primary text-[11px] font-black transition-all active:scale-95 cursor-pointer"
                                 >
                                     Take Action
                                     <ArrowRight className="size-3.5" />
