@@ -1,67 +1,56 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
 import { DEFAULT_BRANDING, BrandConfig } from "@/context/BrandContext";
-
-async function getSupabaseServer() {
-  const cookieStore = await cookies();
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            );
-          } catch {
-            // Ignored in route handlers
-          }
-        },
-      },
-    }
-  );
-}
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 
 /**
  * GET /api/branding
  * Public endpoint to retrieve the instance's active property branding and theme.
+ * Uses service role client so all tenants, guests, and landlords receive the correct branding.
  */
 export async function GET() {
   try {
-    const supabase = await getSupabaseServer();
+    const admin = createServiceRoleSupabaseClient();
 
     // 1. Fetch first property as the primary turnkey property
-    const { data: property } = await supabase
+    const { data: property } = await admin
       .from("properties")
-      .select("id, name, description, type, images, map_decorations")
+      .select("id, name, description, type, images, map_decorations, landlord_id")
       .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle();
 
-    // 2. Fetch landlord business profile
-    const { data: businessProfile } = await supabase
-      .from("landlord_business_profiles")
-      .select("business_name, business_permit_number, business_permit_url")
-      .limit(1)
-      .maybeSingle();
+    // 2. Fetch landlord business profile from profiles table
+    let landlordProfile = null;
+    if (property?.landlord_id) {
+      const { data: prof } = await admin
+        .from("profiles")
+        .select("business_name, full_name")
+        .eq("id", property.landlord_id)
+        .maybeSingle();
+      landlordProfile = prof;
+    } else {
+      const { data: prof } = await admin
+        .from("profiles")
+        .select("business_name, full_name")
+        .eq("role", "landlord")
+        .limit(1)
+        .maybeSingle();
+      landlordProfile = prof;
+    }
 
-    if (!property && !businessProfile) {
+    if (!property && !landlordProfile) {
       return NextResponse.json(DEFAULT_BRANDING);
     }
 
-    // Extract custom decorations/theme if stored in map_decorations or property description
+    // Extract custom decorations/theme if stored in map_decorations
     const customTheme = (property?.map_decorations as Record<string, unknown>)?.branding as
       | Partial<BrandConfig>
       | undefined;
 
     const brandingPayload: BrandConfig = {
       propertyName:
-        property?.name || businessProfile?.business_name || DEFAULT_BRANDING.propertyName,
+        property?.name || landlordProfile?.business_name || DEFAULT_BRANDING.propertyName,
       propertyTagline:
         property?.description ||
         customTheme?.propertyTagline ||
@@ -85,29 +74,35 @@ export async function GET() {
 
 /**
  * POST /api/branding
- * Landlord endpoint to update property branding and theme tokens.
+ * Landlord endpoint to update property branding and theme tokens in the cloud.
  */
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await getSupabaseServer();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId } = authContext;
 
     const body = (await request.json()) as Partial<BrandConfig>;
+    const admin = createServiceRoleSupabaseClient();
 
-    // 1. Fetch current primary property for this landlord
-    const { data: existingProperty } = await supabase
+    // 1. Fetch current primary property for this landlord (or any property if shared)
+    let { data: existingProperty } = await admin
       .from("properties")
       .select("id, map_decorations, images")
-      .eq("landlord_id", user.id)
+      .eq("landlord_id", userId)
       .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle();
+
+    if (!existingProperty) {
+      const { data: firstProp } = await admin
+        .from("properties")
+        .select("id, map_decorations, images")
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      existingProperty = firstProp;
+    }
 
     const currentDecorations =
       (existingProperty?.map_decorations as Record<string, unknown>) || {};
@@ -125,9 +120,9 @@ export async function POST(request: NextRequest) {
       branding: updatedBrandingMeta,
     };
 
-    // 2. Update property record if exists
+    // 2. Update property record in cloud
     if (existingProperty) {
-      await supabase
+      await admin
         .from("properties")
         .update({
           name: body.propertyName || undefined,
@@ -139,18 +134,15 @@ export async function POST(request: NextRequest) {
         .eq("id", existingProperty.id);
     }
 
-    // 3. Update landlord business profile
+    // 3. Update landlord profile business name in profiles table
     if (body.propertyName) {
-      await supabase
-        .from("landlord_business_profiles")
-        .upsert(
-          {
-            profile_id: user.id,
-            business_name: body.propertyName,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "profile_id" }
-        );
+      await admin
+        .from("profiles")
+        .update({
+          business_name: body.propertyName,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", userId);
     }
 
     const fullBranding: BrandConfig = {
