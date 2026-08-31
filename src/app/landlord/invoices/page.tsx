@@ -40,6 +40,13 @@ export default function InvoicesPage() {
   const [activeTab, setActiveTab] = useState<"ledger" | "invoices" | "expenses">("ledger");
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
 
+  useEffect(() => {
+    const queryId = searchParams.get("id") || searchParams.get("invoiceId");
+    if (queryId) {
+      setSelectedInvoiceId(queryId);
+    }
+  }, [searchParams]);
+
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
