@@ -39,6 +39,7 @@ import { searchDocs } from "@/lib/docs/searchEngine";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import Link from "next/link";
+import { useBrand } from "@/context/BrandContext";
 
 // Dynamically import HTMLFlipBook to ensure SSR compatibility
 const HTMLFlipBook = dynamic(() => import("react-pageflip"), {
@@ -167,6 +168,36 @@ export function EBookReader({
 
   const flipBookRef = useRef<any>(null);
   const isFlippingRef = useRef(false);
+
+  const brand = useBrand();
+
+  const propertyBackgroundImage = useMemo(() => {
+    // 1. User-provided property banner or property photo in brand context
+    if (brand.bannerUrl) return brand.bannerUrl;
+    if (brand.logoUrl && !brand.logoUrl.endsWith(".svg")) return brand.logoUrl;
+
+    // 2. Check localStorage for user-provided custom banner or cached property images
+    if (typeof window !== "undefined") {
+      try {
+        const customBanner = localStorage.getItem("ireside_landlord_custom_banner_url");
+        if (customBanner) return customBanner;
+
+        const cachedProps = localStorage.getItem("iReside_cached_properties");
+        if (cachedProps) {
+          const parsed = JSON.parse(cachedProps);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const firstProp = parsed[0];
+            if (firstProp.image) return firstProp.image;
+            if (Array.isArray(firstProp.images) && firstProp.images.length > 0) return firstProp.images[0];
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    return "/images/ebook_workspace_bg.jpg";
+  }, [brand.bannerUrl, brand.logoUrl]);
 
   useEffect(() => {
     setMounted(true);
@@ -337,11 +368,11 @@ export function EBookReader({
         className
       )}
     >
-      {/* 1. Background Visual Accent */}
+      {/* 1. Background Visual Accent (User-provided Property Image) */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
         <div
-          className="absolute inset-0 bg-cover bg-center scale-105"
-          style={{ backgroundImage: "url('/images/ebook_workspace_bg.jpg')" }}
+          className="absolute inset-0 bg-cover bg-center scale-105 transition-all duration-700"
+          style={{ backgroundImage: `url('${propertyBackgroundImage}')` }}
         />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.85)_0%,rgba(255,255,255,0.60)_45%,rgba(255,255,255,0.25)_75%,rgba(255,255,255,0.08)_100%)] backdrop-blur-[1.5px]" />
       </div>
@@ -525,10 +556,10 @@ export function EBookReader({
                 <div className="flex items-center justify-between border-b-2 border-zinc-900 pb-3">
                   <div className="flex items-center gap-2">
                     <div className="size-6 bg-zinc-900 text-white font-black text-[10px] flex items-center justify-center">
-                      iR
+                      {brand.monogramInitials || "iR"}
                     </div>
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-900">
-                      iReside
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-900 truncate max-w-[200px]">
+                      {brand.propertyName || "iReside"}
                     </span>
                   </div>
                   <span className="text-[10px] text-zinc-500 font-semibold uppercase">
@@ -575,7 +606,7 @@ export function EBookReader({
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="text-[9px] uppercase text-zinc-400 block font-semibold">Official Manual</span>
-                      <span className="text-xs font-bold text-zinc-900">iReside System</span>
+                      <span className="text-xs font-bold text-zinc-900">{brand.propertyName || "iReside System"}</span>
                     </div>
                     <button
                       type="button"
