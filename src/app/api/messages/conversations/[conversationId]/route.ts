@@ -1,12 +1,76 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
-import { ensureUserInConversation, getProfilePreviewMap } from "@/lib/messages/engine";
+import { ensureUserInConversation, getProfilePreviewMap, invalidateSummariesCache } from "@/lib/messages/engine";
 import { redactWithAiOrFallback } from "@/lib/messages/redaction-service";
 import type { Json, MessageType } from "@/types/database";
 
 const DEFAULT_FILES_BUCKET = "message-files";
 const SIGNED_URL_TTL_SECONDS = 60 * 60;
+const signedUrlCache = new Map<string, { url: string; expiresAt: number }>();
+
+function getCachedSignedUrl(bucket: string, path: string): string | null {
+    const key = `${bucket}:${path}`;
+    const cached = signedUrlCache.get(key);
+    if (!cached) return null;
+    if (Date.now() >= cached.expiresAt - 5 * 60 * 1000) {
+        signedUrlCache.delete(key);
+        return null;
+    }
+    return cached.url;
+}
+
+function setCachedSignedUrl(bucket: string, path: string, url: string, ttlSeconds: number) {
+    const key = `${bucket}:${path}`;
+    signedUrlCache.set(key, {
+        url,
+        expiresAt: Date.now() + ttlSeconds * 1000,
+    });
+}
+
+async function resolveSignedUrlsBatch(
+    supabase: ReturnType<typeof createServiceRoleSupabaseClient>,
+    items: { bucket: string; path: string }[]
+): Promise<Map<string, string>> {
+    const urlMap = new Map<string, string>();
+    const missingByBucket = new Map<string, Set<string>>();
+
+    for (const { bucket, path } of items) {
+        const cached = getCachedSignedUrl(bucket, path);
+        if (cached) {
+            urlMap.set(`${bucket}:${path}`, cached);
+        } else {
+            const set = missingByBucket.get(bucket) ?? new Set<string>();
+            set.add(path);
+            missingByBucket.set(bucket, set);
+        }
+    }
+
+    await Promise.all(
+        Array.from(missingByBucket.entries()).map(async ([bucket, pathSet]) => {
+            const paths = Array.from(pathSet);
+            if (paths.length === 0) return;
+            try {
+                const { data: results, error } = await supabase.storage
+                    .from(bucket)
+                    .createSignedUrls(paths, SIGNED_URL_TTL_SECONDS);
+
+                if (!error && Array.isArray(results)) {
+                    for (const res of results) {
+                        if (res.signedUrl && res.path) {
+                            setCachedSignedUrl(bucket, res.path, res.signedUrl, SIGNED_URL_TTL_SECONDS);
+                            urlMap.set(`${bucket}:${res.path}`, res.signedUrl);
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error(`[Messages API] Failed to batch sign URLs for bucket ${bucket}:`, err);
+            }
+        })
+    );
+
+    return urlMap;
+}
 
 type MessageBody = {
     content?: string;
@@ -67,65 +131,69 @@ export async function GET(
         const senderIds = Array.from(new Set((messages ?? []).map((message) => message.sender_id)));
         const profileMap = await getProfilePreviewMap(supabase, senderIds);
 
-        const messagesWithSignedUrls = await Promise.all(
-            (messages ?? []).map(async (message) => {
-                let metadata: Record<string, unknown>;
-                
-                if (typeof message.metadata === "string") {
-                    try {
-                        metadata = JSON.parse(message.metadata);
-                    } catch {
-                        return message;
-                    }
-                } else if (message.metadata && typeof message.metadata === "object" && !Array.isArray(message.metadata)) {
-                    metadata = message.metadata as Record<string, unknown>;
-                } else {
-                    return message;
-                }
+        // Collect all file paths that need signed URLs across all messages
+        const filesToResolve: { bucket: string; path: string }[] = [];
+        const parsedMetadataList = (messages ?? []).map((message) => {
+            let metadata: Record<string, unknown> | null = null;
+            if (typeof message.metadata === "string") {
+                try { metadata = JSON.parse(message.metadata); } catch { metadata = null; }
+            } else if (message.metadata && typeof message.metadata === "object" && !Array.isArray(message.metadata)) {
+                metadata = message.metadata as Record<string, unknown>;
+            }
 
-                const filePath = typeof metadata.filePath === "string" ? metadata.filePath : null;
-                const attachments = Array.isArray(metadata.attachments) ? metadata.attachments : null;
-
-                if (!filePath && !attachments) {
-                    return { ...message, metadata: metadata as any };
-                }
-
+            if (metadata) {
                 const bucket = typeof metadata.bucket === "string" ? metadata.bucket : DEFAULT_FILES_BUCKET;
-
-                // Handle single file
-                let updatedMetadata = { ...metadata };
-                if (filePath) {
-                    const { data: signedUrlData } = await supabase.storage
-                        .from(bucket)
-                        .createSignedUrl(filePath, SIGNED_URL_TTL_SECONDS);
-                    if (signedUrlData?.signedUrl) {
-                        updatedMetadata.fileUrl = signedUrlData.signedUrl;
+                if (typeof metadata.filePath === "string") {
+                    filesToResolve.push({ bucket, path: metadata.filePath });
+                }
+                if (Array.isArray(metadata.attachments)) {
+                    for (const att of metadata.attachments) {
+                        if (typeof att?.filePath === "string") {
+                            filesToResolve.push({ bucket, path: att.filePath });
+                        }
                     }
                 }
+            }
+            return metadata;
+        });
 
-                // Handle album attachments
-                if (attachments) {
-                    const updatedAttachments = await Promise.all(
-                        attachments.map(async (att: any) => {
-                            if (typeof att.filePath !== "string") return att;
-                            const { data: signedUrlData } = await supabase.storage
-                                .from(bucket)
-                                .createSignedUrl(att.filePath, SIGNED_URL_TTL_SECONDS);
-                            if (signedUrlData?.signedUrl) {
-                                return { ...att, fileUrl: signedUrlData.signedUrl };
-                            }
-                            return att;
-                        })
-                    );
-                    updatedMetadata.attachments = updatedAttachments;
-                }
+        // Resolve all in 1 batch network call (or 0ms from memory cache)
+        const signedUrlMap = filesToResolve.length > 0
+            ? await resolveSignedUrlsBatch(supabase, filesToResolve)
+            : new Map<string, string>();
 
-                return {
-                    ...message,
-                    metadata: updatedMetadata as Json,
-                };
-            })
-        );
+        const messagesWithSignedUrls = (messages ?? []).map((message, idx) => {
+            const metadata = parsedMetadataList[idx];
+            if (!metadata) return message;
+
+            const filePath = typeof metadata.filePath === "string" ? metadata.filePath : null;
+            const attachments = Array.isArray(metadata.attachments) ? metadata.attachments : null;
+
+            if (!filePath && !attachments) {
+                return { ...message, metadata: metadata as any };
+            }
+
+            const bucket = typeof metadata.bucket === "string" ? metadata.bucket : DEFAULT_FILES_BUCKET;
+            const updatedMetadata = { ...metadata };
+
+            if (filePath) {
+                const signedUrl = signedUrlMap.get(`${bucket}:${filePath}`);
+                if (signedUrl) updatedMetadata.fileUrl = signedUrl;
+            }
+
+            if (attachments) {
+                updatedMetadata.attachments = attachments.map((att: any) => {
+                    if (typeof att?.filePath !== "string") return att;
+                    const signedUrl = signedUrlMap.get(`${bucket}:${att.filePath}`);
+                    return signedUrl ? { ...att, fileUrl: signedUrl } : att;
+                });
+            }
+
+            return {
+                ...message,
+                metadata: updatedMetadata as Json,
+            };
+        });
 
         const payload = messagesWithSignedUrls.map((message) => {
             const metadata = message.metadata as Record<string, unknown> | null;
@@ -232,6 +300,8 @@ export async function POST(
         if (insertError || !inserted) {
             return NextResponse.json({ error: "Failed to send message." }, { status: 500 });
         }
+
+        invalidateSummariesCache();
 
         return NextResponse.json(
             {

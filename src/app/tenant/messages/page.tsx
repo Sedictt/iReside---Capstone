@@ -469,8 +469,8 @@ const seen = new Set<string>();
         nextParams.delete("panel");
         const nextQuery = nextParams.toString();
         const nextHref = nextQuery ? `${pathname}?${nextQuery}` : pathname;
-        router.replace(nextHref, { scroll: false });
-    }, [activeConversationId, conversationFromUrl, panelFromUrl, pathname, router, searchParams, isIrisActive]);
+        window.history.replaceState(null, '', nextHref);
+    }, [activeConversationId, conversationFromUrl, panelFromUrl, pathname, searchParams, isIrisActive]);
 
     useEffect(() => {
         const currentConversationInUrl = searchParams.get("conversation")?.trim() || null;
@@ -484,8 +484,8 @@ const seen = new Set<string>();
         }
         const nextQuery = nextParams.toString();
         const nextHref = nextQuery ? `${pathname}?${nextQuery}` : pathname;
-        router.replace(nextHref, { scroll: false });
-    }, [activeConversationId, pathname, router, searchParams, isIrisActive]);
+        window.history.replaceState(null, '', nextHref);
+    }, [activeConversationId, pathname, searchParams, isIrisActive]);
 
     useEffect(() => {
         if (!user?.id) {
@@ -1352,7 +1352,7 @@ useEffect(() => {
             if (document.visibilityState !== "visible") return;
             void refreshConversations();
             if (activeConversationId) void refreshMessages(activeConversationId);
-        }, 5000);
+        }, 30000);
         return () => window.clearInterval(intervalId);
     }, [user, activeConversationId]);
 
