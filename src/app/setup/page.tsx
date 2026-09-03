@@ -40,6 +40,7 @@ import { Logo } from "@/components/ui/Logo";
 import { cn } from "@/lib/utils";
 import { useBrand } from "@/context/BrandContext";
 import { applyBrandCssVariables } from "@/lib/branding/colors";
+import { useAuth } from "@/hooks/useAuth";
 
 // HSL to HEX helper
 function hslToHex(h: number, s: number, l: number): string {
@@ -123,8 +124,15 @@ function getContrastTextColor(bgHex: string): string {
 
 export default function BusinessPersonalizationWizardPage() {
   const router = useRouter();
+  const { profile, loading } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
+
+  React.useEffect(() => {
+    if (!loading && profile && profile.role === "tenant") {
+      router.replace("/tenant/dashboard");
+    }
+  }, [loading, profile, router]);
 
   const brand = useBrand();
 

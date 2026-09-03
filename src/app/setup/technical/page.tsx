@@ -32,6 +32,7 @@ import { toast } from "sonner";
 import { Logo } from "@/components/ui/Logo";
 import { HighContrastToggle } from "@/components/ui/HighContrastToggle";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
 
 interface MigrationStep {
   id: string;
@@ -43,7 +44,14 @@ interface MigrationStep {
 
 export default function TechnicalCommissioningPage() {
   const router = useRouter();
+  const { profile, loading } = useAuth();
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
+
+  React.useEffect(() => {
+    if (!loading && profile && profile.role === "tenant") {
+      router.replace("/tenant/dashboard");
+    }
+  }, [loading, profile, router]);
 
   // Step 1: Database Verification States
   const [dbTesting, setDbTesting] = useState(false);
