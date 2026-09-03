@@ -1,64 +1,95 @@
-import { createClient } from "./client"
+import { createClient } from "./client";
 
-const CLIENT_SIGN_OUT_TIMEOUT_MS = 1500
+export const AUTH_SYNC_CHANNEL_NAME = "ireside_auth_sync";
 
-async function signOutWithTimeout() {
-    const supabase = createClient()
+export type AuthSyncEvent =
+    | { type: "SIGNED_IN"; userId?: string }
+    | { type: "SIGNED_OUT"; scope?: "local" | "global" | "others" }
+    | { type: "TOKEN_REFRESHED" }
+    | { type: "SESSION_REVOKED"; sessionId?: string };
+
+export function broadcastAuthEvent(event: AuthSyncEvent): void {
+    if (typeof window === "undefined" || typeof window.BroadcastChannel === "undefined") {
+        return;
+    }
+    try {
+        const channel = new BroadcastChannel(AUTH_SYNC_CHANNEL_NAME);
+        channel.postMessage(event);
+        channel.close();
+    } catch (e) {
+        console.warn("[AuthSync] Failed to broadcast auth event:", e);
+    }
+}
+
+export interface SignOutOptions {
+    scope?: "local" | "global" | "others";
+    broadcast?: boolean;
+}
+
+const CLIENT_SIGN_OUT_TIMEOUT_MS = 1500;
+
+async function signOutWithTimeout(scope: "local" | "global" | "others" = "local") {
+    const supabase = createClient();
 
     return Promise.race([
-        supabase.auth.signOut({ scope: 'global' }),
+        supabase.auth.signOut({ scope }),
         new Promise<{ error: Error }>((resolve) => {
             window.setTimeout(() => {
-                resolve({ error: new Error(`Client sign-out timed out after ${CLIENT_SIGN_OUT_TIMEOUT_MS}ms`) })
-            }, CLIENT_SIGN_OUT_TIMEOUT_MS)
+                resolve({ error: new Error(`Client sign-out timed out after ${CLIENT_SIGN_OUT_TIMEOUT_MS}ms`) });
+            }, CLIENT_SIGN_OUT_TIMEOUT_MS);
         }),
-    ])
+    ]);
 }
 
 /**
- * Unified, fully destructive sign-out function.
+ * Unified sign-out function supporting multi-device scopes.
  *
- * This ensures complete session termination:
- * 1. Clears client-side auth state (localStorage/sessionStorage) with global scope
- * 2. Clears any custom app storage
- * 3. Calls server endpoint to clear cookies and server-side session
- * 4. Redirects to login with cache-busting to prevent back-button access
+ * Scopes:
+ * - 'local' (default): Clears current browser/tab session only. Other devices remain logged in.
+ * - 'others': Invalidate all other device sessions while keeping the current device active.
+ * - 'global': Completely terminates sessions on all devices for security lockout.
  *
- * Use this function from client components for consistent sign-out behavior.
+ * Use this function from client components for consistent multi-device auth behavior.
  */
-export async function signOut() {
+export async function signOut(options: SignOutOptions = {}) {
+    const { scope = "local", broadcast = true } = options;
+
     try {
-        // Clear browser session AND invalidate refresh token globally, but do not
-        // let a hanging client request trap the user on a protected page.
-        const { error } = await signOutWithTimeout()
+        const { error } = await signOutWithTimeout(scope);
         if (error) {
-            console.error('Supabase global signOut failed:', error)
+            console.error(`Supabase ${scope} signOut failed:`, error);
         }
     } catch (error) {
-        console.error('Unexpected signOut error:', error)
+        console.error("Unexpected signOut error:", error);
+    }
+
+    if (broadcast && typeof window !== "undefined") {
+        broadcastAuthEvent({ type: "SIGNED_OUT", scope });
+    }
+
+    if (scope === "others") {
+        return;
     }
 
     // Clear any app-specific localStorage/sessionStorage data
     try {
-        // Remove any custom auth-related keys (adjust as needed)
-        Object.keys(localStorage).forEach(key => {
-            if (key.startsWith('supabase.') || key.includes('auth') || key.includes('session')) {
-                localStorage.removeItem(key)
+        Object.keys(localStorage).forEach((key) => {
+            if (key.startsWith("supabase.") || key.includes("auth") || key.includes("session")) {
+                localStorage.removeItem(key);
             }
-        })
-        Object.keys(sessionStorage).forEach(key => {
-            if (key.startsWith('supabase.') || key.includes('auth') || key.includes('session')) {
-                sessionStorage.removeItem(key)
+        });
+        Object.keys(sessionStorage).forEach((key) => {
+            if (key.startsWith("supabase.") || key.includes("auth") || key.includes("session")) {
+                sessionStorage.removeItem(key);
             }
-        })
+        });
     } catch (e) {
-        console.warn('Could not clear custom storage:', e)
+        console.warn("Could not clear custom storage:", e);
     }
 
-// Route logout through the server so middleware-visible cookies are
-    // definitely cleared before we land on the login page.
-    const timestamp = Date.now()
-    window.location.replace(`/auth/logout?logout=${timestamp}`)
+    // Route logout through the server so middleware-visible cookies are cleared
+    const timestamp = Date.now();
+    window.location.replace(`/auth/logout?logout=${timestamp}`);
 }
 
 /**
