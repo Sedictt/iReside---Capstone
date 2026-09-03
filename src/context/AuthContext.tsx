@@ -10,8 +10,10 @@ import {
     type ReactNode,
 } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { AUTH_SYNC_CHANNEL_NAME, type AuthSyncEvent } from '@/lib/supabase/client-auth'
 import type { Profile } from '@/types/database'
 import type { User, Session } from '@supabase/supabase-js'
+import { toast } from 'sonner'
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -231,22 +233,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }))
     }, [state.user?.id, fetchProfile])
 
+    const clearAuthState = useCallback(() => {
+        setState({
+            user: null,
+            profile: null,
+            session: null,
+            loading: false,
+            profileLoading: false,
+        })
+    }, [])
+
     /* ---------- boot sequence ---------- */
 
     useEffect(() => {
         if (!supabase) return
         let cancelled = false // prevent state updates after unmount
         let timeoutId: ReturnType<typeof setTimeout> | undefined
-
-        const clearAuthState = () => {
-            setState({
-                user: null,
-                profile: null,
-                session: null,
-                loading: false,
-                profileLoading: false,
-            })
-        }
 
         const applyAuthedState = async (session: Session) => {
             if (cancelled) return
@@ -323,7 +325,104 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (timeoutId) clearTimeout(timeoutId)
             subscription.unsubscribe()
         }
-    }, [resolveUserFromSession, fetchProfile])
+    }, [resolveUserFromSession, fetchProfile, clearAuthState, supabase])
+
+    /* ---------- cross-tab BroadcastChannel synchronization ---------- */
+
+    useEffect(() => {
+        if (typeof window === 'undefined' || typeof window.BroadcastChannel === 'undefined') return
+
+        let channel: BroadcastChannel | null = null
+        try {
+            channel = new BroadcastChannel(AUTH_SYNC_CHANNEL_NAME)
+            channel.onmessage = async (event: MessageEvent<AuthSyncEvent>) => {
+                const data = event.data
+                if (!data || !data.type) return
+
+                if (data.type === 'SIGNED_OUT' && data.scope !== 'others') {
+                    clearAuthState()
+                    const pathname = window.location.pathname
+                    if (
+                        pathname.startsWith('/tenant') ||
+                        pathname.startsWith('/landlord') ||
+                        pathname.startsWith('/admin')
+                    ) {
+                        window.location.replace(`/login?sync=logout&t=${Date.now()}`)
+                    }
+                } else if (data.type === 'SIGNED_IN') {
+                    const {
+                        data: { session },
+                    } = await supabase.auth.getSession()
+                    if (session) {
+                        const resolved = await resolveUserFromSession(session)
+                        if (resolved.user && !resolved.isAuthoritativelyInvalid) {
+                            const fetchedProfile = await fetchProfile(resolved.user.id)
+                            setState({
+                                user: resolved.user,
+                                profile: fetchedProfile,
+                                session,
+                                loading: false,
+                                profileLoading: false,
+                            })
+                        }
+                    }
+                }
+            }
+        } catch (err) {
+            console.warn('[AuthContext] BroadcastChannel init error:', err)
+        }
+
+        return () => {
+            if (channel) {
+                try {
+                    channel.close()
+                } catch {
+                    // ignore
+                }
+            }
+        }
+    }, [supabase, resolveUserFromSession, fetchProfile, clearAuthState])
+
+    /* ---------- realtime remote session revocation monitor ---------- */
+
+    useEffect(() => {
+        const userId = state.user?.id
+        const currentSessionId = state.session?.id
+        if (!userId || !supabase) return
+
+        const channel = supabase
+            .channel(`auth-monitor:${userId}`)
+            .on('broadcast', { event: 'SESSION_REVOKED' }, (payload: any) => {
+                const payloadData = payload?.payload || payload
+                const targetSessionId = payloadData?.sessionId
+                const scope = payloadData?.scope
+
+                const isTargeted =
+                    (targetSessionId && currentSessionId && targetSessionId === currentSessionId) ||
+                    scope === 'all' ||
+                    (scope === 'others' && payloadData?.originatingSessionId !== currentSessionId)
+
+                if (isTargeted) {
+                    toast.error(
+                        payloadData?.message || 'Your session on this device was ended remotely.'
+                    )
+                    clearAuthState()
+                    const pathname = window.location.pathname
+                    if (
+                        pathname.startsWith('/tenant') ||
+                        pathname.startsWith('/landlord') ||
+                        pathname.startsWith('/admin')
+                    ) {
+                        window.location.replace('/login?reason=remote_revocation')
+                    }
+                }
+            })
+            .subscribe()
+
+        return () => {
+            supabase.removeChannel(channel)
+        }
+    }, [state.user?.id, state.session?.id, supabase, clearAuthState])
 
     /* ---------- listen for "profile-updated" custom events ---------- */
 
