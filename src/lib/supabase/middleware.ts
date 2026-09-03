@@ -204,6 +204,15 @@ export async function updateSession(request: NextRequest) {
         return NextResponse.redirect(url);
     }
 
+    // Role-based portal protection: prevent tenants from accessing landlord or setup routes
+    if (user && role === "tenant") {
+        if (request.nextUrl.pathname.startsWith("/landlord") || request.nextUrl.pathname.startsWith("/setup")) {
+            const url = request.nextUrl.clone();
+            url.pathname = "/tenant/dashboard";
+            return NextResponse.redirect(url);
+        }
+    }
+
     if (
         user &&
         role === "tenant" &&
