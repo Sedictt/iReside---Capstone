@@ -38,8 +38,8 @@ import { PageLoader } from "@/components/ui/LoadingSpinner";
 import { AvatarPicker } from "@/components/profile/AvatarPicker";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
-import { updateTenantPassword } from "@/lib/supabase/client-auth";
-import { UAParser } from "ua-parser-js";
+import { updateTenantPassword, signOut } from "@/lib/supabase/client-auth";
+import { parseUserAgent } from "@/lib/utils/device-parser";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
 
 // --- Types ---
@@ -413,12 +413,44 @@ export function TenantSettings() {
         }
     };
 
+    const handleRevokeSession = async (sessionId: string) => {
+        const loadingToast = toast.loading("Revoking session...");
+        try {
+            const res = await fetch("/api/auth/sessions", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ sessionId }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || "Failed to revoke session");
+
+            toast.success("Session revoked successfully", { id: loadingToast });
+            dispatchSessions({
+                type: 'FETCH_SESSIONS_SUCCESS',
+                payload: {
+                    sessions: sessions.filter(s => s.id !== sessionId),
+                    currentSessionId,
+                },
+            });
+        } catch (error: any) {
+            toast.error(error.message || "Failed to revoke session", { id: loadingToast });
+        }
+    };
+
     const handleSignOutOthers = async () => {
         dispatchSessions({ type: 'FETCH_SESSIONS_START' });
         const loadingToast = toast.loading("Signing out other devices...");
         try {
             const { error } = await supabase.auth.signOut({ scope: "others" });
             if (error) throw error;
+
+            // Broadcast remote invalidation event
+            await fetch("/api/auth/sessions", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ scope: "others" }),
+            }).catch(() => null);
+
             toast.success("Signed out of all other devices successfully", { id: loadingToast });
             const { data } = await (supabase as any).from('user_sessions').select('*').order('updated_at', { ascending: false });
             if (data) {
@@ -430,6 +462,21 @@ export function TenantSettings() {
         } catch (error: any) {
             toast.error(error.message || "Failed to sign out other devices", { id: loadingToast });
             dispatchSessions({ type: 'FETCH_SESSIONS_ERROR' });
+        }
+    };
+
+    const handleSignOutAll = async () => {
+        const loadingToast = toast.loading("Signing out everywhere...");
+        try {
+            await fetch("/api/auth/sessions", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ scope: "global" }),
+            }).catch(() => null);
+
+            await signOut({ scope: "global" });
+        } catch (error: any) {
+            toast.error(error.message || "Failed to sign out globally", { id: loadingToast });
         }
     };
 
@@ -686,42 +733,56 @@ export function TenantSettings() {
                     );
                 case "Sessions":
                     return (
-                        <GlassCard title="Active Sessions" description="Devices currently logged into your account.">
-                            <div className="space-y-4 max-w-lg">
+                        <GlassCard title="Active Sessions" description="Devices and browsers currently logged into your tenant account.">
+                            <div className="space-y-4 max-w-xl">
                                 {isSessionsLoading && sessions.length === 0 ? (
-                                    <div className="text-center py-4 text-xs text-neutral-500 uppercase tracking-widest font-black">Loading sessions...</div>
+                                    <div className="text-center py-6 text-xs text-muted-foreground uppercase tracking-widest font-black">Loading sessions...</div>
                                 ) : sessions.length === 0 ? (
-                                    <div className="text-center py-4 text-xs text-neutral-500 uppercase tracking-widest font-black">No sessions found</div>
+                                    <div className="text-center py-6 text-xs text-muted-foreground uppercase tracking-widest font-black">No active sessions found</div>
                                 ) : (
                                     sessions.map((sess) => {
-                                        const parser = new UAParser(sess.user_agent);
-                                        const browser = parser.getBrowser().name || "Unknown Browser";
-                                        const os = parser.getOS().name || "Unknown OS";
-                                        const deviceType = parser.getDevice().type;
-                                        
+                                        const deviceInfo = parseUserAgent(sess.user_agent);
                                         const isCurrent = sess.id === currentSessionId;
-                                        const isMobile = deviceType === "mobile" || deviceType === "tablet";
+                                        const isMobile = deviceInfo.deviceType === "mobile" || deviceInfo.deviceType === "tablet";
                                         const Icon = isMobile ? Smartphone : Monitor;
 
-                                        
                                         return (
                                             <div key={sess.id} className={cn(
-                                                "flex items-center justify-between rounded-2xl border p-4 transition-colors",
+                                                "flex items-center justify-between rounded-2xl border p-4 transition-colors gap-4",
                                                 isCurrent 
-                                                    ? "border-primary/20 bg-primary/5" 
+                                                    ? "border-primary/30 bg-primary/5" 
                                                     : "border-white/5 bg-white/5 hover:bg-white/10"
                                             )}>
-                                                <div className="flex items-center gap-4">
-                                                    <Icon className={cn("size-5", isCurrent ? "text-primary" : "text-neutral-400")} />
-                                                    <div>
-                                                        <h4 className="text-sm font-black text-white">{browser} on {os}</h4>
-                                                        <p className="text-[10px] text-neutral-500 uppercase tracking-wider">
-                                                            {isCurrent ? "Current Session" : <>Last seen <ClientOnlyDate date={sess.updated_at} format={{ month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }} /></>} • IP: {sess.ip}
+                                                <div className="flex items-center gap-4 min-w-0">
+                                                    <div className={cn(
+                                                        "flex size-10 items-center justify-center rounded-xl shrink-0",
+                                                        isCurrent ? "bg-primary/20 text-primary" : "bg-white/5 text-muted-foreground"
+                                                    )}>
+                                                        <Icon className="size-5" />
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <div className="flex items-center gap-2">
+                                                            <h4 className="text-sm font-black text-foreground truncate">{deviceInfo.label}</h4>
+                                                            {isCurrent && (
+                                                                <span className="rounded-md bg-primary/20 px-2 py-0.5 text-[10px] font-black text-primary uppercase tracking-wider shrink-0">
+                                                                    This Device
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-[11px] text-muted-foreground truncate">
+                                                            {isCurrent ? "Active now" : <>Last active <ClientOnlyDate date={sess.updated_at} format={{ month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }} /></>} • IP: {sess.ip || "Unknown IP"}
                                                         </p>
                                                     </div>
                                                 </div>
-                                                {isCurrent && (
-                                                    <span className="rounded-lg bg-primary/20 px-2 py-1 text-[10px] font-black text-primary">ACTIVE</span>
+
+                                                {!isCurrent && (
+                                                    <button
+                                                        onClick={() => handleRevokeSession(sess.id)}
+                                                        className="px-3 py-1.5 rounded-xl text-xs font-bold text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors shrink-0"
+                                                        title="Revoke this device"
+                                                    >
+                                                        Revoke
+                                                    </button>
                                                 )}
                                             </div>
                                         );
@@ -729,13 +790,23 @@ export function TenantSettings() {
                                 )}
                                 
                                 {sessions.length > 1 && (
-                                    <button 
-                                        onClick={handleSignOutOthers}
-                                        disabled={isSessionsLoading}
-                                        className="mt-2 flex items-center gap-2 text-xs font-black text-red-400 hover:text-red-300 transition-colors disabled:opacity-50"
-                                    >
-                                        <LogOut className="size-3.5" /> Sign out all other devices
-                                    </button>
+                                    <div className="pt-4 flex flex-wrap items-center gap-4 border-t border-white/5">
+                                        <button 
+                                            onClick={handleSignOutOthers}
+                                            disabled={isSessionsLoading}
+                                            className="flex items-center gap-2 text-xs font-black text-amber-500 hover:text-amber-400 transition-colors disabled:opacity-50"
+                                        >
+                                            <LogOut className="size-3.5" /> Sign out all other devices
+                                        </button>
+
+                                        <button 
+                                            onClick={handleSignOutAll}
+                                            disabled={isSessionsLoading}
+                                            className="flex items-center gap-2 text-xs font-black text-red-500 hover:text-red-400 transition-colors disabled:opacity-50"
+                                        >
+                                            <ShieldCheck className="size-3.5" /> Sign out of all devices (Global Reset)
+                                        </button>
+                                    </div>
                                 )}
                             </div>
                         </GlassCard>
