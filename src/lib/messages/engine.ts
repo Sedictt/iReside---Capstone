@@ -247,17 +247,50 @@ export const getLastMessagesByConversation = async (supabase: DbClient, conversa
         return new Map<string, MessagePreview>();
     }
 
+    const map = new Map<string, MessagePreview>();
+
+    // For standard user conversation lists (<= 30), fetch the latest message per conversation
+    // in parallel with limit(1) to avoid unbounded table scans
+    if (conversationIds.length <= 30) {
+        const results = await Promise.all(
+            conversationIds.map((id) =>
+                supabase
+                    .from("messages")
+                    .select("id, conversation_id, sender_id, type, content, metadata, read_at, created_at")
+                    .eq("conversation_id", id)
+                    .order("created_at", { ascending: false })
+                    .limit(1)
+                    .maybeSingle()
+            )
+        );
+
+        for (const res of results) {
+            if (res.data) {
+                map.set(res.data.conversation_id, {
+                    id: res.data.id,
+                    conversationId: res.data.conversation_id,
+                    senderId: res.data.sender_id,
+                    type: res.data.type,
+                    content: res.data.content,
+                    metadata: res.data.metadata,
+                    readAt: res.data.read_at,
+                    createdAt: res.data.created_at,
+                });
+            }
+        }
+        return map;
+    }
+
     const { data, error } = await supabase
         .from("messages")
         .select("id, conversation_id, sender_id, type, content, metadata, read_at, created_at")
         .in("conversation_id", conversationIds)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(conversationIds.length * 5);
 
     if (error) {
         throw new Error("Failed to load last messages.");
     }
-
-    const map = new Map<string, MessagePreview>();
 
     for (const row of data ?? []) {
         if (map.has(row.conversation_id)) continue;
@@ -301,7 +334,32 @@ export const getUnreadCounts = async (supabase: DbClient, conversationIds: strin
     return counts;
 };
 
-export const buildConversationSummaries = async (supabase: DbClient, currentUserId: string) => {
+type CachedSummaries = {
+    data: ConversationSummary[];
+    expiresAt: number;
+};
+const summariesCache = new Map<string, CachedSummaries>();
+
+export const invalidateSummariesCache = (userId?: string) => {
+    if (userId) {
+        summariesCache.delete(userId);
+    } else {
+        summariesCache.clear();
+    }
+};
+
+export const buildConversationSummaries = async (
+    supabase: DbClient,
+    currentUserId: string,
+    options?: { forceFresh?: boolean }
+) => {
+    if (!options?.forceFresh) {
+        const cached = summariesCache.get(currentUserId);
+        if (cached && Date.now() < cached.expiresAt) {
+            return cached.data;
+        }
+    }
+
     const conversationIds = await getConversationIdsForUser(supabase, currentUserId);
 
     if (conversationIds.length === 0) {
@@ -346,7 +404,7 @@ export const buildConversationSummaries = async (supabase: DbClient, currentUser
         resolvePartnerActionState(supabase, currentUserId, partnerIds),
     ]);
 
-    return (conversations ?? []).map((conv) => {
+    const summaries: ConversationSummary[] = (conversations ?? []).map((conv) => {
         const participantIdsForConversation = participantsByConversation.get(conv.id) ?? [];
         const participants = participantIdsForConversation
             .map((id) => profileMap.get(id))
@@ -379,6 +437,13 @@ export const buildConversationSummaries = async (supabase: DbClient, currentUser
             unreadCount: unreadCounts.get(conv.id) ?? 0,
         };
     });
+
+    summariesCache.set(currentUserId, {
+        data: summaries,
+        expiresAt: Date.now() + 10_000, // 10 seconds in-memory TTL
+    });
+
+    return summaries;
 };
 
 export const ensureUserInConversation = async (supabase: DbClient, conversationId: string, userId: string) => {

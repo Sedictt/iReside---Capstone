@@ -26,6 +26,8 @@ interface InvoiceData {
     status?: string;
 }
 
+const invoiceDetailsCache = new Map<string, InvoiceData>();
+
 export function OfficialReceipt({ 
     message, 
     onDownload, 
@@ -45,6 +47,12 @@ export function OfficialReceipt({
             // Skip if no valid ID or if it's an optimistic local message
             if (!id || id.startsWith('local-')) return;
 
+            const cached = invoiceDetailsCache.get(id);
+            if (cached) {
+                setRealData(cached);
+                return;
+            }
+
             setLoading(true);
             try {
                 const endpoint = role === "landlord" 
@@ -55,6 +63,7 @@ export function OfficialReceipt({
                 if (res.ok) {
                     const data = await res.json();
                     if (data.invoice) {
+                        invoiceDetailsCache.set(id, data.invoice);
                         setRealData(data.invoice);
                     }
                 }
