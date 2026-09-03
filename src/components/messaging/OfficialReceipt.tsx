@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { m as motion } from "framer-motion";
 import { UiMessage } from "@/components/landlord/messages/types";
 import { cn } from "@/lib/utils";
+import { useBrand } from "@/context/BrandContext";
 
 interface OfficialReceiptProps {
     message: UiMessage;
@@ -32,6 +33,7 @@ export function OfficialReceipt({
     role = "landlord",
     isCompact = false
 }: OfficialReceiptProps) {
+    const brand = useBrand();
     const [realData, setRealData] = useState<InvoiceData | null>(null);
     const [loading, setLoading] = useState(false);
 
@@ -73,8 +75,8 @@ export function OfficialReceipt({
         date: realData?.issuedDate 
             ? new Date(realData.issuedDate).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) 
             : message.date || "---",
-        landlordName: realData?.landlord?.full_name || message.landlordName || "iReside Partner",
-        propertyName: realData?.property?.name || message.propertyName || "Managed Property",
+        landlordName: realData?.landlord?.full_name || message.landlordName || (brand?.isCustomBranded ? brand.propertyName : "iReside Partner"),
+        propertyName: realData?.property?.name || message.propertyName || (brand?.propertyName !== "iReside Residences" ? brand?.propertyName : undefined) || "Managed Property",
         tenantName: realData?.tenant?.full_name || message.tenantName || "Unknown Tenant",
         unit: realData?.unit?.name || message.unit || "---",
         description: realData?.description || message.description || "Rental Payment",
@@ -83,6 +85,20 @@ export function OfficialReceipt({
             : message.amount || "0",
         status: (realData?.status || "Paid").toUpperCase()
     };
+
+    // Dynamically resolve the brand name established by the landlord
+    const brandName = useMemo(() => {
+        if (brand?.isCustomBranded && brand.propertyName?.trim()) {
+            return brand.propertyName.trim();
+        }
+        if (displayData.propertyName && displayData.propertyName !== "Managed Property") {
+            return displayData.propertyName;
+        }
+        if (brand?.propertyName?.trim() && brand.propertyName !== "iReside Residences") {
+            return brand.propertyName.trim();
+        }
+        return "iReside";
+    }, [brand?.isCustomBranded, brand?.propertyName, displayData.propertyName]);
 
     return (
         <motion.div 
@@ -118,7 +134,7 @@ export function OfficialReceipt({
                     <h1 className={cn(
                         "font-black tracking-tighter mb-1",
                         isCompact ? "text-lg" : "text-xl"
-                    )}>iReside</h1>
+                    )}>{brandName}</h1>
                     <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Payment Confirmation</p>
                     {loading && (
                         <div className="absolute -top-1 right-0">
