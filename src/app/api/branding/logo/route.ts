@@ -35,12 +35,18 @@ export async function POST(request: Request) {
   try {
     const authContext = await requireAuthenticatedUser(request);
     if (!("userId" in authContext)) return authContext as Response;
+    if (authContext.userRole !== "landlord" && authContext.userRole !== "admin") {
+      return NextResponse.json(
+        { error: "Forbidden: Only landlords and administrators can update brand logo assets." },
+        { status: 403 }
+      );
+    }
     const { userId } = authContext;
 
     const formData = await request.formData();
     const file = formData.get("file");
 
-    if (!(file instanceof File)) {
+    if (!file || typeof file === "string" || typeof (file as any).arrayBuffer !== "function") {
       return NextResponse.json({ error: "File is required." }, { status: 400 });
     }
 

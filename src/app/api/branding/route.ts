@@ -62,7 +62,7 @@ export async function GET() {
       primaryColor: customTheme?.primaryColor || DEFAULT_BRANDING.primaryColor,
       secondaryColor: customTheme?.secondaryColor || DEFAULT_BRANDING.secondaryColor,
       logoUrl: customTheme?.logoUrl || (property?.images?.[0] ? property.images[0] : null),
-      bannerUrl: customTheme?.bannerUrl || null,
+      bannerUrl: customTheme?.bannerUrl || (property?.images?.[0] ? property.images[0] : null),
     };
 
     return NextResponse.json(brandingPayload);
@@ -80,6 +80,12 @@ export async function POST(request: NextRequest) {
   try {
     const authContext = await requireAuthenticatedUser(request);
     if (!("userId" in authContext)) return authContext as Response;
+    if (authContext.userRole !== "landlord" && authContext.userRole !== "admin") {
+      return NextResponse.json(
+        { error: "Forbidden: Only landlords and administrators can update brand personalization settings." },
+        { status: 403 }
+      );
+    }
     const { userId } = authContext;
 
     const body = (await request.json()) as Partial<BrandConfig>;
