@@ -109,8 +109,7 @@ describe("LoginPage - UI and Form Validation", () => {
         render(<LoginPage />);
         expect(screen.getByText(/Dedicated/i)).toBeInTheDocument();
         expect(screen.getAllByText(/property/i).length).toBeGreaterThan(0);
-        expect(screen.getByText(/Isolated Private Workspace/i)).toBeInTheDocument();
-        expect(screen.getByText(/Centralized Operations/i)).toBeInTheDocument();
+        expect(screen.getByText(/Download iReside App/i)).toBeInTheDocument();
     });
 
     it("shows loading state on form submission", async () => {

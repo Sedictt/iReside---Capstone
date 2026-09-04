@@ -79,6 +79,31 @@ function isAuthoritativeAuthError(error: unknown): boolean {
     return authoritativeSignals.some(signal => haystack.includes(signal))
 }
 
+function getSessionId(session: Session | null): string | undefined {
+    if (!session) return undefined
+    const rawId = (session as any)?.id || (session as any)?.session_id
+    if (rawId) return rawId
+    if (session.access_token) {
+        try {
+            const parts = session.access_token.split('.')
+            if (parts[1]) {
+                const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/')
+                const jsonPayload = decodeURIComponent(
+                    atob(base64)
+                        .split('')
+                        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+                        .join('')
+                )
+                const payload = JSON.parse(jsonPayload)
+                return payload.session_id
+            }
+        } catch {
+            // ignore decode error
+        }
+    }
+    return undefined
+}
+
 /* ------------------------------------------------------------------ */
 /*  Provider                                                           */
 /* ------------------------------------------------------------------ */
@@ -387,7 +412,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         const userId = state.user?.id
-        const currentSessionId = state.session?.id
+        const currentSessionId = getSessionId(state.session)
         if (!userId || !supabase) return
 
         const channel = supabase
@@ -422,7 +447,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return () => {
             supabase.removeChannel(channel)
         }
-    }, [state.user?.id, state.session?.id, supabase, clearAuthState])
+    }, [state.user?.id, state.session, supabase, clearAuthState])
 
     /* ---------- listen for "profile-updated" custom events ---------- */
 

@@ -4,13 +4,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { 
     Eye, 
+    EyeOff,
     ArrowRight, 
-    ShieldCheck, 
-    UserCircle,
-    ArrowUpRight,
-    Info,
-    Building2,
-    Lock
+    Download,
+    AlertCircle,
+    Loader2
 } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { useState, Suspense, useEffect } from "react";
@@ -97,213 +95,321 @@ function LoginContent() {
     if (!mounted) return null;
 
     return (
-        <div className="min-h-svh w-full flex items-center justify-center bg-background relative overflow-y-auto selection:bg-primary/30 font-sans py-20 lg:py-0">
-            {/* Ambient Background Layer */}
-            <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+        <div className="min-h-svh w-full flex flex-col justify-between bg-background text-foreground relative selection:bg-primary/25 font-sans">
+            {/* Ambient Background Texture */}
+            <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden" aria-hidden="true">
                 <Image 
                     src="/hero-images/apartment-03.png" 
-                    alt="Background" 
+                    alt="" 
                     fill 
                     sizes="100vw"
-                    className="object-cover opacity-15 dark:opacity-10 grayscale-[60%]"
+                    className="object-cover opacity-[0.07] dark:opacity-[0.04] grayscale"
                     priority
                 />
-                <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/85 to-background" />
-                <div className="absolute top-1/4 -left-20 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
-                <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/95 to-background" />
+                <div className="absolute -top-32 -left-32 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
             </div>
 
-            {/* Top Utility Header */}
-            <header className="absolute top-0 left-0 right-0 p-4 sm:p-6 md:p-8 flex items-center justify-between z-50">
-                <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-3">
-                    <Logo className="h-9 md:h-10 w-auto drop-shadow-xl" />
-                </motion.div>
-                <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-3">
-                    <ThemeToggle className="shadow-lg" />
-                </motion.div>
+            {/* Top Navigation Header */}
+            <header className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+                <Link href="/" className="flex items-center gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-lg">
+                    <Logo className="h-8 w-28 drop-shadow-sm" />
+                </Link>
+                <div className="flex items-center gap-4">
+                    <Link
+                        href="/docs"
+                        className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors hidden sm:inline-block"
+                    >
+                        Documentation
+                    </Link>
+                    <ThemeToggle className="rounded-xl border border-border bg-card/80 shadow-xs" />
+                </div>
             </header>
 
-            {/* Main Auth Grid */}
-            <motion.main 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                className="relative z-10 w-full max-w-[1200px] grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 px-4 sm:px-6 items-center"
-            >
-                {/* Left Side: Brand Narrative */}
-                <div className="hidden lg:flex flex-col space-y-8">
-                    <div className="space-y-6">
-                        <h1 className="text-5xl md:text-6xl xl:text-7xl font-black leading-[1.05] tracking-tighter text-foreground drop-shadow-xs">
-                            Dedicated <br />
-                            <span className="text-primary italic underline decoration-primary/20 decoration-8 underline-offset-8">property</span> <br /> 
-                            operations.
-                        </h1>
+            {/* Main Auth Content */}
+            <main className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 my-auto">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+                    
+                    {/* Left Column: Brand & Platform Value (Desktop) */}
+                    <div className="hidden lg:flex lg:col-span-7 flex-col justify-center space-y-8 pr-8 relative overflow-hidden p-8 xl:p-12 rounded-3xl border border-border/40 bg-card/25 backdrop-blur-xs min-h-[500px]">
+                        {/* Abstract Geometric Graphic Layer */}
+                        <div className="absolute inset-0 pointer-events-none overflow-hidden select-none" aria-hidden="true">
+                            {/* Ambient soft glow */}
+                            <div className="absolute top-1/4 -left-12 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />
+                            <div className="absolute -bottom-8 right-12 w-64 h-64 bg-primary/8 rounded-full blur-2xl" />
 
-                        <p className="text-lg text-muted-foreground font-medium leading-relaxed max-w-md">
-                            Unified workspace for portfolio operations, automated financials, and direct resident engagement.
-                        </p>
-                    </div>
+                            {/* Abstract Geometric Vector Elements */}
+                            <svg 
+                                className="absolute -right-16 top-1/2 -translate-y-1/2 w-[480px] h-[480px] text-primary/15 dark:text-primary/10 opacity-70"
+                                viewBox="0 0 400 400" 
+                                fill="none" 
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <defs>
+                                    <linearGradient id="geom-grad" x1="0" y1="0" x2="400" y2="400" gradientUnits="userSpaceOnUse">
+                                        <stop stopColor="currentColor" stopOpacity="0.8" />
+                                        <stop offset="1" stopColor="currentColor" stopOpacity="0.1" />
+                                    </linearGradient>
+                                    <pattern id="grid-dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                                        <circle cx="2" cy="2" r="1" fill="currentColor" fillOpacity="0.4" />
+                                    </pattern>
+                                </defs>
 
-                    {/* Features Highlights */}
-                    <div className="grid grid-cols-1 gap-3.5 max-w-lg">
-                        <div className="p-4.5 rounded-2xl neumorphic-panel flex items-start gap-4">
-                            <div className="size-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0 mt-0.5">
-                                <Lock className="size-5" />
-                            </div>
-                            <div>
-                                <h3 className="font-black text-sm text-foreground">Isolated Private Workspace</h3>
-                                <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                                    Property and tenant records are completely protected with private role-based access.
-                                </p>
-                            </div>
+                                {/* Geometric Matrix Background */}
+                                <rect x="40" y="40" width="320" height="320" fill="url(#grid-dots)" opacity="0.3" />
+
+                                {/* Concentric Precision Rings */}
+                                <circle cx="200" cy="200" r="160" stroke="url(#geom-grad)" strokeWidth="1.2" strokeDasharray="4 6" />
+                                <circle cx="200" cy="200" r="110" stroke="currentColor" strokeWidth="1" opacity="0.35" />
+                                <circle cx="200" cy="200" r="65" stroke="currentColor" strokeWidth="1.5" opacity="0.5" />
+
+                                {/* Modern Isometric Diamond Plane */}
+                                <path d="M70 200 L200 70 L330 200 L200 330 Z" stroke="url(#geom-grad)" strokeWidth="1.5" fill="currentColor" fillOpacity="0.02" />
+                                <path d="M120 200 L200 120 L280 200 L200 280 Z" stroke="currentColor" strokeWidth="1" opacity="0.4" />
+
+                                {/* Technical Axis Guides */}
+                                <line x1="40" y1="200" x2="360" y2="200" stroke="currentColor" strokeWidth="0.75" strokeDasharray="3 4" opacity="0.25" />
+                                <line x1="200" y1="40" x2="200" y2="360" stroke="currentColor" strokeWidth="0.75" strokeDasharray="3 4" opacity="0.25" />
+
+                                {/* Axis Precision Points */}
+                                <circle cx="200" cy="70" r="3" fill="currentColor" opacity="0.6" />
+                                <circle cx="330" cy="200" r="3" fill="currentColor" opacity="0.6" />
+                                <circle cx="200" cy="330" r="3" fill="currentColor" opacity="0.6" />
+                                <circle cx="70" cy="200" r="3" fill="currentColor" opacity="0.6" />
+                                <circle cx="200" cy="200" r="4.5" fill="currentColor" opacity="0.8" />
+                            </svg>
                         </div>
 
-                        <div className="p-4.5 rounded-2xl neumorphic-panel flex items-start gap-4">
-                            <div className="size-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0 mt-0.5">
-                                <Building2 className="size-5" />
-                            </div>
-                            <div>
-                                <h3 className="font-black text-sm text-foreground">Centralized Operations</h3>
-                                <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                                    Streamlined rent tracking, maintenance dispatching, and direct resident communication.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                        {/* Text Content */}
+                        <div className="relative z-10 space-y-5">
+                            <h1 className="text-4xl xl:text-6xl font-black tracking-tight text-foreground leading-[1.08]">
+                                Dedicated <br />
+                                <span className="text-primary underline decoration-primary/30 decoration-6 underline-offset-6">property</span> <br />
+                                operations.
+                            </h1>
 
-                {/* Right Side: Sign-In Card */}
-                <div className="relative w-full">
-                    <section className="relative rounded-3xl sm:rounded-[2.5rem] neumorphic-panel p-6 sm:p-10 lg:p-12 space-y-6 shadow-2xl">
-                        <div className="space-y-2">
-                            <h2 className="text-3xl sm:text-4xl font-black tracking-tight leading-none">Sign In</h2>
-                            <p className="text-sm sm:text-base text-muted-foreground font-medium">
-                                Enter your credentials to access your workspace.
+                            <p className="text-lg text-muted-foreground font-normal leading-relaxed max-w-lg">
+                                Unified workspace for portfolio operations, automated financials, and direct resident engagement.
                             </p>
                         </div>
 
-                        {/* Error Handling */}
-                        <AnimatePresence>
-                            {error && (
-                                <motion.div 
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: 'auto' }}
-                                    exit={{ opacity: 0, height: 0 }}
-                                    className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 flex gap-3 overflow-hidden"
-                                >
-                                    <ShieldCheck className="size-5 text-red-500 shrink-0 mt-0.5" />
-                                    <p className="text-xs font-black text-red-600 dark:text-red-400 leading-relaxed">{error}</p>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-
-                        {/* Form */}
-                        <form className="space-y-4" onSubmit={handleSubmit}>
-                            <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground ml-1" htmlFor="email">Email Address</label>
-                                    <input
-                                        id="email"
-                                        name="email"
-                                        type="email"
-                                        required
-                                        placeholder="name@example.com"
-                                        className="h-14 w-full rounded-2xl neumorphic-inset px-5 text-sm focus:ring-2 focus:ring-primary/30 transition-all outline-none font-medium"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <div className="flex justify-between items-center ml-1">
-                                        <label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground" htmlFor="password">Password</label>
-                                        <Link href="/forgot-password" title="Forgot Password?" className="text-[11px] font-black text-primary hover:underline">Forgot Password?</Link>
-                                    </div>
-                                    <div className="relative">
-                                        <input
-                                            id="password"
-                                            name="password"
-                                            type={isPasswordVisible ? "text" : "password"}
-                                            required
-                                            placeholder="••••••••"
-                                            className="h-14 w-full rounded-2xl neumorphic-inset px-5 pr-12 text-sm focus:ring-2 focus:ring-primary/30 transition-all outline-none font-medium"
-                                        />
-                                        <button 
-                                            type="button"
-                                            onClick={() => setIsPasswordVisible(!isPasswordVisible)}
-                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors cursor-pointer p-1"
-                                            aria-label={isPasswordVisible ? "Hide password" : "Show password"}
-                                        >
-                                            <Eye className={cn("size-5", isPasswordVisible && "text-primary")} />
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="h-14 w-full rounded-2xl neumorphic-primary font-black text-base transition-all flex items-center justify-center gap-3 disabled:opacity-50 active:scale-95 cursor-pointer shadow-lg"
+                        {/* Noticeable & Pleasing CTA Button */}
+                        <div className="relative z-10 pt-2">
+                            <Link
+                                href="/download"
+                                className="group inline-flex items-center gap-3.5 px-5 py-3 rounded-xl bg-card/90 hover:bg-card border border-border/80 hover:border-primary/50 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                             >
-                                {loading ? "Authenticating..." : "Sign into Workspace"}
-                                {!loading && <ArrowRight className="size-5" />}
-                            </button>
-                        </form>
-
-                        <div className="relative flex items-center gap-4 pt-1">
-                            <div className="h-[1px] flex-1 bg-border/50" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground">OR CONTINUE WITH</span>
-                            <div className="h-[1px] flex-1 bg-border/50" />
+                                <div className="size-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all shrink-0">
+                                    <Download className="size-4.5" />
+                                </div>
+                                <div className="flex flex-col text-left">
+                                    <span className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">
+                                        Download iReside App
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">
+                                        For Windows & Android
+                                    </span>
+                                </div>
+                                <ArrowRight className="size-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all ml-2 shrink-0" />
+                            </Link>
                         </div>
+                    </div>
 
-                        <button
-                            type="button"
-                            onClick={handleGoogleLogin}
-                            className="h-14 w-full flex items-center justify-center gap-3.5 rounded-2xl neumorphic-extruded opacity-85 hover:opacity-100 transition-all font-black text-sm active:scale-95 cursor-pointer"
+                    {/* Right Column: Sign-In Card */}
+                    <div className="w-full lg:col-span-5 max-w-md mx-auto">
+                        <motion.section 
+                            initial={{ opacity: 0, y: 16 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.4 }}
+                            className="rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-xl space-y-6"
                         >
-                            <Image src="https://www.svgrepo.com/show/475656/google-color.svg" width={22} height={22} alt="Google" />
-                            Google Account
-                        </button>
+                            {/* Card Header */}
+                            <div className="space-y-1.5">
+                                <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
+                                    Sign In
+                                </h2>
+                                <p className="text-sm text-muted-foreground">
+                                    Enter your credentials to access your workspace.
+                                </p>
+                            </div>
 
-                        {/* Resident Onboarding Join */}
-                        <div className="pt-2">
-                            <div className="relative group/hint">
-                                <Link 
-                                    href="/signup/tenant" 
-                                    className="flex items-center justify-between p-4 rounded-2xl neumorphic-extruded opacity-85 hover:opacity-100 transition-all group overflow-hidden"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className="size-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
-                                            <UserCircle className="size-5" />
+                            {/* Error Notification */}
+                            <AnimatePresence mode="wait">
+                                {error && (
+                                    <motion.div 
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        transition={{ duration: 0.2 }}
+                                        role="alert"
+                                        aria-live="polite"
+                                        className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/25 flex items-start gap-3 overflow-hidden text-red-600 dark:text-red-400"
+                                    >
+                                        <AlertCircle className="size-4 shrink-0 mt-0.5" />
+                                        <p className="text-xs font-medium leading-relaxed">{error}</p>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            {/* Authentication Form */}
+                            <form className="space-y-4" onSubmit={handleSubmit} noValidate>
+                                <div className="space-y-4">
+                                    {/* Email Field */}
+                                    <div className="space-y-1.5">
+                                        <label 
+                                            htmlFor="email"
+                                            className="block text-xs font-semibold text-foreground/90 select-none"
+                                        >
+                                            Email Address
+                                        </label>
+                                        <input
+                                            id="email"
+                                            name="email"
+                                            type="email"
+                                            required
+                                            autoComplete="email"
+                                            autoCapitalize="none"
+                                            spellCheck={false}
+                                            placeholder="name@example.com"
+                                            className="h-11 w-full rounded-xl border border-border bg-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                        />
+                                    </div>
+
+                                    {/* Password Field */}
+                                    <div className="space-y-1.5">
+                                        <div className="flex justify-between items-center">
+                                            <label 
+                                                htmlFor="password"
+                                                className="block text-xs font-semibold text-foreground/90 select-none"
+                                            >
+                                                Password
+                                            </label>
+                                            <Link 
+                                                href="/forgot-password" 
+                                                className="text-xs font-semibold text-primary hover:underline transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded-xs"
+                                            >
+                                                Forgot Password?
+                                            </Link>
                                         </div>
-                                        <div className="flex flex-col text-left">
-                                            <div className="flex items-center gap-1.5 mb-0.5">
-                                                <span className="text-[10px] font-black uppercase tracking-widest text-primary/80 leading-none">Resident Portal</span>
-                                                <div className="flex items-center gap-1">
-                                                    <span className="text-[8px] font-black bg-blue-500/10 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded-full border border-blue-500/20">Private</span>
-                                                    <Info className="size-2.5 text-blue-600/50" />
-                                                </div>
-                                            </div>
-                                            <span className="text-sm font-black">Join with Invite Code</span>
+                                        <div className="relative">
+                                            <input
+                                                id="password"
+                                                name="password"
+                                                type={isPasswordVisible ? "text" : "password"}
+                                                required
+                                                autoComplete="current-password"
+                                                placeholder="••••••••"
+                                                className="h-11 w-full rounded-xl border border-border bg-background px-3.5 pr-11 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                            />
+                                            <button 
+                                                type="button"
+                                                onClick={() => setIsPasswordVisible(!isPasswordVisible)}
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                                                aria-label={isPasswordVisible ? "Hide password" : "Show password"}
+                                                aria-pressed={isPasswordVisible}
+                                            >
+                                                {isPasswordVisible ? (
+                                                    <EyeOff className="size-4.5" />
+                                                ) : (
+                                                    <Eye className="size-4.5" />
+                                                )}
+                                            </button>
                                         </div>
                                     </div>
-                                    <ArrowUpRight className="size-4 text-muted-foreground group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                                </Link>
-                                
-                                {/* Hint Tooltip */}
-                                <div className="absolute bottom-full left-0 mb-2 w-56 p-3 rounded-xl neumorphic-panel opacity-0 translate-y-2 pointer-events-none group-hover/hint:opacity-100 group-hover/hint:translate-y-0 transition-all z-[60] shadow-xl border border-border">
-                                    <p className="text-[11px] font-medium leading-relaxed text-muted-foreground">
-                                        <span className="text-blue-600 dark:text-blue-400 font-black">Invite Only:</span> Resident onboarding requires a private invite link or QR code issued by your property manager.
-                                    </p>
                                 </div>
-                            </div>
-                        </div>
-                    </section>
-                </div>
-            </motion.main>
 
-            {/* Footer */}
-            <footer className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 text-center opacity-40 select-none pointer-events-none">
-                <p className="text-[10px] font-bold uppercase tracking-[0.3em]">
-                    © 2026 iReside • Property Operations Platform
-                </p>
+                                {/* Submit Button */}
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="h-11 w-full rounded-xl bg-primary text-primary-foreground font-bold text-sm tracking-wide transition-all duration-200 hover:bg-primary/90 active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2 shadow-xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                                >
+                                    {loading ? (
+                                        <>
+                                            <Loader2 className="size-4 animate-spin" />
+                                            <span>Authenticating...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span>Sign into Workspace</span>
+                                            <ArrowRight className="size-4" />
+                                        </>
+                                    )}
+                                </button>
+                            </form>
+
+                            {/* Divider */}
+                            <div className="relative flex items-center gap-3 py-1">
+                                <div className="h-px flex-1 bg-border" />
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                                    OR CONTINUE WITH
+                                </span>
+                                <div className="h-px flex-1 bg-border" />
+                            </div>
+
+                            {/* Google OAuth Login */}
+                            <button
+                                type="button"
+                                onClick={handleGoogleLogin}
+                                disabled={loading}
+                                className="h-11 w-full flex items-center justify-center gap-3 rounded-xl border border-border bg-background hover:bg-muted/50 text-foreground font-semibold text-sm transition-all duration-200 active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                            >
+                                <svg className="size-4.5" viewBox="0 0 24 24">
+                                    <path
+                                        fill="#4285F4"
+                                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                                    />
+                                    <path
+                                        fill="#34A853"
+                                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                                    />
+                                    <path
+                                        fill="#FBBC05"
+                                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                                    />
+                                    <path
+                                        fill="#EA4335"
+                                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                                    />
+                                </svg>
+                                <span>Google Account</span>
+                            </button>
+
+                            {/* Resident Activation Link (Single Clean Footnote) */}
+                            <div className="pt-2 text-center">
+                                <p className="text-xs text-muted-foreground">
+                                    Invited as a resident?{" "}
+                                    <Link 
+                                        href="/signup/tenant" 
+                                        className="font-semibold text-primary hover:underline transition-colors"
+                                    >
+                                        Activate with Invite Code
+                                    </Link>
+                                </p>
+                            </div>
+                        </motion.section>
+                    </div>
+                </div>
+            </main>
+
+            {/* Bottom Footer */}
+            <footer className="relative z-20 w-full border-t border-border/40 py-5 text-center select-none bg-background/50 backdrop-blur-xs">
+                <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                    <span>© 2026 iReside Technologies</span>
+                    <span>•</span>
+                    <Link href="/privacy" className="hover:text-foreground transition-colors">
+                        Privacy Policy
+                    </Link>
+                    <span>•</span>
+                    <Link href="/terms" className="hover:text-foreground transition-colors">
+                        Terms of Service
+                    </Link>
+                    <span>•</span>
+                    <Link href="/download" className="hover:text-foreground transition-colors">
+                        Desktop & Mobile
+                    </Link>
+                </div>
             </footer>
         </div>
     );
@@ -311,7 +417,11 @@ function LoginContent() {
 
 export default function LoginPage() {
     return (
-        <Suspense fallback={<div className="h-svh bg-background flex items-center justify-center animate-pulse"><Logo className="h-12 w-44" /></div>}>
+        <Suspense fallback={
+            <div className="min-h-svh bg-background flex items-center justify-center animate-pulse">
+                <Logo className="h-10 w-36" />
+            </div>
+        }>
             <LoginContent />
         </Suspense>
     );

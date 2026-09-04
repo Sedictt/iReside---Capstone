@@ -1,4 +1,4 @@
-export type DocAudience = "tenant" | "landlord" | "it" | "user";
+export type DocAudience = "tenant" | "landlord" | "it" | "user" | "all";
 
 export type DocCategory =
   // Tenant Categories
@@ -27,7 +27,11 @@ export type DocCategory =
   | "environment_security"
   | "database_schema"
   | "cron_maintenance"
-  | "disaster_recovery";
+  | "disaster_recovery"
+  | "system_specifications"
+  | "user_roles_access"
+  | "installation_guide"
+  | "turnover_handover";
 
 export interface DocArticle {
   id: string;
@@ -206,6 +210,30 @@ export const CATEGORY_DEFINITIONS: Record<
     iconName: "ShieldAlert",
     audience: "it",
     description: "Database export dumps, failover recovery, and client handover.",
+  },
+  system_specifications: {
+    label: "System Specs & Requirements",
+    iconName: "Cpu",
+    audience: "it",
+    description: "Hardware, software, browser, and network prerequisites for client and host.",
+  },
+  user_roles_access: {
+    label: "User Types & RBAC Matrix",
+    iconName: "Users",
+    audience: "it",
+    description: "Different user roles, privileges, and feature-by-feature access control matrix.",
+  },
+  installation_guide: {
+    label: "Step-by-Step Installation",
+    iconName: "Terminal",
+    audience: "it",
+    description: "Complete setup procedure from repository clone to database migration and cloud launch.",
+  },
+  turnover_handover: {
+    label: "System Turnover & Defense",
+    iconName: "Award",
+    audience: "it",
+    description: "Formal sign-off acceptance, oral defense checklists, and commissioning protocol.",
   },
 };
 
@@ -1424,4 +1452,180 @@ export const DOCS_ARTICLES: DocArticle[] = [
       },
     ],
   },
+  {
+    id: "it-system-requirements-specs",
+    audience: "it",
+    category: "system_specifications",
+    categoryLabel: "System Specs & Requirements",
+    title: "System Requirements, Hardware/Software Specs & Prerequisites",
+    summary: "Detailed hardware and software specifications for Desktop, Mobile, and Cloud hosting, along with prerequisite accounts before using the platform.",
+    difficulty: "intermediate",
+    readTime: "5 min",
+    keywords: ["specifications", "hardware", "software", "requirements", "prerequisites", "browser", "mobile", "network", "client", "server"],
+    actionShortcut: {
+      label: "View Hardware Inventory",
+      href: "/setup/technical",
+    },
+    relatedArticleIds: ["it-user-roles-access-matrix", "it-step-by-step-installation"],
+    steps: [
+      {
+        title: "Client-Side Hardware Requirements",
+        description: "Desktop/Laptop: Intel Core i3 / AMD Ryzen 3, 4GB RAM minimum (8GB recommended with WebGL GPU). Mobile: Quad-core 1.8GHz, 3GB RAM, Android 9.0+ or iOS 14.0+ with modern touchscreen.",
+      },
+      {
+        title: "Client-Side Software & Browser Support",
+        description: "Google Chrome v110+, Mozilla Firefox v115+, Microsoft Edge v110+, Apple Safari v15.4+, Samsung Internet v20+. JavaScript and WebGL must be enabled.",
+      },
+      {
+        title: "Server & Cloud Infrastructure Specifications",
+        description: "Vercel Serverless Edge Platform (1024MB-2048MB execution limit, Node.js 20+ runtime), Supabase Managed PostgreSQL 15 with connection pooling, and S3-compatible storage buckets.",
+      },
+      {
+        title: "Requirements Before Installing or Using the System",
+        description: "1. Landlord Prerequisites: Building room inventory, GCash Merchant QR image, physical submeter hardware (kWh and m³). 2. Tenant Prerequisites: Active personal email, mobile smartphone with camera, funded GCash account. 3. IT Prerequisites: GitHub repo access, Supabase admin project, Google SMTP App Password.",
+      },
+    ],
+    contentMarkdown: `
+### Complete Specifications Overview Table
+
+| Environment | Minimum Specification | Recommended Specification |
+|---|---|---|
+| **Client Desktop** | Core i3 / Ryzen 3, 4GB RAM, 1366x768 | Core i5 / Apple Silicon M1+, 8GB RAM, 1080p Full HD |
+| **Client Smartphone** | Quad-Core 1.8GHz, 3GB RAM, Android 9 / iOS 14 | Octa-Core 2.4GHz, 6GB RAM, Android 12+ / iOS 16+ |
+| **Server / Cloud Host** | Vercel Edge Serverless, Node 20+, 1GB RAM | Supabase PostgreSQL 15, PgBouncer, 50GB NVMe SSD |
+| **Network & Bandwidth** | 1.5 Mbps broadband/cellular, < 150ms latency | 5 Mbps+ Fiber/5G, TLS 1.3 HTTPS, WSS WebSocket |
+`,
+  },
+  {
+    id: "it-user-roles-access-matrix",
+    audience: "it",
+    category: "user_roles_access",
+    categoryLabel: "User Types & RBAC Matrix",
+    title: "User Types, Role Capabilities & Role-Based Access Control (RBAC) Matrix",
+    summary: "Exhaustive permissions matrix defining capabilities for Landlords, Tenants, System Administrators, and Applicants across all platform modules.",
+    difficulty: "intermediate",
+    readTime: "6 min",
+    keywords: ["roles", "rbac", "permissions", "access control", "landlord", "tenant", "admin", "applicant", "security"],
+    relatedArticleIds: ["it-system-requirements-specs", "it-database-schema"],
+    steps: [
+      {
+        title: "Landlord / Property Manager Role",
+        description: "Full governance over real estate assets: creates properties, configures units, sends onboarding magic links, issues leases, verifies GCash payments, logs utility submeters, and dispatches repair work orders.",
+      },
+      {
+        title: "Tenant / Resident Role",
+        description: "Restricted to their leased unit: signs lease contracts with digital e-signatures, pays monthly rent via GCash, uploads payment proof screenshots, submits maintenance requests with photos, chats with landlord, and queries iRis AI.",
+      },
+      {
+        title: "System Administrator / IT Role",
+        description: "Platform infrastructure guardian: manages environment variables, oversees database schema migrations via source-of-truth-db.sql, monitors automated crons, and executes disaster recovery.",
+      },
+      {
+        title: "Applicant / Public Guest Role",
+        description: "Browses public vacancy catalogs, explores floorplans, submits rental screening applications with proof of income, and tracks application review status.",
+      },
+    ],
+    contentMarkdown: `
+### Access Control Matrix (Feature-by-Feature)
+
+| Module / System Capability | Administrator | Landlord | Tenant | Applicant | Public Guest |
+|---|:---:|:---:|:---:|:---:|:---:|
+| **Database Schema & Serverless Crons** | **FULL** | NONE | NONE | NONE | NONE |
+| **Property & Unit Creation / Editing** | READ | **FULL** | NONE | NONE | NONE |
+| **2D / 3D Interactive Map Customization** | READ | **FULL** | VIEW | NONE | NONE |
+| **Tenant Onboarding & Magic Links** | NONE | **FULL** | NONE | NONE | NONE |
+| **Digital Lease Generation & Signing** | NONE | **FULL** | SIGN | NONE | NONE |
+| **Invoice Generation & Submeter Logging** | NONE | **FULL** | VIEW | NONE | NONE |
+| **GCash Proof Upload & Verification** | NONE | VERIFY | UPLOAD | NONE | NONE |
+| **Maintenance Work Orders & Dispatch** | NONE | MANAGE | SUBMIT | NONE | NONE |
+| **Community Notice Board Broadcast** | NONE | POST | COMMENT | NONE | NONE |
+| **iRis AI Property Concierge Chat** | **TEST** | **FULL** | **FULL** | FAQ | NONE |
+| **Move-Out Settlement & Deposit Refund** | NONE | **FULL** | VIEW | NONE | NONE |
+| **Vacant Unit Catalog Browsing** | VIEW | VIEW | VIEW | **FULL** | **FULL** |
+`,
+  },
+  {
+    id: "it-step-by-step-installation",
+    audience: "it",
+    category: "installation_guide",
+    categoryLabel: "Step-by-Step Installation",
+    title: "Complete System Installation, Database Setup & Cloud Deployment Guide",
+    summary: "End-to-end installation runbook: Git repository cloning, npm package installation, .env.local configuration, Supabase migration via source-of-truth-db.sql, and Vercel cloud deployment.",
+    difficulty: "advanced",
+    readTime: "8 min",
+    keywords: ["installation", "setup", "deploy", "git", "npm", "supabase", "database", "sql", "migration", "vercel", "env", "configuration"],
+    actionShortcut: {
+      label: "Open Technical Commissioning",
+      href: "/setup/technical",
+    },
+    relatedArticleIds: ["it-environment-inventory", "it-database-schema", "it-system-turnover-defense"],
+    steps: [
+      {
+        title: "Step 1: Clone Repository & Workspace Setup",
+        description: "Run 'git clone https://github.com/Sedictt/iReside---Capstone.git iReside' and navigate into the folder: 'cd iReside'.",
+        codeSnippet: `git clone https://github.com/Sedictt/iReside---Capstone.git iReside\ncd iReside`,
+      },
+      {
+        title: "Step 2: Install Node.js Dependencies",
+        description: "Install all required packages using npm with legacy peer dependency resolution: 'npm install --legacy-peer-deps'.",
+        codeSnippet: `npm install --legacy-peer-deps`,
+      },
+      {
+        title: "Step 3: Configure Environment Variables (.env.local)",
+        description: "Create .env.local with NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, DATABASE_URL, SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, and GROQ_API_KEY.",
+      },
+      {
+        title: "Step 4: Execute Database Migration (source-of-truth-db.sql)",
+        description: "Open Supabase Dashboard > SQL Editor > Paste and execute 'source-of-truth-db.sql'. This establishes all tables, enums, triggers, and Row-Level Security (RLS) policies.",
+      },
+      {
+        title: "Step 5: Configure Supabase Storage Buckets",
+        description: "In Supabase Storage, create 4 buckets: 'property-images' (Public: ON), 'billing' (Public: OFF), 'avatars' (Public: ON), and 'maintenance' (Public: OFF).",
+      },
+      {
+        title: "Step 6: Launch Local Server & Verify",
+        description: "Run 'npm run dev' to launch the Next.js server with expanded HTTP header buffer on http://localhost:3000.",
+        codeSnippet: `npm run dev`,
+      },
+      {
+        title: "Step 7: Cloud Deployment to Vercel",
+        description: "Import repository into Vercel, populate all environment variables, confirm framework preset is Next.js, and deploy. Vercel crons in vercel.json will activate automatically.",
+      },
+    ],
+  },
+  {
+    id: "it-system-turnover-defense",
+    audience: "it",
+    category: "turnover_handover",
+    categoryLabel: "System Turnover & Defense",
+    title: "Capstone Oral Defense & Client System Turnover Acceptance Protocol",
+    summary: "Guidelines and checklist for defense presentation, printed user manual availability, client turnover acceptance sheet, and final commissioning verification.",
+    difficulty: "intermediate",
+    readTime: "4 min",
+    keywords: ["defense", "turnover", "acceptance", "handover", "commissioning", "checklist", "oral defense", "capstone"],
+    actionShortcut: {
+      label: "Download Full Manual PDF",
+      href: "/landlord/docs",
+    },
+    relatedArticleIds: ["it-step-by-step-installation", "it-user-roles-access-matrix"],
+    steps: [
+      {
+        title: "Printed Copy Availability During Defense",
+        description: "A hardcopy printed edition of the User Manual (generated via the in-app PDF Download button or printed from docs/USER_MANUAL.md) must be on the examination table during oral defense.",
+      },
+      {
+        title: "System Turnover Requirements",
+        description: "System handover to the property client requires: 1. Full source code repository access. 2. Supabase project ownership transfer. 3. Vercel deployment transfer. 4. Master administrative credentials. 5. Signed Acceptance Sheet.",
+      },
+      {
+        title: "Live Defense Demonstration Runbook",
+        description: "Demonstrate: 1. Landlord inviting tenant via magic link. 2. Tenant digital lease signing. 3. Invoicing with utility submeter calculation. 4. GCash payment upload and approval. 5. Maintenance ticket dispatch. 6. iRis AI resident query.",
+      },
+      {
+        title: "Sign-Off Acceptance Protocol",
+        description: "Both the student development team lead, academic panel chair, and client representative must execute the formal Handover Acceptance Table in docs/USER_MANUAL.md and docs/INSTALLATION_GUIDE.md.",
+      },
+    ],
+  },
 ];
+

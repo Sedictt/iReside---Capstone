@@ -18,7 +18,8 @@ import {
     ShieldCheck,
     FileText,
     Calendar,
-    BookOpen
+    BookOpen,
+    Download
 } from "lucide-react";
 import { signOut } from "@/lib/supabase/client-auth";
 import { RoleSidebar, type SidebarNavSection } from "@/components/navigation/RoleSidebar";
@@ -194,6 +195,12 @@ export function Sidebar({
                     href: "/landlord/docs", 
                     icon: BookOpen,
                     description: "User manual, FAQs, troubleshooting & IT handover runbook"
+                },
+                { 
+                    label: "Download Apps", 
+                    href: "/download", 
+                    icon: Download,
+                    description: "Native Windows .exe client and Android APK package"
                 },
             ]
         },

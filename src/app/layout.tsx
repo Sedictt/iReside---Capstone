@@ -51,6 +51,15 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
         {/*
+          Initialize accessibility preferences (font-size scale & high-contrast)
+          immediately before rendering to avoid flash of unscaled content (FOUT).
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var sc=localStorage.getItem("ireside_font_scale");if(sc&&!isNaN(Number(sc))){var n=Math.min(130,Math.max(90,Number(sc)));document.documentElement.style.fontSize=n+"%";document.documentElement.setAttribute("data-font-size",n<=90?"compact":n<=100?"normal":n<=115?"large":"larger");document.documentElement.setAttribute("data-font-scale",String(n));}else{var s=localStorage.getItem("ireside_font_size");if(s==="large"){document.documentElement.style.fontSize="110%";}else if(s==="larger"){document.documentElement.style.fontSize="120%";}}var hc=localStorage.getItem("ireside_high_contrast");if(hc==="true"){document.documentElement.classList.add("high-contrast");document.documentElement.setAttribute("data-high-contrast","true");}}catch(e){}})();`,
+          }}
+        />
+        {/*
           Strip fdprocessedid injected by Fiddler/form-fill browser extensions
           before React hydrates, preventing hydration mismatch errors.
         */}

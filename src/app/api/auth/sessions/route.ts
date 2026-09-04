@@ -1,4 +1,3 @@
-import { NextRequest, NextResponse } from "next/navigation";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { apiError, apiInternalError, apiSuccess } from "@/lib/api/response";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
