@@ -24,6 +24,7 @@ import {
     Sparkles,
     Check,
     BookOpen,
+    Download,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -92,6 +93,7 @@ const NAV_SECTIONS = [
             { label: "Finance Hub", href: "/tenant/payments", icon: CreditCard },
             { label: "Messages", href: "/tenant/messages", icon: MessageSquare },
             { label: "User Manual", href: "/tenant/docs", icon: BookOpen },
+            { label: "Download App", href: "/download", icon: Download },
         ],
     },
 ];
@@ -119,16 +121,27 @@ export function TenantSidebar() {
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-            if (notificationsRef.current && !notificationsRef.current.contains(event.target as Node)) {
+            const target = event.target as Node;
+            const clickedInsideDesktop = notificationsRef.current?.contains(target);
+            const clickedInsideMobile = mobileNotificationsRef.current?.contains(target);
+
+            if (!clickedInsideDesktop && !clickedInsideMobile) {
                 setIsNotificationsOpen(false);
             }
-            if (mobileNotificationsRef.current && !mobileNotificationsRef.current.contains(event.target as Node)) {
+        };
+
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === "Escape") {
                 setIsNotificationsOpen(false);
             }
         };
 
         document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
+        document.addEventListener("keydown", handleKeyDown);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+            document.removeEventListener("keydown", handleKeyDown);
+        };
     }, []);
 
     const handleNotificationClick = async (notification: Notification) => {

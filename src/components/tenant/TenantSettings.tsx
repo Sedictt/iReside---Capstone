@@ -28,6 +28,8 @@ import {
     Plus,
     Info,
     X,
+    Palette,
+    Contrast,
 } from "lucide-react";
 
 import { useState, useEffect, useRef, useReducer } from "react";
@@ -41,9 +43,11 @@ import { toast } from "sonner";
 import { updateTenantPassword, signOut } from "@/lib/supabase/client-auth";
 import { parseUserAgent } from "@/lib/utils/device-parser";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
+import { useHighContrast } from "@/hooks/useHighContrast";
+import { FontSizeToggle } from "@/components/ui/FontSizeToggle";
 
 // --- Types ---
-type SettingsCategory = "Identity" | "Security" | "Notifications" | "Billing" | "Data";
+type SettingsCategory = "Identity" | "Accessibility" | "Security" | "Notifications" | "Billing" | "Data";
 
 interface SidebarItem {
     id: SettingsCategory;
@@ -58,6 +62,12 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
         label: "Profile", 
         icon: User,
         description: "Manage your personal information"
+    },
+    { 
+        id: "Accessibility", 
+        label: "Display & A11y", 
+        icon: Palette,
+        description: "Text size, contrast and readability"
     },
     { 
         id: "Security", 
@@ -174,11 +184,14 @@ export function TenantSettings() {
     // Mapping of Sub-tabs
     const SUB_TABS: Record<SettingsCategory, string[]> = {
         Identity: ["Profile", "Emergency Contact"],
+        Accessibility: ["Readability"],
         Security: ["Account", "Protection", "Sessions"],
         Notifications: ["Alerts"],
         Billing: ["Payment Methods", "History"],
         Data: ["Export", "Danger"],
     };
+
+    const { isHighContrast, toggleHighContrast } = useHighContrast();
 
     // Reset sub-tab when main tab changes
     const isRestoringFromUrl = useRef(false);
@@ -1156,9 +1169,83 @@ export function TenantSettings() {
         );
     };
 
+    const renderAccessibility = () => {
+        return (
+            <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="space-y-8"
+            >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h2 className="text-2xl font-black text-foreground">Display &amp; Accessibility</h2>
+                        <p className="text-sm text-muted-foreground mt-1">
+                            Customize text readability, contrast, and visual appearance for optimal comfort.
+                        </p>
+                    </div>
+                </div>
+
+                <div className="space-y-6">
+                    <GlassCard 
+                        title="Text Size & Readability" 
+                        description="Adjust the interface typography scale without distorting card layouts or button heights."
+                    >
+                        <FontSizeToggle variant="slider" showPreview={true} />
+                    </GlassCard>
+
+                    <GlassCard 
+                        title="Universal High Contrast" 
+                        description="Reinforces borders, sharpens text outlines, and improves visibility across all tenant pages per WCAG 2.1 AAA standards."
+                    >
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl bg-surface-2 border border-border/60">
+                            <div className="flex items-start gap-4">
+                                <div className={cn(
+                                    "size-12 rounded-xl flex items-center justify-center shrink-0 border transition-all",
+                                    isHighContrast 
+                                        ? "bg-foreground text-background border-foreground font-black" 
+                                        : "bg-surface-3 text-muted-foreground border-border"
+                                )}>
+                                    <Contrast className="size-6" />
+                                </div>
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <h4 className="text-sm font-bold text-foreground">Universal High Contrast</h4>
+                                        <span className={cn(
+                                            "px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider",
+                                            isHighContrast ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30" : "bg-surface-3 text-muted-foreground"
+                                        )}>
+                                            {isHighContrast ? "Active (WCAG AAA)" : "Off"}
+                                        </span>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                        Replaces soft shadows with solid high-contrast borders and high-visibility text.
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => toggleHighContrast()}
+                                className={cn(
+                                    "px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer border",
+                                    isHighContrast
+                                        ? "bg-primary text-primary-foreground border-primary"
+                                        : "bg-muted text-foreground border-border hover:bg-muted/80"
+                                )}
+                            >
+                                {isHighContrast ? "Disable High Contrast" : "Enable High Contrast"}
+                            </button>
+                        </div>
+                    </GlassCard>
+                </div>
+            </motion.div>
+        );
+    };
+
     const renderContent = () => {
         switch (activeTab) {
             case "Identity": return renderIdentity();
+            case "Accessibility": return renderAccessibility();
             case "Security": return renderSecurity();
             case "Notifications": return renderNotifications();
             case "Billing": return renderBilling();

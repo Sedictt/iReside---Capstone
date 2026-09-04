@@ -132,7 +132,21 @@ iReside runs efficiently across any modern web browser:
 2. **On iOS (Safari)**: Tap the **Share** icon $\rightarrow$ select **"Add to Home Screen"**.
 3. **On Android (Chrome)**: Tap the **Menu (⋮)** $\rightarrow$ select **"Install App"**.
 
-### 1.3 User Roles & Access Permissions
+### 1.3 Installing the Dedicated Windows Desktop Client (.exe)
+For landlords and front-desk property managers managing buildings on office PCs:
+- iReside provides a native **Windows Executable (`.exe`)** installer available at `/download`.
+- **Why install the Windows app?**
+  - Runs in its own dedicated, clean window without browser tabs or address bar distractions.
+  - Automatically places a shortcut on your Desktop and in your Windows Start Menu.
+  - Accelerated 3D and 2D floorplan performance with multi-monitor support (e.g., keeping unit maps open on one screen and verifying GCash payments on another).
+- **How to find and install the Windows app:**
+  1. Open your browser to your property portal's web address (e.g., `https://[your-property-domain]` or `http://localhost:3000`).
+  2. Click **"Get Apps"** in the top-right of the login screen, or click **"Download Apps"** in your left sidebar menu (or append `/download` to your portal URL).
+  3. Click **Download for Windows (.exe)**.
+  4. Run `iReside-Setup-v2.1.0-x64.exe` and follow the on-screen prompts.
+  5. Launch **iReside Desktop** directly from your desktop icon.
+
+### 1.4 User Roles & Access Permissions
 
 - **Landlord / Property Owner**: Full administrative privileges over owned properties, leases, financial ledgers, and tenant records.
 - **Tenant**: Self-service resident access to their assigned unit, invoices, maintenance tickets, and community features.

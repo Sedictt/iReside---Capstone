@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { generateUnitName, generateUnitList } from "@/lib/unit-naming";
+import { generateUnitName, generateUnitList } from "../unit-naming";
 
 describe("unit-naming helper", () => {
     it("generates floor-based unit names for ground floor", () => {

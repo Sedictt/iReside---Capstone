@@ -70,6 +70,7 @@ import { signOut } from "@/lib/supabase/client-auth";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
 import { useTheme } from "next-themes";
 import { useHighContrast } from "@/hooks/useHighContrast";
+import { FontSizeToggle } from "@/components/ui/FontSizeToggle";
 import { CURATED_BANNER_PRESETS, DEFAULT_BANNER_URL } from "@/components/landlord/dashboard/BannerCustomizerModal";
 import { ColorPickerModal } from "@/components/ui/ColorPickerModal";
 import { UnsavedChangesModal } from "@/components/ui/UnsavedChangesModal";
@@ -1237,6 +1238,13 @@ export function LandlordSettings() {
                                         onToggle={toggleHighContrast} 
                                     />
                                 </div>
+                            </GlassCard>
+
+                            <GlassCard 
+                                title="Accessibility: Text Size & Readability" 
+                                description="Adjust interface font scaling for maximum comfort without compromising card structures or layout symmetry."
+                            >
+                                <FontSizeToggle variant="slider" showPreview={true} />
                             </GlassCard>
 
                             <GlassCard 

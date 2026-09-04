@@ -2,8 +2,9 @@ import { jsPDF } from "jspdf";
 import { DocArticle, DocAudience, DOCS_ARTICLES } from "./docsData";
 
 export async function generateDocsPdf(audience: DocAudience = "landlord"): Promise<void> {
-  const targetAudience: "tenant" | "landlord" | "it" =
-    audience === "user" ? "landlord" : (audience as "tenant" | "landlord" | "it");
+  const isMaster = audience === "all";
+  const targetAudience: "tenant" | "landlord" | "it" | "all" =
+    audience === "user" ? "landlord" : audience;
 
   const doc = new jsPDF({
     orientation: "portrait",
@@ -16,7 +17,9 @@ export async function generateDocsPdf(audience: DocAudience = "landlord"): Promi
   const margin = 20;
   const contentWidth = pageWidth - margin * 2;
 
-  const articles = DOCS_ARTICLES.filter((a) => a.audience === targetAudience);
+  const articles = isMaster
+    ? DOCS_ARTICLES
+    : DOCS_ARTICLES.filter((a) => a.audience === targetAudience);
 
   // Helper: Draw Standard Running Header (1:1 with EBook)
   const drawRunningHeader = (categoryLabel: string, pageNumStr: string) => {
@@ -71,7 +74,9 @@ export async function generateDocsPdf(audience: DocAudience = "landlord"): Promi
   doc.setFontSize(8);
   doc.setTextColor(130, 130, 130);
   const headerAudienceLabel =
-    targetAudience === "tenant"
+    isMaster
+      ? "ALL-IN-ONE MASTER SYSTEM MANUAL"
+      : targetAudience === "tenant"
       ? "TENANT USER MANUAL"
       : targetAudience === "landlord"
       ? "LANDLORD USER MANUAL"
@@ -86,16 +91,18 @@ export async function generateDocsPdf(audience: DocAudience = "landlord"): Promi
   // Hero Section
   y += 45;
   doc.setFillColor(0, 0, 0);
-  doc.rect(margin, y, 48, 6, "F");
+  doc.rect(margin, y, isMaster ? 54 : 48, 6, "F");
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7.5);
   doc.setTextColor(255, 255, 255);
   const badgeLabel =
-    targetAudience === "tenant"
+    isMaster
+      ? "DEFENSE & TURNOVER MASTER EDITION"
+      : targetAudience === "tenant"
       ? "RESIDENT LIVING GUIDE"
       : targetAudience === "landlord"
       ? "PROPERTY MANAGER GUIDE"
-      : "TECHNICAL DOCUMENTATION";
+      : "INSTALLATION & SYSTEM TURNOVER";
   doc.text(badgeLabel, margin + 3, y + 4.2);
 
   y += 14;
@@ -103,11 +110,13 @@ export async function generateDocsPdf(audience: DocAudience = "landlord"): Promi
   doc.setFontSize(24);
   doc.setTextColor(0, 0, 0);
   const coverTitle =
-    targetAudience === "tenant"
+    isMaster
+      ? "iReside Master Manual:\nComprehensive System Compendium"
+      : targetAudience === "tenant"
       ? "Tenant User Guide &\nResident Living Manual"
       : targetAudience === "landlord"
       ? "Landlord Operations &\nProperty Management Manual"
-      : "Technical Setup &\nDeveloper Guide";
+      : "Installation Guide &\nTechnical System Manual";
   doc.text(coverTitle, margin, y);
 
   y += 24;
@@ -509,7 +518,9 @@ export async function generateDocsPdf(audience: DocAudience = "landlord"): Promi
 
   // Save PDF file
   const filename =
-    targetAudience === "tenant"
+    isMaster
+      ? "iReside_All_In_One_Master_Manual.pdf"
+      : targetAudience === "tenant"
       ? "iReside_Tenant_User_Guide.pdf"
       : targetAudience === "landlord"
       ? "iReside_Landlord_User_Guide.pdf"

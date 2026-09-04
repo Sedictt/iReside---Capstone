@@ -378,6 +378,7 @@ export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActi
     const [searchLoading, setSearchLoading] = useState(false);
     
     const searchRef = useRef<HTMLDivElement>(null);
+    const notificationsRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
     const searchCacheRef = useRef<Map<string, SearchResult[]>>(new Map());
@@ -497,9 +498,21 @@ export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActi
             if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
                 setIsSearchOpen(false);
             }
+            if (notificationsRef.current && !notificationsRef.current.contains(e.target as Node)) {
+                setIsNotificationsOpen(false);
+            }
+        };
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                setIsNotificationsOpen(false);
+            }
         };
         document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
+        document.addEventListener("keydown", handleKeyDown);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+            document.removeEventListener("keydown", handleKeyDown);
+        };
     }, []);
 
     // Fast keystroke handler with 100ms debounce
@@ -685,7 +698,7 @@ export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActi
                 </div>
 
                 {/* Notifications */}
-                <div className="relative">
+                <div className="relative" ref={notificationsRef}>
                     <button
                         onClick={() => {
                             const next = !isNotificationsOpen;

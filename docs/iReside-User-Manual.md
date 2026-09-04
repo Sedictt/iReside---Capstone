@@ -3,7 +3,9 @@
 > Property Management Platform  
 > Version 1.0 | May 2026  
 > 
-> 📖 **Role-Specific Dedicated Manuals:**
+> 📖 **Official Capstone Defense & System Turnover Documentation:**
+> - [Official iReside User Manual](file:///c:/Users/JV/Documents/GitHub/iReside/docs/USER_MANUAL.md)
+> - [Official iReside Installation & Deployment Guide](file:///c:/Users/JV/Documents/GitHub/iReside/docs/INSTALLATION_GUIDE.md)
 > - [iReside Tenant User Manual](file:///c:/Users/JV/Documents/GitHub/iReside/docs/iReside-Tenant-User-Manual.md)
 > - [iReside Landlord User Manual](file:///c:/Users/JV/Documents/GitHub/iReside/docs/iReside-Landlord-User-Manual.md)
 

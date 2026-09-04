@@ -32,6 +32,30 @@ export function NotificationBanner() {
     const [hasNewNotif, setHasNewNotif] = useState(false);
     
     const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const bannerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!isExpanded) return;
+
+        const handleClickOutside = (event: MouseEvent) => {
+            if (bannerRef.current && !bannerRef.current.contains(event.target as Node)) {
+                setIsExpanded(false);
+            }
+        };
+
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === "Escape") {
+                setIsExpanded(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        document.addEventListener("keydown", handleKeyDown);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+            document.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [isExpanded]);
 
     const activeNotifications = importantNotifications.slice(0, 5);
     const totalCount = activeNotifications.length;
@@ -213,6 +237,7 @@ export function NotificationBanner() {
     return (
         <div className="absolute top-0 left-0 right-0 z-40 flex justify-center pointer-events-none">
             <motion.div
+                ref={bannerRef}
                 initial={false}
                 animate={{ 
                     y: 0,

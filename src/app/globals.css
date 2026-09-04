@@ -258,6 +258,30 @@
   color-scheme: light;
 }
 
+/* Accessibility: Dynamic Font Size & Display Scaling Tiers */
+html[data-font-size="normal"],
+:root[data-font-size="normal"] {
+  font-size: 100% !important;
+}
+
+html[data-font-size="large"],
+:root[data-font-size="large"] {
+  font-size: 112% !important;
+}
+
+html[data-font-size="larger"],
+:root[data-font-size="larger"] {
+  font-size: 124% !important;
+}
+
+/* Guardrails against clipping on interactive items when font size is enlarged */
+html[data-font-size="large"] button,
+html[data-font-size="larger"] button,
+html[data-font-size="large"] input,
+html[data-font-size="larger"] input {
+  min-height: max-content;
+}
+
 html {
   overscroll-behavior-y: none;
 }
@@ -660,18 +684,6 @@ input[type="number"] {
   display: none !important;
 }
 
-/* Custom classes from layout.tsx for extra control */
-.ireside-toast {
-  /* Additional overrides if needed */
-}
-
-.ireside-toast-title {
-  /* Font overrides */
-}
-
-.ireside-toast-description {
-  /* Font overrides */
-}
 
 /* Neumorphism design system styles */
 .neumorphic-panel {
