@@ -1458,15 +1458,15 @@ export const DOCS_ARTICLES: DocArticle[] = [
     category: "system_specifications",
     categoryLabel: "System Specs & Requirements",
     title: "System Requirements, Hardware/Software Specs & Prerequisites",
-    summary: "Detailed hardware and software specifications for Desktop, Mobile, and Cloud hosting, along with prerequisite accounts before using the platform.",
+    summary: "Detailed hardware, software, network, and cloud infrastructure specifications for Desktop, Mobile, and Cloud hosting, along with prerequisite accounts before using the platform.",
     difficulty: "intermediate",
-    readTime: "5 min",
-    keywords: ["specifications", "hardware", "software", "requirements", "prerequisites", "browser", "mobile", "network", "client", "server"],
+    readTime: "6 min",
+    keywords: ["specifications", "hardware", "software", "requirements", "prerequisites", "browser", "mobile", "network", "client", "server", "architecture"],
     actionShortcut: {
       label: "View Hardware Inventory",
       href: "/setup/technical",
     },
-    relatedArticleIds: ["it-user-roles-access-matrix", "it-step-by-step-installation"],
+    relatedArticleIds: ["it-feature-specifications-modules", "it-user-roles-access-matrix", "it-step-by-step-installation"],
     steps: [
       {
         title: "Client-Side Hardware Requirements",
@@ -1494,6 +1494,63 @@ export const DOCS_ARTICLES: DocArticle[] = [
 | **Client Smartphone** | Quad-Core 1.8GHz, 3GB RAM, Android 9 / iOS 14 | Octa-Core 2.4GHz, 6GB RAM, Android 12+ / iOS 16+ |
 | **Server / Cloud Host** | Vercel Edge Serverless, Node 20+, 1GB RAM | Supabase PostgreSQL 15, PgBouncer, 50GB NVMe SSD |
 | **Network & Bandwidth** | 1.5 Mbps broadband/cellular, < 150ms latency | 5 Mbps+ Fiber/5G, TLS 1.3 HTTPS, WSS WebSocket |
+
+### Technology Stack Specifications
+
+* **Frontend Engine:** Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4, Lucide Icons, Framer Motion.
+* **Backend Runtime:** Node.js 20+ Serverless Functions on Vercel Edge, Next.js API Routes, Edge Middleware.
+* **Database & BaaS:** Supabase Managed PostgreSQL 15 with Row-Level Security (RLS), Realtime WebSocket Engine, pgvector.
+* **AI & Machine Intelligence:** Groq Cloud Llama 3.1 8B (Retrieval-Augmented Generation for iRis tenant concierge, sentiment & toxic moderation, and landlord KPI analytics).
+* **Storage CDN:** S3-Compatible Buckets (property-images, billing receipts, avatars, maintenance attachments).
+`,
+  },
+  {
+    id: "it-feature-specifications-modules",
+    audience: "it",
+    category: "system_specifications",
+    categoryLabel: "System Specs & Requirements",
+    title: "System Feature Specifications & Core Module Inventory",
+    summary: "Authoritative architectural specifications of iReside's core functional modules, operational workflows, and private multi-tenant isolation model.",
+    difficulty: "intermediate",
+    readTime: "7 min",
+    keywords: ["features", "modules", "specifications", "capabilities", "iris", "ai", "floorplan", "leases", "invoices", "community"],
+    actionShortcut: {
+      label: "Open Dashboard",
+      href: "/landlord/dashboard",
+    },
+    relatedArticleIds: ["it-system-requirements-specs", "it-user-roles-access-matrix"],
+    steps: [
+      {
+        title: "I. AI & Intelligence Engine (iRis & Analytics)",
+        description: "RAG-powered conversational assistant using Groq Llama 3.1 8B. Integrates tenant lease, rules, submeters, and ticket history. Real-time toxic message moderation and landlord KPI performance insights.",
+      },
+      {
+        title: "II. Property & Asset Management (Digital Twin)",
+        description: "Visual floor planner with 20px grid snapping. Dynamic color-coded status (Vacant, Paid, Due Soon, Overdue, Maintenance Alert). Granular unit attributes, pricing, and photo galleries.",
+      },
+      {
+        title: "III. Applications & Onboarding Workflow",
+        description: "Walk-in application processing, automated tenant credential provisioning, live application timeline tracker, and document verification.",
+      },
+      {
+        title: "IV. Digital Lease Lifecycle & E-Signatures",
+        description: "Validated lease state machine (Draft → Pending Tenant Signature → Pending Landlord Signature → Active → Terminated/Expired). JWT remote signing links with 30-day expiry and complete audit trail.",
+      },
+      {
+        title: "V. Operations, Financials & Maintenance Triage",
+        description: "Line-item invoicing (Rent, Water, Electricity), GCash QR payment verification, photo maintenance tickets with priority triage, and branded PDF/CSV reporting.",
+      },
+      {
+        title: "VI. Real-Time Communication & Community Hub",
+        description: "Supabase Realtime direct messaging with presence indicators. Moderated community notice board with polls, albums, utility alerts, and comment threads.",
+      },
+    ],
+    contentMarkdown: `
+### System Architecture & Operational Tenets
+
+1. **Private Property Ecosystem:** iReside operates as an exclusive, private rental management system for verified landlords and provisioned tenants. There is no public listing or marketplace browsing—access is strictly invitation- and lease-governed.
+2. **Deterministic State Progression:** All contracts and invoices advance through finite-state machines, preventing illegal skips (e.g. leases cannot activate without dual valid signatures).
+3. **Audit Trail & Immutable Records:** Crucial transactions (payments, lease signings, move-out settlements) log timestamps, IP addresses, and user-agent metadata for legal compliance.
 `,
   },
   {

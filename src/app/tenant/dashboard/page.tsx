@@ -29,7 +29,6 @@ import { useSearchParams, useRouter } from "next/navigation";
 import LeaseModal from "@/components/tenant/LeaseModal";
 import { TenantContactsSidebar } from "@/components/tenant/TenantContactsSidebar";
 import MoveOutRequest from "@/components/tenant/MoveOutRequest";
-import { DashboardTour } from "@/components/tenant/DashboardTour";
 import LeaseRenewalReminder from "@/components/tenant/LeaseRenewalReminder";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
 
@@ -381,7 +380,6 @@ export default function TenantDashboard() {
                 />
             </div>
 
-            <DashboardTour />
             <LeaseRenewalReminder daysRemaining={daysRemaining} leaseId={lease?.id} />
 
             <div className="space-y-6 relative z-10 text-foreground">

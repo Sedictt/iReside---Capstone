@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { 
     Eye, 
@@ -96,19 +95,99 @@ function LoginContent() {
 
     return (
         <div className="min-h-svh w-full flex flex-col justify-between bg-background text-foreground relative selection:bg-primary/25 font-sans">
-            {/* Ambient Background Texture */}
-            <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden" aria-hidden="true">
-                <Image 
-                    src="/hero-images/apartment-03.png" 
-                    alt="" 
-                    fill 
-                    sizes="100vw"
-                    className="object-cover opacity-[0.07] dark:opacity-[0.04] grayscale"
-                    priority
-                />
-                <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/95 to-background" />
-                <div className="absolute -top-32 -left-32 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
-                <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+            {/* Ambient SVG Background */}
+            <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden select-none" aria-hidden="true">
+                {/* Soft Ambient Atmosphere Glows */}
+                <div className="absolute -top-36 -left-36 w-[540px] h-[540px] bg-primary/10 dark:bg-primary/[0.08] rounded-full blur-[140px]" />
+                <div className="absolute top-1/3 -right-36 w-[500px] h-[500px] bg-primary/8 dark:bg-primary/[0.05] rounded-full blur-[150px]" />
+                <div className="absolute -bottom-32 left-1/4 w-[480px] h-[480px] bg-primary/5 dark:bg-primary/[0.03] rounded-full blur-[130px]" />
+
+                {/* Primary SVG Architectural Grid Pattern with Radial Falloff */}
+                <svg 
+                    className="absolute inset-0 h-full w-full stroke-foreground/[0.04] dark:stroke-white/[0.035] [mask-image:radial-gradient(ellipse_at_center,white_25%,transparent_80%)]" 
+                    width="100%" 
+                    height="100%"
+                >
+                    <defs>
+                        <pattern id="login-base-grid" width="48" height="48" patternUnits="userSpaceOnUse">
+                            <path d="M 48 0 L 0 0 0 48" fill="none" strokeWidth="1" />
+                            <circle cx="48" cy="0" r="1.5" className="fill-foreground/[0.06] dark:fill-white/[0.06]" />
+                        </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill="url(#login-base-grid)" />
+                </svg>
+
+                {/* Abstract Structural Topography & Cadence SVG Motifs */}
+                <svg 
+                    className="absolute inset-0 w-full h-full text-primary/20 dark:text-primary/15 opacity-80"
+                    viewBox="0 0 1440 900" 
+                    preserveAspectRatio="xMidYMid slice" 
+                    fill="none" 
+                    xmlns="http://www.w3.org/2000/svg"
+                >
+                    <defs>
+                        <linearGradient id="bg-curve-grad-1" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="currentColor" stopOpacity="0.6" />
+                            <stop offset="50%" stopColor="currentColor" stopOpacity="0.2" />
+                            <stop offset="100%" stopColor="currentColor" stopOpacity="0.02" />
+                        </linearGradient>
+                        <linearGradient id="bg-curve-grad-2" x1="100%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stopColor="currentColor" stopOpacity="0.5" />
+                            <stop offset="60%" stopColor="currentColor" stopOpacity="0.15" />
+                            <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
+                        </linearGradient>
+                    </defs>
+
+                    {/* Isometric Contour / Flowing Architectural Waves */}
+                    <path 
+                        d="M-100 240 C 260 120, 520 380, 880 260 C 1180 160, 1380 320, 1600 240" 
+                        stroke="url(#bg-curve-grad-1)" 
+                        strokeWidth="1.5" 
+                        strokeDasharray="6 8"
+                    />
+                    <path 
+                        d="M-80 320 C 300 200, 560 460, 920 340 C 1220 240, 1420 400, 1620 320" 
+                        stroke="url(#bg-curve-grad-1)" 
+                        strokeWidth="1.2" 
+                        opacity="0.6"
+                    />
+                    <path 
+                        d="M-60 400 C 340 280, 600 540, 960 420 C 1260 320, 1460 480, 1640 400" 
+                        stroke="url(#bg-curve-grad-1)" 
+                        strokeWidth="1" 
+                        opacity="0.35"
+                    />
+
+                    {/* Architectural Elevation & Structural Blueprint Lines */}
+                    <path 
+                        d="M 120 900 L 460 560 L 840 560 L 1020 740" 
+                        stroke="url(#bg-curve-grad-2)" 
+                        strokeWidth="1" 
+                        strokeDasharray="4 6" 
+                        opacity="0.4"
+                    />
+                    <path 
+                        d="M 220 900 L 520 600 L 880 600 L 1080 800" 
+                        stroke="url(#bg-curve-grad-2)" 
+                        strokeWidth="0.8" 
+                        opacity="0.25"
+                    />
+
+                    {/* Constellation Nodes & Technical Precision Markers */}
+                    <circle cx="880" cy="260" r="3.5" fill="currentColor" opacity="0.8" />
+                    <circle cx="880" cy="260" r="10" stroke="currentColor" strokeWidth="0.75" opacity="0.3" />
+                    <circle cx="520" cy="380" r="2.5" fill="currentColor" opacity="0.6" />
+                    <circle cx="1180" cy="160" r="3" fill="currentColor" opacity="0.7" />
+                    <circle cx="1180" cy="160" r="14" stroke="currentColor" strokeWidth="0.75" strokeDasharray="2 3" opacity="0.25" />
+
+                    {/* Coordinate Precision Crosshairs */}
+                    <g opacity="0.35" stroke="currentColor" strokeWidth="1">
+                        <path d="M 240 140 L 240 152 M 234 146 L 246 146" />
+                        <path d="M 1280 180 L 1280 192 M 1274 186 L 1286 186" />
+                        <path d="M 720 760 L 720 772 M 714 766 L 726 766" />
+                        <path d="M 160 720 L 160 732 M 154 726 L 166 726" />
+                    </g>
+                </svg>
             </div>
 
             {/* Top Navigation Header */}

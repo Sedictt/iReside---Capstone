@@ -76,6 +76,7 @@ export function PropertiesDashboard() {
     const {
         data: propertiesData,
         isLoading,
+        isRevalidating,
         error: fetchError,
         mutate: mutateProperties,
     } = useInstantData<PropertyCard[]>({
@@ -100,6 +101,9 @@ export function PropertiesDashboard() {
     const [hubModalId, setHubModalId] = useState<string | null>(null);
     const [tenantsModalProperty, setTenantsModalProperty] = useState<PropertyCard | null>(null);
     const [maintenanceModalProperty, setMaintenanceModalProperty] = useState<PropertyCard | null>(null);
+
+    // Prevent premature empty state: true if data is undefined, hook reports loading, or revalidating with empty cache
+    const isDataLoading = isLoading || propertiesData === undefined || (isRevalidating && properties.length === 0);
 
     const filteredProperties = useMemo(() => {
         return properties.filter((prop) => {
@@ -167,7 +171,7 @@ export function PropertiesDashboard() {
 
             {/* Assets Stack View */}
             <div data-tour-id="tour-properties-list" className="space-y-6">
-                {isLoading && (
+                {isDataLoading && (
                     <div className="space-y-6">
                         {[1, 2, 3, 4].map((i) => (
                             <PropertySkeleton key={`skeleton-${i}`} />
@@ -175,7 +179,7 @@ export function PropertiesDashboard() {
                     </div>
                 )}
 
-                {!isLoading && loadError && (
+                {!isDataLoading && loadError && (
                     <div className="neumorphic-panel rounded-3xl py-20 text-center">
                         <Building2 className="mx-auto mb-4 size-12 text-red-500 dark:text-red-400" />
                         <h3 className="mb-2 text-xl font-black text-foreground">Failed to load portfolio</h3>
@@ -189,7 +193,7 @@ export function PropertiesDashboard() {
                     </div>
                 )}
 
-                {!isLoading && !loadError && filteredProperties.map((property) => {
+                {!isDataLoading && !loadError && filteredProperties.map((property) => {
                     const occupancyRatio = property.metrics.total > 0 ? property.metrics.occupied / property.metrics.total : 0;
                     const occupancyPercent = Math.round(occupancyRatio * 100);
 
@@ -329,11 +333,41 @@ export function PropertiesDashboard() {
                     );
                 })}
 
-                {!isLoading && !loadError && filteredProperties.length === 0 && (
+                {!isDataLoading && !loadError && filteredProperties.length === 0 && (
                     <div className="neumorphic-panel rounded-3xl py-20 text-center">
                         <Building2 className="mx-auto mb-4 size-12 text-muted-foreground" />
-                        <h3 className="mb-2 text-xl font-black text-foreground">No matching assets</h3>
-                        <p className="text-muted-foreground">Try adjusting your filters or search query.</p>
+                        {properties.length === 0 ? (
+                            <>
+                                <h3 className="mb-2 text-xl font-black text-foreground">No properties added yet</h3>
+                                <p className="mb-6 text-sm text-muted-foreground max-w-md mx-auto">
+                                    Your real estate portfolio is currently empty. Add your first property asset to start managing units, tenants, and performance metrics.
+                                </p>
+                                <Link
+                                    href="/landlord/properties/new"
+                                    className="neumorphic-primary inline-flex h-11 items-center gap-2 rounded-xl px-5 font-black text-primary-foreground transition-all hover:brightness-110"
+                                >
+                                    <Plus className="size-4" />
+                                    <span>Create Your First Asset</span>
+                                </Link>
+                            </>
+                        ) : (
+                            <>
+                                <h3 className="mb-2 text-xl font-black text-foreground">No matching assets</h3>
+                                <p className="text-sm text-muted-foreground">Try adjusting your filters or search query.</p>
+                                {(searchQuery || activeTab !== "All Portfolio") && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setSearchQuery("");
+                                            setActiveTab("All Portfolio");
+                                        }}
+                                        className="mt-4 neumorphic-extruded inline-flex h-10 items-center gap-2 rounded-xl px-4 text-xs font-bold text-foreground transition-all"
+                                    >
+                                        Reset filters
+                                    </button>
+                                )}
+                            </>
+                        )}
                     </div>
                 )}
             </div>

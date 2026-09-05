@@ -46,7 +46,7 @@ function UnitMapContent() {
     }
 
     return (
-        <div data-tour-id="tour-unit-map" className="h-full">
+        <div className="h-full">
             <VisualBuilder key={selectedPropertyId} propertyId={selectedPropertyId} />
         </div>
     );

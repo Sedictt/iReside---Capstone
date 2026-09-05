@@ -244,7 +244,7 @@ type StatsState = {
 };
 
 type StatsAction =
-    | { type: "LOAD_START" }
+    | { type: "LOAD_START"; silent?: boolean }
     | { type: "LOAD_SUCCESS"; payload: { primaryKpis: KpiItem[]; extendedKpis: KpiItem[]; financialChart: OverviewApiResponse["financialChart"]; operationalSnapshot: OverviewApiResponse["operationalSnapshot"] } }
     | { type: "LOAD_ERROR"; error: string }
     | { type: "MERGE_KPIS"; primaryKpis: KpiItem[]; extendedKpis: KpiItem[] };
@@ -252,7 +252,7 @@ type StatsAction =
 function statsReducer(state: StatsState, action: StatsAction): StatsState {
     switch (action.type) {
         case "LOAD_START":
-            return { ...state, statsLoading: true, statsError: null };
+            return { ...state, statsLoading: action.silent ? false : true, statsError: null };
         case "LOAD_SUCCESS":
             return {
                 ...state,
@@ -598,8 +598,34 @@ export default function AnalyticsPage() {
             });
         };
 
+        const cacheKey = `ireside_analytics_cache:${selectedPropertyId || "all"}:${startDate}:${endDate}`;
+
+        // Attempt instant cache hydration if available
+        let hasCache = false;
+        try {
+            const cachedRaw = localStorage.getItem(cacheKey);
+            if (cachedRaw) {
+                const cachedPayload = JSON.parse(cachedRaw) as OverviewApiResponse;
+                if (cachedPayload && cachedPayload.primaryKpis) {
+                    hasCache = true;
+                    dispatchStats({
+                        type: "LOAD_SUCCESS",
+                        payload: {
+                            primaryKpis: mergeKpiValues(primaryKpis, cachedPayload.primaryKpis ?? []),
+                            extendedKpis: mergeKpiValues(extendedKpis, cachedPayload.extendedKpis ?? []),
+                            financialChart: cachedPayload.financialChart ?? DEFAULT_FINANCIAL_CHART,
+                            operationalSnapshot: cachedPayload.operationalSnapshot ?? DEFAULT_OPERATIONAL_SNAPSHOT,
+                        }
+                    });
+                }
+            }
+        } catch {
+            // Ignore cache read issues
+        }
+
         const loadOverview = async () => {
-            dispatchStats({ type: "LOAD_START" });
+            // If we already populated from cache, silently fetch in the background without showing jarring skeletons
+            dispatchStats({ type: "LOAD_START", silent: hasCache });
 
             try {
                 const params = new URLSearchParams({
@@ -618,6 +644,13 @@ export default function AnalyticsPage() {
 
                 const payload = (await response.json()) as OverviewApiResponse;
                 
+                // Update localStorage cache for instant zero-latency loads on revisit
+                try {
+                    localStorage.setItem(cacheKey, JSON.stringify(payload));
+                } catch {
+                    // Ignore cache write limits
+                }
+
                 dispatchStats({
                     type: "LOAD_SUCCESS",
                     payload: {
@@ -629,7 +662,9 @@ export default function AnalyticsPage() {
                 });
             } catch (error) {
                 if ((error as Error).name === "AbortError") return;
-                dispatchStats({ type: "LOAD_ERROR", error: "Unable to load live analytics right now." });
+                if (!hasCache) {
+                    dispatchStats({ type: "LOAD_ERROR", error: "Unable to load live analytics right now." });
+                }
             }
         };
 

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import { AnimatePresence } from "framer-motion"
 import { AlertCircle, Users } from "lucide-react"
 import { Tenant, TenantCard, TenantStatus } from "./TenantCard"
@@ -15,8 +16,16 @@ interface TenantDirectoryProps {
 }
 
 export function TenantDirectory({ tenants, loading, error, onViewProfile, onMessage }: TenantDirectoryProps) {
- const [searchQuery, setSearchQuery] = useState("")
- const [statusFilter, setStatusFilter] = useState<TenantStatus | "All">("All")
+ const searchParams = useSearchParams();
+ const [searchQuery, setSearchQuery] = useState(() => searchParams?.get("search") || "");
+ const [statusFilter, setStatusFilter] = useState<TenantStatus | "All">("All");
+
+ useEffect(() => {
+  const query = searchParams?.get("search");
+  if (query !== null && query !== undefined) {
+   setSearchQuery(query);
+  }
+ }, [searchParams]);
 
  const filteredTenants = useMemo(() => {
  return tenants.filter(tenant => {

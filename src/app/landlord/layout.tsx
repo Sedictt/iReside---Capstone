@@ -12,7 +12,6 @@ import { NotificationProvider } from "@/context/NotificationContext";
 import { ProfileCardProvider } from "@/context/ProfileCardContext";
 import { ProfileCard } from "@/components/ui/ProfileCard";
 import { GlobalDetailModal } from "@/components/landlord/tenants/GlobalDetailModal";
-import { LandlordQuestTriggerGuide } from "@/components/landlord/dashboard/LandlordQuestTriggerGuide";
 import { NotificationBanner } from "@/components/navigation/NotificationBanner";
 import { Menu, X } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
@@ -149,7 +148,6 @@ export default function LandlordLayout({
                         </div>
                         <ProfileCard />
                         <GlobalDetailModal />
-                        <LandlordQuestTriggerGuide />
                     </ProfileCardProvider>
                 </NotificationProvider>
             </PropertyProvider>
