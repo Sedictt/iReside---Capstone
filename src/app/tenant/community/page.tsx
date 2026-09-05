@@ -39,7 +39,6 @@ import { CommunityComposer } from "@/components/community/CommunityComposer"
 import { CommunityPostCard } from "@/components/community/CommunityPostCard"
 import { CommunityRules } from "@/components/community/CommunityRules"
 import { CommunityAnnouncement } from "@/components/community/CommunityAnnouncement"
-import { CommunityTour } from "@/components/tenant/CommunityTour"
 import { toast } from "sonner"
 import { OfflineStorage, OfflineBlobStorage } from "@/lib/offline/offlineStorage"
 import { mutationQueue } from "@/lib/offline/mutationQueue"
@@ -534,8 +533,6 @@ export default function TenantCommunityHubPage() {
             "w-full min-h-full",
             isTenantRoute ? "pb-12" : "mx-auto max-w-7xl px-4 pb-20 pt-8 md:px-8"
         )}>
-            <CommunityTour />
-            
             <CommunityHeader
                 title="Community Hub"
                 description="Stay connected with your neighbors, discover events, and join the conversation."

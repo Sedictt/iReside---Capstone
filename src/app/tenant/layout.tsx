@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { AuthProvider } from "@/context/AuthContext";
-import { TenantProductTourOverlay } from "@/components/tenant/TenantProductTourOverlay";
 import { ThemeProvider } from "@/components/theme-provider";
 import { NotificationProvider } from "@/context/NotificationContext";
 import { ProfileCardProvider } from "@/context/ProfileCardContext";
@@ -77,7 +76,6 @@ export default function TenantLayout({
                                 </motion.div>
                             </AnimatePresence>
                         </main>
-                        {!isOnboardingPage && <TenantProductTourOverlay />}
                     </div>
                 </ThemeProvider>
                 <ProfileCard />

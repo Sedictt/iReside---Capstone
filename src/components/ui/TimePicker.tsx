@@ -186,10 +186,10 @@ export function TimePicker({
                     setIsOpen(!isOpen);
                 }}
                 className={cn(
-                    "neumorphic-inset flex items-center justify-between gap-2.5 rounded-xl border border-white/5 px-3 py-2 text-xs font-bold text-white transition-all hover:border-white/20 active:scale-[0.98]",
+                    "neumorphic-inset flex items-center justify-between gap-2.5 rounded-xl border border-border/60 px-3 py-2 text-xs font-bold text-foreground transition-all hover:border-border active:scale-[0.98]",
                     size === "sm" ? "py-1.5 px-2.5 text-[11px]" : "py-2 px-3 text-xs",
                     isOpen && "border-primary/50 ring-2 ring-primary/20",
-                    !value && "text-neutral-400"
+                    !value && "text-muted-foreground"
                 )}
             >
                 <div className="flex items-center gap-2">
@@ -198,7 +198,7 @@ export function TimePicker({
                 </div>
                 <ChevronDown
                     className={cn(
-                        "size-3 text-neutral-400 transition-transform duration-200",
+                        "size-3 text-muted-foreground transition-transform duration-200",
                         isOpen && "rotate-180 text-primary"
                     )}
                 />
@@ -221,13 +221,13 @@ export function TimePicker({
                         }}
                         transition={{ duration: 0.15, ease: "easeOut" }}
                         className={cn(
-                            "neumorphic-panel absolute z-50 w-80 max-w-[calc(100vw-32px)] rounded-3xl border border-white/10 p-4 shadow-2xl backdrop-blur-2xl",
+                            "neumorphic-panel absolute z-50 w-80 max-w-[calc(100vw-32px)] rounded-3xl border border-border p-4 shadow-2xl backdrop-blur-2xl text-foreground",
                             placement.vertical === "top" ? "bottom-full mb-2" : "top-full mt-2",
                             placement.horizontal === "right" ? "right-0" : "left-0"
                         )}
                     >
                         {/* Direct Editable Time Digits */}
-                        <div className="mb-4 flex items-center justify-between rounded-2xl bg-white/[0.04] p-3 border border-white/5">
+                        <div className="mb-4 flex items-center justify-between rounded-2xl bg-surface-2 p-3 border border-border/40">
                             <div className="flex items-center gap-1.5">
                                 {/* Editable Hour Input */}
                                 <div className="flex flex-col items-center">
@@ -237,10 +237,10 @@ export function TimePicker({
                                         max={12}
                                         value={selectedHour}
                                         onChange={(e) => handleHourChange(parseInt(e.target.value, 10) || 1)}
-                                        className="neumorphic-inset size-10 rounded-xl text-center text-lg font-black text-white outline-none focus:ring-2 focus:ring-primary/50"
+                                        className="neumorphic-inset size-10 rounded-xl text-center text-lg font-black text-foreground outline-none focus:ring-2 focus:ring-primary/50"
                                         title="Type exact hour (1-12)"
                                     />
-                                    <span className="text-[9px] uppercase font-bold text-neutral-500 mt-1">Hour</span>
+                                    <span className="text-[9px] uppercase font-bold text-muted-foreground mt-1">Hour</span>
                                 </div>
 
                                 <span className="text-xl font-bold text-primary mb-3.5">:</span>
@@ -254,15 +254,15 @@ export function TimePicker({
                                         value={selectedMinute}
                                         onChange={(e) => handleMinuteChange(e.target.value)}
                                         onBlur={handleMinuteBlur}
-                                        className="neumorphic-inset size-10 rounded-xl text-center text-lg font-black text-white outline-none focus:ring-2 focus:ring-primary/50"
+                                        className="neumorphic-inset size-10 rounded-xl text-center text-lg font-black text-foreground outline-none focus:ring-2 focus:ring-primary/50"
                                         title="Type exact minute (00-59)"
                                     />
-                                    <span className="text-[9px] uppercase font-bold text-neutral-500 mt-1">Min</span>
+                                    <span className="text-[9px] uppercase font-bold text-muted-foreground mt-1">Min</span>
                                 </div>
                             </div>
 
                             {/* AM / PM Segmented Control */}
-                            <div className="neumorphic-inset flex rounded-xl p-0.5 border border-white/5 self-start mt-1">
+                            <div className="neumorphic-inset flex rounded-xl p-0.5 border border-border/40 self-start mt-1">
                                 {(["AM", "PM"] as const).map((p) => (
                                     <button
                                         key={p}
@@ -271,8 +271,8 @@ export function TimePicker({
                                         className={cn(
                                             "rounded-lg px-3 py-1.5 text-xs font-black tracking-wider transition-all",
                                             selectedPeriod === p
-                                                ? "bg-primary text-black shadow-sm"
-                                                : "text-neutral-400 hover:text-white"
+                                                ? "bg-primary text-primary-foreground shadow-sm"
+                                                : "text-muted-foreground hover:text-foreground"
                                         )}
                                     >
                                         {p}
@@ -283,7 +283,7 @@ export function TimePicker({
 
                         {/* Quick Presets */}
                         <div className="mb-3">
-                            <p className="mb-1.5 text-[9px] font-black uppercase tracking-widest text-neutral-400">
+                            <p className="mb-1.5 text-[9px] font-black uppercase tracking-widest text-muted-foreground">
                                 Quick Pick
                             </p>
                             <div className="flex flex-wrap gap-1.5">
@@ -297,8 +297,8 @@ export function TimePicker({
                                             className={cn(
                                                 "rounded-lg px-2 py-1 text-[10px] font-bold transition-all",
                                                 isCurrent
-                                                    ? "bg-primary text-black"
-                                                    : "bg-white/5 text-neutral-300 hover:bg-white/10 hover:text-white"
+                                                    ? "bg-primary text-primary-foreground font-black"
+                                                    : "bg-surface-2 text-foreground/80 hover:bg-surface-3 hover:text-foreground"
                                             )}
                                         >
                                             {formatDisplayTime(preset)}
@@ -309,8 +309,8 @@ export function TimePicker({
                         </div>
 
                         {/* Hours Grid */}
-                        <div className="mb-3 border-t border-white/5 pt-3">
-                            <p className="mb-1.5 text-[9px] font-black uppercase tracking-widest text-neutral-400">
+                        <div className="mb-3 border-t border-border/40 pt-3">
+                            <p className="mb-1.5 text-[9px] font-black uppercase tracking-widest text-muted-foreground">
                                 Hour
                             </p>
                             <div className="grid grid-cols-6 gap-1">
@@ -324,8 +324,8 @@ export function TimePicker({
                                             className={cn(
                                                 "flex size-8 items-center justify-center rounded-xl text-xs font-bold transition-all",
                                                 isSelected
-                                                    ? "bg-primary text-black font-black shadow-md shadow-primary/20"
-                                                    : "bg-white/[0.02] text-neutral-300 hover:bg-white/10 hover:text-white"
+                                                    ? "bg-primary text-primary-foreground font-black shadow-md shadow-primary/20"
+                                                    : "bg-surface-2 text-foreground/80 hover:bg-surface-3 hover:text-foreground"
                                             )}
                                         >
                                             {h}
@@ -336,12 +336,12 @@ export function TimePicker({
                         </div>
 
                         {/* Minute Presets */}
-                        <div className="border-t border-white/5 pt-3">
+                        <div className="border-t border-border/40 pt-3">
                             <div className="flex items-center justify-between mb-1.5">
-                                <p className="text-[9px] font-black uppercase tracking-widest text-neutral-400">
+                                <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">
                                     Minute Intervals
                                 </p>
-                                <span className="text-[9px] text-neutral-500 font-medium">Or type above</span>
+                                <span className="text-[9px] text-muted-foreground/70 font-medium">Or type above</span>
                             </div>
                             <div className="grid grid-cols-4 gap-1.5">
                                 {MINUTE_PRESETS.map((m) => {
@@ -354,8 +354,8 @@ export function TimePicker({
                                             className={cn(
                                                 "flex h-7 items-center justify-center rounded-xl text-xs font-bold transition-all",
                                                 isSelected
-                                                    ? "bg-primary text-black font-black shadow-md shadow-primary/20"
-                                                    : "bg-white/[0.02] text-neutral-300 hover:bg-white/10 hover:text-white"
+                                                    ? "bg-primary text-primary-foreground font-black shadow-md shadow-primary/20"
+                                                    : "bg-surface-2 text-foreground/80 hover:bg-surface-3 hover:text-foreground"
                                             )}
                                         >
                                             :{m}
@@ -366,11 +366,11 @@ export function TimePicker({
                         </div>
 
                         {/* Done Button */}
-                        <div className="mt-4 pt-3 border-t border-white/5 flex justify-end">
+                        <div className="mt-4 pt-3 border-t border-border/40 flex justify-end">
                             <button
                                 type="button"
                                 onClick={() => setIsOpen(false)}
-                                className="w-full rounded-xl bg-white/10 py-2 text-center text-xs font-bold text-white hover:bg-primary hover:text-black transition-colors"
+                                className="w-full rounded-xl neumorphic-primary py-2 text-center text-xs font-black uppercase tracking-wider text-primary-foreground transition-all hover:scale-[1.01] active:scale-95"
                             >
                                 Apply Time
                             </button>

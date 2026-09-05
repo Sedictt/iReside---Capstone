@@ -106,8 +106,10 @@ export function useInstantData<T>({
                 console.error(`[useInstantData] Error fetching ${key}:`, err);
                 setError(err instanceof Error ? err : new Error(String(err)));
             } finally {
-                setIsLoading(false);
-                setIsRevalidating(false);
+                if (!signal?.aborted) {
+                    setIsLoading(false);
+                    setIsRevalidating(false);
+                }
             }
         },
         [key, enabled]
@@ -151,9 +153,12 @@ export function useInstantData<T>({
         await performFetch();
     }, [performFetch]);
 
+    // If cache has no content yet, fetch is enabled, and no error has occurred, ensure we report loading
+    const effectiveLoading = (enabled && Boolean(key) && !hasData && !error) || isLoading;
+
     return {
         data: cachedData,
-        isLoading,
+        isLoading: effectiveLoading,
         isRevalidating,
         error,
         mutate,

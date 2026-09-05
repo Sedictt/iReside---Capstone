@@ -13,6 +13,7 @@ import { formatPhpCurrency } from "@/lib/billing/utils";
 import { cn } from "@/lib/utils";
 import { useProperty } from "@/context/PropertyContext";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 interface ExpenseItem {
   id: string;
@@ -228,15 +229,15 @@ export default function InvoicesPage() {
         </div>
       </div>
 
-      <div data-tour-id="tour-finance-hub" className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-3">
         {(() => {
           const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
           const netCashFlow = metrics.collectedLast30Days - totalExpenses;
           return (
             <>
-              <HeroStat label="Net Cash Flow (30d)" value={formatPhpCurrency(netCashFlow)} highlight={netCashFlow >= 0 ? "text-emerald-500" : "text-rose-500"} />
-              <HeroStat label="Collected (30d)" value={formatPhpCurrency(metrics.collectedLast30Days)} highlight="text-primary" />
-              <HeroStat label="Total Expenses" value={formatPhpCurrency(totalExpenses)} highlight="text-amber-500" />
+              <HeroStat label="Net Cash Flow (30d)" value={formatPhpCurrency(netCashFlow)} highlight={netCashFlow >= 0 ? "text-emerald-500" : "text-rose-500"} loading={loading} />
+              <HeroStat label="Collected (30d)" value={formatPhpCurrency(metrics.collectedLast30Days)} highlight="text-primary" loading={loading} />
+              <HeroStat label="Total Expenses" value={formatPhpCurrency(totalExpenses)} highlight="text-amber-500" loading={loading} />
             </>
           );
         })()}
@@ -535,7 +536,22 @@ export default function InvoicesPage() {
             </div>
           </div>
           <div className="rounded-[2.5rem] neumorphic-inset p-4 sm:p-6 md:p-8 custom-scrollbar overflow-y-auto max-h-[500px] space-y-4">
-            {expenses.length === 0 && invoices.length === 0 ? (
+            {loading ? (
+              <div className="space-y-4 sm:space-y-5" aria-label="Loading ledger entries">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="flex items-center justify-between rounded-2xl neumorphic-extruded p-4 sm:p-5">
+                    <div className="flex items-center gap-3 sm:gap-4 shrink-0 min-w-0 pr-4">
+                      <Skeleton className="size-10 sm:size-12 shrink-0 rounded-xl bg-muted/40" />
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-32 sm:w-44 rounded-md bg-muted/30" />
+                        <Skeleton className="h-3 w-24 sm:w-36 rounded-md bg-muted/20" />
+                      </div>
+                    </div>
+                    <Skeleton className="h-5 w-20 sm:w-28 rounded-md bg-muted/30" />
+                  </div>
+                ))}
+              </div>
+            ) : expenses.length === 0 && invoices.length === 0 ? (
                 <div className="p-8 sm:p-12 text-center text-sm font-medium text-muted-foreground transition-transform hover:scale-105 duration-300">
                   <div className="mx-auto flex size-16 items-center justify-center rounded-2xl neumorphic-inset-card text-primary mb-5 transition-transform hover:rotate-3">
                     <FileText className="size-8" aria-hidden="true" />
@@ -589,7 +605,22 @@ export default function InvoicesPage() {
             </div>
           </div>
           <div className="rounded-[2rem] border border-border/50 bg-background/50 p-8 shadow-inner custom-scrollbar overflow-y-auto max-h-[500px] space-y-4">
-            {expenses.length === 0 ? (
+            {loading ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-center justify-between rounded-2xl border border-border/50 bg-card p-5">
+                    <div className="flex items-center gap-4">
+                      <Skeleton className="size-10 rounded-full bg-rose-500/10" />
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-32 rounded-md bg-muted/30" />
+                        <Skeleton className="h-3 w-48 rounded-md bg-muted/20" />
+                      </div>
+                    </div>
+                    <Skeleton className="h-5 w-24 rounded-md bg-muted/30" />
+                  </div>
+                ))}
+              </div>
+            ) : expenses.length === 0 ? (
                 <div className="p-12 text-center text-sm font-medium text-muted-foreground">
                   <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-500 mb-4">
                     <Filter className="size-8" />
@@ -626,11 +657,17 @@ export default function InvoicesPage() {
   );
 }
 
-function HeroStat({ label, value, highlight }: { label: string; value: string; highlight?: string }) {
+function HeroStat({ label, value, highlight, loading }: { label: string; value: string; highlight?: string; loading?: boolean }) {
   return (
     <div className="group rounded-[2rem] border border-border/50 bg-background/60 p-5 shadow-sm backdrop-blur-md transition-all hover:bg-background/80 hover:border-border/80">
       <p className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground">{label}</p>
-      <p className={cn("mt-3 text-3xl font-black md:text-2xl lg:text-3xl", highlight ?? "text-foreground")}>{value}</p>
+      {loading ? (
+        <div className="mt-3 flex items-center">
+          <Skeleton className="h-9 w-36 rounded-xl bg-muted/30" />
+        </div>
+      ) : (
+        <p className={cn("mt-3 text-3xl font-black md:text-2xl lg:text-3xl", highlight ?? "text-foreground")}>{value}</p>
+      )}
     </div>
   );
 }

@@ -29,7 +29,6 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 import MoveOutRequest from "@/components/tenant/MoveOutRequest";
 import UnitTransferRequest from "@/components/tenant/UnitTransferRequest";
-import { LeaseTour } from "@/components/tenant/LeaseTour";
 import LeaseModal from "@/components/tenant/LeaseModal";
 import LeaseRenewalRequest from "@/components/tenant/LeaseRenewalRequest";
 import LeaseRenewalReminder from "@/components/tenant/LeaseRenewalReminder";
@@ -153,7 +152,6 @@ function LeaseHubContent() {
 
     return (
         <div className="space-y-6 max-w-[1400px] mx-auto pb-12">
-            <LeaseTour />
             <LeaseRenewalReminder 
                 daysRemaining={progressData.daysRemaining} 
                 leaseId={lease?.id}

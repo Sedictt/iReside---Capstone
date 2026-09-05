@@ -166,7 +166,7 @@ const MODE_CARDS: {
         tagline: "Standard Residential",
         description: "Autonomous private residences with flexible occupant limits and independent leases.",
         icon: Building2,
-        badgeColor: "text-blue-400 bg-blue-400/10 border-blue-400/20",
+        badgeColor: "text-blue-600 dark:text-blue-400 bg-blue-500/10 border-blue-500/20",
     },
     {
         id: "dormitory",
@@ -174,7 +174,7 @@ const MODE_CARDS: {
         tagline: "Structured Community",
         description: "Student & institutional accommodation with curfew hours, visitor rules, and per-bed occupancy.",
         icon: Shield,
-        badgeColor: "text-amber-400 bg-amber-400/10 border-amber-400/20",
+        badgeColor: "text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20",
     },
     {
         id: "boarding_house",
@@ -182,14 +182,14 @@ const MODE_CARDS: {
         tagline: "Shared Co-Living",
         description: "Private single rooms with shared common amenities, hybrid billing, and quiet hour guidelines.",
         icon: Users,
-        badgeColor: "text-purple-400 bg-purple-400/10 border-purple-400/20",
+        badgeColor: "text-purple-600 dark:text-purple-400 bg-purple-500/10 border-purple-500/20",
     },
 ];
 
 export default function PropertyEnvironmentPage() {
     const toast = useAppToast();
     const params = useParams();
-    const { push } = useRouter();
+    const router = useRouter();
     const supabase = useMemo(() => createClient(), []);
     const propertyId = typeof params?.id === "string" ? params.id : Array.isArray(params?.id) ? params.id[0] : "";
 
@@ -349,6 +349,8 @@ export default function PropertyEnvironmentPage() {
                 .eq("id", propertyId);
 
             toast.success("Environment policies updated!");
+            router.refresh();
+            router.push("/landlord/properties");
         } catch (err: any) {
             console.error("Error saving policy:", err);
             toast.error(err?.message || "Failed to save environment settings");
@@ -370,32 +372,32 @@ export default function PropertyEnvironmentPage() {
                 <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3.5">
                         <button
-                            onClick={() => push(`/landlord/properties`)}
-                            className="neumorphic-extruded size-10 rounded-2xl flex items-center justify-center text-neutral-400 hover:text-white transition-all active:scale-95 shrink-0"
+                            onClick={() => router.push(`/landlord/properties`)}
+                            className="neumorphic-extruded size-10 rounded-2xl flex items-center justify-center text-muted-foreground hover:text-foreground transition-all active:scale-95 shrink-0"
                             title="Back to Properties"
                         >
                             <ArrowLeft className="size-4" />
                         </button>
                         <div>
                             <div className="flex items-center gap-2">
-                                <h1 className="text-xl font-black tracking-tight text-white">
+                                <h1 className="text-xl font-black tracking-tight text-foreground">
                                     Environment Scope
                                 </h1>
                                 <span className="rounded-full bg-primary/10 border border-primary/20 px-2.5 py-0.5 text-[10px] font-black text-primary uppercase tracking-wider">
                                     {mode.replace("_", " ")}
                                 </span>
                             </div>
-                            <p className="text-xs text-neutral-400 font-medium truncate max-w-md">
-                                Operating rules, tenant constraints, and billing for <span className="text-white font-bold">{propertyName}</span>
+                            <p className="text-xs text-muted-foreground font-medium truncate max-w-md">
+                                Operating rules, tenant constraints, and billing for <span className="text-foreground font-bold">{propertyName}</span>
                             </p>
                         </div>
                     </div>
 
                     <div className="flex items-center gap-2.5">
                         <button
-                            onClick={() => push(`/landlord/properties`)}
+                            onClick={() => router.push(`/landlord/properties`)}
                             disabled={saving}
-                            className="px-4 py-2 rounded-xl text-xs font-bold text-neutral-400 hover:text-white transition-all"
+                            className="px-4 py-2 rounded-xl text-xs font-bold text-muted-foreground hover:text-foreground transition-all"
                         >
                             Cancel
                         </button>
@@ -414,11 +416,11 @@ export default function PropertyEnvironmentPage() {
                 <div className="neumorphic-panel rounded-[2rem] p-6 space-y-4">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h2 className="text-sm font-black tracking-tight text-white flex items-center gap-2">
+                            <h2 className="text-sm font-black tracking-tight text-foreground flex items-center gap-2">
                                 <Building2 className="size-4 text-primary" />
                                 <span>Operating Environment Mode</span>
                             </h2>
-                            <p className="text-xs text-neutral-400 font-medium mt-0.5">
+                            <p className="text-xs text-muted-foreground font-medium mt-0.5">
                                 Select how this property operates to auto-calibrate occupancy rules, curfews, and metering defaults.
                             </p>
                         </div>
@@ -438,7 +440,7 @@ export default function PropertyEnvironmentPage() {
                                         "group relative flex flex-col justify-between rounded-2xl p-5 text-left transition-all duration-300",
                                         isSelected
                                             ? "neumorphic-inset border-2 border-primary/50 bg-primary/[0.04] shadow-md shadow-primary/10"
-                                            : "neumorphic-panel hover:border-white/20 active:scale-[0.99]"
+                                            : "neumorphic-panel hover:border-primary/20 active:scale-[0.99]"
                                     )}
                                 >
                                     <div>
@@ -446,36 +448,36 @@ export default function PropertyEnvironmentPage() {
                                             <div
                                                 className={cn(
                                                     "neumorphic-inset-card size-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105",
-                                                    isSelected ? "text-primary" : "text-neutral-400"
+                                                    isSelected ? "text-primary" : "text-muted-foreground"
                                                 )}
                                             >
                                                 <Icon className="size-5" />
                                             </div>
                                             {isSelected ? (
-                                                <div className="size-5 rounded-full bg-primary text-black flex items-center justify-center shadow-sm">
+                                                <div className="size-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-sm">
                                                     <Check className="size-3 stroke-[3]" />
                                                 </div>
                                             ) : (
-                                                <div className="size-4 rounded-full border border-white/10" />
+                                                <div className="size-4 rounded-full border border-border" />
                                             )}
                                         </div>
 
-                                        <h3 className="text-sm font-black text-white group-hover:text-primary transition-colors">
+                                        <h3 className="text-sm font-black text-foreground group-hover:text-primary transition-colors">
                                             {card.label}
                                         </h3>
-                                        <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mt-0.5">
+                                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mt-0.5">
                                             {card.tagline}
                                         </p>
-                                        <p className="text-xs text-neutral-400 mt-2 leading-relaxed font-medium">
+                                        <p className="text-xs text-muted-foreground mt-2 leading-relaxed font-medium">
                                             {card.description}
                                         </p>
                                     </div>
 
-                                    <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between">
+                                    <div className="mt-4 pt-3 border-t border-border/40 flex items-center justify-between">
                                         <span className={cn("text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border", card.badgeColor)}>
                                             {card.id.replace("_", " ")}
                                         </span>
-                                        <span className="text-[10px] font-bold text-neutral-500 group-hover:text-neutral-300 transition-colors">
+                                        <span className="text-[10px] font-bold text-muted-foreground group-hover:text-foreground transition-colors">
                                             {isSelected ? "Active Mode" : "Switch Mode →"}
                                         </span>
                                     </div>
@@ -489,37 +491,37 @@ export default function PropertyEnvironmentPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Left Column: Occupancy & Billing Policies */}
                     <div className="neumorphic-panel rounded-3xl p-5 space-y-4">
-                        <div className="flex items-center gap-2.5 pb-2 border-b border-white/5">
+                        <div className="flex items-center gap-2.5 pb-2 border-b border-border/40">
                             <div className="neumorphic-inset-card size-8 rounded-xl flex items-center justify-center text-primary">
                                 <Users className="size-4" />
                             </div>
                             <div>
-                                <h3 className="text-sm font-black text-white">Occupancy & Billing</h3>
-                                <p className="text-[11px] text-neutral-400 font-medium">Capacity and utility metering</p>
+                                <h3 className="text-sm font-black text-foreground">Occupancy & Billing</h3>
+                                <p className="text-[11px] text-muted-foreground font-medium">Capacity and utility metering</p>
                             </div>
                         </div>
 
                         <div className="space-y-4">
                             {/* Max Occupants Stepper */}
                             <div className="space-y-1.5">
-                                <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">
+                                <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                                     Max Occupants Per Unit
                                 </label>
                                 <div className="flex items-center gap-3">
                                     <button
                                         type="button"
                                         onClick={() => setFormData(prev => ({ ...prev, max_occupants_per_unit: Math.max(1, prev.max_occupants_per_unit - 1) }))}
-                                        className="neumorphic-extruded size-9 rounded-xl flex items-center justify-center text-neutral-300 hover:text-white active:scale-95 shrink-0"
+                                        className="neumorphic-extruded size-9 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground active:scale-95 shrink-0"
                                     >
                                         <Minus className="size-3.5" />
                                     </button>
-                                    <div className="neumorphic-inset flex-1 rounded-xl py-2 text-center text-sm font-black text-white">
+                                    <div className="neumorphic-inset flex-1 rounded-xl py-2 text-center text-sm font-black text-foreground">
                                         {formData.max_occupants_per_unit} {formData.max_occupants_per_unit === 1 ? "Person" : "Persons"}
                                     </div>
                                     <button
                                         type="button"
                                         onClick={() => setFormData(prev => ({ ...prev, max_occupants_per_unit: Math.min(20, prev.max_occupants_per_unit + 1) }))}
-                                        className="neumorphic-extruded size-9 rounded-xl flex items-center justify-center text-neutral-300 hover:text-white active:scale-95 shrink-0"
+                                        className="neumorphic-extruded size-9 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground active:scale-95 shrink-0"
                                     >
                                         <Plus className="size-3.5" />
                                     </button>
@@ -528,17 +530,17 @@ export default function PropertyEnvironmentPage() {
 
                             {/* Gender Restriction */}
                             <div className="space-y-1.5">
-                                <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 flex items-center gap-1.5">
+                                <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                                     <VenusAndMars className="size-3 text-primary" />
                                     <span>Gender Policy</span>
                                 </label>
                                 <select
                                     value={formData.gender_restriction_mode}
                                     onChange={(e) => setFormData(prev => ({ ...prev, gender_restriction_mode: e.target.value as GenderRestrictionMode }))}
-                                    className="neumorphic-inset w-full rounded-xl px-3.5 py-2.5 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-primary/40 appearance-none cursor-pointer"
+                                    className="neumorphic-inset w-full rounded-xl px-3.5 py-2.5 text-xs font-bold text-foreground bg-card outline-none focus:ring-2 focus:ring-primary/40 appearance-none cursor-pointer"
                                 >
                                     {GENDER_OPTIONS.map((opt) => (
-                                        <option key={opt.value} value={opt.value} className="bg-[#141414] text-white">
+                                        <option key={opt.value} value={opt.value} className="bg-card text-foreground">
                                             {opt.label}
                                         </option>
                                     ))}
@@ -548,14 +550,14 @@ export default function PropertyEnvironmentPage() {
                             {/* Electricity & Water Billing Selection + Live Explainer */}
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between">
-                                    <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 flex items-center gap-1.5">
-                                        <Zap className="size-3 text-amber-400" />
+                                    <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                                        <Zap className="size-3 text-amber-500" />
                                         <span>Electricity & Water Billing</span>
                                     </label>
                                     <button
                                         type="button"
                                         onClick={() => setIsUtilityGuideOpen(true)}
-                                        className="flex items-center gap-1 text-[11px] font-bold text-amber-400/90 hover:text-amber-300 transition-colors"
+                                        className="flex items-center gap-1 text-[11px] font-bold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors"
                                     >
                                         <HelpCircle className="size-3" />
                                         <span>Compare Styles</span>
@@ -565,10 +567,10 @@ export default function PropertyEnvironmentPage() {
                                 <select
                                     value={formData.utility_policy_mode}
                                     onChange={(e) => setFormData(prev => ({ ...prev, utility_policy_mode: e.target.value as UtilityPolicyMode }))}
-                                    className="neumorphic-inset w-full rounded-xl px-3.5 py-2.5 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-amber-400/40 appearance-none cursor-pointer"
+                                    className="neumorphic-inset w-full rounded-xl px-3.5 py-2.5 text-xs font-bold text-foreground bg-card outline-none focus:ring-2 focus:ring-amber-500/40 appearance-none cursor-pointer"
                                 >
                                     {UTILITY_OPTIONS.map((opt) => (
-                                        <option key={opt.value} value={opt.value} className="bg-[#141414] text-white">
+                                        <option key={opt.value} value={opt.value} className="bg-card text-foreground">
                                             {opt.label}
                                         </option>
                                     ))}
@@ -579,21 +581,21 @@ export default function PropertyEnvironmentPage() {
                                     key={formData.utility_policy_mode}
                                     initial={{ opacity: 0, y: 3 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    className="rounded-2xl border border-white/5 bg-white/[0.02] p-3 space-y-1.5"
+                                    className="rounded-2xl border border-border/60 bg-surface-2/60 dark:bg-white/[0.02] p-3 space-y-1.5"
                                 >
                                     <div className="flex items-center justify-between gap-2">
                                         <div className="flex items-center gap-1.5">
-                                            <Lightbulb className="size-3.5 text-amber-400 shrink-0" />
-                                            <span className="text-[11px] font-black text-white">
+                                            <Lightbulb className="size-3.5 text-amber-500 shrink-0" />
+                                            <span className="text-[11px] font-black text-foreground">
                                                 {currentUtilityGuide.tagline}
                                             </span>
                                         </div>
                                     </div>
-                                    <p className="text-[11px] text-neutral-400 leading-relaxed font-medium">
+                                    <p className="text-[11px] text-muted-foreground leading-relaxed font-medium">
                                         {currentUtilityGuide.howItWorks}
                                     </p>
-                                    <div className="pt-1 flex items-center gap-1.5 text-[10px] text-neutral-500 font-bold">
-                                        <FileText className="size-3 text-neutral-400" />
+                                    <div className="pt-1 flex items-center gap-1.5 text-[10px] text-muted-foreground font-bold">
+                                        <FileText className="size-3 text-muted-foreground" />
                                         <span>Invoice: {currentUtilityGuide.invoicing}</span>
                                     </div>
                                 </motion.div>
@@ -606,8 +608,8 @@ export default function PropertyEnvironmentPage() {
                                     animate={{ opacity: 1, height: "auto" }}
                                     className="space-y-1.5 pt-1"
                                 >
-                                    <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 flex items-center gap-1.5">
-                                        <DollarSign className="size-3 text-amber-400" />
+                                    <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                                        <DollarSign className="size-3 text-amber-500" />
                                         <span>Fixed Monthly Utility Fee (₱)</span>
                                     </label>
                                     <input
@@ -620,7 +622,7 @@ export default function PropertyEnvironmentPage() {
                                             utility_fixed_charge_amount: e.target.value ? parseFloat(e.target.value) : null
                                         }))}
                                         placeholder="e.g. 500"
-                                        className="neumorphic-inset w-full rounded-xl px-3.5 py-2 text-xs font-bold text-white placeholder:text-neutral-600 outline-none focus:ring-2 focus:ring-amber-400/40"
+                                        className="neumorphic-inset w-full rounded-xl px-3.5 py-2 text-xs font-bold text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-amber-500/40"
                                     />
                                 </motion.div>
                             )}
@@ -630,13 +632,13 @@ export default function PropertyEnvironmentPage() {
                     {/* Right Column: Building Rules, Curfews & Quiet Hours */}
                     <div className="neumorphic-panel rounded-3xl p-5 space-y-4 flex flex-col justify-between">
                         <div>
-                            <div className="flex items-center gap-2.5 pb-2 border-b border-white/5">
+                            <div className="flex items-center gap-2.5 pb-2 border-b border-border/40">
                                 <div className="neumorphic-inset-card size-8 rounded-xl flex items-center justify-center text-primary">
                                     <Clock className="size-4" />
                                 </div>
                                 <div>
-                                    <h3 className="text-sm font-black text-white">Access & Curfew Rules</h3>
-                                    <p className="text-[11px] text-neutral-400 font-medium">Gate access & quiet periods</p>
+                                    <h3 className="text-sm font-black text-foreground">Access & Curfew Rules</h3>
+                                    <p className="text-[11px] text-muted-foreground font-medium">Gate access & quiet periods</p>
                                 </div>
                             </div>
 
@@ -644,8 +646,8 @@ export default function PropertyEnvironmentPage() {
                                 {/* Curfew Setting */}
                                 <div className="neumorphic-inset rounded-2xl p-3 flex items-center justify-between gap-3">
                                     <div>
-                                        <p className="text-xs font-black text-white">Curfew Restriction</p>
-                                        <p className="text-[10px] text-neutral-500 font-medium">Enforce gate lock time</p>
+                                        <p className="text-xs font-black text-foreground">Curfew Restriction</p>
+                                        <p className="text-[10px] text-muted-foreground font-medium">Enforce gate lock time</p>
                                     </div>
                                     <div className="flex items-center gap-2.5">
                                         {formData.curfew_enabled && (
@@ -661,13 +663,13 @@ export default function PropertyEnvironmentPage() {
                                             onClick={() => setFormData(prev => ({ ...prev, curfew_enabled: !prev.curfew_enabled }))}
                                             className={cn(
                                                 "relative h-6 w-11 rounded-full transition-colors shrink-0",
-                                                formData.curfew_enabled ? "bg-primary" : "bg-white/10"
+                                                formData.curfew_enabled ? "bg-primary" : "bg-muted/80 border border-border/60"
                                             )}
                                         >
                                             <motion.span
                                                 layout
                                                 className={cn(
-                                                    "absolute top-0.5 size-5 rounded-full bg-white shadow-sm",
+                                                    "absolute top-0.5 size-5 rounded-full bg-white dark:bg-white shadow-sm",
                                                     formData.curfew_enabled ? "left-5" : "left-0.5"
                                                 )}
                                             />
@@ -678,8 +680,8 @@ export default function PropertyEnvironmentPage() {
                                 {/* Visitor Cutoff Setting */}
                                 <div className="neumorphic-inset rounded-2xl p-3 flex items-center justify-between gap-3">
                                     <div>
-                                        <p className="text-xs font-black text-white">Visitor Cutoff</p>
-                                        <p className="text-[10px] text-neutral-500 font-medium">Guest exit deadline</p>
+                                        <p className="text-xs font-black text-foreground">Visitor Cutoff</p>
+                                        <p className="text-[10px] text-muted-foreground font-medium">Guest exit deadline</p>
                                     </div>
                                     <div className="flex items-center gap-2.5">
                                         {formData.visitor_cutoff_enabled && (
@@ -695,13 +697,13 @@ export default function PropertyEnvironmentPage() {
                                             onClick={() => setFormData(prev => ({ ...prev, visitor_cutoff_enabled: !prev.visitor_cutoff_enabled }))}
                                             className={cn(
                                                 "relative h-6 w-11 rounded-full transition-colors shrink-0",
-                                                formData.visitor_cutoff_enabled ? "bg-primary" : "bg-white/10"
+                                                formData.visitor_cutoff_enabled ? "bg-primary" : "bg-muted/80 border border-border/60"
                                             )}
                                         >
                                             <motion.span
                                                 layout
                                                 className={cn(
-                                                    "absolute top-0.5 size-5 rounded-full bg-white shadow-sm",
+                                                    "absolute top-0.5 size-5 rounded-full bg-white dark:bg-white shadow-sm",
                                                     formData.visitor_cutoff_enabled ? "left-5" : "left-0.5"
                                                 )}
                                             />
@@ -713,7 +715,7 @@ export default function PropertyEnvironmentPage() {
                                 <div className="neumorphic-inset rounded-2xl p-3 space-y-2.5">
                                     <div className="flex items-center gap-2">
                                         <Moon className="size-3.5 text-primary" />
-                                        <p className="text-xs font-black text-white">Quiet Hours Period</p>
+                                        <p className="text-xs font-black text-foreground">Quiet Hours Period</p>
                                     </div>
                                     <div className="flex items-center justify-between gap-2">
                                         <TimePicker
@@ -723,7 +725,7 @@ export default function PropertyEnvironmentPage() {
                                             onChange={(val) => setFormData(prev => ({ ...prev, quiet_hours_start: val }))}
                                             placeholder="Start Time"
                                         />
-                                        <span className="text-[10px] font-black uppercase text-neutral-500 shrink-0">to</span>
+                                        <span className="text-[10px] font-black uppercase text-muted-foreground shrink-0">to</span>
                                         <TimePicker
                                             size="sm"
                                             className="flex-1"
@@ -746,7 +748,7 @@ export default function PropertyEnvironmentPage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl"
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
                         onClick={() => setIsUtilityGuideOpen(false)}
                     >
                         <motion.div
@@ -754,25 +756,25 @@ export default function PropertyEnvironmentPage() {
                             animate={{ scale: 1, y: 0 }}
                             exit={{ scale: 0.95, y: 10 }}
                             onClick={(e) => e.stopPropagation()}
-                            className="neumorphic-panel w-full max-w-3xl rounded-[2.5rem] p-6 sm:p-8 space-y-6 border border-white/10 max-h-[90vh] overflow-y-auto"
+                            className="neumorphic-panel w-full max-w-3xl rounded-[2.5rem] p-6 sm:p-8 space-y-6 border border-border/80 max-h-[90vh] overflow-y-auto text-foreground"
                         >
                             <div className="flex items-start justify-between gap-4">
                                 <div className="flex items-center gap-3">
-                                    <div className="size-11 rounded-2xl bg-amber-400/10 border border-amber-400/20 flex items-center justify-center text-amber-400">
+                                    <div className="size-11 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500">
                                         <Zap className="size-6" />
                                     </div>
                                     <div>
-                                        <h3 className="text-xl font-black text-white tracking-tight">
+                                        <h3 className="text-xl font-black text-foreground tracking-tight">
                                             Utility Billing Styles Guide
                                         </h3>
-                                        <p className="text-xs text-neutral-400 font-medium">
+                                        <p className="text-xs text-muted-foreground font-medium">
                                             Understand how each electricity & water billing policy functions in iReside.
                                         </p>
                                     </div>
                                 </div>
                                 <button
                                     onClick={() => setIsUtilityGuideOpen(false)}
-                                    className="neumorphic-extruded size-9 rounded-xl flex items-center justify-center text-neutral-400 hover:text-white transition-all active:scale-95"
+                                    className="neumorphic-extruded size-9 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground transition-all active:scale-95"
                                 >
                                     <X className="size-4" />
                                 </button>
@@ -788,8 +790,8 @@ export default function PropertyEnvironmentPage() {
                                             className={cn(
                                                 "rounded-3xl p-5 flex flex-col justify-between space-y-4 transition-all",
                                                 isSelected
-                                                    ? "neumorphic-inset border-2 border-amber-400/50 bg-amber-400/[0.03]"
-                                                    : "neumorphic-panel border border-white/5"
+                                                    ? "neumorphic-inset border-2 border-amber-500/50 bg-amber-500/[0.04]"
+                                                    : "neumorphic-panel border border-border/60"
                                             )}
                                         >
                                             <div className="space-y-3">
@@ -798,20 +800,20 @@ export default function PropertyEnvironmentPage() {
                                                         {key.replace("_", " ")}
                                                     </span>
                                                     {isSelected && (
-                                                        <span className="text-[10px] font-black text-amber-400">Selected</span>
+                                                        <span className="text-[10px] font-black text-amber-500">Selected</span>
                                                     )}
                                                 </div>
 
-                                                <h4 className="text-sm font-black text-white">{item.title}</h4>
-                                                <p className="text-[11px] text-neutral-400 leading-relaxed font-medium">
+                                                <h4 className="text-sm font-black text-foreground">{item.title}</h4>
+                                                <p className="text-[11px] text-muted-foreground leading-relaxed font-medium">
                                                     {item.howItWorks}
                                                 </p>
 
-                                                <div className="space-y-1.5 pt-2 border-t border-white/5">
-                                                    <p className="text-[10px] font-black uppercase tracking-wider text-neutral-500">Key Benefits:</p>
+                                                <div className="space-y-1.5 pt-2 border-t border-border/40">
+                                                    <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Key Benefits:</p>
                                                     <ul className="space-y-1">
                                                         {item.pros.map((pro, i) => (
-                                                            <li key={i} className="text-[11px] text-neutral-300 flex items-center gap-1.5">
+                                                            <li key={i} className="text-[11px] text-foreground/90 flex items-center gap-1.5">
                                                                 <Check className="size-3 text-primary shrink-0" />
                                                                 <span>{pro}</span>
                                                             </li>
@@ -829,8 +831,8 @@ export default function PropertyEnvironmentPage() {
                                                 className={cn(
                                                     "w-full py-2 rounded-xl text-xs font-bold transition-all text-center",
                                                     isSelected
-                                                        ? "bg-amber-400 text-black font-black"
-                                                        : "bg-white/5 hover:bg-white/10 text-neutral-300"
+                                                        ? "bg-amber-500 text-white font-black shadow-md shadow-amber-500/20"
+                                                        : "neumorphic-extruded text-muted-foreground hover:text-foreground"
                                                 )}
                                             >
                                                 {isSelected ? "Current Policy" : "Choose This Style"}
@@ -844,7 +846,7 @@ export default function PropertyEnvironmentPage() {
                                 <button
                                     type="button"
                                     onClick={() => setIsUtilityGuideOpen(false)}
-                                    className="px-6 py-2.5 rounded-xl bg-white/10 text-xs font-bold text-white hover:bg-white/20 transition-all"
+                                    className="px-6 py-2.5 rounded-xl neumorphic-extruded text-xs font-bold text-foreground hover:bg-surface-2 transition-all"
                                 >
                                     Close Guide
                                 </button>
