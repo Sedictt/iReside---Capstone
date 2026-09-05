@@ -40,6 +40,18 @@ type TenantItem = {
     onboardingStatus: "pending" | "in_progress" | "completed" | "not_started";
 };
 
+type ApplicationItem = {
+    id: string;
+    status: string;
+    applicant: {
+        name: string;
+        email: string;
+    };
+    unitNumber: string;
+    propertyName: string;
+    submittedDate: string;
+};
+
 type ActionItem = {
     id: string;
     title: string;
@@ -182,6 +194,7 @@ interface ActionRequiredState {
     maintenance: MaintenanceRequestItem[];
     tenants: TenantItem[];
     conversations: ConversationSummary[];
+    applications: ApplicationItem[];
     loading: boolean;
     error: string | null;
     mounted: boolean;
@@ -191,6 +204,7 @@ type ActionRequiredAction =
     | { type: "SET_MAINTENANCE"; payload: MaintenanceRequestItem[] }
     | { type: "SET_TENANTS"; payload: TenantItem[] }
     | { type: "SET_CONVERSATIONS"; payload: ConversationSummary[] }
+    | { type: "SET_APPLICATIONS"; payload: ApplicationItem[] }
     | { type: "SET_LOADING"; payload: boolean }
     | { type: "SET_ERROR"; payload: string | null }
     | { type: "SET_MOUNTED"; payload: boolean };
@@ -203,6 +217,8 @@ function actionRequiredReducer(state: ActionRequiredState, action: ActionRequire
             return { ...state, tenants: action.payload };
         case "SET_CONVERSATIONS":
             return { ...state, conversations: action.payload };
+        case "SET_APPLICATIONS":
+            return { ...state, applications: action.payload };
         case "SET_LOADING":
             return { ...state, loading: action.payload };
         case "SET_ERROR":
@@ -223,6 +239,7 @@ export function ActionRequired() {
         maintenance: [],
         tenants: [],
         conversations: [],
+        applications: [],
         loading: true,
         error: null,
         mounted: false
@@ -241,16 +258,18 @@ export function ActionRequired() {
 
             try {
                 const params = new URLSearchParams({ propertyId: selectedPropertyId });
-                const [maintenanceRes, tenantsRes, conversationsRes] = await Promise.all([
+                const [maintenanceRes, tenantsRes, conversationsRes, applicationsRes] = await Promise.all([
                     fetch(`/api/landlord/maintenance?${params.toString()}`, { signal: controller.signal }),
                     fetch(`/api/landlord/tenants?${params.toString()}`, { signal: controller.signal }),
                     fetch("/api/messages/conversations", { signal: controller.signal, cache: "no-store" }),
+                    fetch(`/api/landlord/applications?${params.toString()}`, { signal: controller.signal }),
                 ]);
 
-                const [maintenancePayload, tenantsPayload, conversationsPayload] = await Promise.all([
+                const [maintenancePayload, tenantsPayload, conversationsPayload, applicationsPayload] = await Promise.all([
                     maintenanceRes.json().catch(() => ({})),
                     tenantsRes.json().catch(() => ({})),
                     conversationsRes.json().catch(() => ({})),
+                    applicationsRes.json().catch(() => ({})),
                 ]);
 
                 if (!maintenanceRes.ok || !tenantsRes.ok || !conversationsRes.ok) {
@@ -273,6 +292,12 @@ export function ActionRequired() {
                     type: "SET_CONVERSATIONS", 
                     payload: Array.isArray((conversationsPayload as { conversations?: ConversationSummary[] }).conversations)
                         ? (conversationsPayload as { conversations: ConversationSummary[] }).conversations
+                        : []
+                });
+                dispatch({ 
+                    type: "SET_APPLICATIONS", 
+                    payload: Array.isArray((applicationsPayload as { applications?: ApplicationItem[] }).applications)
+                        ? (applicationsPayload as { applications: ApplicationItem[] }).applications
                         : []
                 });
             } catch (loadError) {
@@ -308,7 +333,7 @@ export function ActionRequired() {
                     title: request.priority === "Critical" ? "Critical Repair Required" : "Maintenance Feedback Loop",
                     detail: `${request.tenant}: ${request.title} at ${request.property}`,
                     meta: `Reported ${formatDateLabel(request.reportedAt)}`,
-                    href: "/landlord/maintenance",
+                    href: `/landlord/maintenance?id=${request.id}`,
                     cta: "Dispatch Tech",
                     tone: request.priority === "Critical" ? "critical" : request.priority === "High" ? "high" : "medium",
                     kind: "maintenance",
@@ -332,10 +357,26 @@ export function ActionRequired() {
                     title: daysUntil <= 7 ? "Urgent Lease Expiry" : "Lease Renewal Window",
                     detail: `${tenant.name} in ${tenant.unit} (${tenant.property})`,
                     meta: daysUntil <= 0 ? "Expired today" : `${daysUntil} days remaining`,
-                    href: "/landlord/tenants",
+                    href: `/landlord/tenants?tab=renewals&tenantId=${tenant.id}`,
                     cta: "Send Renewal",
                     tone: daysUntil <= 7 ? "high" : "medium",
                     kind: "lease",
+                });
+            });
+
+        state.applications
+            .filter((app) => app.status === "pending" || app.status === "reviewing")
+            .slice(0, 2)
+            .forEach((app) => {
+                nextActions.push({
+                    id: `application-${app.id}`,
+                    title: "Pending Applicant Verification",
+                    detail: `${app.applicant.name}: Application for ${app.unitNumber} (${app.propertyName})`,
+                    meta: "Document Review",
+                    href: `/landlord/applications?id=${app.id}`,
+                    cta: "Verify Docs",
+                    tone: "high",
+                    kind: "onboarding",
                 });
             });
 
@@ -343,14 +384,25 @@ export function ActionRequired() {
             .filter((tenant) => tenant.onboardingStatus !== "completed")
             .slice(0, 2)
             .forEach((tenant) => {
+                const isPendingReview = tenant.onboardingStatus === "pending";
+                const isNotStarted = tenant.onboardingStatus === "not_started";
+
                 nextActions.push({
                     id: `onboarding-${tenant.id}`,
-                    title: "Pending Resident Verification",
-                    detail: `${tenant.name} is stuck at ${onboardingStatusLabel[tenant.onboardingStatus]} stage.`,
-                    meta: "Onboarding Bottleneck",
-                    href: "/landlord/tenants",
-                    cta: "Verify Docs",
-                    tone: tenant.onboardingStatus === "in_progress" ? "medium" : "high",
+                    title: isPendingReview
+                        ? "Pending Resident Verification"
+                        : isNotStarted
+                        ? "Resident Setup Pending"
+                        : "Resident Onboarding In Progress",
+                    detail: isNotStarted
+                        ? `${tenant.name} (${tenant.unit}): Move-in setup has not been started.`
+                        : isPendingReview
+                        ? `${tenant.name} (${tenant.unit}): Onboarding details submitted for review.`
+                        : `${tenant.name} (${tenant.unit}): Move-in onboarding currently in progress.`,
+                    meta: isPendingReview ? "Pending Approval" : isNotStarted ? "Onboarding Needed" : "In Progress",
+                    href: `/landlord/tenants?view=profile&tenantId=${tenant.id}&search=${encodeURIComponent(tenant.name)}`,
+                    cta: isPendingReview ? "Review Resident" : "View Resident",
+                    tone: isNotStarted || isPendingReview ? "high" : "medium",
                     kind: "onboarding",
                 });
             });
@@ -365,7 +417,7 @@ export function ActionRequired() {
                     title: "Incoming Inquiries",
                     detail: `${other?.fullName ?? "Resident"}: "${conversation.lastMessage?.content?.slice(0, 40)}..."`,
                     meta: `${conversation.unreadCount} unread responses`,
-                    href: "/landlord/messages",
+                    href: `/landlord/messages?conversation=${conversation.id}`,
                     cta: "Enter Chat",
                     tone: "medium",
                     kind: "message",
@@ -378,6 +430,13 @@ export function ActionRequired() {
                 return weight[right.tone] - weight[left.tone];
             })
             .slice(0, 6);
+
+        const pendingApplicationsCount = state.applications.filter(
+            (app) => app.status === "pending" || app.status === "reviewing"
+        ).length;
+        const incompleteTenantsCount = state.tenants.filter(
+            (tenant) => tenant.onboardingStatus !== "completed"
+        ).length;
 
         const summaryItems: ActionSummary[] = [
             {
@@ -392,13 +451,13 @@ export function ActionRequired() {
             },
             {
                 label: "Move-In Tasks",
-                value: state.tenants.filter((tenant) => tenant.onboardingStatus !== "completed").length,
+                value: incompleteTenantsCount + pendingApplicationsCount,
                 icon: Clock
             },
         ];
 
         return { actions: sorted, summaries: summaryItems };
-    }, [state.conversations, state.maintenance, state.tenants, state.mounted]);
+    }, [state.conversations, state.maintenance, state.tenants, state.applications, state.mounted]);
 
     return (
         <LazyMotion features={domAnimation}>

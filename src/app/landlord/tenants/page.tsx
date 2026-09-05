@@ -143,6 +143,7 @@ function TenantsContent() {
  <TenantProfileView
  tenantId={viewProfileTenantId}
  onClose={handleCloseProfile}
+ onMessage={handleMessageTenant}
  />
  ) : (
  <TenantDirectory

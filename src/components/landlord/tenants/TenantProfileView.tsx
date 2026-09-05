@@ -10,7 +10,8 @@ import {
  Home,
  User,
  Calendar,
- Building2
+ Building2,
+ MessageSquare
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -24,6 +25,7 @@ import { ClientOnlyDate } from '@/components/ui/client-only-date'
 interface TenantProfileViewProps {
  tenantId: string
  onClose: () => void
+ onMessage?: (tenantId: string) => void
 }
 
 type TenantProfile = {
@@ -81,7 +83,7 @@ function calculateLeaseProgress(startDate: string, endDate: string): number {
  return Math.round((elapsed / total) * 100);
 }
 
-export function TenantProfileView({ tenantId, onClose }: TenantProfileViewProps) {
+export function TenantProfileView({ tenantId, onClose, onMessage }: TenantProfileViewProps) {
  const [loading, setLoading] = useState(true)
  const [profile, setProfile] = useState<TenantProfile | null>(null)
  const [activeLease, setActiveLease] = useState<LeaseInfo | null>(null)
@@ -233,6 +235,17 @@ export function TenantProfileView({ tenantId, onClose }: TenantProfileViewProps)
 
  {/* Social Connectivity Row */}
  <ReadOnlySocials socials={socials} className="mt-0" />
+
+ {onMessage && (
+  <button
+   type="button"
+   onClick={() => onMessage(tenantId)}
+   className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#c4b0ff]/15 hover:bg-[#c4b0ff]/25 border border-[#c4b0ff]/30 px-5 py-2.5 text-xs font-black uppercase tracking-wider text-[#c4b0ff] transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-sm"
+  >
+   <MessageSquare size={15} />
+   <span>Message Resident in Workspace</span>
+  </button>
+ )}
  </div>
  </div>
 
