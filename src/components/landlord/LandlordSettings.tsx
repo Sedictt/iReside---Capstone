@@ -18,6 +18,7 @@ import {
     FileText,
     Camera,
     Save,
+    Loader2,
     ChevronRight,
     CheckCircle,
     Key,
@@ -218,6 +219,7 @@ export function LandlordSettings() {
     const [activeTab, setActiveTab] = useState<SettingsCategory>("Identity");
     const [activeSubTab, setActiveSubTab] = useState<string>("Profile");
     const [isSaving, setIsSaving] = useState(false);
+    const [justSaved, setJustSaved] = useState(false);
     const supabase = useMemo(() => createClient(), []);
 
     // Mapping of Sub-tabs
@@ -572,6 +574,20 @@ export function LandlordSettings() {
         }
     };
 
+    const handleDiscardChanges = () => {
+        if (!initialSnapshot) return;
+        setFormData(JSON.parse(JSON.stringify(initialSnapshot.formData)));
+        setPropertyTradeName(initialSnapshot.propertyTradeName);
+        setPropertyTagline(initialSnapshot.propertyTagline);
+        setRentalArchetype(initialSnapshot.rentalArchetype);
+        setBrandPrimaryHex(initialSnapshot.brandPrimaryHex);
+        setBrandSecondaryHex(initialSnapshot.brandSecondaryHex);
+        setBannerUrl(initialSnapshot.bannerUrl);
+        setPropertyLogoUrl(initialSnapshot.propertyLogoUrl);
+        applyBrandCssVariables(initialSnapshot.brandPrimaryHex, initialSnapshot.brandSecondaryHex);
+        toast.info("Unsaved changes discarded");
+    };
+
     const [isUploadingPermit, setIsUploadingPermit] = useState(false);
     const permitInputRef = useRef<HTMLInputElement>(null);
     const [isResetting, setIsResetting] = useState(false);
@@ -823,18 +839,27 @@ export function LandlordSettings() {
                         .from("profiles")
                         .update({
                             full_name: formData.full_name,
+                            business_name: formData.business_name,
+                            email: formData.email,
                             website: formData.website,
                             bio: formData.bio,
                             socials: formData.socials,
                             phone: formData.phone,
                             address: formData.address,
-                            business_name: formData.business_name,
                             business_permit_number: formData.business_permit_number,
                         })
                         .eq("id", profile.id);
 
                     if (error) {
                         console.warn("[LandlordSettings] Profile update warning:", error);
+                    }
+
+                    if (formData.email && formData.email !== profile.email) {
+                        try {
+                            await supabase.auth.updateUser({ email: formData.email });
+                        } catch (emailErr: any) {
+                            console.warn("[LandlordSettings] Auth email update note:", emailErr?.message);
+                        }
                     }
 
                     await Promise.allSettled([
@@ -908,6 +933,8 @@ export function LandlordSettings() {
 
             toast.dismiss(loadingToast);
             toast.success("All settings saved successfully!");
+            setJustSaved(true);
+            setTimeout(() => setJustSaved(false), 2500);
             return true;
         } catch (error: any) {
             toast.dismiss(loadingToast);
@@ -1020,28 +1047,31 @@ export function LandlordSettings() {
                     return (
                         <GlassCard title="Profile Information" description="Basic details about you and your business.">
                             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                <SettingField label="Full Name" icon={User} description="Verified by admin. Contact support to change.">
+                                <SettingField label="Full Name" icon={User} description="Your legal or preferred display name.">
                                     <input
                                         type="text"
-                                        value={profile?.full_name || ""}
-                                        disabled
-                                        className="w-full cursor-not-allowed rounded-xl neumorphic-inset px-4 py-3 text-sm opacity-50"
+                                        value={formData.full_name}
+                                        onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                                        placeholder="e.g. John Doe"
+                                        className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
                                     />
                                 </SettingField>
-                                <SettingField label="Business Name" icon={Building2} description="Verified by admin. Contact support to change.">
+                                <SettingField label="Business Name" icon={Building2} description="Registered entity or enterprise business name.">
                                     <input
                                         type="text"
-                                        value={profile?.business_name || ""}
-                                        disabled
-                                        className="w-full cursor-not-allowed rounded-xl neumorphic-inset px-4 py-3 text-sm opacity-50"
+                                        value={formData.business_name}
+                                        onChange={(e) => setFormData({ ...formData, business_name: e.target.value })}
+                                        placeholder="e.g. Acme Residences LLC"
+                                        className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
                                     />
                                 </SettingField>
-                                <SettingField label="Contact Email" icon={Mail} description="This email is used for inquiries.">
+                                <SettingField label="Contact Email" icon={Mail} description="Primary contact email used for inquiries and notifications.">
                                     <input
                                         type="email"
-                                        value={profile?.email || ""}
-                                        disabled
-                                        className="w-full cursor-not-allowed rounded-xl neumorphic-inset px-4 py-3 text-sm opacity-50"
+                                        value={formData.email}
+                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                        placeholder="name@example.com"
+                                        className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
                                     />
                                 </SettingField>
                                 <SettingField label="Phone Number" icon={Phone}>
@@ -1090,7 +1120,7 @@ export function LandlordSettings() {
                                 <div className="relative h-64 w-full overflow-hidden rounded-[1.5rem] neumorphic-inset">
                                     <ProfileCoverUploader 
                                         initialCoverUrl={profile?.cover_url || null} 
-                                        fullName={profile?.full_name || "Landlord"} 
+                                        fullName={formData.full_name || profile?.full_name || "Landlord"} 
                                     />
                                 </div>
                             </GlassCard>
@@ -1104,7 +1134,7 @@ export function LandlordSettings() {
                                             <Image src={profile.avatar_url} alt="Avatar" fill sizes="160px" className="rounded-[2.8rem] object-cover" />
                                         ) : (
                                             <span className="text-5xl font-black text-white">
-                                                {profile?.full_name?.charAt(0).toUpperCase()}
+                                                {(formData.full_name || profile?.full_name || "L").charAt(0).toUpperCase()}
                                             </span>
                                         )}
                                         <button 
@@ -1114,7 +1144,7 @@ export function LandlordSettings() {
                                             <Camera className="size-6" />
                                         </button>
                                     </div>
-                                    <h4 className="mt-6 text-xl font-black text-white">{profile?.full_name}</h4>
+                                    <h4 className="mt-6 text-xl font-black text-white">{formData.full_name || profile?.full_name}</h4>
                                     <p className="text-sm text-neutral-500">Verified Landlord</p>
                                 </div>
                             </GlassCard>
@@ -2426,8 +2456,8 @@ export function LandlordSettings() {
 
     return (
         <div className="space-y-10">
-            {/* Top Navigation & Unified Global Save Action Bar */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border/40">
+            {/* Top Navigation Bar */}
+            <div className="flex items-center justify-between gap-4 pb-6 border-b border-border/40">
                 <button
                     type="button"
                     onClick={handleRequestExit}
@@ -2439,29 +2469,10 @@ export function LandlordSettings() {
                     <span className="text-sm font-black tracking-wide">Back to Dashboard</span>
                 </button>
 
-                {/* Global Unified Save Button with Dirty Indicator */}
-                <div className="flex items-center gap-3">
-                    {isDirty && (
-                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/30 text-xs font-black animate-pulse">
-                            <span className="size-2 rounded-full bg-amber-500" />
-                            <span>Unsaved Changes</span>
-                        </div>
-                    )}
-
-                    <button
-                        type="button"
-                        onClick={handleSaveAll}
-                        disabled={isSaving || !isDirty}
-                        className={cn(
-                            "flex items-center gap-2 rounded-2xl px-6 py-3 text-xs font-black uppercase tracking-wider transition-all shadow-md",
-                            isDirty 
-                                ? "neumorphic-primary text-primary-foreground hover:scale-[1.02] active:scale-95 shadow-primary/20 cursor-pointer"
-                                : "neumorphic-extruded text-muted-foreground opacity-50 cursor-not-allowed"
-                        )}
-                    >
-                        <Save className="size-4" />
-                        <span>{isSaving ? "Saving All…" : isDirty ? "Save All Changes" : "All Changes Saved"}</span>
-                    </button>
+                <div className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-muted/40 border border-border/40 text-xs font-bold text-muted-foreground">
+                    <span>Control Center</span>
+                    <span className="text-muted-foreground/40">•</span>
+                    <span className="text-foreground font-black">{activeTab}</span>
                 </div>
             </div>
 
@@ -2583,6 +2594,66 @@ export function LandlordSettings() {
                         }
                     }}
                 />
+                {/* Floating Save Action Bar (Appears when changes are pending or recently saved) */}
+                <AnimatePresence>
+                    {(isDirty || isSaving || justSaved) && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 50, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 50, scale: 0.95 }}
+                            transition={{ type: "spring", stiffness: 450, damping: 30 }}
+                            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2.5 sm:gap-3.5 p-2 sm:p-2.5 pl-3.5 sm:pl-4 rounded-2xl bg-card/95 backdrop-blur-xl border border-border/80 shadow-2xl shadow-black/25 dark:shadow-primary/10 max-w-[calc(100vw-2rem)] ring-1 ring-border/20"
+                        >
+                            {justSaved && !isDirty && !isSaving ? (
+                                <div className="flex items-center gap-2 px-3 py-1.5 text-xs font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                                    <CheckCircle className="size-4 text-emerald-500" />
+                                    <span>All Changes Saved</span>
+                                </div>
+                            ) : (
+                                <>
+                                    {/* Unsaved status badge */}
+                                    <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/30 text-xs font-black shrink-0">
+                                        <span className="size-2 rounded-full bg-amber-500 animate-pulse" />
+                                        <span className="hidden xs:inline">Unsaved Changes</span>
+                                        <span className="xs:hidden">Unsaved</span>
+                                    </div>
+
+                                    {/* Discard button */}
+                                    <button
+                                        type="button"
+                                        onClick={handleDiscardChanges}
+                                        disabled={isSaving}
+                                        className="flex items-center gap-1.5 px-3 py-2 text-xs font-black text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-xl transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                                        title="Discard all pending changes"
+                                    >
+                                        <RotateCcw className="size-3.5" />
+                                        <span>Discard</span>
+                                    </button>
+
+                                    {/* Save All Changes Button */}
+                                    <button
+                                        type="button"
+                                        onClick={handleSaveAll}
+                                        disabled={isSaving}
+                                        className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-black uppercase tracking-wider transition-all shadow-md neumorphic-primary text-primary-foreground hover:scale-[1.02] active:scale-95 shadow-primary/20 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                                    >
+                                        {isSaving ? (
+                                            <>
+                                                <Loader2 className="size-4 animate-spin" />
+                                                <span>Saving…</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Save className="size-4" />
+                                                <span>Save All Changes</span>
+                                            </>
+                                        )}
+                                    </button>
+                                </>
+                            )}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
         </div>
     );
