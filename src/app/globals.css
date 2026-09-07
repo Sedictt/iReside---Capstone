@@ -1035,11 +1035,12 @@ body {
 
 /* â”€â”€ Tooltip â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .neu-tooltip {
-  background: linear-gradient(145deg, #111111, #0d0d0d);
+  background: var(--card);
+  color: var(--card-foreground);
   box-shadow:
      6px  6px 14px var(--neu-shadow-dark),
     -6px -6px 14px var(--neu-shadow-light);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
 }
 
@@ -1344,11 +1345,12 @@ body {
 
 /* ── Tooltip ─────────────────────────────────── */
 .neu-tooltip {
-  background: linear-gradient(145deg, #111111, #0d0d0d);
+  background: var(--card);
+  color: var(--card-foreground);
   box-shadow:
      6px  6px 14px var(--neu-shadow-dark),
     -6px -6px 14px var(--neu-shadow-light);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
 }
 

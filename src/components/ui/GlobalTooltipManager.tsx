@@ -254,14 +254,20 @@ export function GlobalTooltipManager() {
                     }}
                     className={`pointer-events-none select-none ${translateClasses}`}
                 >
-                    <div className="relative flex items-center gap-1.5 rounded-xl border border-slate-800/80 bg-slate-950/95 px-3 py-1.5 text-[11px] font-semibold text-slate-100 shadow-[0_10px_35px_-5px_rgba(0,0,0,0.6),0_4px_12px_-2px_rgba(0,0,0,0.4)] backdrop-blur-xl dark:border-white/10 dark:bg-zinc-900/95 dark:text-zinc-100 max-w-xs whitespace-normal break-words leading-snug">
+                    <div className="relative flex items-center gap-1.5 rounded-xl border border-border/80 bg-card/95 px-3 py-1.5 text-[11px] font-semibold text-card-foreground shadow-[0_10px_35px_-5px_rgba(0,0,0,0.15),0_4px_12px_-2px_rgba(0,0,0,0.08)] dark:shadow-[0_10px_35px_-5px_rgba(0,0,0,0.6),0_4px_12px_-2px_rgba(0,0,0,0.4)] backdrop-blur-xl max-w-xs whitespace-normal break-words leading-snug">
                         <span>{text}</span>
                         {/* Subtly styled directional arrow indicator */}
                         {computedSide === "top" && (
-                            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 size-2 rotate-45 border-r border-b border-slate-800/80 bg-slate-950 dark:border-white/10 dark:bg-zinc-900" />
+                            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 size-2 rotate-45 border-r border-b border-border/80 bg-card" />
                         )}
                         {computedSide === "bottom" && (
-                            <div className="absolute -top-1 left-1/2 -translate-x-1/2 size-2 rotate-45 border-l border-t border-slate-800/80 bg-slate-950 dark:border-white/10 dark:bg-zinc-900" />
+                            <div className="absolute -top-1 left-1/2 -translate-x-1/2 size-2 rotate-45 border-l border-t border-border/80 bg-card" />
+                        )}
+                        {computedSide === "left" && (
+                            <div className="absolute -right-1 top-1/2 -translate-y-1/2 size-2 rotate-45 border-r border-t border-border/80 bg-card" />
+                        )}
+                        {computedSide === "right" && (
+                            <div className="absolute -left-1 top-1/2 -translate-y-1/2 size-2 rotate-45 border-l border-b border-border/80 bg-card" />
                         )}
                     </div>
                 </motion.div>

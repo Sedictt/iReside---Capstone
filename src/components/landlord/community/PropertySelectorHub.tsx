@@ -69,7 +69,7 @@ export function PropertySelectorHub({
 
     if (loading && properties.length === 0) {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-[#0a0a0a]">
+            <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
                 <div className="flex flex-col items-center gap-4">
                     <div className="size-16 animate-pulse rounded-2xl bg-primary/20 flex items-center justify-center">
                         <ShieldCheck className="size-8 text-primary" />
@@ -82,12 +82,12 @@ export function PropertySelectorHub({
 
     if (properties.length === 0) {
         return (
-            <div className="flex min-h-screen flex-col items-center justify-center bg-[#0a0a0a] px-6 text-center">
-                <div className="mb-8 flex size-24 items-center justify-center rounded-[2rem] border border-white/5 bg-card/40 shadow-2xl backdrop-blur-xl">
+            <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6 text-center text-foreground">
+                <div className="mb-8 flex size-24 items-center justify-center rounded-[2rem] border border-border/40 bg-card/60 shadow-2xl backdrop-blur-xl">
                     <Building2 className="size-10 text-primary" />
                 </div>
                 <h1 className="mb-4 text-3xl font-black tracking-tight text-foreground md:text-5xl">No properties detected</h1>
-                <p className="mb-10 max-w-md text-sm font-medium text-muted-foreground/80 leading-relaxed">
+                <p className="mb-10 max-w-md text-sm font-medium text-muted-foreground leading-relaxed">
                     The Community Hub requires a specific property context. Please register a property to begin managing its residents and discussions.
                 </p>
                 <Link 
@@ -102,7 +102,7 @@ export function PropertySelectorHub({
     }
 
     return (
-        <div ref={containerRef} className="relative flex h-screen w-full flex-col overflow-hidden bg-[#0a0a0a] text-foreground md:flex-row">
+        <div ref={containerRef} className="relative flex h-screen w-full flex-col overflow-hidden bg-background text-foreground md:flex-row">
             {/* Background Layer */}
             <div className="absolute inset-0 z-0">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent" />
@@ -112,27 +112,27 @@ export function PropertySelectorHub({
                         src={activeProperty.image}
                         alt=""
                         fill
-                        className="property-background-image object-cover opacity-20 blur-md grayscale transition-all duration-1000"
+                        className="property-background-image object-cover opacity-15 blur-md grayscale transition-all duration-1000"
                     />
                 )}
-                <div className="absolute inset-0 bg-[#0a0a0a]/80" />
+                <div className="absolute inset-0 bg-background/85 backdrop-blur-[2px]" />
             </div>
 
             {/* Sidebar / List View */}
-            <aside className="relative z-20 flex w-full flex-col border-b border-white/5 bg-card/40 backdrop-blur-2xl md:w-[420px] md:border-b-0 md:border-r">
+            <aside className="relative z-20 flex w-full flex-col border-b border-border/40 bg-card/60 dark:bg-card/40 backdrop-blur-2xl md:w-[420px] md:border-b-0 md:border-r md:border-border/40">
                 <div className="flex flex-col gap-6 p-8">
                     <div className="flex items-center gap-4">
                         <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                             {icon}
                         </div>
                         <div>
-                            <h2 className="text-xl font-black tracking-tight">{title}</h2>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Portfolio Selection</p>
+                            <h2 className="text-xl font-black tracking-tight text-foreground">{title}</h2>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">Portfolio Selection</p>
                         </div>
                     </div>
 
                     <div className="group relative">
-                        <Search className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40 transition-colors group-focus-within:text-primary" />
+                        <Search className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/60 transition-colors group-focus-within:text-primary" />
                         <input 
                             type="text"
                             value={searchQuery}
@@ -141,7 +141,7 @@ export function PropertySelectorHub({
                                 setActivePropertyIndex(0);
                             }}
                             placeholder="Find property..."
-                            className="h-12 w-full rounded-2xl border-none neumorphic-inset pl-12 pr-4 text-sm font-black text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/30 transition-all"
+                            className="h-12 w-full rounded-2xl border-none neumorphic-inset pl-12 pr-4 text-sm font-black text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/30 transition-all"
                         />
                     </div>
                 </div>
@@ -153,7 +153,7 @@ export function PropertySelectorHub({
                                 key={property.id}
                                 onClick={() => setActivePropertyIndex(idx)}
                                 className={cn(
-                                    "group relative flex w-full items-center gap-4 rounded-[1.25rem] p-4 transition-all duration-300 border-none mb-2",
+                                    "group relative flex w-full items-center gap-4 rounded-[1.25rem] p-4 transition-all duration-300 border-none mb-2 cursor-pointer",
                                     activePropertyIndex === idx 
                                         ? "neumorphic-inset text-primary" 
                                         : "neumorphic-extruded"
@@ -161,9 +161,9 @@ export function PropertySelectorHub({
                             >
                                 <div className="relative size-14 shrink-0 overflow-hidden rounded-xl neumorphic-inset-card">
                                     {property.image ? (
-                                        <Image src={property.image} fill className="object-cover opacity-80" alt="" />
+                                        <Image src={property.image} fill className="object-cover opacity-90" alt="" />
                                     ) : (
-                                        <div className="flex h-full w-full items-center justify-center text-muted-foreground/20">
+                                        <div className="flex h-full w-full items-center justify-center bg-muted/40 text-muted-foreground/40">
                                             <Building2 className="size-6" />
                                         </div>
                                     )}
@@ -171,16 +171,16 @@ export function PropertySelectorHub({
                                 <div className="flex flex-1 flex-col items-start text-left">
                                     <span className={cn(
                                         "truncate text-sm font-black transition-colors",
-                                        activePropertyIndex === idx ? "text-primary" : "text-foreground/90 group-hover:text-foreground"
+                                        activePropertyIndex === idx ? "text-primary" : "text-foreground group-hover:text-foreground"
                                     )}>
                                         {property.name}
                                     </span>
-                                    <span className="truncate text-[10px] font-black uppercase tracking-tight text-muted-foreground/60">
+                                    <span className="truncate text-[10px] font-black uppercase tracking-tight text-muted-foreground/70">
                                         {property.address}
                                     </span>
                                 </div>
                                 <ChevronRight className={cn(
-                                    "size-4 text-muted-foreground/20 transition-all",
+                                    "size-4 text-muted-foreground/40 transition-all",
                                     activePropertyIndex === idx ? "text-primary opacity-100" : "group-hover:translate-x-1 group-hover:opacity-100"
                                 )} />
                             </button>
@@ -188,15 +188,15 @@ export function PropertySelectorHub({
 
                         {filteredProperties.length === 0 && (
                             <div className="py-12 text-center">
-                                <SearchX className="mx-auto size-10 text-muted-foreground/20" />
-                                <p className="mt-4 text-xs font-black text-muted-foreground/40 uppercase tracking-widest">No matches found</p>
+                                <SearchX className="mx-auto size-10 text-muted-foreground/30" />
+                                <p className="mt-4 text-xs font-black text-muted-foreground/60 uppercase tracking-widest">No matches found</p>
                             </div>
                         )}
                     </div>
                 </div>
 
-                <div className="border-t border-white/5 p-6">
-                    <Link href="/landlord/dashboard" className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 transition-colors hover:text-foreground">
+                <div className="border-t border-border/40 p-6">
+                    <Link href="/landlord/dashboard" className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/70 transition-colors hover:text-primary">
                         Exit Selection
                     </Link>
                 </div>
@@ -226,11 +226,11 @@ export function PropertySelectorHub({
                                                 alt={activeProperty.name}
                                             />
                                         ) : (
-                                            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-white/5 to-white/10">
-                                                <Building2 className="size-20 text-white/10" />
+                                            <div className="flex h-full w-full items-center justify-center bg-muted/40">
+                                                <Building2 className="size-20 text-muted-foreground/20" />
                                             </div>
                                         )}
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                                         
                                         <div className="absolute bottom-8 left-8 right-8">
                                             <div className="flex items-center gap-4 text-white">
@@ -238,8 +238,8 @@ export function PropertySelectorHub({
                                                     <MapPin className="size-6" />
                                                 </div>
                                                 <div className="flex flex-col">
-                                                    <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Verified Location</span>
-                                                    <span className="text-sm font-black tracking-tight">{activeProperty.address}</span>
+                                                    <span className="text-[10px] font-black uppercase tracking-widest text-white/70">Verified Location</span>
+                                                    <span className="text-sm font-black tracking-tight text-white">{activeProperty.address}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -255,23 +255,23 @@ export function PropertySelectorHub({
                                             <h1 className="property-stage-content text-4xl font-black tracking-tight text-foreground">
                                                 {activeProperty.name}
                                             </h1>
-                                            <p className="property-stage-content mt-4 text-sm font-medium text-muted-foreground/80 leading-relaxed">
+                                            <p className="property-stage-content mt-4 text-sm font-medium text-muted-foreground leading-relaxed">
                                                 {description}
                                             </p>
 
                                             <div className="mt-8 grid grid-cols-2 gap-4">
                                                 <div className="property-stage-content flex flex-col gap-1 rounded-2xl border-none neumorphic-inset p-4 transition-all">
-                                                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Units</span>
+                                                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">Units</span>
                                                     <div className="flex items-center gap-2">
                                                         <Home className="size-4 text-primary" />
-                                                        <span className="text-lg font-black">{activeProperty.units?.length || 0}</span>
+                                                        <span className="text-lg font-black text-foreground">{activeProperty.units?.length || 0}</span>
                                                     </div>
                                                 </div>
                                                 <div className="property-stage-content flex flex-col gap-1 rounded-2xl border-none neumorphic-inset p-4 transition-all">
-                                                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Residents</span>
+                                                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">Residents</span>
                                                     <div className="flex items-center gap-2">
-                                                        <Users className="size-4 text-emerald-400" />
-                                                        <span className="text-lg font-black">
+                                                        <Users className="size-4 text-emerald-500" />
+                                                        <span className="text-lg font-black text-foreground">
                                                             {activeProperty.units?.filter(u => u.status === 'occupied').length || 0}
                                                         </span>
                                                     </div>
@@ -282,7 +282,7 @@ export function PropertySelectorHub({
                                         <div className="property-stage-content mt-12">
                                             <button 
                                                 onClick={() => setSelectedPropertyId(activeProperty.id)}
-                                                className="group flex w-full items-center justify-between rounded-2xl neumorphic-extruded p-5 text-sm font-black uppercase tracking-widest text-primary transition-all"
+                                                className="group flex w-full items-center justify-between rounded-2xl neumorphic-extruded p-5 text-sm font-black uppercase tracking-widest text-primary transition-all hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
                                             >
                                                 {buttonText}
                                                 <div className="flex size-8 items-center justify-center rounded-xl neumorphic-inset-card transition-transform group-hover:translate-x-1">
