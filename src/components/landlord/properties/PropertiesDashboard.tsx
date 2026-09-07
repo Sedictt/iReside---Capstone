@@ -180,7 +180,8 @@ export function PropertiesDashboard() {
             ].join(",");
         });
 
-        const csvContent = [headers.join(","), ...rows].join("\r\n");
+        // Prefix with UTF-8 BOM (\uFEFF) so Microsoft Excel correctly parses UTF-8 characters like ₱
+        const csvContent = "\uFEFF" + [headers.join(","), ...rows].join("\r\n");
         const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
