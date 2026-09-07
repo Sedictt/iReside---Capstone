@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { m as motion, AnimatePresence } from "framer-motion";
@@ -15,9 +15,13 @@ import {
     Users,
     X,
     Map,
-    Edit3
+    Edit3,
+    Download,
+    ChevronDown,
+    FileSpreadsheet
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAppToast } from "@/hooks/useAppToast";
 import { PropertyTenantsModal } from "./PropertyTenantsModal";
 import { PropertyMaintenanceModal } from "./PropertyMaintenanceModal";
 import { AnimatedFilterPills } from "@/components/ui/AnimatedFilterPills";
@@ -94,6 +98,7 @@ export function PropertiesDashboard() {
         },
     });
 
+    const toast = useAppToast();
     const properties = propertiesData ?? [];
     const loadError = fetchError?.message ?? null;
     const [searchQuery, setSearchQuery] = useState("");
@@ -101,6 +106,95 @@ export function PropertiesDashboard() {
     const [hubModalId, setHubModalId] = useState<string | null>(null);
     const [tenantsModalProperty, setTenantsModalProperty] = useState<PropertyCard | null>(null);
     const [maintenanceModalProperty, setMaintenanceModalProperty] = useState<PropertyCard | null>(null);
+    const [isExportOpen, setIsExportOpen] = useState(false);
+    const exportMenuRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (exportMenuRef.current && !exportMenuRef.current.contains(event.target as Node)) {
+                setIsExportOpen(false);
+            }
+        };
+        if (isExportOpen) {
+            document.addEventListener("mousedown", handleClickOutside);
+        }
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [isExportOpen]);
+
+    const handleExportCSV = useCallback(() => {
+        if (!properties || properties.length === 0) {
+            toast.error("No properties found in portfolio to export.");
+            return;
+        }
+
+        const headers = [
+            "Property Name",
+            "Property Type",
+            "Address",
+            "Total Units",
+            "Occupied Units",
+            "Vacant Units",
+            "Occupancy Rate",
+            "Status",
+            "Active Maintenance Tickets",
+            "Valuation",
+            "NOI",
+            "Cap Rate"
+        ];
+
+        const escapeCSV = (val: string | number | undefined | null) => {
+            const str = String(val ?? "");
+            if (str.includes(",") || str.includes('"') || str.includes("\n") || str.includes("\r")) {
+                return `"${str.replace(/"/g, '""')}"`;
+            }
+            return str;
+        };
+
+        const rows = properties.map((prop) => {
+            const total = prop.metrics?.total ?? prop.totalUnits ?? 0;
+            const occupied = prop.metrics?.occupied ?? 0;
+            const vacant = Math.max(0, total - occupied);
+            const occupancyRate = total > 0 ? `${Math.round((occupied / total) * 100)}%` : "0%";
+            const propertyType =
+                prop.type === "dormitory"
+                    ? "Dormitory"
+                    : prop.type === "boarding_house"
+                    ? "Boarding House"
+                    : "Apartment";
+
+            return [
+                escapeCSV(prop.name),
+                escapeCSV(propertyType),
+                escapeCSV(prop.address),
+                escapeCSV(total),
+                escapeCSV(occupied),
+                escapeCSV(vacant),
+                escapeCSV(occupancyRate),
+                escapeCSV(prop.status),
+                escapeCSV(prop.metrics?.maintenance ?? 0),
+                escapeCSV(prop.valuation || "N/A"),
+                escapeCSV(prop.noi || "N/A"),
+                escapeCSV(prop.capRate || "N/A")
+            ].join(",");
+        });
+
+        const csvContent = [headers.join(","), ...rows].join("\r\n");
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        const dateStr = new Date().toISOString().split("T")[0];
+        link.setAttribute("href", url);
+        link.setAttribute("download", `iReside_Portfolio_Inventory_${dateStr}.csv`);
+        link.style.visibility = "hidden";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        toast.success(`Exported ${properties.length} properties to CSV!`);
+    }, [properties, toast]);
 
     // Prevent premature empty state: true if data is undefined, hook reports loading, or revalidating with empty cache
     const isDataLoading = isLoading || propertiesData === undefined || (isRevalidating && properties.length === 0);
@@ -121,7 +215,7 @@ export function PropertiesDashboard() {
     return (
         <div className="min-h-screen space-y-8 px-3 pb-12 pt-6 text-foreground sm:px-4 lg:px-5 xl:px-6">
             {/* Command Center / Header */}
-            <div className="neumorphic-panel relative overflow-hidden rounded-3xl p-8">
+            <div className="neumorphic-panel relative overflow-visible z-20 rounded-3xl p-8">
                 <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div>
                         <div className="neumorphic-inset-card mb-6 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium text-muted-foreground">
@@ -136,7 +230,54 @@ export function PropertiesDashboard() {
                         </p>
                     </div>
 
-                    <div className="flex gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
+                        {/* Export Portfolio Dropdown (TC-PM-021) */}
+                        <div className="relative" ref={exportMenuRef}>
+                            <button
+                                type="button"
+                                onClick={() => setIsExportOpen((prev) => !prev)}
+                                className="neumorphic-extruded flex h-12 items-center gap-2 rounded-xl px-5 font-black text-foreground transition-all hover:text-primary active:scale-95"
+                                aria-expanded={isExportOpen}
+                                aria-haspopup="true"
+                            >
+                                <Download className="size-4 text-primary" />
+                                <span>Export Portfolio</span>
+                                <ChevronDown className={cn("size-3.5 text-muted-foreground transition-transform duration-200", isExportOpen && "rotate-180")} />
+                            </button>
+
+                            <AnimatePresence>
+                                {isExportOpen && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                                        transition={{ duration: 0.15 }}
+                                        className="neumorphic-panel absolute right-0 top-full mt-2 z-50 w-64 overflow-hidden rounded-2xl p-2 shadow-2xl border border-border/80 backdrop-blur-xl"
+                                    >
+                                        <div className="px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                                            Export Formats
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                handleExportCSV();
+                                                setIsExportOpen(false);
+                                            }}
+                                            className="flex w-full items-center gap-3 rounded-xl p-2.5 text-left text-xs font-bold text-foreground transition-all hover:bg-primary/10 hover:text-primary group"
+                                        >
+                                            <div className="neumorphic-inset-card flex size-8 items-center justify-center rounded-lg text-primary group-hover:scale-110 transition-transform">
+                                                <FileSpreadsheet className="size-4" />
+                                            </div>
+                                            <div>
+                                                <div className="font-black text-foreground group-hover:text-primary">CSV Export</div>
+                                                <div className="text-[10px] text-muted-foreground font-medium">Inventory & metrics (.csv)</div>
+                                            </div>
+                                        </button>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+
                         <Link href="/landlord/properties/new" className="neumorphic-primary flex h-12 items-center gap-2 rounded-xl px-6 font-black text-primary-foreground transition-all hover:brightness-110">
                             <Plus className="size-4" />
                             Add Property
