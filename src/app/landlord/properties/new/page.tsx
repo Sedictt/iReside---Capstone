@@ -25,8 +25,11 @@ import {
     Sparkles,
     FilePlus,
     Hash,
-    Eye
+    Eye,
+    Save,
+    Loader2
 } from "lucide-react";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { generateUnitList } from "@/lib/unit-naming";
 import { cn } from "@/lib/utils";
 import { SmartContractPreviewModal } from "@/components/landlord/properties/SmartContractPreviewModal";
@@ -212,10 +215,11 @@ function NewAssetContent() {
 
     const handleMediaFileChange = (e: ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
-        if (!files) return;
-        const next = Array.from(files).slice(0, MAX_PROPERTY_UPLOAD_FILES - mediaFiles.length);
-        setMediaFiles(prev => [...prev, ...next]);
-        if (coverExistingUrl === null && coverNewIndex === null && next.length > 0) setCoverNewIndex(0);
+        if (!files || files.length === 0) return;
+        const selectedFile = files[0];
+        setMediaFiles([selectedFile]);
+        setCoverNewIndex(0);
+        toast.info("New cover photo selected! Click 'Save Changes' to update.");
     };
 
     const validateStep = (currentStep: Step): boolean => {
@@ -292,7 +296,7 @@ function NewAssetContent() {
 
             // 1. Upload new media files if any
             if (mediaFiles.length > 0) {
-                setSaveStage("Uploading photos...");
+                setSaveStage("Uploading cover photo...");
                 const targetPropId = id || "temp-property";
                 const mediaFormData = new FormData();
                 mediaFormData.append("propertyId", targetPropId);
@@ -308,11 +312,20 @@ function NewAssetContent() {
                             body: mediaFormData,
                         });
                         const mediaData = await mediaRes.json();
-                        if (mediaRes.ok && Array.isArray(mediaData.imageUrls)) {
-                            currentImages = [...currentImages, ...mediaData.imageUrls];
+                        if (mediaRes.ok && Array.isArray(mediaData.imageUrls) && mediaData.imageUrls.length > 0) {
+                            const newCoverUrl = mediaData.imageUrls[0];
+                            // Replace cover photo at index 0 with the newly uploaded photo
+                            const remainingImages = existingImageUrls.length > 0 ? existingImageUrls.slice(1) : [];
+                            currentImages = [newCoverUrl, ...remainingImages];
+                            setExistingImageUrls(currentImages);
+                            setCoverExistingUrl(newCoverUrl);
+                            setMediaFiles([]);
+                        } else {
+                            throw new Error(mediaData?.error || "Failed to upload cover photo.");
                         }
                     } catch (uploadErr) {
-                        console.warn("Photo upload warning:", uploadErr);
+                        console.error("Cover photo upload error:", uploadErr);
+                        throw uploadErr;
                     }
                 }
             }
@@ -467,34 +480,54 @@ function NewAssetContent() {
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                                     <div className="space-y-4">
-                                        <div className="flex items-center gap-2 px-1">
-                                            <Camera className="size-3.5 text-primary" />
-                                            <label htmlFor="cover-identity" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Cover Photo</label>
+                                        <div className="flex items-center justify-between px-1">
+                                            <div className="flex items-center gap-2">
+                                                <Camera className="size-3.5 text-primary" />
+                                                <label htmlFor="cover-identity" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Cover Photo</label>
+                                            </div>
+                                            {mediaFiles.length > 0 && (
+                                                <span className="text-[9px] font-black uppercase tracking-wider text-amber-500 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/30 animate-pulse">
+                                                    New Photo Staged
+                                                </span>
+                                            )}
                                         </div>
                                         <div className="relative group cursor-pointer overflow-hidden rounded-[2.5rem] border border-border/60 neumorphic-inset aspect-[16/10]">
                                             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
                                                 {(mediaPreviewUrls.length > 0 || existingImageUrls.length > 0) ? (
-                                                    <Image src={mediaPreviewUrls[0] || existingImageUrls[0]} alt="" fill className="object-cover" />
+                                                    <Image src={mediaPreviewUrls[0] || existingImageUrls[0]} alt="Property Cover" fill className="object-cover" />
                                                 ) : (
-                                                    <Upload className="size-8 text-muted-foreground/40" />
+                                                    <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground/60">
+                                                        <Upload className="size-8 text-muted-foreground/40" />
+                                                        <span className="text-xs font-bold">Click to Upload Cover Photo</span>
+                                                    </div>
                                                 )}
                                             </div>
-                                            <input id="cover-identity" type="file" onChange={handleMediaFileChange} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
+                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10 pointer-events-none">
+                                                <div className="neumorphic-panel bg-card/90 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-2 text-xs font-bold text-foreground shadow-lg">
+                                                    <Camera className="size-4 text-primary" />
+                                                    <span>Change Cover Photo</span>
+                                                </div>
+                                            </div>
+                                            <input 
+                                                id="cover-identity" 
+                                                type="file" 
+                                                accept="image/jpeg,image/png,image/webp,image/jpg" 
+                                                onChange={handleMediaFileChange} 
+                                                className="absolute inset-0 opacity-0 cursor-pointer z-20" 
+                                            />
                                         </div>
                                     </div>
                                     <div className="space-y-6 neumorphic-panel border border-border/60 rounded-[2.5rem] p-8">
                                         <div className="space-y-2 relative">
                                             <div className="flex items-center justify-between px-1">
                                                 <label htmlFor="property-name" className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Designation</label>
-                                                {isEditMode && <span className="text-[8px] font-black text-primary/60 uppercase tracking-widest flex items-center gap-1"><ShieldCheck className="size-2.5" /> Locked by Admin</span>}
                                             </div>
                                             <input 
                                                 id="property-name"
                                                 type="text" 
-                                                disabled={isEditMode}
                                                 value={formData.propertyName} 
                                                 onChange={e => handleInputChange("propertyName", e.target.value)} 
-                                                className={`w-full neumorphic-inset rounded-2xl px-6 py-4 text-sm font-black text-foreground outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-muted-foreground/50 ${isEditMode ? "opacity-50 cursor-not-allowed bg-muted/40" : ""} ${errors.propertyName ? "!border-rose-500 !ring-2 !ring-rose-500/20" : ""}`} 
+                                                className={`w-full neumorphic-inset rounded-2xl px-6 py-4 text-sm font-black text-foreground outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-muted-foreground/50 ${errors.propertyName ? "!border-rose-500 !ring-2 !ring-rose-500/20" : ""}`} 
                                                 placeholder="e.g. Skyline Residences" 
                                             />
                                             {errors.propertyName && (
@@ -506,15 +539,13 @@ function NewAssetContent() {
                                         <div className="space-y-2 relative">
                                             <div className="flex items-center justify-between px-1">
                                                 <label htmlFor="property-address" className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Location</label>
-                                                {isEditMode && <span className="text-[8px] font-black text-primary/60 uppercase tracking-widest flex items-center gap-1"><ShieldCheck className="size-2.5" /> Locked by Admin</span>}
                                             </div>
                                             <textarea 
                                                 id="property-address"
                                                 rows={3} 
-                                                disabled={isEditMode}
                                                 value={formData.address} 
                                                 onChange={e => handleInputChange("address", e.target.value)} 
-                                                className={`w-full neumorphic-inset rounded-2xl px-6 py-4 text-sm font-medium text-foreground outline-none focus:ring-2 focus:ring-primary/40 resize-none transition-all placeholder:text-muted-foreground/50 ${isEditMode ? "opacity-50 cursor-not-allowed bg-muted/40" : ""} ${errors.address ? "!border-rose-500 !ring-2 !ring-rose-500/20" : ""}`} 
+                                                className={`w-full neumorphic-inset rounded-2xl px-6 py-4 text-sm font-medium text-foreground outline-none focus:ring-2 focus:ring-primary/40 resize-none transition-all placeholder:text-muted-foreground/50 ${errors.address ? "!border-rose-500 !ring-2 !ring-rose-500/20" : ""}`} 
                                                 placeholder="Full address…" 
                                             />
                                             {errors.address && (
@@ -523,16 +554,6 @@ function NewAssetContent() {
                                                 </p>
                                             )}
                                         </div>
-                                        {isEditMode && (
-                                            <button 
-                                                type="button"
-                                                onClick={() => router.push("/landlord/support?topic=property_info_change")}
-                                                className="w-full py-4 rounded-2xl border border-primary/20 bg-primary/5 text-[10px] font-black uppercase tracking-[0.2em] text-primary hover:bg-primary/10 transition-all flex items-center justify-center gap-2"
-                                            >
-                                                <ShieldCheck className="size-3.5" />
-                                                Request Identity Modification
-                                            </button>
-                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -1056,6 +1077,54 @@ function NewAssetContent() {
                     </div>
                 </div>
             </div>
+
+            {/* Floating Save Action Bar (visible on steps 1, 2, and 3; disappears on step 4) */}
+            <AnimatePresence>
+                {step < 4 && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 30 }}
+                        transition={{ duration: 0.2 }}
+                        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-auto max-w-[92vw]"
+                    >
+                        <div className="neumorphic-panel bg-card/95 backdrop-blur-xl border border-border/80 rounded-full py-2.5 px-4 sm:px-6 shadow-2xl flex items-center gap-3 sm:gap-6">
+                            <div className="flex items-center gap-2">
+                                <span className={cn(
+                                    "size-2.5 rounded-full animate-pulse",
+                                    mediaFiles.length > 0 ? "bg-amber-400" : "bg-primary"
+                                )} />
+                                <span className="text-[11px] sm:text-xs font-bold text-foreground truncate max-w-[140px] sm:max-w-none">
+                                    {mediaFiles.length > 0 
+                                        ? "New cover photo staged" 
+                                        : isEditMode 
+                                            ? `Editing: ${formData.propertyName || "Asset"}` 
+                                            : `Step ${step} of 4: ${STEPS[step - 1]?.label}`}
+                                </span>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={handleSubmit}
+                                disabled={isSubmitting}
+                                className="neumorphic-primary flex items-center gap-2 rounded-full px-5 py-2 text-xs font-black text-primary-foreground transition-all hover:brightness-110 active:scale-95 disabled:opacity-50"
+                            >
+                                {isSubmitting ? (
+                                    <>
+                                        <Loader2 className="size-3.5 animate-spin" />
+                                        <span>{saveStage || "Saving..."}</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Save className="size-3.5" />
+                                        <span>Save Changes</span>
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <SmartContractPreviewModal
                 isOpen={isContractBuilderOpen}
