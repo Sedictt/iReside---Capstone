@@ -89,6 +89,7 @@ function NewAssetContent() {
     const [mediaPreviewUrls, setMediaPreviewUrls] = useState<string[]>([]);
     const [coverExistingUrl, setCoverExistingUrl] = useState<string | null>(null);
     const [coverNewIndex, setCoverNewIndex] = useState<number | null>(null);
+    const [errors, setErrors] = useState<Record<string, string>>({});
     
     const [formData, setFormData] = useState({
         propertyName: "",
@@ -196,8 +197,18 @@ function NewAssetContent() {
         return () => nextPreviews.forEach(url => URL.revokeObjectURL(url));
     }, [mediaFiles]);
 
-    const handleInputChange = (field: string, value: any) => setFormData(prev => ({ ...prev, [field]: value }));
-
+    const handleInputChange = (field: string, value: any) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+        setErrors(prev => {
+            if (!prev[field] && !(field === "contractMode" && prev.contractFile)) return prev;
+            const next = { ...prev };
+            delete next[field];
+            if (field === "contractMode" && value === "generate") {
+                delete next.contractFile;
+            }
+            return next;
+        });
+    };
 
     const handleMediaFileChange = (e: ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
@@ -207,7 +218,55 @@ function NewAssetContent() {
         if (coverExistingUrl === null && coverNewIndex === null && next.length > 0) setCoverNewIndex(0);
     };
 
+    const validateStep = (currentStep: Step): boolean => {
+        const nextErrors: Record<string, string> = {};
+
+        if (currentStep === 1) {
+            if (!formData.propertyName.trim()) {
+                nextErrors.propertyName = "Property designation / name is required.";
+            }
+            if (!formData.address.trim()) {
+                nextErrors.address = "Property location / address is required.";
+            }
+        } else if (currentStep === 2) {
+            const units = parseInt(formData.totalUnits, 10);
+            if (isNaN(units) || units < 1) {
+                nextErrors.totalUnits = "Total units must be at least 1.";
+            }
+            const floors = parseInt(formData.floorCount, 10);
+            if (isNaN(floors) || floors < 1) {
+                nextErrors.floorCount = "Floor count must be at least 1.";
+            }
+            const occupancy = parseInt(formData.occupancyLimit, 10);
+            if (isNaN(occupancy) || occupancy < 1) {
+                nextErrors.occupancyLimit = "Occupancy limit must be at least 1.";
+            }
+            if (!formData.unitPrefix.trim()) {
+                nextErrors.unitPrefix = "Unit prefix is required.";
+            }
+        } else if (currentStep === 3) {
+            if (!formData.baseRent || formData.baseRent <= 0) {
+                nextErrors.baseRent = "Please enter a valid base rent amount greater than ₱0.";
+            }
+        } else if (currentStep === 4) {
+            if (formData.contractMode === "upload" && !formData.contractFile) {
+                nextErrors.contractFile = "Please upload a lease document or switch to Auto-Generate.";
+            }
+        }
+
+        setErrors(nextErrors);
+
+        if (Object.keys(nextErrors).length > 0) {
+            const firstErrorMessage = Object.values(nextErrors)[0];
+            toast.error(firstErrorMessage);
+            return false;
+        }
+
+        return true;
+    };
+
     const handleNext = () => {
+        if (!validateStep(step)) return;
         if (step < 4) setStep(s => (s + 1) as Step);
         else handleSubmit();
     };
@@ -218,6 +277,12 @@ function NewAssetContent() {
     };
 
     const handleSubmit = async () => {
+        for (let s = 1; s <= 4; s++) {
+            if (!validateStep(s as Step)) {
+                setStep(s as Step);
+                return;
+            }
+        }
         setIsSubmitting(true);
         setSaveStage("Saving configuration...");
         try {
@@ -336,7 +401,6 @@ function NewAssetContent() {
         { id: 3, label: "Financials", icon: "₱" },
         { id: 4, label: "Governance", icon: ShieldCheck }
     ];
-
     return (
         <div className="min-h-screen pb-20 relative selection:bg-primary/30">
             <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
@@ -345,21 +409,21 @@ function NewAssetContent() {
 
             <div className="max-w-4xl mx-auto px-4 pt-8 space-y-8 animate-in fade-in duration-700">
                 <div className="flex items-center justify-between">
-                    <button onClick={handleBack} className="group flex items-center gap-2 text-sm font-black text-white/40 hover:text-white transition-all bg-white/[0.03] px-5 py-2.5 rounded-full border border-white/5 backdrop-blur-xl">
+                    <button onClick={handleBack} className="group flex items-center gap-2 text-sm font-black text-muted-foreground hover:text-foreground transition-all neumorphic-panel px-5 py-2.5 rounded-full border border-border/60 backdrop-blur-xl">
                         <ArrowLeft className="size-4 group-hover:-translate-x-1 transition-transform" />
                         {step === 1 ? "Cancel" : "Back"}
                     </button>
-                    <div className="text-[10px] font-black text-primary uppercase tracking-[0.3em] bg-primary/10 px-5 py-2 rounded-full border border-primary/20 backdrop-blur-xl">
+                    <div className="text-[10px] font-black text-primary uppercase tracking-[0.3em] bg-primary/10 px-5 py-2 rounded-full border border-primary/20 backdrop-blur-xl shadow-sm">
                         {isEditMode ? "Asset Configuration" : "Expansion Wizard"}
                     </div>
                 </div>
 
-                <div className="bg-white/[0.02] backdrop-blur-2xl border border-white/12 rounded-[2.5rem] overflow-hidden shadow-2xl">
-                    <div className="p-10 border-b border-white/5 bg-white/[0.01]">
+                <div className="bg-card/90 backdrop-blur-2xl border border-border/80 rounded-[2.5rem] overflow-hidden shadow-xl">
+                    <div className="p-10 border-b border-border/60 bg-muted/20">
                         <div className="flex flex-col md:row md:items-center justify-between gap-10">
                             <div className="space-y-3">
-                                <h1 className="text-4xl font-black text-white tracking-tight">Property Wizard</h1>
-                                <p className="text-white/40 text-sm font-medium max-w-md">
+                                <h1 className="text-4xl font-black text-foreground tracking-tight">Property Wizard</h1>
+                                <p className="text-muted-foreground text-sm font-medium max-w-md">
                                     {isEditMode ? "Refining parameters for your asset." : "Establishing a new verified asset profile."}
                                 </p>
                             </div>
@@ -369,8 +433,12 @@ function NewAssetContent() {
                                     <div key={s.id} className="flex items-center">
                                         <div className="flex flex-col items-center gap-2">
                                             <div className={cn(
-                                                "size-10 rounded-full flex items-center justify-center transition-all duration-500 border",
-                                                step === s.id ? "bg-primary text-black border-primary shadow-lg ring-4 ring-primary/10" : "bg-white/5 text-white/20 border-white/5"
+                                                "size-10 rounded-full flex items-center justify-center transition-all duration-500 border font-black",
+                                                step === s.id 
+                                                    ? "bg-primary text-black border-primary shadow-lg ring-4 ring-primary/20" 
+                                                    : step > s.id 
+                                                        ? "neumorphic-inset-card text-primary border-primary/30"
+                                                        : "neumorphic-inset-card text-muted-foreground/40 border-border/50"
                                             )}>
                                                 {step > s.id ? (
                                                     <Check className="size-5 text-primary" />
@@ -380,9 +448,9 @@ function NewAssetContent() {
                                                     <s.icon className="size-4" />
                                                 )}
                                             </div>
-                                            <span className={cn("text-[9px] font-black uppercase tracking-widest", step === s.id ? "text-primary" : "text-white/20")}>{s.label}</span>
+                                            <span className={cn("text-[9px] font-black uppercase tracking-widest", step === s.id ? "text-primary" : "text-muted-foreground/60")}>{s.label}</span>
                                         </div>
-                                        {idx < STEPS.length - 1 && <div className="w-6 h-px bg-white/5 mx-2 -mt-6" />}
+                                        {idx < STEPS.length - 1 && <div className="w-6 h-px bg-border/60 mx-2 -mt-6" />}
                                     </div>
                                 ))}
                             </div>
@@ -394,31 +462,31 @@ function NewAssetContent() {
                         {step === 1 && (
                             <div className="space-y-10 animate-in slide-in-from-right-8 duration-500">
                                 <div className="text-center md:text-left">
-                                    <h2 className="text-3xl font-black tracking-tight text-white">Property Identity</h2>
-                                    <p className="text-white/40 text-sm font-medium mt-1">Establish the visual and formal identity of your asset.</p>
+                                    <h2 className="text-3xl font-black tracking-tight text-foreground">Property Identity</h2>
+                                    <p className="text-muted-foreground text-sm font-medium mt-1">Establish the visual and formal identity of your asset.</p>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-2 px-1">
                                             <Camera className="size-3.5 text-primary" />
-                                            <label htmlFor="cover-identity" className="text-[10px] font-black uppercase tracking-widest text-white/40">Cover Identity</label>
+                                            <label htmlFor="cover-identity" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Cover Photo</label>
                                         </div>
-                                        <div className="relative group cursor-pointer overflow-hidden rounded-[2.5rem] border border-white/10 bg-white/5 aspect-[16/10]">
+                                        <div className="relative group cursor-pointer overflow-hidden rounded-[2.5rem] border border-border/60 neumorphic-inset aspect-[16/10]">
                                             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
                                                 {(mediaPreviewUrls.length > 0 || existingImageUrls.length > 0) ? (
                                                     <Image src={mediaPreviewUrls[0] || existingImageUrls[0]} alt="" fill className="object-cover" />
                                                 ) : (
-                                                    <Upload className="size-8 text-white/20" />
+                                                    <Upload className="size-8 text-muted-foreground/40" />
                                                 )}
                                             </div>
                                             <input id="cover-identity" type="file" onChange={handleMediaFileChange} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
                                         </div>
                                     </div>
-                                    <div className="space-y-6 bg-white/[0.03] border border-white/5 rounded-[2.5rem] p-8">
+                                    <div className="space-y-6 neumorphic-panel border border-border/60 rounded-[2.5rem] p-8">
                                         <div className="space-y-2 relative">
                                             <div className="flex items-center justify-between px-1">
-                                                <label htmlFor="property-name" className="text-[9px] font-black uppercase tracking-wider text-white/30">Designation</label>
-                                                {isEditMode && <span className="text-[8px] font-black text-primary/40 uppercase tracking-widest flex items-center gap-1"><ShieldCheck className="size-2.5" /> Locked by Admin</span>}
+                                                <label htmlFor="property-name" className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Designation</label>
+                                                {isEditMode && <span className="text-[8px] font-black text-primary/60 uppercase tracking-widest flex items-center gap-1"><ShieldCheck className="size-2.5" /> Locked by Admin</span>}
                                             </div>
                                             <input 
                                                 id="property-name"
@@ -426,14 +494,19 @@ function NewAssetContent() {
                                                 disabled={isEditMode}
                                                 value={formData.propertyName} 
                                                 onChange={e => handleInputChange("propertyName", e.target.value)} 
-                                                className={`w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm font-black text-white outline-none focus:border-primary/50 ${isEditMode ? "opacity-50 cursor-not-allowed bg-black/20" : ""}`} 
+                                                className={`w-full neumorphic-inset rounded-2xl px-6 py-4 text-sm font-black text-foreground outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-muted-foreground/50 ${isEditMode ? "opacity-50 cursor-not-allowed bg-muted/40" : ""} ${errors.propertyName ? "!border-rose-500 !ring-2 !ring-rose-500/20" : ""}`} 
                                                 placeholder="e.g. Skyline Residences" 
                                             />
+                                            {errors.propertyName && (
+                                                <p className="text-[11px] font-bold text-rose-500 px-1 mt-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                                                    {errors.propertyName}
+                                                </p>
+                                            )}
                                         </div>
                                         <div className="space-y-2 relative">
                                             <div className="flex items-center justify-between px-1">
-                                                <label htmlFor="property-address" className="text-[9px] font-black uppercase tracking-wider text-white/30">Location</label>
-                                                {isEditMode && <span className="text-[8px] font-black text-primary/40 uppercase tracking-widest flex items-center gap-1"><ShieldCheck className="size-2.5" /> Locked by Admin</span>}
+                                                <label htmlFor="property-address" className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Location</label>
+                                                {isEditMode && <span className="text-[8px] font-black text-primary/60 uppercase tracking-widest flex items-center gap-1"><ShieldCheck className="size-2.5" /> Locked by Admin</span>}
                                             </div>
                                             <textarea 
                                                 id="property-address"
@@ -441,9 +514,14 @@ function NewAssetContent() {
                                                 disabled={isEditMode}
                                                 value={formData.address} 
                                                 onChange={e => handleInputChange("address", e.target.value)} 
-                                                className={`w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm font-medium text-white/80 outline-none focus:border-primary/50 resize-none ${isEditMode ? "opacity-50 cursor-not-allowed bg-black/20" : ""}`} 
+                                                className={`w-full neumorphic-inset rounded-2xl px-6 py-4 text-sm font-medium text-foreground outline-none focus:ring-2 focus:ring-primary/40 resize-none transition-all placeholder:text-muted-foreground/50 ${isEditMode ? "opacity-50 cursor-not-allowed bg-muted/40" : ""} ${errors.address ? "!border-rose-500 !ring-2 !ring-rose-500/20" : ""}`} 
                                                 placeholder="Full address…" 
                                             />
+                                            {errors.address && (
+                                                <p className="text-[11px] font-bold text-rose-500 px-1 mt-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                                                    {errors.address}
+                                                </p>
+                                            )}
                                         </div>
                                         {isEditMode && (
                                             <button 
@@ -464,14 +542,14 @@ function NewAssetContent() {
                         {step === 2 && (
                             <div className="space-y-10 animate-in slide-in-from-right-8 duration-500">
                                 <div className="text-center md:text-left">
-                                    <h2 className="text-3xl font-black tracking-tight text-white">Architectural Scope</h2>
-                                    <p className="text-white/40 text-sm font-medium mt-1">Define the physical parameters and capacity.</p>
+                                    <h2 className="text-3xl font-black tracking-tight text-foreground">Architectural Scope</h2>
+                                    <p className="text-muted-foreground text-sm font-medium mt-1">Define the physical parameters and capacity.</p>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                                    <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-8 space-y-8">
+                                    <div className="neumorphic-panel border border-border/60 rounded-[2rem] p-8 space-y-8">
                                         <div className="flex items-center gap-2">
                                             <Home className="size-4 text-primary" />
-                                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Asset Class</h3>
+                                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Asset Class</h3>
                                         </div>
                                         <div className="grid gap-3">
                                             {[
@@ -482,13 +560,13 @@ function NewAssetContent() {
                                                 <button
                                                     key={opt.id}
                                                     onClick={() => handleInputChange("propertyType", opt.id)}
-                                                    className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl border transition-all text-left ${formData.propertyType === opt.id ? "bg-primary/10 border-primary/50 shadow-lg shadow-primary/5" : "bg-white/5 border-white/5 hover:bg-white/[0.08]"}`}
+                                                    className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl border transition-all text-left ${formData.propertyType === opt.id ? "bg-primary/10 border-primary/50 shadow-sm" : "neumorphic-inset-card border-border/40 hover:border-border"}`}
                                                 >
                                                     <div className="flex items-center gap-4">
-                                                        <div className={`size-2.5 rounded-full ${formData.propertyType === opt.id ? "bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),1)]" : "bg-white/10"}`} />
+                                                        <div className={`size-2.5 rounded-full ${formData.propertyType === opt.id ? "bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),1)]" : "bg-border"}`} />
                                                         <div>
-                                                            <p className={`text-sm font-black tracking-tight ${formData.propertyType === opt.id ? "text-primary" : "text-white"}`}>{opt.label}</p>
-                                                            <p className="text-[10px] text-white/30 font-medium uppercase tracking-wider">{opt.desc}</p>
+                                                            <p className={`text-sm font-black tracking-tight ${formData.propertyType === opt.id ? "text-primary" : "text-foreground"}`}>{opt.label}</p>
+                                                            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{opt.desc}</p>
                                                         </div>
                                                     </div>
                                                     {formData.propertyType === opt.id && <CheckCircle2 className="size-5 text-primary" />}
@@ -497,52 +575,64 @@ function NewAssetContent() {
                                         </div>
                                     </div>
 
-                                    <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-8 space-y-8">
+                                    <div className="neumorphic-panel border border-border/60 rounded-[2rem] p-8 space-y-8">
                                         <div className="flex items-center gap-2">
                                             <Grid className="size-4 text-primary" />
-                                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Structural Specs</h3>
+                                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Structural Specs</h3>
                                         </div>
                                         <div className="grid gap-6">
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div className="space-y-2">
-                                                    <label className="text-[10px] font-black uppercase tracking-wider text-white/30 px-1">Units</label>
+                                                    <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground px-1">Units</label>
                                                     <input 
                                                         type="number" 
+                                                        min="1"
                                                         value={formData.totalUnits}
                                                         onChange={(e) => handleInputChange("totalUnits", e.target.value)}
-                                                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm font-black text-white outline-none focus:border-primary/50"
+                                                        className={`w-full neumorphic-inset rounded-2xl px-6 py-4 text-sm font-black text-foreground outline-none focus:ring-2 focus:ring-primary/40 ${errors.totalUnits ? "!border-rose-500 !ring-2 !ring-rose-500/20" : ""}`}
                                                     />
+                                                    {errors.totalUnits && (
+                                                        <p className="text-[10px] font-bold text-rose-500 px-1 mt-1 animate-in fade-in duration-200">{errors.totalUnits}</p>
+                                                    )}
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <label className="text-[10px] font-black uppercase tracking-wider text-white/30 px-1">Floors</label>
+                                                    <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground px-1">Floors</label>
                                                     <input 
                                                         type="number" 
+                                                        min="1"
                                                         value={formData.floorCount}
                                                         onChange={(e) => handleInputChange("floorCount", e.target.value)}
-                                                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm font-black text-white outline-none focus:border-primary/50"
+                                                        className={`w-full neumorphic-inset rounded-2xl px-6 py-4 text-sm font-black text-foreground outline-none focus:ring-2 focus:ring-primary/40 ${errors.floorCount ? "!border-rose-500 !ring-2 !ring-rose-500/20" : ""}`}
                                                     />
+                                                    {errors.floorCount && (
+                                                        <p className="text-[10px] font-bold text-rose-500 px-1 mt-1 animate-in fade-in duration-200">{errors.floorCount}</p>
+                                                    )}
                                                 </div>
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="text-[10px] font-black uppercase tracking-wider text-white/30 px-1">Max Occupants per Unit</label>
+                                                <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground px-1">Max Occupants per Unit</label>
                                                 <input 
                                                     type="number" 
+                                                    min="1"
                                                     value={formData.occupancyLimit}
                                                     onChange={(e) => handleInputChange("occupancyLimit", e.target.value)}
-                                                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm font-black text-white outline-none focus:border-primary/50"
+                                                    className={`w-full neumorphic-inset rounded-2xl px-6 py-4 text-sm font-black text-foreground outline-none focus:ring-2 focus:ring-primary/40 ${errors.occupancyLimit ? "!border-rose-500 !ring-2 !ring-rose-500/20" : ""}`}
                                                 />
+                                                {errors.occupancyLimit && (
+                                                    <p className="text-[10px] font-bold text-rose-500 px-1 mt-1 animate-in fade-in duration-200">{errors.occupancyLimit}</p>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
 
                                     {/* Unit Identification & Numbering */}
-                                    <div className="col-span-1 md:col-span-2 bg-white/[0.02] border border-white/5 rounded-[2rem] p-8 space-y-6">
+                                    <div className="col-span-1 md:col-span-2 neumorphic-panel border border-border/60 rounded-[2rem] p-8 space-y-6">
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">
                                                 <Hash className="size-4 text-primary" />
-                                                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Unit Identification & Numbering</h3>
+                                                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Unit Identification & Numbering</h3>
                                             </div>
-                                            <span className="text-[10px] font-black uppercase tracking-wider text-primary/80 bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
+                                            <span className="text-[10px] font-black uppercase tracking-wider text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
                                                 Customizable
                                             </span>
                                         </div>
@@ -550,7 +640,7 @@ function NewAssetContent() {
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             {/* Prefix Selector */}
                                             <div className="space-y-3">
-                                                <label className="text-[10px] font-black uppercase tracking-wider text-white/30 px-1">Unit Prefix / Label</label>
+                                                <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground px-1">Unit Prefix / Label</label>
                                                 <div className="flex flex-wrap gap-2">
                                                     {["Unit", "Room", "Studio", "Apt", "Suite", "Villa", "Bed"].map((preset) => (
                                                         <button
@@ -559,8 +649,8 @@ function NewAssetContent() {
                                                             onClick={() => handleInputChange("unitPrefix", preset)}
                                                             className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
                                                                 formData.unitPrefix === preset
-                                                                    ? "bg-primary text-black"
-                                                                    : "bg-white/5 text-white/70 hover:bg-white/10"
+                                                                    ? "bg-primary text-black shadow-sm"
+                                                                    : "neumorphic-inset-card text-muted-foreground hover:text-foreground"
                                                             }`}
                                                         >
                                                             {preset}
@@ -572,25 +662,28 @@ function NewAssetContent() {
                                                     value={formData.unitPrefix}
                                                     onChange={(e) => handleInputChange("unitPrefix", e.target.value)}
                                                     placeholder="Or type custom prefix (e.g. Tower A-)"
-                                                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3 text-xs font-black text-white outline-none focus:border-primary/50"
+                                                    className={`w-full neumorphic-inset rounded-2xl px-5 py-3 text-xs font-black text-foreground outline-none focus:ring-2 focus:ring-primary/40 placeholder:text-muted-foreground/60 ${errors.unitPrefix ? "!border-rose-500 !ring-2 !ring-rose-500/20" : ""}`}
                                                 />
+                                                {errors.unitPrefix && (
+                                                    <p className="text-[10px] font-bold text-rose-500 px-1 mt-1 animate-in fade-in duration-200">{errors.unitPrefix}</p>
+                                                )}
                                             </div>
 
                                             {/* Numbering Scheme */}
                                             <div className="space-y-3">
-                                                <label className="text-[10px] font-black uppercase tracking-wider text-white/30 px-1">Numbering Scheme</label>
+                                                <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground px-1">Numbering Scheme</label>
                                                 <div className="grid grid-cols-2 gap-2">
                                                     <button
                                                         type="button"
                                                         onClick={() => handleInputChange("numberingStyle", "floor_based")}
                                                         className={`p-3 rounded-2xl border text-left transition-all ${
                                                             formData.numberingStyle === "floor_based"
-                                                                ? "bg-primary/10 border-primary/50 text-white"
-                                                                : "bg-white/5 border-white/5 text-white/60 hover:bg-white/10"
+                                                                ? "bg-primary/10 border-primary/50 text-foreground"
+                                                                : "neumorphic-inset-card border-border/40 text-muted-foreground hover:text-foreground"
                                                         }`}
                                                     >
                                                         <p className="text-xs font-black">Floor-Based</p>
-                                                        <p className="text-[10px] text-white/40 mt-0.5">101, 102 / 201, 202</p>
+                                                        <p className="text-[10px] text-muted-foreground mt-0.5">101, 102 / 201, 202</p>
                                                     </button>
 
                                                     <button
@@ -598,23 +691,23 @@ function NewAssetContent() {
                                                         onClick={() => handleInputChange("numberingStyle", "sequential")}
                                                         className={`p-3 rounded-2xl border text-left transition-all ${
                                                             formData.numberingStyle === "sequential"
-                                                                ? "bg-primary/10 border-primary/50 text-white"
-                                                                : "bg-white/5 border-white/5 text-white/60 hover:bg-white/10"
+                                                                ? "bg-primary/10 border-primary/50 text-foreground"
+                                                                : "neumorphic-inset-card border-border/40 text-muted-foreground hover:text-foreground"
                                                         }`}
                                                     >
                                                         <p className="text-xs font-black">Sequential</p>
-                                                        <p className="text-[10px] text-white/40 mt-0.5">1, 2, 3... or from 101</p>
+                                                        <p className="text-[10px] text-muted-foreground mt-0.5">1, 2, 3... or from 101</p>
                                                     </button>
                                                 </div>
 
                                                 {formData.numberingStyle === "sequential" && (
                                                     <div className="pt-1">
-                                                        <label className="text-[9px] font-black uppercase tracking-wider text-white/30 px-1">Starting Number</label>
+                                                        <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground px-1">Starting Number</label>
                                                         <input
                                                             type="number"
                                                             value={formData.startingNumber}
                                                             onChange={(e) => handleInputChange("startingNumber", parseInt(e.target.value) || 1)}
-                                                            className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-2.5 text-xs font-black text-white outline-none focus:border-primary/50 mt-1"
+                                                            className="w-full neumorphic-inset rounded-2xl px-5 py-2.5 text-xs font-black text-foreground outline-none focus:ring-2 focus:ring-primary/40 mt-1"
                                                         />
                                                     </div>
                                                 )}
@@ -622,8 +715,8 @@ function NewAssetContent() {
                                         </div>
 
                                         {/* Dynamic Live Preview */}
-                                        <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-neutral-400">
+                                        <div className="rounded-2xl border border-border/60 bg-muted/20 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
                                                 <Eye className="size-3.5 text-primary" />
                                                 <span>Live Preview of Generated Units:</span>
                                             </div>
@@ -642,7 +735,7 @@ function NewAssetContent() {
                                                     </span>
                                                 ))}
                                                 {(parseInt(formData.totalUnits) || 1) > 6 && (
-                                                    <span className="text-[10px] font-bold text-neutral-500">
+                                                    <span className="text-[10px] font-bold text-muted-foreground">
                                                         +{(parseInt(formData.totalUnits) || 1) - 6} more
                                                     </span>
                                                 )}
@@ -657,19 +750,19 @@ function NewAssetContent() {
                         {step === 3 && (
                             <div className="space-y-10 animate-in slide-in-from-right-8 duration-500">
                                 <div className="text-center md:text-left">
-                                    <h2 className="text-3xl font-black tracking-tight text-white">Financial Strategy</h2>
-                                    <p className="text-white/40 text-sm font-medium mt-1">Configure billing logic and amenities.</p>
+                                    <h2 className="text-3xl font-black tracking-tight text-foreground">Financial Strategy</h2>
+                                    <p className="text-muted-foreground text-sm font-medium mt-1">Configure billing logic and amenities.</p>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">                                     
-                                    <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-7 space-y-6">
+                                    <div className="neumorphic-panel border border-border/60 rounded-[2rem] p-7 space-y-6">
                                         <div className="flex items-center gap-2">
                                             <Wallet className="size-4 text-primary" />
-                                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Billing Strategy</h3>
+                                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Billing Strategy</h3>
                                         </div>
 
                                         <div className="grid gap-6">
                                             <div className="grid gap-3">
-                                                <label className="text-[10px] font-black uppercase tracking-wider text-white/30 px-1">Utility Management</label>
+                                                <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground px-1">Utility Management</label>
                                                 <div className="grid gap-2">
                                                     {[
                                                         { id: "fixed_charge", label: "Bundled Utilities", desc: "All-inclusive monthly rate" },
@@ -679,13 +772,13 @@ function NewAssetContent() {
                                                         <button
                                                             key={opt.id}
                                                             onClick={() => handleInputChange("utilityBilling", opt.id)}
-                                                            className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl border transition-all text-left ${formData.utilityBilling === opt.id ? "bg-primary/10 border-primary/50 shadow-lg shadow-primary/5" : "bg-white/5 border-white/5 hover:bg-white/[0.08]"}`}
+                                                            className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl border transition-all text-left ${formData.utilityBilling === opt.id ? "bg-primary/10 border-primary/50 shadow-sm" : "neumorphic-inset-card border-border/40 hover:border-border"}`}
                                                         >
                                                             <div className="flex items-center gap-4">
-                                                                <div className={`size-2.5 rounded-full ${formData.utilityBilling === opt.id ? "bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),1)]" : "bg-white/10"}`} />
+                                                                <div className={`size-2.5 rounded-full ${formData.utilityBilling === opt.id ? "bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),1)]" : "bg-border"}`} />
                                                                 <div>
-                                                                    <p className={`text-sm font-black tracking-tight ${formData.utilityBilling === opt.id ? "text-primary" : "text-white"}`}>{opt.label}</p>
-                                                                    <p className="text-[10px] text-white/30 font-medium uppercase tracking-wider">{opt.desc}</p>
+                                                                    <p className={`text-sm font-black tracking-tight ${formData.utilityBilling === opt.id ? "text-primary" : "text-foreground"}`}>{opt.label}</p>
+                                                                    <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{opt.desc}</p>
                                                                 </div>
                                                             </div>
                                                             {formData.utilityBilling === opt.id && <CheckCircle2 className="size-5 text-primary" />}
@@ -695,9 +788,9 @@ function NewAssetContent() {
                                             </div>
 
                                             <div className="space-y-3">
-                                                <label className="text-[10px] font-black uppercase tracking-wider text-white/30 px-1">Standard Base Rent (PHP)</label>
+                                                <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground px-1">Standard Base Rent (PHP)</label>
                                                 <div className="relative group">
-                                                    <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none text-xl font-black text-primary/40 group-focus-within:text-primary transition-colors">₱</div>
+                                                    <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none text-xl font-black text-primary/60 group-focus-within:text-primary transition-colors">₱</div>
                                                     <input 
                                                         type="text" 
                                                         value={formData.baseRent === 0 ? "" : formData.baseRent.toLocaleString('en-US')}
@@ -707,18 +800,23 @@ function NewAssetContent() {
                                                             handleInputChange("baseRent", num);
                                                         }}
                                                         placeholder="0.00"
-                                                        className="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-6 py-5 text-2xl font-black text-white outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all"
+                                                        className={`w-full neumorphic-inset rounded-2xl pl-12 pr-6 py-5 text-2xl font-black text-foreground outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-muted-foreground/40 ${errors.baseRent ? "!border-rose-500 !ring-2 !ring-rose-500/20" : ""}`}
                                                     />
                                                 </div>
+                                                {errors.baseRent && (
+                                                    <p className="text-[11px] font-bold text-rose-500 px-1 mt-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                                                        {errors.baseRent}
+                                                    </p>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-7 space-y-6">
+                                    <div className="neumorphic-panel border border-border/60 rounded-[2rem] p-7 space-y-6">
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">
                                                 <Sparkles className="size-4 text-primary" />
-                                                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Amenities</h3>
+                                                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Amenities</h3>
                                             </div>
                                             <span className="text-[10px] font-black text-primary px-3 py-1 bg-primary/10 rounded-full border border-primary/20 uppercase tracking-widest">{formData.amenities.length} Selected</span>
                                         </div>
@@ -735,7 +833,7 @@ function NewAssetContent() {
                                                             : [...formData.amenities, amenity];
                                                         handleInputChange("amenities", newAmenities);
                                                     }}
-                                                    className={`px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all text-center ${formData.amenities.includes(amenity) ? "bg-primary text-black border-primary shadow-lg shadow-primary/20" : "bg-white/5 border-white/5 text-white/30 hover:text-white/50"}`}
+                                                    className={`px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all text-center ${formData.amenities.includes(amenity) ? "bg-primary text-black border-primary shadow-md shadow-primary/20" : "neumorphic-inset-card border-border/40 text-muted-foreground hover:text-foreground hover:border-border"}`}
                                                 >
                                                     {amenity}
                                                 </button>
@@ -750,16 +848,17 @@ function NewAssetContent() {
                         {step === 4 && (
                             <div className="space-y-10 animate-in slide-in-from-right-8 duration-500">
                                 <div className="text-center md:text-left">
-                                    <h2 className="text-3xl font-black tracking-tight text-white">Rules & Governance</h2>
-                                    <p className="text-white/40 text-sm font-medium mt-1">Define property conduct and validate configuration.</p>
+                                    <h2 className="text-3xl font-black tracking-tight text-foreground">Rules & Governance</h2>
+                                    <p className="text-muted-foreground text-sm font-medium mt-1">Define property conduct and validate configuration.</p>
                                 </div>
+                                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                                     {/* Building Rules - Spans 12 columns */}
                                     <div className="lg:col-span-12">
-                                        <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-7 space-y-6">
+                                        <div className="neumorphic-panel border border-border/60 rounded-[2rem] p-7 space-y-6">
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-2">
                                                     <ShieldCheck className="size-4 text-primary" />
-                                                    <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Building Rules & Conduct</h3>
+                                                    <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Building Rules & Conduct</h3>
                                                 </div>
                                                 <span className="text-[10px] font-black text-primary px-3 py-1 bg-primary/10 rounded-full border border-primary/20 uppercase tracking-widest">{formData.buildingRules.length} Defined</span>
                                             </div>
@@ -777,7 +876,7 @@ function NewAssetContent() {
                                                             }
                                                         }}
                                                         placeholder="Define a new property rule…"
-                                                        className="flex-1 bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-white focus:border-primary/50 transition-all placeholder:text-white/10 outline-none"
+                                                        className="flex-1 neumorphic-inset rounded-xl p-4 text-sm text-foreground focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-muted-foreground/50 outline-none"
                                                     />
                                                     <button 
                                                         onClick={() => {
@@ -786,7 +885,7 @@ function NewAssetContent() {
                                                                 setCustomAmenity("");
                                                             }
                                                         }}
-                                                        className="px-6 py-2 bg-primary text-black rounded-xl font-black hover:scale-[1.02] active:scale-[0.98] transition-all"
+                                                        className="px-6 py-2 bg-primary text-black rounded-xl font-black hover:scale-[1.02] active:scale-[0.98] transition-all shadow-sm"
                                                     >
                                                         Add Rule
                                                     </button>
@@ -796,12 +895,12 @@ function NewAssetContent() {
                                                     {formData.buildingRules.map((rule, index) => (
                                                         <div 
                                                             key={rule}
-                                                            className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-2 group hover:border-primary/30 transition-all"
+                                                            className="flex items-center gap-3 neumorphic-inset-card border border-border/60 rounded-xl px-4 py-2 group hover:border-primary/40 transition-all"
                                                         >
-                                                            <span className="text-xs font-black text-white/80">{rule}</span>
+                                                            <span className="text-xs font-black text-foreground">{rule}</span>
                                                             <button 
                                                                 onClick={() => handleInputChange("buildingRules", formData.buildingRules.filter((_, i) => i !== index))}
-                                                                className="text-white/20 hover:text-red-400 transition-colors"
+                                                                className="text-muted-foreground/60 hover:text-rose-500 transition-colors"
                                                             >
                                                                 <X className="size-3.5" />
                                                             </button>
@@ -814,10 +913,10 @@ function NewAssetContent() {
 
                                     {/* Contract Preview - Span 5 */}
                                     <div className="lg:col-span-5">
-                                        <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-7 space-y-6">
+                                        <div className="neumorphic-panel border border-border/60 rounded-[2rem] p-7 space-y-6">
                                             <div className="flex items-center gap-2">
                                                 <FileText className="size-4 text-primary" />
-                                                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Final Validation</h3>
+                                                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Final Validation</h3>
                                             </div>
                                             
                                             <div 
@@ -828,7 +927,7 @@ function NewAssetContent() {
                                                         document.getElementById('contract-upload-input')?.click();
                                                     }
                                                 }}
-                                                className="relative group cursor-pointer aspect-[16/11] rounded-[2rem] border border-white/10 bg-black/40 overflow-hidden shadow-2xl flex flex-col items-center justify-center gap-3 transition-all hover:border-primary/40"
+                                                className={`relative group cursor-pointer aspect-[16/11] rounded-[2rem] border neumorphic-inset overflow-hidden shadow-xl flex flex-col items-center justify-center gap-3 transition-all hover:border-primary/50 ${errors.contractFile ? "!border-rose-500 !ring-2 !ring-rose-500/20" : "border-border/60"}`}
                                             >
                                                 <input 
                                                     id="contract-upload-input"
@@ -842,7 +941,7 @@ function NewAssetContent() {
                                                     className="hidden"
                                                     accept=".pdf,.doc,.docx"
                                                 />
-                                                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-black/60 pointer-events-none" />
+                                                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-foreground/5 pointer-events-none" />
                                                 
                                                 {formData.contractMode === "generate" ? (
                                                     <>
@@ -850,28 +949,28 @@ function NewAssetContent() {
                                                             <FileText className="size-8 text-primary" />
                                                         </div>
                                                         <div className="text-center px-4 relative z-10">
-                                                            <span className="block text-xs font-black text-white uppercase tracking-widest mb-1">Contract Preview</span>
-                                                            <span className="block text-[8px] text-white/30 uppercase tracking-widest font-black">
+                                                            <span className="block text-xs font-black text-foreground uppercase tracking-widest mb-1">Contract Preview</span>
+                                                            <span className="block text-[8px] text-muted-foreground uppercase tracking-widest font-black">
                                                                 Draft Synchronized
                                                             </span>
                                                         </div>
                                                     </>
                                                 ) : (
                                                     <>
-                                                        <div className={`size-16 rounded-2xl flex items-center justify-center border transition-all group-hover:scale-110 duration-500 ${formData.contractFile ? "bg-primary/20 border-primary/40" : "bg-white/5 border-white/10"}`}>
-                                                            {formData.contractFile ? <CheckCircle2 className="size-8 text-primary" /> : <Upload className="size-8 text-white/20" />}
+                                                        <div className={`size-16 rounded-2xl flex items-center justify-center border transition-all group-hover:scale-110 duration-500 ${formData.contractFile ? "bg-primary/20 border-primary/40" : "neumorphic-panel border-border/60"}`}>
+                                                            {formData.contractFile ? <CheckCircle2 className="size-8 text-primary" /> : <Upload className="size-8 text-muted-foreground" />}
                                                         </div>
                                                         <div className="text-center px-4">
-                                                            <span className={`block text-xs font-black uppercase tracking-widest ${formData.contractFile ? "text-primary" : "text-white/40"}`}>
+                                                            <span className={`block text-xs font-black uppercase tracking-widest ${formData.contractFile ? "text-primary" : "text-muted-foreground"}`}>
                                                                 {formData.contractFile ? "Upload Complete" : "Click to Upload"}
                                                             </span>
-                                                            {formData.contractFile && <span className="block text-[8px] text-white/30 uppercase tracking-widest font-black mt-1 truncate max-w-[150px] mx-auto">{formData.contractFile}</span>}
+                                                            {formData.contractFile && <span className="block text-[8px] text-muted-foreground uppercase tracking-widest font-black mt-1 truncate max-w-[150px] mx-auto">{formData.contractFile}</span>}
                                                         </div>
                                                     </>
                                                 )}
 
                                                 <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
-                                                    <div className="bg-white text-black px-5 py-2.5 rounded-full flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                                                    <div className="bg-foreground text-background px-5 py-2.5 rounded-full flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 shadow-xl">
                                                         {formData.contractMode === "generate" ? <ShieldCheck className="size-4" /> : <Upload className="size-4" />}
                                                         <span className="text-[10px] font-black uppercase tracking-widest">
                                                             {formData.contractMode === "generate" ? "View Generated Draft" : (formData.contractFile ? "Change Document" : "Upload File")}
@@ -879,16 +978,21 @@ function NewAssetContent() {
                                                     </div>
                                                 </div>
                                             </div>
+                                            {errors.contractFile && (
+                                                <p className="text-[11px] font-bold text-rose-500 px-1 mt-1 text-center animate-in fade-in slide-in-from-top-1 duration-200">
+                                                    {errors.contractFile}
+                                                </p>
+                                            )}
                                         </div>
                                     </div>
 
                                     {/* Lease Management Method - Span 7 */}
                                     <div className="lg:col-span-7">
-                                        <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-7 space-y-6 h-full flex flex-col">
+                                        <div className="neumorphic-panel border border-border/60 rounded-[2rem] p-7 space-y-6 h-full flex flex-col">
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-2">
                                                     <FilePlus className="size-4 text-primary" />
-                                                    <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Lease Management Method</h3>
+                                                    <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Lease Management Method</h3>
                                                 </div>
                                                 <div className="flex items-center gap-1.5 px-2 py-1 bg-primary/5 border border-primary/20 rounded-lg">
                                                     <div className="size-1.5 rounded-full bg-primary animate-pulse" />
@@ -897,7 +1001,7 @@ function NewAssetContent() {
                                             </div>
                                             
                                             <div className="grid gap-5 flex-1">
-                                                <div className="flex bg-white/5 p-1.5 rounded-2xl border border-white/5">
+                                                <div className="flex neumorphic-inset p-1.5 rounded-2xl border border-border/50">
                                                     {[
                                                         { id: "generate", label: "Auto-Generate Digital Lease" },
                                                         { id: "upload", label: "Upload Proprietary Document" }
@@ -905,17 +1009,17 @@ function NewAssetContent() {
                                                         <button 
                                                             key={mode.id}
                                                             onClick={() => handleInputChange("contractMode", mode.id as any)}
-                                                            className={`flex-1 py-4 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${formData.contractMode === mode.id ? "bg-primary text-black shadow-lg shadow-primary/10" : "text-white/30 hover:text-white/50"}`}
+                                                            className={`flex-1 py-4 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${formData.contractMode === mode.id ? "bg-primary text-black shadow-md shadow-primary/20" : "text-muted-foreground hover:text-foreground"}`}
                                                         >
                                                             {mode.label}
                                                         </button>
                                                     ))}
                                                 </div>
-                                                <div className="bg-white/5 rounded-2xl p-6 border border-white/5 flex-1 flex flex-col items-center justify-center text-center space-y-3">
-                                                    <div className="size-12 rounded-full bg-white/[0.03] flex items-center justify-center">
-                                                        {formData.contractMode === "generate" ? <ShieldCheck className="size-6 text-primary/40" /> : <Upload className="size-6 text-white/20" />}
+                                                <div className="neumorphic-inset-card rounded-2xl p-6 border border-border/50 flex-1 flex flex-col items-center justify-center text-center space-y-3">
+                                                    <div className="size-12 rounded-full bg-primary/10 flex items-center justify-center">
+                                                        {formData.contractMode === "generate" ? <ShieldCheck className="size-6 text-primary" /> : <Upload className="size-6 text-muted-foreground" />}
                                                     </div>
-                                                    <p className="text-[11px] text-white/40 font-black uppercase tracking-widest leading-relaxed max-w-xs">
+                                                    <p className="text-[11px] text-muted-foreground font-black uppercase tracking-widest leading-relaxed max-w-xs">
                                                         {formData.contractMode === "generate" 
                                                             ? "Automatically bind your asset configuration into a legally-compliant digital agreement powered by iReside Smart Draft." 
                                                             : "Securely host and link your existing physical or PDF-based lease documentation to this property profile."}
@@ -924,12 +1028,13 @@ function NewAssetContent() {
                                             </div>
                                         </div>
                                     </div>
+                                </div>
                             </div>
                         )}
                     </div>
 
-                    <div className="p-10 border-t border-white/5 bg-white/[0.01] flex items-center justify-between">
-                        <button onClick={handleBack} disabled={isSubmitting} className={cn("flex items-center gap-2 text-white/40 hover:text-white transition-all font-black uppercase text-[11px]", step === 1 ? "opacity-0 pointer-events-none" : "")}>
+                    <div className="p-10 border-t border-border/60 bg-muted/20 flex items-center justify-between">
+                        <button onClick={handleBack} disabled={isSubmitting} className={cn("flex items-center gap-2 text-muted-foreground hover:text-foreground transition-all font-black uppercase text-[11px]", step === 1 ? "opacity-0 pointer-events-none" : "")}>
                             <ArrowLeft className="size-4" /><span>Back</span>
                         </button>
                         <button 

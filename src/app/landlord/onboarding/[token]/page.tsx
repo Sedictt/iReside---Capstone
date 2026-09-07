@@ -635,7 +635,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                     <div className="space-y-3">
                                         <div className="flex items-center gap-2 px-1">
                                             <ImageIcon className="size-3.5 text-primary" />
-                                            <label htmlFor="cover-photo-input" className="text-[10px] font-black uppercase tracking-widest text-white/40">Cover Identity</label>
+                                            <label htmlFor="cover-photo-input" className="text-[10px] font-black uppercase tracking-widest text-white/40">Cover Photo</label>
                                         </div>
                                         <div className="relative group cursor-pointer overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 hover:bg-white/10 transition-all aspect-[16/10] shadow-2xl">
                                             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">

@@ -139,7 +139,7 @@ export function PropertiesDashboard() {
                     <div className="flex gap-3">
                         <Link href="/landlord/properties/new" className="neumorphic-primary flex h-12 items-center gap-2 rounded-xl px-6 font-black text-primary-foreground transition-all hover:brightness-110">
                             <Plus className="size-4" />
-                            New Asset
+                            Add Property
                         </Link>
                     </div>
                 </div>
@@ -347,7 +347,7 @@ export function PropertiesDashboard() {
                                     className="neumorphic-primary inline-flex h-11 items-center gap-2 rounded-xl px-5 font-black text-primary-foreground transition-all hover:brightness-110"
                                 >
                                     <Plus className="size-4" />
-                                    <span>Create Your First Asset</span>
+                                    <span>Add Your First Property</span>
                                 </Link>
                             </>
                         ) : (

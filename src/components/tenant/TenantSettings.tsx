@@ -356,17 +356,33 @@ export function TenantSettings() {
         if (!profile) return;
         setIsSaving(true);
         try {
+            const socialsWithEmergency = {
+                ...((profile.socials as any) || {}),
+                emergency_contact_name: formData.emergency_name,
+                emergency_contact_phone: formData.emergency_phone,
+            };
+
             const { error } = await supabase
                 .from("profiles")
                 .update({
                     full_name: formData.full_name,
                     bio: formData.bio,
-                    emergency_contact_name: formData.emergency_name,
-                    emergency_contact_phone: formData.emergency_phone,
+                    socials: socialsWithEmergency,
                 } as any)
                 .eq("id", profile.id);
 
             if (error) throw error;
+
+            try {
+                await supabase.auth.updateUser({
+                    data: {
+                        emergency_contact_name: formData.emergency_name,
+                        emergency_contact_phone: formData.emergency_phone,
+                    }
+                });
+            } catch {
+                // non-blocking
+            }
 
             const { error: privateError } = await (supabase as any)
                 .from("profile_private")

@@ -230,8 +230,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             console.warn('[AuthProvider] Failed to fetch landlord business profile fields:', businessError.message)
         }
 
+        const socialsRecord = (profile?.socials && typeof profile.socials === 'object') ? (profile.socials as Record<string, any>) : {};
+
         return {
             ...profile,
+            emergency_contact_name: (profile as any)?.emergency_contact_name || socialsRecord?.emergency_contact_name || null,
+            emergency_contact_phone: (profile as any)?.emergency_contact_phone || socialsRecord?.emergency_contact_phone || null,
             phone: privateProfile?.phone ?? profile.phone,
             address: privateProfile?.address ?? profile.address,
             business_name: businessProfile?.business_name ?? profile.business_name,
