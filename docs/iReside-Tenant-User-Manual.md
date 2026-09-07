@@ -116,6 +116,19 @@ You can install iReside directly onto your smartphone home screen or desktop wit
   1. Click the install icon (computer monitor with download arrow) in the browser address bar.
   2. Click **Install**.
 
+### 1.4 Downloading the Dedicated Android Mobile App (.apk)
+For Android smartphone users, iReside also provides a native installable package (`.apk`):
+- **Why download the Android app?**
+  - Instant camera integration: take photos of payment receipts or broken items directly inside the app.
+  - Real-time mobile notifications for upcoming rent payments and building announcements.
+  - Full-screen touch layout that feels just like a mobile store app.
+- **How to find and install the app:**
+  1. Open your building's portal address on your phone (provided in your onboarding email) and tap **"Get Apps"** on the login page, or tap **"Download App"** in your tenant menu.
+  2. Alternatively, simply scan the QR code printed on your physical building lobby flyer or welcome sheet using your phone camera.
+  3. Tap **Download APK**.
+  4. When prompted, allow your phone to install apps from this source, then tap **Install**.
+  5. Open the app from your home screen and log in.
+
 ---
 
 ## 2. Account Setup & Getting Started

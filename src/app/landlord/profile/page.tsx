@@ -22,9 +22,11 @@ import {
     Linkedin,
     Instagram,
     Globe,
-    ExternalLink
+    ExternalLink,
+    ShieldAlert
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
+import { cn } from '@/lib/utils';
 
 import EditableBio from '@/components/landlord/EditableBio';
 import { ProfileAvatarUploader } from '@/components/profile/ProfileAvatarUploader';
@@ -295,6 +297,8 @@ export default async function LandlordProfilePage() {
 
     // Type casting for socials
     const socials = (profile.socials as Record<string, string>) || {};
+    const emergencyContactName = (profile as any).emergency_contact_name || socials.emergency_contact_name || null;
+    const emergencyContactPhone = (profile as any).emergency_contact_phone || socials.emergency_contact_phone || null;
 
     return (
         <div className="min-h-screen bg-background text-foreground p-6 md:p-12">
@@ -355,7 +359,7 @@ export default async function LandlordProfilePage() {
                         </div>
 
                         {/* Contact Info Row */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-16 pt-10 border-t border-black/10 dark:border-white/5 w-full max-w-4xl">
+                        <div className={cn("grid gap-8 md:gap-12 pt-10 border-t border-black/10 dark:border-white/5 w-full max-w-4xl", emergencyContactPhone ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-4" : "grid-cols-1 md:grid-cols-3")}>
                             <div className="flex flex-col items-center gap-2 group/item transition-all text-center">
                                 <div className="size-12 rounded-full neumorphic-inset-card flex items-center justify-center group-hover/item:scale-110 transition-transform">
                                     <Mail size={18} className="text-[#c4b0ff]" />
@@ -370,6 +374,17 @@ export default async function LandlordProfilePage() {
                                 <p className="text-[10px] font-black tracking-widest opacity-50 uppercase mt-2">Phone Number</p>
                                 <a href={`tel:${profile.phone}`} className="text-sm font-medium hover:text-[#c4b0ff] transition-colors">{profile.phone || '+63 (---) --- ----'}</a>
                             </div>
+                            {emergencyContactPhone && (
+                                <div className="flex flex-col items-center gap-2 group/item transition-all text-center">
+                                    <div className="size-12 rounded-full neumorphic-inset-card flex items-center justify-center group-hover/item:scale-110 transition-transform">
+                                        <ShieldAlert size={18} className="text-red-400" />
+                                    </div>
+                                    <p className="text-[10px] font-black tracking-widest text-red-400 opacity-80 uppercase mt-2">
+                                        {emergencyContactName ? `Emergency (${emergencyContactName})` : "Emergency Contact"}
+                                    </p>
+                                    <a href={`tel:${emergencyContactPhone}`} className="text-sm font-bold text-red-400 hover:underline">{emergencyContactPhone}</a>
+                                </div>
+                            )}
                             <div className="flex flex-col items-center gap-2 group/item transition-all text-center">
                                 <div className="size-12 rounded-full neumorphic-inset-card flex items-center justify-center group-hover/item:scale-110 transition-transform">
                                     <MapPin size={18} className="text-[#c4b0ff]" />

@@ -84,6 +84,23 @@ import Link from "next/link";
 // --- Types ---
 type SettingsCategory = "Identity" | "Personalization" | "Finance" | "Security" | "Notifications" | "Data" | "AuditLogs";
 
+interface NotificationChannelPreferences {
+    email: boolean;
+    push: boolean;
+}
+
+type NotificationCategoryKey = "lease_applications" | "maintenance" | "payments" | "messages" | "announcements";
+
+type NotificationPreferences = Record<NotificationCategoryKey, NotificationChannelPreferences>;
+
+const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
+    lease_applications: { email: true, push: true },
+    maintenance: { email: true, push: true },
+    payments: { email: true, push: true },
+    messages: { email: true, push: true },
+    announcements: { email: true, push: true },
+};
+
 interface SidebarItem {
     id: SettingsCategory;
     label: string;
@@ -224,7 +241,7 @@ export function LandlordSettings() {
 
     // Mapping of Sub-tabs
     const SUB_TABS: Record<SettingsCategory, string[]> = {
-        Identity: ["Profile", "Socials", "Verification"],
+        Identity: ["Profile", "Emergency Contact", "Socials", "Verification"],
         Personalization: ["Themes & Contrast", "Branding & Logo", "Dashboard Banner"],
         Finance: ["GCash", "Utilities"],
         Security: ["Account", "Protection", "Sessions"],
@@ -410,6 +427,8 @@ export function LandlordSettings() {
         website: "",
         address: "",
         bio: "",
+        emergency_contact_name: "",
+        emergency_contact_phone: "",
         business_permit_number: "",
         socials: {
             facebook: "",
@@ -460,8 +479,26 @@ export function LandlordSettings() {
     const [disablePassword, setDisablePassword] = useState("");
     const [isDisabling, setIsDisabling] = useState(false);
 
+    const [notificationPreferences, setNotificationPreferences] = useState<NotificationPreferences>(DEFAULT_NOTIFICATION_PREFERENCES);
+
+    const handleToggleNotification = (category: NotificationCategoryKey, channel: "email" | "push") => {
+        setNotificationPreferences((prev) => ({
+            ...prev,
+            [category]: {
+                ...prev[category],
+                [channel]: !prev[category][channel],
+            },
+        }));
+    };
+
+    const handleResetNotificationDefaults = () => {
+        setNotificationPreferences(DEFAULT_NOTIFICATION_PREFERENCES);
+        toast.info("Notification preferences reset to defaults. Save changes to apply.");
+    };
+
     const [initialSnapshot, setInitialSnapshot] = useState<{
         formData: typeof formData;
+        notificationPreferences: NotificationPreferences;
         propertyTradeName: string;
         propertyTagline: string;
         rentalArchetype: string;
@@ -492,6 +529,8 @@ export function LandlordSettings() {
                 website: profile.website || "",
                 address: profile.address || "",
                 bio: profile.bio || "",
+                emergency_contact_name: (profile as any).emergency_contact_name || (profile.socials as any)?.emergency_contact_name || "",
+                emergency_contact_phone: (profile as any).emergency_contact_phone || (profile.socials as any)?.emergency_contact_phone || "",
                 business_permit_number: profile.business_permit_number || "",
                 socials: typeof profile.socials === 'object' && profile.socials !== null 
                     ? {
@@ -508,6 +547,19 @@ export function LandlordSettings() {
                       },
             };
             setFormData(initialForm);
+
+            const savedNotifs = (profile?.socials as any)?.notification_preferences 
+                || (typeof window !== "undefined" ? JSON.parse(localStorage.getItem("ireside_landlord_notification_preferences") || "null") : null) 
+                || DEFAULT_NOTIFICATION_PREFERENCES;
+
+            const mergedNotifs: NotificationPreferences = {
+                lease_applications: { ...DEFAULT_NOTIFICATION_PREFERENCES.lease_applications, ...(savedNotifs?.lease_applications || {}) },
+                maintenance: { ...DEFAULT_NOTIFICATION_PREFERENCES.maintenance, ...(savedNotifs?.maintenance || {}) },
+                payments: { ...DEFAULT_NOTIFICATION_PREFERENCES.payments, ...(savedNotifs?.payments || {}) },
+                messages: { ...DEFAULT_NOTIFICATION_PREFERENCES.messages, ...(savedNotifs?.messages || {}) },
+                announcements: { ...DEFAULT_NOTIFICATION_PREFERENCES.announcements, ...(savedNotifs?.announcements || {}) },
+            };
+            setNotificationPreferences(mergedNotifs);
 
             const savedBanner = typeof window !== "undefined" ? (localStorage.getItem("ireside_landlord_custom_banner_url") || DEFAULT_BANNER_URL) : DEFAULT_BANNER_URL;
             const savedLogo = typeof window !== "undefined" ? localStorage.getItem("ireside_property_logo") : null;
@@ -528,6 +580,7 @@ export function LandlordSettings() {
             if (!initialSnapshot) {
                 setInitialSnapshot({
                     formData: JSON.parse(JSON.stringify(initialForm)),
+                    notificationPreferences: JSON.parse(JSON.stringify(mergedNotifs)),
                     propertyTradeName: savedName,
                     propertyTagline: savedTagline,
                     rentalArchetype: savedArchetype,
@@ -545,6 +598,7 @@ export function LandlordSettings() {
         if (!initialSnapshot) return false;
         return (
             JSON.stringify(formData) !== JSON.stringify(initialSnapshot.formData) ||
+            JSON.stringify(notificationPreferences) !== JSON.stringify(initialSnapshot.notificationPreferences) ||
             propertyTradeName !== initialSnapshot.propertyTradeName ||
             propertyTagline !== initialSnapshot.propertyTagline ||
             rentalArchetype !== initialSnapshot.rentalArchetype ||
@@ -553,7 +607,7 @@ export function LandlordSettings() {
             bannerUrl !== initialSnapshot.bannerUrl ||
             propertyLogoUrl !== initialSnapshot.propertyLogoUrl
         );
-    }, [formData, propertyTradeName, propertyTagline, rentalArchetype, brandPrimaryHex, brandSecondaryHex, bannerUrl, propertyLogoUrl, initialSnapshot]);
+    }, [formData, notificationPreferences, propertyTradeName, propertyTagline, rentalArchetype, brandPrimaryHex, brandSecondaryHex, bannerUrl, propertyLogoUrl, initialSnapshot]);
 
     useEffect(() => {
         const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -577,6 +631,7 @@ export function LandlordSettings() {
     const handleDiscardChanges = () => {
         if (!initialSnapshot) return;
         setFormData(JSON.parse(JSON.stringify(initialSnapshot.formData)));
+        setNotificationPreferences(JSON.parse(JSON.stringify(initialSnapshot.notificationPreferences)));
         setPropertyTradeName(initialSnapshot.propertyTradeName);
         setPropertyTagline(initialSnapshot.propertyTagline);
         setRentalArchetype(initialSnapshot.rentalArchetype);
@@ -831,10 +886,18 @@ export function LandlordSettings() {
         const loadingToast = toast.loading("Saving all changes across settings…");
         try {
             const hasFormChanged = !initialSnapshot || JSON.stringify(formData) !== JSON.stringify(initialSnapshot.formData);
+            const hasNotifsChanged = !initialSnapshot || JSON.stringify(notificationPreferences) !== JSON.stringify(initialSnapshot.notificationPreferences);
 
-            if (hasFormChanged) {
+            if (hasFormChanged || hasNotifsChanged) {
                 // Perform DB updates with a safety timeout so it never hangs
                 const dbSavePromise = (async () => {
+                    const socialsWithEmergency = {
+                        ...formData.socials,
+                        emergency_contact_name: formData.emergency_contact_name,
+                        emergency_contact_phone: formData.emergency_contact_phone,
+                        notification_preferences: notificationPreferences,
+                    };
+
                     const { error } = await supabase
                         .from("profiles")
                         .update({
@@ -843,7 +906,7 @@ export function LandlordSettings() {
                             email: formData.email,
                             website: formData.website,
                             bio: formData.bio,
-                            socials: formData.socials,
+                            socials: socialsWithEmergency as any,
                             phone: formData.phone,
                             address: formData.address,
                             business_permit_number: formData.business_permit_number,
@@ -852,6 +915,22 @@ export function LandlordSettings() {
 
                     if (error) {
                         console.warn("[LandlordSettings] Profile update warning:", error);
+                    }
+
+                    if (typeof window !== "undefined") {
+                        localStorage.setItem("ireside_landlord_notification_preferences", JSON.stringify(notificationPreferences));
+                    }
+
+                    try {
+                        await supabase.auth.updateUser({
+                            data: {
+                                emergency_contact_name: formData.emergency_contact_name,
+                                emergency_contact_phone: formData.emergency_contact_phone,
+                                notification_preferences: notificationPreferences,
+                            }
+                        });
+                    } catch (metaErr: any) {
+                        console.warn("[LandlordSettings] Auth metadata update note:", metaErr?.message);
                     }
 
                     if (formData.email && formData.email !== profile.email) {
@@ -919,6 +998,7 @@ export function LandlordSettings() {
             // 3. Update Snapshot to clear isDirty immediately
             setInitialSnapshot({
                 formData: JSON.parse(JSON.stringify(formData)),
+                notificationPreferences: JSON.parse(JSON.stringify(notificationPreferences)),
                 propertyTradeName,
                 propertyTagline,
                 rentalArchetype,
@@ -1110,6 +1190,31 @@ export function LandlordSettings() {
                                         />
                                     </SettingField>
                                 </div>
+                            </div>
+                        </GlassCard>
+                    );
+                case "Emergency Contact":
+                    return (
+                        <GlassCard title="Emergency Contact" description="Designated emergency contact person and 24/7 phone number for urgent property escalations and tenant emergencies.">
+                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                <SettingField label="Emergency Contact Name" icon={User} description="Designated manager, partner, or emergency kin.">
+                                    <input
+                                        type="text"
+                                        value={formData.emergency_contact_name}
+                                        onChange={(e) => setFormData({ ...formData, emergency_contact_name: e.target.value })}
+                                        placeholder="e.g. Jane Doe (Property Manager)"
+                                        className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
+                                    />
+                                </SettingField>
+                                <SettingField label="Emergency Contact Phone" icon={Phone} description="Direct phone line reachable 24/7.">
+                                    <input
+                                        type="tel"
+                                        value={formData.emergency_contact_phone}
+                                        onChange={(e) => setFormData({ ...formData, emergency_contact_phone: e.target.value })}
+                                        placeholder="e.g. +63 917 123 4567"
+                                        className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
+                                    />
+                                </SettingField>
                             </div>
                         </GlassCard>
                     );
@@ -2324,33 +2429,51 @@ export function LandlordSettings() {
                         <thead>
                             <tr className="border-b border-border/60 bg-surface-2/50">
                                 <th className="px-8 py-5 text-xs font-black uppercase tracking-widest text-muted-foreground">Activity Type</th>
-                                <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-muted-foreground">Email</th>
-                                <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-muted-foreground">Push</th>
-                                <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-muted-foreground">SMS</th>
+                                <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-muted-foreground w-32">Email</th>
+                                <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-muted-foreground w-32">Push</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border/40">
                             {[
-                                { label: "New Lease Applications", desc: "When a prospective tenant submits an application." },
-                                { label: "Maintenance Requests", desc: "Urgent notifications for unit repairs." },
-                                { label: "Payment Confirmations", desc: "When rent is successfully received." },
-                                { label: "Direct Messages", desc: "Messages from active or prospective tenants." },
-                                { label: "System Announcements", desc: "Product updates and platform news." },
+                                { key: "lease_applications" as const, label: "New Lease Applications", desc: "When a prospective tenant submits an application." },
+                                { key: "maintenance" as const, label: "Maintenance Requests", desc: "Urgent notifications for unit repairs." },
+                                { key: "payments" as const, label: "Payment Confirmations", desc: "When rent is successfully received." },
+                                { key: "messages" as const, label: "Direct Messages", desc: "Messages from active or prospective tenants." },
+                                { key: "announcements" as const, label: "System Announcements", desc: "Product updates and platform news." },
                             ].map((item) => (
-                                <tr key={item.label} className="transition-colors hover:bg-surface-2/50">
+                                <tr key={item.key} className="transition-colors hover:bg-surface-2/50">
                                     <td className="px-8 py-6">
                                         <h4 className="text-sm font-black text-foreground">{item.label}</h4>
                                         <p className="text-xs text-muted-foreground">{item.desc}</p>
                                     </td>
-                                    <td className="px-4 py-6 text-center"><ToggleSwitch enabled={true} onToggle={() => {}} /></td>
-                                    <td className="px-4 py-6 text-center"><ToggleSwitch enabled={true} onToggle={() => {}} /></td>
-                                    <td className="px-4 py-6 text-center"><ToggleSwitch enabled={false} onToggle={() => {}} /></td>
+                                    <td className="px-4 py-6 text-center">
+                                        <div className="flex justify-center">
+                                            <ToggleSwitch 
+                                                enabled={notificationPreferences[item.key].email} 
+                                                onToggle={() => handleToggleNotification(item.key, "email")} 
+                                            />
+                                        </div>
+                                    </td>
+                                    <td className="px-4 py-6 text-center">
+                                        <div className="flex justify-center">
+                                            <ToggleSwitch 
+                                                enabled={notificationPreferences[item.key].push} 
+                                                onToggle={() => handleToggleNotification(item.key, "push")} 
+                                            />
+                                        </div>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
                     <div className="flex items-center justify-end gap-3 border-t border-border/60 p-6 bg-surface-2/30">
-                        <button className="text-xs font-black text-muted-foreground hover:text-foreground transition-colors">Reset to Defaults</button>
+                        <button 
+                            type="button"
+                            onClick={handleResetNotificationDefaults}
+                            className="text-xs font-black text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                        >
+                            Reset to Defaults
+                        </button>
                     </div>
                 </GlassCard>
             </div>
