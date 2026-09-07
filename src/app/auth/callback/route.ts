@@ -11,12 +11,18 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
   const next = searchParams.get('next')
+  const type = searchParams.get('type')
   
   if (code) {
     const supabase = await createClient()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     
     if (!error) {
+      // If this is a password recovery flow or explicit reset path, prioritize it
+      if (type === 'recovery' || next === '/auth/reset-password') {
+        return NextResponse.redirect(`${origin}/auth/reset-password`)
+      }
+
       const { data: { user } } = await supabase.auth.getUser()
       let role = user?.user_metadata?.role
 
@@ -31,5 +37,8 @@ export async function GET(request: Request) {
   }
 
   // Return the user to an error page with instructions
-  return NextResponse.redirect(`${origin}/login?error=Could not authenticate with provider`)
+  const errorMessage = type === 'recovery' 
+    ? 'Password reset link is invalid or has expired. Please request a new one.' 
+    : 'Could not authenticate with provider'
+  return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(errorMessage)}`)
 }

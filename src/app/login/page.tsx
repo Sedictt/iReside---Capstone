@@ -366,7 +366,7 @@ function LoginContent() {
                                             </label>
                                             <Link 
                                                 href="/forgot-password" 
-                                                className="text-xs font-semibold text-primary hover:underline transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded-xs"
+                                                className="text-xs font-semibold text-primary hover:underline transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded-xs"
                                             >
                                                 Forgot Password?
                                             </Link>

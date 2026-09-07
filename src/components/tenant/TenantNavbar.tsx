@@ -25,6 +25,7 @@ import {
     Check,
     BookOpen,
     Download,
+    AlertTriangle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -154,26 +155,37 @@ export function TenantSidebar() {
         const id = data.paymentId || data.applicationId || data.maintenanceId || data.conversationId || data.leaseId || data.id || notification.id;
 
         let href = "#";
-        switch (type) {
-            case "payment":
-                href = `/tenant/payments?id=${id}`;
-                break;
-            case "lease":
-                href = `/tenant/lease?id=${id}`;
-                break;
-            case "maintenance":
-                href = `/tenant/maintenance?id=${id}`;
-                break;
-            case "message":
-                href = `/tenant/messages?conversation=${id}`;
-                break;
-            default:
-                href = "/tenant/dashboard";
+
+        if (data.href) {
+            href = data.href;
+        } else if (
+            data.category === "security" || 
+            data.action === "password_reset" || 
+            notification.title?.toLowerCase().includes("password")
+        ) {
+            href = "/tenant/settings";
+        } else {
+            switch (type) {
+                case "payment":
+                    href = `/tenant/payments?id=${id}`;
+                    break;
+                case "lease":
+                    href = `/tenant/lease?id=${id}`;
+                    break;
+                case "maintenance":
+                    href = `/tenant/maintenance?id=${id}`;
+                    break;
+                case "message":
+                    href = `/tenant/messages?conversation=${id}`;
+                    break;
+                default:
+                    href = "/tenant/dashboard";
+            }
         }
 
+        setIsNotificationsOpen(false);
         if (href !== "#") {
             router.push(href);
-            setIsNotificationsOpen(false);
         }
     };
 
@@ -526,6 +538,20 @@ function NotificationPanelContent({
                                     )}>
                                         {notification.message}
                                     </p>
+                                    {(((notification.data as any)?.action === "password_reset") || notification.title?.toLowerCase().includes("password")) && (
+                                        <div className="mt-2 flex items-center gap-1.5">
+                                            <Link
+                                                href="/forgot-password"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                }}
+                                                className="inline-flex items-center gap-1 text-[11px] font-bold text-red-500 hover:text-red-400 hover:underline transition-colors cursor-pointer"
+                                            >
+                                                <AlertTriangle className="size-3 shrink-0" />
+                                                <span>Is this not you? Reset now &rarr;</span>
+                                            </Link>
+                                        </div>
+                                    )}
                                     <p className="mt-2 text-[10px] font-black text-muted-foreground/40 uppercase tracking-wider">
                                         {formatTimeAgo(notification.created_at)}
                                     </p>
