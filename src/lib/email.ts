@@ -737,3 +737,249 @@ Complete your setup before the link expires.
 
     await sendEmail({ recipientEmail: to, subject, htmlBody: html, textBody: text });
 }
+
+export async function sendPasswordResetEmail({
+    to,
+    resetLink,
+    userName,
+}: {
+    to: string;
+    resetLink: string;
+    userName?: string;
+}) {
+    const subject = "Reset your iReside password";
+    const greeting = userName?.trim() ? `Hi ${userName.trim()},` : "Hello,";
+
+    const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reset your iReside password</title>
+</head>
+<body style="margin:0;padding:40px 16px;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
+  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:520px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:12px;overflow:hidden;">
+    <tr>
+      <td style="padding:32px 32px 28px;">
+        <h1 style="margin:0 0 24px;color:#09090b;font-size:22px;font-weight:700;letter-spacing:-0.4px;">iReside</h1>
+
+        <p style="margin:0 0 16px;font-size:15px;line-height:1.5;color:#18181b;">${greeting}</p>
+        <p style="margin:0 0 24px;font-size:14px;line-height:1.6;color:#52525b;">
+          We received a request to reset the password for your account. Click the button below to choose a new password:
+        </p>
+
+        <!-- Button -->
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
+          <tr>
+            <td align="left" bgcolor="#09090b" style="border-radius:8px;">
+              <a href="${resetLink}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 24px;font-size:14px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:8px;background-color:#09090b;">
+                Reset password
+              </a>
+            </td>
+          </tr>
+        </table>
+
+        <p style="margin:0 0 8px;font-size:13px;line-height:1.5;color:#71717a;">
+          This link will expire in 1 hour. If you didn't ask to reset your password, you can safely ignore this email.
+        </p>
+
+        <hr style="border:none;border-top:1px solid #f4f4f5;margin:24px 0 20px;" />
+
+        <p style="margin:0;font-size:12px;line-height:1.5;color:#a1a1aa;">
+          Button not working? Paste this link into your browser:<br />
+          <a href="${resetLink}" target="_blank" rel="noopener noreferrer" style="color:#2563eb;word-break:break-all;text-decoration:underline;">
+            ${resetLink}
+          </a>
+        </p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:16px 32px;background-color:#fafafa;border-top:1px solid #f4f4f5;text-align:left;">
+        <p style="margin:0;font-size:12px;color:#a1a1aa;">
+          &copy; ${new Date().getFullYear()} iReside. All rights reserved.
+        </p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+    const text = `${greeting}
+
+We received a request to reset the password for your iReside account.
+
+Reset link (expires in 1 hour):
+${resetLink}
+
+If you didn't request a password reset, you can safely ignore this email.
+
+— iReside`;
+
+    await sendEmail({ recipientEmail: to, subject, htmlBody: html, textBody: text });
+}
+
+export async function sendPasswordResetOtpEmail({
+    to,
+    otp,
+    userName,
+}: {
+    to: string;
+    otp: string;
+    userName?: string;
+}) {
+    const subject = `${otp} is your iReside reset code`;
+    const greeting = userName?.trim() ? `Hi ${userName.trim()},` : "Hello,";
+    const formattedOtp = otp.length === 6 ? `${otp.slice(0, 3)} ${otp.slice(3)}` : otp;
+
+    const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your iReside verification code</title>
+</head>
+<body style="margin:0;padding:40px 16px;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
+  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:480px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:12px;overflow:hidden;">
+    <tr>
+      <td style="padding:32px 32px 28px;">
+        <h1 style="margin:0 0 20px;color:#09090b;font-size:22px;font-weight:700;letter-spacing:-0.4px;">iReside</h1>
+
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.5;color:#18181b;">${greeting}</p>
+        <p style="margin:0 0 24px;font-size:14px;line-height:1.6;color:#52525b;">
+          Enter the verification code below to reset your password:
+        </p>
+
+        <!-- OTP Display Box -->
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 24px;">
+          <tr>
+            <td align="center" style="background-color:#fafafa;border:1px dashed #d4d4d8;border-radius:10px;padding:18px 24px;">
+              <span style="font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:32px;font-weight:700;letter-spacing:6px;color:#09090b;">
+                ${formattedOtp}
+              </span>
+            </td>
+          </tr>
+        </table>
+
+        <p style="margin:0 0 8px;font-size:13px;line-height:1.5;color:#71717a;">
+          This code expires in <strong>10 minutes</strong> and can only be used once.
+        </p>
+
+        <hr style="border:none;border-top:1px solid #f4f4f5;margin:24px 0 20px;" />
+
+        <p style="margin:0;font-size:12px;line-height:1.5;color:#a1a1aa;">
+          If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.
+        </p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:16px 32px;background-color:#fafafa;border-top:1px solid #f4f4f5;text-align:left;">
+        <p style="margin:0;font-size:12px;color:#a1a1aa;">
+          &copy; ${new Date().getFullYear()} iReside. All rights reserved.
+        </p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+    const text = `${greeting}
+
+Your password reset verification code is:
+
+${formattedOtp}
+
+This code expires in 10 minutes.
+
+If you didn't request this code, you can safely ignore this message.
+
+— iReside`;
+
+    await sendEmail({ recipientEmail: to, subject, htmlBody: html, textBody: text });
+}
+
+export async function sendPasswordResetConfirmationEmail({
+    to,
+    userName,
+}: {
+    to: string;
+    userName?: string;
+}) {
+    const subject = "Your iReside password was successfully changed";
+    const greeting = userName?.trim() ? `Hi ${userName.trim()},` : "Hello,";
+    const formattedDate = new Date().toLocaleString("en-US", {
+        dateStyle: "medium",
+        timeStyle: "short",
+    });
+
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const resetUrl = `${appUrl}/forgot-password?email=${encodeURIComponent(to)}`;
+
+    const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your password was changed</title>
+</head>
+<body style="margin:0;padding:40px 16px;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
+  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:480px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:12px;overflow:hidden;">
+    <tr>
+      <td style="padding:32px 32px 28px;">
+        <h1 style="margin:0 0 20px;color:#09090b;font-size:22px;font-weight:700;letter-spacing:-0.4px;">iReside</h1>
+
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.5;color:#18181b;">${greeting}</p>
+        <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#52525b;">
+          The password for your iReside account was successfully updated on <strong>${formattedDate}</strong>.
+        </p>
+
+        <div style="background-color:#fafafa;border:1px solid #e4e4e7;border-radius:8px;padding:16px;margin-bottom:20px;">
+          <p style="margin:0;font-size:13px;line-height:1.5;color:#18181b;">
+            <strong>Did you make this change?</strong><br />
+            <span style="color:#71717a;">If so, no further action is needed and you can safely sign in with your new password.</span>
+          </p>
+        </div>
+
+        <div style="background-color:#fef2f2;border:1px solid #fee2e2;border-radius:8px;padding:16px;margin-bottom:20px;">
+          <p style="margin:0 0 8px;font-size:13px;line-height:1.5;color:#991b1b;font-weight:700;">
+            Is this not you?
+          </p>
+          <p style="margin:0 0 14px;font-size:12px;line-height:1.5;color:#7f1d1d;">
+            If you did not perform this update, someone else may have gained unauthorized access to your credentials. Reset your password immediately to secure your account.
+          </p>
+          <a href="${resetUrl}" style="display:inline-block;background-color:#ef4444;color:#ffffff;font-size:13px;font-weight:700;padding:10px 18px;border-radius:8px;text-decoration:none;">
+            Reset Password Now &rarr;
+          </a>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:16px 32px;background-color:#fafafa;border-top:1px solid #f4f4f5;text-align:left;">
+        <p style="margin:0;font-size:12px;color:#a1a1aa;">
+          &copy; ${new Date().getFullYear()} iReside. All rights reserved.
+        </p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+    const text = `${greeting}
+
+The password for your iReside account was successfully updated on ${formattedDate}.
+
+If you made this change, no further action is needed.
+
+IS THIS NOT YOU?
+If you did not make this change, please reset your password immediately:
+${resetUrl}
+
+— iReside Security`;
+
+    await sendEmail({ recipientEmail: to, subject, htmlBody: html, textBody: text });
+}
+
+
+

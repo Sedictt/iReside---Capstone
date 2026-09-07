@@ -54,7 +54,22 @@ const resolveRole = async (
 const isTourAutoStartRoute = (pathname: string) =>
     TOUR_AUTO_START_ROUTE_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 
-const PUBLIC_ROUTE_PREFIXES = ["/login", "/signup", "/auth", "/apply", "/apply-landlord", "/landlord/onboarding", "/demo", "/sign", "/docs", "/about", "/terms", "/privacy"];
+const PUBLIC_ROUTE_PREFIXES = [
+    "/login",
+    "/signup",
+    "/auth",
+    "/forgot-password",
+    "/reset-password",
+    "/apply",
+    "/apply-landlord",
+    "/landlord/onboarding",
+    "/demo",
+    "/sign",
+    "/docs",
+    "/about",
+    "/terms",
+    "/privacy",
+];
 const PUBLIC_EXACT_ROUTES = ["/"];
 
 const isPublicRoute = (pathname: string, request?: NextRequest) => {
@@ -183,7 +198,7 @@ export async function updateSession(request: NextRequest) {
     }
 
     // If user is already logged in, prevent them from accessing auth pages.
-    if (user && (request.nextUrl.pathname.startsWith("/login") || request.nextUrl.pathname.startsWith("/signup"))) {
+    if (user && (request.nextUrl.pathname.startsWith("/login") || request.nextUrl.pathname.startsWith("/signup") || request.nextUrl.pathname.startsWith("/forgot-password"))) {
         const url = request.nextUrl.clone();
         if (role === "admin" || role === "landlord") {
             url.pathname = "/landlord/dashboard";

@@ -34,7 +34,7 @@ async function getTwoFactorState(adminClient: ReturnType<typeof createAdminClien
             .maybeSingle(),
         (adminClient as any)
             .from("user_security_settings")
-            .select("two_factor_enabled, two_factor_email, otp_code, otp_expiry")
+            .select("two_factor_enabled, two_factor_email, otp_code, otp_expiry, has_changed_password, updated_at")
             .eq("profile_id", userId)
             .maybeSingle(),
         (adminClient as any)
@@ -78,11 +78,15 @@ export async function GET(request: Request) {
         const adminClient = createAdminClient();
         const { profile, settings, gmailToken } = await getTwoFactorState(adminClient, userId);
 
+        const passwordLastUpdated = (settings as any)?.has_changed_password ? (settings as any)?.updated_at : null;
+
         return NextResponse.json({
             enabled: settings?.two_factor_enabled || false,
             email: settings?.two_factor_email || null,
             hasGmailConnected: !!gmailToken?.access_token,
             userEmail: profile?.email,
+            passwordLastUpdated,
+            hasChangedPassword: !!(settings as any)?.has_changed_password,
         });
     }
 

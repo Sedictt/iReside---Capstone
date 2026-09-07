@@ -51,7 +51,9 @@ import {
     Wand2,
     Pipette,
     ChevronLeft,
-    ShieldCheck
+    ShieldCheck,
+    Clock,
+    EyeOff
 } from "lucide-react";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
@@ -135,13 +137,16 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
 
 // --- Components ---
 
-function GlassCard({ children, className, title, description }: { children: React.ReactNode; className?: string; title?: string; description?: string }) {
+function GlassCard({ children, className, title, description, headerExtra }: { children: React.ReactNode; className?: string; title?: string; description?: string; headerExtra?: React.ReactNode }) {
     return (
         <div className={cn("relative overflow-hidden rounded-[2rem] neumorphic-panel transition-all duration-500", className)}>
-            {(title || description) && (
-                <div className="border-b border-border/60 px-8 py-6">
-                    {title && <h3 className="text-lg font-black text-foreground">{title}</h3>}
-                    {description && <p className="text-sm text-muted-foreground mt-1">{description}</p>}
+            {(title || description || headerExtra) && (
+                <div className="border-b border-border/60 px-8 py-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div>
+                        {title && <h3 className="text-lg font-black text-foreground">{title}</h3>}
+                        {description && <p className="text-sm text-muted-foreground mt-1">{description}</p>}
+                    </div>
+                    {headerExtra && <div className="shrink-0">{headerExtra}</div>}
                 </div>
             )}
             <div className="p-8 text-foreground">{children}</div>
@@ -208,7 +213,7 @@ function SubNav({ tabs, activeTab, onTabChange }: { tabs: string[]; activeTab: s
 
 export function LandlordSettings() {
     const router = useRouter();
-    const { profile, loading, refreshProfile } = useAuth();
+    const { user, profile, loading, refreshProfile } = useAuth();
     // UI State
     const [activeTab, setActiveTab] = useState<SettingsCategory>("Identity");
     const [activeSubTab, setActiveSubTab] = useState<string>("Profile");
@@ -237,6 +242,8 @@ export function LandlordSettings() {
     useEffect(() => {
         if (!isRestoringFromUrl.current) {
             setActiveSubTab(SUB_TABS[activeTab][0]);
+        } else if (!SUB_TABS[activeTab].includes(activeSubTab)) {
+            setActiveSubTab(SUB_TABS[activeTab][0]);
         }
         isRestoringFromUrl.current = false;
     }, [activeTab]);
@@ -252,6 +259,8 @@ export function LandlordSettings() {
             setActiveTab(category as SettingsCategory);
             if (subtab && SUB_TABS[category as SettingsCategory].includes(subtab)) {
                 setActiveSubTab(subtab);
+            } else {
+                setActiveSubTab(SUB_TABS[category as SettingsCategory][0]);
             }
         }
     }, []);
@@ -434,6 +443,12 @@ export function LandlordSettings() {
     // Security States
     const [otpEnabled, setOtpEnabled] = useState(false);
     const [showOtpField, setShowOtpField] = useState(false);
+    const [passwordLastUpdated, setPasswordLastUpdated] = useState<string | null>(null);
+    const [hasChangedPassword, setHasChangedPassword] = useState(false);
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmNewPassword, setConfirmNewPassword] = useState("");
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
 
     // 2FA States
     const [twoFAStatus, setTwoFAStatus] = useState<'loading' | 'disabled' | 'gmail_connected' | 'pending_otp' | 'enabled'>('loading');
@@ -636,8 +651,8 @@ export function LandlordSettings() {
     }, []);
 
     useEffect(() => {
-        if (activeTab === "Security" && activeSubTab === "Protection") {
-            const fetchTwoFAStatus = async () => {
+        if (activeTab === "Security") {
+            const fetchSecurityStatus = async () => {
                 try {
                     const res = await fetch("/api/landlord/2fa?action=status");
                     const data = await res.json();
@@ -650,14 +665,92 @@ export function LandlordSettings() {
                     } else {
                         setTwoFAStatus('disabled');
                     }
+
+                    if (data.passwordLastUpdated) {
+                        setPasswordLastUpdated(data.passwordLastUpdated);
+                    }
+                    if (typeof data.hasChangedPassword === 'boolean') {
+                        setHasChangedPassword(data.hasChangedPassword);
+                    }
                 } catch (err) {
-                    console.error("[2FA] Failed to fetch status:", err);
+                    console.error("[Security] Failed to fetch status:", err);
                     setTwoFAStatus('disabled');
                 }
             };
-            fetchTwoFAStatus();
+            fetchSecurityStatus();
         }
     }, [activeTab, activeSubTab]);
+
+    const handleUpdatePassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newPassword) {
+            toast.error("Please enter a new password");
+            return;
+        }
+        if (newPassword.length < 6) {
+            toast.error("New password must be at least 6 characters long");
+            return;
+        }
+        if (confirmNewPassword && newPassword !== confirmNewPassword) {
+            toast.error("New passwords do not match");
+            return;
+        }
+
+        setIsUpdatingPassword(true);
+        const loadingToast = toast.loading("Updating password...");
+        try {
+            const { error: authError } = await supabase.auth.updateUser({
+                password: newPassword,
+            });
+
+            if (authError) {
+                throw new Error(authError.message || "Failed to update password");
+            }
+
+            const nowIso = new Date().toISOString();
+
+            if (user?.id) {
+                await (supabase as any)
+                    .from("user_security_settings")
+                    .upsert({
+                        profile_id: user.id,
+                        has_changed_password: true,
+                        updated_at: nowIso,
+                    }, { onConflict: "profile_id" });
+
+                await supabase
+                    .from("profiles")
+                    .update({
+                        has_changed_password: true,
+                        updated_at: nowIso,
+                    } as any)
+                    .eq("id", user.id);
+
+                await supabase.from("notifications").insert({
+                    user_id: user.id,
+                    type: "announcement",
+                    title: "Password Updated",
+                    message: "Your password was successfully changed from your security settings.",
+                    read: false,
+                    data: {
+                        category: "security",
+                        action: "password_reset",
+                    },
+                } as any);
+            }
+
+            setPasswordLastUpdated(nowIso);
+            setHasChangedPassword(true);
+            setNewPassword("");
+            setConfirmNewPassword("");
+            toast.success("Password updated successfully!", { id: loadingToast });
+        } catch (err: any) {
+            console.error("[Settings] Password update error:", err);
+            toast.error(err.message || "Failed to update password", { id: loadingToast });
+        } finally {
+            setIsUpdatingPassword(false);
+        }
+    };
 
     const handleRevokeSession = async (sessionId: string) => {
         const loadingToast = toast.loading("Revoking session...");
@@ -920,8 +1013,9 @@ export function LandlordSettings() {
         }
     };
     const renderIdentity = () => {
+        const currentSubTab = SUB_TABS.Identity.includes(activeSubTab) ? activeSubTab : SUB_TABS.Identity[0];
         const renderSubContent = () => {
-            switch (activeSubTab) {
+            switch (currentSubTab) {
                 case "Profile":
                     return (
                         <GlassCard title="Profile Information" description="Basic details about you and your business.">
@@ -1139,7 +1233,7 @@ export function LandlordSettings() {
 
                 <SubNav 
                     tabs={SUB_TABS.Identity} 
-                    activeTab={activeSubTab} 
+                    activeTab={currentSubTab} 
                     onTabChange={setActiveSubTab} 
                 />
 
@@ -1151,8 +1245,9 @@ export function LandlordSettings() {
     };
 
     const renderPersonalization = () => {
+        const currentSubTab = SUB_TABS.Personalization.includes(activeSubTab) ? activeSubTab : SUB_TABS.Personalization[0];
         const renderSubContent = () => {
-            switch (activeSubTab) {
+            switch (currentSubTab) {
                 case "Themes & Contrast":
                     return (
                         <div className="space-y-8">
@@ -1621,7 +1716,7 @@ export function LandlordSettings() {
 
                 <SubNav 
                     tabs={SUB_TABS.Personalization} 
-                    activeTab={activeSubTab} 
+                    activeTab={currentSubTab} 
                     onTabChange={setActiveSubTab} 
                 />
 
@@ -1633,8 +1728,9 @@ export function LandlordSettings() {
     };
 
     const renderFinance = () => {
+        const currentSubTab = SUB_TABS.Finance.includes(activeSubTab) ? activeSubTab : SUB_TABS.Finance[0];
         const renderSubContent = () => {
-            switch (activeSubTab) {
+            switch (currentSubTab) {
                 case "GCash":
                     return (
                         <GlassCard className="!p-0">
@@ -1718,7 +1814,7 @@ export function LandlordSettings() {
 
                 <SubNav 
                     tabs={SUB_TABS.Finance} 
-                    activeTab={activeSubTab} 
+                    activeTab={currentSubTab} 
                     onTabChange={setActiveSubTab} 
                 />
 
@@ -1732,35 +1828,116 @@ export function LandlordSettings() {
 
 
     const renderSecurity = () => {
+        const currentSubTab = SUB_TABS.Security.includes(activeSubTab) ? activeSubTab : SUB_TABS.Security[0];
         const renderSubContent = () => {
-            switch (activeSubTab) {
+            switch (currentSubTab) {
                 case "Account":
                     return (
-                        <GlassCard title="Change Password" description="Ensure your account is using a long, random password to stay secure.">
-                            <div className="space-y-6 max-w-lg">
-                                <SettingField label="Current Password" icon={Key}>
-                                    <input type="password" placeholder="••••••••" className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none" />
-                                </SettingField>
-                                <SettingField label="New Password" icon={Key}>
-                                    <input type="password" placeholder="••••••••" className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none" />
-                                </SettingField>
-                                
-                                {otpEnabled && (
-                                    <motion.div 
-                                        initial={{ height: 0, opacity: 0 }}
-                                        animate={{ height: "auto", opacity: 1 }}
-                                        className="space-y-2 overflow-hidden"
-                                    >
-                                        <SettingField label="OTP Verification" icon={Smartphone} description="Check your mobile for the 6-digit code.">
-                                            <input type="text" maxLength={6} placeholder="000000" className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm tracking-[0.5em] text-center focus:outline-none font-mono" />
-                                        </SettingField>
-                                    </motion.div>
+                        <GlassCard 
+                            title="Change Password" 
+                            description="Ensure your account is using a long, random password to stay secure."
+                            headerExtra={
+                                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold text-primary">
+                                    <Clock className="size-3.5 shrink-0 text-primary" />
+                                    <span>
+                                        Last updated:{" "}
+                                        <span className="font-bold text-foreground">
+                                            {passwordLastUpdated ? (
+                                                <ClientOnlyDate 
+                                                    date={passwordLastUpdated} 
+                                                    format={{ 
+                                                        month: 'short', 
+                                                        day: 'numeric', 
+                                                        year: 'numeric' 
+                                                    }} 
+                                                />
+                                            ) : (
+                                                "Never"
+                                            )}
+                                        </span>
+                                    </span>
+                                </div>
+                            }
+                        >
+                            <form onSubmit={handleUpdatePassword} className="space-y-6 max-w-lg">
+                                {passwordLastUpdated && (
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between p-3.5 rounded-xl bg-white/[0.02] border border-white/5 text-xs text-muted-foreground">
+                                            <div className="flex items-center gap-2">
+                                                <ShieldCheck className="size-4 text-emerald-400 shrink-0" />
+                                                <span>Password last modified</span>
+                                            </div>
+                                            <span className="font-mono font-medium text-foreground">
+                                                <ClientOnlyDate 
+                                                    date={passwordLastUpdated} 
+                                                    format={{ 
+                                                        month: 'short', 
+                                                        day: 'numeric', 
+                                                        year: 'numeric', 
+                                                        hour: 'numeric', 
+                                                        minute: '2-digit' 
+                                                    }} 
+                                                />
+                                            </span>
+                                        </div>
+
+                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3.5 rounded-xl bg-red-500/[0.06] border border-red-500/20 text-xs">
+                                            <div className="flex items-center gap-2 text-red-500 font-medium">
+                                                <AlertTriangle className="size-4 shrink-0" />
+                                                <span>Is this not you? Someone may have accessed your account.</span>
+                                            </div>
+                                            <Link 
+                                                href={`/forgot-password?email=${encodeURIComponent(user?.email || profile?.email || "")}`}
+                                                className="inline-flex items-center gap-1 font-bold text-red-500 hover:text-red-400 hover:underline transition-colors shrink-0 cursor-pointer"
+                                            >
+                                                <span>Reset password now &rarr;</span>
+                                            </Link>
+                                        </div>
+                                    </div>
                                 )}
 
-                                <button className="w-full rounded-2xl neumorphic-extruded py-3 text-sm font-black transition-all hover:text-primary">
-                                    {otpEnabled ? "Verify & Update" : "Update Password"}
+                                <SettingField label="New Password" icon={Key}>
+                                    <div className="relative">
+                                        <input 
+                                            type={showNewPassword ? "text" : "password"} 
+                                            value={newPassword}
+                                            onChange={(e) => setNewPassword(e.target.value)}
+                                            placeholder="••••••••" 
+                                            required
+                                            minLength={6}
+                                            className="w-full rounded-xl neumorphic-inset px-4 py-3 pr-11 text-sm focus:outline-none" 
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowNewPassword(!showNewPassword)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 transition-colors cursor-pointer"
+                                            aria-label={showNewPassword ? "Hide password" : "Show password"}
+                                        >
+                                            {showNewPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                                        </button>
+                                    </div>
+                                </SettingField>
+
+                                <SettingField label="Confirm New Password" icon={Key}>
+                                    <div className="relative">
+                                        <input 
+                                            type={showNewPassword ? "text" : "password"} 
+                                            value={confirmNewPassword}
+                                            onChange={(e) => setConfirmNewPassword(e.target.value)}
+                                            placeholder="••••••••" 
+                                            className="w-full rounded-xl neumorphic-inset px-4 py-3 pr-11 text-sm focus:outline-none" 
+                                        />
+                                    </div>
+                                </SettingField>
+
+                                <button 
+                                    type="submit"
+                                    disabled={isUpdatingPassword || !newPassword}
+                                    className="w-full rounded-2xl neumorphic-extruded py-3 text-sm font-black transition-all hover:text-primary disabled:opacity-50 cursor-pointer"
+                                >
+                                    {isUpdatingPassword ? "Updating Password..." : "Update Password"}
                                 </button>
-                            </div>
+                            </form>
                         </GlassCard>
                     );
                 case "Protection":
@@ -2083,7 +2260,7 @@ export function LandlordSettings() {
 
                 <SubNav 
                     tabs={SUB_TABS.Security} 
-                    activeTab={activeSubTab} 
+                    activeTab={currentSubTab} 
                     onTabChange={setActiveSubTab} 
                 />
 
@@ -2151,8 +2328,9 @@ export function LandlordSettings() {
     );
 
     const renderData = () => {
+        const currentSubTab = SUB_TABS.Data.includes(activeSubTab) ? activeSubTab : SUB_TABS.Data[0];
         const renderSubContent = () => {
-            switch (activeSubTab) {
+            switch (currentSubTab) {
                 case "Export":
                     return (
                         <GlassCard title="Data Export" description="Download a copy of your records in JSON or CSV format.">
@@ -2222,7 +2400,7 @@ export function LandlordSettings() {
 
                 <SubNav 
                     tabs={SUB_TABS.Data} 
-                    activeTab={activeSubTab} 
+                    activeTab={currentSubTab} 
                     onTabChange={setActiveSubTab} 
                 />
 

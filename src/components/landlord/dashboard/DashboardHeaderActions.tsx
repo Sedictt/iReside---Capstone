@@ -25,8 +25,10 @@ import {
     FileCheck2,
     CalendarClock,
     Palette,
-    Banknote
+    Banknote,
+    AlertTriangle
 } from "lucide-react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -577,6 +579,19 @@ export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActi
             return data.signingUrl;
         }
 
+        if (data.href) {
+            return data.href;
+        }
+
+        // Security / Password notifications
+        if (
+            data.category === "security" || 
+            data.action === "password_reset" || 
+            notification.title?.toLowerCase().includes("password")
+        ) {
+            return "/landlord/settings?category=Security";
+        }
+
         switch (type) {
             case "payment":
                 return `/landlord/invoices?id=${id}`;
@@ -588,6 +603,8 @@ export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActi
                 return `/landlord/messages?conversation=${id}`;
             case "lease":
                 return `/landlord/leases?id=${id}`;
+            case "announcement":
+                return "/landlord/settings?category=Notifications";
             default:
                 return "#";
         }
@@ -599,9 +616,9 @@ export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActi
         }
         
         const href = getNotificationHref(notification);
-        if (href !== "#") {
+        setIsNotificationsOpen(false);
+        if (href && href !== "#") {
             router.push(href);
-            setIsNotificationsOpen(false);
         }
     };
 
@@ -760,14 +777,34 @@ export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActi
                                                     n.type === "maintenance" ? "bg-amber-500/10 text-amber-500" :
                                                     n.type === "application" ? "bg-blue-500/10 text-blue-500" :
                                                     n.type === "lease" ? "bg-purple-500/10 text-purple-500" :
+                                                    n.type === "announcement" ? "bg-blue-500/10 text-blue-400" :
                                                     "bg-primary/10 text-primary"
                                                 )}>
-                                                    <Sparkles className="size-4" />
+                                                    {n.type === "announcement" ? (
+                                                        <ShieldCheck className="size-4" />
+                                                    ) : (
+                                                        <Sparkles className="size-4" />
+                                                    )}
                                                 </div>
                                                 
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-xs font-black text-foreground truncate">{n.title}</p>
                                                     <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{n.message}</p>
+                                                    {((n.data as any)?.action === "password_reset" || n.title?.toLowerCase().includes("password")) && (
+                                                        <div className="mt-2 flex items-center gap-1.5">
+                                                            <Link
+                                                                href="/forgot-password"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setIsNotificationsOpen(false);
+                                                                }}
+                                                                className="inline-flex items-center gap-1 text-[11px] font-bold text-red-500 hover:text-red-400 hover:underline transition-colors cursor-pointer"
+                                                            >
+                                                                <AlertTriangle className="size-3 shrink-0" />
+                                                                <span>Is this not you? Reset now &rarr;</span>
+                                                            </Link>
+                                                        </div>
+                                                    )}
                                                     <span className="text-[10px] text-muted-foreground/60 mt-1 block font-mono">{formatTimeAgo(n.created_at || (n as any).createdAt || new Date().toISOString())}</span>
                                                 </div>
 
