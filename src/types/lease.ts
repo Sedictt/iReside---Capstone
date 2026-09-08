@@ -12,10 +12,19 @@ export interface LeaseData {
     security_deposit: number;
     signed_at: string | null;
     signed_document_url: string | null;
+    status?: string;
+    tenant_signature?: string | null;
+    tenant_signed_at?: string | null;
+    landlord_signature?: string | null;
+    landlord_signed_at?: string | null;
     terms?: {
+        due_day?: number;
         rent_due_day?: number;
+        late_fee?: number;
         late_fee_day?: number;
         grace_period_days?: number;
+        allow_partial?: boolean;
+        [key: string]: any;
     };
     unit: {
         id: string;
@@ -54,8 +63,10 @@ export interface LeaseData {
         avatar_url: string;
         avatar_bg_color: string;
         phone: string;
+        email?: string;
     };
     tenant: {
         full_name: string;
+        email?: string;
     };
 }

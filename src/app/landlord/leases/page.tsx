@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
+import { Suspense, useState, useEffect, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
  User,
@@ -22,12 +22,16 @@ import {
  CalendarRange,
  RotateCcw,
  Loader2,
+ FileText,
+ LayoutDashboard,
+ LayoutGrid,
 } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { m as motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { generateLeasePdf } from "@/lib/lease-pdf";
+import { generateLeasePdf, exportLeaseDocumentElementToPdf } from "@/lib/lease-pdf";
+import { LeaseDocument, type LeaseDocumentProps } from "@/components/lease/LeaseDocument";
 import {
  DropdownMenu,
  DropdownMenuContent,
@@ -60,6 +64,42 @@ function LeasesContent() {
  const [loading, setLoading] = useState(false);
  const [error, setError] = useState<string | null>(null);
  const [countersignLoading, setCountersignLoading] = useState(false);
+ const [leaseViewMode, setLeaseViewMode] = useState<"overview" | "document">("overview");
+
+ const formattedLeaseData: LeaseDocumentProps | null = useMemo(() => {
+   if (!lease) return null;
+   return {
+     id: lease.id,
+     status: lease.status,
+     start_date: lease.start_date,
+     end_date: lease.end_date,
+     monthly_rent: Number(lease.monthly_rent || 0),
+     security_deposit: Number(lease.security_deposit || 0),
+     terms: lease.terms,
+     tenant_signature: lease.tenant_signature,
+     tenant_signed_at: lease.tenant_signed_at,
+     landlord_signature: lease.landlord_signature,
+     landlord_signed_at: lease.landlord_signed_at,
+     signed_at: lease.signed_at || null,
+     signed_document_url: lease.signed_document_url || null,
+     unit: {
+       name: lease.unit?.name || "Unit",
+       property: {
+         name: lease.unit?.property?.name || lease.property?.name || "Residential Property",
+         address: lease.unit?.property?.address || lease.property?.address || "Address not specified",
+         city: lease.unit?.property?.city || lease.property?.city || "",
+       },
+     },
+     landlord: {
+       full_name: lease.landlord?.full_name || "Landlord",
+       email: lease.landlord?.email || "",
+     },
+     tenant: {
+       full_name: lease.tenant?.full_name || "Tenant",
+       email: lease.tenant?.email || "",
+     },
+   };
+ }, [lease]);
 
  useEffect(() => {
  if (leaseId) {
@@ -106,7 +146,7 @@ function LeasesContent() {
  const [isExportingPdf, setIsExportingPdf] = useState(false);
 
  const handleExportPdf = async () => {
-    if (!lease) return;
+    if (!lease || !formattedLeaseData) return;
     setIsExportingPdf(true);
     try {
       let pdfBlob: Blob | null = null;
@@ -119,11 +159,29 @@ function LeasesContent() {
             pdfBlob = await response.blob();
           }
         } catch (fetchErr) {
-          console.warn("[Export PDF] Failed to fetch stored signed doc, falling back to generator:", fetchErr);
+          console.warn("[Export PDF] Failed to fetch stored signed doc, falling back to document export:", fetchErr);
         }
       }
 
-      // 2. Generate PDF client-side if no pre-stored PDF or fetch failed
+      // 2. Export the official LeaseDocument element (visible or hidden)
+      if (!pdfBlob) {
+        const element =
+          document.getElementById("official-lease-document-visible") ||
+          document.getElementById("official-lease-document-hidden");
+
+        if (element) {
+          try {
+            pdfBlob = await exportLeaseDocumentElementToPdf(
+              element,
+              `Lease_Agreement_${lease.id?.slice(0, 8) || "official"}.pdf`
+            );
+          } catch (elementErr) {
+            console.warn("[Export PDF] Failed to export DOM element, falling back to jsPDF generator:", elementErr);
+          }
+        }
+      }
+
+      // 3. Fallback to direct jsPDF generator if DOM capture was not available
       if (!pdfBlob) {
         pdfBlob = await generateLeasePdf({
           id: lease.id,
@@ -155,7 +213,7 @@ function LeasesContent() {
         });
       }
 
-      // 3. Trigger download
+      // 4. Trigger download
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement("a");
       a.href = url;
@@ -165,7 +223,7 @@ function LeasesContent() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      toast.success("Lease PDF exported successfully!");
+      toast.success("Official Lease Agreement PDF exported successfully!");
     } catch (err) {
       console.error("[Export PDF] Failed:", err);
       toast.error("Failed to export lease PDF. Please try again.");
@@ -223,153 +281,225 @@ function LeasesContent() {
  ID: {lease.id}
  </p>
  </div>
- <div className="flex items-center gap-3">
- <button
- onClick={handleExportPdf}
- disabled={isExportingPdf}
- className="flex h-11 items-center gap-2 rounded-xl neumorphic-panel px-5 text-xs font-black uppercase tracking-widest transition-all hover:neumorphic-inset disabled:opacity-50 disabled:cursor-not-allowed"
- title="Export official Lease Agreement PDF"
- >
- {isExportingPdf ? (
- <Loader2 className="size-4 animate-spin text-primary" />
- ) : (
- <Download className="size-4" />
- )}
- <span>{isExportingPdf ? "Exporting..." : "Export PDF"}</span>
- </button>
- </div>
+ <div className="flex flex-wrap items-center gap-3">
+                  {/* View Mode Toggle */}
+                  <div className="flex items-center rounded-xl neumorphic-inset p-1">
+                    <button
+                      type="button"
+                      onClick={() => setLeaseViewMode("overview")}
+                      className={cn(
+                        "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-black uppercase tracking-wider transition-all",
+                        leaseViewMode === "overview"
+                          ? "neumorphic-panel text-primary"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      <LayoutDashboard className="size-3.5" />
+                      Overview
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setLeaseViewMode("document")}
+                      className={cn(
+                        "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-black uppercase tracking-wider transition-all",
+                        leaseViewMode === "document"
+                          ? "neumorphic-panel text-primary"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      <FileText className="size-3.5" />
+                      Agreement
+                    </button>
+                  </div>
+
+                  {/* Export PDF Button */}
+                  <button
+                    onClick={handleExportPdf}
+                    disabled={isExportingPdf}
+                    className="flex h-11 items-center gap-2 rounded-xl neumorphic-panel px-5 text-xs font-black uppercase tracking-widest transition-all hover:neumorphic-inset disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Export official Lease Agreement PDF"
+                  >
+                    {isExportingPdf ? (
+                      <Loader2 className="size-4 animate-spin text-primary" />
+                    ) : (
+                      <Download className="size-4" />
+                    )}
+                    <span>{isExportingPdf ? "Exporting..." : "Export PDF"}</span>
+                  </button>
+                </div>
  </div>
  </div>
 
- <div className="grid grid-cols-1 gap-12 p-8 md:grid-cols-2">
- <div className="space-y-6">
- <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
- Parties Involved
- </h3>
- <div className="space-y-4">
- <div className="flex items-start gap-4">
- <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 font-black text-primary">
- <User className="size-6" />
- </div>
- <div>
- <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
- Tenant
- </p>
- <p className="text-lg font-black text-foreground">
- {lease.tenant?.full_name}
- </p>
- <p className="text-xs font-medium text-muted-foreground">
- {lease.tenant?.email}
- </p>
- </div>
- </div>
- <div className="flex items-start gap-4">
- <div className="flex size-12 items-center justify-center rounded-2xl neumorphic-inset text-muted-foreground font-black">
- <ShieldCheck className="size-6" />
- </div>
- <div>
- <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
- Landlord
- </p>
- <p className="text-lg font-black text-foreground">
- {lease.landlord?.full_name}
- </p>
- <p className="text-xs font-medium text-muted-foreground">
- {lease.landlord?.email}
- </p>
- </div>
- </div>
- </div>
- </div>
+            {leaseViewMode === "document" ? (
+              <div className="flex justify-center overflow-x-auto rounded-b-[2.5rem] bg-neutral-900/40 p-4 sm:p-8">
+                <div className="w-full max-w-4xl overflow-hidden rounded-2xl bg-white shadow-2xl">
+                  {formattedLeaseData && (
+                    <LeaseDocument
+                      containerId="official-lease-document-visible"
+                      disableAnimation={false}
+                      {...formattedLeaseData}
+                    />
+                  )}
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 gap-12 p-8 md:grid-cols-2">
+                  <div className="space-y-6">
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
+                      Parties Involved
+                    </h3>
+                    <div className="space-y-4">
+                      <div className="flex items-start gap-4">
+                        <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 font-black text-primary">
+                          <User className="size-6" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                            Tenant
+                          </p>
+                          <p className="text-lg font-black text-foreground">
+                            {lease.tenant?.full_name}
+                          </p>
+                          <p className="text-xs font-medium text-muted-foreground">
+                            {lease.tenant?.email}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-4">
+                        <div className="flex size-12 items-center justify-center rounded-2xl neumorphic-inset text-muted-foreground font-black">
+                          <ShieldCheck className="size-6" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                            Landlord
+                          </p>
+                          <p className="text-lg font-black text-foreground">
+                            {lease.landlord?.full_name}
+                          </p>
+                          <p className="text-xs font-medium text-muted-foreground">
+                            {lease.landlord?.email}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
- <div className="space-y-6">
- <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
- Premises Details
- </h3>
- <div className="space-y-4">
- <div className="flex items-start gap-4">
- <div className="flex size-12 items-center justify-center rounded-2xl bg-blue-500/10 font-black text-blue-500">
- <Home className="size-6" />
- </div>
- <div>
- <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
- Property
- </p>
- <p className="text-lg font-black text-foreground">
- {lease.unit?.property?.name}
- </p>
- <p className="text-xs font-medium text-muted-foreground">
- {lease.unit?.property?.address}
- </p>
- </div>
- </div>
- <div className="flex items-start gap-4">
- <div className="flex size-12 items-center justify-center rounded-2xl bg-emerald-500/10 font-black text-emerald-500">
- <LayoutGridIcon className="size-6" />
- </div>
- <div>
- <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
- Unit
- </p>
- <p className="text-lg font-black text-foreground">
- Unit {lease.unit?.name}
- </p>
- </div>
- </div>
- </div>
- </div>
- </div>
+                  <div className="space-y-6">
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
+                      Premises Details
+                    </h3>
+                    <div className="space-y-4">
+                      <div className="flex items-start gap-4">
+                        <div className="flex size-12 items-center justify-center rounded-2xl bg-blue-500/10 font-black text-blue-500">
+                          <Home className="size-6" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                            Property
+                          </p>
+                          <p className="text-lg font-black text-foreground">
+                            {lease.unit?.property?.name}
+                          </p>
+                          <p className="text-xs font-medium text-muted-foreground">
+                            {lease.unit?.property?.address}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-4">
+                        <div className="flex size-12 items-center justify-center rounded-2xl bg-emerald-500/10 font-black text-emerald-500">
+                          <LayoutGrid className="size-6" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                            Unit
+                          </p>
+                          <p className="text-lg font-black text-foreground">
+                            Unit {lease.unit?.name}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
- <div className="grid grid-cols-1 gap-8 border-t border-border p-8 sm:grid-cols-3">
- <div className="space-y-1">
- <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
- Term Period
- </p>
- <p className="text-sm font-black text-foreground">
- {formatDate(lease.start_date)} -{" "}
- {formatDate(lease.end_date)}
- </p>
- </div>
- <div className="space-y-1">
- <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
- Monthly Rent
- </p>
- <p className="text-sm font-black text-foreground">
- {formatCurrency(lease.monthly_rent)}
- </p>
- </div>
- <div className="space-y-1">
- <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
- Security Deposit
- </p>
- <p className="text-sm font-black text-foreground">
- {formatCurrency(lease.security_deposit)}
- </p>
- </div>
- </div>
- </div>
+                <div className="grid grid-cols-1 gap-8 border-t border-border p-8 sm:grid-cols-3">
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                      Term Period
+                    </p>
+                    <p className="text-sm font-black text-foreground">
+                      {formatDate(lease.start_date)} -{" "}
+                      {formatDate(lease.end_date)}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                      Monthly Rent
+                    </p>
+                    <p className="text-sm font-black text-foreground">
+                      {formatCurrency(lease.monthly_rent)}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                      Security Deposit
+                    </p>
+                    <p className="text-sm font-black text-foreground">
+                      {formatCurrency(lease.security_deposit)}
+                    </p>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
 
- <div className="rounded-[2.5rem] neumorphic-panel p-8 ">
- <h3 className="mb-6 text-[10px] font-black uppercase tracking-[0.2em] text-primary">
- Lease Terms & Conditions
- </h3>
- <div className="prose prose-sm prose-invert max-w-none text-muted-foreground">
- {lease.terms ? (
- typeof lease.terms === "string" ? (
- <p className="whitespace-pre-wrap leading-relaxed">
- {lease.terms}
- </p>
- ) : (
- <pre className="overflow-x-auto rounded-xl neumorphic-inset p-4 text-xs">
- {JSON.stringify(lease.terms, null, 2)}
- </pre>
- )
- ) : (
- <p className="italic">Standard lease terms apply.</p>
- )}
- </div>
- </div>
- </div>
+          {leaseViewMode === "overview" && (
+            <div className="rounded-[2.5rem] neumorphic-panel p-8 ">
+              <h3 className="mb-6 text-[10px] font-black uppercase tracking-[0.2em] text-primary">
+                Lease Terms & Conditions
+              </h3>
+              <div className="prose prose-sm prose-invert max-w-none text-muted-foreground">
+                {lease.terms ? (
+                  typeof lease.terms === "string" ? (
+                    <p className="whitespace-pre-wrap leading-relaxed">
+                      {lease.terms}
+                    </p>
+                  ) : (
+                    <pre className="overflow-x-auto rounded-xl neumorphic-inset p-4 text-xs">
+                      {JSON.stringify(lease.terms, null, 2)}
+                    </pre>
+                  )
+                ) : (
+                  <p className="italic">Standard lease terms apply.</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Off-screen rendered document for 100% faithful PDF exports when in overview mode */}
+          {leaseViewMode === "overview" && formattedLeaseData && (
+            <div
+              style={{
+                position: "fixed",
+                left: "-9999px",
+                top: 0,
+                width: "850px",
+                pointerEvents: "none",
+                zIndex: -100,
+              }}
+              aria-hidden="true"
+            >
+              <div className="bg-white p-4">
+                <LeaseDocument
+                  containerId="official-lease-document-hidden"
+                  disableAnimation={true}
+                  {...formattedLeaseData}
+                />
+              </div>
+            </div>
+          )}
+        </div>
 
  <div className="space-y-8">
  <div className="rounded-[2.5rem] neumorphic-panel p-8 ">

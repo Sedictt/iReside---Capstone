@@ -1,5 +1,45 @@
 import { jsPDF } from "jspdf";
 
+/**
+ * Exports a rendered LeaseDocument DOM element to a crisp, high-resolution multi-page A4 PDF.
+ * Faithfully preserves 100% of the typography, layout, borders, signatures, and watermarks of LeaseDocument.
+ */
+export async function exportLeaseDocumentElementToPdf(
+  element: HTMLElement,
+  filename = "Lease_Agreement.pdf"
+): Promise<Blob> {
+  const html2canvas = (await import("html2canvas")).default;
+  const canvas = await html2canvas(element, {
+    scale: 2, // 2x for sharp print & retina rendering
+    useCORS: true,
+    logging: false,
+    backgroundColor: "#ffffff",
+    windowWidth: 1024,
+  });
+
+  const imgData = canvas.toDataURL("image/png");
+  const pdf = new jsPDF("p", "mm", "a4");
+  const imgWidth = 210; // A4 width in mm
+  const pageHeight = 297; // A4 height in mm
+  const imgHeight = (canvas.height * imgWidth) / canvas.width;
+  let heightLeft = imgHeight;
+  let position = 0;
+
+  // First page
+  pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+  heightLeft -= pageHeight;
+
+  // Subsequent pages if document spills onto multiple pages
+  while (heightLeft > 0) {
+    position = heightLeft - imgHeight;
+    pdf.addPage();
+    pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+  }
+
+  return pdf.output("blob");
+}
+
 interface LeasePdfData {
   id: string;
   startDate: string;
@@ -9,7 +49,9 @@ interface LeasePdfData {
   property: {
     name: string;
     address: string;
+    city?: string;
     contract_template?: any;
+    house_rules?: string[];
   };
   unit: {
     name: string;
@@ -48,8 +90,8 @@ export async function generateLeasePdf(data: LeasePdfData): Promise<Blob> {
   };
 
   const addHorizontalLine = (yPos: number) => {
-    doc.setDrawColor(230, 230, 230);
-    doc.setLineWidth(0.3);
+    doc.setDrawColor(20, 20, 20);
+    doc.setLineWidth(0.5);
     doc.line(margin, yPos, pageWidth - margin, yPos);
   };
 
@@ -61,25 +103,27 @@ export async function generateLeasePdf(data: LeasePdfData): Promise<Blob> {
   // 1. HEADER SECTION
   doc.setTextColor(10, 10, 10);
   doc.setFont("times", "bold");
-  doc.setFontSize(22);
+  doc.setFontSize(20);
   doc.text("RESIDENTIAL LEASE AGREEMENT", margin, y);
   
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(100, 100, 100);
-  const refId = (data.id || "").split('-')[0].toUpperCase();
-  doc.text(`REF: #${refId}`, pageWidth - margin, y - 5, { align: "right" });
-  doc.text(`DATE: ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).toUpperCase()}`, pageWidth - margin, y, { align: "right" });
-  
-  y += 8;
+  y += 6;
   doc.setFont("times", "italic");
-  doc.setFontSize(11);
+  doc.setFontSize(10);
   doc.setTextColor(80, 80, 80);
   doc.text("Official Binding Documentation", margin, y);
-  
-  y += 10;
+
+  // Reference and Date placed cleanly underneath title
+  const refId = (data.id || "").split('-')[0].toUpperCase();
+  doc.setFont("courier", "bold");
+  doc.setFontSize(8);
+  doc.setTextColor(120, 120, 120);
+  doc.text(`REF: #${refId}`, pageWidth - margin, y - 6, { align: "right" });
+  doc.setFont("courier", "normal");
+  doc.text(`DATE: ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).toUpperCase()}`, pageWidth - margin, y, { align: "right" });
+
+  y += 6;
   addHorizontalLine(y);
-  y += 15;
+  y += 12;
 
   // 2. PARTIES
   checkPageBreak(40);
