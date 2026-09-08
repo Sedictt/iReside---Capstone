@@ -64,7 +64,7 @@ function LeasesContent() {
  const [loading, setLoading] = useState(false);
  const [error, setError] = useState<string | null>(null);
  const [countersignLoading, setCountersignLoading] = useState(false);
- const [leaseViewMode, setLeaseViewMode] = useState<"overview" | "document">("overview");
+  const [leaseViewMode, setLeaseViewMode] = useState<"document" | "overview">("document");
 
  const formattedLeaseData: LeaseDocumentProps | null = useMemo(() => {
    if (!lease) return null;
@@ -151,33 +151,31 @@ function LeasesContent() {
     try {
       let pdfBlob: Blob | null = null;
 
-      // 1. If an official signed document URL exists and is reachable, use it
-      if (lease.signed_document_url) {
+      // 1. Primary: Generate pixel-perfect PDF directly from the official LeaseDocument element (visible or offscreen)
+      const element =
+        document.getElementById("official-lease-document-visible") ||
+        document.getElementById("official-lease-document-hidden");
+
+      if (element) {
+        try {
+          pdfBlob = await exportLeaseDocumentElementToPdf(
+            element,
+            `Lease_Agreement_${lease.id?.slice(0, 8) || "official"}.pdf`
+          );
+        } catch (elementErr) {
+          console.warn("[Export PDF] DOM export failed, attempting fallbacks:", elementErr);
+        }
+      }
+
+      // 2. Fallback: If DOM capture failed and a stored document exists, attempt download
+      if (!pdfBlob && lease.signed_document_url) {
         try {
           const response = await fetch(lease.signed_document_url);
           if (response.ok) {
             pdfBlob = await response.blob();
           }
         } catch (fetchErr) {
-          console.warn("[Export PDF] Failed to fetch stored signed doc, falling back to document export:", fetchErr);
-        }
-      }
-
-      // 2. Export the official LeaseDocument element (visible or hidden)
-      if (!pdfBlob) {
-        const element =
-          document.getElementById("official-lease-document-visible") ||
-          document.getElementById("official-lease-document-hidden");
-
-        if (element) {
-          try {
-            pdfBlob = await exportLeaseDocumentElementToPdf(
-              element,
-              `Lease_Agreement_${lease.id?.slice(0, 8) || "official"}.pdf`
-            );
-          } catch (elementErr) {
-            console.warn("[Export PDF] Failed to export DOM element, falling back to jsPDF generator:", elementErr);
-          }
+          console.warn("[Export PDF] Stored signed doc fetch failed:", fetchErr);
         }
       }
 
