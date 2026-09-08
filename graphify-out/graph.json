@@ -210,7 +210,7 @@
       "source_file": ".agents/skills/impeccable/scripts/command-metadata.json",
       "source_location": "L1",
       "id": "scripts_command_metadata",
-      "community": 924,
+      "community": 928,
       "norm_label": "command-metadata.json"
     },
     {
@@ -2190,7 +2190,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/cli/main.mjs",
       "source_location": "L1",
       "id": "cli_main",
-      "community": 71,
+      "community": 51,
       "norm_label": "main.mjs"
     },
     {
@@ -2199,7 +2199,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/cli/main.mjs",
       "source_location": "L19",
       "id": "cli_main_formatfindings",
-      "community": 71,
+      "community": 51,
       "norm_label": "formatfindings()"
     },
     {
@@ -2208,7 +2208,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/cli/main.mjs",
       "source_location": "L44",
       "id": "cli_main_handlestdin",
-      "community": 71,
+      "community": 51,
       "norm_label": "handlestdin()"
     },
     {
@@ -2226,7 +2226,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/cli/main.mjs",
       "source_location": "L76",
       "id": "cli_main_printusage",
-      "community": 71,
+      "community": 51,
       "norm_label": "printusage()"
     },
     {
@@ -2235,7 +2235,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/cli/main.mjs",
       "source_location": "L99",
       "id": "cli_main_detectcli",
-      "community": 71,
+      "community": 51,
       "norm_label": "detectcli()"
     },
     {
@@ -3486,7 +3486,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns.mjs",
       "source_location": "L1",
       "id": "detector_detect_antipatterns",
-      "community": 71,
+      "community": 51,
       "norm_label": "detect-antipatterns.mjs"
     },
     {
@@ -3495,7 +3495,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/engines/browser/detect-url.mjs",
       "source_location": "L1",
       "id": "browser_detect_url",
-      "community": 51,
+      "community": 861,
       "norm_label": "detect-url.mjs"
     },
     {
@@ -3504,7 +3504,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/engines/browser/detect-url.mjs",
       "source_location": "L10",
       "id": "browser_detect_url_runvisualcontrastfallback",
-      "community": 51,
+      "community": 861,
       "norm_label": "runvisualcontrastfallback()"
     },
     {
@@ -3513,7 +3513,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/engines/browser/detect-url.mjs",
       "source_location": "L87",
       "id": "browser_detect_url_detecturl",
-      "community": 51,
+      "community": 861,
       "norm_label": "detecturl()"
     },
     {
@@ -3522,7 +3522,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/engines/browser/detect-url.mjs",
       "source_location": "L219",
       "id": "browser_detect_url_createbrowserdetector",
-      "community": 71,
+      "community": 51,
       "norm_label": "createbrowserdetector()"
     },
     {
@@ -4125,7 +4125,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/engines/static-html/css-cascade.mjs",
       "source_location": "L826",
       "id": "static_html_css_cascade_buildstaticwindow",
-      "community": 51,
+      "community": 116,
       "norm_label": "buildstaticwindow()"
     },
     {
@@ -4134,7 +4134,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/engines/static-html/css-cascade.mjs",
       "source_location": "L833",
       "id": "static_html_css_cascade_collectstaticcsstext",
-      "community": 51,
+      "community": 169,
       "norm_label": "collectstaticcsstext()"
     },
     {
@@ -4143,7 +4143,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/engines/static-html/css-cascade.mjs",
       "source_location": "L858",
       "id": "static_html_css_cascade_buildstaticstylemap",
-      "community": 51,
+      "community": 861,
       "norm_label": "buildstaticstylemap()"
     },
     {
@@ -4260,7 +4260,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/node/file-system.mjs",
       "source_location": "L1",
       "id": "node_file_system",
-      "community": 71,
+      "community": 51,
       "norm_label": "file-system.mjs"
     },
     {
@@ -4269,7 +4269,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/node/file-system.mjs",
       "source_location": "L8",
       "id": "node_file_system_skip_dirs",
-      "community": 71,
+      "community": 51,
       "norm_label": "skip_dirs"
     },
     {
@@ -4278,7 +4278,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/node/file-system.mjs",
       "source_location": "L13",
       "id": "node_file_system_scannable_extensions",
-      "community": 71,
+      "community": 51,
       "norm_label": "scannable_extensions"
     },
     {
@@ -4287,7 +4287,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/node/file-system.mjs",
       "source_location": "L19",
       "id": "node_file_system_html_extensions",
-      "community": 71,
+      "community": 51,
       "norm_label": "html_extensions"
     },
     {
@@ -4296,7 +4296,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/node/file-system.mjs",
       "source_location": "L21",
       "id": "node_file_system_walkdir",
-      "community": 71,
+      "community": 51,
       "norm_label": "walkdir()"
     },
     {
@@ -4305,7 +4305,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/node/file-system.mjs",
       "source_location": "L39",
       "id": "node_file_system_resolveimport",
-      "community": 71,
+      "community": 51,
       "norm_label": "resolveimport()"
     },
     {
@@ -4314,7 +4314,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/node/file-system.mjs",
       "source_location": "L55",
       "id": "node_file_system_buildimportgraph",
-      "community": 71,
+      "community": 51,
       "norm_label": "buildimportgraph()"
     },
     {
@@ -4323,7 +4323,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/node/file-system.mjs",
       "source_location": "L95",
       "id": "node_file_system_framework_configs",
-      "community": 71,
+      "community": 51,
       "norm_label": "framework_configs"
     },
     {
@@ -4332,7 +4332,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/node/file-system.mjs",
       "source_location": "L119",
       "id": "node_file_system_detectframeworkconfig",
-      "community": 71,
+      "community": 51,
       "norm_label": "detectframeworkconfig()"
     },
     {
@@ -4341,7 +4341,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/node/file-system.mjs",
       "source_location": "L145",
       "id": "node_file_system_isportlistening",
-      "community": 71,
+      "community": 51,
       "norm_label": "isportlistening()"
     },
     {
@@ -4350,7 +4350,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/profile/profiler.mjs",
       "source_location": "L1",
       "id": "profile_profiler",
-      "community": 51,
+      "community": 861,
       "norm_label": "profiler.mjs"
     },
     {
@@ -4359,7 +4359,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/profile/profiler.mjs",
       "source_location": "L1",
       "id": "profile_profiler_profilenow",
-      "community": 51,
+      "community": 861,
       "norm_label": "profilenow()"
     },
     {
@@ -4368,7 +4368,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/profile/profiler.mjs",
       "source_location": "L7",
       "id": "profile_profiler_createdetectorprofile",
-      "community": 71,
+      "community": 51,
       "norm_label": "createdetectorprofile()"
     },
     {
@@ -4377,7 +4377,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/profile/profiler.mjs",
       "source_location": "L11",
       "id": "profile_profiler_recordprofileevent",
-      "community": 51,
+      "community": 861,
       "norm_label": "recordprofileevent()"
     },
     {
@@ -4386,7 +4386,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/profile/profiler.mjs",
       "source_location": "L36",
       "id": "profile_profiler_extractfindingids",
-      "community": 51,
+      "community": 861,
       "norm_label": "extractfindingids()"
     },
     {
@@ -4395,7 +4395,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/profile/profiler.mjs",
       "source_location": "L41",
       "id": "profile_profiler_profilefindings",
-      "community": 51,
+      "community": 861,
       "norm_label": "profilefindings()"
     },
     {
@@ -4404,7 +4404,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/profile/profiler.mjs",
       "source_location": "L54",
       "id": "profile_profiler_profilestep",
-      "community": 51,
+      "community": 861,
       "norm_label": "profilestep()"
     },
     {
@@ -4413,7 +4413,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/profile/profiler.mjs",
       "source_location": "L68",
       "id": "profile_profiler_profilefindingsasync",
-      "community": 51,
+      "community": 861,
       "norm_label": "profilefindingsasync()"
     },
     {
@@ -4422,7 +4422,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/profile/profiler.mjs",
       "source_location": "L81",
       "id": "profile_profiler_profilestepasync",
-      "community": 51,
+      "community": 861,
       "norm_label": "profilestepasync()"
     },
     {
@@ -4431,7 +4431,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/profile/profiler.mjs",
       "source_location": "L95",
       "id": "profile_profiler_percentile",
-      "community": 51,
+      "community": 861,
       "norm_label": "percentile()"
     },
     {
@@ -4440,7 +4440,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/profile/profiler.mjs",
       "source_location": "L104",
       "id": "profile_profiler_summarizedetectorprofile",
-      "community": 71,
+      "community": 51,
       "norm_label": "summarizedetectorprofile()"
     },
     {
@@ -4449,7 +4449,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/registry/antipatterns.mjs",
       "source_location": "L1",
       "id": "registry_antipatterns",
-      "community": 71,
+      "community": 51,
       "norm_label": "antipatterns.mjs"
     },
     {
@@ -4458,7 +4458,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/registry/antipatterns.mjs",
       "source_location": "L1",
       "id": "registry_antipatterns_antipatterns",
-      "community": 71,
+      "community": 51,
       "norm_label": "antipatterns"
     },
     {
@@ -4467,7 +4467,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/registry/antipatterns.mjs",
       "source_location": "L374",
       "id": "registry_antipatterns_rule_engine_support",
-      "community": 71,
+      "community": 51,
       "norm_label": "rule_engine_support"
     },
     {
@@ -4485,7 +4485,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/registry/antipatterns.mjs",
       "source_location": "L385",
       "id": "registry_antipatterns_getrulesforcategory",
-      "community": 71,
+      "community": 51,
       "norm_label": "getrulesforcategory()"
     },
     {
@@ -4494,7 +4494,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/registry/antipatterns.mjs",
       "source_location": "L389",
       "id": "registry_antipatterns_getruleenginesupport",
-      "community": 71,
+      "community": 51,
       "norm_label": "getruleenginesupport()"
     },
     {
@@ -4503,7 +4503,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/registry/antipatterns.mjs",
       "source_location": "L394",
       "id": "registry_antipatterns_gated_providers",
-      "community": 71,
+      "community": 51,
       "norm_label": "gated_providers"
     },
     {
@@ -4917,7 +4917,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
       "source_location": "L1561",
       "id": "rules_checks_checkpagequalityfromdoc",
-      "community": 23,
+      "community": 51,
       "norm_label": "checkpagequalityfromdoc()"
     },
     {
@@ -4926,7 +4926,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
       "source_location": "L1582",
       "id": "rules_checks_checkpagequalitydom",
-      "community": 23,
+      "community": 51,
       "norm_label": "checkpagequalitydom()"
     },
     {
@@ -5007,7 +5007,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
       "source_location": "L1783",
       "id": "rules_checks_checkelementglow",
-      "community": 23,
+      "community": 51,
       "norm_label": "checkelementglow()"
     },
     {
@@ -5043,7 +5043,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
       "source_location": "L1897",
       "id": "rules_checks_checkpagetypography",
-      "community": 71,
+      "community": 51,
       "norm_label": "checkpagetypography()"
     },
     {
@@ -5133,7 +5133,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
       "source_location": "L2142",
       "id": "rules_checks_shadowmaxblurpx",
-      "community": 203,
+      "community": 23,
       "norm_label": "shadowmaxblurpx()"
     },
     {
@@ -5142,7 +5142,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
       "source_location": "L2158",
       "id": "rules_checks_checkgptthinborderwideshadow",
-      "community": 203,
+      "community": 23,
       "norm_label": "checkgptthinborderwideshadow()"
     },
     {
@@ -5151,7 +5151,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
       "source_location": "L2168",
       "id": "rules_checks_borderwidthsfromstyle",
-      "community": 203,
+      "community": 23,
       "norm_label": "borderwidthsfromstyle()"
     },
     {
@@ -5160,7 +5160,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
       "source_location": "L2177",
       "id": "rules_checks_checkelementgptbordershadow",
-      "community": 203,
+      "community": 23,
       "norm_label": "checkelementgptbordershadow()"
     },
     {
@@ -5169,7 +5169,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
       "source_location": "L2181",
       "id": "rules_checks_checkelementgptbordershadowdom",
-      "community": 203,
+      "community": 23,
       "norm_label": "checkelementgptbordershadowdom()"
     },
     {
@@ -5952,7 +5952,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L150",
       "id": "scripts_live_browser_readscrolly",
-      "community": 138,
+      "community": 12,
       "norm_label": "readscrolly()"
     },
     {
@@ -5970,7 +5970,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L186",
       "id": "scripts_live_browser_own",
-      "community": 950,
+      "community": 12,
       "norm_label": "own()"
     },
     {
@@ -5979,7 +5979,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L190",
       "id": "scripts_live_browser_pickable",
-      "community": 950,
+      "community": 12,
       "norm_label": "pickable()"
     },
     {
@@ -6060,7 +6060,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L413",
       "id": "scripts_live_browser_showannotoverlay",
-      "community": 485,
+      "community": 392,
       "norm_label": "showannotoverlay()"
     },
     {
@@ -6078,7 +6078,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L431",
       "id": "scripts_live_browser_positionannotoverlay",
-      "community": 485,
+      "community": 392,
       "norm_label": "positionannotoverlay()"
     },
     {
@@ -6213,7 +6213,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L834",
       "id": "scripts_live_browser_stripmanualeditruntimestate",
-      "community": 157,
+      "community": 36,
       "norm_label": "stripmanualeditruntimestate()"
     },
     {
@@ -6303,7 +6303,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L1012",
       "id": "scripts_live_browser_positionbar",
-      "community": 138,
+      "community": 12,
       "norm_label": "positionbar()"
     },
     {
@@ -6366,7 +6366,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L1138",
       "id": "scripts_live_browser_layoutflowchildren",
-      "community": 950,
+      "community": 12,
       "norm_label": "layoutflowchildren()"
     },
     {
@@ -6429,7 +6429,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L1255",
       "id": "scripts_live_browser_cursorforinsertaxis",
-      "community": 950,
+      "community": 12,
       "norm_label": "cursorforinsertaxis()"
     },
     {
@@ -6447,7 +6447,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L1278",
       "id": "scripts_live_browser_placeholderwidthisimplicit",
-      "community": 485,
+      "community": 12,
       "norm_label": "placeholderwidthisimplicit()"
     },
     {
@@ -6465,7 +6465,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L1299",
       "id": "scripts_live_browser_materializeplaceholderwidth",
-      "community": 485,
+      "community": 12,
       "norm_label": "materializeplaceholderwidth()"
     },
     {
@@ -6501,7 +6501,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L1333",
       "id": "scripts_live_browser_cursorforplaceholderedge",
-      "community": 485,
+      "community": 392,
       "norm_label": "cursorforplaceholderedge()"
     },
     {
@@ -6519,7 +6519,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L1366",
       "id": "scripts_live_browser_ensureinsertline",
-      "community": 950,
+      "community": 12,
       "norm_label": "ensureinsertline()"
     },
     {
@@ -6528,7 +6528,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L1384",
       "id": "scripts_live_browser_showinsertline",
-      "community": 950,
+      "community": 12,
       "norm_label": "showinsertline()"
     },
     {
@@ -6537,7 +6537,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L1414",
       "id": "scripts_live_browser_hideinsertline",
-      "community": 950,
+      "community": 12,
       "norm_label": "hideinsertline()"
     },
     {
@@ -6546,7 +6546,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L1426",
       "id": "scripts_live_browser_syncpageinteractioncursor",
-      "community": 950,
+      "community": 12,
       "norm_label": "syncpageinteractioncursor()"
     },
     {
@@ -6555,7 +6555,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L1441",
       "id": "scripts_live_browser_resolvebaranchor",
-      "community": 138,
+      "community": 12,
       "norm_label": "resolvebaranchor()"
     },
     {
@@ -6591,7 +6591,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L1495",
       "id": "scripts_live_browser_findinsertanchorindom",
-      "community": 138,
+      "community": 12,
       "norm_label": "findinsertanchorindom()"
     },
     {
@@ -6600,7 +6600,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L1512",
       "id": "scripts_live_browser_isinsertgeneratingsession",
-      "community": 138,
+      "community": 12,
       "norm_label": "isinsertgeneratingsession()"
     },
     {
@@ -6609,7 +6609,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L1519",
       "id": "scripts_live_browser_ensureinsertplaceholder",
-      "community": 138,
+      "community": 12,
       "norm_label": "ensureinsertplaceholder()"
     },
     {
@@ -6618,7 +6618,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L1547",
       "id": "scripts_live_browser_applyplaceholderdimensions",
-      "community": 485,
+      "community": 12,
       "norm_label": "applyplaceholderdimensions()"
     },
     {
@@ -6627,7 +6627,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L1559",
       "id": "scripts_live_browser_buildplaceholderresizehandles",
-      "community": 485,
+      "community": 392,
       "norm_label": "buildplaceholderresizehandles()"
     },
     {
@@ -6636,7 +6636,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L1589",
       "id": "scripts_live_browser_syncplaceholderresizehandles",
-      "community": 485,
+      "community": 392,
       "norm_label": "syncplaceholderresizehandles()"
     },
     {
@@ -6645,7 +6645,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L1600",
       "id": "scripts_live_browser_startplaceholderedgeresize",
-      "community": 485,
+      "community": 12,
       "norm_label": "startplaceholderedgeresize()"
     },
     {
@@ -6924,7 +6924,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L2770",
       "id": "scripts_live_browser_unwrapmixedcontenttextnodes",
-      "community": 157,
+      "community": 36,
       "norm_label": "unwrapmixedcontenttextnodes()"
     },
     {
@@ -7626,7 +7626,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L4067",
       "id": "scripts_live_browser_setvariantshown",
-      "community": 138,
+      "community": 12,
       "norm_label": "setvariantshown()"
     },
     {
@@ -7635,7 +7635,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L4078",
       "id": "scripts_live_browser_showvariantindom",
-      "community": 138,
+      "community": 12,
       "norm_label": "showvariantindom()"
     },
     {
@@ -7662,7 +7662,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L4194",
       "id": "scripts_live_browser_updateselectedelement",
-      "community": 138,
+      "community": 12,
       "norm_label": "updateselectedelement()"
     },
     {
@@ -7680,7 +7680,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L4220",
       "id": "scripts_live_browser_pickvariantcontent",
-      "community": 138,
+      "community": 12,
       "norm_label": "pickvariantcontent()"
     },
     {
@@ -7779,7 +7779,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L4646",
       "id": "scripts_live_browser_queuecheckpoint",
-      "community": 138,
+      "community": 12,
       "norm_label": "queuecheckpoint()"
     },
     {
@@ -7788,7 +7788,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L4659",
       "id": "scripts_live_browser_handlemousemove",
-      "community": 950,
+      "community": 12,
       "norm_label": "handlemousemove()"
     },
     {
@@ -7995,7 +7995,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L5516",
       "id": "scripts_live_browser_positionshaderoverlay",
-      "community": 138,
+      "community": 12,
       "norm_label": "positionshaderoverlay()"
     },
     {
@@ -8049,7 +8049,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L5769",
       "id": "scripts_live_browser_loadsession",
-      "community": 138,
+      "community": 12,
       "norm_label": "loadsession()"
     },
     {
@@ -8058,7 +8058,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L5773",
       "id": "scripts_live_browser_clearsession",
-      "community": 138,
+      "community": 12,
       "norm_label": "clearsession()"
     },
     {
@@ -8076,7 +8076,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L5785",
       "id": "scripts_live_browser_issessionhandled",
-      "community": 138,
+      "community": 12,
       "norm_label": "issessionhandled()"
     },
     {
@@ -8085,7 +8085,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L5789",
       "id": "scripts_live_browser_clearhandled",
-      "community": 138,
+      "community": 12,
       "norm_label": "clearhandled()"
     },
     {
@@ -8112,7 +8112,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L5881",
       "id": "scripts_live_browser_resumesession",
-      "community": 138,
+      "community": 12,
       "norm_label": "resumesession()"
     },
     {
@@ -8211,7 +8211,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L6187",
       "id": "scripts_live_browser_pagehashosttextselection",
-      "community": 950,
+      "community": 12,
       "norm_label": "pagehashosttextselection()"
     },
     {
@@ -8247,7 +8247,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L6231",
       "id": "scripts_live_browser_notepagepointerdown",
-      "community": 950,
+      "community": 12,
       "norm_label": "notepagepointerdown()"
     },
     {
@@ -8760,7 +8760,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L8118",
       "id": "scripts_live_browser_renderdesignbody",
-      "community": 12,
+      "community": 240,
       "norm_label": "renderdesignbody()"
     },
     {
@@ -8769,7 +8769,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L8152",
       "id": "scripts_live_browser_msgdiv",
-      "community": 12,
+      "community": 240,
       "norm_label": "msgdiv()"
     },
     {
@@ -8778,7 +8778,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L8159",
       "id": "scripts_live_browser_renderstalehint",
-      "community": 12,
+      "community": 240,
       "norm_label": "renderstalehint()"
     },
     {
@@ -8787,7 +8787,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L8169",
       "id": "scripts_live_browser_renderparsedmdcta",
-      "community": 12,
+      "community": 240,
       "norm_label": "renderparsedmdcta()"
     },
     {
@@ -8796,7 +8796,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L8178",
       "id": "scripts_live_browser_renderdesignvisual",
-      "community": 12,
+      "community": 240,
       "norm_label": "renderdesignvisual()"
     },
     {
@@ -8805,7 +8805,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L8214",
       "id": "scripts_live_browser_buildcolormodels",
-      "community": 12,
+      "community": 240,
       "norm_label": "buildcolormodels()"
     },
     {
@@ -8814,7 +8814,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L8230",
       "id": "scripts_live_browser_buildtypographymodels",
-      "community": 12,
+      "community": 240,
       "norm_label": "buildtypographymodels()"
     },
     {
@@ -8823,7 +8823,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L8253",
       "id": "scripts_live_browser_buildradiimodels",
-      "community": 12,
+      "community": 240,
       "norm_label": "buildradiimodels()"
     },
     {
@@ -8859,7 +8859,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L8282",
       "id": "scripts_live_browser_synthesizenarrative",
-      "community": 12,
+      "community": 240,
       "norm_label": "synthesizenarrative()"
     },
     {
@@ -8868,7 +8868,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L8299",
       "id": "scripts_live_browser_rendercolortiles",
-      "community": 12,
+      "community": 240,
       "norm_label": "rendercolortiles()"
     },
     {
@@ -8877,7 +8877,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L8334",
       "id": "scripts_live_browser_synthesizeramp",
-      "community": 12,
+      "community": 240,
       "norm_label": "synthesizeramp()"
     },
     {
@@ -8886,7 +8886,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L8344",
       "id": "scripts_live_browser_rendertypetiles",
-      "community": 12,
+      "community": 240,
       "norm_label": "rendertypetiles()"
     },
     {
@@ -8895,7 +8895,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L8388",
       "id": "scripts_live_browser_fontstack",
-      "community": 12,
+      "community": 240,
       "norm_label": "fontstack()"
     },
     {
@@ -8904,7 +8904,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L8397",
       "id": "scripts_live_browser_renderradiitile",
-      "community": 12,
+      "community": 240,
       "norm_label": "renderradiitile()"
     },
     {
@@ -8913,7 +8913,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L8428",
       "id": "scripts_live_browser_rendershadowtiles",
-      "community": 12,
+      "community": 240,
       "norm_label": "rendershadowtiles()"
     },
     {
@@ -8922,7 +8922,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L8458",
       "id": "scripts_live_browser_rendercomponenttiles",
-      "community": 12,
+      "community": 240,
       "norm_label": "rendercomponenttiles()"
     },
     {
@@ -8931,7 +8931,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L8515",
       "id": "scripts_live_browser_groupbykind",
-      "community": 12,
+      "community": 240,
       "norm_label": "groupbykind()"
     },
     {
@@ -8940,7 +8940,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L8528",
       "id": "scripts_live_browser_titleforkind",
-      "community": 12,
+      "community": 240,
       "norm_label": "titleforkind()"
     },
     {
@@ -8949,7 +8949,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L8542",
       "id": "scripts_live_browser_buildcollapsible",
-      "community": 12,
+      "community": 240,
       "norm_label": "buildcollapsible()"
     },
     {
@@ -8958,7 +8958,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L8567",
       "id": "scripts_live_browser_renderrulescollapsible",
-      "community": 12,
+      "community": 240,
       "norm_label": "renderrulescollapsible()"
     },
     {
@@ -8967,7 +8967,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L8585",
       "id": "scripts_live_browser_renderdosdontscollapsible",
-      "community": 12,
+      "community": 240,
       "norm_label": "renderdosdontscollapsible()"
     },
     {
@@ -8976,7 +8976,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L8606",
       "id": "scripts_live_browser_renderoverviewcollapsible",
-      "community": 12,
+      "community": 240,
       "norm_label": "renderoverviewcollapsible()"
     },
     {
@@ -8985,7 +8985,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L8630",
       "id": "scripts_live_browser_csssafe",
-      "community": 12,
+      "community": 240,
       "norm_label": "csssafe()"
     },
     {
@@ -9003,7 +9003,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L8650",
       "id": "scripts_live_browser_renderrawtab",
-      "community": 12,
+      "community": 240,
       "norm_label": "renderrawtab()"
     },
     {
@@ -9012,7 +9012,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L8657",
       "id": "scripts_live_browser_rendermarkdown",
-      "community": 12,
+      "community": 240,
       "norm_label": "rendermarkdown()"
     },
     {
@@ -9030,7 +9030,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L8746",
       "id": "scripts_live_browser_inlinemd",
-      "community": 12,
+      "community": 240,
       "norm_label": "inlinemd()"
     },
     {
@@ -9039,7 +9039,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L8760",
       "id": "scripts_live_browser_highlightbold",
-      "community": 12,
+      "community": 240,
       "norm_label": "highlightbold()"
     },
     {
@@ -9048,7 +9048,7 @@
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L8764",
       "id": "scripts_live_browser_escapehtml",
-      "community": 12,
+      "community": 240,
       "norm_label": "escapehtml()"
     },
     {
@@ -16093,7 +16093,7 @@
       "source_file": "docs/database-inventory/inventory.json",
       "source_location": "L110",
       "id": "database_inventory_inventory_functions_update_updated_at_column",
-      "community": 297,
+      "community": 466,
       "norm_label": "update_updated_at_column"
     },
     {
@@ -16102,7 +16102,7 @@
       "source_file": "docs/database-inventory/inventory.json",
       "source_location": "L111",
       "id": "database_inventory_inventory_update_updated_at_column_tablereferences",
-      "community": 297,
+      "community": 466,
       "norm_label": "tablereferences"
     },
     {
@@ -16111,7 +16111,7 @@
       "source_file": "docs/database-inventory/inventory.json",
       "source_location": "L112",
       "id": "database_inventory_inventory_update_updated_at_column_grants",
-      "community": 297,
+      "community": 466,
       "norm_label": "grants"
     },
     {
@@ -16120,7 +16120,7 @@
       "source_file": "docs/database-inventory/inventory.json",
       "source_location": "L119",
       "id": "database_inventory_inventory_functions_validate_lease_status_transition",
-      "community": 952,
+      "community": 297,
       "norm_label": "validate_lease_status_transition"
     },
     {
@@ -16129,7 +16129,7 @@
       "source_file": "docs/database-inventory/inventory.json",
       "source_location": "L120",
       "id": "database_inventory_inventory_validate_lease_status_transition_tablereferences",
-      "community": 952,
+      "community": 297,
       "norm_label": "tablereferences"
     },
     {
@@ -16138,7 +16138,7 @@
       "source_file": "docs/database-inventory/inventory.json",
       "source_location": "L121",
       "id": "database_inventory_inventory_validate_lease_status_transition_grants",
-      "community": 952,
+      "community": 297,
       "norm_label": "grants"
     },
     {
@@ -20467,7 +20467,7 @@
       "source_file": "opencode.json",
       "source_location": "L1",
       "id": "opencode",
-      "community": 538,
+      "community": 465,
       "norm_label": "opencode.json"
     },
     {
@@ -20476,7 +20476,7 @@
       "source_file": "opencode.json",
       "source_location": "L2",
       "id": "opencode_schema",
-      "community": 538,
+      "community": 465,
       "norm_label": "$schema"
     },
     {
@@ -20485,7 +20485,7 @@
       "source_file": "opencode.json",
       "source_location": "L3",
       "id": "opencode_model",
-      "community": 538,
+      "community": 465,
       "norm_label": "model"
     },
     {
@@ -20566,7 +20566,7 @@
       "source_file": "opencode.json",
       "source_location": "L17",
       "id": "opencode_mcp",
-      "community": 869,
+      "community": 866,
       "norm_label": "mcp"
     },
     {
@@ -21007,7 +21007,7 @@
       "source_file": "opencode.json",
       "source_location": "L80",
       "id": "opencode_plugin",
-      "community": 538,
+      "community": 465,
       "norm_label": "plugin"
     },
     {
@@ -32656,7 +32656,7 @@
       "source_file": "src/app/landlord/documents/page.tsx",
       "source_location": "L1",
       "id": "documents_page",
-      "community": 107,
+      "community": 164,
       "norm_label": "page.tsx"
     },
     {
@@ -32665,7 +32665,7 @@
       "source_file": "src/app/landlord/documents/page.tsx",
       "source_location": "L31",
       "id": "documents_page_document",
-      "community": 107,
+      "community": 164,
       "norm_label": "document"
     },
     {
@@ -32674,7 +32674,7 @@
       "source_file": "src/app/landlord/documents/page.tsx",
       "source_location": "L45",
       "id": "documents_page_landlordprofile",
-      "community": 107,
+      "community": 164,
       "norm_label": "landlordprofile"
     },
     {
@@ -32683,7 +32683,7 @@
       "source_file": "src/app/landlord/documents/page.tsx",
       "source_location": "L52",
       "id": "documents_page_documentspage",
-      "community": 107,
+      "community": 164,
       "norm_label": "documentspage()"
     },
     {
@@ -32710,7 +32710,7 @@
       "source_file": "src/app/landlord/invoices/page.tsx",
       "source_location": "L1",
       "id": "invoices_page",
-      "community": 134,
+      "community": 20,
       "norm_label": "page.tsx"
     },
     {
@@ -32719,7 +32719,7 @@
       "source_file": "src/app/landlord/invoices/page.tsx",
       "source_location": "L18",
       "id": "invoices_page_expenseitem",
-      "community": 134,
+      "community": 20,
       "norm_label": "expenseitem"
     },
     {
@@ -32728,7 +32728,7 @@
       "source_file": "src/app/landlord/invoices/page.tsx",
       "source_location": "L26",
       "id": "invoices_page_invoicespage",
-      "community": 134,
+      "community": 20,
       "norm_label": "invoicespage()"
     },
     {
@@ -32737,7 +32737,7 @@
       "source_file": "src/app/landlord/invoices/page.tsx",
       "source_location": "L660",
       "id": "invoices_page_herostat",
-      "community": 134,
+      "community": 20,
       "norm_label": "herostat()"
     },
     {
@@ -32746,7 +32746,7 @@
       "source_file": "src/app/landlord/invoices/page.tsx",
       "source_location": "L675",
       "id": "invoices_page_ledgermetric",
-      "community": 134,
+      "community": 20,
       "norm_label": "ledgermetric()"
     },
     {
@@ -33088,7 +33088,7 @@
       "source_file": "src/app/landlord/properties/[id]/environment/page.tsx",
       "source_location": "L1",
       "id": "environment_page",
-      "community": 20,
+      "community": 134,
       "norm_label": "page.tsx"
     },
     {
@@ -33097,7 +33097,7 @@
       "source_file": "src/app/landlord/properties/[id]/environment/page.tsx",
       "source_location": "L32",
       "id": "environment_page_environmentmode",
-      "community": 20,
+      "community": 134,
       "norm_label": "environmentmode"
     },
     {
@@ -33106,7 +33106,7 @@
       "source_file": "src/app/landlord/properties/[id]/environment/page.tsx",
       "source_location": "L34",
       "id": "environment_page_propertypolicy",
-      "community": 20,
+      "community": 134,
       "norm_label": "propertypolicy"
     },
     {
@@ -33115,7 +33115,7 @@
       "source_file": "src/app/landlord/properties/[id]/environment/page.tsx",
       "source_location": "L54",
       "id": "environment_page_genderrestrictionmode",
-      "community": 20,
+      "community": 134,
       "norm_label": "genderrestrictionmode"
     },
     {
@@ -33124,7 +33124,7 @@
       "source_file": "src/app/landlord/properties/[id]/environment/page.tsx",
       "source_location": "L55",
       "id": "environment_page_utilitypolicymode",
-      "community": 20,
+      "community": 134,
       "norm_label": "utilitypolicymode"
     },
     {
@@ -33133,7 +33133,7 @@
       "source_file": "src/app/landlord/properties/[id]/environment/page.tsx",
       "source_location": "L57",
       "id": "environment_page_gender_options",
-      "community": 20,
+      "community": 134,
       "norm_label": "gender_options"
     },
     {
@@ -33142,7 +33142,7 @@
       "source_file": "src/app/landlord/properties/[id]/environment/page.tsx",
       "source_location": "L64",
       "id": "environment_page_utility_options",
-      "community": 20,
+      "community": 134,
       "norm_label": "utility_options"
     },
     {
@@ -33151,7 +33151,7 @@
       "source_file": "src/app/landlord/properties/[id]/environment/page.tsx",
       "source_location": "L70",
       "id": "environment_page_utility_guide_details",
-      "community": 20,
+      "community": 134,
       "norm_label": "utility_guide_details"
     },
     {
@@ -33160,7 +33160,7 @@
       "source_file": "src/app/landlord/properties/[id]/environment/page.tsx",
       "source_location": "L108",
       "id": "environment_page_dorm_defaults",
-      "community": 20,
+      "community": 134,
       "norm_label": "dorm_defaults"
     },
     {
@@ -33169,7 +33169,7 @@
       "source_file": "src/app/landlord/properties/[id]/environment/page.tsx",
       "source_location": "L120",
       "id": "environment_page_boarding_defaults",
-      "community": 20,
+      "community": 134,
       "norm_label": "boarding_defaults"
     },
     {
@@ -33178,7 +33178,7 @@
       "source_file": "src/app/landlord/properties/[id]/environment/page.tsx",
       "source_location": "L132",
       "id": "environment_page_apartment_defaults",
-      "community": 20,
+      "community": 134,
       "norm_label": "apartment_defaults"
     },
     {
@@ -33187,7 +33187,7 @@
       "source_file": "src/app/landlord/properties/[id]/environment/page.tsx",
       "source_location": "L144",
       "id": "environment_page_getdefaultsformode",
-      "community": 20,
+      "community": 134,
       "norm_label": "getdefaultsformode()"
     },
     {
@@ -33196,7 +33196,7 @@
       "source_file": "src/app/landlord/properties/[id]/environment/page.tsx",
       "source_location": "L155",
       "id": "environment_page_mode_cards",
-      "community": 20,
+      "community": 134,
       "norm_label": "mode_cards"
     },
     {
@@ -33205,7 +33205,7 @@
       "source_file": "src/app/landlord/properties/[id]/environment/page.tsx",
       "source_location": "L189",
       "id": "environment_page_propertyenvironmentpage",
-      "community": 20,
+      "community": 134,
       "norm_label": "propertyenvironmentpage()"
     },
     {
@@ -33286,7 +33286,7 @@
       "source_file": "src/app/landlord/properties/page.tsx",
       "source_location": "L1",
       "id": "properties_page",
-      "community": 20,
+      "community": 115,
       "norm_label": "page.tsx"
     },
     {
@@ -33295,7 +33295,7 @@
       "source_file": "src/app/landlord/properties/page.tsx",
       "source_location": "L5",
       "id": "properties_page_propertiespage",
-      "community": 20,
+      "community": 115,
       "norm_label": "propertiespage()"
     },
     {
@@ -33880,7 +33880,7 @@
       "source_file": "src/app/signup/page.tsx",
       "source_location": "L1",
       "id": "signup_page",
-      "community": 13,
+      "community": 203,
       "norm_label": "page.tsx"
     },
     {
@@ -33889,7 +33889,7 @@
       "source_file": "src/app/signup/page.tsx",
       "source_location": "L13",
       "id": "signup_page_signuppage",
-      "community": 13,
+      "community": 203,
       "norm_label": "signuppage()"
     },
     {
@@ -34096,7 +34096,7 @@
       "source_file": "src/app/tenant/applications/page.tsx",
       "source_location": "L1",
       "id": "src_app_tenant_applications_page_tsx_applications_page",
-      "community": 3,
+      "community": 111,
       "norm_label": "page.tsx"
     },
     {
@@ -34105,7 +34105,7 @@
       "source_file": "src/app/tenant/applications/page.tsx",
       "source_location": "L29",
       "id": "applications_page_properties",
-      "community": 3,
+      "community": 111,
       "norm_label": "properties"
     },
     {
@@ -34114,7 +34114,7 @@
       "source_file": "src/app/tenant/applications/page.tsx",
       "source_location": "L37",
       "id": "applications_page_mockapplications",
-      "community": 3,
+      "community": 111,
       "norm_label": "mockapplications"
     },
     {
@@ -34123,7 +34123,7 @@
       "source_file": "src/app/tenant/applications/page.tsx",
       "source_location": "L73",
       "id": "applications_page_recentactivity",
-      "community": 3,
+      "community": 111,
       "norm_label": "recentactivity"
     },
     {
@@ -34132,7 +34132,7 @@
       "source_file": "src/app/tenant/applications/page.tsx",
       "source_location": "L79",
       "id": "applications_page_myapplicationspage",
-      "community": 3,
+      "community": 111,
       "norm_label": "myapplicationspage()"
     },
     {
@@ -34267,7 +34267,7 @@
       "source_file": "src/app/tenant/dashboard/page.tsx",
       "source_location": "L1",
       "id": "src_app_tenant_dashboard_page_tsx_dashboard_page",
-      "community": 164,
+      "community": 134,
       "norm_label": "page.tsx"
     },
     {
@@ -34276,7 +34276,7 @@
       "source_file": "src/app/tenant/dashboard/page.tsx",
       "source_location": "L35",
       "id": "dashboard_page_dashboarddata",
-      "community": 164,
+      "community": 134,
       "norm_label": "dashboarddata"
     },
     {
@@ -34285,7 +34285,7 @@
       "source_file": "src/app/tenant/dashboard/page.tsx",
       "source_location": "L114",
       "id": "dashboard_page_icon_map",
-      "community": 164,
+      "community": 134,
       "norm_label": "icon_map"
     },
     {
@@ -34294,7 +34294,7 @@
       "source_file": "src/app/tenant/dashboard/page.tsx",
       "source_location": "L122",
       "id": "dashboard_page_default_quick_actions",
-      "community": 164,
+      "community": 134,
       "norm_label": "default_quick_actions"
     },
     {
@@ -34303,7 +34303,7 @@
       "source_file": "src/app/tenant/dashboard/page.tsx",
       "source_location": "L128",
       "id": "dashboard_page_formatcurrency",
-      "community": 164,
+      "community": 134,
       "norm_label": "formatcurrency()"
     },
     {
@@ -34312,7 +34312,7 @@
       "source_file": "src/app/tenant/dashboard/page.tsx",
       "source_location": "L136",
       "id": "dashboard_page_formatcurrencyparts",
-      "community": 164,
+      "community": 134,
       "norm_label": "formatcurrencyparts()"
     },
     {
@@ -34321,7 +34321,7 @@
       "source_file": "src/app/tenant/dashboard/page.tsx",
       "source_location": "L145",
       "id": "dashboard_page_formatduedate",
-      "community": 164,
+      "community": 134,
       "norm_label": "formatduedate()"
     },
     {
@@ -34330,7 +34330,7 @@
       "source_file": "src/app/tenant/dashboard/page.tsx",
       "source_location": "L161",
       "id": "dashboard_page_buildinvoicelabel",
-      "community": 164,
+      "community": 134,
       "norm_label": "buildinvoicelabel()"
     },
     {
@@ -34339,7 +34339,7 @@
       "source_file": "src/app/tenant/dashboard/page.tsx",
       "source_location": "L169",
       "id": "dashboard_page_buildoverduelabel",
-      "community": 164,
+      "community": 134,
       "norm_label": "buildoverduelabel()"
     },
     {
@@ -34348,7 +34348,7 @@
       "source_file": "src/app/tenant/dashboard/page.tsx",
       "source_location": "L177",
       "id": "dashboard_page_tenantdashboard",
-      "community": 164,
+      "community": 134,
       "norm_label": "tenantdashboard()"
     },
     {
@@ -35590,7 +35590,7 @@
       "source_file": "src/components/deprecated/LandlordSignup.deprecated.tsx",
       "source_location": "L1",
       "id": "deprecated_landlordsignup_deprecated",
-      "community": 13,
+      "community": 203,
       "norm_label": "landlordsignup.deprecated.tsx"
     },
     {
@@ -35599,7 +35599,7 @@
       "source_file": "src/components/deprecated/LandlordSignup.deprecated.tsx",
       "source_location": "L18",
       "id": "deprecated_landlordsignup_deprecated_deprecatedlandlordsignup",
-      "community": 13,
+      "community": 203,
       "norm_label": "deprecatedlandlordsignup()"
     },
     {
@@ -35932,7 +35932,7 @@
       "source_file": "src/components/landlord/EditableBio.tsx",
       "source_location": "L1",
       "id": "landlord_editablebio",
-      "community": 13,
+      "community": 1,
       "norm_label": "editablebio.tsx"
     },
     {
@@ -35941,7 +35941,7 @@
       "source_file": "src/components/landlord/EditableBio.tsx",
       "source_location": "L8",
       "id": "landlord_editablebio_editablebio",
-      "community": 13,
+      "community": 1,
       "norm_label": "editablebio()"
     },
     {
@@ -35995,7 +35995,7 @@
       "source_file": "src/components/landlord/LandlordProfile.tsx",
       "source_location": "L1",
       "id": "landlord_landlordprofile",
-      "community": 3,
+      "community": 98,
       "norm_label": "landlordprofile.tsx"
     },
     {
@@ -36004,7 +36004,7 @@
       "source_file": "src/components/landlord/LandlordProfile.tsx",
       "source_location": "L31",
       "id": "landlord_landlordprofile_section",
-      "community": 3,
+      "community": 98,
       "norm_label": "section"
     },
     {
@@ -36013,7 +36013,7 @@
       "source_file": "src/components/landlord/LandlordProfile.tsx",
       "source_location": "L33",
       "id": "landlord_landlordprofile_sidebar_items",
-      "community": 3,
+      "community": 98,
       "norm_label": "sidebar_items"
     },
     {
@@ -36022,7 +36022,7 @@
       "source_file": "src/components/landlord/LandlordProfile.tsx",
       "source_location": "L44",
       "id": "landlord_landlordprofile_landlordprofile",
-      "community": 3,
+      "community": 98,
       "norm_label": "landlordprofile()"
     },
     {
@@ -36137,7 +36137,7 @@
       "label": "CachedLandlordSettings",
       "file_type": "code",
       "source_file": "src/components/landlord/LandlordSettings.tsx",
-      "source_location": "L233",
+      "source_location": "L235",
       "id": "landlord_landlordsettings_cachedlandlordsettings",
       "community": 64,
       "norm_label": "cachedlandlordsettings"
@@ -36146,7 +36146,7 @@
       "label": "getCachedSettings()",
       "file_type": "code",
       "source_file": "src/components/landlord/LandlordSettings.tsx",
-      "source_location": "L275",
+      "source_location": "L277",
       "id": "landlord_landlordsettings_getcachedsettings",
       "community": 64,
       "norm_label": "getcachedsettings()"
@@ -36155,7 +36155,7 @@
       "label": "saveCachedSettings()",
       "file_type": "code",
       "source_file": "src/components/landlord/LandlordSettings.tsx",
-      "source_location": "L287",
+      "source_location": "L289",
       "id": "landlord_landlordsettings_savecachedsettings",
       "community": 64,
       "norm_label": "savecachedsettings()"
@@ -36164,7 +36164,7 @@
       "label": "LandlordSettings()",
       "file_type": "code",
       "source_file": "src/components/landlord/LandlordSettings.tsx",
-      "source_location": "L302",
+      "source_location": "L304",
       "id": "landlord_landlordsettings_landlordsettings",
       "community": 64,
       "norm_label": "landlordsettings()"
@@ -36202,7 +36202,7 @@
       "source_file": "src/components/landlord/PropertyEnvironmentBanner.tsx",
       "source_location": "L1",
       "id": "landlord_propertyenvironmentbanner",
-      "community": 20,
+      "community": 115,
       "norm_label": "propertyenvironmentbanner.tsx"
     },
     {
@@ -36211,7 +36211,7 @@
       "source_file": "src/components/landlord/PropertyEnvironmentBanner.tsx",
       "source_location": "L5",
       "id": "landlord_propertyenvironmentbanner_environmentmode",
-      "community": 20,
+      "community": 115,
       "norm_label": "environmentmode"
     },
     {
@@ -36220,7 +36220,7 @@
       "source_file": "src/components/landlord/PropertyEnvironmentBanner.tsx",
       "source_location": "L7",
       "id": "landlord_propertyenvironmentbanner_propertyenvironmentbannerprops",
-      "community": 20,
+      "community": 115,
       "norm_label": "propertyenvironmentbannerprops"
     },
     {
@@ -36229,7 +36229,7 @@
       "source_file": "src/components/landlord/PropertyEnvironmentBanner.tsx",
       "source_location": "L14",
       "id": "landlord_propertyenvironmentbanner_propertyenvironmentbanner",
-      "community": 20,
+      "community": 115,
       "norm_label": "propertyenvironmentbanner()"
     },
     {
@@ -36274,7 +36274,7 @@
       "source_file": "src/components/landlord/UnitShowcaseModal.tsx",
       "source_location": "L1",
       "id": "landlord_unitshowcasemodal",
-      "community": 3,
+      "community": 98,
       "norm_label": "unitshowcasemodal.tsx"
     },
     {
@@ -36283,7 +36283,7 @@
       "source_file": "src/components/landlord/UnitShowcaseModal.tsx",
       "source_location": "L21",
       "id": "landlord_unitshowcasemodal_unitshowcasedata",
-      "community": 3,
+      "community": 98,
       "norm_label": "unitshowcasedata"
     },
     {
@@ -36292,7 +36292,7 @@
       "source_file": "src/components/landlord/UnitShowcaseModal.tsx",
       "source_location": "L41",
       "id": "landlord_unitshowcasemodal_unitshowcasemodalprops",
-      "community": 3,
+      "community": 98,
       "norm_label": "unitshowcasemodalprops"
     },
     {
@@ -36301,7 +36301,7 @@
       "source_file": "src/components/landlord/UnitShowcaseModal.tsx",
       "source_location": "L51",
       "id": "landlord_unitshowcasemodal_unitshowcasemodal",
-      "community": 3,
+      "community": 98,
       "norm_label": "unitshowcasemodal()"
     },
     {
@@ -37066,7 +37066,7 @@
       "source_file": "src/components/landlord/dashboard/ActionRequired.tsx",
       "source_location": "L1",
       "id": "dashboard_actionrequired",
-      "community": 20,
+      "community": 107,
       "norm_label": "actionrequired.tsx"
     },
     {
@@ -37075,7 +37075,7 @@
       "source_file": "src/components/landlord/dashboard/ActionRequired.tsx",
       "source_location": "L26",
       "id": "dashboard_actionrequired_maintenancerequestitem",
-      "community": 20,
+      "community": 107,
       "norm_label": "maintenancerequestitem"
     },
     {
@@ -37084,7 +37084,7 @@
       "source_file": "src/components/landlord/dashboard/ActionRequired.tsx",
       "source_location": "L37",
       "id": "dashboard_actionrequired_tenantitem",
-      "community": 20,
+      "community": 107,
       "norm_label": "tenantitem"
     },
     {
@@ -37093,7 +37093,7 @@
       "source_file": "src/components/landlord/dashboard/ActionRequired.tsx",
       "source_location": "L46",
       "id": "dashboard_actionrequired_applicationitem",
-      "community": 20,
+      "community": 107,
       "norm_label": "applicationitem"
     },
     {
@@ -37102,7 +37102,7 @@
       "source_file": "src/components/landlord/dashboard/ActionRequired.tsx",
       "source_location": "L58",
       "id": "dashboard_actionrequired_actioncategoryfilter",
-      "community": 20,
+      "community": 107,
       "norm_label": "actioncategoryfilter"
     },
     {
@@ -37111,7 +37111,7 @@
       "source_file": "src/components/landlord/dashboard/ActionRequired.tsx",
       "source_location": "L60",
       "id": "dashboard_actionrequired_actionitem",
-      "community": 20,
+      "community": 107,
       "norm_label": "actionitem"
     },
     {
@@ -37120,7 +37120,7 @@
       "source_file": "src/components/landlord/dashboard/ActionRequired.tsx",
       "source_location": "L74",
       "id": "dashboard_actionrequired_toneclasses",
-      "community": 20,
+      "community": 107,
       "norm_label": "toneclasses"
     },
     {
@@ -37129,7 +37129,7 @@
       "source_file": "src/components/landlord/dashboard/ActionRequired.tsx",
       "source_location": "L80",
       "id": "dashboard_actionrequired_kindiconmap",
-      "community": 20,
+      "community": 107,
       "norm_label": "kindiconmap"
     },
     {
@@ -37138,7 +37138,7 @@
       "source_file": "src/components/landlord/dashboard/ActionRequired.tsx",
       "source_location": "L87",
       "id": "dashboard_actionrequired_formatdatelabel",
-      "community": 20,
+      "community": 107,
       "norm_label": "formatdatelabel()"
     },
     {
@@ -37147,7 +37147,7 @@
       "source_file": "src/components/landlord/dashboard/ActionRequired.tsx",
       "source_location": "L96",
       "id": "dashboard_actionrequired_actionfilteredemptystate",
-      "community": 20,
+      "community": 107,
       "norm_label": "actionfilteredemptystate()"
     },
     {
@@ -37156,7 +37156,7 @@
       "source_file": "src/components/landlord/dashboard/ActionRequired.tsx",
       "source_location": "L123",
       "id": "dashboard_actionrequired_actionitemcard",
-      "community": 20,
+      "community": 107,
       "norm_label": "actionitemcard()"
     },
     {
@@ -37165,7 +37165,7 @@
       "source_file": "src/components/landlord/dashboard/ActionRequired.tsx",
       "source_location": "L178",
       "id": "dashboard_actionrequired_actionemptystate",
-      "community": 20,
+      "community": 107,
       "norm_label": "actionemptystate()"
     },
     {
@@ -37174,7 +37174,7 @@
       "source_file": "src/components/landlord/dashboard/ActionRequired.tsx",
       "source_location": "L196",
       "id": "dashboard_actionrequired_actionrequiredstate",
-      "community": 20,
+      "community": 107,
       "norm_label": "actionrequiredstate"
     },
     {
@@ -37183,7 +37183,7 @@
       "source_file": "src/components/landlord/dashboard/ActionRequired.tsx",
       "source_location": "L206",
       "id": "dashboard_actionrequired_actionrequiredaction",
-      "community": 20,
+      "community": 107,
       "norm_label": "actionrequiredaction"
     },
     {
@@ -37192,7 +37192,7 @@
       "source_file": "src/components/landlord/dashboard/ActionRequired.tsx",
       "source_location": "L215",
       "id": "dashboard_actionrequired_actionrequiredreducer",
-      "community": 20,
+      "community": 107,
       "norm_label": "actionrequiredreducer()"
     },
     {
@@ -37336,7 +37336,7 @@
       "source_file": "src/components/landlord/dashboard/CommandCenter.tsx",
       "source_location": "L1",
       "id": "dashboard_commandcenter",
-      "community": 134,
+      "community": 20,
       "norm_label": "commandcenter.tsx"
     },
     {
@@ -37345,7 +37345,7 @@
       "source_file": "src/components/landlord/dashboard/CommandCenter.tsx",
       "source_location": "L24",
       "id": "dashboard_commandcenter_commandcenterprops",
-      "community": 134,
+      "community": 20,
       "norm_label": "commandcenterprops"
     },
     {
@@ -37354,7 +37354,7 @@
       "source_file": "src/components/landlord/dashboard/CommandCenter.tsx",
       "source_location": "L35",
       "id": "dashboard_commandcenter_statcard",
-      "community": 134,
+      "community": 20,
       "norm_label": "statcard"
     },
     {
@@ -37363,7 +37363,7 @@
       "source_file": "src/components/landlord/dashboard/CommandCenter.tsx",
       "source_location": "L45",
       "id": "dashboard_commandcenter_nextmove",
-      "community": 134,
+      "community": 20,
       "norm_label": "nextmove"
     },
     {
@@ -37372,7 +37372,7 @@
       "source_file": "src/components/landlord/dashboard/CommandCenter.tsx",
       "source_location": "L55",
       "id": "dashboard_commandcenter_urgencystyles",
-      "community": 134,
+      "community": 20,
       "norm_label": "urgencystyles"
     },
     {
@@ -37381,7 +37381,7 @@
       "source_file": "src/components/landlord/dashboard/CommandCenter.tsx",
       "source_location": "L61",
       "id": "dashboard_commandcenter_commandcenter",
-      "community": 134,
+      "community": 20,
       "norm_label": "commandcenter()"
     },
     {
@@ -38506,7 +38506,7 @@
       "source_file": "src/components/landlord/invoices/InvoiceModal.tsx",
       "source_location": "L1",
       "id": "invoices_invoicemodal",
-      "community": 134,
+      "community": 20,
       "norm_label": "invoicemodal.tsx"
     },
     {
@@ -38515,7 +38515,7 @@
       "source_file": "src/components/landlord/invoices/InvoiceModal.tsx",
       "source_location": "L21",
       "id": "invoices_invoicemodal_invoicedetail",
-      "community": 134,
+      "community": 20,
       "norm_label": "invoicedetail"
     },
     {
@@ -38533,7 +38533,7 @@
       "source_file": "src/components/landlord/invoices/InvoiceModal.tsx",
       "source_location": "L947",
       "id": "invoices_invoicemodal_f2factioncenter",
-      "community": 134,
+      "community": 20,
       "norm_label": "f2factioncenter()"
     },
     {
@@ -38542,7 +38542,7 @@
       "source_file": "src/components/landlord/invoices/InvoiceModal.tsx",
       "source_location": "L1018",
       "id": "invoices_invoicemodal_wizardflow",
-      "community": 134,
+      "community": 20,
       "norm_label": "wizardflow()"
     },
     {
@@ -38551,7 +38551,7 @@
       "source_file": "src/components/landlord/invoices/InvoiceModal.tsx",
       "source_location": "L1315",
       "id": "invoices_invoicemodal_diagnosiscard",
-      "community": 134,
+      "community": 20,
       "norm_label": "diagnosiscard()"
     },
     {
@@ -38560,7 +38560,7 @@
       "source_file": "src/components/landlord/invoices/InvoiceModal.tsx",
       "source_location": "L1333",
       "id": "invoices_invoicemodal_resolutioncard",
-      "community": 134,
+      "community": 20,
       "norm_label": "resolutioncard()"
     },
     {
@@ -38569,7 +38569,7 @@
       "source_file": "src/components/landlord/invoices/InvoiceModal.tsx",
       "source_location": "L1353",
       "id": "invoices_invoicemodal_metric",
-      "community": 134,
+      "community": 20,
       "norm_label": "metric()"
     },
     {
@@ -38578,7 +38578,7 @@
       "source_file": "src/components/landlord/invoices/InvoiceModal.tsx",
       "source_location": "L1373",
       "id": "invoices_invoicemodal_readingfield",
-      "community": 134,
+      "community": 20,
       "norm_label": "readingfield()"
     },
     {
@@ -38587,7 +38587,7 @@
       "source_file": "src/components/landlord/invoices/InvoiceModal.tsx",
       "source_location": "L1385",
       "id": "invoices_invoicemodal_statusline",
-      "community": 134,
+      "community": 20,
       "norm_label": "statusline()"
     },
     {
@@ -38596,7 +38596,7 @@
       "source_file": "src/components/landlord/invoices/InvoiceModal.tsx",
       "source_location": "L1397",
       "id": "invoices_invoicemodal_actionbutton",
-      "community": 134,
+      "community": 20,
       "norm_label": "actionbutton()"
     },
     {
@@ -38605,7 +38605,7 @@
       "source_file": "src/components/landlord/invoices/InvoiceModal.tsx",
       "source_location": "L1441",
       "id": "invoices_invoicemodal_refundcenter",
-      "community": 134,
+      "community": 20,
       "norm_label": "refundcenter()"
     },
     {
@@ -38614,7 +38614,7 @@
       "source_file": "src/components/landlord/invoices/InvoiceModal.tsx",
       "source_location": "L1597",
       "id": "invoices_invoicemodal_refundsubmitbutton",
-      "community": 134,
+      "community": 20,
       "norm_label": "refundsubmitbutton()"
     },
     {
@@ -38623,7 +38623,7 @@
       "source_file": "src/components/landlord/invoices/InvoiceModal.tsx",
       "source_location": "L1665",
       "id": "invoices_invoicemodal_creditcardicon",
-      "community": 134,
+      "community": 20,
       "norm_label": "creditcardicon()"
     },
     {
@@ -38632,7 +38632,7 @@
       "source_file": "src/components/landlord/invoices/InvoiceModal.tsx",
       "source_location": "L1674",
       "id": "invoices_invoicemodal_mockinvoice",
-      "community": 134,
+      "community": 20,
       "norm_label": "mockinvoice()"
     },
     {
@@ -38641,7 +38641,7 @@
       "source_file": "src/components/landlord/invoices/RecordExpenseModal.tsx",
       "source_location": "L1",
       "id": "invoices_recordexpensemodal",
-      "community": 134,
+      "community": 20,
       "norm_label": "recordexpensemodal.tsx"
     },
     {
@@ -38650,7 +38650,7 @@
       "source_file": "src/components/landlord/invoices/RecordExpenseModal.tsx",
       "source_location": "L10",
       "id": "invoices_recordexpensemodal_recordexpensemodalprops",
-      "community": 134,
+      "community": 20,
       "norm_label": "recordexpensemodalprops"
     },
     {
@@ -38659,7 +38659,7 @@
       "source_file": "src/components/landlord/invoices/RecordExpenseModal.tsx",
       "source_location": "L15",
       "id": "invoices_recordexpensemodal_recordexpensemodal",
-      "community": 134,
+      "community": 20,
       "norm_label": "recordexpensemodal()"
     },
     {
@@ -39163,7 +39163,7 @@
       "source_file": "src/components/landlord/leases/RenewalReview.tsx",
       "source_location": "L1",
       "id": "leases_renewalreview",
-      "community": 134,
+      "community": 107,
       "norm_label": "renewalreview.tsx"
     },
     {
@@ -39172,7 +39172,7 @@
       "source_file": "src/components/landlord/leases/RenewalReview.tsx",
       "source_location": "L13",
       "id": "leases_renewalreview_renewalrequest",
-      "community": 134,
+      "community": 107,
       "norm_label": "renewalrequest"
     },
     {
@@ -39181,7 +39181,7 @@
       "source_file": "src/components/landlord/leases/RenewalReview.tsx",
       "source_location": "L45",
       "id": "leases_renewalreview_landlordrenewalreviewprops",
-      "community": 134,
+      "community": 107,
       "norm_label": "landlordrenewalreviewprops"
     },
     {
@@ -39190,7 +39190,7 @@
       "source_file": "src/components/landlord/leases/RenewalReview.tsx",
       "source_location": "L49",
       "id": "leases_renewalreview_landlordrenewalreview",
-      "community": 134,
+      "community": 107,
       "norm_label": "landlordrenewalreview()"
     },
     {
@@ -39199,7 +39199,7 @@
       "source_file": "src/components/landlord/leases/RenewalSettingsModal.tsx",
       "source_location": "L1",
       "id": "leases_renewalsettingsmodal",
-      "community": 134,
+      "community": 107,
       "norm_label": "renewalsettingsmodal.tsx"
     },
     {
@@ -39208,7 +39208,7 @@
       "source_file": "src/components/landlord/leases/RenewalSettingsModal.tsx",
       "source_location": "L7",
       "id": "leases_renewalsettingsmodal_renewalsettings",
-      "community": 134,
+      "community": 107,
       "norm_label": "renewalsettings"
     },
     {
@@ -39217,7 +39217,7 @@
       "source_file": "src/components/landlord/leases/RenewalSettingsModal.tsx",
       "source_location": "L15",
       "id": "leases_renewalsettingsmodal_renewalsettingsmodalprops",
-      "community": 134,
+      "community": 107,
       "norm_label": "renewalsettingsmodalprops"
     },
     {
@@ -39226,7 +39226,7 @@
       "source_file": "src/components/landlord/leases/RenewalSettingsModal.tsx",
       "source_location": "L22",
       "id": "leases_renewalsettingsmodal_renewalsettingsmodal",
-      "community": 134,
+      "community": 107,
       "norm_label": "renewalsettingsmodal()"
     },
     {
@@ -39397,7 +39397,7 @@
       "source_file": "src/components/landlord/maintenance/PrioritySelector.tsx",
       "source_location": "L1",
       "id": "maintenance_priorityselector",
-      "community": 1151,
+      "community": 98,
       "norm_label": "priorityselector.tsx"
     },
     {
@@ -39406,7 +39406,7 @@
       "source_file": "src/components/landlord/maintenance/PrioritySelector.tsx",
       "source_location": "L5",
       "id": "maintenance_priorityselector_priority",
-      "community": 1151,
+      "community": 98,
       "norm_label": "priority"
     },
     {
@@ -39415,7 +39415,7 @@
       "source_file": "src/components/landlord/maintenance/PrioritySelector.tsx",
       "source_location": "L7",
       "id": "maintenance_priorityselector_priorityselectorprops",
-      "community": 1151,
+      "community": 98,
       "norm_label": "priorityselectorprops"
     },
     {
@@ -39424,7 +39424,7 @@
       "source_file": "src/components/landlord/maintenance/PrioritySelector.tsx",
       "source_location": "L13",
       "id": "maintenance_priorityselector_priorities",
-      "community": 1151,
+      "community": 98,
       "norm_label": "priorities"
     },
     {
@@ -39433,7 +39433,7 @@
       "source_file": "src/components/landlord/maintenance/PrioritySelector.tsx",
       "source_location": "L15",
       "id": "maintenance_priorityselector_styles",
-      "community": 1151,
+      "community": 98,
       "norm_label": "styles"
     },
     {
@@ -39442,7 +39442,7 @@
       "source_file": "src/components/landlord/maintenance/PrioritySelector.tsx",
       "source_location": "L22",
       "id": "maintenance_priorityselector_priorityselector",
-      "community": 1151,
+      "community": 98,
       "norm_label": "priorityselector()"
     },
     {
@@ -39892,7 +39892,7 @@
       "source_file": "src/components/landlord/properties/PropertiesDashboard.tsx",
       "source_location": "L1",
       "id": "properties_propertiesdashboard",
-      "community": 20,
+      "community": 115,
       "norm_label": "propertiesdashboard.tsx"
     },
     {
@@ -39901,7 +39901,7 @@
       "source_file": "src/components/landlord/properties/PropertiesDashboard.tsx",
       "source_location": "L29",
       "id": "properties_propertiesdashboard_propertystatus",
-      "community": 20,
+      "community": 115,
       "norm_label": "propertystatus"
     },
     {
@@ -39910,7 +39910,7 @@
       "source_file": "src/components/landlord/properties/PropertiesDashboard.tsx",
       "source_location": "L31",
       "id": "properties_propertiesdashboard_propertycard",
-      "community": 20,
+      "community": 115,
       "norm_label": "propertycard"
     },
     {
@@ -39919,7 +39919,7 @@
       "source_file": "src/components/landlord/properties/PropertiesDashboard.tsx",
       "source_location": "L54",
       "id": "properties_propertiesdashboard_filter_tabs",
-      "community": 20,
+      "community": 115,
       "norm_label": "filter_tabs"
     },
     {
@@ -39928,7 +39928,7 @@
       "source_file": "src/components/landlord/properties/PropertiesDashboard.tsx",
       "source_location": "L56",
       "id": "properties_propertiesdashboard_getstylebystatus",
-      "community": 20,
+      "community": 115,
       "norm_label": "getstylebystatus()"
     },
     {
@@ -39937,7 +39937,7 @@
       "source_file": "src/components/landlord/properties/PropertiesDashboard.tsx",
       "source_location": "L79",
       "id": "properties_propertiesdashboard_propertiesdashboard",
-      "community": 20,
+      "community": 115,
       "norm_label": "propertiesdashboard()"
     },
     {
@@ -39946,7 +39946,7 @@
       "source_file": "src/components/landlord/properties/PropertiesDashboard.tsx",
       "source_location": "L632",
       "id": "properties_propertiesdashboard_propertyskeleton",
-      "community": 20,
+      "community": 115,
       "norm_label": "propertyskeleton()"
     },
     {
@@ -39982,7 +39982,7 @@
       "source_file": "src/components/landlord/properties/PropertyTenantsModal.tsx",
       "source_location": "L1",
       "id": "properties_propertytenantsmodal",
-      "community": 20,
+      "community": 115,
       "norm_label": "propertytenantsmodal.tsx"
     },
     {
@@ -39991,7 +39991,7 @@
       "source_file": "src/components/landlord/properties/PropertyTenantsModal.tsx",
       "source_location": "L28",
       "id": "properties_propertytenantsmodal_propertytenantsmodalprops",
-      "community": 20,
+      "community": 115,
       "norm_label": "propertytenantsmodalprops"
     },
     {
@@ -40000,7 +40000,7 @@
       "source_file": "src/components/landlord/properties/PropertyTenantsModal.tsx",
       "source_location": "L36",
       "id": "properties_propertytenantsmodal_tenantitem",
-      "community": 20,
+      "community": 115,
       "norm_label": "tenantitem"
     },
     {
@@ -40009,7 +40009,7 @@
       "source_file": "src/components/landlord/properties/PropertyTenantsModal.tsx",
       "source_location": "L53",
       "id": "properties_propertytenantsmodal_propertytenantsmodal",
-      "community": 20,
+      "community": 115,
       "norm_label": "propertytenantsmodal()"
     },
     {
@@ -40207,7 +40207,7 @@
       "source_file": "src/components/landlord/tenants/TenantDetailModal.tsx",
       "source_location": "L1",
       "id": "tenants_tenantdetailmodal",
-      "community": 20,
+      "community": 115,
       "norm_label": "tenantdetailmodal.tsx"
     },
     {
@@ -40216,7 +40216,7 @@
       "source_file": "src/components/landlord/tenants/TenantDetailModal.tsx",
       "source_location": "L23",
       "id": "tenants_tenantdetailmodal_tenantdetailmodalprops",
-      "community": 20,
+      "community": 115,
       "norm_label": "tenantdetailmodalprops"
     },
     {
@@ -40225,7 +40225,7 @@
       "source_file": "src/components/landlord/tenants/TenantDetailModal.tsx",
       "source_location": "L30",
       "id": "tenants_tenantdetailmodal_activity",
-      "community": 20,
+      "community": 115,
       "norm_label": "activity"
     },
     {
@@ -40234,7 +40234,7 @@
       "source_file": "src/components/landlord/tenants/TenantDetailModal.tsx",
       "source_location": "L40",
       "id": "tenants_tenantdetailmodal_document",
-      "community": 20,
+      "community": 115,
       "norm_label": "document"
     },
     {
@@ -40243,7 +40243,7 @@
       "source_file": "src/components/landlord/tenants/TenantDetailModal.tsx",
       "source_location": "L49",
       "id": "tenants_tenantdetailmodal_tenantprofileinfo",
-      "community": 20,
+      "community": 115,
       "norm_label": "tenantprofileinfo"
     },
     {
@@ -40252,7 +40252,7 @@
       "source_file": "src/components/landlord/tenants/TenantDetailModal.tsx",
       "source_location": "L58",
       "id": "tenants_tenantdetailmodal_tenantdetailmodal",
-      "community": 20,
+      "community": 115,
       "norm_label": "tenantdetailmodal()"
     },
     {
@@ -42538,7 +42538,7 @@
       "source_file": "src/components/tenant/DashboardTour.tsx",
       "source_location": "L1",
       "id": "tenant_dashboardtour",
-      "community": 164,
+      "community": 134,
       "norm_label": "dashboardtour.tsx"
     },
     {
@@ -42547,7 +42547,7 @@
       "source_file": "src/components/tenant/DashboardTour.tsx",
       "source_location": "L6",
       "id": "tenant_dashboardtour_dashboardtour",
-      "community": 164,
+      "community": 134,
       "norm_label": "dashboardtour()"
     },
     {
@@ -42700,7 +42700,7 @@
       "source_file": "src/components/tenant/MoveOutChecklist.tsx",
       "source_location": "L1",
       "id": "tenant_moveoutchecklist",
-      "community": 164,
+      "community": 134,
       "norm_label": "moveoutchecklist.tsx"
     },
     {
@@ -42709,7 +42709,7 @@
       "source_file": "src/components/tenant/MoveOutChecklist.tsx",
       "source_location": "L8",
       "id": "tenant_moveoutchecklist_checklistitem",
-      "community": 164,
+      "community": 134,
       "norm_label": "checklistitem"
     },
     {
@@ -42718,7 +42718,7 @@
       "source_file": "src/components/tenant/MoveOutChecklist.tsx",
       "source_location": "L14",
       "id": "tenant_moveoutchecklist_moveoutchecklistprops",
-      "community": 164,
+      "community": 134,
       "norm_label": "moveoutchecklistprops"
     },
     {
@@ -42727,7 +42727,7 @@
       "source_file": "src/components/tenant/MoveOutChecklist.tsx",
       "source_location": "L19",
       "id": "tenant_moveoutchecklist_default_checklist",
-      "community": 164,
+      "community": 134,
       "norm_label": "default_checklist"
     },
     {
@@ -42736,7 +42736,7 @@
       "source_file": "src/components/tenant/MoveOutChecklist.tsx",
       "source_location": "L26",
       "id": "tenant_moveoutchecklist_moveoutchecklist",
-      "community": 164,
+      "community": 134,
       "norm_label": "moveoutchecklist()"
     },
     {
@@ -42745,7 +42745,7 @@
       "source_file": "src/components/tenant/MoveOutRequest.tsx",
       "source_location": "L1",
       "id": "tenant_moveoutrequest",
-      "community": 164,
+      "community": 134,
       "norm_label": "moveoutrequest.tsx"
     },
     {
@@ -42754,7 +42754,7 @@
       "source_file": "src/components/tenant/MoveOutRequest.tsx",
       "source_location": "L12",
       "id": "tenant_moveoutrequest_moveoutstatus",
-      "community": 164,
+      "community": 134,
       "norm_label": "moveoutstatus"
     },
     {
@@ -42763,7 +42763,7 @@
       "source_file": "src/components/tenant/MoveOutRequest.tsx",
       "source_location": "L14",
       "id": "tenant_moveoutrequest_moveoutrequestdata",
-      "community": 164,
+      "community": 134,
       "norm_label": "moveoutrequestdata"
     },
     {
@@ -42772,7 +42772,7 @@
       "source_file": "src/components/tenant/MoveOutRequest.tsx",
       "source_location": "L30",
       "id": "tenant_moveoutrequest_moveoutrequestprops",
-      "community": 164,
+      "community": 134,
       "norm_label": "moveoutrequestprops"
     },
     {
@@ -42781,7 +42781,7 @@
       "source_file": "src/components/tenant/MoveOutRequest.tsx",
       "source_location": "L35",
       "id": "tenant_moveoutrequest_moveoutrequest",
-      "community": 164,
+      "community": 134,
       "norm_label": "moveoutrequest()"
     },
     {
@@ -42898,7 +42898,7 @@
       "source_file": "src/components/tenant/TenantContactsSidebar.tsx",
       "source_location": "L119",
       "id": "tenant_tenantcontactssidebar_tenantcontactssidebar",
-      "community": 164,
+      "community": 134,
       "norm_label": "tenantcontactssidebar()"
     },
     {
@@ -43465,7 +43465,7 @@
       "source_file": "src/components/ui/AnimatedFilterPills.tsx",
       "source_location": "L1",
       "id": "ui_animatedfilterpills",
-      "community": 20,
+      "community": 115,
       "norm_label": "animatedfilterpills.tsx"
     },
     {
@@ -43474,7 +43474,7 @@
       "source_file": "src/components/ui/AnimatedFilterPills.tsx",
       "source_location": "L7",
       "id": "ui_animatedfilterpills_filterpillitem",
-      "community": 20,
+      "community": 115,
       "norm_label": "filterpillitem"
     },
     {
@@ -43483,7 +43483,7 @@
       "source_file": "src/components/ui/AnimatedFilterPills.tsx",
       "source_location": "L14",
       "id": "ui_animatedfilterpills_animatedfilterpillsprops",
-      "community": 20,
+      "community": 115,
       "norm_label": "animatedfilterpillsprops"
     },
     {
@@ -43492,7 +43492,7 @@
       "source_file": "src/components/ui/AnimatedFilterPills.tsx",
       "source_location": "L25",
       "id": "ui_animatedfilterpills_animatedfilterpills",
-      "community": 20,
+      "community": 115,
       "norm_label": "animatedfilterpills()"
     },
     {
@@ -44203,7 +44203,7 @@
       "source_file": "src/components/ui/tooltip.tsx",
       "source_location": "L1",
       "id": "ui_tooltip",
-      "community": 134,
+      "community": 20,
       "norm_label": "tooltip.tsx"
     },
     {
@@ -44212,7 +44212,7 @@
       "source_file": "src/components/ui/tooltip.tsx",
       "source_location": "L13",
       "id": "ui_tooltip_tooltiparrow",
-      "community": 134,
+      "community": 20,
       "norm_label": "tooltiparrow"
     },
     {
@@ -44221,7 +44221,7 @@
       "source_file": "src/components/ui/tooltip.tsx",
       "source_location": "L28",
       "id": "ui_tooltip_tooltipcontent",
-      "community": 134,
+      "community": 20,
       "norm_label": "tooltipcontent"
     },
     {
@@ -44230,7 +44230,7 @@
       "source_file": "src/components/ui/tooltip.tsx",
       "source_location": "L56",
       "id": "ui_tooltip_tooltipprops",
-      "community": 134,
+      "community": 20,
       "norm_label": "tooltipprops"
     },
     {
@@ -44239,7 +44239,7 @@
       "source_file": "src/components/ui/tooltip.tsx",
       "source_location": "L71",
       "id": "ui_tooltip_tooltip",
-      "community": 134,
+      "community": 20,
       "norm_label": "tooltip()"
     },
     {
@@ -45085,7 +45085,7 @@
       "source_file": "src/lib/__tests__/wizard-storage.test.ts",
       "source_location": "L1",
       "id": "tests_wizard_storage_test",
-      "community": 13,
+      "community": 203,
       "norm_label": "wizard-storage.test.ts"
     },
     {
@@ -45922,7 +45922,7 @@
       "source_file": "src/lib/billing/server.ts",
       "source_location": "L942",
       "id": "billing_server_recordutilityreading",
-      "community": 11,
+      "community": 42,
       "norm_label": "recordutilityreading()"
     },
     {
@@ -46066,7 +46066,7 @@
       "source_file": "src/lib/billing/utils.ts",
       "source_location": "L45",
       "id": "billing_utils_formatphpcurrency",
-      "community": 134,
+      "community": 20,
       "norm_label": "formatphpcurrency()"
     },
     {
@@ -46147,7 +46147,7 @@
       "source_file": "src/lib/billing/utils.ts",
       "source_location": "L159",
       "id": "billing_utils_computeusage",
-      "community": 11,
+      "community": 42,
       "norm_label": "computeusage()"
     },
     {
@@ -46156,7 +46156,7 @@
       "source_file": "src/lib/billing/utils.ts",
       "source_location": "L162",
       "id": "billing_utils_computeutilitycharge",
-      "community": 11,
+      "community": 42,
       "norm_label": "computeutilitycharge()"
     },
     {
@@ -46903,7 +46903,7 @@
       "source_file": "src/lib/constants.ts",
       "source_location": "L1",
       "id": "lib_constants",
-      "community": 13,
+      "community": 203,
       "norm_label": "constants.ts"
     },
     {
@@ -46912,7 +46912,7 @@
       "source_file": "src/lib/constants.ts",
       "source_location": "L4",
       "id": "lib_constants_allowed_file_types",
-      "community": 13,
+      "community": 203,
       "norm_label": "allowed_file_types"
     },
     {
@@ -49864,7 +49864,7 @@
       "source_file": "src/lib/product-tour.ts",
       "source_location": "L51",
       "id": "lib_product_tour_tenant_dashboard_tour_steps",
-      "community": 164,
+      "community": 134,
       "norm_label": "tenant_dashboard_tour_steps"
     },
     {
@@ -53122,7 +53122,7 @@
       "source_file": "src/lib/services/payment/expense.service.ts",
       "source_location": "L12",
       "id": "payment_expense_service_expenseservice_constructor",
-      "community": 11,
+      "community": 37,
       "norm_label": ".constructor()"
     },
     {
@@ -55219,7 +55219,7 @@
       "source_file": "src/lib/wizard-storage.ts",
       "source_location": "L1",
       "id": "lib_wizard_storage",
-      "community": 13,
+      "community": 203,
       "norm_label": "wizard-storage.ts"
     },
     {
@@ -55228,7 +55228,7 @@
       "source_file": "src/lib/wizard-storage.ts",
       "source_location": "L5",
       "id": "lib_wizard_storage_wizardstate",
-      "community": 13,
+      "community": 203,
       "norm_label": "wizardstate"
     },
     {
@@ -55237,7 +55237,7 @@
       "source_file": "src/lib/wizard-storage.ts",
       "source_location": "L17",
       "id": "lib_wizard_storage_savewizardstate",
-      "community": 13,
+      "community": 203,
       "norm_label": "savewizardstate()"
     },
     {
@@ -55246,7 +55246,7 @@
       "source_file": "src/lib/wizard-storage.ts",
       "source_location": "L41",
       "id": "lib_wizard_storage_loadwizardstate",
-      "community": 13,
+      "community": 203,
       "norm_label": "loadwizardstate()"
     },
     {
@@ -55255,7 +55255,7 @@
       "source_file": "src/lib/wizard-storage.ts",
       "source_location": "L76",
       "id": "lib_wizard_storage_clearwizardstate",
-      "community": 13,
+      "community": 203,
       "norm_label": "clearwizardstate()"
     },
     {
@@ -55264,7 +55264,7 @@
       "source_file": "src/lib/wizard-storage.ts",
       "source_location": "L90",
       "id": "lib_wizard_storage_islocalstorageavailable",
-      "community": 13,
+      "community": 203,
       "norm_label": "islocalstorageavailable()"
     },
     {
@@ -55273,7 +55273,7 @@
       "source_file": "src/lib/wizard-storage.ts",
       "source_location": "L107",
       "id": "lib_wizard_storage_getwizardstateage",
-      "community": 13,
+      "community": 203,
       "norm_label": "getwizardstateage()"
     },
     {
@@ -55282,7 +55282,7 @@
       "source_file": "src/lib/wizard-storage.ts",
       "source_location": "L126",
       "id": "lib_wizard_storage_iswizardstateexpired",
-      "community": 13,
+      "community": 203,
       "norm_label": "iswizardstateexpired()"
     },
     {
@@ -55444,7 +55444,7 @@
       "source_file": "src/types/database.ts",
       "source_location": "L21",
       "id": "types_database_utilitybillingmode",
-      "community": 11,
+      "community": 42,
       "norm_label": "utilitybillingmode"
     },
     {
@@ -55615,7 +55615,7 @@
       "source_file": "src/types/database.ts",
       "source_location": "L1918",
       "id": "types_database_property",
-      "community": 22,
+      "community": 32,
       "norm_label": "property"
     },
     {
@@ -98625,7 +98625,7 @@
       "file_type": "code",
       "source_file": "src/app/landlord/documents/page.tsx",
       "source_location": "L1",
-      "community": 107,
+      "community": 164,
       "norm_label": "page.tsx",
       "id": "src_app_landlord_documents_page_tsx"
     },
@@ -98643,7 +98643,7 @@
       "file_type": "code",
       "source_file": "src/app/landlord/invoices/page.tsx",
       "source_location": "L1",
-      "community": 134,
+      "community": 20,
       "norm_label": "page.tsx",
       "id": "src_app_landlord_invoices_page_tsx"
     },
@@ -98787,7 +98787,7 @@
       "file_type": "code",
       "source_file": "src/app/landlord/properties/page.tsx",
       "source_location": "L1",
-      "community": 20,
+      "community": 115,
       "norm_label": "page.tsx",
       "id": "src_app_landlord_properties_page_tsx"
     },
@@ -98805,7 +98805,7 @@
       "file_type": "code",
       "source_file": "src/app/landlord/properties/[id]/environment/page.tsx",
       "source_location": "L1",
-      "community": 20,
+      "community": 134,
       "norm_label": "page.tsx",
       "id": "src_app_landlord_properties_id_environment_page_tsx"
     },
@@ -99039,7 +99039,7 @@
       "file_type": "code",
       "source_file": "src/app/signup/page.tsx",
       "source_location": "L1",
-      "community": 13,
+      "community": 203,
       "norm_label": "page.tsx",
       "id": "src_app_signup_page_tsx"
     },
@@ -99075,7 +99075,7 @@
       "file_type": "code",
       "source_file": "src/app/tenant/applications/page.tsx",
       "source_location": "L1",
-      "community": 3,
+      "community": 111,
       "norm_label": "page.tsx",
       "id": "src_app_tenant_applications_page_tsx"
     },
@@ -99111,7 +99111,7 @@
       "file_type": "code",
       "source_file": "src/app/tenant/dashboard/page.tsx",
       "source_location": "L1",
-      "community": 164,
+      "community": 134,
       "norm_label": "page.tsx",
       "id": "src_app_tenant_dashboard_page_tsx"
     },
@@ -99426,7 +99426,7 @@
       "file_type": "code",
       "source_file": "src/components/deprecated/LandlordSignup.deprecated.tsx",
       "source_location": "L1",
-      "community": 13,
+      "community": 203,
       "norm_label": "landlordsignup.deprecated.tsx",
       "id": "src_components_deprecated_landlordsignup_deprecated_tsx"
     },
@@ -99534,7 +99534,7 @@
       "file_type": "code",
       "source_file": "src/components/landlord/LandlordProfile.tsx",
       "source_location": "L1",
-      "community": 3,
+      "community": 98,
       "norm_label": "landlordprofile.tsx",
       "id": "src_components_landlord_landlordprofile_tsx"
     },
@@ -99561,7 +99561,7 @@
       "file_type": "code",
       "source_file": "src/components/landlord/PropertyEnvironmentBanner.tsx",
       "source_location": "L1",
-      "community": 20,
+      "community": 115,
       "norm_label": "propertyenvironmentbanner.tsx",
       "id": "src_components_landlord_propertyenvironmentbanner_tsx"
     },
@@ -99588,7 +99588,7 @@
       "file_type": "code",
       "source_file": "src/components/landlord/UnitShowcaseModal.tsx",
       "source_location": "L1",
-      "community": 3,
+      "community": 98,
       "norm_label": "unitshowcasemodal.tsx",
       "id": "src_components_landlord_unitshowcasemodal_tsx"
     },
@@ -99867,7 +99867,7 @@
       "file_type": "code",
       "source_file": "src/components/landlord/dashboard/ActionRequired.tsx",
       "source_location": "L1",
-      "community": 20,
+      "community": 107,
       "norm_label": "actionrequired.tsx",
       "id": "src_components_landlord_dashboard_actionrequired_tsx"
     },
@@ -99903,7 +99903,7 @@
       "file_type": "code",
       "source_file": "src/components/landlord/dashboard/CommandCenter.tsx",
       "source_location": "L1",
-      "community": 134,
+      "community": 20,
       "norm_label": "commandcenter.tsx",
       "id": "src_components_landlord_dashboard_commandcenter_tsx"
     },
@@ -100173,7 +100173,7 @@
       "file_type": "code",
       "source_file": "src/components/landlord/invoices/InvoiceModal.tsx",
       "source_location": "L1",
-      "community": 134,
+      "community": 20,
       "norm_label": "invoicemodal.tsx",
       "id": "src_components_landlord_invoices_invoicemodal_tsx"
     },
@@ -100182,7 +100182,7 @@
       "file_type": "code",
       "source_file": "src/components/landlord/invoices/RecordExpenseModal.tsx",
       "source_location": "L1",
-      "community": 134,
+      "community": 20,
       "norm_label": "recordexpensemodal.tsx",
       "id": "src_components_landlord_invoices_recordexpensemodal_tsx"
     },
@@ -100299,7 +100299,7 @@
       "file_type": "code",
       "source_file": "src/components/landlord/leases/RenewalReview.tsx",
       "source_location": "L1",
-      "community": 134,
+      "community": 107,
       "norm_label": "renewalreview.tsx",
       "id": "src_components_landlord_leases_renewalreview_tsx"
     },
@@ -100308,7 +100308,7 @@
       "file_type": "code",
       "source_file": "src/components/landlord/leases/RenewalSettingsModal.tsx",
       "source_location": "L1",
-      "community": 134,
+      "community": 107,
       "norm_label": "renewalsettingsmodal.tsx",
       "id": "src_components_landlord_leases_renewalsettingsmodal_tsx"
     },
@@ -100344,7 +100344,7 @@
       "file_type": "code",
       "source_file": "src/components/landlord/maintenance/PrioritySelector.tsx",
       "source_location": "L1",
-      "community": 1151,
+      "community": 98,
       "norm_label": "priorityselector.tsx",
       "id": "src_components_landlord_maintenance_priorityselector_tsx"
     },
@@ -100461,7 +100461,7 @@
       "file_type": "code",
       "source_file": "src/components/landlord/properties/PropertiesDashboard.tsx",
       "source_location": "L1",
-      "community": 20,
+      "community": 115,
       "norm_label": "propertiesdashboard.tsx",
       "id": "src_components_landlord_properties_propertiesdashboard_tsx"
     },
@@ -100479,7 +100479,7 @@
       "file_type": "code",
       "source_file": "src/components/landlord/properties/PropertyTenantsModal.tsx",
       "source_location": "L1",
-      "community": 20,
+      "community": 115,
       "norm_label": "propertytenantsmodal.tsx",
       "id": "src_components_landlord_properties_propertytenantsmodal_tsx"
     },
@@ -100533,7 +100533,7 @@
       "file_type": "code",
       "source_file": "src/components/landlord/tenants/TenantDetailModal.tsx",
       "source_location": "L1",
-      "community": 20,
+      "community": 115,
       "norm_label": "tenantdetailmodal.tsx",
       "id": "src_components_landlord_tenants_tenantdetailmodal_tsx"
     },
@@ -101190,7 +101190,7 @@
       "file_type": "code",
       "source_file": "src/components/tenant/DashboardTour.tsx",
       "source_location": "L1",
-      "community": 164,
+      "community": 134,
       "norm_label": "dashboardtour.tsx",
       "id": "src_components_tenant_dashboardtour_tsx"
     },
@@ -101253,7 +101253,7 @@
       "file_type": "code",
       "source_file": "src/components/tenant/MoveOutChecklist.tsx",
       "source_location": "L1",
-      "community": 164,
+      "community": 134,
       "norm_label": "moveoutchecklist.tsx",
       "id": "src_components_tenant_moveoutchecklist_tsx"
     },
@@ -101262,7 +101262,7 @@
       "file_type": "code",
       "source_file": "src/components/tenant/MoveOutRequest.tsx",
       "source_location": "L1",
-      "community": 164,
+      "community": 134,
       "norm_label": "moveoutrequest.tsx",
       "id": "src_components_tenant_moveoutrequest_tsx"
     },
@@ -101370,7 +101370,7 @@
       "file_type": "code",
       "source_file": "src/components/ui/AnimatedFilterPills.tsx",
       "source_location": "L1",
-      "community": 20,
+      "community": 115,
       "norm_label": "animatedfilterpills.tsx",
       "id": "src_components_ui_animatedfilterpills_tsx"
     },
@@ -101559,7 +101559,7 @@
       "file_type": "code",
       "source_file": "src/components/ui/tooltip.tsx",
       "source_location": "L1",
-      "community": 134,
+      "community": 20,
       "norm_label": "tooltip.tsx",
       "id": "src_components_ui_tooltip_tsx"
     },
@@ -101748,7 +101748,7 @@
       "file_type": "code",
       "source_file": "src/lib/constants.ts",
       "source_location": "L1",
-      "community": 13,
+      "community": 203,
       "norm_label": "constants.ts",
       "id": "src_lib_constants_ts"
     },
@@ -101919,7 +101919,7 @@
       "file_type": "code",
       "source_file": "src/lib/wizard-storage.ts",
       "source_location": "L1",
-      "community": 13,
+      "community": 203,
       "norm_label": "wizard-storage.ts",
       "id": "src_lib_wizard_storage_ts"
     },
@@ -104583,7 +104583,7 @@
       "file_type": "code",
       "source_file": "src/lib/__tests__/wizard-storage.test.ts",
       "source_location": "L1",
-      "community": 13,
+      "community": 203,
       "norm_label": "wizard-storage.test.ts",
       "id": "src_lib_tests_wizard_storage_test_ts"
     },
@@ -104592,7 +104592,7 @@
       "file_type": "code",
       "source_file": "src/lib/__tests__/wizard-storage.test.ts",
       "source_location": "L26",
-      "community": 13,
+      "community": 203,
       "norm_label": "result",
       "id": "tests_wizard_storage_test_result"
     },
@@ -104601,7 +104601,7 @@
       "file_type": "code",
       "source_file": "src/lib/__tests__/wizard-storage.test.ts",
       "source_location": "L32",
-      "community": 13,
+      "community": 203,
       "norm_label": "spy",
       "id": "tests_wizard_storage_test_spy"
     },
@@ -104610,7 +104610,7 @@
       "file_type": "code",
       "source_file": "src/lib/__tests__/wizard-storage.test.ts",
       "source_location": "L46",
-      "community": 13,
+      "community": 203,
       "norm_label": "data",
       "id": "tests_wizard_storage_test_data"
     },
@@ -104619,7 +104619,7 @@
       "file_type": "code",
       "source_file": "src/lib/__tests__/wizard-storage.test.ts",
       "source_location": "L49",
-      "community": 13,
+      "community": 203,
       "norm_label": "serialized",
       "id": "tests_wizard_storage_test_serialized"
     },
@@ -104628,7 +104628,7 @@
       "file_type": "code",
       "source_file": "src/lib/__tests__/wizard-storage.test.ts",
       "source_location": "L52",
-      "community": 13,
+      "community": 203,
       "norm_label": "parsed",
       "id": "tests_wizard_storage_test_parsed"
     },
@@ -104637,7 +104637,7 @@
       "file_type": "code",
       "source_file": "src/lib/__tests__/wizard-storage.test.ts",
       "source_location": "L70",
-      "community": 13,
+      "community": 203,
       "norm_label": "beforesave",
       "id": "tests_wizard_storage_test_beforesave"
     },
@@ -104646,7 +104646,7 @@
       "file_type": "code",
       "source_file": "src/lib/__tests__/wizard-storage.test.ts",
       "source_location": "L72",
-      "community": 13,
+      "community": 203,
       "norm_label": "aftersave",
       "id": "tests_wizard_storage_test_aftersave"
     },
@@ -104655,7 +104655,7 @@
       "file_type": "code",
       "source_file": "src/lib/__tests__/wizard-storage.test.ts",
       "source_location": "L106",
-      "community": 13,
+      "community": 203,
       "norm_label": "data1",
       "id": "tests_wizard_storage_test_data1"
     },
@@ -104664,7 +104664,7 @@
       "file_type": "code",
       "source_file": "src/lib/__tests__/wizard-storage.test.ts",
       "source_location": "L109",
-      "community": 13,
+      "community": 203,
       "norm_label": "data2",
       "id": "tests_wizard_storage_test_data2"
     },
@@ -104673,7 +104673,7 @@
       "file_type": "code",
       "source_file": "src/lib/__tests__/wizard-storage.test.ts",
       "source_location": "L124",
-      "community": 13,
+      "community": 203,
       "norm_label": "loaded",
       "id": "tests_wizard_storage_test_loaded"
     },
@@ -104682,7 +104682,7 @@
       "file_type": "code",
       "source_file": "src/lib/__tests__/wizard-storage.test.ts",
       "source_location": "L219",
-      "community": 13,
+      "community": 203,
       "norm_label": "age",
       "id": "tests_wizard_storage_test_age"
     },
@@ -104691,7 +104691,7 @@
       "file_type": "code",
       "source_file": "src/lib/__tests__/wizard-storage.test.ts",
       "source_location": "L220",
-      "community": 13,
+      "community": 203,
       "norm_label": "aftercheck",
       "id": "tests_wizard_storage_test_aftercheck"
     },
@@ -104700,7 +104700,7 @@
       "file_type": "code",
       "source_file": "src/lib/__tests__/wizard-storage.test.ts",
       "source_location": "L240",
-      "community": 13,
+      "community": 203,
       "norm_label": "isexpired",
       "id": "tests_wizard_storage_test_isexpired"
     },
@@ -104709,7 +104709,7 @@
       "file_type": "code",
       "source_file": "src/lib/__tests__/wizard-storage.test.ts",
       "source_location": "L302",
-      "community": 13,
+      "community": 203,
       "norm_label": "loadedafterclear",
       "id": "tests_wizard_storage_test_loadedafterclear"
     },
@@ -104718,7 +104718,7 @@
       "file_type": "code",
       "source_file": "src/lib/__tests__/wizard-storage.test.ts",
       "source_location": "L309",
-      "community": 13,
+      "community": 203,
       "norm_label": "data3",
       "id": "tests_wizard_storage_test_data3"
     },
@@ -105843,7 +105843,7 @@
       "file_type": "document",
       "source_file": "AGENT_DESIGN_GUIDE.md",
       "source_location": "L302",
-      "community": 1160,
+      "community": 196,
       "norm_label": "5. ux laws reference",
       "id": "ireside_agent_design_guide_5_ux_laws_reference"
     },
@@ -105852,7 +105852,7 @@
       "file_type": "document",
       "source_file": "AGENT_DESIGN_GUIDE.md",
       "source_location": "L306",
-      "community": 1160,
+      "community": 196,
       "norm_label": "cognitive laws",
       "id": "ireside_agent_design_guide_cognitive_laws"
     },
@@ -105861,7 +105861,7 @@
       "file_type": "document",
       "source_file": "AGENT_DESIGN_GUIDE.md",
       "source_location": "L318",
-      "community": 1160,
+      "community": 196,
       "norm_label": "perception laws",
       "id": "ireside_agent_design_guide_perception_laws"
     },
@@ -105870,7 +105870,7 @@
       "file_type": "document",
       "source_file": "AGENT_DESIGN_GUIDE.md",
       "source_location": "L329",
-      "community": 1160,
+      "community": 196,
       "norm_label": "behavioral laws",
       "id": "ireside_agent_design_guide_behavioral_laws"
     },
@@ -106590,7 +106590,7 @@
       "file_type": "document",
       "source_file": "APT_APT.docx.md",
       "source_location": "L1",
-      "community": 953,
+      "community": 198,
       "norm_label": "apt_apt.docx.md",
       "id": "apt_apt_docx_md"
     },
@@ -106599,7 +106599,7 @@
       "file_type": "document",
       "source_file": "APT_APT.docx.md",
       "source_location": "L3",
-      "community": 953,
+      "community": 198,
       "norm_label": "**design and development of ireside: property and tenant services management system for the landlords of valenzuela city**",
       "id": "ireside_apt_apt_docx_design_and_development_of_ireside_property_and_tenant_services_management_system_for_the_landlords_of_valenzuela_city"
     },
@@ -106608,7 +106608,7 @@
       "file_type": "document",
       "source_file": "APT_APT.docx.md",
       "source_location": "L17",
-      "community": 953,
+      "community": 198,
       "norm_label": "**table of contents** {#table-of-contents}",
       "id": "ireside_apt_apt_docx_table_of_contents_table_of_contents"
     },
@@ -106617,7 +106617,7 @@
       "file_type": "document",
       "source_file": "APT_APT.docx.md",
       "source_location": "L229",
-      "community": 953,
+      "community": 198,
       "norm_label": "**chapter 1** {#chapter-1}",
       "id": "ireside_apt_apt_docx_chapter_1_chapter_1"
     },
@@ -106788,7 +106788,7 @@
       "file_type": "document",
       "source_file": "APT_APT.docx.md",
       "source_location": "L888",
-      "community": 953,
+      "community": 198,
       "norm_label": "**chapter 2** {#chapter-2}",
       "id": "ireside_apt_apt_docx_chapter_2_chapter_2"
     },
@@ -107103,7 +107103,7 @@
       "file_type": "document",
       "source_file": "APT_APT.docx.md",
       "source_location": "L1127",
-      "community": 953,
+      "community": 198,
       "norm_label": "**chapter 3** {#chapter-3}",
       "id": "ireside_apt_apt_docx_chapter_3_chapter_3"
     },
@@ -107382,7 +107382,7 @@
       "file_type": "document",
       "source_file": "APT_APT.docx.md",
       "source_location": "L2768",
-      "community": 198,
+      "community": 369,
       "norm_label": "**3.6 testing and evaluation plan** {#3.6-testing-and-evaluation-plan}",
       "id": "ireside_apt_apt_docx_3_6_testing_and_evaluation_plan_3_6_testing_and_evaluation_plan"
     },
@@ -107391,7 +107391,7 @@
       "file_type": "document",
       "source_file": "APT_APT.docx.md",
       "source_location": "L2770",
-      "community": 198,
+      "community": 369,
       "norm_label": "**3.6.1 entry criteria** {#3.6.1-entry-criteria}",
       "id": "ireside_apt_apt_docx_3_6_1_entry_criteria_3_6_1_entry_criteria"
     },
@@ -107400,7 +107400,7 @@
       "file_type": "document",
       "source_file": "APT_APT.docx.md",
       "source_location": "L2797",
-      "community": 198,
+      "community": 369,
       "norm_label": "**3.6.4 evaluation tool** {#3.6.4-evaluation-tool}",
       "id": "ireside_apt_apt_docx_3_6_4_evaluation_tool_3_6_4_evaluation_tool"
     },
@@ -107409,7 +107409,7 @@
       "file_type": "document",
       "source_file": "APT_APT.docx.md",
       "source_location": "L2801",
-      "community": 198,
+      "community": 369,
       "norm_label": "*3.6.4.1 test cases* {#3.6.4.1-test-cases}",
       "id": "ireside_apt_apt_docx_3_6_4_1_test_cases_3_6_4_1_test_cases"
     },
@@ -107418,7 +107418,7 @@
       "file_type": "document",
       "source_file": "APT_APT.docx.md",
       "source_location": "L2910",
-      "community": 198,
+      "community": 369,
       "norm_label": "*3.6.4.2 feature-based questionnaire* {#3.6.4.2-feature-based-questionnaire}",
       "id": "ireside_apt_apt_docx_3_6_4_2_feature_based_questionnaire_3_6_4_2_feature_based_questionnaire"
     },
@@ -107427,7 +107427,7 @@
       "file_type": "document",
       "source_file": "APT_APT.docx.md",
       "source_location": "L2983",
-      "community": 198,
+      "community": 369,
       "norm_label": "*3.6.4.3 iso-based questionnaire* {#3.6.4.3-iso-based-questionnaire}",
       "id": "ireside_apt_apt_docx_3_6_4_3_iso_based_questionnaire_3_6_4_3_iso_based_questionnaire"
     },
@@ -107436,7 +107436,7 @@
       "file_type": "document",
       "source_file": "APT_APT.docx.md",
       "source_location": "L3039",
-      "community": 198,
+      "community": 369,
       "norm_label": "**3.6.5 data categorization** {#3.6.5-data-categorization}",
       "id": "ireside_apt_apt_docx_3_6_5_data_categorization_3_6_5_data_categorization"
     },
@@ -107445,7 +107445,7 @@
       "file_type": "document",
       "source_file": "APT_APT.docx.md",
       "source_location": "L3058",
-      "community": 953,
+      "community": 198,
       "norm_label": "**bibliography** {#bibliography}",
       "id": "ireside_apt_apt_docx_bibliography_bibliography"
     },
@@ -118956,7 +118956,7 @@
       "file_type": "code",
       "source_file": "src/components/landlord/dashboard/ActionRequired.tsx",
       "source_location": "L66",
-      "community": 20,
+      "community": 107,
       "norm_label": "actionsummary",
       "id": "dashboard_actionrequired_actionsummary"
     },
@@ -118965,7 +118965,7 @@
       "file_type": "code",
       "source_file": "src/components/landlord/dashboard/ActionRequired.tsx",
       "source_location": "L87",
-      "community": 20,
+      "community": 107,
       "norm_label": "onboardingstatuslabel",
       "id": "dashboard_actionrequired_onboardingstatuslabel"
     },
@@ -118974,7 +118974,7 @@
       "file_type": "code",
       "source_file": "src/components/landlord/dashboard/ActionRequired.tsx",
       "source_location": "L103",
-      "community": 20,
+      "community": 107,
       "norm_label": "actionsummarybar()",
       "id": "dashboard_actionrequired_actionsummarybar"
     },
@@ -119100,7 +119100,7 @@
       "file_type": "code",
       "source_file": "src/app/landlord/invoices/page.tsx",
       "source_location": "L26",
-      "community": 134,
+      "community": 20,
       "norm_label": "demo_invoice_items",
       "id": "invoices_page_demo_invoice_items"
     },
@@ -119118,7 +119118,7 @@
       "file_type": "code",
       "source_file": "src/components/landlord/properties/PropertiesDashboard.tsx",
       "source_location": "L76",
-      "community": 20,
+      "community": 115,
       "norm_label": "demo_property_cards",
       "id": "properties_propertiesdashboard_demo_property_cards"
     },
@@ -119604,7 +119604,7 @@
       "file_type": "code",
       "source_file": "src/app/landlord/properties/[id]/environment/page.tsx",
       "source_location": "L110",
-      "community": 20,
+      "community": 134,
       "norm_label": "mode_info",
       "id": "environment_page_mode_info"
     },
@@ -127218,7 +127218,7 @@
       "file_type": "document",
       "source_file": "APT_APT.docx.md",
       "source_location": "L3124",
-      "community": 953,
+      "community": 198,
       "norm_label": "**appendices** {#appendices}",
       "id": "ireside_apt_apt_docx_appendices_appendices"
     },
@@ -128379,7 +128379,7 @@
       "file_type": "code",
       "source_file": "src/app/landlord/documents/page.tsx",
       "source_location": "L44",
-      "community": 107,
+      "community": 164,
       "norm_label": "verificationinfo",
       "id": "documents_page_verificationinfo"
     },
@@ -128388,7 +128388,7 @@
       "file_type": "code",
       "source_file": "src/app/landlord/invoices/page.tsx",
       "source_location": "L14",
-      "community": 134,
+      "community": 20,
       "norm_label": "studiostep",
       "id": "invoices_page_studiostep"
     },
@@ -128397,7 +128397,7 @@
       "file_type": "code",
       "source_file": "src/app/landlord/invoices/page.tsx",
       "source_location": "L749",
-      "community": 134,
+      "community": 20,
       "norm_label": "selectfield()",
       "id": "invoices_page_selectfield"
     },
@@ -128406,7 +128406,7 @@
       "file_type": "code",
       "source_file": "src/app/landlord/invoices/page.tsx",
       "source_location": "L763",
-      "community": 134,
+      "community": 20,
       "norm_label": "inputfield()",
       "id": "invoices_page_inputfield"
     },
@@ -128415,7 +128415,7 @@
       "file_type": "code",
       "source_file": "src/app/landlord/invoices/page.tsx",
       "source_location": "L767",
-      "community": 134,
+      "community": 20,
       "norm_label": "studiolineitem()",
       "id": "invoices_page_studiolineitem"
     },
@@ -128424,7 +128424,7 @@
       "file_type": "code",
       "source_file": "src/app/landlord/invoices/page.tsx",
       "source_location": "L797",
-      "community": 134,
+      "community": 20,
       "norm_label": "utilityreadingstep()",
       "id": "invoices_page_utilityreadingstep"
     },
@@ -128784,7 +128784,7 @@
       "file_type": "code",
       "source_file": "src/components/landlord/dashboard/ActionRequired.tsx",
       "source_location": "L70",
-      "community": 20,
+      "community": 107,
       "norm_label": "statuslabel",
       "id": "dashboard_actionrequired_statuslabel"
     },
@@ -128793,7 +128793,7 @@
       "file_type": "code",
       "source_file": "src/components/landlord/dashboard/ActionRequired.tsx",
       "source_location": "L84",
-      "community": 20,
+      "community": 107,
       "norm_label": "getdaysuntil()",
       "id": "dashboard_actionrequired_getdaysuntil"
     },
@@ -187837,9 +187837,9 @@
       "source_file": "src/app/api/branding/route.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "branding_route",
-      "target": "supabase_server",
-      "confidence_score": 1.0
+      "target": "supabase_server"
     },
     {
       "relation": "imports",
@@ -187848,9 +187848,9 @@
       "source_file": "src/app/api/branding/route.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "branding_route",
-      "target": "supabase_server_createserversupabaseclient",
-      "confidence_score": 1.0
+      "target": "supabase_server_createserversupabaseclient"
     },
     {
       "relation": "calls",
@@ -246951,9 +246951,9 @@
       "source_file": "src/components/landlord/visual-planner/VisualBuilder.tsx",
       "source_location": "L25",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "visual_planner_visualbuilder",
-      "target": "supabase_client",
-      "confidence_score": 1.0
+      "target": "supabase_client"
     },
     {
       "relation": "imports",
@@ -246962,9 +246962,9 @@
       "source_file": "src/components/landlord/visual-planner/VisualBuilder.tsx",
       "source_location": "L25",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "visual_planner_visualbuilder",
-      "target": "supabase_client_createbrowsersupabaseclient",
-      "confidence_score": 1.0
+      "target": "supabase_client_createbrowsersupabaseclient"
     },
     {
       "relation": "imports_from",
@@ -408349,5 +408349,5 @@
       "source_file": "source-of-truth-db.sql"
     }
   ],
-  "built_at_commit": "f06959b81eca74b4b9db6431add4bb5d21892a2f"
+  "built_at_commit": "7ad8423ffd0fac3b9c1484c4a4584106f5f0ad0c"
 }

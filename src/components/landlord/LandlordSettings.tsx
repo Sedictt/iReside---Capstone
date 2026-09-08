@@ -159,17 +159,17 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
 
 function GlassCard({ children, className, title, description, headerExtra }: { children: React.ReactNode; className?: string; title?: string; description?: string; headerExtra?: React.ReactNode }) {
     return (
-        <div className={cn("relative overflow-hidden rounded-[2rem] neumorphic-panel transition-all duration-500", className)}>
+        <div className={cn("relative overflow-hidden rounded-2xl sm:rounded-[2rem] neumorphic-panel transition-all duration-500", className)}>
             {(title || description || headerExtra) && (
-                <div className="border-b border-border/60 px-8 py-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="border-b border-border/60 px-4 py-3.5 sm:px-6 sm:py-5 md:px-8 md:py-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div>
-                        {title && <h3 className="text-lg font-black text-foreground">{title}</h3>}
-                        {description && <p className="text-sm text-muted-foreground mt-1">{description}</p>}
+                        {title && <h3 className="text-base sm:text-lg font-black text-foreground">{title}</h3>}
+                        {description && <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">{description}</p>}
                     </div>
                     {headerExtra && <div className="shrink-0">{headerExtra}</div>}
                 </div>
             )}
-            <div className="p-8 text-foreground">{children}</div>
+            <div className="p-4 sm:p-6 md:p-8 text-foreground">{children}</div>
         </div>
     );
 }
@@ -209,22 +209,24 @@ function ToggleSwitch({ enabled, onToggle }: { enabled: boolean; onToggle: () =>
 
 function SubNav({ tabs, activeTab, onTabChange }: { tabs: string[]; activeTab: string; onTabChange: (tab: string) => void }) {
     return (
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            {tabs.map((tab) => (
-                <button
-                    key={tab}
-                    type="button"
-                    onClick={() => onTabChange(tab)}
-                    className={cn(
-                        "whitespace-nowrap rounded-xl px-5 py-2.5 text-xs font-black transition-all",
-                        activeTab === tab
-                            ? "neumorphic-primary text-primary-foreground font-black shadow-md"
-                            : "neumorphic-extruded text-muted-foreground hover:text-foreground font-bold"
-                    )}
-                >
-                    {tab}
-                </button>
-            ))}
+        <div className="relative">
+            <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-2 pt-0.5 scrollbar-hide px-0.5">
+                {tabs.map((tab) => (
+                    <button
+                        key={tab}
+                        type="button"
+                        onClick={() => onTabChange(tab)}
+                        className={cn(
+                            "whitespace-nowrap rounded-xl px-3.5 sm:px-5 py-2 sm:py-2.5 text-xs font-black transition-all cursor-pointer shrink-0",
+                            activeTab === tab
+                                ? "neumorphic-primary text-primary-foreground font-black shadow-md"
+                                : "neumorphic-extruded text-muted-foreground hover:text-foreground font-bold"
+                        )}
+                    >
+                        {tab}
+                    </button>
+                ))}
+            </div>
         </div>
     );
 }
@@ -305,6 +307,7 @@ export function LandlordSettings() {
     // UI State
     const [activeTab, setActiveTab] = useState<SettingsCategory>("Identity");
     const [activeSubTab, setActiveSubTab] = useState<string>("Profile");
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [justSaved, setJustSaved] = useState(false);
     const supabase = useMemo(() => createClient(), []);
@@ -1773,31 +1776,31 @@ export function LandlordSettings() {
                             >
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                     <SettingField label="Primary Brand Accent" icon={Palette} description="Used for primary buttons, active tabs, and key badges.">
-                                        <div className="flex items-center gap-3">
+                                        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 sm:gap-3">
                                             <button
                                                 type="button"
                                                 onClick={() => setIsPrimaryColorPickerOpen(true)}
-                                                className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl neumorphic-extruded border border-border/80 hover:border-primary/80 transition-all group cursor-pointer"
+                                                className="flex items-center gap-2 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl neumorphic-extruded border border-border/80 hover:border-primary/80 transition-all group cursor-pointer shrink-0"
                                                 title="Open modern color picker"
                                             >
                                                 <span 
-                                                    className="size-6 rounded-lg shadow-sm border border-white/20 shrink-0 transition-transform group-hover:scale-105" 
+                                                    className="size-5 sm:size-6 rounded-lg shadow-sm border border-white/20 shrink-0 transition-transform group-hover:scale-105" 
                                                     style={{ backgroundColor: brandPrimaryHex }} 
                                                 />
                                                 <span className="font-mono text-xs font-black uppercase text-foreground">
                                                     {brandPrimaryHex}
                                                 </span>
-                                                <Pipette className="size-3.5 text-muted-foreground group-hover:text-primary transition-colors ml-1" />
+                                                <Pipette className="size-3.5 text-muted-foreground group-hover:text-primary transition-colors ml-0.5 sm:ml-1" />
                                             </button>
                                             <input
                                                 type="text"
                                                 value={brandPrimaryHex}
                                                 onChange={(e) => setBrandPrimaryHex(e.target.value)}
                                                 placeholder="#C4B0FF"
-                                                className="w-28 uppercase font-mono text-xs font-bold rounded-xl neumorphic-inset px-3 py-3 text-foreground"
+                                                className="w-24 sm:w-28 uppercase font-mono text-xs font-bold rounded-xl neumorphic-inset px-3 py-2.5 sm:py-3 text-foreground"
                                             />
                                             <div 
-                                                className="size-10 rounded-xl border border-white/20 shadow-md flex items-center justify-center text-xs font-black"
+                                                className="size-9 sm:size-10 rounded-xl border border-white/20 shadow-md flex items-center justify-center text-xs font-black shrink-0"
                                                 style={{ backgroundColor: brandPrimaryHex, color: "#000" }}
                                             >
                                                 Aa
@@ -1806,31 +1809,31 @@ export function LandlordSettings() {
                                     </SettingField>
 
                                     <SettingField label="Secondary Ambient Accent" icon={SlidersHorizontal} description="Used for gradients, glowing highlights, and secondary tags.">
-                                        <div className="flex items-center gap-3">
+                                        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 sm:gap-3">
                                             <button
                                                 type="button"
                                                 onClick={() => setIsSecondaryColorPickerOpen(true)}
-                                                className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl neumorphic-extruded border border-border/80 hover:border-primary/80 transition-all group cursor-pointer"
+                                                className="flex items-center gap-2 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl neumorphic-extruded border border-border/80 hover:border-primary/80 transition-all group cursor-pointer shrink-0"
                                                 title="Open modern color picker"
                                             >
                                                 <span 
-                                                    className="size-6 rounded-lg shadow-sm border border-white/20 shrink-0 transition-transform group-hover:scale-105" 
+                                                    className="size-5 sm:size-6 rounded-lg shadow-sm border border-white/20 shrink-0 transition-transform group-hover:scale-105" 
                                                     style={{ backgroundColor: brandSecondaryHex }} 
                                                 />
                                                 <span className="font-mono text-xs font-black uppercase text-foreground">
                                                     {brandSecondaryHex}
                                                 </span>
-                                                <Pipette className="size-3.5 text-muted-foreground group-hover:text-primary transition-colors ml-1" />
+                                                <Pipette className="size-3.5 text-muted-foreground group-hover:text-primary transition-colors ml-0.5 sm:ml-1" />
                                             </button>
                                             <input
                                                 type="text"
                                                 value={brandSecondaryHex}
                                                 onChange={(e) => setBrandSecondaryHex(e.target.value)}
                                                 placeholder="#06B6D4"
-                                                className="w-28 uppercase font-mono text-xs font-bold rounded-xl neumorphic-inset px-3 py-3 text-foreground"
+                                                className="w-24 sm:w-28 uppercase font-mono text-xs font-bold rounded-xl neumorphic-inset px-3 py-2.5 sm:py-3 text-foreground"
                                             />
                                             <div 
-                                                className="size-10 rounded-xl border border-white/20 shadow-md flex items-center justify-center text-xs font-black text-white"
+                                                className="size-9 sm:size-10 rounded-xl border border-white/20 shadow-md flex items-center justify-center text-xs font-black text-white shrink-0"
                                                 style={{ backgroundColor: brandSecondaryHex }}
                                             >
                                                 Aa
@@ -2868,25 +2871,26 @@ export function LandlordSettings() {
     };
 
     return (
-        <div className="space-y-10">
+        <div className="space-y-6 sm:space-y-10">
             {/* Top Navigation Bar */}
-            <div className="flex items-center justify-between gap-4 pb-6 border-b border-border/40">
+            <div className="flex items-center justify-between gap-3 sm:gap-4 pb-4 sm:pb-6 border-b border-border/40">
                 <button
                     type="button"
                     onClick={handleRequestExit}
-                    className="flex items-center gap-2.5 text-muted-foreground hover:text-primary transition-colors group cursor-pointer w-fit"
+                    className="flex items-center gap-2 sm:gap-2.5 text-muted-foreground hover:text-primary transition-colors group cursor-pointer w-fit shrink-0"
                 >
                     <div className="size-8 rounded-full neumorphic-extruded flex items-center justify-center transition-all group-hover:scale-105 group-hover:text-primary">
                         <ChevronLeft className="size-4" />
                     </div>
-                    <span className="text-sm font-black tracking-wide">Back to Dashboard</span>
+                    <span className="text-xs sm:text-sm font-black tracking-wide hidden sm:inline">Back to Dashboard</span>
+                    <span className="text-xs font-black tracking-wide sm:hidden">Dashboard</span>
                 </button>
 
                 <div className="flex items-center gap-2 sm:gap-3">
                     {/* Background Sync Status Indicator */}
                     <div
                         className={cn(
-                            "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all border shadow-sm",
+                            "flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-bold transition-all border shadow-sm",
                             isSyncing
                                 ? "bg-primary/10 border-primary/20 text-primary animate-pulse"
                                 : syncError
@@ -2971,18 +2975,93 @@ export function LandlordSettings() {
                 </div>
             )}
 
-            <div className="min-h-[80vh] flex flex-col lg:flex-row gap-12">
-                {/* Sidebar */}
-                <div className="w-full lg:w-80 flex-shrink-0 space-y-6">
-                    <div className="flex items-center gap-4 px-4">
-                        <div className="flex size-12 items-center justify-center rounded-[1.2rem] bg-primary/20 text-primary border border-primary/20">
-                            <Layout className="size-6" />
-                        </div>
-                        <div>
-                            <h1 className="text-xl font-black text-foreground">Settings</h1>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Control Center</p>
+            <div className="min-h-[80vh] flex flex-col lg:flex-row gap-6 lg:gap-12">
+                {/* Mobile / Tablet Horizontal Navigation (< lg) */}
+                <div className="block lg:hidden space-y-3">
+                    <div className="flex items-center justify-between px-1">
+                        <div className="flex items-center gap-2.5">
+                            <div className="flex size-9 items-center justify-center rounded-xl bg-primary/20 text-primary border border-primary/20">
+                                <Layout className="size-4.5" />
+                            </div>
+                            <div>
+                                <h1 className="text-base font-black text-foreground leading-tight">Settings</h1>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                                    {SIDEBAR_ITEMS.find(i => i.id === activeTab)?.label}
+                                </p>
+                            </div>
                         </div>
                     </div>
+
+                    <div className="relative">
+                        <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1 scrollbar-hide -mx-1 px-1">
+                            {SIDEBAR_ITEMS.map((item) => {
+                                const Icon = item.icon;
+                                const isActive = activeTab === item.id;
+                                return (
+                                    <button
+                                        key={item.id}
+                                        type="button"
+                                        onClick={() => setActiveTab(item.id)}
+                                        className={cn(
+                                            "flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-black whitespace-nowrap transition-all duration-300 cursor-pointer shrink-0",
+                                            isActive
+                                                ? "neumorphic-panel text-primary font-black shadow-sm border-primary/30 ring-1 ring-primary/20"
+                                                : "neumorphic-extruded text-muted-foreground hover:text-foreground font-bold"
+                                        )}
+                                    >
+                                        <Icon className={cn("size-4 transition-transform", isActive ? "scale-110 text-primary" : "text-muted-foreground")} />
+                                        <span>{item.label}</span>
+                                        {isActive && (
+                                            <span className="size-1.5 rounded-full bg-primary" />
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Desktop Collapsible Sidebar (lg+) */}
+                <div className={cn(
+                    "hidden lg:block flex-shrink-0 space-y-6 transition-all duration-300",
+                    isSidebarCollapsed ? "w-20" : "w-80"
+                )}>
+                    <div className="flex items-center justify-between px-2">
+                        <div className={cn("flex items-center gap-4 transition-opacity", isSidebarCollapsed && "justify-center w-full")}>
+                            <div className="flex size-12 items-center justify-center rounded-[1.2rem] bg-primary/20 text-primary border border-primary/20 shrink-0">
+                                <Layout className="size-6" />
+                            </div>
+                            {!isSidebarCollapsed && (
+                                <div>
+                                    <h1 className="text-xl font-black text-foreground">Settings</h1>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Control Center</p>
+                                </div>
+                            )}
+                        </div>
+                        {!isSidebarCollapsed && (
+                            <button
+                                type="button"
+                                onClick={() => setIsSidebarCollapsed(true)}
+                                className="size-8 rounded-xl neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-primary transition-all cursor-pointer"
+                                title="Collapse sidebar"
+                            >
+                                <ChevronLeft className="size-4" />
+                            </button>
+                        )}
+                    </div>
+
+                    {isSidebarCollapsed && (
+                        <div className="flex justify-center">
+                            <button
+                                type="button"
+                                onClick={() => setIsSidebarCollapsed(false)}
+                                className="size-8 rounded-xl neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-primary transition-all cursor-pointer"
+                                title="Expand sidebar"
+                            >
+                                <ChevronRight className="size-4" />
+                            </button>
+                        </div>
+                    )}
 
                     <nav className="space-y-2">
                         {SIDEBAR_ITEMS.map((item) => {
@@ -2993,28 +3072,33 @@ export function LandlordSettings() {
                                     key={item.id}
                                     type="button"
                                     onClick={() => setActiveTab(item.id)}
+                                    title={isSidebarCollapsed ? `${item.label} — ${item.description}` : undefined}
                                     className={cn(
-                                        "group relative flex w-full flex-col items-start rounded-[1.5rem] px-6 py-5 transition-all duration-300 text-left cursor-pointer",
-                                        isActive 
+                                        "group relative flex transition-all duration-300 text-left cursor-pointer",
+                                        isSidebarCollapsed
                                             ? "neumorphic-panel text-primary font-black shadow-md border-primary/30" 
                                             : "neumorphic-extruded text-muted-foreground hover:text-foreground"
                                     )}
                                 >
-                                    <div className="flex w-full items-center justify-between">
+                                    <div className={cn("flex items-center", isSidebarCollapsed ? "justify-center" : "w-full justify-between")}>
                                         <Icon className={cn("size-5 transition-transform duration-300", isActive ? "scale-110 text-primary" : "text-muted-foreground group-hover:text-foreground")} />
                                         {isActive && (
                                             <motion.div 
                                                 layoutId="active-indicator"
-                                                className="size-1.5 rounded-full bg-primary" 
+                                                className={cn("rounded-full bg-primary", isSidebarCollapsed ? "hidden" : "size-1.5")} 
                                             />
                                         )}
                                     </div>
-                                    <span className={cn("mt-3 text-sm font-black transition-colors", isActive ? "text-primary" : "text-foreground group-hover:text-primary")}>
-                                        {item.label}
-                                    </span>
-                                    <span className="text-[10px] font-medium text-muted-foreground mt-0.5">
-                                        {item.description}
-                                    </span>
+                                    {!isSidebarCollapsed && (
+                                        <>
+                                            <span className={cn("mt-3 text-sm font-black transition-colors", isActive ? "text-primary" : "text-foreground group-hover:text-primary")}>
+                                                {item.label}
+                                            </span>
+                                            <span className="text-[10px] font-medium text-muted-foreground mt-0.5 line-clamp-1">
+                                                {item.description}
+                                            </span>
+                                        </>
+                                    )}
                                 </button>
                             );
                         })}
@@ -3051,9 +3135,8 @@ export function LandlordSettings() {
                 <ColorPickerModal
                     isOpen={isPrimaryColorPickerOpen}
                     onClose={() => setIsPrimaryColorPickerOpen(false)}
-                    title="Primary Brand Accent"
-                    subtitle="Used for primary buttons, active tabs, and key interactive elements"
                     color={brandPrimaryHex}
+                    title="Primary Brand Accent"
                     onChange={(newColor) => {
                         setBrandPrimaryHex(newColor);
                         applyBrandCssVariables(newColor, brandSecondaryHex);
@@ -3063,9 +3146,8 @@ export function LandlordSettings() {
                 <ColorPickerModal
                     isOpen={isSecondaryColorPickerOpen}
                     onClose={() => setIsSecondaryColorPickerOpen(false)}
-                    title="Secondary Ambient Tone"
-                    subtitle="Used for gradients, glowing highlights, and secondary tags"
                     color={brandSecondaryHex}
+                    title="Secondary Ambient Accent"
                     onChange={(newColor) => {
                         setBrandSecondaryHex(newColor);
                         applyBrandCssVariables(brandPrimaryHex, newColor);
@@ -3089,6 +3171,7 @@ export function LandlordSettings() {
                         }
                     }}
                 />
+
                 {/* Floating Save Action Bar (Appears when changes are pending or recently saved) */}
                 <AnimatePresence>
                     {(isDirty || isSaving || justSaved) && (
@@ -3097,7 +3180,7 @@ export function LandlordSettings() {
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: 50, scale: 0.95 }}
                             transition={{ type: "spring", stiffness: 450, damping: 30 }}
-                            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2.5 sm:gap-3.5 p-2 sm:p-2.5 pl-3.5 sm:pl-4 rounded-2xl bg-card/95 backdrop-blur-xl border border-border/80 shadow-2xl shadow-black/25 dark:shadow-primary/10 max-w-[calc(100vw-2rem)] ring-1 ring-border/20"
+                            className="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 sm:gap-3.5 p-2 sm:p-2.5 pl-3 sm:pl-4 rounded-2xl bg-card/95 backdrop-blur-xl border border-border/80 shadow-2xl shadow-black/25 dark:shadow-primary/10 max-w-[calc(100vw-1.5rem)] ring-1 ring-border/20 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] sm:pb-2.5"
                         >
                             {justSaved && !isDirty && !isSaving ? (
                                 <div className="flex items-center gap-2 px-3 py-1.5 text-xs font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
@@ -3107,10 +3190,10 @@ export function LandlordSettings() {
                             ) : (
                                 <>
                                     {/* Unsaved status badge */}
-                                    <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/30 text-xs font-black shrink-0">
+                                    <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 py-1.5 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/30 text-[11px] sm:text-xs font-black shrink-0">
                                         <span className="size-2 rounded-full bg-amber-500 animate-pulse" />
-                                        <span className="hidden xs:inline">Unsaved Changes</span>
-                                        <span className="xs:hidden">Unsaved</span>
+                                        <span className="hidden sm:inline">Unsaved Changes</span>
+                                        <span className="sm:hidden">Unsaved</span>
                                     </div>
 
                                     {/* Discard button */}
@@ -3118,11 +3201,11 @@ export function LandlordSettings() {
                                         type="button"
                                         onClick={handleDiscardChanges}
                                         disabled={isSaving}
-                                        className="flex items-center gap-1.5 px-3 py-2 text-xs font-black text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-xl transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                                        className="flex items-center gap-1 px-2.5 sm:px-3 py-2 text-xs font-black text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-xl transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
                                         title="Discard all pending changes"
                                     >
                                         <RotateCcw className="size-3.5" />
-                                        <span>Discard</span>
+                                        <span className="hidden sm:inline">Discard</span>
                                     </button>
 
                                     {/* Save All Changes Button */}
@@ -3130,7 +3213,7 @@ export function LandlordSettings() {
                                         type="button"
                                         onClick={handleSaveAll}
                                         disabled={isSaving}
-                                        className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-black uppercase tracking-wider transition-all shadow-md neumorphic-primary text-primary-foreground hover:scale-[1.02] active:scale-95 shadow-primary/20 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                                        className="flex items-center gap-1.5 sm:gap-2 rounded-xl px-3.5 sm:px-5 py-2.5 text-xs font-black uppercase tracking-wider transition-all shadow-md neumorphic-primary text-primary-foreground hover:scale-[1.02] active:scale-95 shadow-primary/20 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
                                     >
                                         {isSaving ? (
                                             <>
@@ -3140,7 +3223,8 @@ export function LandlordSettings() {
                                         ) : (
                                             <>
                                                 <Save className="size-4" />
-                                                <span>Save All Changes</span>
+                                                <span className="hidden sm:inline">Save All Changes</span>
+                                                <span className="sm:hidden">Save</span>
                                             </>
                                         )}
                                     </button>
