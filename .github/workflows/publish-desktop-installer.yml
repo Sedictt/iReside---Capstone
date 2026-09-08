@@ -1,0 +1,48 @@
+name: Publish branded Windows installer
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: "Public URL of this landlord's deployed iReside instance"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  package-and-publish:
+    name: Package Windows installer and publish it
+    runs-on: windows-latest
+    timeout-minutes: 30
+    env:
+      TARGET_URL: ${{ inputs.target_url }}
+      BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install web and desktop dependencies
+        run: |
+          npm ci
+          npm --prefix desktop ci
+
+      - name: Build tenant-branded Windows installer
+        run: npm run desktop:build
+
+      - name: Publish current installer to this Vercel Blob store
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem desktop/dist -File -Filter *.exe |
+            Where-Object { $_.Name -notmatch 'uninstaller' } |
+            Select-Object -First 1
+          if (-not $installer) { throw 'Electron Builder did not produce a Windows installer.' }
+          node desktop/scripts/publish-desktop-release.mjs "--installer=$($installer.FullName)"

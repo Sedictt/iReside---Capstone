@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DEFAULT_BRANDING, BrandConfig } from "@/context/BrandContext";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { queueBrandedInstaller } from "@/lib/desktop/queue-branded-installer";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 
 /**
@@ -94,7 +95,7 @@ export async function POST(request: NextRequest) {
     // 1. Fetch current primary property for this landlord (or any property if shared)
     let { data: existingProperty } = await admin
       .from("properties")
-      .select("id, map_decorations, images")
+      .select("id, name, map_decorations, images")
       .eq("landlord_id", userId)
       .order("created_at", { ascending: true })
       .limit(1)
@@ -103,7 +104,7 @@ export async function POST(request: NextRequest) {
     if (!existingProperty) {
       const { data: firstProp } = await admin
         .from("properties")
-        .select("id, map_decorations, images")
+        .select("id, name, map_decorations, images")
         .order("created_at", { ascending: true })
         .limit(1)
         .maybeSingle();
@@ -112,6 +113,7 @@ export async function POST(request: NextRequest) {
 
     const currentDecorations =
       (existingProperty?.map_decorations as Record<string, unknown>) || {};
+    const currentBranding = currentDecorations.branding as Partial<BrandConfig> | undefined;
     const updatedBrandingMeta: Partial<BrandConfig> = {
       primaryColor: body.primaryColor || DEFAULT_BRANDING.primaryColor,
       secondaryColor: body.secondaryColor || DEFAULT_BRANDING.secondaryColor,
@@ -161,7 +163,20 @@ export async function POST(request: NextRequest) {
       bannerUrl: body.bannerUrl || null,
     };
 
-    return NextResponse.json(fullBranding);
+    // A Windows installer cannot change its embedded icon or Start-menu name at
+    // runtime. Queue a fresh branded package after an identity change, but do
+    // not make a successful branding save depend on GitHub Actions availability.
+    const previousPropertyName = existingProperty?.name || DEFAULT_BRANDING.propertyName;
+    const previousLogoUrl =
+      currentBranding?.logoUrl || (existingProperty?.images?.[0] ? existingProperty.images[0] : null);
+    const identityChanged =
+      (body.propertyName !== undefined && body.propertyName !== previousPropertyName) ||
+      (body.logoUrl !== undefined && body.logoUrl !== previousLogoUrl);
+    const desktopBuildQueued = identityChanged
+      ? await queueBrandedInstaller(request.nextUrl.origin)
+      : false;
+
+    return NextResponse.json({ ...fullBranding, desktopBuildQueued });
   } catch (error: any) {
     console.error("[POST /api/branding] Error saving branding:", error);
     return NextResponse.json(

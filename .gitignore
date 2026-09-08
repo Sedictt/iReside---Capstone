@@ -103,6 +103,10 @@ node_modules/
 /.cursor
 /.gemini
 /.github
+!/.github/
+/.github/*
+!/.github/workflows/
+!/.github/workflows/*.yml
 /.opencode
 /.vscode
 /.windsurf
