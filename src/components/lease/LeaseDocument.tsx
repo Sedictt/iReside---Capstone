@@ -1,9 +1,49 @@
-"use client";
-
 import { m as motion } from "framer-motion";
 import { LeaseData } from "@/types/lease";
+import { cn } from "@/lib/utils";
 
-export function LeaseDocument(leaseDataProps: LeaseData) {
+export interface LeaseDocumentProps {
+    id: string;
+    start_date: string;
+    end_date: string;
+    monthly_rent: number;
+    security_deposit: number;
+    signed_at?: string | null;
+    signed_document_url?: string | null;
+    status?: string;
+    tenant_signature?: string | null;
+    tenant_signed_at?: string | null;
+    landlord_signature?: string | null;
+    landlord_signed_at?: string | null;
+    terms?: any;
+    unit?: {
+        name?: string;
+        property?: {
+            name?: string;
+            address?: string;
+            city?: string;
+            house_rules?: string[];
+            amenities?: any[];
+            [key: string]: any;
+        };
+        [key: string]: any;
+    };
+    landlord?: {
+        full_name?: string;
+        email?: string;
+        [key: string]: any;
+    };
+    tenant?: {
+        full_name?: string;
+        email?: string;
+        [key: string]: any;
+    };
+    containerId?: string;
+    className?: string;
+    disableAnimation?: boolean;
+}
+
+export function LeaseDocument(leaseDataProps: LeaseDocumentProps) {
     const {
         id: leaseId,
         landlord,
@@ -13,6 +53,9 @@ export function LeaseDocument(leaseDataProps: LeaseData) {
         end_date,
         monthly_rent,
         security_deposit,
+        containerId,
+        className,
+        disableAnimation = false,
     } = leaseDataProps;
 
     const parties = {
@@ -21,17 +64,31 @@ export function LeaseDocument(leaseDataProps: LeaseData) {
     };
 
     const property = {
-        unit: unit?.name || "Unit",
+        unit: unit?.name ? (unit.name.toLowerCase().startsWith("unit") ? unit.name : `Unit ${unit.name}`) : "Unit",
         street: unit?.property?.address || "Main Street",
-        city: unit?.property?.city || "Metro Manila",
+        city: unit?.property?.city || "",
         zip: "" // Optional if not in DB
     };
 
-    const term = {
-        start: start_date || "--",
-        end: end_date || "--"
+    const formatDateStr = (d?: string) => {
+        if (!d || d === "--") return "--";
+        try {
+            const dateObj = new Date(d);
+            if (isNaN(dateObj.getTime())) return d;
+            return dateObj.toLocaleDateString("en-US", {
+                month: "long",
+                day: "numeric",
+                year: "numeric"
+            });
+        } catch {
+            return d;
+        }
     };
 
+    const term = {
+        start: formatDateStr(start_date),
+        end: formatDateStr(end_date)
+    };
 
     const getOrdinalSuffix = (dayOfMonth: number): string => {
         if (dayOfMonth > 3 && dayOfMonth < 21) return 'th';
@@ -43,11 +100,11 @@ export function LeaseDocument(leaseDataProps: LeaseData) {
         }
     };
 
-const rentDetails = {
+    const dueDay = leaseDataProps.terms?.due_day ?? leaseDataProps.terms?.rent_due_day;
+    const rentDetails = {
         monthly: monthly_rent || 0,
-        due: leaseDataProps.terms?.rent_due_day ? `${leaseDataProps.terms.rent_due_day}${getOrdinalSuffix(leaseDataProps.terms.rent_due_day)} of the month` : "1st of the month"
+        due: dueDay ? `${dueDay}${getOrdinalSuffix(Number(dueDay))} of the month` : "1st of the month"
     };
-
 
     const deposit = security_deposit || 0;
     const currentDate = new Date().toLocaleDateString('en-US', {
@@ -56,12 +113,13 @@ const rentDetails = {
         day: 'numeric'
     });
 
-return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="relative mx-auto w-full max-w-4xl bg-white p-6 text-zinc-900 shadow-2xl md:p-8 lg:p-10 mb-32 print:shadow-none print:mb-0 transform-gpu font-serif"
+    return (
+        <div
+            id={containerId}
+            className={cn(
+                "relative mx-auto w-full max-w-4xl bg-white p-6 text-zinc-900 shadow-2xl md:p-8 lg:p-10 print:shadow-none print:mb-0 transform-gpu font-serif",
+                className
+            )}
             style={{ fontFamily: "'Times New Roman', Times, serif" }}
             suppressHydrationWarning
         >
@@ -178,29 +236,71 @@ return (
 
                 <div className="mt-8 pt-4 border-t border-zinc-200">
                     <div className="grid md:grid-cols-2 gap-12">
+                        {/* Tenant signature block */}
                         <div className="space-y-1.5">
-                            <div className="h-10 border-b border-zinc-400"></div>
-                            <p className="text-[8px] font-black uppercase tracking-widest text-zinc-500">
-                                LESSEE (TENANT) SIGNATURE
-                            </p>
-                        </div>
-                        <div className="space-y-1.5">
-                            <div className={`h-10 border-b border-zinc-400 flex items-end justify-start ${currentDate.length > 15 ? 'pb-0.5' : 'pb-1'}`}>
-                                <span className="text-zinc-950 font-mono text-[10px]">{currentDate}</span>
+                            <div className="h-12 border-b border-zinc-400 flex items-end pb-1">
+                                {leaseDataProps.tenant_signature ? (
+                                    <img 
+                                        src={leaseDataProps.tenant_signature} 
+                                        alt="Tenant Signature" 
+                                        className="h-10 max-w-full object-contain" 
+                                    />
+                                ) : (
+                                    <span className="text-[10px] text-zinc-400 italic">
+                                        {leaseDataProps.tenant_signed_at ? "Signed digitally" : "Pending signature"}
+                                    </span>
+                                )}
                             </div>
-                            <p className="text-[8px] font-black uppercase tracking-widest text-zinc-500">DATE OF EXECUTION</p>
+                            <div className="flex justify-between items-center">
+                                <p className="text-[8px] font-black uppercase tracking-widest text-zinc-500">
+                                    LESSEE (TENANT) SIGNATURE
+                                </p>
+                                {leaseDataProps.tenant_signed_at && (
+                                    <span className="text-[8px] font-mono text-zinc-500">
+                                        {new Date(leaseDataProps.tenant_signed_at).toLocaleDateString()}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Landlord signature block */}
+                        <div className="space-y-1.5">
+                            <div className="h-12 border-b border-zinc-400 flex items-end pb-1">
+                                {leaseDataProps.landlord_signature ? (
+                                    <img 
+                                        src={leaseDataProps.landlord_signature} 
+                                        alt="Landlord Signature" 
+                                        className="h-10 max-w-full object-contain" 
+                                    />
+                                ) : (
+                                    <span className="text-[10px] text-zinc-400 italic">
+                                        {leaseDataProps.landlord_signed_at ? "Signed digitally" : "Pending signature"}
+                                    </span>
+                                )}
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <p className="text-[8px] font-black uppercase tracking-widest text-zinc-500">
+                                    LESSOR (LANDLORD) SIGNATURE
+                                </p>
+                                <span className="text-[8px] font-mono text-zinc-500">
+                                    {leaseDataProps.landlord_signed_at 
+                                        ? new Date(leaseDataProps.landlord_signed_at).toLocaleDateString()
+                                        : currentDate}
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center overflow-hidden opacity-[0.015]">
-                <p className="-rotate-45 text-[min(10rem,12vw)] font-black uppercase text-zinc-950 select-none">
-                    LEGAL DRAFT
+            <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center overflow-hidden opacity-[0.02]">
+                <p className="-rotate-45 text-[min(8rem,10vw)] font-black uppercase text-zinc-950 select-none tracking-widest">
+                    {leaseDataProps.signed_at || leaseDataProps.landlord_signed_at || leaseDataProps.status === "active" 
+                        ? "OFFICIAL LEASE" 
+                        : "LEGAL DRAFT"}
                 </p>
             </div>
-
-        </motion.div>
+        </div>
     );
 }
 
