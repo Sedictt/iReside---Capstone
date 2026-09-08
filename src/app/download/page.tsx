@@ -26,6 +26,7 @@ import { Logo } from "@/components/ui/Logo";
 export default function AppDownloadPage() {
   const [activeModal, setActiveModal] = useState<"qr" | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [isWindowsDownloading, setIsWindowsDownloading] = useState(false);
 
   const handleCopyLink = () => {
     if (typeof window !== "undefined") {
@@ -39,28 +40,37 @@ export default function AppDownloadPage() {
   };
 
   const handleDownloadWindows = async () => {
-    const installerPath = "/downloads/iReside-Setup-v2.1.0-x64.exe";
     try {
-      const res = await fetch(installerPath, { method: "HEAD" });
-      if (res.ok) {
-        const a = document.createElement("a");
-        a.href = installerPath;
-        a.download = "iReside-Setup-v2.1.0-x64.exe";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        toast.success("Downloading Windows Installer", {
-          description: "iReside-Setup-v2.1.0-x64.exe has started downloading to your PC.",
-        });
-        return;
-      }
-    } catch {
-      // Fall through to notification
-    }
+      setIsWindowsDownloading(true);
+      const response = await fetch("/api/desktop-release", { cache: "no-store" });
+      const release = (await response.json()) as {
+        downloadUrl?: string;
+        filename?: string;
+        propertyName?: string;
+        error?: string;
+      };
 
-    toast.info("Windows Client Ready to Package", {
-      description: "Compile the standalone Windows setup installer using: npm run desktop:build",
-    });
+      if (!response.ok || !release.downloadUrl || !release.filename) {
+        throw new Error(release.error || "The Windows installer is not available yet.");
+      }
+
+      const link = document.createElement("a");
+      link.href = release.downloadUrl;
+      link.download = release.filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success("Downloading your branded Windows installer", {
+        description: `${release.filename} for ${release.propertyName || "this property"} has started downloading.`,
+      });
+    } catch (error) {
+      toast.error("Windows installer is not ready", {
+        description: error instanceof Error ? error.message : "Please try again shortly.",
+      });
+    } finally {
+      setIsWindowsDownloading(false);
+    }
   };
 
   const handleDownloadAndroid = () => {
@@ -158,10 +168,11 @@ export default function AppDownloadPage() {
 
             <button
               onClick={handleDownloadWindows}
-              className="w-full py-3.5 px-4 rounded-2xl neumorphic-primary active:scale-95 text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+              disabled={isWindowsDownloading}
+              className="w-full py-3.5 px-4 rounded-2xl neumorphic-primary active:scale-95 disabled:cursor-wait disabled:opacity-70 text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2"
             >
               <Download className="size-4" />
-              <span>Download for Windows (.exe)</span>
+              <span>{isWindowsDownloading ? "Preparing download..." : "Download for Windows (.exe)"}</span>
             </button>
           </div>
 
