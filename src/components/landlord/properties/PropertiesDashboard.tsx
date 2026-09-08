@@ -559,7 +559,7 @@ export function PropertiesDashboard() {
                                         <div className="neumorphic-inset-card size-12 text-primary rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                                             <Edit3 className="size-5" />
                                         </div>
-                                        <span className="text-sm font-medium text-foreground">Manage Property</span>
+                                        <span className="text-sm font-medium text-foreground">Edit Property</span>
                                     </Link>
                                     
                                     <Link href={`/landlord/unit-map?property=${activeProperty.id}`} className="neumorphic-extruded group flex flex-col items-center justify-center rounded-2xl p-4 transition-all">

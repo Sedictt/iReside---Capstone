@@ -121,3 +121,10 @@ supabase_backup/
 src/graphify-out/cache/
 graphify-out/cache/
 
+# Temporary Office Lock & Cache Files
+~$*
+test2.docx
+__pycache__/
+*.pyc
+
+

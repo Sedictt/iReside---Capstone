@@ -58,7 +58,7 @@
 10. [Maintenance Oversight & Work Orders](#10-maintenance-oversight--work-orders)
     - 10.1 [Maintenance Ticket Triage & Urgency Prioritization](#101-maintenance-ticket-triage--urgency-prioritization)
     - 10.2 [Assigning In-House Technicians or Third-Party Contractors](#102-assigning-in-house-technicians-or-third-party-contractors)
-    - 10.3 [Managing Ticket Lifecycle (Pending $\rightarrow$ In Progress $\rightarrow$ Resolved $\rightarrow$ Closed)](#103-managing-ticket-lifecycle-pending-rightarrow-in-progress-rightarrow-resolved-rightarrow-closed)
+    - 10.3 [Managing Ticket Lifecycle (Pending → In Progress → Resolved → Closed)](#103-managing-ticket-lifecycle-pending-rightarrow-in-progress-rightarrow-resolved-rightarrow-closed)
     - 10.4 [Handling Self-Repair Requests & Material Reimbursements](#104-handling-self-repair-requests--material-reimbursements)
     - 10.5 [Logging Maintenance Costs & Invoicing Tenant Damages](#105-logging-maintenance-costs--invoicing-tenant-damages)
 11. [Utility Meter Tracking & Utility Billing](#11-utility-meter-tracking--utility-billing)
@@ -129,8 +129,8 @@ iReside runs efficiently across any modern web browser:
 
 #### Installing as a Progressive Web App (PWA):
 1. **On Desktop (Chrome/Edge)**: Click the **Install iReside** icon in the URL search bar.
-2. **On iOS (Safari)**: Tap the **Share** icon $\rightarrow$ select **"Add to Home Screen"**.
-3. **On Android (Chrome)**: Tap the **Menu (⋮)** $\rightarrow$ select **"Install App"**.
+2. **On iOS (Safari)**: Tap the **Share** icon → select **"Add to Home Screen"**.
+3. **On Android (Chrome)**: Tap the **Menu (⋮)** → select **"Install App"**.
 
 ### 1.3 Installing the Dedicated Windows Desktop Client (.exe)
 For landlords and front-desk property managers managing buildings on office PCs:
@@ -710,7 +710,7 @@ Go to **Profile** (`/landlord/profile`) / **Settings** (`/landlord/settings`):
 A: Yes! You can add unlimited properties, buildings, and units under your landlord workspace.
 
 **Q: How do I adjust utility rates when government electric/water tariffs change?**  
-A: Go to **Utilities** $\rightarrow$ **Settings** and update the per-kWh or per-$m^3$ rate before generating the new month's readings.
+A: Go to **Utilities** → **Settings** and update the per-kWh or per-$m^3$ rate before generating the new month's readings.
 
 **Q: Are digital signatures generated on iReside legally binding?**  
 A: Yes. iReside complies with electronic signature standards (such as the Philippine E-Commerce Act of 2000 / RA 8792 and global e-sign frameworks), recording IP addresses, audit timestamps, and cryptographic hashes.
