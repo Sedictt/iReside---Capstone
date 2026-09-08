@@ -3172,9 +3172,12 @@ export function LandlordSettings() {
                                     onClick={() => setActiveTab(item.id)}
                                     title={isSidebarCollapsed ? `${item.label} — ${item.description}` : undefined}
                                     className={cn(
-                                        "group relative flex transition-all duration-300 text-left cursor-pointer",
+                                        "group relative flex flex-col transition-all duration-300 text-left cursor-pointer",
                                         isSidebarCollapsed
-                                            ? "neumorphic-panel text-primary font-black shadow-md border-primary/30" 
+                                            ? "w-full items-center justify-center rounded-2xl p-3.5"
+                                            : "w-full items-start rounded-[1.5rem] px-6 py-5",
+                                        isActive 
+                                            ? "neumorphic-panel text-primary font-black shadow-md border-primary/30 ring-1 ring-primary/20" 
                                             : "neumorphic-extruded text-muted-foreground hover:text-foreground"
                                     )}
                                 >
