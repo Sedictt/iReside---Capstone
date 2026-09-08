@@ -40,6 +40,7 @@ import { useAppToast } from "@/hooks/useAppToast";
 import { SortableUnit, FloorLane, floorDisplayName } from "./components/WizardUnits";
 import type { DbUnit, FloorConfig } from "./components/WizardUnits";
 import { BulkOrganizerPanel } from "./components/BulkOrganizerPanel";
+import { getUnitDimensions } from "./utils";
 
 interface MapSetupWizardProps {
     propertyId: string;
@@ -426,26 +427,23 @@ export function MapSetupWizard({
                 if (count === 0) continue;
 
                 let cols = 4;
-                if (count <= 2) cols = 2;
+                if (count <= 3) cols = count;
                 else if (count <= 6) cols = 3;
                 else if (count <= 12) cols = 4;
                 else if (count <= 24) cols = 5;
                 else cols = 6;
 
-                const availableWidth = BLUEPRINT_WIDTH - (PADDING * 2);
-                const unitW = (availableWidth - (cols - 1) * PADDING) / cols;
-                const unitH = Math.min(180, unitW * 0.65);
-
                 floorUnits.forEach((unit, idx) => {
                     const col = idx % cols;
                     const row = Math.floor(idx / cols);
+                    const dims = getUnitDimensions(unit.beds);
                     positions.push({
                         unitId: unit.id,
                         floorKey: fc.floor_key,
-                        x: PADDING + col * (unitW + PADDING),
-                        y: PADDING + row * (unitH + PADDING),
-                        w: Math.round(unitW),
-                        h: Math.round(unitH),
+                        x: PADDING + col * (dims.w + PADDING),
+                        y: PADDING + row * (dims.h + PADDING),
+                        w: dims.w,
+                        h: dims.h,
                     });
                 });
             }
