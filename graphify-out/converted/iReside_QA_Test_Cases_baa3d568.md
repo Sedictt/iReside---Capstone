@@ -1,6 +1,5 @@
 <!-- converted from iReside_QA_Test_Cases.docx -->
 
-
 | Design and Development of iReside: Property and Tenant Services Management System
 for the Landlords of Valenzuela City | Design and Development of iReside: Property and Tenant Services Management System
 for the Landlords of Valenzuela City | Design and Development of iReside: Property and Tenant Services Management System
@@ -68,9 +67,10 @@ Failed | Remarks |
 | TC-PM-016 | Visual Unit Map (/landlord/unit-map) | Inspect room details and tenant actions from the map side panel | Rooms exist on your visual floor plan. | 1. On the Visual Unit Map, click on any room box.
 2. Look at the Unit Details side panel that opens on the right.
 3. Check the tenant name, monthly rent, and available buttons (Message, History, or Walk-In). | The side panel displays full information about the room and who lives there. |  |  |  |
-| TC-PM-017 | Visual Unit Map (/landlord/unit-map) | Highlight only vacant rooms on the floor plan | Your building has both occupied and vacant rooms. | 1. Go to the Visual Unit Map.
-2. Click the "Vacant" filter button in the top toolbar.
-3. Look at the rooms on the floor plan. | All vacant rooms light up in green, while occupied rooms are filtered out. |  |  |  |
+| TC-PM-017 | Visual Unit Map (/landlord/unit-map) | Filter room availability using the bottom status dock | You have an active floor plan with both occupied and available rooms. | 1. Open the Visual Unit Map (`/landlord/unit-map`) and select your building.
+2. Locate the floating status filter bar at the bottom-left of the floor plan.
+3. Click the "Occupied" filter to turn it off (leaving "Available" active).
+4. Observe the rooms on the floor plan blueprint and the minimap. | Occupied rooms dim and turn grey, while Available rooms stay clearly highlighted with green borders and indicators. |  |  |  |
 | TC-PM-018 | Visual Unit Map (/landlord/unit-map) | Delete or decommission a vacant room from the floor plan | You have an empty room you want to remove. | 1. On the Visual Unit Map, click on the empty room.
 2. In the Unit Details side panel, scroll down to the bottom.
 3. Click the red "Remove Unit" button and confirm. | The room is permanently removed from the visual floor plan. |  |  |  |
