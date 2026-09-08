@@ -22,6 +22,7 @@ import { TenantInviteManager } from "@/components/landlord/applications/TenantIn
 import { QrCode, X, ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
+import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 
 const EMPTY_ARRAY: any[] = [];
 const EMPTY_OBJECT = Object.freeze({});
@@ -307,6 +308,18 @@ export default function VisualBuilder({
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [position, setPosition] = useState({ x: 0, y: 0 });
     const [activeFloor, setActiveFloor] = useState<FloorId>(DEFAULT_ACTIVE_FLOOR);
+    const activeFloorRef = useRef(activeFloor);
+    useEffect(() => {
+        activeFloorRef.current = activeFloor;
+    }, [activeFloor]);
+
+    const builderInstanceId = useRef<string>(
+        typeof crypto !== "undefined" && crypto.randomUUID
+            ? crypto.randomUUID()
+            : Math.random().toString(36).substring(2, 9)
+    );
+    const realtimeChannelRef = useRef<any>(null);
+    const isRemoteUpdateRef = useRef(false);
     const [draggingUnitId, setDraggingUnitId] = useState<string | null>(null);
     const [draggingCorridorId, setDraggingCorridorId] = useState<string | null>(null);
     const [draggingStructureId, setDraggingStructureId] = useState<string | null>(null);
@@ -487,6 +500,89 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         return () => clearInterval(interval);
     }, [demoMode, units.length]);
 
+    // Helper to process & apply data payload
+    const applyMapData = useCallback((data: {
+        floorConfigs: FloorConfig[];
+        units: DbUnit[];
+        mapDecorations: Record<string, { corridors?: Corridor[]; structures?: Structure[] }>;
+        isSetupComplete: boolean;
+        placedCount: number;
+        totalUnits: number;
+    }, isRemote: boolean = false) => {
+        if (isRemote) {
+            isRemoteUpdateRef.current = true;
+        }
+        const unplaced = data.units.filter((u: DbUnit) => u.position === null);
+        const newFloorLayouts: Record<FloorId, FloorLayout> = {};
+        
+        for (const fc of data.floorConfigs) {
+            newFloorLayouts[fc.floor_key] = {
+                name: fc.display_name ?? undefined,
+                units: [],
+                corridors: (data.mapDecorations[fc.floor_key]?.corridors ?? []) as Corridor[],
+                structures: (data.mapDecorations[fc.floor_key]?.structures ?? []) as Structure[],
+            };
+        }
+        if (Object.keys(newFloorLayouts).length === 0) {
+            newFloorLayouts["floor1"] = { units: [], corridors: [], structures: [] };
+        }
+        for (const dbUnit of data.units) {
+            if (!dbUnit.position) continue;
+            const fk = dbUnit.position.floor_key;
+            if (!newFloorLayouts[fk]) newFloorLayouts[fk] = { units: [], corridors: [], structures: [] };
+            newFloorLayouts[fk].units.push(dbUnitToCanvasUnit(dbUnit));
+        }
+        
+        const storedActiveFloor = typeof window !== "undefined"
+            ? window.localStorage.getItem(SCOPED_ACTIVE_FLOOR_KEY)
+            : null;
+        const orderedFloorKeys = Array.from(new Set([
+            ...data.floorConfigs.map((fc) => fc.floor_key),
+            ...Object.keys(newFloorLayouts),
+        ]));
+        const firstPopulatedFloorKey = orderedFloorKeys.find((floorKey) => {
+            const layout = newFloorLayouts[floorKey];
+            return Boolean(layout) && (layout.units.length > 0 || layout.corridors.length > 0 || layout.structures.length > 0);
+        });
+        const currentFloorKey = activeFloorRef.current || activeFloor;
+        const targetFloorKey = (
+            currentFloorKey && newFloorLayouts[currentFloorKey]
+                ? currentFloorKey
+                : (storedActiveFloor && newFloorLayouts[storedActiveFloor]
+                    ? storedActiveFloor
+                    : firstPopulatedFloorKey
+                        ?? data.floorConfigs[0]?.floor_key
+                        ?? orderedFloorKeys[0]
+                        ?? "floor1")
+        );
+        
+        const targetUnits = newFloorLayouts[targetFloorKey]?.units ?? [];
+        const targetCorridors = newFloorLayouts[targetFloorKey]?.corridors ?? [];
+        const targetStructures = newFloorLayouts[targetFloorKey]?.structures ?? [];
+
+        setDbUnits(data.units);
+        setFloorConfigs(data.floorConfigs);
+        setIsSetupComplete(data.isSetupComplete);
+        setPlacedCount(data.placedCount);
+        setTotalDbUnits(data.totalUnits);
+        setUnplacedDbUnits(unplaced);
+        setFloorLayouts(newFloorLayouts);
+        setActiveFloor(targetFloorKey);
+        setUnits(targetUnits);
+        setCorridors(targetCorridors);
+        setStructures(targetStructures);
+        setHasHydratedFloorState(true);
+
+        isUndoingRef.current = true;
+        historyRef.current = [{
+            units: targetUnits,
+            corridors: targetCorridors,
+            structures: targetStructures,
+        }];
+        historyIndexRef.current = 0;
+        setUndoAvailable(false);
+    }, [SCOPED_ACTIVE_FLOOR_KEY, activeFloor]);
+
     // ---------------------------------------------------------------
     // Load real data from DB when a property is selected (SWR Instant Cache)
     // ---------------------------------------------------------------
@@ -497,83 +593,6 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         const controller = new AbortController();
         const cacheKey = `ireside.mapCache.${selectedPropertyId}`;
 
-        // Helper to process & apply data payload
-        const applyMapData = (data: {
-            floorConfigs: FloorConfig[];
-            units: DbUnit[];
-            mapDecorations: Record<string, { corridors?: Corridor[]; structures?: Structure[] }>;
-            isSetupComplete: boolean;
-            placedCount: number;
-            totalUnits: number;
-        }) => {
-            const unplaced = data.units.filter((u: DbUnit) => u.position === null);
-            const newFloorLayouts: Record<FloorId, FloorLayout> = {};
-            
-            for (const fc of data.floorConfigs) {
-                newFloorLayouts[fc.floor_key] = {
-                    name: fc.display_name ?? undefined,
-                    units: [],
-                    corridors: (data.mapDecorations[fc.floor_key]?.corridors ?? []) as Corridor[],
-                    structures: (data.mapDecorations[fc.floor_key]?.structures ?? []) as Structure[],
-                };
-            }
-            if (Object.keys(newFloorLayouts).length === 0) {
-                newFloorLayouts["floor1"] = { units: [], corridors: [], structures: [] };
-            }
-            for (const dbUnit of data.units) {
-                if (!dbUnit.position) continue;
-                const fk = dbUnit.position.floor_key;
-                if (!newFloorLayouts[fk]) newFloorLayouts[fk] = { units: [], corridors: [], structures: [] };
-                newFloorLayouts[fk].units.push(dbUnitToCanvasUnit(dbUnit));
-            }
-            
-            const storedActiveFloor = typeof window !== "undefined"
-                ? window.localStorage.getItem(SCOPED_ACTIVE_FLOOR_KEY)
-                : null;
-            const orderedFloorKeys = Array.from(new Set([
-                ...data.floorConfigs.map((fc) => fc.floor_key),
-                ...Object.keys(newFloorLayouts),
-            ]));
-            const firstPopulatedFloorKey = orderedFloorKeys.find((floorKey) => {
-                const layout = newFloorLayouts[floorKey];
-                return Boolean(layout) && (layout.units.length > 0 || layout.corridors.length > 0 || layout.structures.length > 0);
-            });
-            const initialFloorKey = (
-                storedActiveFloor && newFloorLayouts[storedActiveFloor]
-                    ? storedActiveFloor
-                    : firstPopulatedFloorKey
-                        ?? data.floorConfigs[0]?.floor_key
-                        ?? orderedFloorKeys[0]
-                        ?? "floor1"
-            );
-            
-            const initialUnits = newFloorLayouts[initialFloorKey]?.units ?? [];
-            const initialCorridors = newFloorLayouts[initialFloorKey]?.corridors ?? [];
-            const initialStructures = newFloorLayouts[initialFloorKey]?.structures ?? [];
-
-            setDbUnits(data.units);
-            setFloorConfigs(data.floorConfigs);
-            setIsSetupComplete(data.isSetupComplete);
-            setPlacedCount(data.placedCount);
-            setTotalDbUnits(data.totalUnits);
-            setUnplacedDbUnits(unplaced);
-            setFloorLayouts(newFloorLayouts);
-            setActiveFloor(initialFloorKey);
-            setUnits(initialUnits);
-            setCorridors(initialCorridors);
-            setStructures(initialStructures);
-            setHasHydratedFloorState(true);
-
-            isUndoingRef.current = true;
-            historyRef.current = [{
-                units: initialUnits,
-                corridors: initialCorridors,
-                structures: initialStructures,
-            }];
-            historyIndexRef.current = 0;
-            setUndoAvailable(false);
-        };
-
         // 1. Instant Cache Hydration (0ms)
         let hasCache = false;
         if (typeof window !== "undefined") {
@@ -582,7 +601,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                 if (rawCache) {
                     const parsed = JSON.parse(rawCache);
                     if (parsed && Array.isArray(parsed.units) && Array.isArray(parsed.floorConfigs)) {
-                        applyMapData(parsed);
+                        applyMapData(parsed, true);
                         setIsLoadingMap(false);
                         hasCache = true;
                     }
@@ -621,7 +640,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                 };
 
                 // Apply fresh data
-                applyMapData(data);
+                applyMapData(data, true);
 
                 // Save to cache for next instant load
                 if (typeof window !== "undefined") {
@@ -641,7 +660,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         void load();
         return () => controller.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedPropertyId, refreshKey, demoMode]);
+    }, [selectedPropertyId, refreshKey, demoMode, applyMapData]);
 
     useEffect(() => {
         if (typeof window === "undefined") return;
@@ -699,6 +718,90 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
     // Helper to update undo availability state
     const [undoAvailable, setUndoAvailable] = useState(false);
+
+    // ---------------------------------------------------------------
+    // Realtime synchronization across devices & tabs
+    // ---------------------------------------------------------------
+    useEffect(() => {
+        if (demoMode || !selectedPropertyId || selectedPropertyId === "all") return;
+
+        let channel: any = null;
+        try {
+            const supabase = createBrowserSupabaseClient();
+            channel = supabase
+                .channel(`ireside-unitmap-${selectedPropertyId}`, {
+                    config: { broadcast: { self: false } },
+                })
+                .on("broadcast", { event: "unitmap-updated" }, async (payload: any) => {
+                    const data = payload?.payload;
+                    if (!data) return;
+                    if (data.senderId && data.senderId === builderInstanceId.current) return;
+                    if (activeDragItem !== null || isPanningRef.current) return;
+
+                    try {
+                        const endpoint = readOnly 
+                            ? "/api/tenant/unit-map" 
+                            : `/api/landlord/unit-map?propertyId=${selectedPropertyId}`;
+                        
+                        const res = await fetch(endpoint, {
+                            cache: "no-store",
+                        });
+                        if (res.ok) {
+                            const freshData = await res.json();
+                            if (freshData && Array.isArray(freshData.units) && Array.isArray(freshData.floorConfigs)) {
+                                applyMapData(freshData, true);
+                                try {
+                                    const cacheKey = `ireside.mapCache.${selectedPropertyId}`;
+                                    window.sessionStorage.setItem(cacheKey, JSON.stringify(freshData));
+                                    window.localStorage.setItem(cacheKey, JSON.stringify(freshData));
+                                } catch {}
+                            }
+                        }
+                    } catch (fetchErr) {
+                        console.warn("[VisualBuilder] Realtime revalidate failed:", fetchErr);
+                    }
+                })
+                .subscribe();
+
+            realtimeChannelRef.current = channel;
+        } catch (err) {
+            console.warn("[VisualBuilder] Realtime channel setup error:", err);
+        }
+
+        return () => {
+            if (channel) {
+                try {
+                    const supabase = createBrowserSupabaseClient();
+                    supabase.removeChannel(channel);
+                } catch {}
+            }
+            realtimeChannelRef.current = null;
+        };
+    }, [selectedPropertyId, demoMode, readOnly, applyMapData, activeDragItem]);
+
+    // Revalidate when user returns to or focuses the window/tab
+    useEffect(() => {
+        if (demoMode || !selectedPropertyId || selectedPropertyId === "all") return;
+
+        const handleFocus = () => {
+            if (activeDragItem !== null || isPanningRef.current) return;
+            const endpoint = readOnly 
+                ? "/api/tenant/unit-map" 
+                : `/api/landlord/unit-map?propertyId=${selectedPropertyId}`;
+            
+            fetch(endpoint, { cache: "no-store" })
+                .then(res => res.ok ? res.json() : null)
+                .then(freshData => {
+                    if (freshData && Array.isArray(freshData.units) && Array.isArray(freshData.floorConfigs)) {
+                        applyMapData(freshData, true);
+                    }
+                })
+                .catch(() => {});
+        };
+
+        window.addEventListener("focus", handleFocus);
+        return () => window.removeEventListener("focus", handleFocus);
+    }, [selectedPropertyId, demoMode, readOnly, applyMapData, activeDragItem]);
 
     // Tenant transfer request state
     const [transferModalUnit, setTransferModalUnit] = useState<Unit | null>(null);
@@ -2158,6 +2261,12 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     useEffect(() => {
         if (!selectedPropertyId || selectedPropertyId === "all" || !hasHydratedFloorState || readOnly) return;
 
+        // Skip auto-saving if this state update came from a remote sync or initial load
+        if (isRemoteUpdateRef.current) {
+            isRemoteUpdateRef.current = false;
+            return;
+        }
+
         if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
         setSaveStatus("waiting");
         autoSaveTimerRef.current = setTimeout(async () => {
@@ -2199,13 +2308,34 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                 }
             }
             try {
-                await fetch("/api/landlord/unit-map", {
+                const res = await fetch("/api/landlord/unit-map", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ propertyId: selectedPropertyId, positions: allPositions, decorations }),
                 });
-                setSaveStatus("saved");
-                setTimeout(() => setSaveStatus("idle"), 3000);
+                if (res.ok) {
+                    setSaveStatus("saved");
+                    setTimeout(() => setSaveStatus("idle"), 3000);
+
+                    // Broadcast real-time update to all other connected tabs / devices
+                    if (realtimeChannelRef.current) {
+                        try {
+                            realtimeChannelRef.current.send({
+                                type: "broadcast",
+                                event: "unitmap-updated",
+                                payload: {
+                                    propertyId: selectedPropertyId,
+                                    senderId: builderInstanceId.current,
+                                    timestamp: Date.now(),
+                                },
+                            });
+                        } catch (bcErr) {
+                            console.warn("[VisualBuilder] Failed to broadcast unitmap update:", bcErr);
+                        }
+                    }
+                } else {
+                    setSaveStatus("idle");
+                }
             } catch (err) {
                 console.error("Auto-save failed:", err);
                 setSaveStatus("idle");

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { applyBrandCssVariables, getMonogramInitials } from "@/lib/branding/colors";
 import { OfflineStorage } from "@/lib/offline/offlineStorage";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
@@ -39,6 +39,7 @@ const BrandContext = createContext<BrandContextValue | null>(null);
 export function BrandProvider({ children }: { children: React.ReactNode }) {
   const [branding, setBranding] = useState<BrandConfig>(DEFAULT_BRANDING);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const realtimeChannelRef = useRef<any>(null);
 
   // Load from local storage or cached snapshot
   const loadLocalSnapshot = useCallback((): BrandConfig => {
@@ -140,7 +141,9 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
     try {
       const supabase = createBrowserSupabaseClient();
       channel = supabase
-        .channel("ireside-branding-realtime")
+        .channel("ireside-branding-realtime", {
+          config: { broadcast: { self: false } },
+        })
         .on("broadcast", { event: "brand-updated" }, (payload: any) => {
           if (payload?.payload) {
             const data: BrandConfig = payload.payload;
@@ -160,6 +163,7 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
           }
         })
         .subscribe();
+      realtimeChannelRef.current = channel;
     } catch (err) {
       console.warn("[BrandProvider] Realtime channel init note:", err);
     }
@@ -167,6 +171,7 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
     return () => {
       window.removeEventListener("property-branding-updated", handleBrandingEvent);
       window.removeEventListener("focus", handleFocus);
+      realtimeChannelRef.current = null;
       if (channel) {
         try {
           const supabase = createBrowserSupabaseClient();
@@ -231,20 +236,16 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
       }
 
       // 3. Broadcast to other connected devices via Realtime channel
-      try {
-        const supabase = createBrowserSupabaseClient();
-        const ch = supabase.channel("ireside-branding-realtime");
-        ch.subscribe((status) => {
-          if (status === "SUBSCRIBED") {
-            ch.send({
-              type: "broadcast",
-              event: "brand-updated",
-              payload: merged,
-            });
-          }
-        });
-      } catch (broadcastErr) {
-        console.warn("[BrandProvider] Realtime broadcast note:", broadcastErr);
+      if (realtimeChannelRef.current) {
+        try {
+          realtimeChannelRef.current.send({
+            type: "broadcast",
+            event: "brand-updated",
+            payload: merged,
+          });
+        } catch (broadcastErr) {
+          console.warn("[BrandProvider] Realtime broadcast error:", broadcastErr);
+        }
       }
 
       // 4. Persist to backend database if requested
