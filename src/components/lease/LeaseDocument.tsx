@@ -123,15 +123,15 @@ export function LeaseDocument(leaseDataProps: LeaseDocumentProps) {
             style={{ fontFamily: "'Times New Roman', Times, serif" }}
             suppressHydrationWarning
         >
-            <header className="mb-6 border-b-2 border-zinc-900 pb-3 flex flex-col md:flex-row justify-between items-start md:items-end gap-4 relative z-10">
+            <header className="mb-6 border-b-2 border-zinc-900 pb-3 flex justify-between items-end gap-4 relative z-10">
                 <div>
-                    <h1 className="mb-0.5 text-xl font-black tracking-tight text-zinc-950 md:text-2xl">
+                    <h1 className="mb-0.5 text-xl font-black tracking-tight text-zinc-950 md:text-2xl leading-none">
                         RESIDENTIAL LEASE AGREEMENT
                     </h1>
-                    <p className="text-sm text-zinc-600 italic leading-none">Official Binding Documentation</p>
+                    <p className="text-sm text-zinc-600 italic leading-none mt-1">Official Binding Documentation</p>
                 </div>
-                <div className="text-right text-[9px] uppercase text-zinc-500 font-mono tracking-widest">
-                    <p className="font-black">Ref: #{leaseId}</p>
+                <div className="text-right text-[9px] uppercase text-zinc-500 font-mono tracking-widest shrink-0">
+                    <p className="font-black text-zinc-700">Ref: #{leaseId ? (leaseId.length > 16 ? leaseId.slice(0, 8).toUpperCase() : leaseId.toUpperCase()) : "OFFICIAL"}</p>
                     <p>Date: {currentDate}</p>
                 </div>
             </header>

@@ -266,75 +266,77 @@ function LeasesContent() {
  <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
  <div className="space-y-8 lg:col-span-2">
  <div className="overflow-hidden rounded-[2.5rem] neumorphic-panel ">
- <div className="border-b border-white/5 neumorphic-inset p-8">
- <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
- <div className="space-y-1">
- <div className="flex items-center gap-3">
- <h1 className="text-3xl font-black tracking-tight text-foreground">
- Lease Agreement
- </h1>
- <LeaseStatusBadge status={lease.status} />
- </div>
- <p className="text-sm font-medium text-muted-foreground">
- ID: {lease.id}
- </p>
- </div>
- <div className="flex flex-wrap items-center gap-3">
-                  {/* View Mode Toggle */}
-                  <div className="flex items-center rounded-xl neumorphic-inset p-1">
-                    <button
-                      type="button"
-                      onClick={() => setLeaseViewMode("overview")}
-                      className={cn(
-                        "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-black uppercase tracking-wider transition-all",
-                        leaseViewMode === "overview"
-                          ? "neumorphic-panel text-primary"
-                          : "text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      <LayoutDashboard className="size-3.5" />
-                      Overview
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setLeaseViewMode("document")}
-                      className={cn(
-                        "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-black uppercase tracking-wider transition-all",
-                        leaseViewMode === "document"
-                          ? "neumorphic-panel text-primary"
-                          : "text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      <FileText className="size-3.5" />
-                      Agreement
-                    </button>
+              <div className="border-b border-border/30 neumorphic-inset px-6 py-5 sm:px-8 sm:py-6">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="space-y-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
+                        Lease Agreement
+                      </h1>
+                      <LeaseStatusBadge status={lease.status} />
+                    </div>
+                    <p className="text-xs font-mono text-muted-foreground">
+                      ID: <span className="font-semibold text-foreground">{lease.id ? (lease.id.length > 16 ? lease.id.slice(0, 8).toUpperCase() : lease.id) : "N/A"}</span>
+                    </p>
                   </div>
 
-                  {/* Export PDF Button */}
-                  <button
-                    onClick={handleExportPdf}
-                    disabled={isExportingPdf}
-                    className="flex h-11 items-center gap-2 rounded-xl neumorphic-panel px-5 text-xs font-black uppercase tracking-widest transition-all hover:neumorphic-inset disabled:opacity-50 disabled:cursor-not-allowed"
-                    title="Export official Lease Agreement PDF"
-                  >
-                    {isExportingPdf ? (
-                      <Loader2 className="size-4 animate-spin text-primary" />
-                    ) : (
-                      <Download className="size-4" />
-                    )}
-                    <span>{isExportingPdf ? "Exporting..." : "Export PDF"}</span>
-                  </button>
+                  <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+                    {/* View Mode Toggle */}
+                    <div className="flex items-center rounded-xl neumorphic-inset p-1">
+                      <button
+                        type="button"
+                        onClick={() => setLeaseViewMode("document")}
+                        className={cn(
+                          "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-black uppercase tracking-wider transition-all",
+                          leaseViewMode === "document"
+                            ? "neumorphic-panel text-primary shadow-sm"
+                            : "text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        <FileText className="size-3.5" />
+                        Agreement
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setLeaseViewMode("overview")}
+                        className={cn(
+                          "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-black uppercase tracking-wider transition-all",
+                          leaseViewMode === "overview"
+                            ? "neumorphic-panel text-primary shadow-sm"
+                            : "text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        <LayoutDashboard className="size-3.5" />
+                        Overview
+                      </button>
+                    </div>
+
+                    {/* Export PDF Button */}
+                    <button
+                      onClick={handleExportPdf}
+                      disabled={isExportingPdf}
+                      className="flex h-10 items-center gap-2 rounded-xl neumorphic-panel px-4 text-xs font-black uppercase tracking-widest transition-all hover:neumorphic-inset disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                      title="Export official Lease Agreement PDF"
+                    >
+                      {isExportingPdf ? (
+                        <Loader2 className="size-3.5 animate-spin text-primary" />
+                      ) : (
+                        <Download className="size-3.5" />
+                      )}
+                      <span>{isExportingPdf ? "Exporting..." : "Export PDF"}</span>
+                    </button>
+                  </div>
                 </div>
- </div>
- </div>
+              </div>
 
             {leaseViewMode === "document" ? (
-              <div className="flex justify-center overflow-x-auto rounded-b-[2.5rem] bg-neutral-900/40 p-4 sm:p-8">
-                <div className="w-full max-w-4xl overflow-hidden rounded-2xl bg-white shadow-2xl">
+              <div className="flex justify-center overflow-x-auto rounded-b-[2.5rem] neumorphic-inset p-4 sm:p-8 md:p-10 bg-neutral-100/60 dark:bg-black/20">
+                <div className="w-full max-w-3xl overflow-hidden rounded-xl bg-white shadow-xl border border-zinc-200/70">
                   {formattedLeaseData && (
                     <LeaseDocument
                       containerId="official-lease-document-visible"
                       disableAnimation={false}
+                      className="shadow-none border-none max-w-none p-6 sm:p-8 md:p-10"
                       {...formattedLeaseData}
                     />
                   )}
@@ -499,21 +501,21 @@ function LeasesContent() {
           )}
         </div>
 
- <div className="space-y-8">
- <div className="rounded-[2.5rem] neumorphic-panel p-8 ">
- <div className="mb-6 flex items-center justify-between">
- <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
- Audit Trail
- </h3>
- <History className="size-4 text-muted-foreground/50" />
- </div>
- <LeaseAuditTrail events={[]} />
- </div>
+  <div className="space-y-6">
+  <div className="rounded-3xl neumorphic-panel p-6">
+  <div className="mb-4 flex items-center justify-between">
+  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
+  Audit Trail
+  </h3>
+  <History className="size-4 text-muted-foreground/50" />
+  </div>
+  <LeaseAuditTrail events={[]} />
+  </div>
 
- <div className="space-y-6 rounded-[2.5rem] neumorphic-panel p-8 ">
- <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
- Signature Status
- </h3>
+  <div className="space-y-4 rounded-3xl neumorphic-panel p-6">
+  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
+  Signature Status
+  </h3>
  <div className="space-y-4">
  <div className="flex items-center justify-between rounded-2xl neumorphic-inset p-4">
  <div className="flex items-center gap-3">
