@@ -21,10 +21,13 @@ import {
  ArrowDown10,
  CalendarRange,
  RotateCcw,
+ Loader2,
 } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { m as motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { generateLeasePdf } from "@/lib/lease-pdf";
 import {
  DropdownMenu,
  DropdownMenuContent,
@@ -100,6 +103,77 @@ function LeasesContent() {
  });
  };
 
+ const [isExportingPdf, setIsExportingPdf] = useState(false);
+
+ const handleExportPdf = async () => {
+    if (!lease) return;
+    setIsExportingPdf(true);
+    try {
+      let pdfBlob: Blob | null = null;
+
+      // 1. If an official signed document URL exists and is reachable, use it
+      if (lease.signed_document_url) {
+        try {
+          const response = await fetch(lease.signed_document_url);
+          if (response.ok) {
+            pdfBlob = await response.blob();
+          }
+        } catch (fetchErr) {
+          console.warn("[Export PDF] Failed to fetch stored signed doc, falling back to generator:", fetchErr);
+        }
+      }
+
+      // 2. Generate PDF client-side if no pre-stored PDF or fetch failed
+      if (!pdfBlob) {
+        pdfBlob = await generateLeasePdf({
+          id: lease.id,
+          startDate: formatDate(lease.start_date),
+          endDate: formatDate(lease.end_date),
+          monthlyRent: Number(lease.monthly_rent || 0),
+          securityDeposit: Number(lease.security_deposit || 0),
+          property: {
+            name: lease.unit?.property?.name || lease.property?.name || "Residential Property",
+            address: lease.unit?.property?.address || lease.property?.address || "Address not specified",
+            contract_template: lease.unit?.property?.contract_template || lease.property?.contract_template,
+          },
+          unit: {
+            name: lease.unit?.name || "Unit",
+          },
+          landlord: {
+            name: lease.landlord?.full_name || "Landlord",
+            email: lease.landlord?.email || "",
+          },
+          tenant: {
+            name: lease.tenant?.full_name || "Tenant",
+            email: lease.tenant?.email || "",
+          },
+          terms: lease.terms,
+          tenantSignature: lease.tenant_signature || undefined,
+          tenantSignedAt: lease.tenant_signed_at || undefined,
+          landlordSignature: lease.landlord_signature || undefined,
+          landlordSignedAt: lease.landlord_signed_at || undefined,
+        });
+      }
+
+      // 3. Trigger download
+      const url = URL.createObjectURL(pdfBlob);
+      const a = document.createElement("a");
+      a.href = url;
+      const shortId = lease.id ? lease.id.slice(0, 8) : "agreement";
+      a.download = `Lease_Agreement_${shortId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success("Lease PDF exported successfully!");
+    } catch (err) {
+      console.error("[Export PDF] Failed:", err);
+      toast.error("Failed to export lease PDF. Please try again.");
+    } finally {
+      setIsExportingPdf(false);
+    }
+  };
+
  if (leaseId && (loading || lease || error)) {
  return (
  <div className="mx-auto max-w-7xl px-4 py-8 md:px-8">
@@ -150,9 +224,18 @@ function LeasesContent() {
  </p>
  </div>
  <div className="flex items-center gap-3">
- <button className="flex h-11 items-center gap-2 rounded-xl neumorphic-panel px-5 text-xs font-black uppercase tracking-widest transition-all hover:neumorphic-inset">
+ <button
+ onClick={handleExportPdf}
+ disabled={isExportingPdf}
+ className="flex h-11 items-center gap-2 rounded-xl neumorphic-panel px-5 text-xs font-black uppercase tracking-widest transition-all hover:neumorphic-inset disabled:opacity-50 disabled:cursor-not-allowed"
+ title="Export official Lease Agreement PDF"
+ >
+ {isExportingPdf ? (
+ <Loader2 className="size-4 animate-spin text-primary" />
+ ) : (
  <Download className="size-4" />
- Export PDF
+ )}
+ <span>{isExportingPdf ? "Exporting..." : "Export PDF"}</span>
  </button>
  </div>
  </div>
