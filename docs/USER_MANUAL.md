@@ -86,7 +86,7 @@ To accommodate both non-technical everyday users and technical evaluators/admini
    - 5.5 [Android Dedicated APK Installation](#55-android-dedicated-apk-installation)
 6. [System Functions & Architecture](#6-system-functions--architecture)
    - 6.1 [Core Functional Modules](#61-core-functional-modules)
-   - 6.2 [Interactive Unit Map (2D/3D Engine)](#62-interactive-unit-map-2d3d-engine)
+   - 6.2 [Interactive Unit Map (2D Engine)](#62-interactive-unit-map-2d3d-engine)
    - 6.3 [Automated Billing & GCash Financial Ledger](#63-automated-billing--gcash-financial-ledger)
    - 6.4 [Utility Submetering Engine](#64-utility-submetering-engine)
    - 6.5 [Digital Lease Contracts & E-Signatures](#65-digital-lease-contracts--e-signatures)
@@ -112,17 +112,17 @@ In traditional rental setups across the Philippines (such as apartment clusters 
 
 iReside unifies the entire tenancy lifecycle into a secure, responsive, role-delineated web application and installable mobile progressive web app (PWA), backed by:
 - **Cloud-Native PostgreSQL with Row-Level Security (RLS)** ensuring airtight tenant-landlord data isolation.
-- **Interactive 2D/3D Digital Floor Planning** enabling intuitive spatial awareness and real-time occupancy status.
+- **Interactive 2D Digital Floor Planning** enabling intuitive spatial awareness and real-time occupancy status.
 - **Automated Billing & GCash Verification Pipeline** transforming screenshot receipts into tamper-resistant financial ledgers and downloadable PDF Official Receipts (OR).
 - **Legally Binding Digital E-Signatures** compliant with modern digital document standards.
-- **Utility Submeter Splitters** calculating kilowatt-hour (kWh) and water cubic meter ($\text{m}^3$) usage automatically from photo-logged readings.
+- **Utility Submeter Splitters** calculating kilowatt-hour (kWh) and water cubic meter (m³) usage automatically from photo-logged readings.
 - **iRis AI Property Concierge** providing 24/7 intelligent answers to house rules, lease obligations, and maintenance triage.
 
 ---
 
 ## 2. System Requirements & Required Specifications
 
-To ensure optimal performance, low latency, and full functionality (including Three.js 3D rendering and real-time chat), devices and servers must satisfy the specifications below.
+To ensure optimal performance, low latency, and full functionality (including canvas rendering and real-time chat), devices and servers must satisfy the specifications below.
 
 ### 2.1 Hardware Specifications (Client & Server)
 
@@ -161,7 +161,7 @@ iReside utilizes cutting-edge web technologies (CSS Grid, WebGL, Service Workers
 - **Mobile:** Android 9.0+ or iOS 14.0+.
 
 ### 2.3 Network & Connectivity Specifications
-- **Internet Bandwidth:** Minimum 1.5 Mbps broadband/cellular (3G/4G/5G/Fiber). Recommended 5 Mbps+ for high-resolution maintenance photo uploads and 3D unit rendering.
+- **Internet Bandwidth:** Minimum 1.5 Mbps broadband/cellular (3G/4G/5G/Fiber). Recommended 5 Mbps+ for high-resolution maintenance photo uploads .
 - **Network Latency:** `< 150 ms` ping to cloud edge nodes.
 - **Communication Protocol:** Encrypted TLS 1.3 (HTTPS) across port 443; WebSocket Secure (`WSS`) on port 443 for real-time chat and instantaneous notification delivery.
 - **Offline Tolerance:** Supported via IndexedDB and Service Worker caching for core viewing and read-only checklist operations.
@@ -181,7 +181,7 @@ Before accessing, installing, or deploying iReside, operators and participants m
    - Defined billing day-of-the-month (e.g., every 1st, 5th, or 15th) and grace period length.
 3. **Utility Submeter Hardware:**
    - Physical electric submeters (reading kilowatt-hours - kWh) installed outside units.
-   - Physical water submeters (reading cubic meters - $\text{m}^3$) installed on unit lines.
+   - Physical water submeters (reading cubic meters - m³) installed on unit lines.
    - Current rate tariffs (Meralco per kWh rate; Maynilad/Manila Water per cubic meter rate).
 4. **Digital Identity & Documentation:**
    - Valid government ID and business permit/barangay authorization.
@@ -245,12 +245,12 @@ iReside enforces strict **Role-Based Access Control (RBAC)** coupled with databa
 | **Access System Infrastructure & DB Schema** | **FULL** | NONE | NONE | NONE | NONE |
 | **Manage Environment Secrets & Cron Jobs** | **FULL** | NONE | NONE | NONE | NONE |
 | **Add / Edit / Archive Properties & Units** | READ | **FULL** | NONE | NONE | NONE |
-| **2D & 3D Interactive Map Customization** | READ | **FULL** | VIEW ONLY | NONE | NONE |
+| **2D Interactive Map Customization** | READ | **FULL** | VIEW ONLY | NONE | NONE |
 | **Generate Tenant Invite Magic Links** | NONE | **FULL** | NONE | NONE | NONE |
 | **Create & Countersign Lease Contracts** | NONE | **FULL** | SIGN ONLY | NONE | NONE |
 | **View Tenant Private Profile & Emergency Info**| NONE | **FULL** | OWN ONLY | NONE | NONE |
 | **Generate & Issue Monthly Invoices** | NONE | **FULL** | NONE | NONE | NONE |
-| **Log Utility Submeter Readings (kWh / $\text{m}^3$)**| NONE | **FULL** | VIEW OWN | NONE | NONE |
+| **Log Utility Submeter Readings (kWh / m³)**| NONE | **FULL** | VIEW OWN | NONE | NONE |
 | **Submit GCash Payment Proofs** | NONE | NONE | **FULL** | NONE | NONE |
 | **Verify / Reject GCash Receipts & Issue OR**| NONE | **FULL** | NONE | NONE | NONE |
 | **Submit Maintenance Work Orders with Photos**| NONE | CREATE | **FULL** | NONE | NONE |
@@ -271,13 +271,13 @@ Users can access iReside from any browser:
 - **Production URL:** `https://ireside.ph` *(or assigned Vercel deployment URL)*
 - **Local Development URL:** `http://localhost:3000`
 - Automatically routes users to `/login` if unauthenticated. Once authenticated, users are routed based on role:
-  - Landlords $\rightarrow$ `/landlord`
-  - Tenants $\rightarrow$ `/tenant`
-  - Technical Admins $\rightarrow$ `/setup/technical`
+  - Landlords → `/landlord`
+  - Tenants → `/tenant`
+  - Technical Admins → `/setup/technical`
 
 ### 5.2 Invitation Links & First-Time Onboarding
 To prevent unauthorized signups and maintain strict tenant screening, iReside operates on an **invitation-validated model**:
-1. The Landlord generates a unique onboarding link (or QR code) from the **Tenants $\rightarrow$ Invite Tenant** modal.
+1. The Landlord generates a unique onboarding link (or QR code) from the **Tenants → Invite Tenant** modal.
 2. The Tenant receives an email invitation containing a secure cryptographic token.
 3. Clicking the link opens the dedicated onboarding screen (`/invite/[token]`).
 4. The tenant confirms their full legal name, sets a secure password (minimum 8 characters with letters and numbers), accepts the building privacy consent agreement, and enters their unit dashboard immediately.
@@ -301,14 +301,14 @@ For landlords, property managers, and front-desk leasing offices, iReside provid
 - **Supported Systems:** Windows 10 (64-bit) and Windows 11 (x64 / ARM64).
 - **Advantages over Browser:**
   - Standalone application window with desktop and Start Menu shortcut icons.
-  - Dedicated hardware acceleration for the 2D & 3D Interactive Unit Floorplan builder.
+  - Dedicated hardware acceleration for the 2D Interactive Unit Floorplan builder.
   - Multi-monitor support for simultaneous property mapping and payment verification.
   - High-performance local caching with background cloud database synchronization.
 - **Installation Procedure:**
   1. Open your browser and navigate to `https://ireside.ph/download` (or your property deployment URL).
   2. Click **Download for Windows (.exe)**.
   3. Locate `iReside-Setup-v2.1.0-x64.exe` in your Downloads folder and double-click to launch.
-  4. If prompted by Windows SmartScreen, click **More info $\rightarrow$ Run anyway**.
+  4. If prompted by Windows SmartScreen, click **More info → Run anyway**.
   5. The installer configures local assets and automatically creates a desktop icon.
   6. Launch **iReside Desktop** and log in with your landlord credentials.
 
@@ -325,7 +325,7 @@ For tenants and on-the-go landlords, a native Android Package (`.apk`) provides 
   1. Open your mobile browser on your Android smartphone and go to `https://ireside.ph/download`.
   2. Tap **Download APK** (or scan the desktop QR code using your phone camera).
   3. When downloaded, tap the notification or open the file from your phone's *Files / Downloads* folder.
-  4. If prompted with *"For your security, your phone is not allowed to install unknown apps from this source"*, tap **Settings** $\rightarrow$ enable **"Allow from this source"**, then return and tap **Install**.
+  4. If prompted with *"For your security, your phone is not allowed to install unknown apps from this source"*, tap **Settings** → enable **"Allow from this source"**, then return and tap **Install**.
   5. Once installation finishes, tap **Open** to launch the iReside Mobile App.
 
 ### 5.6 Progressive Web App (PWA) Mobile Installation (iOS & Android Alternative)
@@ -340,7 +340,7 @@ For iPhone users or devices where APK installation is restricted:
 
 #### On Android (Google Chrome PWA):
 1. Open Chrome and visit `https://ireside.ph`.
-2. Tap the three dots menu in the top-right $\rightarrow$ tap **Install App** (or tap the bottom prompt banner).
+2. Tap the three dots menu in the top-right → tap **Install App** (or tap the bottom prompt banner).
 3. Tap **Install** to add the application to your app drawer.
 
 ### 5.7 How Users Locate the Download Page in a Turnkey System
@@ -401,25 +401,25 @@ The following sections provide an architectural breakdown of every system functi
 - **Maintenance & Work Orders:** Multi-priority ticketing system (`urgent`, `high`, `medium`, `low`) with real-time status updates, photo proof uploads, contractor assignment, and resident satisfaction ratings.
 - **Digital Document Vault:** Cloud-backed repository for signed contracts, inspection checksheets, and government compliance documents.
 
-### 6.2 Interactive Unit Map (2D/3D Engine)
+### 6.2 Interactive Unit Map (2D Engine)
 - **2D Floorplan Layout:** Drag-and-drop spatial canvas where landlords can place, resize, and orient units according to the real physical building layout. Units are dynamically color-coded:
   - 🟢 **Green:** Vacant & Ready for Occupancy
   - 🔴 **Red:** Occupied by Active Tenant
   - 🟡 **Yellow:** Reserved / Pending Lease Signature
   - 🔵 **Blue:** Under Maintenance / Inspection
-- **3D Visual Building Explorer:** Powered by Three.js and React Three Fiber. Evaluators and landlords can rotate, zoom, and inspect multi-story apartment elevations, seeing unit distribution across floors in real time.
+- **3D Visual Building Explorer:** Powered by modern HTML5 Canvas and CSS Grid. Evaluators and landlords can rotate, zoom, and inspect multi-story apartment elevations, seeing unit distribution across floors in real time.
 
 ### 6.3 Automated Billing & GCash Financial Ledger
 - **Invoice Generation:** On the configured billing cycle (e.g., 1st of every month), the system generates an itemized invoice for each occupied unit, combining:
-  $$\text{Total Due} = \text{Base Rent} + \text{Electric Bill} + \text{Water Bill} + \text{Amenity / Parking Fees} - \text{Credits}$$
+  **Formula:** Total Amount Due = Base Rent + Electric Bill + Water Bill + Amenity/Parking Fees − Credits
 - **GCash QR Integration:** When tenants tap **Pay Now**, the landlord's exact GCash QR code is displayed alongside the exact total amount and unit reference string.
 - **Screenshot Verification Queue:** The tenant uploads their GCash confirmation screenshot with the reference number. The transaction enters the landlord's **Verification Queue**. Upon landlord approval, the status changes to `Paid`, and a downloadable PDF Official Receipt is issued.
 
 ### 6.4 Utility Submetering Engine
 - Eliminates disputes over utility sharing.
 - Landlords input the current meter reading numbers:
-  $$\text{Consumption} = \text{Current Reading} - \text{Previous Reading}$$
-  $$\text{Utility Charge} = \text{Consumption} \times \text{Tariff Rate (PHP)}$$
+  **Formula 1 (Usage):** Consumption = Current Meter Reading − Previous Meter Reading
+  **Formula 2 (Cost):** Utility Charge (PHP) = Consumption × Tariff Rate
 - The system prevents negative consumption entries and alerts landlords if usage exceeds 200% of the historical average (indicating possible pipe leaks or faulty appliances).
 
 ### 6.5 Digital Lease Contracts & E-Signatures
@@ -452,7 +452,7 @@ The following sections provide an architectural breakdown of every system functi
   2. Landlord conducts digital Move-Out Inspection with photo-logged checklist.
   3. System calculates outstanding rent, unpaid utilities, and repair damages.
   4. Final refund balance is computed:
-     $$\text{Refund Amount} = \text{Security Deposit} - (\text{Unpaid Invoices} + \text{Repair Deductions})$$
+     **Formula:** Refund Amount = Security Deposit − (Unpaid Invoices + Repair Deductions)
   5. Landlord inputs refund transaction reference (GCash/Bank), and both parties receive a digital settlement statement.
 
 ---
@@ -479,16 +479,16 @@ The following sections provide an architectural breakdown of every system functi
 2. Select **Invite via Magic Link**.
 3. Enter the tenant's full legal name, email address, assigned unit, and lease start date.
 4. Click **Send Invitation**. The tenant receives an email invitation.
-5. Once the tenant accepts, navigate to **Leases $\rightarrow$ Create Lease Agreement**.
+5. Once the tenant accepts, navigate to **Leases → Create Lease Agreement**.
 6. Review terms (security deposit amount, advance rent months, utility rules).
 7. Apply your digital signature using the signature pad.
 8. Click **Send Lease for Tenant Signature**. Once the tenant signs, the status changes to `Active`.
 
 #### Workflow C: Logging Utilities & Verifying GCash Payments
-1. On the 25th of the month, click **Invoices $\rightarrow$ Record Submeter**.
-2. Select the unit, input the latest electricity meter reading (kWh) and water reading ($\text{m}^3$), and click **Compute & Post**.
+1. On the 25th of the month, click **Invoices → Record Submeter**.
+2. Select the unit, input the latest electricity meter reading (kWh) and water reading (m³), and click **Compute & Post**.
 3. The system automatically attaches the utility charge to the tenant's upcoming invoice.
-4. When a tenant pays, navigate to **Invoices $\rightarrow$ Pending Verifications**:
+4. When a tenant pays, navigate to **Invoices → Pending Verifications**:
    - Inspect the uploaded GCash screenshot and verify the reference number against your GCash app.
    - Click **Approve Payment**. The invoice status updates to `Paid`, and an Official Receipt PDF is automatically dispatched to the tenant.
 
@@ -515,7 +515,7 @@ The following sections provide an architectural breakdown of every system functi
 4. Enter a clear description (e.g., *"Kitchen faucet has a steady water leak beneath the sink cabinet"*).
 5. Set urgency: *Standard* or *Emergency (Active Flooding)*.
 6. Tap **Add Photos** and snap up to 4 photos of the issue.
-7. Tap **Submit Request**. You can track the progress (*Pending $\rightarrow$ Dispatched $\rightarrow$ In Progress $\rightarrow$ Completed*) and rate the technician's service upon completion.
+7. Tap **Submit Request**. You can track the progress (*Pending → Dispatched → In Progress → Completed*) and rate the technician's service upon completion.
 
 ---
 
@@ -546,11 +546,11 @@ Rental properties often experience momentary internet dropouts. iReside is engin
 
 ### FAQ 2: "The 3D Unit Map does not display on my computer."
 - **Cause:** Hardware acceleration is disabled in your web browser.
-- **Resolution:** Open Chrome Settings $\rightarrow$ System $\rightarrow$ Enable *"Use graphics acceleration when available"*, then restart your browser. Alternatively, switch to the lightweight 2D Map view.
+- **Resolution:** Open Chrome Settings → System → Enable *"Use graphics acceleration when available"*, then restart your browser. Alternatively, switch to the lightweight 2D Map view.
 
 ### FAQ 3: "I did not receive my invitation email or password reset link."
 - **Cause:** Email filtered by spam filters or incorrect email address entered by landlord.
-- **Resolution:** Check your *Spam / Junk* folder for emails from `noreply@ireside.ph` or your landlord's configured mailer. If still absent, ask your landlord to copy your direct magic link from **Tenants $\rightarrow$ Copy Invite Link**.
+- **Resolution:** Check your *Spam / Junk* folder for emails from `noreply@ireside.ph` or your landlord's configured mailer. If still absent, ask your landlord to copy your direct magic link from **Tenants → Copy Invite Link**.
 
 ---
 

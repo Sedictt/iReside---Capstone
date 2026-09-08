@@ -670,13 +670,17 @@ export function LandlordSettings() {
     const syncSettingsWithDatabase = useCallback(async (isManualRetry = false) => {
         setIsSyncing(true);
         setSyncError(null);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 6000);
 
         try {
-            const [profileRes, secRes, tourRes] = await Promise.all([
-                fetch("/api/landlord/profile").catch((err) => ({ ok: false, statusText: err.message })),
-                fetch("/api/landlord/2fa?action=status").catch((err) => ({ ok: false, statusText: err.message })),
-                fetch("/api/landlord/tour?start=0").catch((err) => ({ ok: false, statusText: err.message })),
+            const [profileRes, secRes, tourRes, brandRes] = await Promise.all([
+                fetch("/api/landlord/profile", { signal: controller.signal }).catch((err) => ({ ok: false, statusText: err.message })),
+                fetch("/api/landlord/2fa?action=status", { signal: controller.signal }).catch((err) => ({ ok: false, statusText: err.message })),
+                fetch("/api/landlord/tour?start=0", { signal: controller.signal }).catch((err) => ({ ok: false, statusText: err.message })),
+                fetch("/api/branding", { cache: "no-store", signal: controller.signal }).catch((err) => ({ ok: false, statusText: err.message })),
             ]);
+            clearTimeout(timeoutId);
 
             let profileData: any = null;
             if ('ok' in profileRes && profileRes.ok) {
@@ -690,6 +694,15 @@ export function LandlordSettings() {
             const freshProfile = profileData.profile || profileData;
             const privateProfile = profileData.profile_private || {};
             const businessProfile = profileData.business_profile || {};
+
+            let serverBranding: any = null;
+            if ('ok' in brandRes && brandRes.ok) {
+                try {
+                    serverBranding = await (brandRes as Response).json();
+                } catch {
+                    // ignore JSON parse error
+                }
+            }
 
             const syncedForm = {
                 full_name: freshProfile?.full_name || "",
@@ -729,13 +742,23 @@ export function LandlordSettings() {
                 announcements: { ...DEFAULT_NOTIFICATION_PREFERENCES.announcements, ...(savedNotifs?.announcements || {}) },
             };
 
-            const savedBanner = typeof window !== "undefined" ? (localStorage.getItem("ireside_landlord_custom_banner_url") || DEFAULT_BANNER_URL) : DEFAULT_BANNER_URL;
-            const savedLogo = typeof window !== "undefined" ? localStorage.getItem("ireside_property_logo") : null;
-            const savedName = typeof window !== "undefined" ? (localStorage.getItem("ireside_property_name") || "Skyline Lofts") : "Skyline Lofts";
-            const savedTagline = typeof window !== "undefined" ? (localStorage.getItem("ireside_property_tagline") || "Modern Urban Residences & Studios") : "Modern Urban Residences & Studios";
-            const savedArchetype = typeof window !== "undefined" ? (localStorage.getItem("ireside_rental_archetype") || "apartments") : "apartments";
-            const savedPrimary = typeof window !== "undefined" ? (localStorage.getItem("ireside_brand_primary") || "#c4b0ff") : "#c4b0ff";
-            const savedSecondary = typeof window !== "undefined" ? (localStorage.getItem("ireside_brand_secondary") || "#06b6d4") : "#06b6d4";
+            const savedBanner = serverBranding?.bannerUrl || (typeof window !== "undefined" ? (localStorage.getItem("ireside_landlord_custom_banner_url") || DEFAULT_BANNER_URL) : DEFAULT_BANNER_URL);
+            const savedLogo = serverBranding?.logoUrl ?? (typeof window !== "undefined" ? localStorage.getItem("ireside_property_logo") : null);
+            const savedName = serverBranding?.propertyName || (typeof window !== "undefined" ? (localStorage.getItem("ireside_property_name") || "Skyline Lofts") : "Skyline Lofts");
+            const savedTagline = serverBranding?.propertyTagline || (typeof window !== "undefined" ? (localStorage.getItem("ireside_property_tagline") || "Modern Urban Residences & Studios") : "Modern Urban Residences & Studios");
+            const savedArchetype = serverBranding?.rentalArchetype || (typeof window !== "undefined" ? (localStorage.getItem("ireside_rental_archetype") || "apartments") : "apartments");
+            const savedPrimary = serverBranding?.primaryColor || (typeof window !== "undefined" ? (localStorage.getItem("ireside_brand_primary") || "#c4b0ff") : "#c4b0ff");
+            const savedSecondary = serverBranding?.secondaryColor || (typeof window !== "undefined" ? (localStorage.getItem("ireside_brand_secondary") || "#06b6d4") : "#06b6d4");
+
+            if (serverBranding && typeof window !== "undefined") {
+                localStorage.setItem("ireside_property_name", savedName);
+                localStorage.setItem("ireside_property_tagline", savedTagline);
+                localStorage.setItem("ireside_rental_archetype", savedArchetype);
+                localStorage.setItem("ireside_brand_primary", savedPrimary);
+                localStorage.setItem("ireside_brand_secondary", savedSecondary);
+                if (savedLogo) localStorage.setItem("ireside_property_logo", savedLogo);
+                if (savedBanner) localStorage.setItem("ireside_landlord_custom_banner_url", savedBanner);
+            }
 
             let syncedSecurity: any = {
                 twoFAStatus: 'disabled',
@@ -843,7 +866,9 @@ export function LandlordSettings() {
                 toast.error(err?.message || "Failed to sync settings with the database");
             }
         } finally {
+            clearTimeout(timeoutId);
             setIsSyncing(false);
+            setHasLoadedOnce(true);
         }
     }, [profile, user?.id, supabase]);
 
@@ -869,6 +894,19 @@ export function LandlordSettings() {
 
     const isDirtyRef = useRef(false);
     isDirtyRef.current = isDirty;
+
+    // Sync brand fields when BrandContext updates from server or realtime broadcast
+    useEffect(() => {
+        if (!isDirtyRef.current && brand && !brand.isLoading) {
+            if (brand.primaryColor) setBrandPrimaryHex(brand.primaryColor);
+            if (brand.secondaryColor) setBrandSecondaryHex(brand.secondaryColor);
+            if (brand.propertyName) setPropertyTradeName(brand.propertyName);
+            if (brand.propertyTagline) setPropertyTagline(brand.propertyTagline);
+            if (brand.rentalArchetype) setRentalArchetype(brand.rentalArchetype);
+            if (brand.logoUrl !== undefined) setPropertyLogoUrl(brand.logoUrl);
+            if (brand.bannerUrl) setBannerUrl(brand.bannerUrl);
+        }
+    }, [brand.primaryColor, brand.secondaryColor, brand.propertyName, brand.propertyTagline, brand.rentalArchetype, brand.logoUrl, brand.bannerUrl, brand.isLoading]);
 
     useEffect(() => {
         const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -1142,9 +1180,21 @@ export function LandlordSettings() {
     };
 
     const handleSaveAll = async (): Promise<boolean> => {
-        if (!profile) return false;
+        const currentUserId = profile?.id || user?.id;
+        if (!currentUserId) {
+            toast.error("Please wait for your account session to load before saving.");
+            return false;
+        }
         setIsSaving(true);
         const loadingToast = toast.loading("Saving all changes across settings…");
+
+        // Failsafe timer so save button can never be trapped in perpetual saving state
+        const safetyTimer = setTimeout(() => {
+            setIsSaving(false);
+            toast.dismiss(loadingToast);
+            toast.error("Saving took longer than expected. Changes were saved locally.");
+        }, 12000);
+
         try {
             const hasFormChanged = !initialSnapshot || JSON.stringify(formData) !== JSON.stringify(initialSnapshot.formData);
             const hasNotifsChanged = !initialSnapshot || JSON.stringify(notificationPreferences) !== JSON.stringify(initialSnapshot.notificationPreferences);
@@ -1178,7 +1228,7 @@ export function LandlordSettings() {
                     localStorage.setItem("ireside_landlord_notification_preferences", JSON.stringify(notificationPreferences));
                 }
 
-                if (formData.email && formData.email !== profile.email) {
+                if (formData.email && formData.email !== profile?.email) {
                     try {
                         await supabase.auth.updateUser({ email: formData.email });
                     } catch (emailErr: any) {
@@ -1203,7 +1253,11 @@ export function LandlordSettings() {
             }
 
             // 3. Await profile refresh so state has fresh data from DB
-            await refreshProfile();
+            try {
+                await refreshProfile();
+            } catch (pErr) {
+                console.warn("[LandlordSettings] Non-critical refreshProfile note:", pErr);
+            }
 
             // 4. Update Snapshot to clear isDirty immediately
             setInitialSnapshot({
@@ -1241,19 +1295,22 @@ export function LandlordSettings() {
                 properties,
                 tourState,
             };
-            saveCachedSettings(updatedCache, profile.id || user?.id);
+            saveCachedSettings(updatedCache, currentUserId);
             setLastSyncedAt(new Date());
 
+            clearTimeout(safetyTimer);
             toast.dismiss(loadingToast);
             toast.success("All settings saved successfully!");
             setJustSaved(true);
             setTimeout(() => setJustSaved(false), 2500);
             return true;
         } catch (error: any) {
+            clearTimeout(safetyTimer);
             toast.dismiss(loadingToast);
             toast.error(error?.message || "Failed to save settings");
             return false;
         } finally {
+            clearTimeout(safetyTimer);
             setIsSaving(false);
         }
     };
@@ -2809,46 +2866,6 @@ export function LandlordSettings() {
             default: return null;
         }
     };
-
-    if (!hasLoadedOnce && isSyncing) {
-        return (
-            <div className="space-y-10 animate-fade-in">
-                <div className="flex items-center justify-between gap-4 pb-6 border-b border-border/40">
-                    <div className="flex items-center gap-2.5 text-muted-foreground">
-                        <div className="size-8 rounded-full neumorphic-extruded flex items-center justify-center animate-pulse">
-                            <ChevronLeft className="size-4" />
-                        </div>
-                        <span className="text-sm font-black tracking-wide">Back to Dashboard</span>
-                    </div>
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold animate-pulse">
-                        <RefreshCw className="size-3.5 animate-spin" />
-                        <span>Syncing with database…</span>
-                    </div>
-                </div>
-
-                <div className="min-h-[70vh] flex flex-col lg:flex-row gap-12">
-                    <div className="w-full lg:w-80 flex-shrink-0 space-y-4">
-                        <div className="h-14 rounded-2xl bg-muted/30 animate-pulse" />
-                        <div className="h-14 rounded-2xl bg-muted/30 animate-pulse" />
-                        <div className="h-14 rounded-2xl bg-muted/30 animate-pulse" />
-                        <div className="h-14 rounded-2xl bg-muted/30 animate-pulse" />
-                    </div>
-                    <div className="flex-1 space-y-6">
-                        <div className="p-6 rounded-3xl neumorphic-panel space-y-4">
-                            <div className="flex items-center gap-3 text-primary">
-                                <RefreshCw className="size-5 animate-spin" />
-                                <div>
-                                    <h3 className="text-sm font-black text-foreground">Loading Your Settings</h3>
-                                    <p className="text-xs text-muted-foreground mt-0.5">Connecting and syncing your preferences with the database…</p>
-                                </div>
-                            </div>
-                            <div className="h-40 rounded-2xl bg-muted/20 animate-pulse" />
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-    }
 
     return (
         <div className="space-y-10">

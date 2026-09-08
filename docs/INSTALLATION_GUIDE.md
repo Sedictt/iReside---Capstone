@@ -84,7 +84,7 @@ iReside is architected as a modern, decoupled full-stack application built upon 
 
 #### Local Development Workstation
 - **Processor:** 64-bit multi-core processor (Intel Core i5 / AMD Ryzen 5 / Apple Silicon M-series or higher).
-- **RAM:** 8 GB minimum (16 GB strongly recommended for smooth Next.js compilation and Three.js 3D testing).
+- **RAM:** 8 GB minimum (16 GB strongly recommended for smooth Next.js compilation and canvas testing).
 - **Disk Space:** Minimum 10 GB free space on an SSD (Solid State Drive) for `node_modules`, build caches, and Git history.
 - **Operating System:** Windows 10/11 (64-bit) with PowerShell 7+, macOS (Monterey 12.0+), or Linux (Ubuntu 22.04 LTS / Debian 12).
 
@@ -242,7 +242,7 @@ iReside stores payment screenshots, property photos, and maintenance proofs in S
 ### Step 6: Configure SMTP Transactional Email Services
 To enable automated sending of onboarding invite links, password reset emails, and monthly invoice alerts:
 
-1. Log into your Google Account $\rightarrow$ Go to [Google Security](https://myaccount.google.com/security).
+1. Log into your Google Account → Go to [Google Security](https://myaccount.google.com/security).
 2. Ensure **2-Step Verification** is turned **ON**.
 3. Under *"How you sign in to Google"*, search for and click **App Passwords**.
 4. Enter an App Name (e.g., `iReside Mailer`) and click **Create**.
@@ -293,7 +293,7 @@ Deploying iReside to the Vercel cloud environment provides edge serverless scala
 ### 5.1 Vercel Project Setup & Git Linking
 1. Push your repository to GitHub: `git push origin main`.
 2. Open [https://vercel.com](https://vercel.com) and log in.
-3. Click **Add New... $\rightarrow$ Project**.
+3. Click **Add New... → Project**.
 4. Import the `Sedictt/iReside---Capstone` repository.
 5. In the **Configure Project** screen:
    - **Framework Preset:** `Next.js`
@@ -325,7 +325,7 @@ iReside automates billing and prevents free-tier database sleep through serverle
 - **/api/cron/keep-alive:** Executes daily at 12:00 UTC, performing a lightweight health check to keep Supabase PostgreSQL active.
 
 ### 5.3 Custom Domain & SSL Enforcement
-1. In Vercel Project Settings $\rightarrow$ **Domains**, enter your custom domain (e.g., `app.ireside.ph`).
+1. In Vercel Project Settings → **Domains**, enter your custom domain (e.g., `app.ireside.ph`).
 2. Add the provided `CNAME` or `A` record in your DNS provider (Cloudflare, Namecheap, GoDaddy).
 3. Vercel automatically provisions a free Let's Encrypt TLS 1.3 SSL certificate.
 
@@ -342,7 +342,7 @@ The Windows Desktop Client is tailored for Landlords, Property Managers, and Fro
 - **Target OS:** Windows 10 (64-bit) & Windows 11 (x64 / ARM64).
 - **Key Capabilities:**
   - Standalone desktop frame (independent of browser tabs and URL bars).
-  - Hardware-accelerated WebGL 2.0 rendering for 2D & 3D Interactive Floorplans.
+  - Hardware-accelerated WebGL 2.0 rendering for 2D Interactive Floorplans.
   - Desktop notifications and Start Menu / Taskbar pinning.
   - Multi-window support (viewing map on Monitor 1 while verifying invoices on Monitor 2).
 - **Distribution Setup:**
@@ -375,8 +375,8 @@ The Android Mobile Client provides residents and on-site staff with direct camer
 
 ### 6.3 Progressive Web App (PWA) Deployment (iOS & Android Alternative)
 The web application is pre-configured with a standards-compliant web app manifest at `public/manifest.json` and service worker caching logic.
-- **On iPhone / iPad (iOS):** Users open `/` in Apple Safari $\rightarrow$ tap **Share** $\rightarrow$ tap **Add to Home Screen**.
-- **On Android Chrome:** Users visit `/` $\rightarrow$ tap **Install App** on the prompt banner.
+- **On iPhone / iPad (iOS):** Users open `/` in Apple Safari → tap **Share** → tap **Add to Home Screen**.
+- **On Android Chrome:** Users visit `/` → tap **Install App** on the prompt banner.
 
 ### 6.4 The App Download Hub (`/download`) & Turnkey Dynamic Routing
 The `/download` route serves as the self-contained distribution portal for each turnkey property deployment:

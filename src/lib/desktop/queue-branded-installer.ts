@@ -14,6 +14,9 @@ export async function queueBrandedInstaller(targetUrl: string): Promise<boolean>
     return false;
   }
 
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 4000);
+
   try {
     const response = await fetch(
       `https://api.github.com/repos/${repository}/actions/workflows/${WORKFLOW_FILE}/dispatches`,
@@ -30,8 +33,11 @@ export async function queueBrandedInstaller(targetUrl: string): Promise<boolean>
           inputs: { target_url: targetUrl },
         }),
         cache: "no-store",
+        signal: controller.signal,
       }
     );
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       console.warn(`[Desktop release] Workflow dispatch failed (${response.status}).`);
@@ -40,6 +46,7 @@ export async function queueBrandedInstaller(targetUrl: string): Promise<boolean>
 
     return true;
   } catch (error) {
+    clearTimeout(timeoutId);
     console.warn("[Desktop release] Workflow dispatch failed:", error);
     return false;
   }

@@ -11,208 +11,210 @@ for the Landlords of Valenzuela City | Design and Development of iReside: Proper
 for the Landlords of Valenzuela City | Design and Development of iReside: Property and Tenant Services Management System
 for the Landlords of Valenzuela City |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Test Case ID | Module / Route | Test Scenario | Preconditions | Test Steps | Expected Result | Actual Result | Pass or Failed | Remarks |
+| Test Case ID | Module /
+Route | Test Scenario | Preconditions | Test Steps | Expected Result | Actual
+Result | Pass or
+Failed | Remarks |
 | Landlord | Landlord | Landlord | Landlord | Landlord | Landlord | Landlord | Landlord | Landlord |
-| TC_Auth_001 | Public Gateway (/) | Route unauthenticated root visitor to login | The user is an unauthenticated visitor with no active browser session. | 1. Navigate to the root URL `/`.
-2. Observe the initial routing transition.
-3. Verify the final loaded destination. | The system redirects the unauthenticated visitor directly to `/login`. |  |  |  |
-| TC_Auth_002 | Authentication (/login) | Authenticate with invalid password | A registered landlord account exists with valid email credentials. | 1. Navigate to `/login`.
-2. Enter the registered email and an incorrect password.
-3. Click the "Sign into Workspace" button. | An error banner displays invalid credentials and access is denied. |  |  |  |
-| TC_Auth_003 | Authentication (/forgot-password) | Request password reset for a registered email | A user account associated with the provided email exists. | 1. Navigate to `/forgot-password`.
-2. Enter the registered email address into the input field.
-3. Click the "Send Reset Link" button. | The system displays a confirmation notice stating that recovery instructions have been emailed. |  |  |  |
-| TC_Auth_004 | Authentication (/login) | Authenticate valid landlord credentials | An active verified landlord account exists in the database. | 1. Navigate to `/login`.
-2. Enter the valid landlord email address and password.
-3. Click the "Sign into Workspace" button. | The system authenticates the user and redirects to `/landlord/dashboard`. |  |  |  |
-| TC_Landlord_Settings_005 | Identity Settings (/landlord/settings) | Update landlord profile and contact details | The landlord user is logged into the workspace. | 1. Navigate to `/landlord/settings`.
-2. Select the "Identity" tab and update business name and emergency contact.
-3. Click the "Save All Changes" master button. | The updated profile details are saved to Supabase and a success toast appears. |  |  |  |
-| TC_Landlord_Settings_006 | Personalization Settings (/landlord/settings) | Customize brand accent theme palette | The landlord settings page is open on the Personalization tab. | 1. Navigate to `/landlord/settings` and select the "Personalization" tab.
-2. Pick a new primary theme color from the interactive color picker.
-3. Click the "Save All Changes" master button. | The UI theme instantly adapts to the chosen accent color across all dashboard pages. |  |  |  |
-| TC_Landlord_Settings_007 | Personalization Settings (/landlord/settings) | Upload custom property monogram logo | The landlord has an image file for their property brand. | 1. Navigate to `/landlord/settings` and select the "Personalization" tab.
-2. Upload a PNG logo image in the Brand Assets section.
-3. Click the "Save All Changes" master button. | The custom monogram logo updates in the navigation header and resident portal. |  |  |  |
-| TC_Landlord_Settings_008 | Landlord Settings (/landlord/settings) | Prevent accidental exit when unsaved modifications exist | Changes have been made to form inputs without saving. | 1. Navigate to `/landlord/settings` and modify a field.
-2. Click the "Back to Dashboard" navigation link.
-3. Inspect the rendered confirmation modal. | An unsaved changes modal appears offering Save All & Exit, Discard, and Keep Editing options. |  |  |  |
-| TC_Landlord_Settings_009 | Landlord Settings (/landlord/settings) | Persist multiple cross-tab edits with single save action | The landlord has modified fields across Identity and Personalization tabs. | 1. Navigate to `/landlord/settings`.
-2. Change business name in Identity tab and theme color in Personalization tab.
-3. Click the "Save All Changes" top action button. | All modified fields across both tabs persist simultaneously with a single confirmation toast. |  |  |  |
-| TC_Landlord_Settings_010 | Financial Settings (/landlord/settings) | Configure landlord payout GCash and bank payment details | The landlord is accessing workspace financial preferences. | 1. Navigate to `/landlord/settings`.
-2. Select the "Finance" tab and enter GCash number and Bank Account details.
-3. Click the "Save All Changes" master button. | Payment instructions update successfully and display on resident checkout invoices. |  |  |  |
-| TC_Landlord_Settings_011 | Notification Settings (/landlord/settings) | Configure automated maintenance email notification rules | The landlord is configuring notification preferences. | 1. Navigate to `/landlord/settings` and select the "Notifications" tab.
-2. Toggle on "Instant Email for Emergency Tickets".
-3. Click the "Save All Changes" master button. | The notification preference persists and triggers automated emails on critical repair submissions. |  |  |  |
-| TC_Documentation_012 | Documentation Hub (/docs or /landlord/docs) | Search documentation and download complete handover kit | The landlord is viewing the integrated documentation portal. | 1. Navigate to `/landlord/docs`.
-2. Type "Disaster Recovery" into the documentation search bar.
-3. Click the "Download Complete Handover Kit" export button. | Relevant setup sections filter instantly and a complete Markdown handover archive downloads. |  |  |  |
-| TC_Property_Management_013 | Properties Management (/landlord/properties) | Create a new multi-unit rental property | The landlord has active workspace management permissions. | 1. Navigate to `/landlord/properties`.
-2. Click the "Add Property" button and fill in name, address, and property type.
-3. Click the "Save Property" button. | The property is created in the database and appears in the properties list. |  |  |  |
-| TC_Property_Management_014 | Property Media (/landlord/properties/[id]) | Upload property showcase photo gallery | A property detail page is currently open. | 1. Navigate to `/landlord/properties/[id]`.
-2. Select the "Media & Gallery" tab and upload a JPEG image.
-3. Click the "Upload Photos" button. | The image uploads to Supabase storage and renders in the property hero carousel. |  |  |  |
-| TC_Property_Management_015 | Unit Management (/landlord/units) | Add a residential unit to an existing property | A registered property exists in the landlord workspace. | 1. Navigate to `/landlord/units`.
-2. Click the "New Unit" button and enter unit number, floor, monthly rent, and deposit.
-3. Click the "Create Unit" button. | The unit is persisted and listed under the designated property. |  |  |  |
-| TC_Property_Management_016 | Unit Detail (/landlord/units/[id]) | Update unit monthly rental rate and deposit | A specific unit exists in the landlord database. | 1. Navigate to `/landlord/units/[id]`.
-2. Update the monthly rent input field with a new value.
-3. Click the "Save Unit Changes" button. | The updated rental amount is persisted and reflected across subsequent lease drafts. |  |  |  |
-| TC_Property_Management_017 | Unit Map (/landlord/unit-map) | Filter visual unit occupancy status on unit map | Multiple properties and units exist with varying occupancy states. | 1. Navigate to `/landlord/unit-map`.
-2. Click the "Vacant Units" filter pill.
-3. Observe the interactive architectural layout. | The unit map highlights vacant units in amber and hides occupied units. |  |  |  |
-| TC_Property_Management_018 | Unit Detail (/landlord/units/[id]) | Archive a decommissioned rental unit | A vacant unit with no active lease exists. | 1. Navigate to `/landlord/units/[id]`.
-2. Click the "Archive Unit" danger action.
-3. Confirm the confirmation dialog prompt. | The unit status updates to archived and is hidden from active availability selectors. |  |  |  |
-| TC_Property_Management_019 | Unit Management (/landlord/units) | Search units by tenant name or room number | Multiple units with assigned tenants exist. | 1. Navigate to `/landlord/units`.
-2. Type the target unit number into the search bar.
-3. Inspect the filtered table results. | The table displays only matching unit records matching the search term. |  |  |  |
-| TC_Property_Management_020 | Property Detail (/landlord/properties/[id]) | View property occupancy metrics and unit breakdown | An existing property with active units exists in the portfolio. | 1. Navigate to `/landlord/properties`.
-2. Click on the target property card.
-3. Review the summary metrics cards at the top of the page. | The page displays correct total units, occupied count, vacant count, and monthly revenue. |  |  |  |
-| TC_Property_Management_021 | Properties Management (/landlord/properties) | Export property portfolio inventory summary | At least one property exists in the landlord portfolio. | 1. Navigate to `/landlord/properties`.
-2. Click the "Export Portfolio" dropdown action.
-3. Select the "CSV Export" option. | The browser downloads a structured CSV file containing all properties and unit counts. |  |  |  |
-| TC_Resident_Onboarding_022 | Lobby Flyer Studio (/landlord/flyer) | Customize lobby resident flyer template | The landlord is logged in with an active property portfolio. | 1. Navigate to `/landlord/flyer`.
-2. Edit the title text, upload a background image, and adjust brightness.
-3. Observe the live flyer preview canvas. | The flyer canvas updates dynamically and automatically syncs changes to cloud storage. |  |  |  |
-| TC_Resident_Onboarding_023 | Lobby Flyer Studio (/landlord/flyer) | Export high-resolution print flyer image | The flyer template contains customized property branding. | 1. Navigate to `/landlord/flyer`.
-2. Click the "Download Print Poster (.png)" button.
-3. Open the downloaded image file. | The browser downloads a high-resolution PNG image containing the rendered flyer and QR code. |  |  |  |
-| TC_Resident_Onboarding_024 | Tenant Intake (/landlord/tenants/invite) | Generate private resident onboarding invitation QR code | The landlord is preparing a unit for upcoming resident move-in. | 1. Navigate to `/landlord/tenants/invite`.
-2. Select the target unit and move-in date.
-3. Click the "Generate Invite QR" button. | A unique QR code and private registration link render on the modal for tenant handover. |  |  |  |
-| TC_Lease_Management_025 | Lease Creation (/landlord/leases/new) | Prevent drafting overlapping lease for an occupied unit | A unit currently has an active, non-expired lease agreement. | 1. Navigate to `/landlord/leases/new`.
-2. Attempt to select the occupied unit from the unit dropdown.
-3. Observe the unit dropdown options. | The occupied unit is disabled with an indicator showing that an active lease is in effect. |  |  |  |
-| TC_Lease_Management_026 | Lease Creation (/landlord/leases/new) | Draft a new residential lease agreement | A vacant unit and an onboarded tenant profile exist. | 1. Navigate to `/landlord/leases/new`.
-2. Select the unit, tenant, start date, end date, and monthly rent.
-3. Click the "Create Draft Lease" button. | The lease record is created with draft status and appears in the lease table. |  |  |  |
-| TC_Lease_Management_027 | Lease Detail (/landlord/leases/[id]) | Generate tenant digital signing invitation link | A drafted lease agreement is ready for signature. | 1. Navigate to `/landlord/leases/[id]`.
-2. Click the "Generate Signing Link" button.
-3. Click the "Copy Link" action. | A unique secure signing URL is generated and copied to the system clipboard. |  |  |  |
-| TC_Lease_Management_028 | Lease Signing (/landlord/leases/[id] or /sign/[token]) | Execute landlord signature on pending contract | The tenant has already completed their signature on the contract. | 1. Navigate to `/landlord/leases/[id]`.
-2. Click the "Sign Agreement" button and draw the signature on the canvas.
-3. Click the "Confirm & Finalize Signature" button. | The lease status updates to active and a finalized agreement timestamp is recorded. |  |  |  |
-| TC_Lease_Management_029 | Lease Detail (/landlord/leases/[id]) | Review active lease payment schedule and terms | An active executed lease exists in the system. | 1. Navigate to `/landlord/leases/[id]`.
-2. Select the "Payment Schedule" tab.
-3. Inspect the monthly billing rows. | The full schedule of monthly due dates, rental amounts, and payment statuses is displayed. |  |  |  |
-| TC_Lease_Management_030 | Lease Detail (/landlord/leases/[id]) | Download executed legal lease agreement PDF | A finalized lease signed by both parties exists. | 1. Navigate to `/landlord/leases/[id]`.
-2. Click the "Download PDF" action button.
-3. Open the downloaded file. | The browser downloads a formatted PDF document displaying all terms and embedded signatures. |  |  |  |
-| TC_Billing_Financials_031 | Utility Readings (/landlord/utility-readings) | Record monthly sub-metered water and electricity readings | Active occupied units exist with sub-meter configurations. | 1. Navigate to `/landlord/utility-readings`.
-2. Enter current electricity and water meter readings for a unit.
-3. Click the "Save Utility Readings" button. | The utility consumption is calculated automatically and saved to the billing ledger. |  |  |  |
-| TC_Billing_Financials_032 | Invoice Management (/landlord/invoices) | Generate monthly rent and utility billing statement | An active lease exists with recorded utility consumption. | 1. Navigate to `/landlord/invoices`.
-2. Click the "Generate Billing" button and select the billing cycle month.
-3. Click the "Issue Invoices" button. | Itemized invoices are created for all active tenants with pending payment status. |  |  |  |
-| TC_Billing_Financials_033 | Financial Verification (/landlord/financials) | Verify and approve tenant payment proof submission | A tenant has submitted payment reference details and receipt image. | 1. Navigate to `/landlord/financials`.
-2. Click on the pending payment verification card.
-3. Review the uploaded receipt image and click "Approve Payment". | The payment status transitions to verified and the invoice balance updates to zero. |  |  |  |
-| TC_Billing_Financials_034 | Expense Management (/landlord/expenses) | Record property maintenance expense entry | The landlord is logged into the workspace. | 1. Navigate to `/landlord/expenses`.
-2. Click "Add Expense" and enter title, amount, category, and target property.
-3. Click the "Save Expense" button. | The expense entry is recorded and deducted from net operating income metrics. |  |  |  |
-| TC_Billing_Financials_035 | Financial Ledger (/landlord/financials) | Filter financial cash flow ledger by date range | Multiple payments and expense records exist in the database. | 1. Navigate to `/landlord/financials`.
-2. Select the "Last 30 Days" filter from the date range selector.
-3. Inspect the updated transaction table. | The ledger recalculates total income, expenses, and displays transactions from the chosen period. |  |  |  |
-| TC_Billing_Financials_036 | Invoice Management (/landlord/invoices) | Send automated overdue payment reminder notification | An invoice remains unpaid past its contractual due date. | 1. Navigate to `/landlord/invoices`.
-2. Locate the overdue invoice row.
-3. Click the "Send Reminder" action button. | An automated payment reminder notification is dispatched to the tenant via email and in-app alert. |  |  |  |
-| TC_Billing_Financials_037 | Financial Reports (/landlord/financials) | Export annual revenue and expense statement | Financial records exist across multiple billing cycles. | 1. Navigate to `/landlord/financials`.
-2. Click the "Export Report" button.
-3. Select the "Annual Financial Statement" format. | The system generates and downloads a detailed financial summary spreadsheet. |  |  |  |
-| TC_Maintenance_Ops_038 | Maintenance Dashboard (/landlord/maintenance) | Review incoming tenant maintenance repair ticket | A tenant has submitted a new maintenance request with photos. | 1. Navigate to `/landlord/maintenance`.
-2. Click on the newly submitted ticket row.
-3. Inspect the issue description, severity level, and attached photo. | The maintenance detail view opens and displays all tenant-submitted report details. |  |  |  |
-| TC_Maintenance_Ops_039 | Maintenance Detail (/landlord/maintenance/[id]) | Assign third-party contractor to maintenance repair ticket | An open maintenance ticket is currently under review in the maintenance modal. | 1. Navigate to `/landlord/maintenance` and open an active ticket.
-2. Select "Third Party Repair (Assign contractor)" and enter the contractor name.
-3. Click the "To Process" action button. | The ticket status updates to assigned with the contractor name recorded for resident transparency. |  |  |  |
-| TC_Maintenance_Ops_040 | Maintenance Detail (/landlord/maintenance/[id]) | Mark completed maintenance repair with resolution cost | A dispatched maintenance repair has been completed by the contractor. | 1. Navigate to `/landlord/maintenance/[id]`.
-2. Enter final invoice repair cost and completion notes.
-3. Click the "Mark Resolved" button. | Ticket status changes to resolved and the repair cost automatically logs to property expenses. |  |  |  |
-| TC_Communication_041 | Landlord Messages (/landlord/messages) | Send direct chat message to active tenant | An active lease connection exists between landlord and tenant. | 1. Navigate to `/landlord/messages`.
-2. Select the tenant contact thread from the left conversation list.
-3. Type a message into the text area and click "Send". | The message sends immediately and appears in the real-time conversation timeline. |  |  |  |
-| TC_Communication_042 | Community Bulletin (/tenant/community) | Publish building-wide maintenance announcement | The landlord has communication broadcast permissions. | 1. Navigate to `/tenant/community`.
-2. Click the "Create Announcement" button, enter title, and announcement body.
-3. Click the "Publish Announcement" button. | The announcement is pinned to the community bulletin for all building residents. |  |  |  |
-| TC_Operations_Assistant_043 | Operations Assistant (/landlord/iris) | Query operations assistant for portfolio occupancy insights | Multiple properties and leases exist in the workspace. | 1. Navigate to `/landlord/iris`.
-2. Type "What is our current portfolio occupancy and upcoming lease expirations?".
-3. Press Enter to submit the query. | The assistant analyzes live database records and outputs a concise portfolio summary. |  |  |  |
-| TC_Operations_Assistant_044 | Operations Assistant (/landlord/messages) | Draft contextual resident inquiry reply using assistant | An unread resident message is open in the messaging module. | 1. Navigate to `/landlord/messages`.
-2. Open an unread resident inquiry regarding building policies.
-3. Click the "Draft Smart Reply" assistant action. | The input area populates with a polite, policy-compliant response ready for review. |  |  |  |
-| TC_Lease_End_045 | Lease Renewal (/landlord/leases/[id]) | Approve pending tenant lease renewal request | A tenant has submitted a renewal request for an expiring lease. | 1. Navigate to `/landlord/leases/[id]`.
-2. Click on the "Renewal Request" notification banner.
-3. Click the "Approve Renewal" button. | The renewal request status changes to approved and a new lease term draft is created. |  |  |  |
-| TC_Lease_End_046 | Lease Detail (/landlord/leases/[id]) | Terminate an expired lease agreement | An active lease has reached its contractual end date. | 1. Navigate to `/landlord/leases/[id]`.
-2. Click the "Terminate Lease" action button.
-3. Enter the move-out inspection notes and confirm. | The lease transitions to terminated status and the associated unit becomes vacant. |  |  |  |
-| TC_Auth_047 | Authentication (/login) | Sign out of an active landlord session | The landlord user is logged into the workspace dashboard. | 1. Click the user profile widget in the navigation sidebar.
+| TC-AU-001 | Home / Root Gateway (/) | Automatically send visitors to the Login screen | You are not logged in and opening the website for the first time. | 1. Open the website address (`/`) in your browser.
+2. Wait a moment as the page loads.
+3. Check where the browser takes you. | The website automatically redirects you to the Login screen (`/login`). |  |  |  |
+| TC-AU-002 | Login Page (/login) | Show an error when entering the wrong password | You have a registered landlord email address. | 1. Go to the Login page.
+2. Type in your email and an incorrect password.
+3. Click the "Sign into Workspace" button. | A red alert banner appears stating that your password is invalid, and access is denied. |  |  |  |
+| TC-AU-003 | Forgot Password (/forgot-password) | Send a 6-digit recovery code when forgetting a password | Your landlord account email is registered in the system. | 1. Click "Forgot Password?" on the login page.
+2. Type in your registered email address.
+3. Click "Send verification code". | The system sends a 6-digit code to your email inbox and opens the "Enter 6-Digit Code" screen. |  |  |  |
+| TC-AU-004 | Login Page (/login) | Successfully log into the Landlord Dashboard | You have an active landlord account with valid email and password. | 1. Go to the Login page.
+2. Type in your correct email and password.
+3. Click the "Sign into Workspace" button. | You are successfully logged in and brought straight to your Landlord Dashboard. |  |  |  |
+| TC-LS-005 | Settings > Identity (/landlord/settings) | Update your landlord profile and business contact info | You are logged into your landlord account. | 1. Go to Settings and open the "Identity" tab.
+2. Type in your updated business name, phone number, or emergency contact.
+3. Click the "Save All Changes" button at the bottom. | A green success message appears confirming that your contact info has been saved. |  |  |  |
+| TC-LS-006 | Settings > Personalization (/landlord/settings) | Change the dashboard accent color theme | You are on the Settings page under the Personalization tab. | 1. Click the "Personalization" tab in Settings.
+2. Click on a color circle (or use the color picker to choose your brand color).
+3. Click "Save All Changes". | The dashboard buttons, icons, and highlights immediately switch to your chosen color. |  |  |  |
+| TC-LS-007 | Settings > Personalization (/landlord/settings) | Upload your custom property brand logo | You have an image file (PNG or JPG) of your logo on your computer or phone. | 1. In Settings, open the "Personalization" tab.
+2. In the Brand Assets section, click to upload your logo image.
+3. Click "Save All Changes". | Your property logo updates in the top navigation bar and appears on the resident portal. |  |  |  |
+| TC-LS-008 | Settings (/landlord/settings) | Warn you if you try to leave with unsaved changes | You typed new information into a settings box but have not clicked save yet. | 1. Change any text box in Settings.
+2. Click "Back to Dashboard" or try clicking another tab.
+3. Look at the warning message that pops up. | A pop-up window appears asking whether you want to Save, Discard, or Keep Editing your changes. |  |  |  |
+| TC-LS-009 | Settings (/landlord/settings) | Save changes across multiple tabs with one click | You are logged in as a landlord. | 1. In the "Identity" tab, change your business name.
+2. Switch to the "Personalization" tab and choose a new accent color.
+3. Click the top "Save All Changes" button once. | Both your new business name and color theme save simultaneously with one success message. |  |  |  |
+| TC-LS-010 | Settings > Finance (/landlord/settings) | Set up your GCash and Bank Account for rent payments | You want tenants to pay rent through your GCash or bank account. | 1. In Settings, click the "Finance" tab.
+2. Type in your GCash mobile number, account name, and bank details.
+3. Click "Save Payment Instructions". | Payment instructions update successfully and will be displayed on tenant checkout bills. |  |  |  |
+| TC-LS-011 | Settings > Notifications (/landlord/settings) | Choose which alerts you receive by email and push notifications | You are logged into your landlord account. | 1. In Settings, click the "Notifications" tab.
+2. Toggle the switches on or off for maintenance, payments, and tenant alerts.
+3. Click "Save All Changes". | Your notification preferences are saved and the system alerts you only through your chosen channels. |  |  |  |
+| TC-DC-012 | Help & Docs (/landlord/docs) | Search help topics and download a printable PDF manual | You are viewing the Documentation Hub page. | 1. Go to the Documentation page (`/landlord/docs`).
+2. Click the search bar (magnifying glass) and type a word like "GCash" or "Rent".
+3. Click the "PDF" button in the top bar. | Help topics instantly filter to match your word, and a formatted printable PDF user guide downloads to your computer. |  |  |  |
+| TC-PM-013 | Properties (/landlord/properties) | Add a new rental building to your portfolio | You are logged in and ready to register a property. | 1. Go to the Properties page.
+2. Click the "+ Add Property" button.
+3. Type the building name, address, and choose Apartment, Dormitory, or Boarding House.
+4. Follow the setup steps to add units and floors, then click "Save Property". | The new building is saved and appears as a card on your Properties dashboard. |  |  |  |
+| TC-PM-014 | Properties (/landlord/properties) | Update property photo and amenities | You have at least one property listed in your portfolio. | 1. On the Properties page, click the "Manage" button on your building card.
+2. In the Quick Actions pop-up, click "Edit Property".
+3. In Step 1 (Identity), click the cover photo to upload a new picture.
+4. Click Next to reach Step 3 (Financials) and check off your amenities (Wi-Fi, CCTV, Parking, etc.).
+5. Continue through the wizard and click "Save Changes". | The property updates successfully with your new cover photo and selected amenities. |  |  |  |
+| TC-PM-015 | Visual Unit Map (/landlord/unit-map) | View and arrange room layouts on an interactive floor plan | You have a building with units created. | 1. Go to the Visual Planner (`/landlord/unit-map`) and select your building.
+2. Look at the architectural blueprint showing all the rooms on that floor.
+3. Click on any room box to see its details. | The visual map shows all rooms positioned clearly with room numbers and status tags. |  |  |  |
+| TC-PM-016 | Visual Unit Map (/landlord/unit-map) | Inspect room details and tenant actions from the map side panel | Rooms exist on your visual floor plan. | 1. On the Visual Unit Map, click on any room box.
+2. Look at the Unit Details side panel that opens on the right.
+3. Check the tenant name, monthly rent, and available buttons (Message, History, or Walk-In). | The side panel displays full information about the room and who lives there. |  |  |  |
+| TC-PM-017 | Visual Unit Map (/landlord/unit-map) | Highlight only vacant rooms on the floor plan | Your building has both occupied and vacant rooms. | 1. Go to the Visual Unit Map.
+2. Click the "Vacant" filter button in the top toolbar.
+3. Look at the rooms on the floor plan. | All vacant rooms light up in green, while occupied rooms are filtered out. |  |  |  |
+| TC-PM-018 | Visual Unit Map (/landlord/unit-map) | Delete or decommission a vacant room from the floor plan | You have an empty room you want to remove. | 1. On the Visual Unit Map, click on the empty room.
+2. In the Unit Details side panel, scroll down to the bottom.
+3. Click the red "Remove Unit" button and confirm. | The room is permanently removed from the visual floor plan. |  |  |  |
+| TC-PM-019 | Tenants Directory (/landlord/tenants) | Find a tenant quickly by typing their name or room number | Tenants are registered in your properties. | 1. Go to the Tenants page.
+2. Type a resident's name or room number into the search box.
+3. Check the filtered list below. | The list instantly narrows down to the matching tenant, showing their phone number, room, and property. |  |  |  |
+| TC-PM-020 | Properties (/landlord/properties) | Check how many rooms are occupied and view all current residents | You have an active rental building. | 1. Go to the Properties page.
+2. Look at your building card to see occupied vs. vacant room counts.
+3. Click the "View Tenants" button on the card. | A window opens listing every tenant living in the building, along with their assigned unit and contact info. |  |  |  |
+| TC-PM-021 | Properties (/landlord/properties) | Download an Excel-compatible spreadsheet of all your buildings | You have at least one property listed. | 1. Go to the Properties page.
+2. Click the "Export Portfolio" dropdown button in the top bar.
+3. Click "CSV Export". | A CSV spreadsheet downloads containing your property names, addresses, room counts, and valuations. |  |  |  |
+| TC-RO-022 | Lobby Poster Studio (/landlord/flyer) | Customize an onboarding poster to display in your lobby | You are logged in with an active building. | 1. Go to the Lobby Flyer page (`/landlord/flyer`).
+2. Type in your building title, choose a background theme, and pick your colors.
+3. Look at the live poster preview on the screen. | The poster updates immediately on screen and saves your custom design automatically. |  |  |  |
+| TC-RO-023 | Lobby Poster Studio (/landlord/flyer) | Download a high-resolution image of the lobby poster to print | Your lobby poster has your building information and QR code. | 1. On the Lobby Flyer page, click the "Download" button in the top bar.
+2. Open the downloaded picture file on your device. | A high-resolution PNG image downloads containing the poster artwork and scannable mobile app QR code. |  |  |  |
+| TC-RO-024 | Tenants (/landlord/tenants) | Create a QR code and signup link for a new tenant | You have an empty room and want to onboard a tenant. | 1. Go to the Tenants page.
+2. Click the "+ Add Resident" button and select the "Invite" tab.
+3. Choose your building and click to generate the invite. | A private signup link and scannable QR code appear on screen ready to text or email to the tenant. |  |  |  |
+| TC-LM-025 | Leases (/landlord/leases) | Filter leases by active, renewal, or past contract status | You have multiple tenant contracts in your system. | 1. Go to the Leases page.
+2. Click the filter tabs: "Active", "Renewals", and "History".
+3. Review the contracts listed under each tab. | The list updates cleanly, letting you see active tenancies, upcoming renewals, and past contracts. |  |  |  |
+| TC-LM-026 | Applications & Leases (/landlord/applications) | Create a formal rental contract for a tenant | A tenant submitted an application or walk-in inquiry. | 1. Go to Applications (or click "New Lease" from the Leases page).
+2. Enter the tenant's name, room number, start date, end date, and monthly rent.
+3. Click to create the draft contract. | A formal lease agreement is created and appears in your Leases list waiting for signatures. |  |  |  |
+| TC-LM-027 | Leases (/landlord/leases) | Copy the online digital signing link to send to a tenant | A lease contract is waiting for tenant signature. | 1. On the Leases page, click on the contract that is pending signature.
+2. In the signing banner, click "Copy Signing Link".
+3. Paste the link into a chat or message to test it. | The link copies to your clipboard so you can send it to the tenant to sign on their phone or computer. |  |  |  |
+| TC-LM-028 | Lease Signing (/signing/landlord/[leaseId]) | Sign the lease contract electronically with your finger or mouse | The tenant has already drawn and submitted their signature. | 1. Open the contract in Leases and click "Countersign Lease".
+2. Look over the document and check the tenant's signature.
+3. Draw your signature in the signing box and click "Confirm & Finalize Signature". | The lease status turns to Active, and both signatures are permanently saved on the contract. |  |  |  |
+| TC-LM-029 | Leases (/landlord/leases) | Review full agreement terms, monthly rent, and history log | An active signed contract exists. | 1. Go to the Leases page and click on an active contract.
+2. Review the monthly rent, deposit, room details, and contract dates.
+3. Scroll down to see the signature dates and contract audit trail. | All lease details, house rules, rent amounts, and chronological history logs are displayed. |  |  |  |
+| TC-LM-030 | Leases (/landlord/leases) | Download a signed copy of the lease agreement as a PDF | A lease contract is signed by both you and the tenant. | 1. Open the contract on the Leases page.
+2. Click the "Download PDF" button.
+3. Open the downloaded document. | A legal PDF document opens showing the complete contract terms, property address, and both signatures. |  |  |  |
+| TC-BF-031 | Utility Billing (/landlord/utility-billing) | Enter new electric and water meter numbers for a room | Tenants have electric or water sub-meters. | 1. Go to Utility Billing and click the "Readings" tab.
+2. Type in the current electric (kWh) and water (m³) numbers for each room.
+3. Click "Save Utility Readings". | The system computes the exact usage and charges automatically based on your utility rates. |  |  |  |
+| TC-BF-032 | Invoices (/landlord/invoices) | Send a monthly bill for rent and utilities to a tenant | An active tenant has rent due or recorded utility consumption. | 1. Go to the Invoices page and click the "Invoices" tab.
+2. Click the "Issue Invoice" button.
+3. Pick the tenant, review the rent and utility amounts, and click "Issue Invoice". | An itemized bill is generated with a pending status and sent directly to the tenant's phone portal. |  |  |  |
+| TC-BF-033 | Invoices (/landlord/invoices) | Review and approve a tenant's payment receipt screenshot | A tenant uploaded a screenshot of their GCash or bank payment receipt. | 1. On the Invoices page, click on the bill marked "Pending Verification".
+2. Look at the receipt screenshot and check the reference number.
+3. Click the green "Approve Payment" button. | The bill marks as Paid, the tenant's balance clears to zero, and the payment logs in your income ledger. |  |  |  |
+| TC-BF-034 | Invoices > Expenses (/landlord/invoices) | Record a repair or maintenance expense for your property | You spent money on maintenance, supplies, or building repairs. | 1. Go to the Invoices page and click the "Expenses" tab.
+2. Click the "Record Expense" button.
+3. Type the expense title, amount spent, category, date, and property, then click "Save Expense". | The expense is saved and deducted from your building's net profit calculations. |  |  |  |
+| TC-BF-035 | Invoices > Ledger (/landlord/invoices) | Review your cash flow history and export to spreadsheet | Payment receipts and maintenance expenses have been recorded. | 1. Go to the Invoices page and click the "Ledger" tab.
+2. Review the chronological list of all money received and expenses paid.
+3. Click "Export CSV". | A spreadsheet file downloads showing your total income, total expenses, and net profit. |  |  |  |
+| TC-BF-036 | Invoices (/landlord/invoices) | Send an overdue payment reminder to a late tenant | A tenant has not paid their rent past the due date. | 1. Go to the Invoices page.
+2. Find the overdue invoice in the list.
+3. Click the "Send Reminder" button on that row. | An automated reminder is sent to the tenant's portal reminding them to pay their bill. |  |  |  |
+| TC-BF-037 | Analytics (/landlord/analytics) | View income charts and download an annual financial report | Your rental property has payment history over several months. | 1. Go to the Analytics page (`/landlord/analytics`).
+2. Choose a time range (such as "30D", "90D", or "1Y").
+3. Click the "Export Report" button and pick PDF or CSV. | A detailed financial report downloads summarizing your earnings, occupancy trends, and income. |  |  |  |
+| TC-MO-038 | Maintenance (/landlord/maintenance) | Check a new repair ticket sent by a tenant | A tenant reported a broken item with attached photos. | 1. Go to the Maintenance page.
+2. Click on the new ticket card in the list.
+3. Read the tenant's description of the problem and look at their attached photos. | The ticket modal opens clearly displaying the room number, problem description, urgency, and pictures. |  |  |  |
+| TC-MO-039 | Maintenance (/landlord/maintenance) | Assign a technician or handyman to fix a reported issue | A repair ticket is open and waiting for action. | 1. In the maintenance ticket, click the action dropdown and choose "Third Party Repair (Assign contractor)".
+2. Type the name of the repair person (e.g. "Kuya Jun - Electrician").
+3. Click the "To Process" button. | The ticket status changes to "Assigned" so the tenant can see who is coming to repair the issue. |  |  |  |
+| TC-MO-040 | Maintenance (/landlord/maintenance) | Mark a repair job as finished once the work is done | A repair technician has completed the requested repair. | 1. Open the in-progress repair ticket on the Maintenance page.
+2. Click the green "Mark as Completed" button. | The ticket status turns to Completed, and the resolution timestamp is recorded. |  |  |  |
+| TC-CM-041 | Messages (/landlord/messages) | Send an instant chat message to a tenant | An active tenant lives in your building. | 1. Go to the Messages page.
+2. Click the tenant's name on the left conversation list.
+3. Type your message in the chat box at the bottom and click "Send". | The message delivers immediately and appears in the chat history. |  |  |  |
+| TC-CM-042 | Community Hub (/landlord/community) | Post an announcement to all residents in a building | You are logged in as a landlord. | 1. Go to the Community page and select your building.
+2. Click the announcement box, type a title and your message (e.g. "Water interruption tomorrow from 1PM to 4PM").
+3. Click "Publish Announcement". | The announcement is pinned to the top of the community board for all building residents to see. |  |  |  |
+| TC-OA-043 | Analytics > iRis AI (/landlord/analytics) | Get AI health checks and operational suggestions for your rental business | You have active properties, rooms, and payments. | 1. Go to the Analytics page.
+2. Look at the iRis AI Insights box on the screen.
+3. Click the refresh button to ask iRis for a fresh checkup. | iRis analyzes your occupancy and payments, highlighting what's going well and what needs your attention. |  |  |  |
+| TC-OA-044 | Messages (/landlord/messages) | Filter chat messages by room number and attach bills or notices | You have ongoing conversations with residents. | 1. On the Messages page, type a room number into the search box.
+2. Click the paperclip or quick action button in the chat composer.
+3. Pick an invoice or document to attach and send. | The conversation list narrows down to that room, and your attachment links directly in the chat. |  |  |  |
+| TC-LE-045 | Leases > Renewals (/landlord/leases) | Approve a tenant's request to renew their lease for another term | A tenant sent a renewal request before their contract ended. | 1. Go to the Leases page and click the "Renewals" tab.
+2. Click on the tenant's pending renewal card.
+3. Review their requested lease length and notes, then click "Approve Renewal". | The renewal is approved and a new draft contract is prepared automatically. |  |  |  |
+| TC-LE-046 | Move-Out Requests (/landlord/move-out) | Process a tenant's move-out inspection and room clearance | A tenant is moving out at the end of their lease. | 1. Go to the Move-Out page (`/landlord/move-out`).
+2. Click on the tenant's move-out record.
+3. Go through the inspection checklist, enter any repair deductions, and confirm clearance. | The departure is recorded, the security deposit is settled, and the room becomes vacant for new tenants. |  |  |  |
+| TC-AU-047 | Sign Out (/login) | Safely log out of your landlord account | You are logged into your landlord account. | 1. Click your profile picture/name in the sidebar or header.
 2. Click the "Sign Out" button.
-3. Confirm the logout prompt. | The session token is cleared and the browser redirects to `/login`. |  |  |  |
+3. Confirm that you want to log out. | Your session ends securely and you are brought back to the Login screen. |  |  |  |
 | Tenant | Tenant | Tenant | Tenant | Tenant | Tenant | Tenant | Tenant | Tenant |
-| TC_Tenant_Onboarding_048 | App Download Hub (/download) | Access resident mobile APK and web application | The download portal is accessible via public link or flyer QR code. | 1. Navigate to `/download`.
-2. Click the "Download Android APK" button.
-3. Click the "Launch Web Resident App" alternative link. | The APK download commences and the alternative button navigates to `/login`. |  |  |  |
-| TC_Tenant_Onboarding_049 | Resident Onboarding (/signup/tenant) | Register new resident using invitation token | An active tenant invitation code has been issued by the landlord. | 1. Navigate to `/signup/tenant`.
-2. Enter the full name, email, password, and valid invitation code.
-3. Click the "Join Workspace" button. | The resident account is provisioned and the browser redirects to `/tenant/dashboard`. |  |  |  |
-| TC_Tenant_Experience_050 | Resident Tour (/tenant/tour) | Complete interactive resident onboarding walkthrough | A resident logs into their newly activated account for the first time. | 1. Navigate to `/tenant/tour`.
-2. Advance through the interactive guidance cards explaining payments and maintenance.
-3. Click the "Complete Tour" button on the final slide. | The tour completion flag is saved and the user is guided directly into their dashboard. |  |  |  |
-| TC_Tenant_Experience_051 | Resident Dashboard (/tenant/dashboard) | View resident home dashboard overview and balances | An authenticated resident with an active lease is logged in. | 1. Navigate to `/tenant/dashboard`.
-2. Review the current rent balance and upcoming due date card.
-3. Inspect the recent notices feed. | The dashboard renders current lease summary, outstanding balance, and recent building notices. |  |  |  |
-| TC_Tenant_Experience_052 | Resident Lease (/tenant/lease) | Review digital lease agreement and terms | An active lease contract is assigned to the resident. | 1. Navigate to `/tenant/lease`.
-2. Review the monthly rental amount, security deposit, and contract duration.
-3. Click the "View Full Agreement" link. | The digital lease agreement displays all contractual clauses, unit details, and signatures. |  |  |  |
-| TC_Tenant_Experience_053 | Community Bulletin (/tenant/community) | View building announcements and contact neighbors | The resident has access to the community module. | 1. Navigate to `/tenant/community`.
-2. Read the latest landlord announcement.
-3. Click on the building directory tab. | The community feed displays all active announcements and verified building contacts. |  |  |  |
-| TC_Tenant_Experience_054 | Resident Chat (/tenant/messages) | Send direct chat message to landlord | An active tenancy connection exists. | 1. Navigate to `/tenant/messages`.
-2. Type a message regarding parking availability.
-3. Click the "Send" button. | The message transmits in real time and appears in the conversation stream. |  |  |  |
-| TC_Tenant_Experience_055 | New Maintenance Ticket (/tenant/maintenance/new) | Submit maintenance repair ticket with photo evidence | The resident is logged into the tenant portal. | 1. Navigate to `/tenant/maintenance/new`.
-2. Select category, enter problem description, select urgency, and upload photo.
-3. Click the "Submit Request" button. | The maintenance ticket is created and assigned a tracking ID with open status. |  |  |  |
-| TC_Tenant_Experience_056 | Maintenance Tracking (/tenant/maintenance) | Track real-time repair ticket progress updates | An active maintenance request has been dispatched by the landlord. | 1. Navigate to `/tenant/maintenance`.
-2. Click on the active repair ticket card.
-3. Inspect the progress timeline and assigned contractor notes. | The ticket timeline shows current dispatch status and estimated resolution date. |  |  |  |
-| TC_Tenant_Payments_057 | Resident Invoices (/tenant/payments/[id]) | View itemized monthly rent and utility breakdown | A monthly invoice has been issued to the resident. | 1. Navigate to `/tenant/payments/[id]`.
-2. Inspect the breakdown of base rent, water charges, and electricity charges.
-3. Check the total payable balance. | The invoice displays itemized charges and total amount matching the landlord billing ledger. |  |  |  |
-| TC_Tenant_Payments_058 | Resident Payment Submission (/tenant/payments/[id]) | Submit payment proof receipt for monthly invoice | An unpaid invoice exists on the resident account. | 1. Navigate to `/tenant/payments/[id]`.
-2. Select payment method, enter transaction reference number, and upload receipt image.
-3. Click the "Submit Payment Proof" button. | The payment proof is submitted and invoice status updates to verification_pending. |  |  |  |
-| TC_Tenant_Payments_059 | Advance Payment (/tenant/payments/advance) | Submit advance rental payment for future months | The resident is current on all existing invoices. | 1. Navigate to `/tenant/payments/advance`.
-2. Enter advance payment amount and upload transaction receipt.
-3. Click the "Confirm Advance Payment" button. | The advance payment records into the account ledger as a credit toward upcoming rent. |  |  |  |
-| TC_Tenant_Lease_060 | Lease Renewal (/tenant/lease/renewal) | Submit lease renewal request to property manager | The resident lease is within 60 days of contractual expiration. | 1. Navigate to `/tenant/lease/renewal`.
-2. Select the proposed renewal term length and enter optional notes.
-3. Click the "Submit Renewal Request" button. | The renewal request submits to the landlord and the status displays pending review. |  |  |  |
-| TC_Tenant_Auth_061 | Authentication (/login) | Sign out of an active tenant session | The tenant user is logged into the resident portal. | 1. Click the user profile dropdown in the top right header.
-2. Click the "Sign Out" button.
-3. Confirm the logout prompt. | The active tenant session terminates and the browser redirects to `/login`. |  |  |  |
+| TC-TO-048 | App Download Hub (/download) | Download the mobile app APK or open the web app | You have a smartphone or computer. | 1. Open the Download page (`/download`) on your phone.
+2. Tap the "Download Android APK" button.
+3. Tap the "Sign In" link. | The Android APK file starts downloading to your phone, and the Sign In link takes you to the login screen. |  |  |  |
+| TC-TO-049 | Tenant Application (/apply/[token]) | Apply for an apartment room using a landlord's invite link | Your landlord gave you an invite link to register for a room. | 1. Open the invite link (`/apply/[token]`) on your phone or computer.
+2. Type in your name, email, phone number, employment info, and move-in date.
+3. Take a picture of your ID and submit the form. | Your application is sent directly to the landlord for review and approval. |  |  |  |
+| TC-TE-050 | Resident Dashboard (/tenant/dashboard) | Use quick shortcut buttons when opening the resident portal | You are logged into your tenant account. | 1. Open your Tenant Dashboard (`/tenant/dashboard`).
+2. Look at the quick buttons for "Pay Rent", "Maintenance", and "Messages".
+3. Tap any of the buttons to test the shortcut. | Tapping any button opens that exact section (e.g. tapping "Pay Rent" takes you directly to your bill). |  |  |  |
+| TC-TE-051 | Resident Dashboard (/tenant/dashboard) | Check your rent balance, upcoming due date, and building news | You are an active tenant living in the building. | 1. Open your Tenant Dashboard.
+2. Look at the card displaying your current rent balance and due date.
+3. Check the announcement box for recent building news. | The dashboard clearly displays how much you owe, when rent is due, and any new property notices. |  |  |  |
+| TC-TE-052 | My Lease (/tenant/lease) | Read your online lease contract and house rules | You have an active lease contract. | 1. Go to the "My Lease" page (`/tenant/lease`).
+2. Review your monthly rent, security deposit amount, and lease dates.
+3. Click the "View Full Agreement" button. | A window opens displaying your entire contract, building rules, and electronic signatures. |  |  |  |
+| TC-TE-053 | Community Board (/tenant/community) | Read building notices and join neighbor discussions | You are logged into your building portal. | 1. Go to the Community page (`/tenant/community`).
+2. Read announcements from the landlord at the top of the feed.
+3. Scroll down through neighbor posts, add a comment, or vote in a poll. | The community board displays all building announcements and lets you interact respectfully with neighbors. |  |  |  |
+| TC-TE-054 | Messages (/tenant/messages) | Send a direct chat message to your landlord | You have a question or request for your landlord. | 1. Go to the Messages page.
+2. Type your message in the chat box (e.g. "Good morning, may I ask about parking?").
+3. Tap "Send". | The message sends instantly and appears in your private chat conversation with the landlord. |  |  |  |
+| TC-TE-055 | Request a Repair (/tenant/maintenance/new) | Report a broken item in your room with pictures | Something in your room needs fixing (e.g. leaking sink or broken light). | 1. Go to Maintenance and tap "New Request".
+2. Pick a category (like Plumbing or Electrical), describe the problem, and attach a photo.
+3. Tap "Submit Request". | A repair ticket is created with a tracking number and your landlord is notified right away. |  |  |  |
+| TC-TE-056 | Repair Status (/tenant/maintenance) | Check if a repair person has been assigned to your ticket | You submitted a repair request. | 1. Go to the Maintenance page.
+2. Tap on your active repair request card.
+3. Check the progress timeline and the name of the assigned technician. | The ticket modal shows the current status, who is coming to help, and any updates from the landlord. |  |  |  |
+| TC-TP-057 | Bills & Dues (/tenant/payments) | See an itemized breakdown of your rent, electric, and water bills | A monthly bill has been issued to your room. | 1. Go to the Payments page.
+2. Under "Current Bill", review the breakdown for base rent, electricity, and water.
+3. Check your meter readings and total amount due. | The bill clearly shows your electric and water meter numbers, rates, and total balance due. |  |  |  |
+| TC-TP-058 | Pay Bill (/tenant/payments/[id]/checkout) | Pay your rent with GCash or Bank Transfer and upload your receipt | You have an unpaid bill on your account. | 1. On the Payments page, tap the "Pay Now" button.
+2. Choose your payment method (GCash, Maya, or Bank Transfer).
+3. Type the transaction reference number, upload a photo of your receipt, and tap "Submit". | Your payment proof is sent to the landlord and the bill status updates to "Verification Pending". |  |  |  |
+| TC-TP-059 | Pay in Advance (/tenant/payments) | Pay your next month's rent early before the bill is generated | You have paid all current bills and want to pay ahead of time. | 1. Go to the Payments page.
+2. Tap the "Pay Next Cycle Now" button.
+3. On the payment checkout screen, enter your reference number and upload your receipt photo. | An advance payment bill is created and sent to the landlord to credit toward your next rent. |  |  |  |
+| TC-TL-060 | Lease Renewal (/tenant/lease) | Ask your landlord to renew your contract for another term | Your lease is approaching its expiration date. | 1. Go to the "My Lease" page.
+2. In the Lease Renewal section, choose how many months you want to renew (e.g. 6 or 12 months).
+3. Add any notes and tap "Submit Renewal Request". | Your renewal request is sent to the landlord, and your page shows that it is under review. |  |  |  |
+| TC-TA-061 | Sign Out (/login) | Safely log out of the tenant portal | You are logged into your tenant account. | 1. Tap your profile picture at the top right.
+2. Tap "Sign Out".
+3. Confirm that you want to log out. | You are safely logged out and brought back to the Login screen. |  |  |  |
 | System Security, Accessibility & Resilience | System Security, Accessibility & Resilience | System Security, Accessibility & Resilience | System Security, Accessibility & Resilience | System Security, Accessibility & Resilience | System Security, Accessibility & Resilience | System Security, Accessibility & Resilience | System Security, Accessibility & Resilience | System Security, Accessibility & Resilience |
-| TC_Accessibility_062 | Accessibility Controls (/landlord/settings or /landlord/dashboard) | Toggle WCAG AAA high contrast visual mode | The user is viewing any authenticated page. | 1. Open the user profile or quick settings widget.
-2. Click the "High Contrast Mode" toggle button.
-3. Inspect page borders, typography, and active tabs. | All shadows are replaced with high-contrast borders and active tabs show high-visibility highlights. |  |  |  |
-| TC_Accessibility_063 | Keyboard Navigation (/login or /landlord/dashboard) | Navigate interface using keyboard tab focus | The user is navigating using keyboard only. | 1. Navigate to `/login`.
-2. Press Tab repeatedly to cycle through interactive elements.
-3. Press Enter on the focused button. | Focus rings visibly highlight each interactive element in logical sequential order. |  |  |  |
-| TC_System_Security_064 | Security & Isolation (/api/tenant/payments) | Enforce row level security isolation on tenant records | A tenant user attempts to query data belonging to another tenant. | 1. Authenticate as Tenant A.
-2. Send an API request to fetch payment records for Tenant B.
-3. Inspect the HTTP response code and payload. | The system returns a 403 Forbidden error and reveals zero data from other tenants. |  |  |  |
-| TC_System_Security_065 | Security & Isolation (/api/tenant/messages) | Prevent unauthorized cross-tenant message inspection | Two distinct tenant accounts exist in the workspace. | 1. Authenticate as Tenant A.
-2. Attempt to open a conversation channel belonging to Tenant B.
-3. Observe the response and UI behavior. | Access is denied and the user cannot view or send messages in unauthorized threads. |  |  |  |
-| TC_System_Resilience_066 | Network Resilience (/landlord/flyer) | Display persistent warning banner during network disconnection | The user is editing flyer configurations in the studio. | 1. Navigate to `/landlord/flyer`.
-2. Disconnect the network connection.
-3. Attempt to modify a text element on the canvas. | A persistent offline warning banner displays and sync automatically resumes when reconnected. |  |  |  |
-| TC_Access_Control_067 | Access Control (/admin/dashboard) | Intercept deprecated admin portal route attempt | A user attempts to access a retired administrative endpoint. | 1. Enter `/admin/dashboard` into the browser address bar.
-2. Press Enter to submit the navigation request.
-3. Observe the response behavior. | The system intercepts the request and redirects the user directly to `/landlord/dashboard`. |  |  |  |
+| TC-AC-062 | High Contrast Mode (/landlord/settings or User Menu) | Turn on High Contrast mode for clearer, easier reading | You are viewing any page in the system. | 1. Open your profile menu (or go to Settings > Personalization).
+2. Click the "High Contrast" button.
+3. Check how text, buttons, and borders look. | All text becomes darker and bolder, borders become sharp and clear, and shadows are replaced with high-visibility outlines. |  |  |  |
+| TC-AC-063 | Keyboard Navigation (/login or /landlord/dashboard) | Use the Tab key on your keyboard to navigate without a mouse | You are using a computer keyboard. | 1. Go to the Login page.
+2. Press the `Tab` key repeatedly to jump from box to box.
+3. When on the submit button, press the `Enter` key. | A glowing outline clearly shows which box or button is active, and pressing Enter triggers the button. |  |  |  |
+| TC-SS-064 | Privacy & Data Protection (/tenant/payments) | Prevent any tenant from seeing another tenant's payment records | Multiple tenants live and pay rent in the building. | 1. Log in as Tenant A.
+2. Try to open or view a payment link belonging to Tenant B.
+3. Observe what happens. | The system completely blocks access, keeping all other tenants' financial records private and secure. |  |  |  |
+| TC-SS-065 | Private Conversations (/tenant/messages) | Keep chat messages strictly private between tenant and landlord | You are logged in as a tenant. | 1. Open the Messages page.
+2. Check your list of available chats.
+3. Confirm you cannot see or join any messages between other residents and the landlord. | You only have access to your own private conversation with the landlord; other residents' chats are completely hidden. |  |  |  |
+| TC-SR-066 | Offline Protection (/landlord/flyer) | Protect your work and alert you if the internet disconnects | You are editing in the Lobby Poster Studio. | 1. Open the Lobby Flyer page.
+2. Turn off your Wi-Fi or disconnect from the internet.
+3. Try typing new text on the poster canvas.
+4. Reconnect your Wi-Fi. | An orange "You are Offline" banner appears warning you, and your changes are saved and synced once your connection returns. |  |  |  |
