@@ -3,41 +3,108 @@ import { DEFAULT_BRANDING, BrandConfig } from "@/context/BrandContext";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { queueBrandedInstaller } from "@/lib/desktop/queue-branded-installer";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 /**
  * GET /api/branding
- * Public endpoint to retrieve the instance's active property branding and theme.
+ * Retrieves active property branding and theme tokens scoped to the caller's property/landlord.
  * Uses service role client so all tenants, guests, and landlords receive the correct branding.
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const admin = createServiceRoleSupabaseClient();
+    const url = new URL(request.url);
+    const queryPropertyId = url.searchParams.get("propertyId");
+    const queryLandlordId = url.searchParams.get("landlordId");
 
-    // 1. Fetch first property as the primary turnkey property
-    const { data: property } = await admin
-      .from("properties")
-      .select("id, name, description, type, images, map_decorations, landlord_id")
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle();
+    let targetLandlordId: string | null = queryLandlordId || null;
+    let targetPropertyId: string | null = queryPropertyId || null;
 
-    // 2. Fetch landlord business profile from profiles table
+    // 1. Resolve caller identity from session cookie if present
+    try {
+      const authSupabase = await createServerSupabaseClient();
+      const { data: { user } } = await authSupabase.auth.getUser();
+      if (user) {
+        const { data: userProfile } = await admin
+          .from("profiles")
+          .select("id, role")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        if (userProfile?.role === "landlord" || userProfile?.role === "admin") {
+          targetLandlordId = user.id;
+        } else if (userProfile?.role === "tenant") {
+          const { data: lease } = await admin
+            .from("leases")
+            .select("property_id, property:properties(id, landlord_id)")
+            .eq("tenant_id", user.id)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          const prop = (lease as any)?.property;
+          if (prop?.landlord_id) {
+            targetLandlordId = prop.landlord_id;
+            targetPropertyId = prop.id;
+          }
+        }
+      }
+    } catch {
+      // Unauthenticated caller, will fall back below
+    }
+
+    let property = null;
     let landlordProfile = null;
-    if (property?.landlord_id) {
+
+    if (targetPropertyId) {
+      const { data: p } = await admin
+        .from("properties")
+        .select("id, name, description, type, images, map_decorations, landlord_id")
+        .eq("id", targetPropertyId)
+        .maybeSingle();
+      property = p;
+      if (property?.landlord_id) {
+        targetLandlordId = property.landlord_id;
+      }
+    }
+
+    if (targetLandlordId) {
+      if (!property) {
+        const { data: p } = await admin
+          .from("properties")
+          .select("id, name, description, type, images, map_decorations, landlord_id")
+          .eq("landlord_id", targetLandlordId)
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        property = p;
+      }
+
       const { data: prof } = await admin
         .from("profiles")
         .select("business_name, full_name, socials")
-        .eq("id", property.landlord_id)
+        .eq("id", targetLandlordId)
         .maybeSingle();
       landlordProfile = prof;
-    } else {
-      const { data: prof } = await admin
-        .from("profiles")
-        .select("business_name, full_name, socials")
-        .eq("role", "landlord")
+    }
+
+    // 2. Fallback to turnkey property if no user/landlord resolved (public guests)
+    if (!property && !landlordProfile) {
+      const { data: firstProp } = await admin
+        .from("properties")
+        .select("id, name, description, type, images, map_decorations, landlord_id")
+        .order("created_at", { ascending: true })
         .limit(1)
         .maybeSingle();
-      landlordProfile = prof;
+      property = firstProp;
+
+      if (property?.landlord_id) {
+        const { data: prof } = await admin
+          .from("profiles")
+          .select("business_name, full_name, socials")
+          .eq("id", property.landlord_id)
+          .maybeSingle();
+        landlordProfile = prof;
+      }
     }
 
     if (!property && !landlordProfile) {
@@ -136,7 +203,7 @@ export async function POST(request: NextRequest) {
       branding: updatedBrandingMeta,
     };
 
-    // 2. Update property record in cloud
+    // 2. Update all properties owned by this landlord with the branding tokens
     if (existingProperty) {
       await admin
         .from("properties")
@@ -147,7 +214,7 @@ export async function POST(request: NextRequest) {
           map_decorations: newDecorations,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", existingProperty.id);
+        .eq("landlord_id", userId);
     }
 
     // 3. Update landlord profile with branding in profiles.socials and business_name
