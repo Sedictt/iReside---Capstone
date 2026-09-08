@@ -2280,7 +2280,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
       "source_location": "L537",
       "id": "detector_detect_antipatterns_browser_relativeluminance",
-      "community": 264,
+      "community": 136,
       "norm_label": "relativeluminance()"
     },
     {
@@ -2289,7 +2289,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
       "source_location": "L544",
       "id": "detector_detect_antipatterns_browser_contrastratio",
-      "community": 264,
+      "community": 136,
       "norm_label": "contrastratio()"
     },
     {
@@ -2307,7 +2307,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
       "source_location": "L568",
       "id": "detector_detect_antipatterns_browser_haschroma",
-      "community": 264,
+      "community": 136,
       "norm_label": "haschroma()"
     },
     {
@@ -2316,7 +2316,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
       "source_location": "L573",
       "id": "detector_detect_antipatterns_browser_gethue",
-      "community": 264,
+      "community": 136,
       "norm_label": "gethue()"
     },
     {
@@ -2325,7 +2325,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
       "source_location": "L586",
       "id": "detector_detect_antipatterns_browser_colortohex",
-      "community": 264,
+      "community": 136,
       "norm_label": "colortohex()"
     },
     {
@@ -2343,7 +2343,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
       "source_location": "L629",
       "id": "detector_detect_antipatterns_browser_isemojionlytext",
-      "community": 136,
+      "community": 438,
       "norm_label": "isemojionlytext()"
     },
     {
@@ -2352,7 +2352,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
       "source_location": "L635",
       "id": "detector_detect_antipatterns_browser_checkcolors",
-      "community": 264,
+      "community": 136,
       "norm_label": "checkcolors()"
     },
     {
@@ -2370,7 +2370,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
       "source_location": "L749",
       "id": "detector_detect_antipatterns_browser_checkicontile",
-      "community": 136,
+      "community": 438,
       "norm_label": "checkicontile()"
     },
     {
@@ -2424,7 +2424,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
       "source_location": "L942",
       "id": "detector_detect_antipatterns_browser_checkmotion",
-      "community": 60,
+      "community": 296,
       "norm_label": "checkmotion()"
     },
     {
@@ -2433,7 +2433,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
       "source_location": "L980",
       "id": "detector_detect_antipatterns_browser_checkglow",
-      "community": 264,
+      "community": 136,
       "norm_label": "checkglow()"
     },
     {
@@ -2514,7 +2514,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
       "source_location": "L1363",
       "id": "detector_detect_antipatterns_browser_checkelementicontiledom",
-      "community": 136,
+      "community": 438,
       "norm_label": "checkelementicontiledom()"
     },
     {
@@ -2622,7 +2622,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
       "source_location": "L1666",
       "id": "detector_detect_antipatterns_browser_checkelementmotiondom",
-      "community": 60,
+      "community": 296,
       "norm_label": "checkelementmotiondom()"
     },
     {
@@ -2640,7 +2640,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
       "source_location": "L1708",
       "id": "detector_detect_antipatterns_browser_checkelementaipalettedom",
-      "community": 264,
+      "community": 136,
       "norm_label": "checkelementaipalettedom()"
     },
     {
@@ -2730,7 +2730,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
       "source_location": "L2255",
       "id": "detector_detect_antipatterns_browser_checkelementicontile",
-      "community": 136,
+      "community": 438,
       "norm_label": "checkelementicontile()"
     },
     {
@@ -2766,7 +2766,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
       "source_location": "L2343",
       "id": "detector_detect_antipatterns_browser_checkelementmotion",
-      "community": 60,
+      "community": 296,
       "norm_label": "checkelementmotion()"
     },
     {
@@ -2775,7 +2775,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
       "source_location": "L2353",
       "id": "detector_detect_antipatterns_browser_checkelementglow",
-      "community": 264,
+      "community": 136,
       "norm_label": "checkelementglow()"
     },
     {
@@ -2838,7 +2838,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
       "source_location": "L2615",
       "id": "detector_detect_antipatterns_browser_iscreamcolor",
-      "community": 843,
+      "community": 136,
       "norm_label": "iscreamcolor()"
     },
     {
@@ -2847,7 +2847,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
       "source_location": "L2637",
       "id": "detector_detect_antipatterns_browser_creamfromclasslist",
-      "community": 843,
+      "community": 136,
       "norm_label": "creamfromclasslist()"
     },
     {
@@ -2856,7 +2856,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
       "source_location": "L2649",
       "id": "detector_detect_antipatterns_browser_checkcreampalette",
-      "community": 843,
+      "community": 136,
       "norm_label": "checkcreampalette()"
     },
     {
@@ -3090,7 +3090,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
       "source_location": "L3315",
       "id": "detector_detect_antipatterns_browser_buildselectorsegment",
-      "community": 60,
+      "community": 466,
       "norm_label": "buildselectorsegment()"
     },
     {
@@ -3099,7 +3099,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
       "source_location": "L3346",
       "id": "detector_detect_antipatterns_browser_generateselector",
-      "community": 60,
+      "community": 466,
       "norm_label": "generateselector()"
     },
     {
@@ -3108,7 +3108,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
       "source_location": "L3381",
       "id": "detector_detect_antipatterns_browser_getdirecttext",
-      "community": 136,
+      "community": 466,
       "norm_label": "getdirecttext()"
     },
     {
@@ -3117,7 +3117,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
       "source_location": "L3388",
       "id": "detector_detect_antipatterns_browser_getdirecttextrect",
-      "community": 136,
+      "community": 466,
       "norm_label": "getdirecttextrect()"
     },
     {
@@ -3126,7 +3126,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
       "source_location": "L3416",
       "id": "detector_detect_antipatterns_browser_collectvisualcontrastreasons",
-      "community": 136,
+      "community": 466,
       "norm_label": "collectvisualcontrastreasons()"
     },
     {
@@ -3135,7 +3135,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
       "source_location": "L3471",
       "id": "detector_detect_antipatterns_browser_collectvisualcontrastcandidates",
-      "community": 136,
+      "community": 466,
       "norm_label": "collectvisualcontrastcandidates()"
     },
     {
@@ -3144,7 +3144,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
       "source_location": "L3534",
       "id": "detector_detect_antipatterns_browser_clampbyte",
-      "community": 253,
+      "community": 466,
       "norm_label": "clampbyte()"
     },
     {
@@ -3153,7 +3153,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
       "source_location": "L3538",
       "id": "detector_detect_antipatterns_browser_blendrgba",
-      "community": 253,
+      "community": 466,
       "norm_label": "blendrgba()"
     },
     {
@@ -3162,7 +3162,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
       "source_location": "L3552",
       "id": "detector_detect_antipatterns_browser_pickworstcontrastcolor",
-      "community": 264,
+      "community": 136,
       "norm_label": "pickworstcontrastcolor()"
     },
     {
@@ -3279,7 +3279,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
       "source_location": "L3823",
       "id": "detector_detect_antipatterns_browser_textsamplepoints",
-      "community": 253,
+      "community": 466,
       "norm_label": "textsamplepoints()"
     },
     {
@@ -3297,7 +3297,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
       "source_location": "L3902",
       "id": "detector_detect_antipatterns_browser_analyzevisualcontrastcandidate",
-      "community": 253,
+      "community": 466,
       "norm_label": "analyzevisualcontrastcandidate()"
     },
     {
@@ -3306,7 +3306,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
       "source_location": "L3981",
       "id": "detector_detect_antipatterns_browser_waitforvisualpaint",
-      "community": 484,
+      "community": 466,
       "norm_label": "waitforvisualpaint()"
     },
     {
@@ -3315,7 +3315,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
       "source_location": "L3987",
       "id": "detector_detect_antipatterns_browser_analyzevisualcontrast",
-      "community": 484,
+      "community": 466,
       "norm_label": "analyzevisualcontrast()"
     },
     {
@@ -4152,7 +4152,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/engines/static-html/detect-html.mjs",
       "source_location": "L1",
       "id": "static_html_detect_html",
-      "community": 51,
+      "community": 71,
       "norm_label": "detect-html.mjs"
     },
     {
@@ -4161,7 +4161,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/engines/static-html/detect-html.mjs",
       "source_location": "L37",
       "id": "static_html_detect_html_checkstaticpagetypography",
-      "community": 51,
+      "community": 71,
       "norm_label": "checkstaticpagetypography()"
     },
     {
@@ -4170,7 +4170,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/engines/static-html/detect-html.mjs",
       "source_location": "L72",
       "id": "static_html_detect_html_checkelementbrokenimage",
-      "community": 51,
+      "community": 71,
       "norm_label": "checkelementbrokenimage()"
     },
     {
@@ -4179,7 +4179,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/engines/static-html/detect-html.mjs",
       "source_location": "L86",
       "id": "static_html_detect_html_static_element_rules",
-      "community": 51,
+      "community": 71,
       "norm_label": "static_element_rules"
     },
     {
@@ -4656,7 +4656,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
       "source_location": "L446",
       "id": "rules_checks_checkhtmlpatterns",
-      "community": 51,
+      "community": 71,
       "norm_label": "checkhtmlpatterns()"
     },
     {
@@ -4917,7 +4917,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
       "source_location": "L1561",
       "id": "rules_checks_checkpagequalityfromdoc",
-      "community": 51,
+      "community": 71,
       "norm_label": "checkpagequalityfromdoc()"
     },
     {
@@ -4926,7 +4926,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
       "source_location": "L1582",
       "id": "rules_checks_checkpagequalitydom",
-      "community": 51,
+      "community": 71,
       "norm_label": "checkpagequalitydom()"
     },
     {
@@ -5007,7 +5007,7 @@
       "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
       "source_location": "L1783",
       "id": "rules_checks_checkelementglow",
-      "community": 51,
+      "community": 71,
       "norm_label": "checkelementglow()"
     },
     {
@@ -16012,7 +16012,7 @@
       "source_file": "docs/database-inventory/inventory.json",
       "source_location": "L83",
       "id": "database_inventory_inventory_functions_sync_compat_payment_status",
-      "community": 913,
+      "community": 297,
       "norm_label": "sync_compat_payment_status"
     },
     {
@@ -16021,7 +16021,7 @@
       "source_file": "docs/database-inventory/inventory.json",
       "source_location": "L84",
       "id": "database_inventory_inventory_sync_compat_payment_status_tablereferences",
-      "community": 913,
+      "community": 297,
       "norm_label": "tablereferences"
     },
     {
@@ -16030,7 +16030,7 @@
       "source_file": "docs/database-inventory/inventory.json",
       "source_location": "L85",
       "id": "database_inventory_inventory_sync_compat_payment_status_grants",
-      "community": 913,
+      "community": 297,
       "norm_label": "grants"
     },
     {
@@ -16039,7 +16039,7 @@
       "source_file": "docs/database-inventory/inventory.json",
       "source_location": "L92",
       "id": "database_inventory_inventory_functions_update_lease_signature_timestamps",
-      "community": 297,
+      "community": 913,
       "norm_label": "update_lease_signature_timestamps"
     },
     {
@@ -16048,7 +16048,7 @@
       "source_file": "docs/database-inventory/inventory.json",
       "source_location": "L93",
       "id": "database_inventory_inventory_update_lease_signature_timestamps_tablereferences",
-      "community": 297,
+      "community": 913,
       "norm_label": "tablereferences"
     },
     {
@@ -16057,7 +16057,7 @@
       "source_file": "docs/database-inventory/inventory.json",
       "source_location": "L94",
       "id": "database_inventory_inventory_update_lease_signature_timestamps_grants",
-      "community": 297,
+      "community": 913,
       "norm_label": "grants"
     },
     {
@@ -20467,7 +20467,7 @@
       "source_file": "opencode.json",
       "source_location": "L1",
       "id": "opencode",
-      "community": 538,
+      "community": 885,
       "norm_label": "opencode.json"
     },
     {
@@ -20476,7 +20476,7 @@
       "source_file": "opencode.json",
       "source_location": "L2",
       "id": "opencode_schema",
-      "community": 538,
+      "community": 885,
       "norm_label": "$schema"
     },
     {
@@ -20485,7 +20485,7 @@
       "source_file": "opencode.json",
       "source_location": "L3",
       "id": "opencode_model",
-      "community": 538,
+      "community": 885,
       "norm_label": "model"
     },
     {
@@ -20566,7 +20566,7 @@
       "source_file": "opencode.json",
       "source_location": "L17",
       "id": "opencode_mcp",
-      "community": 870,
+      "community": 869,
       "norm_label": "mcp"
     },
     {
@@ -21007,7 +21007,7 @@
       "source_file": "opencode.json",
       "source_location": "L80",
       "id": "opencode_plugin",
-      "community": 538,
+      "community": 885,
       "norm_label": "plugin"
     },
     {
@@ -25321,7 +25321,7 @@
       "source_file": "src/app/admin/consultation-tool/ConsultationDashboard.tsx",
       "source_location": "L1",
       "id": "consultation_tool_consultationdashboard",
-      "community": 107,
+      "community": 854,
       "norm_label": "consultationdashboard.tsx"
     },
     {
@@ -25330,7 +25330,7 @@
       "source_file": "src/app/admin/consultation-tool/ConsultationDashboard.tsx",
       "source_location": "L16",
       "id": "consultation_tool_consultationdashboard_document",
-      "community": 107,
+      "community": 854,
       "norm_label": "document"
     },
     {
@@ -25339,7 +25339,7 @@
       "source_file": "src/app/admin/consultation-tool/ConsultationDashboard.tsx",
       "source_location": "L26",
       "id": "consultation_tool_consultationdashboard_consultationdashboard",
-      "community": 107,
+      "community": 854,
       "norm_label": "consultationdashboard()"
     },
     {
@@ -25348,7 +25348,7 @@
       "source_file": "src/app/admin/consultation-tool/ConsultationTool.tsx",
       "source_location": "L1",
       "id": "consultation_tool_consultationtool",
-      "community": 107,
+      "community": 854,
       "norm_label": "consultationtool.tsx"
     },
     {
@@ -25357,7 +25357,7 @@
       "source_file": "src/app/admin/consultation-tool/ConsultationTool.tsx",
       "source_location": "L9",
       "id": "consultation_tool_consultationtool_digitalsigner",
-      "community": 107,
+      "community": 854,
       "norm_label": "digitalsigner"
     },
     {
@@ -25366,7 +25366,7 @@
       "source_file": "src/app/admin/consultation-tool/ConsultationTool.tsx",
       "source_location": "L14",
       "id": "consultation_tool_consultationtool_consultationtoolprops",
-      "community": 107,
+      "community": 854,
       "norm_label": "consultationtoolprops"
     },
     {
@@ -25375,7 +25375,7 @@
       "source_file": "src/app/admin/consultation-tool/ConsultationTool.tsx",
       "source_location": "L19",
       "id": "consultation_tool_consultationtool_consultationtool",
-      "community": 107,
+      "community": 854,
       "norm_label": "consultationtool()"
     },
     {
@@ -26437,7 +26437,7 @@
       "source_file": "src/app/api/auth/landlord-register/route.ts",
       "source_location": "L1",
       "id": "landlord_register_route",
-      "community": 696,
+      "community": 17,
       "norm_label": "route.ts"
     },
     {
@@ -26446,7 +26446,7 @@
       "source_file": "src/app/api/auth/landlord-register/route.ts",
       "source_location": "L7",
       "id": "landlord_register_route_landlordregistrationschema",
-      "community": 696,
+      "community": 17,
       "norm_label": "landlordregistrationschema"
     },
     {
@@ -26455,7 +26455,7 @@
       "source_file": "src/app/api/auth/landlord-register/route.ts",
       "source_location": "L16",
       "id": "landlord_register_route_uploadedfile",
-      "community": 696,
+      "community": 17,
       "norm_label": "uploadedfile"
     },
     {
@@ -26464,7 +26464,7 @@
       "source_file": "src/app/api/auth/landlord-register/route.ts",
       "source_location": "L22",
       "id": "landlord_register_route_fileschema",
-      "community": 696,
+      "community": 17,
       "norm_label": "fileschema"
     },
     {
@@ -26473,7 +26473,7 @@
       "source_file": "src/app/api/auth/landlord-register/route.ts",
       "source_location": "L34",
       "id": "landlord_register_route_landlordregistrationwithfilesschema",
-      "community": 696,
+      "community": 17,
       "norm_label": "landlordregistrationwithfilesschema"
     },
     {
@@ -26482,7 +26482,7 @@
       "source_file": "src/app/api/auth/landlord-register/route.ts",
       "source_location": "L44",
       "id": "landlord_register_route_post",
-      "community": 696,
+      "community": 17,
       "norm_label": "post()"
     },
     {
@@ -27580,7 +27580,7 @@
       "source_file": "src/app/api/landlord/analytics/report/route.ts",
       "source_location": "L1",
       "id": "report_route",
-      "community": 423,
+      "community": 0,
       "norm_label": "route.ts"
     },
     {
@@ -27589,7 +27589,7 @@
       "source_file": "src/app/api/landlord/analytics/report/route.ts",
       "source_location": "L4",
       "id": "report_route_reportrow",
-      "community": 423,
+      "community": 0,
       "norm_label": "reportrow"
     },
     {
@@ -27598,7 +27598,7 @@
       "source_file": "src/app/api/landlord/analytics/report/route.ts",
       "source_location": "L11",
       "id": "report_route_exportaudititem",
-      "community": 423,
+      "community": 0,
       "norm_label": "exportaudititem"
     },
     {
@@ -27607,7 +27607,7 @@
       "source_file": "src/app/api/landlord/analytics/report/route.ts",
       "source_location": "L18",
       "id": "report_route_reportrequestbody",
-      "community": 423,
+      "community": 0,
       "norm_label": "reportrequestbody"
     },
     {
@@ -27616,7 +27616,7 @@
       "source_file": "src/app/api/landlord/analytics/report/route.ts",
       "source_location": "L27",
       "id": "report_route_escapecsv",
-      "community": 423,
+      "community": 0,
       "norm_label": "escapecsv()"
     },
     {
@@ -27625,7 +27625,7 @@
       "source_file": "src/app/api/landlord/analytics/report/route.ts",
       "source_location": "L34",
       "id": "report_route_buildcsvreport",
-      "community": 423,
+      "community": 0,
       "norm_label": "buildcsvreport()"
     },
     {
@@ -27634,7 +27634,7 @@
       "source_file": "src/app/api/landlord/analytics/report/route.ts",
       "source_location": "L52",
       "id": "report_route_get",
-      "community": 423,
+      "community": 0,
       "norm_label": "get()"
     },
     {
@@ -27643,7 +27643,7 @@
       "source_file": "src/app/api/landlord/analytics/report/route.ts",
       "source_location": "L83",
       "id": "report_route_post",
-      "community": 423,
+      "community": 0,
       "norm_label": "post()"
     },
     {
@@ -32710,7 +32710,7 @@
       "source_file": "src/app/landlord/invoices/page.tsx",
       "source_location": "L1",
       "id": "invoices_page",
-      "community": 107,
+      "community": 3,
       "norm_label": "page.tsx"
     },
     {
@@ -32719,7 +32719,7 @@
       "source_file": "src/app/landlord/invoices/page.tsx",
       "source_location": "L18",
       "id": "invoices_page_expenseitem",
-      "community": 107,
+      "community": 3,
       "norm_label": "expenseitem"
     },
     {
@@ -32728,7 +32728,7 @@
       "source_file": "src/app/landlord/invoices/page.tsx",
       "source_location": "L26",
       "id": "invoices_page_invoicespage",
-      "community": 107,
+      "community": 3,
       "norm_label": "invoicespage()"
     },
     {
@@ -32737,7 +32737,7 @@
       "source_file": "src/app/landlord/invoices/page.tsx",
       "source_location": "L660",
       "id": "invoices_page_herostat",
-      "community": 107,
+      "community": 3,
       "norm_label": "herostat()"
     },
     {
@@ -32746,7 +32746,7 @@
       "source_file": "src/app/landlord/invoices/page.tsx",
       "source_location": "L675",
       "id": "invoices_page_ledgermetric",
-      "community": 107,
+      "community": 3,
       "norm_label": "ledgermetric()"
     },
     {
@@ -32789,7 +32789,7 @@
       "label": "LeasesPage()",
       "file_type": "code",
       "source_file": "src/app/landlord/leases/page.tsx",
-      "source_location": "L817",
+      "source_location": "L815",
       "id": "leases_page_leasespage",
       "community": 98,
       "norm_label": "leasespage()"
@@ -32798,7 +32798,7 @@
       "label": "LayoutGridIcon()",
       "file_type": "code",
       "source_file": "src/app/landlord/leases/page.tsx",
-      "source_location": "L831",
+      "source_location": "L829",
       "id": "leases_page_layoutgridicon",
       "community": 98,
       "norm_label": "layoutgridicon()"
@@ -32845,7 +32845,7 @@
       "source_file": "src/app/landlord/messages/page.tsx",
       "source_location": "L1",
       "id": "src_app_landlord_messages_page_tsx_messages_page",
-      "community": 2,
+      "community": 5,
       "norm_label": "page.tsx"
     },
     {
@@ -32854,7 +32854,7 @@
       "source_file": "src/app/landlord/messages/page.tsx",
       "source_location": "L80",
       "id": "messages_page_landlord_quick_actions_by_relationship",
-      "community": 2,
+      "community": 20,
       "norm_label": "landlord_quick_actions_by_relationship"
     },
     {
@@ -32863,7 +32863,7 @@
       "source_file": "src/app/landlord/messages/page.tsx",
       "source_location": "L185",
       "id": "src_app_landlord_messages_page_tsx_messages_page_redactionstrength",
-      "community": 2,
+      "community": 5,
       "norm_label": "redactionstrength()"
     },
     {
@@ -32872,7 +32872,7 @@
       "source_file": "src/app/landlord/messages/page.tsx",
       "source_location": "L190",
       "id": "src_app_landlord_messages_page_tsx_messages_page_redactioncategoryrank",
-      "community": 2,
+      "community": 5,
       "norm_label": "redactioncategoryrank()"
     },
     {
@@ -32881,7 +32881,7 @@
       "source_file": "src/app/landlord/messages/page.tsx",
       "source_location": "L200",
       "id": "src_app_landlord_messages_page_tsx_messages_page_resolvestrictcategory",
-      "community": 2,
+      "community": 5,
       "norm_label": "resolvestrictcategory()"
     },
     {
@@ -32890,7 +32890,7 @@
       "source_file": "src/app/landlord/messages/page.tsx",
       "source_location": "L209",
       "id": "src_app_landlord_messages_page_tsx_messages_page_resolvedisclosureallowed",
-      "community": 2,
+      "community": 5,
       "norm_label": "resolvedisclosureallowed()"
     },
     {
@@ -32899,7 +32899,7 @@
       "source_file": "src/app/landlord/messages/page.tsx",
       "source_location": "L220",
       "id": "src_app_landlord_messages_page_tsx_messages_page_mergecensorshipstate",
-      "community": 2,
+      "community": 5,
       "norm_label": "mergecensorshipstate()"
     },
     {
@@ -32908,7 +32908,7 @@
       "source_file": "src/app/landlord/messages/page.tsx",
       "source_location": "L257",
       "id": "messages_page_messagescontent",
-      "community": 2,
+      "community": 20,
       "norm_label": "messagescontent()"
     },
     {
@@ -32917,7 +32917,7 @@
       "source_file": "src/app/landlord/messages/page.tsx",
       "source_location": "L1840",
       "id": "messages_page_messagespage",
-      "community": 2,
+      "community": 20,
       "norm_label": "messagespage()"
     },
     {
@@ -33340,7 +33340,7 @@
       "source_file": "src/app/landlord/tenants/page.tsx",
       "source_location": "L1",
       "id": "tenants_page",
-      "community": 66,
+      "community": 107,
       "norm_label": "page.tsx"
     },
     {
@@ -33349,7 +33349,7 @@
       "source_file": "src/app/landlord/tenants/page.tsx",
       "source_location": "L17",
       "id": "tenants_page_tenantscontent",
-      "community": 66,
+      "community": 107,
       "norm_label": "tenantscontent()"
     },
     {
@@ -33358,7 +33358,7 @@
       "source_file": "src/app/landlord/tenants/page.tsx",
       "source_location": "L167",
       "id": "tenants_page_tenantspage",
-      "community": 66,
+      "community": 107,
       "norm_label": "tenantspage()"
     },
     {
@@ -33853,7 +33853,7 @@
       "source_file": "src/app/sign/[id]/page.tsx",
       "source_location": "L1",
       "id": "src_app_sign_id_page_tsx_id_page",
-      "community": 107,
+      "community": 854,
       "norm_label": "page.tsx"
     },
     {
@@ -33862,7 +33862,7 @@
       "source_file": "src/app/sign/[id]/page.tsx",
       "source_location": "L11",
       "id": "id_page_consultationtool",
-      "community": 107,
+      "community": 854,
       "norm_label": "consultationtool"
     },
     {
@@ -33871,7 +33871,7 @@
       "source_file": "src/app/sign/[id]/page.tsx",
       "source_location": "L25",
       "id": "id_page_signpage",
-      "community": 107,
+      "community": 854,
       "norm_label": "signpage()"
     },
     {
@@ -35473,7 +35473,7 @@
       "source_file": "src/components/community/CommunityRules.tsx",
       "source_location": "L1",
       "id": "community_communityrules",
-      "community": 9,
+      "community": 843,
       "norm_label": "communityrules.tsx"
     },
     {
@@ -35482,7 +35482,7 @@
       "source_file": "src/components/community/CommunityRules.tsx",
       "source_location": "L6",
       "id": "community_communityrules_communityrulesprops",
-      "community": 9,
+      "community": 843,
       "norm_label": "communityrulesprops"
     },
     {
@@ -35491,7 +35491,7 @@
       "source_file": "src/components/community/CommunityRules.tsx",
       "source_location": "L10",
       "id": "community_communityrules_communityrules",
-      "community": 9,
+      "community": 843,
       "norm_label": "communityrules()"
     },
     {
@@ -37390,7 +37390,7 @@
       "source_file": "src/components/landlord/dashboard/ContactsSidebar.tsx",
       "source_location": "L1",
       "id": "dashboard_contactssidebar",
-      "community": 5,
+      "community": 264,
       "norm_label": "contactssidebar.tsx"
     },
     {
@@ -37399,7 +37399,7 @@
       "source_file": "src/components/landlord/dashboard/ContactsSidebar.tsx",
       "source_location": "L30",
       "id": "dashboard_contactssidebar_chatuser",
-      "community": 5,
+      "community": 264,
       "norm_label": "chatuser"
     },
     {
@@ -37408,7 +37408,7 @@
       "source_file": "src/components/landlord/dashboard/ContactsSidebar.tsx",
       "source_location": "L44",
       "id": "dashboard_contactssidebar_openchatuser",
-      "community": 5,
+      "community": 264,
       "norm_label": "openchatuser"
     },
     {
@@ -37417,7 +37417,7 @@
       "source_file": "src/components/landlord/dashboard/ContactsSidebar.tsx",
       "source_location": "L48",
       "id": "dashboard_contactssidebar_minichatmessage",
-      "community": 5,
+      "community": 264,
       "norm_label": "minichatmessage"
     },
     {
@@ -37426,7 +37426,7 @@
       "source_file": "src/components/landlord/dashboard/ContactsSidebar.tsx",
       "source_location": "L66",
       "id": "dashboard_contactssidebar_minichatstate",
-      "community": 5,
+      "community": 264,
       "norm_label": "minichatstate"
     },
     {
@@ -37435,7 +37435,7 @@
       "source_file": "src/components/landlord/dashboard/ContactsSidebar.tsx",
       "source_location": "L76",
       "id": "dashboard_contactssidebar_empty_array",
-      "community": 5,
+      "community": 264,
       "norm_label": "empty_array"
     },
     {
@@ -37444,7 +37444,7 @@
       "source_file": "src/components/landlord/dashboard/ContactsSidebar.tsx",
       "source_location": "L77",
       "id": "dashboard_contactssidebar_empty_object",
-      "community": 5,
+      "community": 264,
       "norm_label": "empty_object"
     },
     {
@@ -37453,7 +37453,7 @@
       "source_file": "src/components/landlord/dashboard/ContactsSidebar.tsx",
       "source_location": "L80",
       "id": "dashboard_contactssidebar_default_chat_state",
-      "community": 5,
+      "community": 264,
       "norm_label": "default_chat_state"
     },
     {
@@ -37462,7 +37462,7 @@
       "source_file": "src/components/landlord/dashboard/ContactsSidebar.tsx",
       "source_location": "L92",
       "id": "dashboard_contactssidebar_formatconversationtimestamp",
-      "community": 5,
+      "community": 264,
       "norm_label": "formatconversationtimestamp()"
     },
     {
@@ -37471,7 +37471,7 @@
       "source_file": "src/components/landlord/dashboard/ContactsSidebar.tsx",
       "source_location": "L110",
       "id": "dashboard_contactssidebar_formatminitimestamp",
-      "community": 5,
+      "community": 264,
       "norm_label": "formatminitimestamp()"
     },
     {
@@ -37489,7 +37489,7 @@
       "source_file": "src/components/landlord/dashboard/ContactsSidebar.tsx",
       "source_location": "L1426",
       "id": "dashboard_contactssidebar_contactcardprops",
-      "community": 5,
+      "community": 264,
       "norm_label": "contactcardprops"
     },
     {
@@ -37498,7 +37498,7 @@
       "source_file": "src/components/landlord/dashboard/ContactsSidebar.tsx",
       "source_location": "L1436",
       "id": "dashboard_contactssidebar_rendersystemicon",
-      "community": 5,
+      "community": 264,
       "norm_label": "rendersystemicon()"
     },
     {
@@ -37507,7 +37507,7 @@
       "source_file": "src/components/landlord/dashboard/ContactsSidebar.tsx",
       "source_location": "L1446",
       "id": "dashboard_contactssidebar_minisystemmessage",
-      "community": 5,
+      "community": 264,
       "norm_label": "minisystemmessage()"
     },
     {
@@ -37516,7 +37516,7 @@
       "source_file": "src/components/landlord/dashboard/ContactsSidebar.tsx",
       "source_location": "L1518",
       "id": "dashboard_contactssidebar_contactcard",
-      "community": 5,
+      "community": 264,
       "norm_label": "contactcard()"
     },
     {
@@ -38506,7 +38506,7 @@
       "source_file": "src/components/landlord/invoices/InvoiceModal.tsx",
       "source_location": "L1",
       "id": "invoices_invoicemodal",
-      "community": 107,
+      "community": 3,
       "norm_label": "invoicemodal.tsx"
     },
     {
@@ -38515,7 +38515,7 @@
       "source_file": "src/components/landlord/invoices/InvoiceModal.tsx",
       "source_location": "L21",
       "id": "invoices_invoicemodal_invoicedetail",
-      "community": 107,
+      "community": 3,
       "norm_label": "invoicedetail"
     },
     {
@@ -38524,7 +38524,7 @@
       "source_file": "src/components/landlord/invoices/InvoiceModal.tsx",
       "source_location": "L23",
       "id": "invoices_invoicemodal_invoicemodal",
-      "community": 2,
+      "community": 20,
       "norm_label": "invoicemodal()"
     },
     {
@@ -38533,7 +38533,7 @@
       "source_file": "src/components/landlord/invoices/InvoiceModal.tsx",
       "source_location": "L947",
       "id": "invoices_invoicemodal_f2factioncenter",
-      "community": 107,
+      "community": 3,
       "norm_label": "f2factioncenter()"
     },
     {
@@ -38542,7 +38542,7 @@
       "source_file": "src/components/landlord/invoices/InvoiceModal.tsx",
       "source_location": "L1018",
       "id": "invoices_invoicemodal_wizardflow",
-      "community": 107,
+      "community": 3,
       "norm_label": "wizardflow()"
     },
     {
@@ -38551,7 +38551,7 @@
       "source_file": "src/components/landlord/invoices/InvoiceModal.tsx",
       "source_location": "L1315",
       "id": "invoices_invoicemodal_diagnosiscard",
-      "community": 107,
+      "community": 3,
       "norm_label": "diagnosiscard()"
     },
     {
@@ -38560,7 +38560,7 @@
       "source_file": "src/components/landlord/invoices/InvoiceModal.tsx",
       "source_location": "L1333",
       "id": "invoices_invoicemodal_resolutioncard",
-      "community": 107,
+      "community": 3,
       "norm_label": "resolutioncard()"
     },
     {
@@ -38569,7 +38569,7 @@
       "source_file": "src/components/landlord/invoices/InvoiceModal.tsx",
       "source_location": "L1353",
       "id": "invoices_invoicemodal_metric",
-      "community": 107,
+      "community": 3,
       "norm_label": "metric()"
     },
     {
@@ -38578,7 +38578,7 @@
       "source_file": "src/components/landlord/invoices/InvoiceModal.tsx",
       "source_location": "L1373",
       "id": "invoices_invoicemodal_readingfield",
-      "community": 107,
+      "community": 3,
       "norm_label": "readingfield()"
     },
     {
@@ -38587,7 +38587,7 @@
       "source_file": "src/components/landlord/invoices/InvoiceModal.tsx",
       "source_location": "L1385",
       "id": "invoices_invoicemodal_statusline",
-      "community": 107,
+      "community": 3,
       "norm_label": "statusline()"
     },
     {
@@ -38596,7 +38596,7 @@
       "source_file": "src/components/landlord/invoices/InvoiceModal.tsx",
       "source_location": "L1397",
       "id": "invoices_invoicemodal_actionbutton",
-      "community": 107,
+      "community": 3,
       "norm_label": "actionbutton()"
     },
     {
@@ -38605,7 +38605,7 @@
       "source_file": "src/components/landlord/invoices/InvoiceModal.tsx",
       "source_location": "L1441",
       "id": "invoices_invoicemodal_refundcenter",
-      "community": 107,
+      "community": 3,
       "norm_label": "refundcenter()"
     },
     {
@@ -38614,7 +38614,7 @@
       "source_file": "src/components/landlord/invoices/InvoiceModal.tsx",
       "source_location": "L1597",
       "id": "invoices_invoicemodal_refundsubmitbutton",
-      "community": 107,
+      "community": 3,
       "norm_label": "refundsubmitbutton()"
     },
     {
@@ -38623,7 +38623,7 @@
       "source_file": "src/components/landlord/invoices/InvoiceModal.tsx",
       "source_location": "L1665",
       "id": "invoices_invoicemodal_creditcardicon",
-      "community": 107,
+      "community": 3,
       "norm_label": "creditcardicon()"
     },
     {
@@ -38632,7 +38632,7 @@
       "source_file": "src/components/landlord/invoices/InvoiceModal.tsx",
       "source_location": "L1674",
       "id": "invoices_invoicemodal_mockinvoice",
-      "community": 107,
+      "community": 3,
       "norm_label": "mockinvoice()"
     },
     {
@@ -38641,7 +38641,7 @@
       "source_file": "src/components/landlord/invoices/RecordExpenseModal.tsx",
       "source_location": "L1",
       "id": "invoices_recordexpensemodal",
-      "community": 107,
+      "community": 3,
       "norm_label": "recordexpensemodal.tsx"
     },
     {
@@ -38650,7 +38650,7 @@
       "source_file": "src/components/landlord/invoices/RecordExpenseModal.tsx",
       "source_location": "L10",
       "id": "invoices_recordexpensemodal_recordexpensemodalprops",
-      "community": 107,
+      "community": 3,
       "norm_label": "recordexpensemodalprops"
     },
     {
@@ -38659,7 +38659,7 @@
       "source_file": "src/components/landlord/invoices/RecordExpenseModal.tsx",
       "source_location": "L15",
       "id": "invoices_recordexpensemodal_recordexpensemodal",
-      "community": 107,
+      "community": 3,
       "norm_label": "recordexpensemodal()"
     },
     {
@@ -39469,7 +39469,7 @@
       "source_file": "src/components/landlord/messages/ChatHeader.tsx",
       "source_location": "L28",
       "id": "messages_chatheader_chatheader",
-      "community": 2,
+      "community": 20,
       "norm_label": "chatheader()"
     },
     {
@@ -39595,7 +39595,7 @@
       "source_file": "src/components/landlord/messages/MessageComposer.tsx",
       "source_location": "L1",
       "id": "messages_messagecomposer",
-      "community": 2,
+      "community": 20,
       "norm_label": "messagecomposer.tsx"
     },
     {
@@ -39604,7 +39604,7 @@
       "source_file": "src/components/landlord/messages/MessageComposer.tsx",
       "source_location": "L22",
       "id": "messages_messagecomposer_messagecomposerprops",
-      "community": 2,
+      "community": 20,
       "norm_label": "messagecomposerprops"
     },
     {
@@ -39613,7 +39613,7 @@
       "source_file": "src/components/landlord/messages/MessageComposer.tsx",
       "source_location": "L36",
       "id": "messages_messagecomposer_messagecomposer",
-      "community": 2,
+      "community": 20,
       "norm_label": "messagecomposer()"
     },
     {
@@ -39712,7 +39712,7 @@
       "source_file": "src/components/landlord/messages/types.ts",
       "source_location": "L68",
       "id": "messages_types_sharedfileitem",
-      "community": 2,
+      "community": 20,
       "norm_label": "sharedfileitem"
     },
     {
@@ -39721,7 +39721,7 @@
       "source_file": "src/components/landlord/messages/types.ts",
       "source_location": "L79",
       "id": "messages_types_pendingattachment",
-      "community": 2,
+      "community": 20,
       "norm_label": "pendingattachment"
     },
     {
@@ -39730,7 +39730,7 @@
       "source_file": "src/components/landlord/messages/types.ts",
       "source_location": "L90",
       "id": "messages_types_quickaction",
-      "community": 2,
+      "community": 20,
       "norm_label": "quickaction"
     },
     {
@@ -39739,7 +39739,7 @@
       "source_file": "src/components/landlord/messages/types.ts",
       "source_location": "L99",
       "id": "messages_types_confirmactiontype",
-      "community": 2,
+      "community": 20,
       "norm_label": "confirmactiontype"
     },
     {
@@ -40090,7 +40090,7 @@
       "source_file": "src/components/landlord/tenants/AddTenantModal.tsx",
       "source_location": "L1",
       "id": "tenants_addtenantmodal",
-      "community": 66,
+      "community": 107,
       "norm_label": "addtenantmodal.tsx"
     },
     {
@@ -40099,7 +40099,7 @@
       "source_file": "src/components/landlord/tenants/AddTenantModal.tsx",
       "source_location": "L28",
       "id": "tenants_addtenantmodal_addtenantmodalprops",
-      "community": 66,
+      "community": 107,
       "norm_label": "addtenantmodalprops"
     },
     {
@@ -40108,7 +40108,7 @@
       "source_file": "src/components/landlord/tenants/AddTenantModal.tsx",
       "source_location": "L34",
       "id": "tenants_addtenantmodal_addtenantmodal",
-      "community": 66,
+      "community": 107,
       "norm_label": "addtenantmodal()"
     },
     {
@@ -40135,7 +40135,7 @@
       "source_file": "src/components/landlord/tenants/TenantCard.tsx",
       "source_location": "L1",
       "id": "tenants_tenantcard",
-      "community": 66,
+      "community": 107,
       "norm_label": "tenantcard.tsx"
     },
     {
@@ -40144,7 +40144,7 @@
       "source_file": "src/components/landlord/tenants/TenantCard.tsx",
       "source_location": "L9",
       "id": "tenants_tenantcard_tenantstatus",
-      "community": 66,
+      "community": 107,
       "norm_label": "tenantstatus"
     },
     {
@@ -40153,7 +40153,7 @@
       "source_file": "src/components/landlord/tenants/TenantCard.tsx",
       "source_location": "L10",
       "id": "tenants_tenantcard_tenantpaymentstatus",
-      "community": 66,
+      "community": 107,
       "norm_label": "tenantpaymentstatus"
     },
     {
@@ -40162,7 +40162,7 @@
       "source_file": "src/components/landlord/tenants/TenantCard.tsx",
       "source_location": "L12",
       "id": "tenants_tenantcard_tenant",
-      "community": 66,
+      "community": 107,
       "norm_label": "tenant"
     },
     {
@@ -40171,7 +40171,7 @@
       "source_file": "src/components/landlord/tenants/TenantCard.tsx",
       "source_location": "L28",
       "id": "tenants_tenantcard_tenantcardprops",
-      "community": 66,
+      "community": 107,
       "norm_label": "tenantcardprops"
     },
     {
@@ -40180,7 +40180,7 @@
       "source_file": "src/components/landlord/tenants/TenantCard.tsx",
       "source_location": "L35",
       "id": "tenants_tenantcard_getstatusstyles",
-      "community": 66,
+      "community": 107,
       "norm_label": "getstatusstyles()"
     },
     {
@@ -40189,7 +40189,7 @@
       "source_file": "src/components/landlord/tenants/TenantCard.tsx",
       "source_location": "L44",
       "id": "tenants_tenantcard_getpaymentbadge",
-      "community": 66,
+      "community": 107,
       "norm_label": "getpaymentbadge()"
     },
     {
@@ -40198,7 +40198,7 @@
       "source_file": "src/components/landlord/tenants/TenantCard.tsx",
       "source_location": "L65",
       "id": "tenants_tenantcard_tenantcard",
-      "community": 66,
+      "community": 107,
       "norm_label": "tenantcard()"
     },
     {
@@ -40261,7 +40261,7 @@
       "source_file": "src/components/landlord/tenants/TenantDirectory.tsx",
       "source_location": "L1",
       "id": "tenants_tenantdirectory",
-      "community": 66,
+      "community": 107,
       "norm_label": "tenantdirectory.tsx"
     },
     {
@@ -40270,7 +40270,7 @@
       "source_file": "src/components/landlord/tenants/TenantDirectory.tsx",
       "source_location": "L10",
       "id": "tenants_tenantdirectory_tenantdirectoryprops",
-      "community": 66,
+      "community": 107,
       "norm_label": "tenantdirectoryprops"
     },
     {
@@ -40279,7 +40279,7 @@
       "source_file": "src/components/landlord/tenants/TenantDirectory.tsx",
       "source_location": "L18",
       "id": "tenants_tenantdirectory_tenantdirectory",
-      "community": 66,
+      "community": 107,
       "norm_label": "tenantdirectory()"
     },
     {
@@ -40288,7 +40288,7 @@
       "source_file": "src/components/landlord/tenants/TenantFilterBar.tsx",
       "source_location": "L1",
       "id": "tenants_tenantfilterbar",
-      "community": 66,
+      "community": 107,
       "norm_label": "tenantfilterbar.tsx"
     },
     {
@@ -40297,7 +40297,7 @@
       "source_file": "src/components/landlord/tenants/TenantFilterBar.tsx",
       "source_location": "L7",
       "id": "tenants_tenantfilterbar_tenantfilterbarprops",
-      "community": 66,
+      "community": 107,
       "norm_label": "tenantfilterbarprops"
     },
     {
@@ -40306,7 +40306,7 @@
       "source_file": "src/components/landlord/tenants/TenantFilterBar.tsx",
       "source_location": "L14",
       "id": "tenants_tenantfilterbar_tenantfilterbar",
-      "community": 66,
+      "community": 107,
       "norm_label": "tenantfilterbar()"
     },
     {
@@ -41836,7 +41836,7 @@
       "source_file": "src/components/offline/OfflineCommandCenterModal.tsx",
       "source_location": "L1",
       "id": "offline_offlinecommandcentermodal",
-      "community": 152,
+      "community": 66,
       "norm_label": "offlinecommandcentermodal.tsx"
     },
     {
@@ -41845,7 +41845,7 @@
       "source_file": "src/components/offline/OfflineCommandCenterModal.tsx",
       "source_location": "L37",
       "id": "offline_offlinecommandcentermodal_activeview",
-      "community": 152,
+      "community": 66,
       "norm_label": "activeview"
     },
     {
@@ -41854,7 +41854,7 @@
       "source_file": "src/components/offline/OfflineCommandCenterModal.tsx",
       "source_location": "L48",
       "id": "offline_offlinecommandcentermodal_offlinecommandcentermodal",
-      "community": 152,
+      "community": 66,
       "norm_label": "offlinecommandcentermodal()"
     },
     {
@@ -41863,7 +41863,7 @@
       "source_file": "src/components/offline/OfflineCommandCenterModal.tsx",
       "source_location": "L542",
       "id": "offline_offlinecommandcentermodal_getsubviewtitle",
-      "community": 152,
+      "community": 66,
       "norm_label": "getsubviewtitle()"
     },
     {
@@ -41872,7 +41872,7 @@
       "source_file": "src/components/offline/OfflineCommandCenterModal.tsx",
       "source_location": "L559",
       "id": "offline_offlinecommandcentermodal_offlinereminderschecklistview",
-      "community": 152,
+      "community": 66,
       "norm_label": "offlinereminderschecklistview()"
     },
     {
@@ -41881,7 +41881,7 @@
       "source_file": "src/components/offline/OfflineCommandCenterModal.tsx",
       "source_location": "L732",
       "id": "offline_offlinecommandcentermodal_offlinepaymentsview",
-      "community": 152,
+      "community": 66,
       "norm_label": "offlinepaymentsview()"
     },
     {
@@ -41890,7 +41890,7 @@
       "source_file": "src/components/offline/OfflineCommandCenterModal.tsx",
       "source_location": "L865",
       "id": "offline_offlinecommandcentermodal_offlinemaintenanceview",
-      "community": 152,
+      "community": 66,
       "norm_label": "offlinemaintenanceview()"
     },
     {
@@ -41899,7 +41899,7 @@
       "source_file": "src/components/offline/OfflineCommandCenterModal.tsx",
       "source_location": "L1015",
       "id": "offline_offlinecommandcentermodal_offlineregistrationview",
-      "community": 152,
+      "community": 66,
       "norm_label": "offlineregistrationview()"
     },
     {
@@ -41908,7 +41908,7 @@
       "source_file": "src/components/offline/OfflineCommandCenterModal.tsx",
       "source_location": "L1152",
       "id": "offline_offlinecommandcentermodal_offlinetenantlistview",
-      "community": 152,
+      "community": 66,
       "norm_label": "offlinetenantlistview()"
     },
     {
@@ -41917,7 +41917,7 @@
       "source_file": "src/components/offline/OfflineCommandCenterModal.tsx",
       "source_location": "L1232",
       "id": "offline_offlinecommandcentermodal_offlineleasesview",
-      "community": 152,
+      "community": 66,
       "norm_label": "offlineleasesview()"
     },
     {
@@ -41926,7 +41926,7 @@
       "source_file": "src/components/offline/OfflineCommandCenterModal.tsx",
       "source_location": "L1423",
       "id": "offline_offlinecommandcentermodal_offlineutilitiesview",
-      "community": 152,
+      "community": 66,
       "norm_label": "offlineutilitiesview()"
     },
     {
@@ -41935,7 +41935,7 @@
       "source_file": "src/components/offline/OfflineCommandCenterModal.tsx",
       "source_location": "L1614",
       "id": "offline_offlinecommandcentermodal_offlineemergencyview",
-      "community": 152,
+      "community": 66,
       "norm_label": "offlineemergencyview()"
     },
     {
@@ -42529,7 +42529,7 @@
       "source_file": "src/components/tenant/CommunityTour.tsx",
       "source_location": "L1",
       "id": "tenant_communitytour",
-      "community": 466,
+      "community": 9,
       "norm_label": "communitytour.tsx"
     },
     {
@@ -42538,7 +42538,7 @@
       "source_file": "src/components/tenant/CommunityTour.tsx",
       "source_location": "L6",
       "id": "tenant_communitytour_communitytour",
-      "community": 466,
+      "community": 9,
       "norm_label": "communitytour()"
     },
     {
@@ -43771,7 +43771,7 @@
       "source_file": "src/components/ui/OfflineBanner.tsx",
       "source_location": "L1",
       "id": "ui_offlinebanner",
-      "community": 61,
+      "community": 66,
       "norm_label": "offlinebanner.tsx"
     },
     {
@@ -43780,7 +43780,7 @@
       "source_file": "src/components/ui/OfflineBanner.tsx",
       "source_location": "L9",
       "id": "ui_offlinebanner_offlinebanner",
-      "community": 61,
+      "community": 66,
       "norm_label": "offlinebanner()"
     },
     {
@@ -44788,7 +44788,7 @@
       "source_file": "src/hooks/useNetworkStatus.ts",
       "source_location": "L1",
       "id": "hooks_usenetworkstatus",
-      "community": 61,
+      "community": 66,
       "norm_label": "usenetworkstatus.ts"
     },
     {
@@ -44797,7 +44797,7 @@
       "source_file": "src/hooks/useNetworkStatus.ts",
       "source_location": "L6",
       "id": "hooks_usenetworkstatus_networkstatus",
-      "community": 61,
+      "community": 66,
       "norm_label": "networkstatus"
     },
     {
@@ -44806,7 +44806,7 @@
       "source_file": "src/hooks/useNetworkStatus.ts",
       "source_location": "L14",
       "id": "hooks_usenetworkstatus_usenetworkstatus",
-      "community": 61,
+      "community": 66,
       "norm_label": "usenetworkstatus()"
     },
     {
@@ -47146,7 +47146,7 @@
       "source_file": "src/lib/email.ts",
       "source_location": "L260",
       "id": "lib_email_sendtenantsignednotification",
-      "community": 110,
+      "community": 31,
       "norm_label": "sendtenantsignednotification()"
     },
     {
@@ -48323,7 +48323,7 @@
       "label": "LeasePdfData",
       "file_type": "code",
       "source_file": "src/lib/lease-pdf.ts",
-      "source_location": "L43",
+      "source_location": "L49",
       "id": "lib_lease_pdf_leasepdfdata",
       "community": 110,
       "norm_label": "leasepdfdata"
@@ -48332,7 +48332,7 @@
       "label": "generateLeasePdf()",
       "file_type": "code",
       "source_file": "src/lib/lease-pdf.ts",
-      "source_location": "L74",
+      "source_location": "L80",
       "id": "lib_lease_pdf_generateleasepdf",
       "community": 110,
       "norm_label": "generateleasepdf()"
@@ -49252,7 +49252,7 @@
       "source_file": "src/lib/messages/redaction-client.ts",
       "source_location": "L16",
       "id": "messages_redaction_client_redactmessageforsend",
-      "community": 2,
+      "community": 20,
       "norm_label": "redactmessageforsend()"
     },
     {
@@ -49909,7 +49909,7 @@
       "source_file": "src/lib/product-tour.ts",
       "source_location": "L168",
       "id": "lib_product_tour_tenant_community_tour_steps",
-      "community": 466,
+      "community": 9,
       "norm_label": "tenant_community_tour_steps"
     },
     {
@@ -54337,7 +54337,7 @@
       "source_file": "src/lib/supabase.ts",
       "source_location": "L1",
       "id": "lib_supabase",
-      "community": 107,
+      "community": 854,
       "norm_label": "supabase.ts"
     },
     {
@@ -54526,7 +54526,7 @@
       "source_file": "src/lib/supabase/client.ts",
       "source_location": "L1",
       "id": "supabase_client",
-      "community": 107,
+      "community": 854,
       "norm_label": "client.ts"
     },
     {
@@ -54535,7 +54535,7 @@
       "source_file": "src/lib/supabase/client.ts",
       "source_location": "L14",
       "id": "supabase_client_createbrowsersupabaseclient",
-      "community": 107,
+      "community": 854,
       "norm_label": "createbrowsersupabaseclient()"
     },
     {
@@ -54724,7 +54724,7 @@
       "source_file": "src/lib/tenant-intake-invites.ts",
       "source_location": "L5",
       "id": "lib_tenant_intake_invites_tenantinviteapplicationtype",
-      "community": 91,
+      "community": 117,
       "norm_label": "tenantinviteapplicationtype"
     },
     {
@@ -76495,7 +76495,7 @@
       "source_file": "docs/END_TO_END_OPERATIONS_AND_BUG_HUNTING_GUIDE.md",
       "source_location": "L522",
       "id": "docs_end_to_end_operations_and_bug_hunting_guide_scenario_7_monthly_corridor_sub_meter_utility_readings_invoicing",
-      "community": 216,
+      "community": 696,
       "norm_label": "\u26a1 scenario 7: monthly corridor sub-meter utility readings & invoicing"
     },
     {
@@ -76504,7 +76504,7 @@
       "source_file": "docs/END_TO_END_OPERATIONS_AND_BUG_HUNTING_GUIDE.md",
       "source_location": "L524",
       "id": "docs_end_to_end_operations_and_bug_hunting_guide_context_persona_524",
-      "community": 216,
+      "community": 696,
       "norm_label": "\ud83c\udfad context & persona"
     },
     {
@@ -76513,7 +76513,7 @@
       "source_file": "docs/END_TO_END_OPERATIONS_AND_BUG_HUNTING_GUIDE.md",
       "source_location": "L529",
       "id": "docs_end_to_end_operations_and_bug_hunting_guide_flow_7_1_corridor_walkthrough_live_meter_calculation_landlord_utility_or_landlord_utility_billing",
-      "community": 216,
+      "community": 696,
       "norm_label": "\ud83d\udd39 flow 7.1: corridor walkthrough & live meter calculation (`/landlord/utility` or `/landlord/utility-billing`)"
     },
     {
@@ -76522,7 +76522,7 @@
       "source_file": "docs/END_TO_END_OPERATIONS_AND_BUG_HUNTING_GUIDE.md",
       "source_location": "L533",
       "id": "docs_end_to_end_operations_and_bug_hunting_guide_step_by_step_actions_533",
-      "community": 216,
+      "community": 696,
       "norm_label": "step-by-step actions"
     },
     {
@@ -76531,7 +76531,7 @@
       "source_file": "docs/END_TO_END_OPERATIONS_AND_BUG_HUNTING_GUIDE.md",
       "source_location": "L556",
       "id": "docs_end_to_end_operations_and_bug_hunting_guide_edge_cases_things_that_could_go_wrong_in_scenario_7",
-      "community": 216,
+      "community": 696,
       "norm_label": "\u26a0\ufe0f edge cases & things that could go wrong in scenario 7"
     },
     {
@@ -77062,7 +77062,7 @@
       "source_file": "docs/END_TO_END_OPERATIONS_AND_BUG_HUNTING_GUIDE.md",
       "source_location": "L1017",
       "id": "docs_end_to_end_operations_and_bug_hunting_guide_scenario_15_ai_virtual_assistant_iris",
-      "community": 846,
+      "community": 216,
       "norm_label": "\ud83e\udd16 scenario 15: ai virtual assistant (iris)"
     },
     {
@@ -77071,7 +77071,7 @@
       "source_file": "docs/END_TO_END_OPERATIONS_AND_BUG_HUNTING_GUIDE.md",
       "source_location": "L1019",
       "id": "docs_end_to_end_operations_and_bug_hunting_guide_context_persona_1019",
-      "community": 846,
+      "community": 216,
       "norm_label": "\ud83c\udfad context & persona"
     },
     {
@@ -77080,7 +77080,7 @@
       "source_file": "docs/END_TO_END_OPERATIONS_AND_BUG_HUNTING_GUIDE.md",
       "source_location": "L1024",
       "id": "docs_end_to_end_operations_and_bug_hunting_guide_flow_15_1_tenant_ai_chatbot_grounded_in_lease_terms_tenantirischat",
-      "community": 846,
+      "community": 216,
       "norm_label": "\ud83d\udd39 flow 15.1: tenant ai chatbot grounded in lease terms (`tenantirischat`)"
     },
     {
@@ -77089,7 +77089,7 @@
       "source_file": "docs/END_TO_END_OPERATIONS_AND_BUG_HUNTING_GUIDE.md",
       "source_location": "L1028",
       "id": "docs_end_to_end_operations_and_bug_hunting_guide_step_by_step_actions_1028",
-      "community": 846,
+      "community": 216,
       "norm_label": "step-by-step actions"
     },
     {
@@ -77098,7 +77098,7 @@
       "source_file": "docs/END_TO_END_OPERATIONS_AND_BUG_HUNTING_GUIDE.md",
       "source_location": "L1039",
       "id": "docs_end_to_end_operations_and_bug_hunting_guide_edge_cases_things_that_could_go_wrong_in_scenario_15",
-      "community": 846,
+      "community": 216,
       "norm_label": "\u26a0\ufe0f edge cases & things that could go wrong in scenario 15"
     },
     {
@@ -86755,7 +86755,7 @@
       "source_file": "docs/latest-documentations after major refactor/activity-diagram-documentation.md",
       "source_location": "L27",
       "id": "latest_documentations_after_major_refactor_activity_diagram_documentation_option_c_cli_with_plantuml_jar",
-      "community": 476,
+      "community": 503,
       "norm_label": "option c: cli with plantuml jar"
     },
     {
@@ -86764,7 +86764,7 @@
       "source_file": "docs/latest-documentations after major refactor/activity-diagram-documentation.md",
       "source_location": "L32",
       "id": "latest_documentations_after_major_refactor_activity_diagram_documentation_option_d_plantuml_server_url_direct_link",
-      "community": 343,
+      "community": 476,
       "norm_label": "option d: plantuml server url (direct link)"
     },
     {
@@ -86782,7 +86782,7 @@
       "source_file": "docs/latest-documentations after major refactor/activity-diagram-documentation.md",
       "source_location": "L56",
       "id": "latest_documentations_after_major_refactor_activity_diagram_documentation_feature_1_authentication_login",
-      "community": 660,
+      "community": 503,
       "norm_label": "feature 1: authentication & login"
     },
     {
@@ -86791,7 +86791,7 @@
       "source_file": "docs/latest-documentations after major refactor/activity-diagram-documentation.md",
       "source_location": "L58",
       "id": "latest_documentations_after_major_refactor_activity_diagram_documentation_objective",
-      "community": 660,
+      "community": 503,
       "norm_label": "objective"
     },
     {
@@ -86800,7 +86800,7 @@
       "source_file": "docs/latest-documentations after major refactor/activity-diagram-documentation.md",
       "source_location": "L61",
       "id": "latest_documentations_after_major_refactor_activity_diagram_documentation_swimlanes",
-      "community": 660,
+      "community": 503,
       "norm_label": "swimlanes"
     },
     {
@@ -86809,7 +86809,7 @@
       "source_file": "docs/latest-documentations after major refactor/activity-diagram-documentation.md",
       "source_location": "L66",
       "id": "latest_documentations_after_major_refactor_activity_diagram_documentation_main_flow",
-      "community": 660,
+      "community": 503,
       "norm_label": "main flow"
     },
     {
@@ -86818,7 +86818,7 @@
       "source_file": "docs/latest-documentations after major refactor/activity-diagram-documentation.md",
       "source_location": "L76",
       "id": "latest_documentations_after_major_refactor_activity_diagram_documentation_alternative_flows",
-      "community": 660,
+      "community": 503,
       "norm_label": "alternative flows"
     },
     {
@@ -86827,7 +86827,7 @@
       "source_file": "docs/latest-documentations after major refactor/activity-diagram-documentation.md",
       "source_location": "L84",
       "id": "latest_documentations_after_major_refactor_activity_diagram_documentation_uml_activity_diagram",
-      "community": 476,
+      "community": 503,
       "norm_label": "uml activity diagram"
     },
     {
@@ -86881,7 +86881,7 @@
       "source_file": "docs/latest-documentations after major refactor/activity-diagram-documentation.md",
       "source_location": "L170",
       "id": "latest_documentations_after_major_refactor_activity_diagram_documentation_uml_activity_diagram_170",
-      "community": 340,
+      "community": 343,
       "norm_label": "uml activity diagram"
     },
     {
@@ -86989,7 +86989,7 @@
       "source_file": "docs/latest-documentations after major refactor/activity-diagram-documentation.md",
       "source_location": "L361",
       "id": "latest_documentations_after_major_refactor_activity_diagram_documentation_uml_activity_diagram_361",
-      "community": 344,
+      "community": 340,
       "norm_label": "uml activity diagram"
     },
     {
@@ -95197,7 +95197,7 @@
       "source_file": "src/lib/supabase/client.ts",
       "source_location": "L41",
       "id": "supabase_client_createclient",
-      "community": 107,
+      "community": 854,
       "norm_label": "createclient"
     },
     {
@@ -96015,7 +96015,7 @@
       "file_type": "code",
       "source_file": "src/app/admin/consultation-tool/ConsultationDashboard.tsx",
       "source_location": "L1",
-      "community": 107,
+      "community": 854,
       "norm_label": "consultationdashboard.tsx",
       "id": "src_app_admin_consultation_tool_consultationdashboard_tsx"
     },
@@ -96024,7 +96024,7 @@
       "file_type": "code",
       "source_file": "src/app/admin/consultation-tool/ConsultationTool.tsx",
       "source_location": "L1",
-      "community": 107,
+      "community": 854,
       "norm_label": "consultationtool.tsx",
       "id": "src_app_admin_consultation_tool_consultationtool_tsx"
     },
@@ -96384,7 +96384,7 @@
       "file_type": "code",
       "source_file": "src/app/api/auth/landlord-register/route.ts",
       "source_location": "L1",
-      "community": 696,
+      "community": 17,
       "norm_label": "route.ts",
       "id": "src_app_api_auth_landlord_register_route_ts"
     },
@@ -96681,7 +96681,7 @@
       "file_type": "code",
       "source_file": "src/app/api/landlord/analytics/report/route.ts",
       "source_location": "L1",
-      "community": 423,
+      "community": 0,
       "norm_label": "route.ts",
       "id": "src_app_api_landlord_analytics_report_route_ts"
     },
@@ -98661,7 +98661,7 @@
       "file_type": "code",
       "source_file": "src/app/landlord/invoices/page.tsx",
       "source_location": "L1",
-      "community": 107,
+      "community": 3,
       "norm_label": "page.tsx",
       "id": "src_app_landlord_invoices_page_tsx"
     },
@@ -98688,7 +98688,7 @@
       "file_type": "code",
       "source_file": "src/app/landlord/messages/page.tsx",
       "source_location": "L1",
-      "community": 2,
+      "community": 20,
       "norm_label": "page.tsx",
       "id": "src_app_landlord_messages_page_tsx"
     },
@@ -98850,7 +98850,7 @@
       "file_type": "code",
       "source_file": "src/app/landlord/tenants/page.tsx",
       "source_location": "L1",
-      "community": 66,
+      "community": 107,
       "norm_label": "page.tsx",
       "id": "src_app_landlord_tenants_page_tsx"
     },
@@ -99048,7 +99048,7 @@
       "file_type": "code",
       "source_file": "src/app/sign/[id]/page.tsx",
       "source_location": "L1",
-      "community": 107,
+      "community": 854,
       "norm_label": "page.tsx",
       "id": "src_app_sign_id_page_tsx"
     },
@@ -99426,7 +99426,7 @@
       "file_type": "code",
       "source_file": "src/components/community/CommunityRules.tsx",
       "source_location": "L1",
-      "community": 9,
+      "community": 843,
       "norm_label": "communityrules.tsx",
       "id": "src_components_community_communityrules_tsx"
     },
@@ -99930,7 +99930,7 @@
       "file_type": "code",
       "source_file": "src/components/landlord/dashboard/ContactsSidebar.tsx",
       "source_location": "L1",
-      "community": 5,
+      "community": 264,
       "norm_label": "contactssidebar.tsx",
       "id": "src_components_landlord_dashboard_contactssidebar_tsx"
     },
@@ -100191,7 +100191,7 @@
       "file_type": "code",
       "source_file": "src/components/landlord/invoices/InvoiceModal.tsx",
       "source_location": "L1",
-      "community": 107,
+      "community": 3,
       "norm_label": "invoicemodal.tsx",
       "id": "src_components_landlord_invoices_invoicemodal_tsx"
     },
@@ -100200,7 +100200,7 @@
       "file_type": "code",
       "source_file": "src/components/landlord/invoices/RecordExpenseModal.tsx",
       "source_location": "L1",
-      "community": 107,
+      "community": 3,
       "norm_label": "recordexpensemodal.tsx",
       "id": "src_components_landlord_invoices_recordexpensemodal_tsx"
     },
@@ -100371,7 +100371,7 @@
       "file_type": "code",
       "source_file": "src/components/landlord/messages/ChatHeader.tsx",
       "source_location": "L1",
-      "community": 2,
+      "community": 20,
       "norm_label": "chatheader.tsx",
       "id": "src_components_landlord_messages_chatheader_tsx"
     },
@@ -100407,7 +100407,7 @@
       "file_type": "code",
       "source_file": "src/components/landlord/messages/MessageComposer.tsx",
       "source_location": "L1",
-      "community": 2,
+      "community": 20,
       "norm_label": "messagecomposer.tsx",
       "id": "src_components_landlord_messages_messagecomposer_tsx"
     },
@@ -100434,7 +100434,7 @@
       "file_type": "code",
       "source_file": "src/components/landlord/messages/types.ts",
       "source_location": "L1",
-      "community": 2,
+      "community": 20,
       "norm_label": "types.ts",
       "id": "src_components_landlord_messages_types_ts"
     },
@@ -100524,7 +100524,7 @@
       "file_type": "code",
       "source_file": "src/components/landlord/tenants/AddTenantModal.tsx",
       "source_location": "L1",
-      "community": 66,
+      "community": 107,
       "norm_label": "addtenantmodal.tsx",
       "id": "src_components_landlord_tenants_addtenantmodal_tsx"
     },
@@ -100542,7 +100542,7 @@
       "file_type": "code",
       "source_file": "src/components/landlord/tenants/TenantCard.tsx",
       "source_location": "L1",
-      "community": 66,
+      "community": 107,
       "norm_label": "tenantcard.tsx",
       "id": "src_components_landlord_tenants_tenantcard_tsx"
     },
@@ -100560,7 +100560,7 @@
       "file_type": "code",
       "source_file": "src/components/landlord/tenants/TenantDirectory.tsx",
       "source_location": "L1",
-      "community": 66,
+      "community": 107,
       "norm_label": "tenantdirectory.tsx",
       "id": "src_components_landlord_tenants_tenantdirectory_tsx"
     },
@@ -100569,7 +100569,7 @@
       "file_type": "code",
       "source_file": "src/components/landlord/tenants/TenantFilterBar.tsx",
       "source_location": "L1",
-      "community": 66,
+      "community": 107,
       "norm_label": "tenantfilterbar.tsx",
       "id": "src_components_landlord_tenants_tenantfilterbar_tsx"
     },
@@ -101046,7 +101046,7 @@
       "file_type": "code",
       "source_file": "src/components/offline/OfflineCommandCenterModal.tsx",
       "source_location": "L1",
-      "community": 152,
+      "community": 66,
       "norm_label": "offlinecommandcentermodal.tsx",
       "id": "src_components_offline_offlinecommandcentermodal_tsx"
     },
@@ -101199,7 +101199,7 @@
       "file_type": "code",
       "source_file": "src/components/tenant/CommunityTour.tsx",
       "source_location": "L1",
-      "community": 466,
+      "community": 9,
       "norm_label": "communitytour.tsx",
       "id": "src_components_tenant_communitytour_tsx"
     },
@@ -101532,7 +101532,7 @@
       "file_type": "code",
       "source_file": "src/components/ui/OfflineBanner.tsx",
       "source_location": "L1",
-      "community": 61,
+      "community": 66,
       "norm_label": "offlinebanner.tsx",
       "id": "src_components_ui_offlinebanner_tsx"
     },
@@ -101658,7 +101658,7 @@
       "file_type": "code",
       "source_file": "src/hooks/useAuth.ts",
       "source_location": "L1",
-      "community": 64,
+      "community": 1,
       "norm_label": "useauth.ts",
       "id": "src_hooks_useauth_ts"
     },
@@ -101685,7 +101685,7 @@
       "file_type": "code",
       "source_file": "src/hooks/useNetworkStatus.ts",
       "source_location": "L1",
-      "community": 61,
+      "community": 66,
       "norm_label": "usenetworkstatus.ts",
       "id": "src_hooks_usenetworkstatus_ts"
     },
@@ -104034,7 +104034,7 @@
       "file_type": "code",
       "source_file": "src/lib/supabase/client.ts",
       "source_location": "L1",
-      "community": 107,
+      "community": 854,
       "norm_label": "client.ts",
       "id": "src_lib_supabase_client_ts"
     },
@@ -116220,7 +116220,7 @@
       "file_type": "document",
       "source_file": "docs/latest-documentations after major refactor/activity-diagram-documentation.md",
       "source_location": "L28",
-      "community": 476,
+      "community": 503,
       "norm_label": "code:bash (java -jar plantuml.jar docs/latest-documentations\\ after\\ ma)",
       "id": "latest_documentations_after_major_refactor_activity_diagram_documentation_codeblock_2"
     },
@@ -116229,7 +116229,7 @@
       "file_type": "document",
       "source_file": "docs/latest-documentations after major refactor/activity-diagram-documentation.md",
       "source_location": "L34",
-      "community": 343,
+      "community": 476,
       "norm_label": "code:block3 (https://www.plantuml.com/plantuml/uml/syffkj2rkt3coknelr1io4)",
       "id": "latest_documentations_after_major_refactor_activity_diagram_documentation_codeblock_3"
     },
@@ -116238,7 +116238,7 @@
       "file_type": "document",
       "source_file": "docs/latest-documentations after major refactor/activity-diagram-documentation.md",
       "source_location": "L86",
-      "community": 476,
+      "community": 503,
       "norm_label": "code:plantuml (@startuml)",
       "id": "latest_documentations_after_major_refactor_activity_diagram_documentation_codeblock_4"
     },
@@ -116247,7 +116247,7 @@
       "file_type": "document",
       "source_file": "docs/latest-documentations after major refactor/activity-diagram-documentation.md",
       "source_location": "L172",
-      "community": 340,
+      "community": 343,
       "norm_label": "code:plantuml (@startuml)",
       "id": "latest_documentations_after_major_refactor_activity_diagram_documentation_codeblock_5"
     },
@@ -116265,7 +116265,7 @@
       "file_type": "document",
       "source_file": "docs/latest-documentations after major refactor/activity-diagram-documentation.md",
       "source_location": "L363",
-      "community": 344,
+      "community": 340,
       "norm_label": "code:plantuml (@startuml)",
       "id": "latest_documentations_after_major_refactor_activity_diagram_documentation_codeblock_7"
     },
@@ -119118,7 +119118,7 @@
       "file_type": "code",
       "source_file": "src/app/landlord/invoices/page.tsx",
       "source_location": "L26",
-      "community": 107,
+      "community": 3,
       "norm_label": "demo_invoice_items",
       "id": "invoices_page_demo_invoice_items"
     },
@@ -119127,7 +119127,7 @@
       "file_type": "code",
       "source_file": "src/app/landlord/tenants/page.tsx",
       "source_location": "L18",
-      "community": 66,
+      "community": 107,
       "norm_label": "demo_tenant_records",
       "id": "tenants_page_demo_tenant_records"
     },
@@ -119307,7 +119307,7 @@
       "file_type": "document",
       "source_file": "docs/END_TO_END_OPERATIONS_AND_BUG_HUNTING_GUIDE.md",
       "source_location": "L236",
-      "community": 503,
+      "community": 90,
       "norm_label": "\u270d\ufe0f phase 4: digital contracts & biometric signatures (landlord \u2194 tenant)",
       "id": "docs_end_to_end_operations_and_bug_hunting_guide_phase_4_digital_contracts_biometric_signatures_landlord_tenant"
     },
@@ -119316,7 +119316,7 @@
       "file_type": "document",
       "source_file": "docs/END_TO_END_OPERATIONS_AND_BUG_HUNTING_GUIDE.md",
       "source_location": "L238",
-      "community": 503,
+      "community": 90,
       "norm_label": "\ud83d\udd39 step 4.1: landlord drafts & sends digital lease contract",
       "id": "docs_end_to_end_operations_and_bug_hunting_guide_step_4_1_landlord_drafts_sends_digital_lease_contract"
     },
@@ -119325,7 +119325,7 @@
       "file_type": "document",
       "source_file": "docs/END_TO_END_OPERATIONS_AND_BUG_HUNTING_GUIDE.md",
       "source_location": "L254",
-      "community": 503,
+      "community": 90,
       "norm_label": "\ud83d\udd39 step 4.2: tenant reviews & signs contract with touchpad/mouse",
       "id": "docs_end_to_end_operations_and_bug_hunting_guide_step_4_2_tenant_reviews_signs_contract_with_touchpad_mouse"
     },
@@ -119334,7 +119334,7 @@
       "file_type": "document",
       "source_file": "docs/END_TO_END_OPERATIONS_AND_BUG_HUNTING_GUIDE.md",
       "source_location": "L268",
-      "community": 503,
+      "community": 90,
       "norm_label": "\ud83d\udd39 step 4.3: landlord countersigns & officially seals the lease",
       "id": "docs_end_to_end_operations_and_bug_hunting_guide_step_4_3_landlord_countersigns_officially_seals_the_lease"
     },
@@ -119343,7 +119343,7 @@
       "file_type": "document",
       "source_file": "docs/END_TO_END_OPERATIONS_AND_BUG_HUNTING_GUIDE.md",
       "source_location": "L285",
-      "community": 503,
+      "community": 90,
       "norm_label": "\ud83d\udd39 step 4.4: offline move-in test (signing in basements with zero wi-fi)",
       "id": "docs_end_to_end_operations_and_bug_hunting_guide_step_4_4_offline_move_in_test_signing_in_basements_with_zero_wi_fi"
     },
@@ -119397,7 +119397,7 @@
       "file_type": "document",
       "source_file": "docs/END_TO_END_OPERATIONS_AND_BUG_HUNTING_GUIDE.md",
       "source_location": "L355",
-      "community": 885,
+      "community": 90,
       "norm_label": "\ud83d\udd27 phase 7: maintenance requests & contractor expense tracking",
       "id": "docs_end_to_end_operations_and_bug_hunting_guide_phase_7_maintenance_requests_contractor_expense_tracking"
     },
@@ -119406,7 +119406,7 @@
       "file_type": "document",
       "source_file": "docs/END_TO_END_OPERATIONS_AND_BUG_HUNTING_GUIDE.md",
       "source_location": "L357",
-      "community": 885,
+      "community": 90,
       "norm_label": "\ud83d\udd39 step 7.1: tenant reports a maintenance issue (`/tenant/maintenance/new`)",
       "id": "docs_end_to_end_operations_and_bug_hunting_guide_step_7_1_tenant_reports_a_maintenance_issue_tenant_maintenance_new"
     },
@@ -119415,7 +119415,7 @@
       "file_type": "document",
       "source_file": "docs/END_TO_END_OPERATIONS_AND_BUG_HUNTING_GUIDE.md",
       "source_location": "L371",
-      "community": 885,
+      "community": 90,
       "norm_label": "\ud83d\udd39 step 7.2: emergency phone & sms fallback (dead zone feature)",
       "id": "docs_end_to_end_operations_and_bug_hunting_guide_step_7_2_emergency_phone_sms_fallback_dead_zone_feature"
     },
@@ -119424,7 +119424,7 @@
       "file_type": "document",
       "source_file": "docs/END_TO_END_OPERATIONS_AND_BUG_HUNTING_GUIDE.md",
       "source_location": "L383",
-      "community": 885,
+      "community": 90,
       "norm_label": "\ud83d\udd39 step 7.3: landlord assigns contractor & logs repair expense (`/landlord/maintenance`)",
       "id": "docs_end_to_end_operations_and_bug_hunting_guide_step_7_3_landlord_assigns_contractor_logs_repair_expense_landlord_maintenance"
     },
@@ -119460,7 +119460,7 @@
       "file_type": "document",
       "source_file": "docs/END_TO_END_OPERATIONS_AND_BUG_HUNTING_GUIDE.md",
       "source_location": "L435",
-      "community": 90,
+      "community": 846,
       "norm_label": "\ud83d\udd04 phase 9: lease expiration, renewal addendum & move-out settlement",
       "id": "docs_end_to_end_operations_and_bug_hunting_guide_phase_9_lease_expiration_renewal_addendum_move_out_settlement"
     },
@@ -119469,7 +119469,7 @@
       "file_type": "document",
       "source_file": "docs/END_TO_END_OPERATIONS_AND_BUG_HUNTING_GUIDE.md",
       "source_location": "L437",
-      "community": 90,
+      "community": 846,
       "norm_label": "\ud83d\udd39 step 9.1: automated 90-day expiration alert & renewal addendum",
       "id": "docs_end_to_end_operations_and_bug_hunting_guide_step_9_1_automated_90_day_expiration_alert_renewal_addendum"
     },
@@ -119478,7 +119478,7 @@
       "file_type": "document",
       "source_file": "docs/END_TO_END_OPERATIONS_AND_BUG_HUNTING_GUIDE.md",
       "source_location": "L447",
-      "community": 90,
+      "community": 846,
       "norm_label": "\ud83d\udd39 step 9.2: 30-day move-out notice & unit departure",
       "id": "docs_end_to_end_operations_and_bug_hunting_guide_step_9_2_30_day_move_out_notice_unit_departure"
     },
@@ -119487,7 +119487,7 @@
       "file_type": "document",
       "source_file": "docs/END_TO_END_OPERATIONS_AND_BUG_HUNTING_GUIDE.md",
       "source_location": "L459",
-      "community": 90,
+      "community": 846,
       "norm_label": "\ud83d\udd39 step 9.3: landlord inspection & security deposit refund settlement",
       "id": "docs_end_to_end_operations_and_bug_hunting_guide_step_9_3_landlord_inspection_security_deposit_refund_settlement"
     },
@@ -127794,7 +127794,7 @@
       "file_type": "document",
       "source_file": "docs/latest-documentations after major refactor/activity-diagram-documentation.md",
       "source_location": "L154",
-      "community": 343,
+      "community": 476,
       "norm_label": "uml activity diagram",
       "id": "latest_documentations_after_major_refactor_activity_diagram_documentation_uml_activity_diagram_154"
     },
@@ -127839,7 +127839,7 @@
       "file_type": "document",
       "source_file": "docs/latest-documentations after major refactor/activity-diagram-documentation.md",
       "source_location": "L248",
-      "community": 476,
+      "community": 503,
       "norm_label": "uml activity diagram",
       "id": "latest_documentations_after_major_refactor_activity_diagram_documentation_uml_activity_diagram_248"
     },
@@ -127884,7 +127884,7 @@
       "file_type": "document",
       "source_file": "docs/latest-documentations after major refactor/activity-diagram-documentation.md",
       "source_location": "L345",
-      "community": 340,
+      "community": 343,
       "norm_label": "uml activity diagram",
       "id": "latest_documentations_after_major_refactor_activity_diagram_documentation_uml_activity_diagram_345"
     },
@@ -127974,7 +127974,7 @@
       "file_type": "document",
       "source_file": "docs/latest-documentations after major refactor/activity-diagram-documentation.md",
       "source_location": "L516",
-      "community": 344,
+      "community": 340,
       "norm_label": "uml activity diagram",
       "id": "latest_documentations_after_major_refactor_activity_diagram_documentation_uml_activity_diagram_516"
     },
@@ -128406,7 +128406,7 @@
       "file_type": "code",
       "source_file": "src/app/landlord/invoices/page.tsx",
       "source_location": "L14",
-      "community": 107,
+      "community": 3,
       "norm_label": "studiostep",
       "id": "invoices_page_studiostep"
     },
@@ -128415,7 +128415,7 @@
       "file_type": "code",
       "source_file": "src/app/landlord/invoices/page.tsx",
       "source_location": "L749",
-      "community": 107,
+      "community": 3,
       "norm_label": "selectfield()",
       "id": "invoices_page_selectfield"
     },
@@ -128424,7 +128424,7 @@
       "file_type": "code",
       "source_file": "src/app/landlord/invoices/page.tsx",
       "source_location": "L763",
-      "community": 107,
+      "community": 3,
       "norm_label": "inputfield()",
       "id": "invoices_page_inputfield"
     },
@@ -128433,7 +128433,7 @@
       "file_type": "code",
       "source_file": "src/app/landlord/invoices/page.tsx",
       "source_location": "L767",
-      "community": 107,
+      "community": 3,
       "norm_label": "studiolineitem()",
       "id": "invoices_page_studiolineitem"
     },
@@ -128442,7 +128442,7 @@
       "file_type": "code",
       "source_file": "src/app/landlord/invoices/page.tsx",
       "source_location": "L797",
-      "community": 107,
+      "community": 3,
       "norm_label": "utilityreadingstep()",
       "id": "invoices_page_utilityreadingstep"
     },
@@ -128766,7 +128766,7 @@
       "file_type": "code",
       "source_file": "src/app/landlord/tenants/page.tsx",
       "source_location": "L28",
-      "community": 66,
+      "community": 107,
       "norm_label": "tenantstatus",
       "id": "tenants_page_tenantstatus"
     },
@@ -128775,7 +128775,7 @@
       "file_type": "code",
       "source_file": "src/app/landlord/tenants/page.tsx",
       "source_location": "L29",
-      "community": 66,
+      "community": 107,
       "norm_label": "tenantpaymentstatus",
       "id": "tenants_page_tenantpaymentstatus"
     },
@@ -128784,7 +128784,7 @@
       "file_type": "code",
       "source_file": "src/app/landlord/tenants/page.tsx",
       "source_location": "L31",
-      "community": 66,
+      "community": 107,
       "norm_label": "tenant",
       "id": "tenants_page_tenant"
     },
@@ -128793,7 +128793,7 @@
       "file_type": "code",
       "source_file": "src/app/landlord/tenants/page.tsx",
       "source_location": "L48",
-      "community": 66,
+      "community": 107,
       "norm_label": "formatleaseend()",
       "id": "tenants_page_formatleaseend"
     },
@@ -214367,9 +214367,9 @@
       "source_file": "src/app/landlord/leases/page.tsx",
       "source_location": "L34",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "leases_page",
-      "target": "lease_leasedocument",
-      "confidence_score": 1.0
+      "target": "lease_leasedocument"
     },
     {
       "relation": "imports",
@@ -214378,9 +214378,9 @@
       "source_file": "src/app/landlord/leases/page.tsx",
       "source_location": "L34",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "leases_page",
-      "target": "lease_leasedocument_leasedocument",
-      "confidence_score": 1.0
+      "target": "lease_leasedocument_leasedocument"
     },
     {
       "relation": "imports",
@@ -214389,9 +214389,9 @@
       "source_file": "src/app/landlord/leases/page.tsx",
       "source_location": "L34",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "leases_page",
-      "target": "lease_leasedocument_leasedocumentprops",
-      "confidence_score": 1.0
+      "target": "lease_leasedocument_leasedocumentprops"
     },
     {
       "relation": "imports_from",
@@ -214518,9 +214518,9 @@
       "source_file": "src/app/landlord/leases/page.tsx",
       "source_location": "L33",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "leases_page",
-      "target": "lib_lease_pdf_exportleasedocumentelementtopdf",
-      "confidence_score": 1.0
+      "target": "lib_lease_pdf_exportleasedocumentelementtopdf"
     },
     {
       "relation": "imports",
@@ -251098,9 +251098,9 @@
       "source_file": "src/components/lease/LeaseDocument.tsx",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lease_leasedocument",
-      "target": "lease_leasedocument_leasedocumentprops",
-      "confidence_score": 1.0
+      "target": "lease_leasedocument_leasedocumentprops"
     },
     {
       "relation": "imports_from",
@@ -251109,9 +251109,9 @@
       "source_file": "src/components/lease/LeaseDocument.tsx",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lease_leasedocument",
-      "target": "lib_utils",
-      "confidence_score": 1.0
+      "target": "lib_utils"
     },
     {
       "relation": "imports",
@@ -251120,9 +251120,9 @@
       "source_file": "src/components/lease/LeaseDocument.tsx",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lease_leasedocument",
-      "target": "lib_utils_cn",
-      "confidence_score": 1.0
+      "target": "lib_utils_cn"
     },
     {
       "relation": "imports_from",
@@ -282840,9 +282840,9 @@
       "source_file": "src/lib/lease-pdf.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_lease_pdf",
-      "target": "lib_lease_pdf_exportleasedocumentelementtopdf",
-      "confidence_score": 1.0
+      "target": "lib_lease_pdf_exportleasedocumentelementtopdf"
     },
     {
       "relation": "contains",
@@ -408486,5 +408486,5 @@
       "source_file": "source-of-truth-db.sql"
     }
   ],
-  "built_at_commit": "60275f89418c698d1a97ddea7a0e0e32f50b1e30"
+  "built_at_commit": "98c09234e6795b273ba90e303203f74153373e84"
 }

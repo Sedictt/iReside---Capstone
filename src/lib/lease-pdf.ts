@@ -14,7 +14,13 @@ export async function exportLeaseDocumentElementToPdf(
     useCORS: true,
     logging: false,
     backgroundColor: "#ffffff",
-    windowWidth: 1024,
+    onclone: (_clonedDoc, clonedEl) => {
+      clonedEl.style.boxShadow = "none";
+      clonedEl.style.borderRadius = "0px";
+      clonedEl.style.margin = "0 auto";
+      clonedEl.style.width = "800px";
+      clonedEl.style.maxWidth = "800px";
+    },
   });
 
   const imgData = canvas.toDataURL("image/png");
