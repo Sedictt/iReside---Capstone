@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 import { applyBrandCssVariables, getMonogramInitials } from "@/lib/branding/colors";
 import { OfflineStorage } from "@/lib/offline/offlineStorage";
+import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 
 export interface BrandConfig {
   propertyName: string;
@@ -94,6 +95,8 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
           localStorage.setItem("ireside_brand_secondary", data.secondaryColor);
           if (data.logoUrl) localStorage.setItem("ireside_property_logo", data.logoUrl);
           if (data.bannerUrl) localStorage.setItem("ireside_landlord_custom_banner_url", data.bannerUrl);
+
+          window.dispatchEvent(new CustomEvent("property-branding-updated", { detail: data }));
           return;
         }
       }
@@ -107,7 +110,7 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
     applyBrandCssVariables(local.primaryColor, local.secondaryColor);
   }, [loadLocalSnapshot]);
 
-  // Initial load
+  // Initial load & real-time synchronization
   useEffect(() => {
     const initial = loadLocalSnapshot();
     setBranding(initial);
@@ -125,8 +128,53 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
     };
 
     window.addEventListener("property-branding-updated", handleBrandingEvent);
+
+    // Revalidate when user returns to or focuses the window/tab
+    const handleFocus = () => {
+      refreshBranding();
+    };
+    window.addEventListener("focus", handleFocus);
+
+    // Realtime channel subscription for instant multi-device sync
+    let channel: any = null;
+    try {
+      const supabase = createBrowserSupabaseClient();
+      channel = supabase
+        .channel("ireside-branding-realtime")
+        .on("broadcast", { event: "brand-updated" }, (payload: any) => {
+          if (payload?.payload) {
+            const data: BrandConfig = payload.payload;
+            setBranding(data);
+            applyBrandCssVariables(data.primaryColor, data.secondaryColor);
+            OfflineStorage.set("brand_configuration", data, null, "branding");
+            localStorage.setItem("ireside_property_name", data.propertyName);
+            localStorage.setItem("ireside_property_tagline", data.propertyTagline);
+            localStorage.setItem("ireside_rental_archetype", data.rentalArchetype);
+            localStorage.setItem("ireside_brand_primary", data.primaryColor);
+            localStorage.setItem("ireside_brand_secondary", data.secondaryColor);
+            if (data.logoUrl) localStorage.setItem("ireside_property_logo", data.logoUrl);
+            if (data.bannerUrl) localStorage.setItem("ireside_landlord_custom_banner_url", data.bannerUrl);
+            window.dispatchEvent(new CustomEvent("property-branding-updated", { detail: data }));
+          } else {
+            refreshBranding();
+          }
+        })
+        .subscribe();
+    } catch (err) {
+      console.warn("[BrandProvider] Realtime channel init note:", err);
+    }
+
     return () => {
       window.removeEventListener("property-branding-updated", handleBrandingEvent);
+      window.removeEventListener("focus", handleFocus);
+      if (channel) {
+        try {
+          const supabase = createBrowserSupabaseClient();
+          supabase.removeChannel(channel);
+        } catch {
+          // ignore
+        }
+      }
     };
   }, [loadLocalSnapshot, refreshBranding]);
 
@@ -179,10 +227,27 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
         } else {
           localStorage.removeItem("ireside_landlord_custom_banner_url");
         }
-        window.dispatchEvent(new CustomEvent("property-branding-updated"));
+        window.dispatchEvent(new CustomEvent("property-branding-updated", { detail: merged }));
       }
 
-      // 3. Persist to backend database if requested
+      // 3. Broadcast to other connected devices via Realtime channel
+      try {
+        const supabase = createBrowserSupabaseClient();
+        const ch = supabase.channel("ireside-branding-realtime");
+        ch.subscribe((status) => {
+          if (status === "SUBSCRIBED") {
+            ch.send({
+              type: "broadcast",
+              event: "brand-updated",
+              payload: merged,
+            });
+          }
+        });
+      } catch (broadcastErr) {
+        console.warn("[BrandProvider] Realtime broadcast note:", broadcastErr);
+      }
+
+      // 4. Persist to backend database if requested
       if (persistToDatabase && typeof navigator !== "undefined" && navigator.onLine) {
         try {
           const res = await fetch("/api/branding", {

@@ -26,14 +26,14 @@ export async function GET() {
     if (property?.landlord_id) {
       const { data: prof } = await admin
         .from("profiles")
-        .select("business_name, full_name")
+        .select("business_name, full_name, socials")
         .eq("id", property.landlord_id)
         .maybeSingle();
       landlordProfile = prof;
     } else {
       const { data: prof } = await admin
         .from("profiles")
-        .select("business_name, full_name")
+        .select("business_name, full_name, socials")
         .eq("role", "landlord")
         .limit(1)
         .maybeSingle();
@@ -44,14 +44,22 @@ export async function GET() {
       return NextResponse.json(DEFAULT_BRANDING);
     }
 
-    // Extract custom decorations/theme if stored in map_decorations
-    const customTheme = (property?.map_decorations as Record<string, unknown>)?.branding as
+    // Extract custom decorations/theme if stored in map_decorations or profile socials
+    const propertyTheme = (property?.map_decorations as Record<string, unknown>)?.branding as
       | Partial<BrandConfig>
       | undefined;
+    const profileTheme = ((landlordProfile?.socials as Record<string, unknown>)?.branding as
+      | Partial<BrandConfig>
+      | undefined);
+
+    const customTheme: Partial<BrandConfig> = {
+      ...(profileTheme || {}),
+      ...(propertyTheme || {}),
+    };
 
     const brandingPayload: BrandConfig = {
       propertyName:
-        property?.name || landlordProfile?.business_name || DEFAULT_BRANDING.propertyName,
+        property?.name || landlordProfile?.business_name || customTheme?.propertyName || DEFAULT_BRANDING.propertyName,
       propertyTagline:
         property?.description ||
         customTheme?.propertyTagline ||
@@ -142,16 +150,31 @@ export async function POST(request: NextRequest) {
         .eq("id", existingProperty.id);
     }
 
-    // 3. Update landlord profile business name in profiles table
+    // 3. Update landlord profile with branding in profiles.socials and business_name
+    const { data: userProfile } = await admin
+      .from("profiles")
+      .select("socials, business_name")
+      .eq("id", userId)
+      .maybeSingle();
+
+    const existingSocials = (userProfile?.socials as Record<string, unknown>) || {};
+    const updatedSocials = {
+      ...existingSocials,
+      branding: updatedBrandingMeta,
+    };
+
+    const profileUpdates: Record<string, unknown> = {
+      socials: updatedSocials,
+      updated_at: new Date().toISOString(),
+    };
     if (body.propertyName) {
-      await admin
-        .from("profiles")
-        .update({
-          business_name: body.propertyName,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", userId);
+      profileUpdates.business_name = body.propertyName;
     }
+
+    await admin
+      .from("profiles")
+      .update(profileUpdates as any)
+      .eq("id", userId);
 
     const fullBranding: BrandConfig = {
       propertyName: body.propertyName || DEFAULT_BRANDING.propertyName,

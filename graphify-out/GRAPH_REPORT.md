@@ -1,16 +1,16 @@
 # Graph Report - iReside  (2026-09-08)
 
 ## Corpus Check
-- 1165 files · ~8,481,435 words
+- 1165 files · ~8,481,840 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 14359 nodes · 26721 edges · 1145 communities (1006 shown, 139 thin omitted)
+- 14359 nodes · 26723 edges · 1163 communities (1023 shown, 140 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 322 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `25cc5137`
+- Built from commit: `cc187d29`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -869,6 +869,7 @@
 - [[_COMMUNITY_Community 851|Community 851]]
 - [[_COMMUNITY_Community 852|Community 852]]
 - [[_COMMUNITY_Community 853|Community 853]]
+- [[_COMMUNITY_Community 854|Community 854]]
 - [[_COMMUNITY_Community 855|Community 855]]
 - [[_COMMUNITY_Community 856|Community 856]]
 - [[_COMMUNITY_Community 857|Community 857]]
@@ -954,6 +955,7 @@
 - [[_COMMUNITY_Community 937|Community 937]]
 - [[_COMMUNITY_Community 938|Community 938]]
 - [[_COMMUNITY_Community 939|Community 939]]
+- [[_COMMUNITY_Community 940|Community 940]]
 - [[_COMMUNITY_Community 941|Community 941]]
 - [[_COMMUNITY_Community 942|Community 942]]
 - [[_COMMUNITY_Community 943|Community 943]]
@@ -964,7 +966,9 @@
 - [[_COMMUNITY_Community 948|Community 948]]
 - [[_COMMUNITY_Community 949|Community 949]]
 - [[_COMMUNITY_Community 950|Community 950]]
+- [[_COMMUNITY_Community 951|Community 951]]
 - [[_COMMUNITY_Community 952|Community 952]]
+- [[_COMMUNITY_Community 953|Community 953]]
 - [[_COMMUNITY_Community 954|Community 954]]
 - [[_COMMUNITY_Community 955|Community 955]]
 - [[_COMMUNITY_Community 956|Community 956]]
@@ -1062,6 +1066,20 @@
 - [[_COMMUNITY_Community 1146|Community 1146]]
 - [[_COMMUNITY_Community 1147|Community 1147]]
 - [[_COMMUNITY_Community 1148|Community 1148]]
+- [[_COMMUNITY_Community 1149|Community 1149]]
+- [[_COMMUNITY_Community 1150|Community 1150]]
+- [[_COMMUNITY_Community 1151|Community 1151]]
+- [[_COMMUNITY_Community 1152|Community 1152]]
+- [[_COMMUNITY_Community 1153|Community 1153]]
+- [[_COMMUNITY_Community 1154|Community 1154]]
+- [[_COMMUNITY_Community 1155|Community 1155]]
+- [[_COMMUNITY_Community 1156|Community 1156]]
+- [[_COMMUNITY_Community 1157|Community 1157]]
+- [[_COMMUNITY_Community 1158|Community 1158]]
+- [[_COMMUNITY_Community 1159|Community 1159]]
+- [[_COMMUNITY_Community 1160|Community 1160]]
+- [[_COMMUNITY_Community 1161|Community 1161]]
+- [[_COMMUNITY_Community 1162|Community 1162]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `cn()` - 572 edges
@@ -1096,31 +1114,31 @@
 - **Lease Lifecycle Entities** — source-of-truth-db_leases_table, source-of-truth-db_lease_status_trigger, source-of-truth-db_lease_validation_trigger, source-of-truth-db_renewal_requests_table, source-of-truth-db_check_renewal_windows, source-of-truth-db_move_out_requests_table [EXTRACTED 1.00]
 - **Community & Messaging** — source-of-truth-db_community_posts_table, source-of-truth-db_conversations_table, source-of-truth-db_messages_table, source-of-truth-db_notifications_table [EXTRACTED 1.00]
 
-## Communities (1145 total, 139 thin omitted)
+## Communities (1163 total, 140 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.03
-Nodes (94): GET(), advancePaymentSchema, POST(), GET(), requireAuthenticatedUser(), resolveUserRole(), PUT(), RouteParams (+86 more)
+Nodes (82): GET(), advancePaymentSchema, POST(), requireAuthenticatedUser(), resolveUserRole(), PUT(), RouteParams, GET() (+74 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.05
-Nodes (64): AboutPage(), VALUES, WHO_IT_SERVES, GlobalNotFound(), HOW_IT_WORKS, IRIS_WORKFLOWS, OUTCOMES, RootTurnkeyEntryPage() (+56 more)
+Cohesion: 0.06
+Nodes (49): AboutPage(), VALUES, WHO_IT_SERVES, NAV_ITEMS, HOW_IT_WORKS, IRIS_WORKFLOWS, OUTCOMES, RootTurnkeyEntryPage() (+41 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.14
 Nodes (33): buildListFetchErrorMessage(), buildPaymentHistoryErrorMessage(), ConversationMessage, createOrGetDirectConversation(), fetchConversationMessages(), fetchConversationPaymentHistory(), fetchConversations(), FetchMessagesOptions (+25 more)
 
 ### Community 3 - "Community 3"
-Cohesion: 0.08
-Nodes (40): AnalyticsPage(), DEFAULT_EXTENDED_KPIS, DEFAULT_FINANCIAL_CHART, DEFAULT_OPERATIONAL_SNAPSHOT, DEFAULT_PRIMARY_KPIS, ExportAuditItem, formatIsoDate(), getDateLabels() (+32 more)
+Cohesion: 0.13
+Nodes (24): AnalyticsPage(), DEFAULT_EXTENDED_KPIS, DEFAULT_FINANCIAL_CHART, DEFAULT_OPERATIONAL_SNAPSHOT, DEFAULT_PRIMARY_KPIS, ExportAuditItem, formatIsoDate(), getDateLabels() (+16 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.05
-Nodes (55): { result }, applyScaleToDocument(), FONT_SCALE_STEPS, FONT_SIZE_OPTIONS, FontSize, FontSizeOption, FontSizeTier, getServerSnapshot() (+47 more)
+Cohesion: 0.11
+Nodes (27): { result }, applyScaleToDocument(), FONT_SCALE_STEPS, FONT_SIZE_OPTIONS, FontSize, FontSizeOption, FontSizeTier, getServerSnapshot() (+19 more)
 
 ### Community 5 - "Community 5"
-Cohesion: 0.06
-Nodes (50): CalendarEvent, EVENT_TYPE_STYLES, LandlordCalendarPage(), MONTH_NAMES, WEEKDAYS, CommunityPropertyGate(), LandlordCommunityHubPage(), PropertySelectorHub() (+42 more)
+Cohesion: 0.05
+Nodes (58): array, CalendarEvent, EVENT_TYPE_STYLES, LandlordCalendarPage(), MONTH_NAMES, WEEKDAYS, CommunityPropertyGate(), LandlordCommunityHubPage() (+50 more)
 
 ### Community 6 - "Community 6"
 Cohesion: 0.13
@@ -1140,7 +1158,7 @@ Nodes (38): addComment(), approveResidentPost(), canCreatePostType(), CommunityR
 
 ### Community 10 - "Community 10"
 Cohesion: 0.06
-Nodes (72): AuditCategory, AuditSeverity, logUserActivity(), LogUserActivityParams, sanitizeMetadata(), SENSITIVE_KEYS, simplifyUserAgent(), AuditLogItem (+64 more)
+Nodes (71): AuditCategory, AuditSeverity, logUserActivity(), LogUserActivityParams, sanitizeMetadata(), SENSITIVE_KEYS, simplifyUserAgent(), AuditLogItem (+63 more)
 
 ### Community 11 - "Community 11"
 Cohesion: 0.05
@@ -1148,23 +1166,23 @@ Nodes (54): BillingService, ExpenseService, InvalidPaymentStateError, PaymentAcc
 
 ### Community 12 - "Community 12"
 Cohesion: 0.04
-Nodes (76): addManualContextText(), applyPlaceholderSizingStyles(), averageRgb01(), buildAnnotationsForCapture(), buildInsertPlaceholderSnapshotFromDom(), buildPinElement(), captureElementToBlob(), checkpointPayload() (+68 more)
+Nodes (72): applyPlaceholderSizingStyles(), averageRgb01(), buildAnnotationsForCapture(), buildCollapsible(), buildColorModels(), buildInsertPlaceholderSnapshotFromDom(), buildPinElement(), buildRadiiModels() (+64 more)
 
 ### Community 13 - "Community 13"
-Cohesion: 0.04
-Nodes (62): ApplyForm(), ApplyPage(), ThemeToggle(), ThemeToggleProps, ConsultationDashboard(), Document, ConsultationTool(), ConsultationToolProps (+54 more)
+Cohesion: 0.09
+Nodes (27): BusinessPermitCard(), BusinessPermitCardProps, calculateLeaseProgress(), formatCurrency(), formatRelativeDate(), LandlordProfilePage(), LandlordProperty, resolveGoogleAvatarUrl() (+19 more)
 
 ### Community 14 - "Community 14"
-Cohesion: 0.05
-Nodes (70): acknowledgePendingEvent(), addOpToManualApplyChunk(), agentPollingConnected(), annotRoot, APPLY_EVENT_HARD_TIMEOUT_MS, APPLY_EVENT_SOFT_DEADLINE_MS, args, broadcast() (+62 more)
+Cohesion: 0.04
+Nodes (72): acknowledgePendingEvent(), addOpToManualApplyChunk(), agentPollingConnected(), annotRoot, APPLY_EVENT_HARD_TIMEOUT_MS, APPLY_EVENT_SOFT_DEADLINE_MS, args, broadcast() (+64 more)
 
 ### Community 15 - "Community 15"
-Cohesion: 0.10
-Nodes (20): PUT(), GET(), LeaseDetailsPage(), BusinessVerificationResult, generateValenzuelaSearchURL(), searchValenzuelaBusinessDatabank(), ScrapedBusinessData, ScrapedBusinessRow (+12 more)
+Cohesion: 0.04
+Nodes (54): ConsultationDashboard(), Document, ConsultationTool(), ConsultationToolProps, DigitalSigner, AuthContext, AuthContextValue, AuthState (+46 more)
 
 ### Community 16 - "Community 16"
 Cohesion: 0.05
-Nodes (39): CommentService, CommunityAccessError, CommunityError, CommunityValidationError, PostNotFoundError, CommentItem, CommunityPost, CommunityPostStatus (+31 more)
+Nodes (40): CommentService, CommunityAccessError, CommunityError, CommunityValidationError, PostNotFoundError, CommentItem, CommunityPost, CommunityPostStatus (+32 more)
 
 ### Community 17 - "Community 17"
 Cohesion: 0.10
@@ -1180,30 +1198,30 @@ Nodes (67): dependencies, @base-ui/react, boneyard-js, chart.js, chartjs-plugin-
 
 ### Community 20 - "Community 20"
 Cohesion: 0.06
-Nodes (47): ActionCategoryFilter, ActionEmptyState(), ActionFilteredEmptyState(), ActionItem, ActionItemCard(), ActionRequiredAction, actionRequiredReducer(), ActionRequiredState (+39 more)
+Nodes (48): ActionCategoryFilter, ActionEmptyState(), ActionFilteredEmptyState(), ActionItem, ActionItemCard(), ActionRequired(), ActionRequiredAction, actionRequiredReducer() (+40 more)
 
 ### Community 21 - "Community 21"
 Cohesion: 0.04
-Nodes (51): evaluateQuickAction(), brand, CanvasItemKind, canViewTenantProfile, Corridor, CorridorResizeHandle, daysRemaining, DbUnit (+43 more)
+Nodes (56): brand, CanvasItemKind, canViewTenantProfile, ComplaintModal(), Corridor, CorridorResizeHandle, daysRemaining, DbUnit (+48 more)
 
 ### Community 22 - "Community 22"
-Cohesion: 0.09
-Nodes (41): Amenity, AmenityBooking, Application, ApplicationSource, ApplicationWithDetails, ConsultationDocument, Conversation, ConversationParticipant (+33 more)
+Cohesion: 0.08
+Nodes (44): getLandlordProperties(), getPropertyById(), Amenity, AmenityBooking, Application, ApplicationSource, ApplicationWithDetails, ConsultationDocument (+36 more)
 
 ### Community 23 - "Community 23"
 Cohesion: 0.07
 Nodes (60): borderWidthsFromStyle(), checkBorders(), checkColors(), checkCreamPalette(), checkElementAIPaletteDOM(), checkElementBorders(), checkElementBordersDOM(), checkElementColors() (+52 more)
 
 ### Community 24 - "Community 24"
-Cohesion: 0.06
-Nodes (36): buildComment(), buildCommunityPost(), CommunityCommentRow, CommunityPostRow, buildLease(), LeaseRow, buildMaintenanceRequest(), MaintenanceRequestRow (+28 more)
+Cohesion: 0.10
+Nodes (19): buildComment(), buildCommunityPost(), CommunityCommentRow, CommunityPostRow, buildLease(), LeaseRow, buildMaintenanceRequest(), MaintenanceRequestRow (+11 more)
 
 ### Community 25 - "Community 25"
 Cohesion: 0.12
 Nodes (27): CashPaymentInterface(), CashPaymentInterfaceProps, MessageComposer(), MessageComposerProps, ConversationCacheAction, conversationCacheReducer(), ConversationCleanupAction, conversationCleanupReducer() (+19 more)
 
 ### Community 26 - "Community 26"
-Cohesion: 0.10
+Cohesion: 0.11
 Nodes (38): GET(), getCachedSignedUrl(), isJsonObject(), MessageBody, POST(), resolveSignedUrlsBatch(), setCachedSignedUrl(), signedUrlCache (+30 more)
 
 ### Community 27 - "Community 27"
@@ -1211,8 +1229,8 @@ Cohesion: 0.07
 Nodes (50): addBrowserFindings(), addVisualContrastFindings(), addVisualContrastResult(), analyzeVisualContrast(), analyzeVisualContrastCandidate(), blendRgba(), browserFindingsFromMap(), buildSelectorSegment() (+42 more)
 
 ### Community 28 - "Community 28"
-Cohesion: 0.16
-Nodes (22): APARTMENT_DEFAULTS, BOARDING_DEFAULTS, DORM_DEFAULTS, EnvironmentMode, GENDER_OPTIONS, GenderRestrictionMode, getDefaultsForMode(), MODE_CARDS (+14 more)
+Cohesion: 0.08
+Nodes (32): Loading(), APARTMENT_DEFAULTS, BOARDING_DEFAULTS, DORM_DEFAULTS, EnvironmentMode, GENDER_OPTIONS, GenderRestrictionMode, getDefaultsForMode() (+24 more)
 
 ### Community 29 - "Community 29"
 Cohesion: 0.11
@@ -1223,16 +1241,16 @@ Cohesion: 0.07
 Nodes (26): ConversationService, MessageService, ConversationNotFoundError, MessagingAccessError, MessagingError, MessagingValidationError, ConversationRow, ConversationSummary (+18 more)
 
 ### Community 31 - "Community 31"
-Cohesion: 0.05
-Nodes (74): generateOTP(), GET(), getTwoFactorState(), GmailToken, POST(), TwoFactorSettings, upsertTwoFactorSettings(), ActionBody (+66 more)
+Cohesion: 0.07
+Nodes (56): generateOTP(), GET(), getTwoFactorState(), GmailToken, POST(), TwoFactorSettings, upsertTwoFactorSettings(), LandlordCredentialsCopyEmailParameters (+48 more)
 
 ### Community 32 - "Community 32"
-Cohesion: 0.10
+Cohesion: 0.09
 Nodes (27): GET(), openai, POST(), formatContextForAI(), getTenantContext(), IrisContextService, IrisAiProviderError, IrisError (+19 more)
 
 ### Community 33 - "Community 33"
-Cohesion: 0.09
-Nodes (50): allEntryIds(), argVal(), buildRepairBatch(), candidatesForEntry(), changedFilesSinceSnapshot(), clearAppliedEntries(), collectApplyOwnedFiles(), collectRollbackFiles() (+42 more)
+Cohesion: 0.07
+Nodes (66): allEntryIds(), argVal(), buildRepairBatch(), candidatesForEntry(), changedFilesSinceSnapshot(), clearAppliedEntries(), collectApplyOwnedFiles(), collectRollbackFiles() (+58 more)
 
 ### Community 34 - "Community 34"
 Cohesion: 0.08
@@ -1243,20 +1261,20 @@ Cohesion: 0.04
 Nodes (47): `applications` Table, Billing and Financial Reporting, `community_albums` Table, `community_comments` Table, Community Module, `community_photos` Table, `community_poll_votes` Table, `community_posts` Table (+39 more)
 
 ### Community 36 - "Community 36"
-Cohesion: 0.13
-Nodes (45): cancelEditing(), cancelEditingToPicking(), cancelInsertConfigure(), captureAndEmit(), cleanup(), clearAnnotations(), clearInsertPicking(), closeTunePopover() (+37 more)
+Cohesion: 0.14
+Nodes (43): cancelEditing(), cancelEditingToPicking(), cancelInsertConfigure(), captureAndEmit(), cleanup(), clearAnnotations(), clearInsertPicking(), closeTunePopover() (+35 more)
 
 ### Community 37 - "Community 37"
-Cohesion: 0.07
-Nodes (25): mockSession, mockUser, appChain, chain, createMockSupabase(), mockApp, mockProfile, mockProfiles (+17 more)
+Cohesion: 0.08
+Nodes (24): mockSession, mockUser, appChain, chain, createMockSupabase(), mockApp, mockProfile, mockProfiles (+16 more)
 
 ### Community 38 - "Community 38"
 Cohesion: 0.04
 Nodes (48): 10.1 Global Principles, 10.2 Current Motion Tools, 10.3 Timing Guidelines, 10. Motion System, 11.1 Fonts, 11.2 Type Hierarchy, 11.3 Copy Rules, 11. Typography & Content Design (+40 more)
 
 ### Community 39 - "Community 39"
-Cohesion: 0.04
-Nodes (79): mockApplications, MyApplicationsPage(), properties, recentActivity, AdminChatModerationPage(), BannedTerm, ModerationReportCard(), ReportRow (+71 more)
+Cohesion: 0.27
+Nodes (15): BulkOrganizerPanel(), BulkOrganizerPanelProps, DbUnit, FloorConfig, floorDisplayName(), FloorLane(), SortableUnit(), DbUnit (+7 more)
 
 ### Community 40 - "Community 40"
 Cohesion: 0.04
@@ -1279,8 +1297,8 @@ Cohesion: 0.04
 Nodes (44): 2.1 CORE MODULES, 2.2 PRODUCT FEATURES, 2.3.1 User Classes, 2.3.2 Tenant User Characteristics, 2.3.3 Landlord User Characteristics, 2.3.4 Admin User Characteristics, 2.3.5 Visitor User Characteristics, 2.3 USER CLASS AND CHARACTERISTICS (+36 more)
 
 ### Community 45 - "Community 45"
-Cohesion: 0.05
-Nodes (67): AdminSidebar(), NAV_ITEMS, AdminLayout(), ThemeProvider(), AuthContext, AuthContextValue, AuthProvider(), AuthState (+59 more)
+Cohesion: 0.10
+Nodes (30): AdminSidebar(), AdminLayout(), ThemeProvider(), AuthProvider(), newNotification, NotificationAction, NotificationContext, NotificationContextType (+22 more)
 
 ### Community 46 - "Community 46"
 Cohesion: 0.08
@@ -1288,7 +1306,7 @@ Nodes (38): buildUpdateDirective(), cli(), compareSemver(), computeUpdateDirecti
 
 ### Community 47 - "Community 47"
 Cohesion: 0.10
-Nodes (27): PropertyAccessError, PropertyError, PropertyNotFoundError, PropertyValidationError, UnitNotFoundError, formatCompactCurrency(), getPortfolioStatus(), PropertyService (+19 more)
+Nodes (25): PropertyAccessError, PropertyError, PropertyNotFoundError, PropertyValidationError, UnitNotFoundError, formatCompactCurrency(), getPortfolioStatus(), PropertyService (+17 more)
 
 ### Community 48 - "Community 48"
 Cohesion: 0.05
@@ -1315,8 +1333,8 @@ Cohesion: 0.18
 Nodes (23): VisualCanvas(), VisualCanvasProps, useOptionalProperty(), useVisualBuilderState(), VisualBuilderStateProps, DEFAULT_FLOOR_LAYOUTS, EMPTY_FLOOR_LAYOUT, INITIAL_UNITS (+15 more)
 
 ### Community 54 - "Community 54"
-Cohesion: 0.06
-Nodes (47): DeprecatedLandlordSignUp(), fileSchema, landlordRegistrationSchema, landlordRegistrationWithFilesSchema, POST(), UploadedFile, ALLOWED_FILE_TYPES, clearWizardState() (+39 more)
+Cohesion: 0.10
+Nodes (30): DeprecatedLandlordSignUp(), fileSchema, landlordRegistrationSchema, landlordRegistrationWithFilesSchema, POST(), UploadedFile, ALLOWED_FILE_TYPES, clearWizardState() (+22 more)
 
 ### Community 55 - "Community 55"
 Cohesion: 0.10
@@ -1355,8 +1373,8 @@ Cohesion: 0.17
 Nodes (35): activeLeaseSnapshot(), addDays(), averageTenantDurationYears(), buildFinancialWindows(), buildSnapshotPoints(), ChangeType, clampTrend(), countRenewalsWithin() (+27 more)
 
 ### Community 64 - "Community 64"
-Cohesion: 0.14
-Nodes (13): BannerCustomizerModal(), BannerCustomizerModalProps, CURATED_BANNER_PRESETS, DashboardBackground(), DashboardBackgroundProps, BannerNotification, DashboardBannerProps, SearchResult (+5 more)
+Cohesion: 0.05
+Nodes (63): GlobalNotFound(), useAuth(), BrandConfig, BrandContext, BrandContextValue, BrandProvider(), DEFAULT_BRANDING, useBrand() (+55 more)
 
 ### Community 65 - "Community 65"
 Cohesion: 0.15
@@ -1364,7 +1382,7 @@ Nodes (27): ApplicationIdentityStep(), ApplicationProfileStep(), applyLiveFieldV
 
 ### Community 66 - "Community 66"
 Cohesion: 0.04
-Nodes (65): assertAdmin(), MUTABLE_STATUSES, PATCH(), RegistrationRecord, generateTempPassword(), POST(), ensureBucket(), POST() (+57 more)
+Nodes (65): saveGmailTwoFactorState(), assertAdmin(), MUTABLE_STATUSES, PATCH(), POST(), RegistrationRecord, generateTempPassword(), POST() (+57 more)
 
 ### Community 67 - "Community 67"
 Cohesion: 0.05
@@ -1427,12 +1445,12 @@ Cohesion: 0.11
 Nodes (18): ComplaintModal(), ComplaintModalProps, ComplaintModal(), ComplaintModalProps, TransferRequestModal(), TransferRequestModalProps, MaintenanceHistoryItem, TenantHistoryItem (+10 more)
 
 ### Community 82 - "Community 82"
-Cohesion: 0.16
-Nodes (29): ChangePasswordInput, changePasswordSchema, LoginInput, loginSchema, OtpRequestInput, otpRequestSchema, OtpVerifyInput, otpVerifySchema (+21 more)
+Cohesion: 0.09
+Nodes (42): BusinessVerificationResult, generateValenzuelaSearchURL(), searchValenzuelaBusinessDatabank(), ScrapedBusinessData, ScrapedBusinessRow, scrapeValenzuelaBusinessDatabank(), ChangePasswordInput, changePasswordSchema (+34 more)
 
 ### Community 83 - "Community 83"
-Cohesion: 0.13
-Nodes (17): LeaseService, LandlordLeaseFilters, LandlordRenewalRequestItem, LeaseDetail, LeaseDetailUnit, LeaseListItem, LeasePartyView, LeaseRow (+9 more)
+Cohesion: 0.29
+Nodes (14): LandlordLeaseFilters, LandlordRenewalRequestItem, LeaseDetail, LeaseDetailUnit, LeaseListItem, LeasePartyView, LeaseRow, LeaseTenantSummary (+6 more)
 
 ### Community 84 - "Community 84"
 Cohesion: 0.10
@@ -1459,8 +1477,8 @@ Cohesion: 0.06
 Nodes (32): Bullet characters, CLI Reference, Complete Example, CV Content (`cv`), Date handling, Design (`design`), engineeringclassic, engineeringresumes (+24 more)
 
 ### Community 90 - "Community 90"
-Cohesion: 0.07
-Nodes (27): 🛡️ iReside: Master Operations & Bug-Hunting Manual, 📚 PHASE 10: Zero-IT Handover Manual & Emergency Recovery Hub, 🎨 PHASE 1: Property Identity, Theme & Custom Branding Setup, 🏢 PHASE 2: Visual Floor Planner, Unit Inventory & Lease Rules, 📢 PHASE 3: Physical Lobby Marketing, Resident Acquisition & Private Intake, ⚡ PHASE 5: Monthly Corridor Sub-Meter Utility Walkthrough, 💳 PHASE 6: Monthly Rent & Utility GCash Payments (Tenant ↔ Landlord), 🔧 PHASE 7: Maintenance Requests & Contractor Expense Tracking (+19 more)
+Cohesion: 0.09
+Nodes (22): 🛡️ iReside: Master Operations & Bug-Hunting Manual, 📚 PHASE 10: Zero-IT Handover Manual & Emergency Recovery Hub, 🎨 PHASE 1: Property Identity, Theme & Custom Branding Setup, 🏢 PHASE 2: Visual Floor Planner, Unit Inventory & Lease Rules, ⚡ PHASE 5: Monthly Corridor Sub-Meter Utility Walkthrough, 💳 PHASE 6: Monthly Rent & Utility GCash Payments (Tenant ↔ Landlord), 📢 PHASE 8: Community Bulletin, Interactive Polls & Photo Albums, 🔄 PHASE 9: Lease Expiration, Renewal Addendum & Move-Out Settlement (+14 more)
 
 ### Community 91 - "Community 91"
 Cohesion: 0.15
@@ -1468,11 +1486,11 @@ Nodes (32): ensureBucket(), InviteRecord, loadInviteRecord(), POST(), sanitizeFi
 
 ### Community 92 - "Community 92"
 Cohesion: 0.09
-Nodes (37): InquiryAction, AuthenticatedContext, requireAccessToLease(), requireLandlordOwnsProperty(), requireRole(), UserProfile, apiConflict(), ApiEnvelope (+29 more)
+Nodes (34): AuthenticatedContext, requireAccessToLease(), requireLandlordOwnsProperty(), requireRole(), UserProfile, apiConflict(), ApiEnvelope, apiError() (+26 more)
 
 ### Community 93 - "Community 93"
-Cohesion: 0.13
-Nodes (19): ApplicationAccessError, ApplicationError, ApplicationNotFoundError, ApplicationValidationError, InvalidApplicationStateError, ALLOWED_APPLICATION_TRANSITIONS, canTransitionApplication(), isTerminalApplicationStatus() (+11 more)
+Cohesion: 0.07
+Nodes (46): ApplicationAccessError, ApplicationError, ApplicationNotFoundError, ApplicationValidationError, InvalidApplicationStateError, ApplicationService, buildComplianceChecklist(), ALLOWED_APPLICATION_TRANSITIONS (+38 more)
 
 ### Community 94 - "Community 94"
 Cohesion: 0.06
@@ -1491,12 +1509,12 @@ Cohesion: 0.06
 Nodes (31): END OF SCRIPT, EPISODE 1: THE UNIT MAP, EPISODE 2: THE LANDLORD DASHBOARD, EPISODE 3: THE TENANT PORTAL, EPISODE 4: MAINTENANCE SYSTEM & FINANCIAL LEDGER, EPISODE 5: THE AI ASSISTANT (iRis), EPISODE 6: SYSTEM SUMMARY, EPISODE TIMING BREAKDOWN (+23 more)
 
 ### Community 98 - "Community 98"
-Cohesion: 0.05
-Nodes (61): DocsHeader(), DocsHeaderProps, DocsLayout(), DOCS_NAV, DocsSidebar(), NavItem, NavSection, Layout() (+53 more)
+Cohesion: 0.06
+Nodes (47): DocsPage(), UnitMapFeatureSection(), FeaturesPage(), metadata, ActiveLeasesTabProps, ArchiveTab(), ArchiveTabProps, CardVariant (+39 more)
 
 ### Community 99 - "Community 99"
-Cohesion: 0.07
-Nodes (40): ApplicationsPage(), Applicant, ApplicationsSkeletonList(), ApplicationStatus, calculateApplicationProgress(), formatCurrency(), formatDate(), formatDocumentLabel() (+32 more)
+Cohesion: 0.06
+Nodes (42): ApplicationsPage(), Applicant, ApplicationsSkeletonList(), ApplicationStatus, calculateApplicationProgress(), formatCurrency(), formatDate(), formatDocumentLabel() (+34 more)
 
 ### Community 100 - "Community 100"
 Cohesion: 0.13
@@ -1528,19 +1546,19 @@ Nodes (29): Accessibility, Animation & Motion, Bottom Bar (64px / h-16), Canvas 
 
 ### Community 107 - "Community 107"
 Cohesion: 0.05
-Nodes (61): ADVANCE_TEMPLATE_KEYS, buildPaymentPreview(), DEPOSIT_TEMPLATE_KEYS, InviteApplicationType, InviteListItem, InviteMode, InviteRequirementKey, parseAmount() (+53 more)
+Nodes (62): ADVANCE_TEMPLATE_KEYS, buildPaymentPreview(), DEPOSIT_TEMPLATE_KEYS, InviteApplicationType, InviteListItem, InviteMode, InviteRequirementKey, parseAmount() (+54 more)
 
 ### Community 108 - "Community 108"
 Cohesion: 0.07
 Nodes (28): 1. **AI Model Selection** ✅, 1. Get Groq API Key, 2. **API Route** ✅, 2. Configure Environment, 3. Install Dependencies (Already Done), 3. **RAG Context System** ✅, 4. **Frontend Integration** ✅, 4. Start Development Server (+20 more)
 
 ### Community 109 - "Community 109"
-Cohesion: 0.10
-Nodes (18): geistMono, geistSans, metadata, RootLayout(), ConsentSettings, CookieConsent(), SettingToggle(), GlobalLoadingContext (+10 more)
+Cohesion: 0.13
+Nodes (15): geistMono, geistSans, metadata, RootLayout(), ConsentSettings, CookieConsent(), SettingToggle(), GlobalLoadingContext (+7 more)
 
 ### Community 110 - "Community 110"
-Cohesion: 0.08
-Nodes (50): AuditEvent, extractIpAddress(), extractUserAgent(), logAuditEvent(), sendLeaseActivatedNotification(), sendSigningLinkEmail(), sendTenantSignedNotification(), generateLandlordSigningLink() (+42 more)
+Cohesion: 0.05
+Nodes (56): getDashboardPathForRole(), PUT(), GET(), LeaseDetailsPage(), AuditEvent, extractIpAddress(), extractUserAgent(), logAuditEvent() (+48 more)
 
 ### Community 111 - "Community 111"
 Cohesion: 0.14
@@ -1559,8 +1577,8 @@ Cohesion: 0.07
 Nodes (26): 1. Get a Groq API Key, 2. Add Environment Variable, 3. Install Dependencies, Alternative AI Models, Anthropic Claude, Architecture, code:env (GROQ_API_KEY=gsk_your_api_key_here), code:bash (npm install openai) (+18 more)
 
 ### Community 115 - "Community 115"
-Cohesion: 0.11
-Nodes (26): useViewMode(), MaintenanceCard(), MaintenanceCardSkeleton(), MaintenanceDashboard(), MaintenanceListRow(), Priority, PriorityBadge(), Status (+18 more)
+Cohesion: 0.09
+Nodes (33): useViewMode(), MaintenanceCard(), MaintenanceCardSkeleton(), MaintenanceDashboard(), MaintenanceListRow(), MaintenanceRequest, Priority, PriorityBadge() (+25 more)
 
 ### Community 116 - "Community 116"
 Cohesion: 0.12
@@ -1587,8 +1605,8 @@ Cohesion: 0.08
 Nodes (27): 9.11 Error Handling, 9.12 Rate Limiting, 9.13 OpenAPI Specification, 9.1 API Architecture, 9.2 API Routes Structure, 9.3 Authentication Endpoints, 9.4 AI Assistant (iRis) API, 9.5 Landlord Statistics API (+19 more)
 
 ### Community 122 - "Community 122"
-Cohesion: 0.09
-Nodes (42): args, buffer, cwd, pageUrlFilter, remaining, analyzeSourceHint(), buildCandidatesForOp(), buildContextHintsByRef() (+34 more)
+Cohesion: 0.14
+Nodes (24): analyzeSourceHint(), buildCandidatesForOp(), buildContextHintsByRef(), collectSearchFiles(), countOps(), escapeRegExp(), findContextMatches(), findLiteralMatches() (+16 more)
 
 ### Community 123 - "Community 123"
 Cohesion: 0.07
@@ -1619,8 +1637,8 @@ Cohesion: 0.08
 Nodes (24): 1.4 Scope and Delimitation, 2D Spatial Canvas & Floor Planner, A. Geographic and Demographic Boundaries, Administrative Portal, AI-Powered Features, B. Property and Unit Modeling Constraints, C. Access Model and Tenant Onboarding Constraints, Communication & Community (+16 more)
 
 ### Community 130 - "Community 130"
-Cohesion: 0.21
-Nodes (18): actionLabel(), buildConfigureRow(), buildConfirmedRow(), buildCyclingRow(), buildDots(), buildGeneratingRow(), buildInsertConfigureRow(), buildSavingRow() (+10 more)
+Cohesion: 0.18
+Nodes (20): actionLabel(), buildConfigureRow(), buildConfirmedRow(), buildCyclingRow(), buildDots(), buildGeneratingRow(), buildInsertConfigureRow(), buildSavingRow() (+12 more)
 
 ### Community 131 - "Community 131"
 Cohesion: 0.13
@@ -1635,8 +1653,8 @@ Cohesion: 0.17
 Nodes (19): args, build(), desktopDir, __dirname, discoverInstanceBranding(), __filename, rootDir, sanitizeFilename() (+11 more)
 
 ### Community 134 - "Community 134"
-Cohesion: 0.04
-Nodes (78): Loading(), BillingWorkspace, InvoiceListItem, InvoiceReadingDetail, formatPhpCurrency(), NextPayment, OverduePayment, PaymentSummary() (+70 more)
+Cohesion: 0.03
+Nodes (92): InvoiceListItem, InvoiceReadingDetail, formatPhpCurrency(), NextPayment, OverduePayment, PaymentSummary(), PaymentSummaryProps, LeaseInfo (+84 more)
 
 ### Community 135 - "Community 135"
 Cohesion: 0.08
@@ -1651,8 +1669,8 @@ Cohesion: 0.08
 Nodes (24): Component translation rules, Narrative mapping, Pitfalls, Scan mode (approach C: auto-extract, then confirm descriptive language), Schema, Seed mode, Step 1: Confirm seed mode, Step 1: Find the design assets (+16 more)
 
 ### Community 138 - "Community 138"
-Cohesion: 0.13
-Nodes (21): applyParamDefaults(), applyParamValue(), clearHandled(), clearSession(), closedClipPath(), getVisibleVariantEl(), hideParamsPanel(), isSessionHandled() (+13 more)
+Cohesion: 0.09
+Nodes (29): applyParamDefaults(), applyParamValue(), clearHandled(), clearSession(), closedClipPath(), ensureInsertPlaceholder(), findInsertAnchorInDom(), getVisibleVariantEl() (+21 more)
 
 ### Community 139 - "Community 139"
 Cohesion: 0.08
@@ -1687,8 +1705,8 @@ Cohesion: 0.08
 Nodes (23): ADDED Requirements, Requirement: Create secure JWT token, Requirement: Create signing link URL, Requirement: Generate signing link for draft applications, Requirement: Send email with signing link, Requirement: Store tenant signature and notify landlord, Requirement: Tenant remote signing interface, Scenario: Button is hidden for non-draft applications (+15 more)
 
 ### Community 147 - "Community 147"
-Cohesion: 0.23
-Nodes (10): POST(), generateUnitList(), generateUnitName(), NumberingStyle, UnitNamingOptions, POST(), name, name1 (+2 more)
+Cohesion: 0.22
+Nodes (11): POST(), generateUnitList(), generateUnitName(), NumberingStyle, UnitNamingOptions, GET(), PATCH(), name (+3 more)
 
 ### Community 148 - "Community 148"
 Cohesion: 0.17
@@ -1727,12 +1745,12 @@ Cohesion: 0.09
 Nodes (20): 10. Glossary, 1. What is iReside?, 2. The Big Picture: How Everything Connects, 3.1 Super Administrator, 3.2 Landlord, 3.3 Tenant, 3.4 Role-Based Access Control (RBAC), 3. User Roles & Access (+12 more)
 
 ### Community 157 - "Community 157"
-Cohesion: 0.11
-Nodes (27): applyEditing(), buildLocatorForLeaf(), canRestoreManualEditElement(), copyEditContainerContext(), copyEditLeafContext(), directMixedTextRestoreNodes(), documentRefClassSuffix(), documentRefForElement() (+19 more)
+Cohesion: 0.09
+Nodes (33): addManualContextText(), applyEditing(), buildLocatorForLeaf(), canRestoreManualEditElement(), collectManualContextPieces(), contextElementForManualEdit(), copyEditContainerContext(), copyEditLeafContext() (+25 more)
 
 ### Community 158 - "Community 158"
-Cohesion: 0.18
-Nodes (15): getActiveLease(), getLandlordLeases(), getLandlordRenewalRequests(), getLeaseById(), getRenewalRequestById(), getTenantLeases(), getTenantRenewalRequests(), getLandlordPayments() (+7 more)
+Cohesion: 0.24
+Nodes (12): getActiveLease(), getLandlordLeases(), getLandlordRenewalRequests(), getLeaseById(), getRenewalRequestById(), getTenantLeases(), getTenantRenewalRequests(), getLandlordPayments() (+4 more)
 
 ### Community 159 - "Community 159"
 Cohesion: 0.19
@@ -1743,20 +1761,20 @@ Cohesion: 0.22
 Nodes (13): CommunityPhotoLightbox(), CommunityPhotoLightboxProps, CommentData, CommunityPostCard(), CommunityPostCardProps, formatRelative(), getPollOptions(), PhotoGrid() (+5 more)
 
 ### Community 161 - "Community 161"
-Cohesion: 0.10
-Nodes (28): buildCollapsible(), buildColorModels(), buildRadiiModels(), buildTypographyModels(), cssSafe(), escapeHtml(), fontStack(), groupByKind() (+20 more)
+Cohesion: 0.14
+Nodes (24): ActionBody, ALLOWED_STATUSES, createLeaseRecord(), createPaymentRecords(), generateTempPassword(), getStateForAction(), InquiryAction, isAllowedStatus() (+16 more)
 
 ### Community 162 - "Community 162"
 Cohesion: 0.43
 Nodes (4): MAINTENANCE_CATEGORIES, MaintenanceCategoryId, CategorySelector(), CategorySelectorProps
 
 ### Community 163 - "Community 163"
-Cohesion: 0.22
-Nodes (15): ApplicationService, buildComplianceChecklist(), ApplicantSummary, ApplicationFilterOptions, ApplicationLeaseSummary, ApplicationRow, ApplicationSource, ComplianceChecklist (+7 more)
+Cohesion: 0.16
+Nodes (19): BillingWorkspace, Action, BillingOperationsPanel(), Field(), initialState, makeDraft(), reducer(), State (+11 more)
 
 ### Community 164 - "Community 164"
-Cohesion: 0.09
-Nodes (29): LeasePreviewModal(), LeasePreviewModalProps, Document, DocumentsPage(), LandlordProfile, VerificationInfo, LeaseDocument(), LeaseHubContent() (+21 more)
+Cohesion: 0.18
+Nodes (15): LeasePreviewModal(), LeasePreviewModalProps, LeaseDocument(), AvatarPicker(), SmartContractPreviewModal(), SmartContractPreviewModalProps, SupportedPropertyEnum, LeaseModal() (+7 more)
 
 ### Community 165 - "Community 165"
 Cohesion: 0.22
@@ -1783,8 +1801,8 @@ Cohesion: 0.15
 Nodes (23): attachSteerFocusDebug(), buildSteerProcessingDots(), clearSteerAwaitTimer(), collapsePageChat(), expandPageChat(), focusConfigureInput(), focusSteerChat(), initPageChat() (+15 more)
 
 ### Community 171 - "Community 171"
-Cohesion: 0.19
-Nodes (14): configureVoiceContext(), finishVoiceSession(), isEmbeddedPreviewBrowser(), releaseVoiceEngine(), startVoice(), steerSpeechRecognitionCtor(), steerVoiceContext(), steerVoiceErrorMessage() (+6 more)
+Cohesion: 0.11
+Nodes (21): clearSteerFocusRecoverTimer(), configureVoiceContext(), fetchAgentPollingStatus(), finishVoiceSession(), hideAgentPollTooltip(), isEmbeddedPreviewBrowser(), releaseVoiceEngine(), scheduleSteerFocusRecover() (+13 more)
 
 ### Community 172 - "Community 172"
 Cohesion: 0.10
@@ -1819,8 +1837,8 @@ Cohesion: 0.10
 Nodes (20): ADDED Requirements, Requirement: Display expired link error message, Requirement: Display link expiration date, Requirement: Prevent signature capture with expired token, Requirement: Provide request new link functionality, Requirement: Regenerate signing links, Scenario: Expiration date is shown, Scenario: Expiration date is shown (+12 more)
 
 ### Community 180 - "Community 180"
-Cohesion: 0.20
-Nodes (17): array, AddAmenityModal(), AddAmenityModalProps, AMENITY_TYPES, ICONS, ModernSelect(), AmenityInsert, createAmenityBooking() (+9 more)
+Cohesion: 0.13
+Nodes (13): GET(), GET(), POST(), getTenantAmenities(), getTenantBookings(), auth(), getCurrentUser(), getDashboardPathForRole() (+5 more)
 
 ### Community 181 - "Community 181"
 Cohesion: 0.29
@@ -1843,8 +1861,8 @@ Cohesion: 0.10
 Nodes (18): 1.1 Account Management, 1.2 Core Platform Setup, 1.3 Applications and Lease Management, 1.4 Property and Unit Management, 1.5 Financial Operations, 1.6 Maintenance, Messaging, and AI, 1.7 Admin Governance, 1.8 Community Hub (+10 more)
 
 ### Community 186 - "Community 186"
-Cohesion: 0.40
-Nodes (5): 🎭 Context & Persona, ⚠️ Edge Cases & Things That Could Go Wrong in Scenario 7, 🔹 Flow 7.1: Corridor Walkthrough & Live Meter Calculation (`/landlord/utility` or `/landlord/utility-billing`), ⚡ SCENARIO 7: Monthly Corridor Sub-Meter Utility Readings & Invoicing, Step-by-Step Actions
+Cohesion: 0.11
+Nodes (17): createMockSupabaseClient(), createMockSupabaseQuery(), MockSupabaseOptions, MockTableHandler, comment, context, customUser, defaultUser (+9 more)
 
 ### Community 187 - "Community 187"
 Cohesion: 0.12
@@ -1883,15 +1901,15 @@ Cohesion: 0.11
 Nodes (19): 8.1 Navigation, 8.2 Header Blocks, 8.3 Cards, 8.4 Forms, 8.5 Tables and Lists, 8.6 Status Badges, 8.7 Modals and Drawers, 8.8 Buttons (+11 more)
 
 ### Community 196 - "Community 196"
-Cohesion: 0.11
-Nodes (18): 11. Accessibility Baseline, 12. Responsive Behavior, 13. Performance Rules, 14.1 Quick Agent Prompt Template, 14. Agent Build Workflow, 17. Definition of Done, 18. Anti-Patterns to Avoid, 1. How to Use This Guide (+10 more)
+Cohesion: 0.13
+Nodes (14): 11. Accessibility Baseline, 12. Responsive Behavior, 13. Performance Rules, 14.1 Quick Agent Prompt Template, 14. Agent Build Workflow, 17. Definition of Done, 18. Anti-Patterns to Avoid, 1. How to Use This Guide (+6 more)
 
 ### Community 197 - "Community 197"
 Cohesion: 0.11
 Nodes (18): **3.1 Development Model** {#3.1-development-model}, **3.2.1 Research Locale** {#3.2.1-research-locale}, **3.2.2 Respondents** {#3.2.2-respondents}, **3.2.3 Population And Sampling Techniques** {#3.2.3-population-and-sampling-techniques}, **3.2.4 Research Instruments** {#3.2.4-research-instruments}, **3.2.8 Ethical Considerations**   {#3.2.8-ethical-considerations}, **3.2 Research Design** {#3.2-research-design}, **3.3.1 Functional Requirements** {#3.3.1-functional-requirements} (+10 more)
 
 ### Community 198 - "Community 198"
-Cohesion: 0.10
+Cohesion: 0.11
 Nodes (19): **3.1 Development Model** {#3.1-development-model}, **3.2.1 Research Locale** {#3.2.1-research-locale}, **3.2.2 Respondents** {#3.2.2-respondents}, **3.2.3 Population And Sampling Techniques** {#3.2.3-population-and-sampling-techniques}, **3.2.4 Research Instruments** {#3.2.4-research-instruments}, **3.2.8 Ethical Considerations**   {#3.2.8-ethical-considerations}, **3.2 Research Design** {#3.2-research-design}, **3.3.1 Functional Requirements** {#3.3.1-functional-requirements} (+11 more)
 
 ### Community 199 - "Community 199"
@@ -1964,7 +1982,7 @@ Nodes (17): 11. Accessibility Baseline, 12. Responsive Behavior, 13. Performance
 
 ### Community 216 - "Community 216"
 Cohesion: 0.11
-Nodes (17): code:mermaid (flowchart TD), 🎭 Context & Persona, 🎭 Context & Persona, 🎭 Context & Persona, ⚠️ Edge Cases & Things That Could Go Wrong in Scenario 15, 🔹 Flow 15.1: Tenant AI Chatbot Grounded in Lease Terms (`TenantIrisChat`), 🔹 Flow 16.1: Zero-Wi-Fi Full Operations Cycle, 🔹 Flow 17.1: Built-In 5-Module Operations Hub (`/landlord/docs`) (+9 more)
+Nodes (17): code:mermaid (flowchart TD), 🎭 Context & Persona, 🎭 Context & Persona, 🎭 Context & Persona, ⚠️ Edge Cases & Things That Could Go Wrong in Scenario 7, 🔹 Flow 16.1: Zero-Wi-Fi Full Operations Cycle, 🔹 Flow 17.1: Built-In 5-Module Operations Hub (`/landlord/docs`), 🔹 Flow 7.1: Corridor Walkthrough & Live Meter Calculation (`/landlord/utility` or `/landlord/utility-billing`) (+9 more)
 
 ### Community 217 - "Community 217"
 Cohesion: 0.11
@@ -2011,8 +2029,8 @@ Cohesion: 0.12
 Nodes (15): 1. Overview, 2. Current State, 3.1 Cross-Cutting Diagrams, 3.2 Tenant Standalone Diagrams, 3.3 Landlord Standalone Diagrams, 3.4 Admin Standalone Diagrams, 3. Target State, 4. Notation Standards (+7 more)
 
 ### Community 228 - "Community 228"
-Cohesion: 0.09
-Nodes (34): ActivityItem, Announcement, buildUtilities(), BUILT_IN_QUICK_ACTIONS, DashboardResponse, GET(), isPendingStatus(), LeaseSummary (+26 more)
+Cohesion: 0.16
+Nodes (19): buildStatusLabel(), buildStatusTone(), deriveTypeLabel(), formatDateLabel(), formatMonthLabel(), METHOD_LABELS, PaymentHistoryEntry, GET() (+11 more)
 
 ### Community 229 - "Community 229"
 Cohesion: 0.12
@@ -2031,8 +2049,8 @@ Cohesion: 0.12
 Nodes (15): Context, Decision 1: Signing Mode Architecture, Decision 2: JWT Token Storage for Signing Links, Decision 3: Wizard State Persistence Strategy, Decision 4: Signature Storage Format, Decision 5: Lease Status State Machine, Decision 6: Concurrent Signing Prevention, Decision 7: Audit Trail Implementation (+7 more)
 
 ### Community 233 - "Community 233"
-Cohesion: 0.50
-Nodes (4): 🔄 PHASE 9: Lease Expiration, Renewal Addendum & Move-Out Settlement, 🔹 Step 9.1: Automated 90-Day Expiration Alert & Renewal Addendum, 🔹 Step 9.2: 30-Day Move-Out Notice & Unit Departure, 🔹 Step 9.3: Landlord Inspection & Security Deposit Refund Settlement
+Cohesion: 0.19
+Nodes (12): playSound(), SOUND_PATHS, SoundManager, SoundType, useSound(), DEFAULT_OCCUPANCY, ENUM_TO_PROPERTY_TYPE, NewAssetContent() (+4 more)
 
 ### Community 234 - "Community 234"
 Cohesion: 0.21
@@ -2255,8 +2273,8 @@ Cohesion: 0.18
 Nodes (11): 1.1 Development & Commissioning Host Hardware, 1.2 Required Base Software & Runtimes, 1. Required Software & Hardware, 2. Installation Requirements & Cloud Accounts, 4.1 Cloud Production Deployment (Vercel), 4.2 Automated Serverless Cron Jobs Configuration, 4.3 Custom Domain & TLS / SSL Enforcement, 4. Any Necessary Configuration (+3 more)
 
 ### Community 289 - "Community 289"
-Cohesion: 0.12
-Nodes (15): 1. Non-Destructive — Zero Downtime, 2. Identifier Naming Convention (NON-NEGOTIABLE), Appendix A: Identifier Audit Checklist (Per-File), Appendix B: File Migration Map, Appendix C: Naming Convention Examples, Files to be REFACTORED (service extraction):, Files to be REMOVED (after migration):, Function Naming (+7 more)
+Cohesion: 0.11
+Nodes (16): 1. Non-Destructive — Zero Downtime, 2. Identifier Naming Convention (NON-NEGOTIABLE), Appendix A: Identifier Audit Checklist (Per-File), Appendix B: File Migration Map, Architecture & Layer Violations, Code Quality Issues, Current State — Backend Anti-Pattern Inventory, Database Structural Issues (+8 more)
 
 ### Community 290 - "Community 290"
 Cohesion: 0.15
@@ -2288,7 +2306,7 @@ Nodes (13): browserFindingsFromMap(), checkClippedOverflow(), checkElementClippe
 
 ### Community 297 - "Community 297"
 Cohesion: 0.15
-Nodes (13): functions, prevent_payment_receipt_update, rls_auto_enable, update_lease_signature_timestamps, update_updated_at_column, grants, tableReferences, grants (+5 more)
+Nodes (13): functions, prevent_payment_receipt_update, rls_auto_enable, sync_compat_payment_status, update_updated_at_column, grants, tableReferences, grants (+5 more)
 
 ### Community 298 - "Community 298"
 Cohesion: 0.15
@@ -2423,8 +2441,8 @@ Cohesion: 0.38
 Nodes (10): Clean-Text(), Escape-Json(), Get-Children(), Get-Domain(), Get-DomainColor(), Get-FieldName(), Get-TableAncestor(), Has-StyleToken() (+2 more)
 
 ### Community 331 - "Community 331"
-Cohesion: 0.19
-Nodes (20): QuickActionGuardResult, QuickActionType, dbUnitToCanvasUnit(), formatFloorWatermark(), getFloorDisplayLabel(), getPlacementDimensions(), getUnitDimensions(), parseFloorNumber() (+12 more)
+Cohesion: 0.23
+Nodes (16): VisualPlannerPage(), QuickActionGuardResult, QuickActionType, dbUnitToCanvasUnit(), evaluateQuickAction(), formatFloorWatermark(), getFloorDisplayLabel(), getPlacementDimensions() (+8 more)
 
 ### Community 332 - "Community 332"
 Cohesion: 0.32
@@ -2459,8 +2477,8 @@ Cohesion: 0.17
 Nodes (12): Alternative Flows, Alternative Flows, code:plantuml (@startuml), FEATURE 7: Community Hub, Main Flow, Main Flow, Objective, Objective (+4 more)
 
 ### Community 340 - "Community 340"
-Cohesion: 0.13
-Nodes (15): Alternative Flows, Alternative Flows, code:plantuml (@startuml), code:plantuml (@startuml), FEATURE 4: Payment & Billing Processing, Main Flow, Main Flow, Objective (+7 more)
+Cohesion: 0.17
+Nodes (12): Alternative Flows, Alternative Flows, code:plantuml (@startuml), FEATURE 4: Payment & Billing Processing, Main Flow, Main Flow, Objective, Objective (+4 more)
 
 ### Community 341 - "Community 341"
 Cohesion: 0.17
@@ -2472,7 +2490,7 @@ Nodes (12): Alternative Flows, Alternative Flows, code:plantuml (@startuml), FEA
 
 ### Community 343 - "Community 343"
 Cohesion: 0.17
-Nodes (12): Alternative Flows, Alternative Flows, code:block3 (https://www.plantuml.com/plantuml/uml/SyfFKj2rKt3CoKnELR1Io4), FEATURE 2: Walk-in Tenant Application Processing, Main Flow, Main Flow, Objective, Objective (+4 more)
+Nodes (12): Alternative Flows, Alternative Flows, code:plantuml (@startuml), FEATURE 2: Walk-in Tenant Application Processing, Main Flow, Main Flow, Objective, Objective (+4 more)
 
 ### Community 344 - "Community 344"
 Cohesion: 0.17
@@ -2955,8 +2973,8 @@ Cohesion: 0.29
 Nodes (7): 4.2 Landlord Dashboard, Dashboard Metrics, Date Range Flexibility, Reporting & Exports, Viewing Modes, What It Does, What It Does
 
 ### Community 465 - "Community 465"
-Cohesion: 0.23
-Nodes (12): ActorProfile, ApplicationResponse, ApplicationRow, AuditRow, ComplianceChecklist, LeaseRow, PaymentRequestRow, PostgrestLikeError (+4 more)
+Cohesion: 0.19
+Nodes (11): LeaseHubContent(), LeasesPage(), TabId, TENANT_LEASE_TOUR_STEPS, LeaseTour(), Amenity, getIconByName(), PropertyAmenities() (+3 more)
 
 ### Community 466 - "Community 466"
 Cohesion: 0.25
@@ -2999,8 +3017,8 @@ Cohesion: 0.22
 Nodes (9): 4.5 AI Assistant (iRis), code:block4 (Tenant: "What amenities are available?"), Cost, How It Works (Technical), Privacy & Security, What Can iRis Answer?, What It Does, What It Does (+1 more)
 
 ### Community 476 - "Community 476"
-Cohesion: 0.20
-Nodes (11): code:block1 (docs/latest-documentations after major refactor/activity-dia), code:bash (java -jar plantuml.jar docs/latest-documentations\ after\ ma), code:plantuml (@startuml), How to View the Diagrams, Option A: Online Renderer (Quickest), Option A: Open .drawio files in diagrams.net, Option B: Use PlantUML, Option B: VS Code Extension (+3 more)
+Cohesion: 0.25
+Nodes (9): code:block1 (docs/latest-documentations after major refactor/activity-dia), code:block3 (https://www.plantuml.com/plantuml/uml/SyfFKj2rKt3CoKnELR1Io4), How to View the Diagrams, Option A: Online Renderer (Quickest), Option A: Open .drawio files in diagrams.net, Option B: Use PlantUML, Option B: VS Code Extension, Option D: PlantUML Server URL (Direct Link) (+1 more)
 
 ### Community 477 - "Community 477"
 Cohesion: 0.17
@@ -3087,8 +3105,8 @@ Cohesion: 0.36
 Nodes (4): data, labels, RevenueChart(), DashboardPage()
 
 ### Community 498 - "Community 498"
-Cohesion: 0.29
-Nodes (7): **3.6.1 Entry Criteria** {#3.6.1-entry-criteria}, *3.6.4.1 Test Cases* {#3.6.4.1-test-cases}, *3.6.4.2 Feature-based Questionnaire* {#3.6.4.2-feature-based-questionnaire}, *3.6.4.3 ISO-based Questionnaire* {#3.6.4.3-iso-based-questionnaire}, **3.6.4 Evaluation Tool** {#3.6.4-evaluation-tool}, **3.6.5 Data Categorization** {#3.6.5-data-categorization}, **3.6 Testing and Evaluation Plan** {#3.6-testing-and-evaluation-plan}
+Cohesion: 0.13
+Nodes (17): checkbox, emailInput, forgotPasswordLink, getEmailInput(), getPasswordInput(), label, logo, logos (+9 more)
 
 ### Community 499 - "Community 499"
 Cohesion: 0.53
@@ -3247,8 +3265,8 @@ Cohesion: 0.25
 Nodes (7): reason, state, updatedAt, sessionID, sources, background-task, updatedAt
 
 ### Community 538 - "Community 538"
-Cohesion: 0.17
-Nodes (11): name, model, minimaxai/minimax-m2.7, models, npm, options, baseURL, plugin (+3 more)
+Cohesion: 0.25
+Nodes (8): name, minimaxai/minimax-m2.7, models, npm, options, baseURL, provider, nvidia
 
 ### Community 539 - "Community 539"
 Cohesion: 0.25
@@ -3735,8 +3753,8 @@ Cohesion: 0.33
 Nodes (6): 8.1 What is RAG?, 8.2 What is Row-Level Security?, 8.3 What is a PWA?, 8.4 Digital Twin, 8.5 Zero-Latency Sync, 8. Key Technical Concepts
 
 ### Community 660 - "Community 660"
-Cohesion: 0.18
-Nodes (9): Alternative Flows, Consistency Notes, Diagram Inventory, FEATURE 1: Authentication & Login, iReside UML Activity Diagrams — Complete Documentation, Main Flow, Objective, Swimlanes (+1 more)
+Cohesion: 0.33
+Nodes (4): Consistency Notes, Diagram Inventory, iReside UML Activity Diagrams — Complete Documentation, UML Notation Legend
 
 ### Community 661 - "Community 661"
 Cohesion: 0.33
@@ -3987,8 +4005,8 @@ Cohesion: 0.40
 Nodes (4): File Editing, lean-ctx — Context Engineering Layer, Mode Selection, Proactive (use without being asked)
 
 ### Community 723 - "Community 723"
-Cohesion: 0.40
-Nodes (5): Architecture & Layer Violations, Code Quality Issues, Current State — Backend Anti-Pattern Inventory, Database Structural Issues, Security Vulnerabilities
+Cohesion: 0.23
+Nodes (15): ActivityItem, Announcement, buildUtilities(), BUILT_IN_QUICK_ACTIONS, DashboardResponse, GET(), isPendingStatus(), LeaseSummary (+7 more)
 
 ### Community 724 - "Community 724"
 Cohesion: 0.40
@@ -4351,8 +4369,8 @@ Cohesion: 0.50
 Nodes (4): 2.1 For Property Owners / Landlords, 2.2 For Tenants / Residents, 2.3 For System Installation & Commissioning (One-Time Turnkey Deployment), 2. Requirements Needed Before Installing / Using the System
 
 ### Community 824 - "Community 824"
-Cohesion: 0.36
-Nodes (5): GET(), getDashboardPathForRole(), saveGmailTwoFactorState(), GET(), GET()
+Cohesion: 0.21
+Nodes (11): useAppToast(), DigitalSigner, LandlordLeaseSigningPage(), LandlordSigningContent(), LeaseDetails, LeaseSigningContent(), TenantLeaseSigningPage(), DigitalSigner (+3 more)
 
 ### Community 826 - "Community 826"
 Cohesion: 0.50
@@ -4375,8 +4393,8 @@ Cohesion: 0.50
 Nodes (4): 15.1 Publishing Building-Wide Announcements, 15.2 Moderating the Community Feed & Resident Discussions, 15.3 Establishing & Updating Property House Rules, 15. Community Management & Announcements
 
 ### Community 831 - "Community 831"
-Cohesion: 0.67
-Nodes (3): sync_compat_payment_status, grants, tableReferences
+Cohesion: 0.31
+Nodes (11): getPaymentBadge(), getStatusStyles(), Tenant, TenantCard(), TenantCardProps, TenantPaymentStatus, TenantStatus, TenantDirectory() (+3 more)
 
 ### Community 832 - "Community 832"
 Cohesion: 0.50
@@ -4454,6 +4472,10 @@ Nodes (3): Part I — Tenant / Bahagi I — Nangungupahan, Part II — Landlord 
 Cohesion: 0.50
 Nodes (3): code:typescript (it('fetches posts for landlord properties with filters', asy), code:bash (git add src/lib/community/actions.ts), Task 2.8: getAllPosts Server Action (Landlord Dashboard)
 
+### Community 854 - "Community 854"
+Cohesion: 0.26
+Nodes (8): DocsHeader(), DocsLayout(), DOCS_NAV, DocsSidebar(), NavItem, NavSection, Layout(), metadata
+
 ### Community 855 - "Community 855"
 Cohesion: 0.50
 Nodes (3): code:typescript (it('adds top-level comment', async () => {), code:bash (git add src/lib/community/actions.ts), Task 2.11: addComment Server Action (Nested Replies)
@@ -4499,16 +4521,16 @@ Cohesion: 0.50
 Nodes (4): command, enabled, type, filesystem
 
 ### Community 867 - "Community 867"
-Cohesion: 0.50
-Nodes (4): command, enabled, type, drawio
+Cohesion: 0.40
+Nodes (5): command, enabled, type, mcp, drawio
 
 ### Community 868 - "Community 868"
 Cohesion: 0.60
 Nodes (5): GET(), parseBoolean(), resolveOnboardingCompleted(), resolveRole(), resolveTriggerSource()
 
 ### Community 869 - "Community 869"
-Cohesion: 0.40
-Nodes (5): enabled, type, url, mcp, BetterBugs
+Cohesion: 0.50
+Nodes (4): enabled, type, url, BetterBugs
 
 ### Community 870 - "Community 870"
 Cohesion: 0.50
@@ -4611,7 +4633,7 @@ Cohesion: 0.67
 Nodes (3): critique, argumentHint, description
 
 ### Community 923 - "Community 923"
-Cohesion: 0.67
+Cohesion: 0.50
 Nodes (3): colorize, argumentHint, description
 
 ### Community 924 - "Community 924"
@@ -4631,7 +4653,7 @@ Cohesion: 0.67
 Nodes (3): shape, argumentHint, description
 
 ### Community 928 - "Community 928"
-Cohesion: 0.50
+Cohesion: 0.67
 Nodes (3): adapt, argumentHint, description
 
 ### Community 929 - "Community 929"
@@ -4702,9 +4724,21 @@ Nodes (3): handle_lease_status_change, grants, tableReferences
 Cohesion: 0.67
 Nodes (3): handle_new_message, grants, tableReferences
 
+### Community 950 - "Community 950"
+Cohesion: 0.22
+Nodes (11): cursorForInsertAxis(), ensureInsertLine(), handleMouseMove(), hideInsertLine(), layoutFlowChildren(), notePagePointerDown(), own(), pageHasHostTextSelection() (+3 more)
+
+### Community 951 - "Community 951"
+Cohesion: 0.20
+Nodes (10): Alternative Flows, code:bash (java -jar plantuml.jar docs/latest-documentations\ after\ ma), code:plantuml (@startuml), FEATURE 1: Authentication & Login, Main Flow, Objective, Option C: CLI with PlantUML jar, Swimlanes (+2 more)
+
 ### Community 952 - "Community 952"
 Cohesion: 0.67
 Nodes (3): validate_lease_status_transition, grants, tableReferences
+
+### Community 953 - "Community 953"
+Cohesion: 0.25
+Nodes (7): **APPENDICES** {#appendices}, **BIBLIOGRAPHY** {#bibliography}, **CHAPTER 1** {#chapter-1}, **CHAPTER 2** {#chapter-2}, **CHAPTER 3** {#chapter-3}, **Design and Development of iReside: Property and Tenant Services Management System for the Landlords of Valenzuela City**, **TABLE OF CONTENTS** {#table-of-contents}
 
 ### Community 960 - "Community 960"
 Cohesion: 0.67
@@ -4730,19 +4764,71 @@ Nodes (3): application_payment_requests table (advance rent and security deposit
 Cohesion: 0.67
 Nodes (3): maintenance_priority enum (low, medium, high, urgent), maintenance_requests table (tenant maintenance tickets), maintenance_status enum (open, assigned, in_progress, resolved, closed)
 
+### Community 1149 - "Community 1149"
+Cohesion: 0.43
+Nodes (6): AdminChatModerationPage(), BannedTerm, ModerationReportCard(), ReportRow, ReportStatus, STATUS_OPTIONS
+
+### Community 1150 - "Community 1150"
+Cohesion: 0.50
+Nodes (6): AdminDashboardPage(), AdminStats, formatPercent(), MetricBar(), ProductTourMetrics, StatTile()
+
+### Community 1151 - "Community 1151"
+Cohesion: 0.48
+Nodes (5): PRIORITIES, Priority, PrioritySelector(), PrioritySelectorProps, styles
+
+### Community 1152 - "Community 1152"
+Cohesion: 0.38
+Nodes (3): ClickSpark(), ClickSparkProps, GlobalClickSpark()
+
+### Community 1153 - "Community 1153"
+Cohesion: 0.53
+Nodes (4): mockApplications, MyApplicationsPage(), properties, recentActivity
+
+### Community 1154 - "Community 1154"
+Cohesion: 0.47
+Nodes (4): formatCompactCurrency(), getStatus(), PortfolioStatus, GET()
+
+### Community 1155 - "Community 1155"
+Cohesion: 0.40
+Nodes (5): 🎭 Context & Persona, ⚠️ Edge Cases & Things That Could Go Wrong in Scenario 15, 🔹 Flow 15.1: Tenant AI Chatbot Grounded in Lease Terms (`TenantIrisChat`), 🤖 SCENARIO 15: AI Virtual Assistant (iRis), Step-by-Step Actions
+
+### Community 1156 - "Community 1156"
+Cohesion: 0.40
+Nodes (5): 📢 PHASE 3: Physical Lobby Marketing, Resident Acquisition & Private Intake, 🔹 Step 3.1: Lobby Promotional Flyer Studio (`/landlord/flyer`), 🔹 Step 3.2: Private Unit Invite Token Generation (`/landlord/properties`), 🔹 Step 3.3: Resident Private Account Registration (`/signup/tenant`), 🔹 Step 3.4: First-Launch Resident Interactive Product Tour (`/tenant/tour`)
+
+### Community 1158 - "Community 1158"
+Cohesion: 0.50
+Nodes (4): Appendix C: Naming Convention Examples, Function Naming, Type/Interface Naming, Variable Naming
+
+### Community 1159 - "Community 1159"
+Cohesion: 0.50
+Nodes (4): 🔧 PHASE 7: Maintenance Requests & Contractor Expense Tracking, 🔹 Step 7.1: Tenant Reports a Maintenance Issue (`/tenant/maintenance/new`), 🔹 Step 7.2: Emergency Phone & SMS Fallback (Dead Zone Feature), 🔹 Step 7.3: Landlord Assigns Contractor & Logs Repair Expense (`/landlord/maintenance`)
+
+### Community 1160 - "Community 1160"
+Cohesion: 0.50
+Nodes (4): 5. UX Laws Reference, Behavioral Laws, Cognitive Laws, Perception Laws
+
+### Community 1161 - "Community 1161"
+Cohesion: 0.50
+Nodes (3): model, plugin, $schema
+
+### Community 1162 - "Community 1162"
+Cohesion: 0.67
+Nodes (3): update_lease_signature_timestamps, grants, tableReferences
+
 ## Knowledge Gaps
 - **6092 isolated node(s):** `name`, `displayName`, `plugins`, `DEPRECATED_NAMES`, `HARNESS_DIRS` (+6087 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **139 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **140 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Profile` connect `Community 45` to `Community 32`, `Community 42`, `Community 861`, `Community 22`?**
+- **Why does `Profile` connect `Community 15` to `Community 32`, `Community 1`, `Community 42`, `Community 45`, `Community 22`, `Community 861`?**
   _High betweenness centrality (0.056) - this node is a cross-community bridge._
-- **Why does `recordProfileEvent()` connect `Community 861` to `Community 116`, `Community 45`?**
+- **Why does `recordProfileEvent()` connect `Community 861` to `Community 116`, `Community 15`?**
   _High betweenness centrality (0.056) - this node is a cross-community bridge._
-- **Why does `cn()` connect `Community 39` to `Community 1`, `Community 2`, `Community 3`, `Community 4`, `Community 5`, `Community 134`, `Community 6`, `Community 265`, `Community 9`, `Community 13`, `Community 913`, `Community 20`, `Community 21`, `Community 25`, `Community 153`, `Community 28`, `Community 285`, `Community 159`, `Community 162`, `Community 164`, `Community 555`, `Community 45`, `Community 180`, `Community 52`, `Community 56`, `Community 61`, `Community 64`, `Community 65`, `Community 74`, `Community 203`, `Community 331`, `Community 466`, `Community 467`, `Community 468`, `Community 858`, `Community 222`, `Community 98`, `Community 99`, `Community 101`, `Community 107`, `Community 109`, `Community 111`, `Community 240`, `Community 369`, `Community 115`, `Community 120`?**
+- **Why does `cn()` connect `Community 134` to `Community 1`, `Community 2`, `Community 3`, `Community 1153`, `Community 5`, `Community 6`, `Community 4`, `Community 265`, `Community 9`, `Community 13`, `Community 15`, `Community 913`, `Community 20`, `Community 21`, `Community 25`, `Community 153`, `Community 28`, `Community 285`, `Community 159`, `Community 162`, `Community 163`, `Community 164`, `Community 39`, `Community 555`, `Community 45`, `Community 52`, `Community 56`, `Community 824`, `Community 61`, `Community 831`, `Community 64`, `Community 65`, `Community 74`, `Community 203`, `Community 331`, `Community 465`, `Community 466`, `Community 467`, `Community 468`, `Community 854`, `Community 858`, `Community 222`, `Community 98`, `Community 99`, `Community 101`, `Community 233`, `Community 107`, `Community 109`, `Community 111`, `Community 240`, `Community 369`, `Community 115`, `Community 120`, `Community 1149`, `Community 1150`, `Community 1151`?**
   _High betweenness centrality (0.056) - this node is a cross-community bridge._
 - **Are the 4 inferred relationships involving `cn()` (e.g. with `ApplyForm()` and `LandlordProfilePage()`) actually correct?**
   _`cn()` has 4 INFERRED edges - model-reasoned connections that need verification._

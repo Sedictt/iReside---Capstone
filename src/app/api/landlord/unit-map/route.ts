@@ -304,10 +304,10 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "propertyId is required" }, { status: 400 });
     }
 
-    // Verify ownership
+    // Verify ownership and fetch current decorations
     const { data: property, error: propError } = await supabase
         .from("properties")
-        .select("id")
+        .select("id, map_decorations")
         .eq("id", propertyId)
         .eq("landlord_id", userId)
         .maybeSingle();
@@ -397,11 +397,20 @@ export async function POST(request: NextRequest) {
         }
     }
 
-    // Update decorations blob if provided
+    // Update decorations blob if provided while preserving non-floor keys like branding
     if (decorations !== undefined) {
+        const existingDecorations = (property?.map_decorations as Record<string, unknown>) || {};
+        const mergedDecorations: Record<string, unknown> = {
+            ...existingDecorations,
+            ...decorations,
+        };
+        if (existingDecorations.branding && !decorations.branding) {
+            mergedDecorations.branding = existingDecorations.branding;
+        }
+
         const { error: decError } = await (supabase
             .from("properties")
-            .update({ map_decorations: decorations } as any)
+            .update({ map_decorations: mergedDecorations } as any)
             .eq("id", propertyId)
             .eq("landlord_id", userId) as any);
 
