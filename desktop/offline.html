@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>iReside — Connecting to Server</title>
+  <style>
+    :root {
+      --bg: #090d16;
+      --card: #121824;
+      --primary: #c4b0ff;
+      --accent: #8b5cf6;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      user-select: none;
+    }
+    .panel {
+      background: var(--card);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 28px;
+      padding: 40px 32px;
+      max-width: 460px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+    .spinner {
+      width: 54px;
+      height: 54px;
+      border: 3px solid rgba(139, 92, 246, 0.2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 24px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    h1 {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+    p {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    .target-box {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-family: monospace;
+      font-size: 12px;
+      color: var(--primary);
+      margin-bottom: 24px;
+      word-break: break-all;
+    }
+    .retry-btn {
+      background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 14px;
+      font-weight: 700;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      width: 100%;
+    }
+    .retry-btn:hover { opacity: 0.9; }
+    .retry-btn:active { transform: scale(0.98); }
+    .footer {
+      margin-top: 20px;
+      font-size: 11px;
+      color: var(--muted);
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+  <div class="panel">
+    <div class="spinner"></div>
+    <h1>Connecting to iReside</h1>
+    <p>Waiting for the property management service to become reachable. Automatic retry is active.</p>
+    <div class="target-box" id="targetUrl">Connecting...</div>
+    <button class="retry-btn" onclick="retryConnection()">Retry Connection Now</button>
+    <div class="footer">Turnkey Windows Client · iReside Platform</div>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const target = urlParams.get('target') || 'http://localhost:3000';
+    document.getElementById('targetUrl').innerText = target;
+
+    function retryConnection() {
+      window.location.href = target;
+    }
+
+    // Auto retry every 4 seconds
+    setInterval(() => {
+      fetch(target, { method: 'HEAD', mode: 'no-cors' })
+        .then(() => { window.location.href = target; })
+        .catch(() => { /* still offline, retry */ });
+    }, 4000);
+  </script>
+</body>
+</html>

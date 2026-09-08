@@ -1,0 +1,32 @@
+appId: ph.ireside.desktop
+productName: iReside
+copyright: Copyright © 2026 iReside Team
+
+directories:
+  output: dist
+  buildResources: build
+
+compression: normal
+
+files:
+  - "main.js"
+  - "preload.js"
+  - "offline.html"
+  - "config.json"
+  - "build/**/*"
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: build/icon.ico
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: "iReside"
+  artifactName: "iReside-Setup-v${version}-x64.${ext}"
+  differentialPackage: false

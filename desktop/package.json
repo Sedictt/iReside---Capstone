@@ -1,0 +1,18 @@
+{
+  "name": "ireside-desktop",
+  "version": "2.1.0",
+  "description": "iReside Turnkey Rental Property Management Platform — Native Windows Client",
+  "main": "main.js",
+  "author": "iReside Team",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win --x64",
+    "build:portable": "electron-builder --win portable --x64"
+  },
+  "devDependencies": {
+    "electron": "^34.2.0",
+    "electron-builder": "^25.1.8"
+  }
+}

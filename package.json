@@ -11,7 +11,12 @@
     "db:inventory": "node scripts/database-inventory.mjs",
     "seed:notifications": "node scripts/seed-notifications.mjs",
     "moderation:candidates": "node scripts/messages/generate-profanity-candidates.mjs public/dataset/val.csv output/profanity-candidates.json",
-    "moderation:spam-candidates": "node scripts/messages/generate-spam-candidates.mjs public/dataset/spam.csv output/spam-candidates.json"
+    "moderation:spam-candidates": "node scripts/messages/generate-spam-candidates.mjs public/dataset/spam.csv output/spam-candidates.json",
+    "desktop:icon": "node desktop/scripts/generate-ico.mjs",
+    "desktop:dev": "node desktop/scripts/run-dev.mjs",
+    "desktop:build": "node desktop/scripts/build-desktop.mjs",
+    "desktop:build:local": "node desktop/scripts/build-desktop.mjs --url=http://localhost:3000",
+    "desktop:build:portable": "node desktop/scripts/build-desktop.mjs --portable"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.0",
