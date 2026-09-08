@@ -164,12 +164,12 @@ export function CommandCenter({
                 </div>
 
                 {/* Real-time stats pills */}
-                <div className="grid grid-cols-2 md:grid-cols-4 2xl:flex 2xl:items-center gap-2 sm:gap-2.5 w-full 2xl:w-auto">
+                <div className="grid grid-cols-2 xl:grid-cols-4 2xl:flex 2xl:items-center gap-2.5 sm:gap-3 w-full 2xl:w-auto">
                     {statCards.map((stat) => {
                         const content = (
                             <>
                                 <stat.icon className="size-4 opacity-80 transition-opacity group-hover:opacity-100 shrink-0" />
-                                <div className="flex flex-col text-left">
+                                <div className="flex flex-col text-left min-w-0">
                                     <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-muted-foreground whitespace-nowrap">{stat.label}</span>
                                     {stat.isLoading ? (
                                         <div className="h-4 w-8 rounded bg-muted animate-pulse mt-1" />
@@ -181,7 +181,7 @@ export function CommandCenter({
                         );
 
                         const cardClass = cn(
-                            "neumorphic-extruded group relative flex items-center gap-2 sm:gap-2.5 rounded-2xl px-3 sm:px-3.5 py-2 sm:py-2.5 active:scale-95 justify-start",
+                            "neumorphic-extruded group relative flex items-center gap-2.5 sm:gap-3 rounded-2xl px-4 py-2.5 sm:py-3 active:scale-95 justify-start min-w-0",
                             "dark:bento-glass-card dark:hover:bg-white/[0.05] transition-all cursor-pointer",
                             stat.toneClass
                         );
