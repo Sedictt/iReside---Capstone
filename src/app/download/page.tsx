@@ -38,9 +38,28 @@ export default function AppDownloadPage() {
     }
   };
 
-  const handleDownloadWindows = () => {
-    toast.success("Downloading Windows Installer", {
-      description: "iReside-Setup-v2.1.0-x64.exe (Tauri/Electron Native Client)",
+  const handleDownloadWindows = async () => {
+    const installerPath = "/downloads/iReside-Setup-v2.1.0-x64.exe";
+    try {
+      const res = await fetch(installerPath, { method: "HEAD" });
+      if (res.ok) {
+        const a = document.createElement("a");
+        a.href = installerPath;
+        a.download = "iReside-Setup-v2.1.0-x64.exe";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        toast.success("Downloading Windows Installer", {
+          description: "iReside-Setup-v2.1.0-x64.exe has started downloading to your PC.",
+        });
+        return;
+      }
+    } catch {
+      // Fall through to notification
+    }
+
+    toast.info("Windows Client Ready to Package", {
+      description: "Compile the standalone Windows setup installer using: npm run desktop:build",
     });
   };
 

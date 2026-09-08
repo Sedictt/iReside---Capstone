@@ -127,4 +127,11 @@ test2.docx
 __pycache__/
 *.pyc
 
+# Desktop build artifacts
+desktop/node_modules/
+desktop/dist/
+desktop/electron-builder.json
+public/downloads/*.exe
+
+
 

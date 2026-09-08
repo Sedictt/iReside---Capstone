@@ -130,6 +130,25 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
     };
   }, [loadLocalSnapshot, refreshBranding]);
 
+  // Synchronize dynamic property branding with Desktop native window and browser title
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    // Update document title for browser & web views
+    if (branding.propertyName && branding.propertyName !== "iReside Residences") {
+      document.title = `${branding.propertyName} — iReside Operations`;
+    }
+
+    // Notify native desktop shell if running inside Windows desktop app
+    if ((window as any).iResideDesktop?.updateBrand) {
+      (window as any).iResideDesktop.updateBrand({
+        propertyName: branding.propertyName,
+        propertyTagline: branding.propertyTagline,
+        logoUrl: branding.logoUrl,
+      });
+    }
+  }, [branding.propertyName, branding.propertyTagline, branding.logoUrl]);
+
   // Update Branding function
   const updateBranding = useCallback(
     async (newValues: Partial<BrandConfig>, persistToDatabase: boolean = true): Promise<boolean> => {
