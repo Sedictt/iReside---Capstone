@@ -150,27 +150,27 @@ export function CommandCenter({
             {/* Background decorative elements */}
             <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 size-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none opacity-0 dark:opacity-100 transition-opacity duration-500" />
             
-            <div className="mb-8 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between relative z-10">
+            <div className="mb-8 flex flex-col gap-6 2xl:flex-row 2xl:items-end 2xl:justify-between relative z-10">
                 <div className="flex items-start gap-4">
-                    <div className="neumorphic-inset-card flex size-14 items-center justify-center rounded-[1.25rem] text-primary dark:bg-primary/10 dark:border-primary/20 dark:shadow-none">
-                        <ShieldCheck className="size-7" />
+                    <div className="neumorphic-inset-card flex size-12 sm:size-14 items-center justify-center rounded-[1.25rem] text-primary dark:bg-primary/10 dark:border-primary/20 dark:shadow-none shrink-0">
+                        <ShieldCheck className="size-6 sm:size-7" />
                     </div>
-                    <div>
-                        <h2 className="text-2xl font-black tracking-tight text-foreground">Intelligence Hub</h2>
-                        <p className="text-sm font-medium text-muted-foreground/80">
+                    <div className="min-w-0">
+                        <h2 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">Intelligence Hub</h2>
+                        <p className="text-xs sm:text-sm font-medium text-muted-foreground/80 leading-relaxed">
                             Orchestrating your property ecosystem from one dashboard.
                         </p>
                     </div>
                 </div>
 
                 {/* Real-time stats pills */}
-                <div className="flex gap-2 overflow-x-auto pb-2 pr-1 w-full sm:w-auto scrollbar-hide">
+                <div className="grid grid-cols-2 sm:grid-cols-4 2xl:flex 2xl:items-center gap-2.5 sm:gap-3 w-full 2xl:w-auto">
                     {statCards.map((stat) => {
                         const content = (
                             <>
-                                <stat.icon className="size-4 opacity-80 transition-opacity group-hover:opacity-100" />
-                                <div className="flex flex-col text-left">
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{stat.label}</span>
+                                <stat.icon className="size-4 opacity-80 transition-opacity group-hover:opacity-100 shrink-0" />
+                                <div className="flex flex-col text-left min-w-0">
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground truncate">{stat.label}</span>
                                     {stat.isLoading ? (
                                         <div className="h-4 w-8 rounded bg-muted animate-pulse mt-1" />
                                     ) : (
@@ -181,7 +181,7 @@ export function CommandCenter({
                         );
 
                         const cardClass = cn(
-                            "neumorphic-extruded group relative flex shrink-0 w-auto items-center gap-2 sm:gap-3 rounded-2xl px-3 sm:px-4 py-2 sm:py-2.5 active:scale-95",
+                            "neumorphic-extruded group relative flex items-center gap-2.5 sm:gap-3 rounded-2xl px-3.5 sm:px-4 py-2.5 active:scale-95 min-w-0 justify-start",
                             "dark:bento-glass-card dark:hover:bg-white/[0.05] transition-all cursor-pointer",
                             stat.toneClass
                         );
@@ -213,18 +213,18 @@ export function CommandCenter({
                 </div>
             </div>
 
-            <div className="grid gap-6 lg:grid-cols-[1fr_380px] relative z-10">
+            <div className="grid gap-6 2xl:grid-cols-[1fr_360px] relative z-10">
                 {/* Operations Center */}
                 <div className={cn(
-                    "neumorphic-inset rounded-[2rem] p-4 sm:p-5 md:p-6",
+                    "neumorphic-inset rounded-[2rem] p-4 sm:p-5 md:p-6 min-w-0",
                     "dark:bento-glass-inset"
                 )}>
-                    <h3 className="mb-6 flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/80">
+                    <h3 className="mb-5 sm:mb-6 flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/80">
                         <span className="h-1 w-4 rounded-full bg-primary" />
                         Operations Center
                     </h3>
                     
-                    <div className="grid grid-cols-3 gap-3 sm:gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
                         {[
                             { 
                                 label: "Invoice Ledger", 
@@ -294,23 +294,20 @@ export function CommandCenter({
                                 <Link
                                     href={action.href}
                                     className={cn(
-                                        "neumorphic-extruded group flex flex-col items-center text-center gap-1.5 sm:gap-2 rounded-[1.25rem] p-2 sm:p-3",
+                                        "neumorphic-extruded group flex flex-col items-center justify-center text-center gap-2 rounded-[1.25rem] p-3 sm:p-4 min-w-0 w-full overflow-hidden",
                                         "dark:bento-glass-card dark:hover:bg-primary/5 dark:hover:border-primary/20 dark:hover:shadow-[0_0_20px_rgba(196,176,255,0.1)] transition-all"
                                     )}
                                     aria-label={`${action.label}: ${action.description}`}
                                 >
                                     <div className={cn(
-                                        "neumorphic-inset-card flex size-8 sm:size-10 items-center justify-center rounded-xl transition-all duration-300 group-hover:scale-110",
+                                        "neumorphic-inset-card flex size-9 sm:size-10 items-center justify-center rounded-xl transition-all duration-300 group-hover:scale-110 shrink-0",
                                         "dark:bg-white/[0.05] dark:border-white/10 dark:shadow-none",
                                         action.color
                                     )}>
                                         <action.icon className="size-4 sm:size-5" />
                                     </div>
-                                    <div className="flex flex-col gap-0.5 text-center">
-                                        <span className={cn(
-                                            "text-[10px] sm:text-xs font-black tracking-tight transition-colors text-foreground/90 group-hover:text-foreground max-w-full",
-                                            "overflow-hidden text-ellipsis whitespace-nowrap"
-                                        )}>
+                                    <div className="flex flex-col gap-0.5 text-center min-w-0 w-full px-1">
+                                        <span className="text-[11px] sm:text-xs font-bold tracking-tight transition-colors text-foreground/90 group-hover:text-foreground line-clamp-2 break-words leading-tight">
                                             {action.label}
                                         </span>
                                     </div>
@@ -322,15 +319,15 @@ export function CommandCenter({
 
                 {/* Insights Hub */}
                 <div className={cn(
-                    "neumorphic-inset rounded-[2rem] p-4 sm:p-5 md:p-6",
+                    "neumorphic-inset rounded-[2rem] p-4 sm:p-5 md:p-6 min-w-0",
                     "dark:bento-glass-inset"
                 )}>
-                    <h3 className="mb-6 flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/80">
+                    <h3 className="mb-5 sm:mb-6 flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/80">
                         <span className="h-1 w-4 rounded-full bg-amber-500" />
                         Next Priorities
                     </h3>
                     
-                    <div className="flex flex-col gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-1 gap-4">
                         {nextMoves.map((move) => (
                             <div key={move.id} className={cn(
                                 "neumorphic-extruded group/item relative overflow-hidden rounded-2xl p-4",
