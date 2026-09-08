@@ -1,51 +1,38 @@
 import { Unit, DbUnit, QuickActionType, QuickActionGuardResult, FloorId } from "./types";
 
-/** Size in pixels for newly placed units by DB bed-count */
+/** Standard uniform size in pixels for all units across the map */
+export const STANDARD_UNIT_WIDTH = 200;
+export const STANDARD_UNIT_HEIGHT = 140;
+
+/** Size in pixels for newly placed units by DB bed-count (standardized for consistency) */
 export const UNIT_SIZE_BY_BEDS: Record<number, { w: number; h: number }> = {
-    0: { w: 180, h: 120 }, // Studio
-    1: { w: 200, h: 140 }, // 1BR
-    2: { w: 220, h: 140 }, // 2BR
-    3: { w: 240, h: 140 }, // 3BR
+    0: { w: STANDARD_UNIT_WIDTH, h: STANDARD_UNIT_HEIGHT }, // Studio
+    1: { w: STANDARD_UNIT_WIDTH, h: STANDARD_UNIT_HEIGHT }, // 1BR
+    2: { w: STANDARD_UNIT_WIDTH, h: STANDARD_UNIT_HEIGHT }, // 2BR
+    3: { w: STANDARD_UNIT_WIDTH, h: STANDARD_UNIT_HEIGHT }, // 3BR
 };
 
-export const getUnitDimensions = (beds?: number, type?: Unit["type"]): { w: number; h: number } => {
-    const bedroomCount = beds !== undefined ? beds : (type === "Studio" ? 0 : type === "2BR" ? 2 : type === "3BR" ? 3 : 1);
-    if (bedroomCount === 0) return { w: 180, h: 120 };
-    if (bedroomCount === 2) return { w: 220, h: 140 };
-    if (bedroomCount >= 3) return { w: 240, h: 140 };
-    return { w: 200, h: 140 };
+export const getUnitDimensions = (_beds?: number, _type?: Unit["type"]): { w: number; h: number } => {
+    return { w: STANDARD_UNIT_WIDTH, h: STANDARD_UNIT_HEIGHT };
 };
 
-/** Get dimensions for a unit being placed, adapting to existing units on the active floor layout */
+/** Get dimensions for a unit being placed, maintaining consistent uniform size */
 export const getPlacementDimensions = (
-    dbUnit?: DbUnit | { beds?: number },
+    _dbUnit?: DbUnit | { beds?: number },
     placedUnits?: Unit[]
 ): { w: number; h: number } => {
-    const beds = dbUnit?.beds;
-
-    // 1. If units already exist on the floor, check for an existing unit with the same bedroom count
     if (placedUnits && placedUnits.length > 0) {
-        if (beds !== undefined) {
-            const matchingUnit = placedUnits.find(u => {
-                const uBeds = u.bedrooms ?? (u.type === "Studio" ? 0 : u.type === "2BR" ? 2 : u.type === "3BR" ? 3 : 1);
-                return uBeds === beds && u.w > 0 && u.h > 0;
-            });
-            if (matchingUnit) {
-                return { w: matchingUnit.w, h: matchingUnit.h };
-            }
-        }
-
-        // 2. Otherwise adapt to the average dimensions of existing units on this floor
         const validUnits = placedUnits.filter(u => u.w > 0 && u.h > 0);
         if (validUnits.length > 0) {
-            const avgW = Math.round(validUnits.reduce((sum, u) => sum + u.w, 0) / validUnits.length);
-            const avgH = Math.round(validUnits.reduce((sum, u) => sum + u.h, 0) / validUnits.length);
-            return { w: avgW, h: avgH };
+            const firstW = validUnits[0].w;
+            const firstH = validUnits[0].h;
+            const isAllUniform = validUnits.every(u => u.w === firstW && u.h === firstH);
+            if (isAllUniform) {
+                return { w: firstW, h: firstH };
+            }
         }
     }
-
-    // 3. Fallback to default dimensions
-    return getUnitDimensions(beds);
+    return { w: STANDARD_UNIT_WIDTH, h: STANDARD_UNIT_HEIGHT };
 };
 
 /** Derive a canvas Unit type from DB beds count */
@@ -71,8 +58,8 @@ export const dbUnitToCanvasUnit = (dbUnit: DbUnit): Unit => {
         tenantAvatarBgColor: dbUnit.status === "occupied" ? dbUnit.tenant_avatar_bg_color : undefined,
         x: pos.x,
         y: pos.y,
-        w: pos.w,
-        h: pos.h,
+        w: STANDARD_UNIT_WIDTH,
+        h: STANDARD_UNIT_HEIGHT,
         details: dbUnit.maintenance_description || dbUnit.maintenance_title,
         areaSqm: dbUnit.sqft ? Math.round(dbUnit.sqft * 0.092903) : undefined,
         bedrooms: dbUnit.beds,

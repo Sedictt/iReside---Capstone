@@ -54,7 +54,9 @@ import {
     ChevronLeft,
     ShieldCheck,
     Clock,
-    EyeOff
+    EyeOff,
+    AlertCircle,
+    CheckCircle2
 } from "lucide-react";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
@@ -227,6 +229,74 @@ function SubNav({ tabs, activeTab, onTabChange }: { tabs: string[]; activeTab: s
     );
 }
 
+// --- Cache Persistence Types & Helpers ---
+export interface CachedLandlordSettings {
+    timestamp: number;
+    formData: {
+        full_name: string;
+        business_name: string;
+        email: string;
+        phone: string;
+        website: string;
+        address: string;
+        bio: string;
+        emergency_contact_name: string;
+        emergency_contact_phone: string;
+        business_permit_number: string;
+        socials: {
+            facebook: string;
+            instagram: string;
+            twitter: string;
+            linkedin: string;
+        };
+    };
+    notificationPreferences: NotificationPreferences;
+    personalization: {
+        propertyTradeName: string;
+        propertyTagline: string;
+        rentalArchetype: string;
+        brandPrimaryHex: string;
+        brandSecondaryHex: string;
+        bannerUrl: string;
+        propertyLogoUrl: string | null;
+    };
+    security?: {
+        twoFAStatus: 'loading' | 'disabled' | 'gmail_connected' | 'pending_otp' | 'enabled';
+        twoFAEmail: string | null;
+        passwordLastUpdated: string | null;
+        hasChangedPassword: boolean;
+    };
+    properties?: Array<{ id: string; name: string }>;
+    tourState?: any;
+}
+
+const SETTINGS_CACHE_KEY_PREFIX = "ireside_landlord_settings_cache_";
+
+export function getCachedSettings(userId?: string): CachedLandlordSettings | null {
+    if (typeof window === "undefined") return null;
+    try {
+        const userKey = userId ? `${SETTINGS_CACHE_KEY_PREFIX}${userId}` : null;
+        const raw = (userKey && localStorage.getItem(userKey)) || localStorage.getItem(`${SETTINGS_CACHE_KEY_PREFIX}current`);
+        if (!raw) return null;
+        return JSON.parse(raw);
+    } catch {
+        return null;
+    }
+}
+
+export function saveCachedSettings(settings: CachedLandlordSettings, userId?: string): void {
+    if (typeof window === "undefined") return;
+    try {
+        const payload = JSON.stringify(settings);
+        if (userId) {
+            localStorage.setItem(`${SETTINGS_CACHE_KEY_PREFIX}${userId}`, payload);
+        }
+        localStorage.setItem(`${SETTINGS_CACHE_KEY_PREFIX}current`, payload);
+    } catch (err) {
+        console.warn("[LandlordSettings] Failed to cache settings:", err);
+    }
+}
+
 // --- Main Component ---
 
 export function LandlordSettings() {
@@ -238,6 +308,15 @@ export function LandlordSettings() {
     const [isSaving, setIsSaving] = useState(false);
     const [justSaved, setJustSaved] = useState(false);
     const supabase = useMemo(() => createClient(), []);
+
+    // Sync & Cache States
+    const [isSyncing, setIsSyncing] = useState(true);
+    const [syncError, setSyncError] = useState<string | null>(null);
+    const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(() => {
+        const cached = getCachedSettings();
+        return cached?.timestamp ? new Date(cached.timestamp) : null;
+    });
+    const [hasLoadedOnce, setHasLoadedOnce] = useState(() => !!getCachedSettings());
 
     // Mapping of Sub-tabs
     const SUB_TABS: Record<SettingsCategory, string[]> = {
@@ -290,14 +369,35 @@ export function LandlordSettings() {
     const brand = useBrand();
 
     // Personalization & Branding State
-    const [bannerUrl, setBannerUrl] = useState<string>(DEFAULT_BANNER_URL);
+    const [bannerUrl, setBannerUrl] = useState<string>(() => {
+        const cached = getCachedSettings();
+        return cached?.personalization?.bannerUrl || (typeof window !== "undefined" ? (localStorage.getItem("ireside_landlord_custom_banner_url") || DEFAULT_BANNER_URL) : DEFAULT_BANNER_URL);
+    });
     const [customBannerInput, setCustomBannerInput] = useState<string>("");
-    const [propertyTradeName, setPropertyTradeName] = useState<string>(brand.propertyName || "Skyline Lofts");
-    const [propertyTagline, setPropertyTagline] = useState<string>(brand.propertyTagline || "Modern Urban Residences & Studios");
-    const [propertyLogoUrl, setPropertyLogoUrl] = useState<string | null>(brand.logoUrl);
-    const [rentalArchetype, setRentalArchetype] = useState<string>(brand.rentalArchetype || "apartments");
-    const [brandPrimaryHex, setBrandPrimaryHex] = useState<string>(brand.primaryColor || "#c4b0ff");
-    const [brandSecondaryHex, setBrandSecondaryHex] = useState<string>(brand.secondaryColor || "#06b6d4");
+    const [propertyTradeName, setPropertyTradeName] = useState<string>(() => {
+        const cached = getCachedSettings();
+        return cached?.personalization?.propertyTradeName || (typeof window !== "undefined" ? (localStorage.getItem("ireside_property_name") || brand.propertyName || "Skyline Lofts") : (brand.propertyName || "Skyline Lofts"));
+    });
+    const [propertyTagline, setPropertyTagline] = useState<string>(() => {
+        const cached = getCachedSettings();
+        return cached?.personalization?.propertyTagline || (typeof window !== "undefined" ? (localStorage.getItem("ireside_property_tagline") || brand.propertyTagline || "Modern Urban Residences & Studios") : (brand.propertyTagline || "Modern Urban Residences & Studios"));
+    });
+    const [propertyLogoUrl, setPropertyLogoUrl] = useState<string | null>(() => {
+        const cached = getCachedSettings();
+        return cached?.personalization?.propertyLogoUrl ?? (typeof window !== "undefined" ? (localStorage.getItem("ireside_property_logo") || brand.logoUrl || null) : (brand.logoUrl || null));
+    });
+    const [rentalArchetype, setRentalArchetype] = useState<string>(() => {
+        const cached = getCachedSettings();
+        return cached?.personalization?.rentalArchetype || (typeof window !== "undefined" ? (localStorage.getItem("ireside_rental_archetype") || brand.rentalArchetype || "apartments") : (brand.rentalArchetype || "apartments"));
+    });
+    const [brandPrimaryHex, setBrandPrimaryHex] = useState<string>(() => {
+        const cached = getCachedSettings();
+        return cached?.personalization?.brandPrimaryHex || (typeof window !== "undefined" ? (localStorage.getItem("ireside_brand_primary") || brand.primaryColor || "#c4b0ff") : (brand.primaryColor || "#c4b0ff"));
+    });
+    const [brandSecondaryHex, setBrandSecondaryHex] = useState<string>(() => {
+        const cached = getCachedSettings();
+        return cached?.personalization?.brandSecondaryHex || (typeof window !== "undefined" ? (localStorage.getItem("ireside_brand_secondary") || brand.secondaryColor || "#06b6d4") : (brand.secondaryColor || "#06b6d4"));
+    });
     const [isPrimaryColorPickerOpen, setIsPrimaryColorPickerOpen] = useState(false);
     const [isSecondaryColorPickerOpen, setIsSecondaryColorPickerOpen] = useState(false);
     const [isUnsavedModalOpen, setIsUnsavedModalOpen] = useState(false);
@@ -419,26 +519,33 @@ export function LandlordSettings() {
     };
 
 
-    const [formData, setFormData] = useState({
-        full_name: "",
-        business_name: "",
-        email: "",
-        phone: "",
-        website: "",
-        address: "",
-        bio: "",
-        emergency_contact_name: "",
-        emergency_contact_phone: "",
-        business_permit_number: "",
-        socials: {
-            facebook: "",
-            instagram: "",
-            twitter: "",
-            linkedin: "",
-        },
+    const [formData, setFormData] = useState(() => {
+        const cached = getCachedSettings();
+        if (cached?.formData) return cached.formData;
+        return {
+            full_name: "",
+            business_name: "",
+            email: "",
+            phone: "",
+            website: "",
+            address: "",
+            bio: "",
+            emergency_contact_name: "",
+            emergency_contact_phone: "",
+            business_permit_number: "",
+            socials: {
+                facebook: "",
+                instagram: "",
+                twitter: "",
+                linkedin: "",
+            },
+        };
     });
 
-    const [tourState, setTourState] = useState<any>(null);
+    const [tourState, setTourState] = useState<any>(() => {
+        const cached = getCachedSettings();
+        return cached?.tourState || null;
+    });
 
     const fetchTourState = useCallback(async () => {
         try {
@@ -452,34 +559,57 @@ export function LandlordSettings() {
         }
     }, []);
 
-    useEffect(() => {
-        fetchTourState();
-    }, [fetchTourState]);
-
     const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
     const [avatarPickerKey, setAvatarPickerKey] = useState(0);
-    const [properties, setProperties] = useState<any[]>([]);
+    const [properties, setProperties] = useState<any[]>(() => {
+        const cached = getCachedSettings();
+        return cached?.properties || [];
+    });
     const [selectedPropertyId, setSelectedPropertyId] = useState<string>("all");
 
     // Security States
     const [otpEnabled, setOtpEnabled] = useState(false);
     const [showOtpField, setShowOtpField] = useState(false);
-    const [passwordLastUpdated, setPasswordLastUpdated] = useState<string | null>(null);
-    const [hasChangedPassword, setHasChangedPassword] = useState(false);
+    const [passwordLastUpdated, setPasswordLastUpdated] = useState<string | null>(() => {
+        const cached = getCachedSettings();
+        return cached?.security?.passwordLastUpdated || null;
+    });
+    const [hasChangedPassword, setHasChangedPassword] = useState<boolean>(() => {
+        const cached = getCachedSettings();
+        return cached?.security?.hasChangedPassword || false;
+    });
     const [newPassword, setNewPassword] = useState("");
     const [confirmNewPassword, setConfirmNewPassword] = useState("");
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
 
     // 2FA States
-    const [twoFAStatus, setTwoFAStatus] = useState<'loading' | 'disabled' | 'gmail_connected' | 'pending_otp' | 'enabled'>('loading');
-    const [twoFAEmail, setTwoFAEmail] = useState<string | null>(null);
+    const [twoFAStatus, setTwoFAStatus] = useState<'loading' | 'disabled' | 'gmail_connected' | 'pending_otp' | 'enabled'>(() => {
+        const cached = getCachedSettings();
+        return cached?.security?.twoFAStatus || 'loading';
+    });
+    const [twoFAEmail, setTwoFAEmail] = useState<string | null>(() => {
+        const cached = getCachedSettings();
+        return cached?.security?.twoFAEmail || null;
+    });
     const [otpInput, setOtpInput] = useState("");
     const [isVerifyingOTP, setIsVerifyingOTP] = useState(false);
     const [disablePassword, setDisablePassword] = useState("");
     const [isDisabling, setIsDisabling] = useState(false);
 
-    const [notificationPreferences, setNotificationPreferences] = useState<NotificationPreferences>(DEFAULT_NOTIFICATION_PREFERENCES);
+    const [notificationPreferences, setNotificationPreferences] = useState<NotificationPreferences>(() => {
+        const cached = getCachedSettings();
+        if (cached?.notificationPreferences) {
+            return {
+                lease_applications: { ...DEFAULT_NOTIFICATION_PREFERENCES.lease_applications, ...(cached.notificationPreferences.lease_applications || {}) },
+                maintenance: { ...DEFAULT_NOTIFICATION_PREFERENCES.maintenance, ...(cached.notificationPreferences.maintenance || {}) },
+                payments: { ...DEFAULT_NOTIFICATION_PREFERENCES.payments, ...(cached.notificationPreferences.payments || {}) },
+                messages: { ...DEFAULT_NOTIFICATION_PREFERENCES.messages, ...(cached.notificationPreferences.messages || {}) },
+                announcements: { ...DEFAULT_NOTIFICATION_PREFERENCES.announcements, ...(cached.notificationPreferences.announcements || {}) },
+            };
+        }
+        return DEFAULT_NOTIFICATION_PREFERENCES;
+    });
 
     const handleToggleNotification = (category: NotificationCategoryKey, channel: "email" | "push") => {
         setNotificationPreferences((prev) => ({
@@ -506,38 +636,78 @@ export function LandlordSettings() {
         brandSecondaryHex: string;
         bannerUrl: string;
         propertyLogoUrl: string | null;
-    } | null>(null);
+    } | null>(() => {
+        const cached = getCachedSettings();
+        if (cached) {
+            return {
+                formData: JSON.parse(JSON.stringify(cached.formData)),
+                notificationPreferences: JSON.parse(JSON.stringify(cached.notificationPreferences)),
+                propertyTradeName: cached.personalization?.propertyTradeName || "Skyline Lofts",
+                propertyTagline: cached.personalization?.propertyTagline || "Modern Urban Residences & Studios",
+                rentalArchetype: cached.personalization?.rentalArchetype || "apartments",
+                brandPrimaryHex: cached.personalization?.brandPrimaryHex || "#c4b0ff",
+                brandSecondaryHex: cached.personalization?.brandSecondaryHex || "#06b6d4",
+                bannerUrl: cached.personalization?.bannerUrl || DEFAULT_BANNER_URL,
+                propertyLogoUrl: cached.personalization?.propertyLogoUrl ?? null,
+            };
+        }
+        return null;
+    });
 
     const fetchProperties = useCallback(async () => {
-        if (!profile?.id) return;
+        const landlordId = profile?.id || user?.id;
+        if (!landlordId) return;
         
-        const { data, error } = await supabase
+        const { data } = await supabase
             .from("properties")
             .select("id, name")
-            .eq("landlord_id", profile.id);
+            .eq("landlord_id", landlordId);
         
         if (data) setProperties(data);
-    }, [profile?.id, supabase]);
+    }, [profile?.id, user?.id, supabase]);
 
-    useEffect(() => {
-        if (profile) {
-            const initialForm = {
-                full_name: profile.full_name || "",
-                business_name: profile.business_name || "",
-                email: profile.email || "",
-                phone: profile.phone || "",
-                website: profile.website || "",
-                address: profile.address || "",
-                bio: profile.bio || "",
-                emergency_contact_name: (profile as any).emergency_contact_name || (profile.socials as any)?.emergency_contact_name || "",
-                emergency_contact_phone: (profile as any).emergency_contact_phone || (profile.socials as any)?.emergency_contact_phone || "",
-                business_permit_number: profile.business_permit_number || "",
-                socials: typeof profile.socials === 'object' && profile.socials !== null 
+    // Comprehensive Background Synchronization with Server/DB
+    const syncSettingsWithDatabase = useCallback(async (isManualRetry = false) => {
+        setIsSyncing(true);
+        setSyncError(null);
+
+        try {
+            const [profileRes, secRes, tourRes] = await Promise.all([
+                fetch("/api/landlord/profile").catch((err) => ({ ok: false, statusText: err.message })),
+                fetch("/api/landlord/2fa?action=status").catch((err) => ({ ok: false, statusText: err.message })),
+                fetch("/api/landlord/tour?start=0").catch((err) => ({ ok: false, statusText: err.message })),
+            ]);
+
+            let profileData: any = null;
+            if ('ok' in profileRes && profileRes.ok) {
+                profileData = await (profileRes as Response).json();
+            } else if (profile) {
+                profileData = { profile };
+            } else {
+                throw new Error("Unable to sync profile settings with the server.");
+            }
+
+            const freshProfile = profileData.profile || profileData;
+            const privateProfile = profileData.profile_private || {};
+            const businessProfile = profileData.business_profile || {};
+
+            const syncedForm = {
+                full_name: freshProfile?.full_name || "",
+                business_name: freshProfile?.business_name || businessProfile?.business_name || "",
+                email: freshProfile?.email || "",
+                phone: freshProfile?.phone || "",
+                website: freshProfile?.website || businessProfile?.website || "",
+                address: freshProfile?.address || businessProfile?.address || "",
+                bio: freshProfile?.bio || "",
+                emergency_contact_name: freshProfile?.emergency_contact_name || privateProfile?.emergency_contact_name || (freshProfile?.socials as any)?.emergency_contact_name || "",
+                emergency_contact_phone: freshProfile?.emergency_contact_phone || privateProfile?.emergency_contact_phone || (freshProfile?.socials as any)?.emergency_contact_phone || "",
+                business_permit_number: freshProfile?.business_permit_number || businessProfile?.business_permit_number || "",
+                socials: typeof freshProfile?.socials === 'object' && freshProfile?.socials !== null 
                     ? {
-                        facebook: (profile.socials as any).facebook || "",
-                        instagram: (profile.socials as any).instagram || "",
-                        twitter: (profile.socials as any).twitter || "",
-                        linkedin: (profile.socials as any).linkedin || "",
+                        facebook: (freshProfile.socials as any).facebook || "",
+                        instagram: (freshProfile.socials as any).instagram || "",
+                        twitter: (freshProfile.socials as any).twitter || "",
+                        linkedin: (freshProfile.socials as any).linkedin || "",
                       }
                     : {
                         facebook: "",
@@ -546,20 +716,18 @@ export function LandlordSettings() {
                         linkedin: "",
                       },
             };
-            setFormData(initialForm);
 
-            const savedNotifs = (profile?.socials as any)?.notification_preferences 
+            const savedNotifs = (freshProfile?.socials as any)?.notification_preferences 
                 || (typeof window !== "undefined" ? JSON.parse(localStorage.getItem("ireside_landlord_notification_preferences") || "null") : null) 
                 || DEFAULT_NOTIFICATION_PREFERENCES;
 
-            const mergedNotifs: NotificationPreferences = {
+            const syncedNotifs: NotificationPreferences = {
                 lease_applications: { ...DEFAULT_NOTIFICATION_PREFERENCES.lease_applications, ...(savedNotifs?.lease_applications || {}) },
                 maintenance: { ...DEFAULT_NOTIFICATION_PREFERENCES.maintenance, ...(savedNotifs?.maintenance || {}) },
                 payments: { ...DEFAULT_NOTIFICATION_PREFERENCES.payments, ...(savedNotifs?.payments || {}) },
                 messages: { ...DEFAULT_NOTIFICATION_PREFERENCES.messages, ...(savedNotifs?.messages || {}) },
                 announcements: { ...DEFAULT_NOTIFICATION_PREFERENCES.announcements, ...(savedNotifs?.announcements || {}) },
             };
-            setNotificationPreferences(mergedNotifs);
 
             const savedBanner = typeof window !== "undefined" ? (localStorage.getItem("ireside_landlord_custom_banner_url") || DEFAULT_BANNER_URL) : DEFAULT_BANNER_URL;
             const savedLogo = typeof window !== "undefined" ? localStorage.getItem("ireside_property_logo") : null;
@@ -569,18 +737,70 @@ export function LandlordSettings() {
             const savedPrimary = typeof window !== "undefined" ? (localStorage.getItem("ireside_brand_primary") || "#c4b0ff") : "#c4b0ff";
             const savedSecondary = typeof window !== "undefined" ? (localStorage.getItem("ireside_brand_secondary") || "#06b6d4") : "#06b6d4";
 
-            setBannerUrl(savedBanner);
-            setPropertyLogoUrl(savedLogo);
-            setPropertyTradeName(savedName);
-            setPropertyTagline(savedTagline);
-            setRentalArchetype(savedArchetype);
-            setBrandPrimaryHex(savedPrimary);
-            setBrandSecondaryHex(savedSecondary);
+            let syncedSecurity: any = {
+                twoFAStatus: 'disabled',
+                twoFAEmail: null,
+                passwordLastUpdated: null,
+                hasChangedPassword: false,
+            };
 
-            if (!initialSnapshot) {
+            if ('ok' in secRes && secRes.ok) {
+                const secData = await (secRes as Response).json();
+                if (secData.enabled) {
+                    syncedSecurity.twoFAStatus = 'enabled';
+                    syncedSecurity.twoFAEmail = secData.email;
+                } else if (secData.hasGmailConnected) {
+                    syncedSecurity.twoFAStatus = 'gmail_connected';
+                } else {
+                    syncedSecurity.twoFAStatus = 'disabled';
+                }
+                if (secData.passwordLastUpdated) {
+                    syncedSecurity.passwordLastUpdated = secData.passwordLastUpdated;
+                }
+                if (typeof secData.hasChangedPassword === 'boolean') {
+                    syncedSecurity.hasChangedPassword = secData.hasChangedPassword;
+                }
+                setTwoFAStatus(syncedSecurity.twoFAStatus);
+                if (syncedSecurity.twoFAEmail) setTwoFAEmail(syncedSecurity.twoFAEmail);
+                if (syncedSecurity.passwordLastUpdated) setPasswordLastUpdated(syncedSecurity.passwordLastUpdated);
+                setHasChangedPassword(syncedSecurity.hasChangedPassword);
+            }
+
+            let syncedTourState = null;
+            if ('ok' in tourRes && tourRes.ok) {
+                const tourData = await (tourRes as Response).json();
+                syncedTourState = tourData.state;
+                setTourState(syncedTourState);
+            }
+
+            const landlordId = freshProfile?.id || profile?.id || user?.id;
+            let syncedProperties: any[] = [];
+            if (landlordId) {
+                const { data: propData } = await supabase
+                    .from("properties")
+                    .select("id, name")
+                    .eq("landlord_id", landlordId);
+                if (propData) {
+                    syncedProperties = propData;
+                    setProperties(propData);
+                }
+            }
+
+            // Only overwrite active form inputs if user is not in the middle of editing
+            if (!isDirtyRef.current) {
+                setFormData(syncedForm);
+                setNotificationPreferences(syncedNotifs);
+                setBannerUrl(savedBanner);
+                setPropertyLogoUrl(savedLogo);
+                setPropertyTradeName(savedName);
+                setPropertyTagline(savedTagline);
+                setRentalArchetype(savedArchetype);
+                setBrandPrimaryHex(savedPrimary);
+                setBrandSecondaryHex(savedSecondary);
+
                 setInitialSnapshot({
-                    formData: JSON.parse(JSON.stringify(initialForm)),
-                    notificationPreferences: JSON.parse(JSON.stringify(mergedNotifs)),
+                    formData: JSON.parse(JSON.stringify(syncedForm)),
+                    notificationPreferences: JSON.parse(JSON.stringify(syncedNotifs)),
                     propertyTradeName: savedName,
                     propertyTagline: savedTagline,
                     rentalArchetype: savedArchetype,
@@ -590,9 +810,47 @@ export function LandlordSettings() {
                     propertyLogoUrl: savedLogo,
                 });
             }
-            fetchProperties();
+
+            // Persist synced data to local cache
+            const cachePayload: CachedLandlordSettings = {
+                timestamp: Date.now(),
+                formData: syncedForm,
+                notificationPreferences: syncedNotifs,
+                personalization: {
+                    propertyTradeName: savedName,
+                    propertyTagline: savedTagline,
+                    rentalArchetype: savedArchetype,
+                    brandPrimaryHex: savedPrimary,
+                    brandSecondaryHex: savedSecondary,
+                    bannerUrl: savedBanner,
+                    propertyLogoUrl: savedLogo,
+                },
+                security: syncedSecurity,
+                properties: syncedProperties,
+                tourState: syncedTourState,
+            };
+            saveCachedSettings(cachePayload, landlordId);
+
+            setLastSyncedAt(new Date());
+            setHasLoadedOnce(true);
+            if (isManualRetry) {
+                toast.success("Settings synced with cloud database!");
+            }
+        } catch (err: any) {
+            console.error("[LandlordSettings] Background sync error:", err);
+            setSyncError(err?.message || "Failed to sync settings with the database.");
+            if (isManualRetry) {
+                toast.error(err?.message || "Failed to sync settings with the database");
+            }
+        } finally {
+            setIsSyncing(false);
         }
-    }, [profile]);
+    }, [profile, user?.id, supabase]);
+
+    // Background sync on mount & when user identity resolves
+    useEffect(() => {
+        syncSettingsWithDatabase();
+    }, [syncSettingsWithDatabase]);
 
     const isDirty = useMemo(() => {
         if (!initialSnapshot) return false;
@@ -608,6 +866,9 @@ export function LandlordSettings() {
             propertyLogoUrl !== initialSnapshot.propertyLogoUrl
         );
     }, [formData, notificationPreferences, propertyTradeName, propertyTagline, rentalArchetype, brandPrimaryHex, brandSecondaryHex, bannerUrl, propertyLogoUrl, initialSnapshot]);
+
+    const isDirtyRef = useRef(false);
+    isDirtyRef.current = isDirty;
 
     useEffect(() => {
         const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -889,94 +1150,40 @@ export function LandlordSettings() {
             const hasNotifsChanged = !initialSnapshot || JSON.stringify(notificationPreferences) !== JSON.stringify(initialSnapshot.notificationPreferences);
 
             if (hasFormChanged || hasNotifsChanged) {
-                // Perform DB updates with a safety timeout so it never hangs
-                const dbSavePromise = (async () => {
-                    const socialsWithEmergency = {
-                        ...formData.socials,
+                const res = await fetch("/api/landlord/profile", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        full_name: formData.full_name,
+                        business_name: formData.business_name,
+                        email: formData.email,
+                        phone: formData.phone,
+                        website: formData.website,
+                        address: formData.address,
+                        bio: formData.bio,
                         emergency_contact_name: formData.emergency_contact_name,
                         emergency_contact_phone: formData.emergency_contact_phone,
+                        business_permit_number: formData.business_permit_number,
+                        socials: formData.socials,
                         notification_preferences: notificationPreferences,
-                    };
+                    }),
+                });
 
-                    const { error } = await supabase
-                        .from("profiles")
-                        .update({
-                            full_name: formData.full_name,
-                            business_name: formData.business_name,
-                            email: formData.email,
-                            website: formData.website,
-                            bio: formData.bio,
-                            socials: socialsWithEmergency as any,
-                            phone: formData.phone,
-                            address: formData.address,
-                            business_permit_number: formData.business_permit_number,
-                        })
-                        .eq("id", profile.id);
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data.error || "Failed to save profile changes");
+                }
 
-                    if (error) {
-                        console.warn("[LandlordSettings] Profile update warning:", error);
-                    }
+                if (typeof window !== "undefined") {
+                    localStorage.setItem("ireside_landlord_notification_preferences", JSON.stringify(notificationPreferences));
+                }
 
-                    if (typeof window !== "undefined") {
-                        localStorage.setItem("ireside_landlord_notification_preferences", JSON.stringify(notificationPreferences));
-                    }
-
+                if (formData.email && formData.email !== profile.email) {
                     try {
-                        await supabase.auth.updateUser({
-                            data: {
-                                emergency_contact_name: formData.emergency_contact_name,
-                                emergency_contact_phone: formData.emergency_contact_phone,
-                                notification_preferences: notificationPreferences,
-                            }
-                        });
-                    } catch (metaErr: any) {
-                        console.warn("[LandlordSettings] Auth metadata update note:", metaErr?.message);
+                        await supabase.auth.updateUser({ email: formData.email });
+                    } catch (emailErr: any) {
+                        console.warn("[LandlordSettings] Auth email update note:", emailErr?.message);
                     }
-
-                    if (formData.email && formData.email !== profile.email) {
-                        try {
-                            await supabase.auth.updateUser({ email: formData.email });
-                        } catch (emailErr: any) {
-                            console.warn("[LandlordSettings] Auth email update note:", emailErr?.message);
-                        }
-                    }
-
-                    await Promise.allSettled([
-                        (supabase as any)
-                            .from("profile_private")
-                            .upsert(
-                                {
-                                    profile_id: profile.id,
-                                    phone: formData.phone,
-                                    address: formData.address,
-                                    updated_at: new Date().toISOString(),
-                                },
-                                { onConflict: "profile_id" }
-                            ),
-                        (supabase as any)
-                            .from("landlord_business_profiles")
-                            .upsert(
-                                {
-                                    profile_id: profile.id,
-                                    business_name: formData.business_name,
-                                    business_permit_number: formData.business_permit_number,
-                                    business_permit_url: profile.business_permit_url,
-                                    business_permits: profile.business_permits ?? [],
-                                    updated_at: new Date().toISOString(),
-                                },
-                                { onConflict: "profile_id" }
-                            ),
-                    ]);
-                })();
-
-                const timeoutPromise = new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error("Database save timed out")), 5000)
-                );
-
-                try {
-                    await Promise.race([dbSavePromise, timeoutPromise]);
-                } catch (timeoutErr: any) {
-                    console.warn("[LandlordSettings] DB Save warning:", timeoutErr?.message);
                 }
             }
 
@@ -995,7 +1202,10 @@ export function LandlordSettings() {
                 window.dispatchEvent(new CustomEvent("banner-updated", { detail: bannerUrl }));
             }
 
-            // 3. Update Snapshot to clear isDirty immediately
+            // 3. Await profile refresh so state has fresh data from DB
+            await refreshProfile();
+
+            // 4. Update Snapshot to clear isDirty immediately
             setInitialSnapshot({
                 formData: JSON.parse(JSON.stringify(formData)),
                 notificationPreferences: JSON.parse(JSON.stringify(notificationPreferences)),
@@ -1008,8 +1218,31 @@ export function LandlordSettings() {
                 propertyLogoUrl,
             });
 
-            // Refresh profile in background
-            refreshProfile().catch((err) => console.warn("[LandlordSettings] Profile refresh error:", err));
+            // 5. Update local cache immediately with latest persisted data
+            const updatedCache: CachedLandlordSettings = {
+                timestamp: Date.now(),
+                formData,
+                notificationPreferences,
+                personalization: {
+                    propertyTradeName,
+                    propertyTagline,
+                    rentalArchetype,
+                    brandPrimaryHex,
+                    brandSecondaryHex,
+                    bannerUrl,
+                    propertyLogoUrl,
+                },
+                security: {
+                    twoFAStatus,
+                    twoFAEmail,
+                    passwordLastUpdated,
+                    hasChangedPassword,
+                },
+                properties,
+                tourState,
+            };
+            saveCachedSettings(updatedCache, profile.id || user?.id);
+            setLastSyncedAt(new Date());
 
             toast.dismiss(loadingToast);
             toast.success("All settings saved successfully!");
@@ -2577,6 +2810,46 @@ export function LandlordSettings() {
         }
     };
 
+    if (!hasLoadedOnce && isSyncing) {
+        return (
+            <div className="space-y-10 animate-fade-in">
+                <div className="flex items-center justify-between gap-4 pb-6 border-b border-border/40">
+                    <div className="flex items-center gap-2.5 text-muted-foreground">
+                        <div className="size-8 rounded-full neumorphic-extruded flex items-center justify-center animate-pulse">
+                            <ChevronLeft className="size-4" />
+                        </div>
+                        <span className="text-sm font-black tracking-wide">Back to Dashboard</span>
+                    </div>
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold animate-pulse">
+                        <RefreshCw className="size-3.5 animate-spin" />
+                        <span>Syncing with database…</span>
+                    </div>
+                </div>
+
+                <div className="min-h-[70vh] flex flex-col lg:flex-row gap-12">
+                    <div className="w-full lg:w-80 flex-shrink-0 space-y-4">
+                        <div className="h-14 rounded-2xl bg-muted/30 animate-pulse" />
+                        <div className="h-14 rounded-2xl bg-muted/30 animate-pulse" />
+                        <div className="h-14 rounded-2xl bg-muted/30 animate-pulse" />
+                        <div className="h-14 rounded-2xl bg-muted/30 animate-pulse" />
+                    </div>
+                    <div className="flex-1 space-y-6">
+                        <div className="p-6 rounded-3xl neumorphic-panel space-y-4">
+                            <div className="flex items-center gap-3 text-primary">
+                                <RefreshCw className="size-5 animate-spin" />
+                                <div>
+                                    <h3 className="text-sm font-black text-foreground">Loading Your Settings</h3>
+                                    <p className="text-xs text-muted-foreground mt-0.5">Connecting and syncing your preferences with the database…</p>
+                                </div>
+                            </div>
+                            <div className="h-40 rounded-2xl bg-muted/20 animate-pulse" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-10">
             {/* Top Navigation Bar */}
@@ -2592,12 +2865,94 @@ export function LandlordSettings() {
                     <span className="text-sm font-black tracking-wide">Back to Dashboard</span>
                 </button>
 
-                <div className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-muted/40 border border-border/40 text-xs font-bold text-muted-foreground">
-                    <span>Control Center</span>
-                    <span className="text-muted-foreground/40">•</span>
-                    <span className="text-foreground font-black">{activeTab}</span>
+                <div className="flex items-center gap-2 sm:gap-3">
+                    {/* Background Sync Status Indicator */}
+                    <div
+                        className={cn(
+                            "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all border shadow-sm",
+                            isSyncing
+                                ? "bg-primary/10 border-primary/20 text-primary animate-pulse"
+                                : syncError
+                                ? "bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400"
+                                : "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400"
+                        )}
+                        title={
+                            isSyncing
+                                ? "Syncing settings with database in the background..."
+                                : syncError
+                                ? `Sync failed: ${syncError}`
+                                : lastSyncedAt
+                                ? `Synced with cloud database (Last synced: ${lastSyncedAt.toLocaleTimeString()})`
+                                : "Synced with cloud database"
+                        }
+                    >
+                        {isSyncing ? (
+                            <>
+                                <RefreshCw className="size-3.5 animate-spin text-primary" />
+                                <span className="hidden sm:inline">Syncing with database…</span>
+                                <span className="sm:hidden">Syncing…</span>
+                            </>
+                        ) : syncError ? (
+                            <>
+                                <AlertCircle className="size-3.5 text-rose-500" />
+                                <span className="hidden sm:inline">Sync Error</span>
+                                <span className="sm:hidden">Error</span>
+                            </>
+                        ) : (
+                            <>
+                                <CheckCircle2 className="size-3.5 text-emerald-500" />
+                                <span className="hidden sm:inline">Synced with cloud</span>
+                                <span className="sm:hidden">Synced</span>
+                            </>
+                        )}
+                    </div>
+
+                    <div className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-muted/40 border border-border/40 text-xs font-bold text-muted-foreground">
+                        <span>Control Center</span>
+                        <span className="text-muted-foreground/40">•</span>
+                        <span className="text-foreground font-black">{activeTab}</span>
+                    </div>
                 </div>
             </div>
+
+            {/* Sync Error Banner (Shown if background sync fails) */}
+            {syncError && (
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 shadow-sm animate-fade-in">
+                    <div className="flex items-start gap-3">
+                        <div className="p-2 rounded-xl bg-rose-500/20 text-rose-600 dark:text-rose-400 mt-0.5 shrink-0">
+                            <AlertCircle className="size-5" />
+                        </div>
+                        <div>
+                            <h4 className="text-sm font-black text-rose-900 dark:text-rose-200">
+                                Unable to sync latest settings with the database
+                            </h4>
+                            <p className="text-xs text-rose-700/90 dark:text-rose-300/90 mt-0.5">
+                                Showing cached data. Background synchronization encountered an error ({syncError}).
+                                We recommend refreshing the page or retrying the sync.
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                        <button
+                            type="button"
+                            onClick={() => syncSettingsWithDatabase(true)}
+                            disabled={isSyncing}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black bg-rose-500/20 hover:bg-rose-500/30 text-rose-800 dark:text-rose-200 transition-colors cursor-pointer disabled:opacity-50"
+                        >
+                            <RefreshCw className={cn("size-3.5", isSyncing && "animate-spin")} />
+                            <span>Retry Sync</span>
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => window.location.reload()}
+                            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition-colors cursor-pointer"
+                        >
+                            <RotateCcw className="size-3.5" />
+                            <span>Refresh Page</span>
+                        </button>
+                    </div>
+                </div>
+            )}
 
             <div className="min-h-[80vh] flex flex-col lg:flex-row gap-12">
                 {/* Sidebar */}

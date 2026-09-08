@@ -40,7 +40,8 @@ import {
     UNIT_SIZE_BY_BEDS, unitTypeFromBeds, dbUnitToCanvasUnit, 
     parseFloorNumber, getFloorDisplayLabel, formatFloorWatermark, 
     QUICK_ACTIONS_BY_STATUS, QUICK_ACTION_META, evaluateQuickAction,
-    getUnitDimensions, getPlacementDimensions
+    getUnitDimensions, getPlacementDimensions,
+    STANDARD_UNIT_WIDTH, STANDARD_UNIT_HEIGHT
 } from "./utils";
 import { 
     INITIAL_UNITS, LEGEND_VISIBILITY_STORAGE_KEY, FLOOR_LAYOUTS_STORAGE_KEY, 
@@ -900,7 +901,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const updateCanvasDimensions = useCallback((
         activeItem?: { kind: CanvasItemKind; id: string; x: number; y: number; w: number; h: number }
     ) => {
-        const padding = 200;
+        const padding = 260;
         const MIN_BLUEPRINT_WIDTH = Math.max(420, viewportSize.width - BLUEPRINT_MARGIN * 2);
         const MIN_BLUEPRINT_HEIGHT = Math.max(320, viewportSize.height - BLUEPRINT_MARGIN * 2);
 
@@ -935,7 +936,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         if (newExtraW !== extraDimensionsRef.current.width || newExtraH !== extraDimensionsRef.current.height) {
             setExtraDimensions({ width: newExtraW, height: newExtraH });
         }
-    }, [units, corridors, structures, viewportSize]);
+    }, [units, corridors, structures, viewportSize, BLUEPRINT_MARGIN]);
 
     const snapToGrid = (value: number) => Math.round(value / GRID_SIZE) * GRID_SIZE;
     const clampUnitAxis = (value: number, size: number, maxSize: number) => Math.max(0, value);
@@ -1515,8 +1516,25 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const handleZoomIn = () => setScale(prev => Math.min(prev + 0.1, 2));
     const handleZoomOut = () => setScale(prev => Math.max(prev - 0.1, 0.5));
     const handleFit = () => {
-        setScale(1);
-        setPosition(clampPosition(0, 0, 1));
+        const container = containerRef.current;
+        const containerW = container?.clientWidth || viewportSize.width;
+        const containerH = container?.clientHeight || viewportSize.height;
+        const availableW = Math.max(300, containerW - 120);
+        const availableH = Math.max(200, containerH - 140);
+        const fitScale = Math.min(
+            1.0,
+            Math.max(
+                0.35,
+                Math.min(
+                    availableW / WORLD_WIDTH,
+                    availableH / WORLD_HEIGHT
+                )
+            )
+        );
+        const fitX = Math.round((containerW - WORLD_WIDTH * fitScale) / 2);
+        const fitY = Math.round((containerH - WORLD_HEIGHT * fitScale) / 2);
+        setScale(fitScale);
+        setPosition({ x: fitX, y: fitY });
     };
 
     const handleUndo = () => {
@@ -2235,13 +2253,13 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
     const handleSidebarBlockDragStart = (blockType: SidebarBlockType, dbUnitId?: string) => (e: React.DragEvent<HTMLDivElement>) => {
         let payload = blockType === "studio"
-            ? { blockType, label: "Studio", unitType: "Studio" as const, w: 180, h: 120 }
+            ? { blockType, label: "Studio", unitType: "Studio" as const, w: STANDARD_UNIT_WIDTH, h: STANDARD_UNIT_HEIGHT }
             : blockType === "1br"
-                ? { blockType, label: "1 BR Std", unitType: "1BR" as const, w: 200, h: 140 }
+                ? { blockType, label: "1 BR Std", unitType: "1BR" as const, w: STANDARD_UNIT_WIDTH, h: STANDARD_UNIT_HEIGHT }
                 : blockType === "2br"
-                    ? { blockType, label: "2 BR Corner", unitType: "2BR" as const, w: 220, h: 140 }
+                    ? { blockType, label: "2 BR Corner", unitType: "2BR" as const, w: STANDARD_UNIT_WIDTH, h: STANDARD_UNIT_HEIGHT }
                     : blockType === "3br"
-                        ? { blockType, label: "3 BR Suite", unitType: "3BR" as const, w: 240, h: 140 }
+                        ? { blockType, label: "3 BR Suite", unitType: "3BR" as const, w: STANDARD_UNIT_WIDTH, h: STANDARD_UNIT_HEIGHT }
                         : blockType === "corridor"
                             ? { blockType, label: "Corridor", w: 260, h: 60 }
                             : blockType === "elevator"
@@ -2612,36 +2630,41 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
             const topCount = Math.ceil(count / 2);
             const bottomCount = count - topCount;
 
+            const topUnits = floorPool.slice(0, topCount);
+            const bottomUnits = floorPool.slice(topCount, count);
+
             let topRowW = 0;
-            for (let i = 0; i < topCount; i++) {
-                const dims = getUnitDimensions(floorPool[i]?.beds);
-                topRowW += dims.w + (i > 0 ? GAP : 0);
-            }
+            topUnits.forEach((u, i) => {
+                topRowW += getUnitDimensions(u?.beds).w + (i > 0 ? GAP : 0);
+            });
+
             let bottomRowW = 0;
-            for (let i = topCount; i < count; i++) {
-                const dims = getUnitDimensions(floorPool[i]?.beds);
-                bottomRowW += dims.w + (i > topCount ? GAP : 0);
-            }
+            bottomUnits.forEach((u, i) => {
+                bottomRowW += getUnitDimensions(u?.beds).w + (i > 0 ? GAP : 0);
+            });
+
+            const maxTopH = topUnits.length > 0 ? Math.max(...topUnits.map(u => getUnitDimensions(u?.beds).h)) : 140;
+            const maxBottomH = bottomUnits.length > 0 ? Math.max(...bottomUnits.map(u => getUnitDimensions(u?.beds).h)) : 140;
+
             const contentW = Math.max(topRowW, bottomRowW, 800);
             const corridorW = contentW + 80;
-            const startX = 60;
+            const MARGIN = 80;
+            const startX = MARGIN;
             const corridorX = startX - 40;
-
-            const maxUnitH = 140;
-            const startY = 60;
+            const startY = MARGIN;
 
             // Top row
             let curTopX = startX;
             for (let i = 0; i < topCount; i++) {
-                const dbu = floorPool[i];
+                const dbu = topUnits[i];
                 const dims = getUnitDimensions(dbu?.beds);
-                const u = createUnit(curTopX, startY, dims.w, dims.h);
+                const u = createUnit(curTopX, startY + (maxTopH - dims.h), dims.w, dims.h);
                 if (u) newUnits.push(u);
                 curTopX += dims.w + GAP;
             }
 
             // Central corridor
-            const corridorY = startY + maxUnitH + GAP;
+            const corridorY = startY + maxTopH + GAP;
             newCorridors.push({
                 id: `corridor-${Date.now()}`,
                 label: "Central Corridor",
@@ -2653,8 +2676,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
             // Bottom row
             let curBottomX = startX;
-            for (let i = topCount; i < count; i++) {
-                const dbu = floorPool[i];
+            for (let i = 0; i < bottomCount; i++) {
+                const dbu = bottomUnits[i];
                 const dims = getUnitDimensions(dbu?.beds);
                 const u = createUnit(curBottomX, corridorY + CORRIDOR_H + GAP, dims.w, dims.h);
                 if (u) newUnits.push(u);
@@ -2667,17 +2690,19 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                 const dims = getUnitDimensions(floorPool[i]?.beds);
                 rowW += dims.w + (i > 0 ? GAP : 0);
             }
+            const maxUnitH = floorPool.length > 0 ? Math.max(...floorPool.map(u => getUnitDimensions(u?.beds).h)) : 140;
             const contentW = Math.max(rowW, 800);
             const corridorW = contentW + 80;
-            const startX = 60;
+            const MARGIN = 80;
+            const startX = MARGIN;
             const corridorX = startX - 40;
-            const startY = 80;
+            const startY = MARGIN;
 
             let curX = startX;
             for (let i = 0; i < count; i++) {
                 const dbu = floorPool[i];
                 const dims = getUnitDimensions(dbu?.beds);
-                const u = createUnit(curX, startY, dims.w, dims.h);
+                const u = createUnit(curX, startY + (maxUnitH - dims.h), dims.w, dims.h);
                 if (u) newUnits.push(u);
                 curX += dims.w + GAP;
             }
@@ -2686,7 +2711,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                 id: `corridor-${Date.now()}`,
                 label: "Main Corridor",
                 x: corridorX,
-                y: startY + 140 + GAP,
+                y: startY + maxUnitH + GAP,
                 w: corridorW,
                 h: CORRIDOR_H,
             });
@@ -2696,29 +2721,55 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
             const nLeft = Math.max(1, Math.floor((count - nTop) / 2));
             const nRight = Math.max(0, count - nTop - nLeft);
 
+            const topUnits = floorPool.slice(0, nTop);
+            const leftUnits = floorPool.slice(nTop, nTop + nLeft);
+            const rightUnits = floorPool.slice(nTop + nLeft, count);
+
+            const maxLeftW = leftUnits.length > 0 ? Math.max(...leftUnits.map(u => getUnitDimensions(u?.beds).w)) : 0;
+            const maxRightW = rightUnits.length > 0 ? Math.max(...rightUnits.map(u => getUnitDimensions(u?.beds).w)) : 0;
+            const maxTopH = topUnits.length > 0 ? Math.max(...topUnits.map(u => getUnitDimensions(u?.beds).h)) : 140;
+
             let topW = 0;
-            for (let i = 0; i < nTop; i++) {
-                const dims = getUnitDimensions(floorPool[i]?.beds);
-                topW += dims.w + (i > 0 ? GAP : 0);
-            }
+            topUnits.forEach((u, i) => {
+                topW += getUnitDimensions(u?.beds).w + (i > 0 ? GAP : 0);
+            });
 
-            const startX = 240;
-            const startY = 60;
-            const topCorridorX = startX - 40;
-            const topCorridorY = startY + 140 + GAP;
-            const topCorridorW = topW + 80;
+            let leftH = 0;
+            leftUnits.forEach((u, i) => {
+                leftH += getUnitDimensions(u?.beds).h + (i > 0 ? GAP : 0);
+            });
 
-            // Top row
-            let curTopX = startX;
+            let rightH = 0;
+            rightUnits.forEach((u, i) => {
+                rightH += getUnitDimensions(u?.beds).h + (i > 0 ? GAP : 0);
+            });
+
+            const MARGIN = 80;
+            // West wing units start at MARGIN
+            const westUnitsStartX = MARGIN;
+            const leftCorridorX = nLeft > 0 ? westUnitsStartX + maxLeftW + GAP : MARGIN;
+            const topCorridorX = leftCorridorX;
+            // North corridor width spans from left corridor through top units to right corridor
+            const topCorridorW = Math.max(topW + (nRight > 0 ? CORRIDOR_H + GAP * 2 : 80), 640);
+            const topUnitsStartX = topCorridorX + Math.max(GAP, Math.round((topCorridorW - topW) / 2));
+
+            const startY = MARGIN;
+            const topCorridorY = startY + maxTopH + GAP;
+            const sideUnitsStartY = topCorridorY + CORRIDOR_H + GAP;
+            const maxSideH = Math.max(leftH, rightH, 420);
+            const sideCorridorH = maxSideH + CORRIDOR_H + GAP;
+
+            // 1. Top row units
+            let curTopX = topUnitsStartX;
             for (let i = 0; i < nTop; i++) {
-                const dbu = floorPool[i];
+                const dbu = topUnits[i];
                 const dims = getUnitDimensions(dbu?.beds);
-                const u = createUnit(curTopX, startY, dims.w, dims.h);
+                const u = createUnit(curTopX, startY + (maxTopH - dims.h), dims.w, dims.h);
                 if (u) newUnits.push(u);
                 curTopX += dims.w + GAP;
             }
 
-            // Top Corridor
+            // 2. North Corridor
             newCorridors.push({
                 id: `corridor-top-${Date.now()}`,
                 label: "North Wing",
@@ -2728,39 +2779,46 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                 h: CORRIDOR_H,
             });
 
-            // West Wing
-            const leftCorridorX = topCorridorX - CORRIDOR_H;
-            const leftCorridorY = topCorridorY;
-            const leftCorridorH = Math.max(nLeft * 160 + 40, 420);
-            newCorridors.push({
-                id: `corridor-left-${Date.now()}`,
-                label: "West Wing",
-                x: leftCorridorX,
-                y: leftCorridorY,
-                w: CORRIDOR_H,
-                h: leftCorridorH,
-            });
-            for (let i = 0; i < nLeft; i++) {
-                const u = createUnit(leftCorridorX - 140 - GAP, leftCorridorY + 40 + i * 160, 140, 140);
-                if (u) newUnits.push(u);
+            // 3. West Wing Corridor & Units
+            if (nLeft > 0) {
+                newCorridors.push({
+                    id: `corridor-left-${Date.now()}`,
+                    label: "West Wing",
+                    x: leftCorridorX,
+                    y: topCorridorY,
+                    w: CORRIDOR_H,
+                    h: sideCorridorH,
+                });
+
+                let curLeftY = sideUnitsStartY;
+                for (let i = 0; i < nLeft; i++) {
+                    const dbu = leftUnits[i];
+                    const dims = getUnitDimensions(dbu?.beds);
+                    const u = createUnit(leftCorridorX - dims.w - GAP, curLeftY, dims.w, dims.h);
+                    if (u) newUnits.push(u);
+                    curLeftY += dims.h + GAP;
+                }
             }
 
-            // East Wing
+            // 4. East Wing Corridor & Units
             if (nRight > 0) {
-                const rightCorridorX = topCorridorX + topCorridorW;
-                const rightCorridorY = topCorridorY;
-                const rightCorridorH = Math.max(nRight * 160 + 40, 420);
+                const rightCorridorX = topCorridorX + topCorridorW - CORRIDOR_H;
                 newCorridors.push({
                     id: `corridor-right-${Date.now()}`,
                     label: "East Wing",
                     x: rightCorridorX,
-                    y: rightCorridorY,
+                    y: topCorridorY,
                     w: CORRIDOR_H,
-                    h: rightCorridorH,
+                    h: sideCorridorH,
                 });
+
+                let curRightY = sideUnitsStartY;
                 for (let i = 0; i < nRight; i++) {
-                    const u = createUnit(rightCorridorX + CORRIDOR_H + GAP, rightCorridorY + 40 + i * 160, 140, 140);
+                    const dbu = rightUnits[i];
+                    const dims = getUnitDimensions(dbu?.beds);
+                    const u = createUnit(rightCorridorX + CORRIDOR_H + GAP, curRightY, dims.w, dims.h);
                     if (u) newUnits.push(u);
+                    curRightY += dims.h + GAP;
                 }
             }
         } else if (presetType === "l-shape") {
@@ -2768,23 +2826,40 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
             const nTop = Math.max(1, Math.ceil(count / 2));
             const nLeft = Math.max(1, count - nTop);
 
+            const topUnits = floorPool.slice(0, nTop);
+            const leftUnits = floorPool.slice(nTop, count);
+
+            const maxLeftW = leftUnits.length > 0 ? Math.max(...leftUnits.map(u => getUnitDimensions(u?.beds).w)) : 0;
+            const maxTopH = topUnits.length > 0 ? Math.max(...topUnits.map(u => getUnitDimensions(u?.beds).h)) : 140;
+
             let topW = 0;
-            for (let i = 0; i < nTop; i++) {
-                const dims = getUnitDimensions(floorPool[i]?.beds);
-                topW += dims.w + (i > 0 ? GAP : 0);
-            }
+            topUnits.forEach((u, i) => {
+                topW += getUnitDimensions(u?.beds).w + (i > 0 ? GAP : 0);
+            });
 
-            const startX = 240;
-            const startY = 60;
-            const topCorridorX = startX - 40;
-            const topCorridorY = startY + 140 + GAP;
-            const topCorridorW = topW + 80;
+            let leftH = 0;
+            leftUnits.forEach((u, i) => {
+                leftH += getUnitDimensions(u?.beds).h + (i > 0 ? GAP : 0);
+            });
 
-            let curTopX = startX;
+            const MARGIN = 80;
+            const westUnitsStartX = MARGIN;
+            const leftCorridorX = westUnitsStartX + maxLeftW + GAP;
+            const topCorridorX = leftCorridorX;
+            const topCorridorW = Math.max(topW + 80, 600);
+            const topUnitsStartX = topCorridorX + Math.max(GAP, Math.round((topCorridorW - topW) / 2));
+
+            const startY = MARGIN;
+            const topCorridorY = startY + maxTopH + GAP;
+            const sideUnitsStartY = topCorridorY + CORRIDOR_H + GAP;
+            const sideCorridorH = Math.max(leftH, 420) + CORRIDOR_H + GAP;
+
+            // Top row
+            let curTopX = topUnitsStartX;
             for (let i = 0; i < nTop; i++) {
-                const dbu = floorPool[i];
+                const dbu = topUnits[i];
                 const dims = getUnitDimensions(dbu?.beds);
-                const u = createUnit(curTopX, startY, dims.w, dims.h);
+                const u = createUnit(curTopX, startY + (maxTopH - dims.h), dims.w, dims.h);
                 if (u) newUnits.push(u);
                 curTopX += dims.w + GAP;
             }
@@ -2798,20 +2873,22 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                 h: CORRIDOR_H,
             });
 
-            const leftCorridorX = topCorridorX - CORRIDOR_H;
-            const leftCorridorY = topCorridorY;
-            const leftCorridorH = Math.max(nLeft * 160 + 40, 420);
             newCorridors.push({
                 id: `corridor-left-${Date.now()}`,
                 label: "Side Wing",
                 x: leftCorridorX,
-                y: leftCorridorY,
+                y: topCorridorY,
                 w: CORRIDOR_H,
-                h: leftCorridorH,
+                h: sideCorridorH,
             });
+
+            let curLeftY = sideUnitsStartY;
             for (let i = 0; i < nLeft; i++) {
-                const u = createUnit(leftCorridorX - 140 - GAP, leftCorridorY + 40 + i * 160, 140, 140);
+                const dbu = leftUnits[i];
+                const dims = getUnitDimensions(dbu?.beds);
+                const u = createUnit(leftCorridorX - dims.w - GAP, curLeftY, dims.w, dims.h);
                 if (u) newUnits.push(u);
+                curLeftY += dims.h + GAP;
             }
         }
 
@@ -2819,14 +2896,50 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         setCorridors(newCorridors);
         setStructures([]);
 
-        // Calculate and apply expanded canvas dimensions
+        // Calculate and apply expanded canvas dimensions with generous padding
         let maxX = 0;
         let maxY = 0;
         newUnits.forEach(u => { maxX = Math.max(maxX, u.x + u.w); maxY = Math.max(maxY, u.y + u.h); });
         newCorridors.forEach(c => { maxX = Math.max(maxX, c.x + c.w); maxY = Math.max(maxY, c.y + c.h); });
-        const neededExtraW = Math.max(0, Math.ceil((maxX + 300 - Math.max(420, viewportSize.width - BLUEPRINT_MARGIN * 2)) / 50) * 50);
-        const neededExtraH = Math.max(0, Math.ceil((maxY + 300 - Math.max(320, viewportSize.height - BLUEPRINT_MARGIN * 2)) / 50) * 50);
+
+        const CANVAS_PADDING = 260;
+        const MIN_BLUEPRINT_WIDTH = Math.max(420, viewportSize.width - BLUEPRINT_MARGIN * 2);
+        const MIN_BLUEPRINT_HEIGHT = Math.max(320, viewportSize.height - BLUEPRINT_MARGIN * 2);
+
+        const neededExtraW = Math.max(0, Math.ceil((maxX + CANVAS_PADDING - MIN_BLUEPRINT_WIDTH) / 50) * 50);
+        const neededExtraH = Math.max(0, Math.ceil((maxY + CANVAS_PADDING - MIN_BLUEPRINT_HEIGHT) / 50) * 50);
+
         setExtraDimensions({ width: neededExtraW, height: neededExtraH });
+        extraDimensionsRef.current = { width: neededExtraW, height: neededExtraH };
+
+        // Auto-fit & center the newly generated layout in the viewport
+        const targetBlueprintW = MIN_BLUEPRINT_WIDTH + neededExtraW;
+        const targetBlueprintH = MIN_BLUEPRINT_HEIGHT + neededExtraH;
+        const targetWorldW = targetBlueprintW + BLUEPRINT_MARGIN * 2;
+        const targetWorldH = targetBlueprintH + BLUEPRINT_MARGIN * 2;
+
+        const container = containerRef.current;
+        const containerW = container?.clientWidth || viewportSize.width;
+        const containerH = container?.clientHeight || viewportSize.height;
+
+        const availableW = Math.max(300, containerW - 120);
+        const availableH = Math.max(200, containerH - 140);
+
+        const fitScale = Math.min(
+            1.0,
+            Math.max(
+                0.35,
+                Math.min(
+                    availableW / targetWorldW,
+                    availableH / targetWorldH
+                )
+            )
+        );
+        const fitX = Math.round((containerW - targetWorldW * fitScale) / 2);
+        const fitY = Math.round((containerH - targetWorldH * fitScale) / 2);
+
+        setScale(fitScale);
+        setPosition({ x: fitX, y: fitY });
 
         // Ensure unplaced pool reflects the changes
         const placedIds = new Set(newUnits.map(u => u.dbId || u.id));
