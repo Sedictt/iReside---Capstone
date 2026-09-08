@@ -56,19 +56,21 @@ Failed | Remarks |
 2. Click the "+ Add Property" button.
 3. Type the building name, address, and choose Apartment, Dormitory, or Boarding House.
 4. Follow the setup steps to add units and floors, then click "Save Property". | The new building is saved and appears as a card on your Properties dashboard. |  |  |  |
-| TC-PM-014 | Properties (/landlord/properties) | Add photos and amenities to an existing building | You have at least one building listed. | 1. On the Properties page, find your building card and click the pencil "Edit" button.
-2. Go to the "Amenities & Media" step.
-3. Upload pictures of the building and check off amenities (WiFi, CCTV, etc.).
-4. Save your changes. | The photos upload cleanly and display on the property's showcase card. |  |  |  |
+| TC-PM-014 | Properties (/landlord/properties) | Update property photo and amenities | You have at least one property listed in your portfolio. | 1. On the Properties page, click the "Manage" button on your building card.
+2. In the Quick Actions pop-up, click "Edit Property".
+3. In Step 1 (Identity), click the cover photo to upload a new picture.
+4. Click Next to reach Step 3 (Financials) and check off your amenities (Wi-Fi, CCTV, Parking, etc.).
+5. Continue through the wizard and click "Save Changes". | The property updates successfully with your new cover photo and selected amenities. |  |  |  |
 | TC-PM-015 | Visual Unit Map (/landlord/unit-map) | View and arrange room layouts on an interactive floor plan | You have a building with units created. | 1. Go to the Visual Planner (`/landlord/unit-map`) and select your building.
 2. Look at the architectural blueprint showing all the rooms on that floor.
 3. Click on any room box to see its details. | The visual map shows all rooms positioned clearly with room numbers and status tags. |  |  |  |
 | TC-PM-016 | Visual Unit Map (/landlord/unit-map) | Inspect room details and tenant actions from the map side panel | Rooms exist on your visual floor plan. | 1. On the Visual Unit Map, click on any room box.
 2. Look at the Unit Details side panel that opens on the right.
 3. Check the tenant name, monthly rent, and available buttons (Message, History, or Walk-In). | The side panel displays full information about the room and who lives there. |  |  |  |
-| TC-PM-017 | Visual Unit Map (/landlord/unit-map) | Highlight only vacant rooms on the floor plan | Your building has both occupied and vacant rooms. | 1. Go to the Visual Unit Map.
-2. Click the "Vacant" filter button in the top toolbar.
-3. Look at the rooms on the floor plan. | All vacant rooms light up in green, while occupied rooms are filtered out. |  |  |  |
+| TC-PM-017 | Visual Unit Map (/landlord/unit-map) | Filter room availability using the bottom status dock | You have an active floor plan with both occupied and available rooms. | 1. Open the Visual Unit Map (`/landlord/unit-map`) and select your building.
+2. Locate the floating status filter bar at the bottom-left of the floor plan.
+3. Click the "Occupied" filter to turn it off (leaving "Available" active).
+4. Observe the rooms on the floor plan blueprint and the minimap. | Occupied rooms dim and turn grey, while Available rooms stay clearly highlighted with green borders and indicators. |  |  |  |
 | TC-PM-018 | Visual Unit Map (/landlord/unit-map) | Delete or decommission a vacant room from the floor plan | You have an empty room you want to remove. | 1. On the Visual Unit Map, click on the empty room.
 2. In the Unit Details side panel, scroll down to the bottom.
 3. Click the red "Remove Unit" button and confirm. | The room is permanently removed from the visual floor plan. |  |  |  |

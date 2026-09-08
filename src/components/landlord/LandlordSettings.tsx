@@ -312,6 +312,47 @@ export function LandlordSettings() {
     const [justSaved, setJustSaved] = useState(false);
     const supabase = useMemo(() => createClient(), []);
 
+    // Mobile Tab Rail Horizontal Scroll State & Affordance
+    const mobileTabRailRef = useRef<HTMLDivElement>(null);
+    const [canScrollLeft, setCanScrollLeft] = useState(false);
+    const [canScrollRight, setCanScrollRight] = useState(true);
+
+    const updateScrollIndicators = useCallback(() => {
+        const el = mobileTabRailRef.current;
+        if (!el) return;
+        const { scrollLeft, scrollWidth, clientWidth } = el;
+        setCanScrollLeft(scrollLeft > 6);
+        setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 6);
+    }, []);
+
+    useEffect(() => {
+        const el = mobileTabRailRef.current;
+        if (!el) return;
+        updateScrollIndicators();
+        el.addEventListener("scroll", updateScrollIndicators, { passive: true });
+        window.addEventListener("resize", updateScrollIndicators);
+        return () => {
+            el.removeEventListener("scroll", updateScrollIndicators);
+            window.removeEventListener("resize", updateScrollIndicators);
+        };
+    }, [updateScrollIndicators]);
+
+    const scrollMobileTabs = useCallback((direction: "left" | "right") => {
+        const el = mobileTabRailRef.current;
+        if (!el) return;
+        const delta = direction === "left" ? -200 : 200;
+        el.scrollBy({ left: delta, behavior: "smooth" });
+    }, []);
+
+    const handleMobileTabClick = useCallback((tabId: SettingsCategory) => {
+        setActiveTab(tabId);
+        const el = mobileTabRailRef.current;
+        if (el) {
+            const btn = el.querySelector(`[data-tab-id="${tabId}"]`) as HTMLElement | null;
+            btn?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+        }
+    }, []);
+
     // Sync & Cache States
     const [isSyncing, setIsSyncing] = useState(true);
     const [syncError, setSyncError] = useState<string | null>(null);
@@ -2990,18 +3031,52 @@ export function LandlordSettings() {
                                 </p>
                             </div>
                         </div>
+
+                        {/* Swipe / Slide affordance hint */}
+                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground bg-muted/40 px-2.5 py-1 rounded-full border border-border/40 select-none">
+                            <SlidersHorizontal className="size-3 text-primary/70" />
+                            <span>Swipe to reveal</span>
+                            <ChevronRight className="size-3 text-primary animate-pulse" />
+                        </div>
                     </div>
 
-                    <div className="relative">
-                        <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1 scrollbar-hide -mx-1 px-1">
+                    <div className="relative group/rail">
+                        {/* Left Fade Gradient & Scroll Arrow */}
+                        <AnimatePresence>
+                            {canScrollLeft && (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="absolute left-0 top-0 bottom-0 z-10 flex items-center pr-3 pl-0.5 bg-gradient-to-r from-background via-background/95 to-transparent pointer-events-none"
+                                >
+                                    <button
+                                        type="button"
+                                        onClick={() => scrollMobileTabs("left")}
+                                        aria-label="Scroll tabs left"
+                                        className="size-7 rounded-full neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-primary transition-all shadow-md active:scale-90 cursor-pointer pointer-events-auto"
+                                    >
+                                        <ChevronLeft className="size-3.5" />
+                                    </button>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                        {/* Scrollable Pills Container */}
+                        <div 
+                            ref={mobileTabRailRef}
+                            className="flex items-center gap-2 overflow-x-auto pb-1.5 pt-1 scrollbar-hide -mx-1 px-1 scroll-smooth"
+                        >
                             {SIDEBAR_ITEMS.map((item) => {
                                 const Icon = item.icon;
                                 const isActive = activeTab === item.id;
                                 return (
                                     <button
                                         key={item.id}
+                                        data-tab-id={item.id}
                                         type="button"
-                                        onClick={() => setActiveTab(item.id)}
+                                        onClick={() => handleMobileTabClick(item.id)}
                                         className={cn(
                                             "flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-black whitespace-nowrap transition-all duration-300 cursor-pointer shrink-0",
                                             isActive
@@ -3018,6 +3093,29 @@ export function LandlordSettings() {
                                 );
                             })}
                         </div>
+
+                        {/* Right Fade Gradient & Scroll Arrow */}
+                        <AnimatePresence>
+                            {canScrollRight && (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="absolute right-0 top-0 bottom-0 z-10 flex items-center pl-3 pr-0.5 bg-gradient-to-l from-background via-background/95 to-transparent pointer-events-none"
+                                >
+                                    <button
+                                        type="button"
+                                        onClick={() => scrollMobileTabs("right")}
+                                        aria-label="Scroll tabs right"
+                                        title="Slide to view more tabs"
+                                        className="size-7 rounded-full neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-primary transition-all shadow-md active:scale-90 cursor-pointer pointer-events-auto animate-pulse hover:animate-none"
+                                    >
+                                        <ChevronRight className="size-3.5" />
+                                    </button>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
                 </div>
 
