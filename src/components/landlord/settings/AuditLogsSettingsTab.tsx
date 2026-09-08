@@ -147,8 +147,8 @@ export function AuditLogsSettingsTab() {
                 return {
                     label: "Billing & Invoices",
                     icon: CreditCard,
-                    badgeClass: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
-                    dotClass: "bg-emerald-500",
+                    badgeClass: "bg-primary/10 text-primary border-primary/20",
+                    dotClass: "bg-primary",
                 };
             case "security":
                 return {
@@ -161,22 +161,22 @@ export function AuditLogsSettingsTab() {
                 return {
                     label: "Settings & Profile",
                     icon: SlidersHorizontal,
-                    badgeClass: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20",
-                    dotClass: "bg-indigo-500",
+                    badgeClass: "bg-primary/10 text-primary border-primary/20",
+                    dotClass: "bg-primary",
                 };
             case "properties":
                 return {
                     label: "Properties & Units",
                     icon: Building2,
-                    badgeClass: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20",
-                    dotClass: "bg-cyan-500",
+                    badgeClass: "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20",
+                    dotClass: "bg-sky-500",
                 };
             default:
                 return {
                     label: "Activity",
                     icon: Clock,
-                    badgeClass: "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20",
-                    dotClass: "bg-slate-500",
+                    badgeClass: "bg-muted text-muted-foreground border-border",
+                    dotClass: "bg-muted-foreground",
                 };
         }
     };
@@ -188,14 +188,14 @@ export function AuditLogsSettingsTab() {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                         <div className="flex items-center gap-2.5">
-                            <div className="size-10 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center">
+                            <div className="size-10 rounded-2xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center">
                                 <ShieldCheck className="size-5" />
                             </div>
                             <div>
-                                <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                                <h2 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">
                                     Activity & Audit Logs
                                 </h2>
-                                <p className="text-xs text-slate-500 dark:text-neutral-400">
+                                <p className="text-xs text-muted-foreground">
                                     Tamper-proof chronological trail of account, billing, and security actions.
                                 </p>
                             </div>
@@ -207,9 +207,9 @@ export function AuditLogsSettingsTab() {
                             type="button"
                             onClick={() => fetchLogs()}
                             disabled={loading}
-                            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-xs font-bold text-slate-700 dark:text-neutral-200 transition-colors"
+                            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl neumorphic-extruded hover:text-primary text-xs font-bold text-muted-foreground hover:text-foreground transition-colors cursor-pointer disabled:opacity-50"
                         >
-                            <RefreshCw className={cn("size-3.5", loading && "animate-spin text-emerald-500")} />
+                            <RefreshCw className={cn("size-3.5", loading && "animate-spin text-primary")} />
                             <span>Refresh</span>
                         </button>
 
@@ -217,7 +217,7 @@ export function AuditLogsSettingsTab() {
                             type="button"
                             onClick={handleExportCsv}
                             disabled={isExporting || logs.length === 0}
-                            className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black transition-all shadow-md shadow-emerald-500/20 disabled:opacity-50"
+                            className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl neumorphic-primary text-primary-foreground text-xs font-black transition-all shadow-md shadow-primary/20 hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:hover:scale-100 cursor-pointer"
                         >
                             <Download className="size-3.5" />
                             <span>{isExporting ? "Exporting..." : "Export CSV"}</span>
@@ -226,34 +226,14 @@ export function AuditLogsSettingsTab() {
                 </div>
 
                 {/* Ethical Privacy Guarantee Banner */}
-                <div className="flex items-start gap-3 p-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 text-xs text-slate-600 dark:text-emerald-200/90 leading-relaxed">
-                    <Lock className="size-4 shrink-0 text-emerald-500 mt-0.5" />
+                <div className="flex items-start gap-3 p-4 rounded-2xl border border-primary/20 bg-primary/5 text-xs text-muted-foreground leading-relaxed">
+                    <Lock className="size-4 shrink-0 text-primary mt-0.5" />
                     <div>
-                        <span className="font-bold text-slate-900 dark:text-white">Ethical Logging Standard (OWASP & GDPR Article 30): </span>
+                        <span className="font-bold text-foreground">Ethical Logging Standard (OWASP & GDPR Article 30): </span>
                         <span>
                             All events are append-only and strictly isolated to your workspace. Passwords, auth tokens, private chat texts, and financial secrets are never logged.
                         </span>
                     </div>
-                </div>
-            </div>
-
-            {/* Metrics Bento Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-                <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50/60 dark:bg-white/5 space-y-1">
-                    <span className="text-[11px] font-semibold text-slate-500 dark:text-neutral-400 block">Total Activities</span>
-                    <p className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">{stats.total}</p>
-                </div>
-                <div className="p-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 space-y-1">
-                    <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 block">Billing Actions</span>
-                    <p className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400">{stats.billingCount}</p>
-                </div>
-                <div className="p-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 space-y-1">
-                    <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 block">Security Events</span>
-                    <p className="text-xl sm:text-2xl font-black text-amber-600 dark:text-amber-400">{stats.securityCount}</p>
-                </div>
-                <div className="p-4 rounded-2xl border border-indigo-500/20 bg-indigo-500/5 space-y-1">
-                    <span className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 block">Settings Changes</span>
-                    <p className="text-xl sm:text-2xl font-black text-indigo-600 dark:text-indigo-400">{stats.settingsCount}</p>
                 </div>
             </div>
 
@@ -262,33 +242,36 @@ export function AuditLogsSettingsTab() {
                 <div className="flex flex-col md:flex-row items-center gap-3">
                     {/* Search Input */}
                     <div className="relative w-full md:flex-1">
-                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-400 dark:text-neutral-500" />
+                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                         <input
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Search by action, resident, or invoice ID..."
-                            className="w-full pl-9 pr-4 py-2.5 text-xs sm:text-sm text-slate-900 dark:text-white bg-slate-50/60 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 transition-all placeholder:text-slate-400"
+                            className="w-full pl-9 pr-4 py-2.5 text-xs sm:text-sm text-foreground bg-card/60 border border-border rounded-2xl focus:outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-muted-foreground"
                         />
                     </div>
 
                     {/* Category Tabs */}
-                    <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-white/5 rounded-2xl overflow-x-auto w-full md:w-auto">
-                        {["all", "billing", "security", "settings", "properties"].map((cat) => (
-                            <button
-                                key={cat}
-                                type="button"
-                                onClick={() => setSelectedCategory(cat)}
-                                className={cn(
-                                    "px-3 py-1.5 rounded-xl text-xs font-bold capitalize transition-all whitespace-nowrap",
-                                    selectedCategory === cat
-                                        ? "bg-white dark:bg-[#1e2330] text-slate-900 dark:text-white shadow-sm"
-                                        : "text-slate-500 dark:text-neutral-400 hover:text-slate-900"
-                                )}
-                            >
-                                {cat === "all" ? "All Logs" : cat}
-                            </button>
-                        ))}
+                    <div className="flex items-center gap-1 p-1 bg-muted/30 rounded-2xl border border-border/40 overflow-x-auto w-full md:w-auto scrollbar-hide">
+                        {["all", "billing", "security", "settings", "properties"].map((cat) => {
+                            const isCatActive = selectedCategory === cat;
+                            return (
+                                <button
+                                    key={cat}
+                                    type="button"
+                                    onClick={() => setSelectedCategory(cat)}
+                                    className={cn(
+                                        "px-3.5 py-1.5 rounded-xl text-xs font-bold capitalize transition-all whitespace-nowrap cursor-pointer",
+                                        isCatActive
+                                            ? "neumorphic-panel text-primary font-black shadow-sm border-primary/30 ring-1 ring-primary/20"
+                                            : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                                    )}
+                                >
+                                    {cat === "all" ? "All Logs" : cat}
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
             </div>
@@ -296,14 +279,14 @@ export function AuditLogsSettingsTab() {
             {/* Logs Timeline List (Paginated & Clean) */}
             <div className="space-y-2.5">
                 {loading ? (
-                    <div className="flex flex-col items-center justify-center py-20 text-slate-400 gap-2 text-xs">
-                        <RefreshCw className="size-5 animate-spin text-emerald-500" />
+                    <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-2 text-xs">
+                        <RefreshCw className="size-5 animate-spin text-primary" />
                         Loading activity logs...
                     </div>
                 ) : logs.length === 0 ? (
-                    <div className="p-12 text-center border border-dashed border-slate-200 dark:border-white/10 rounded-3xl space-y-2 text-slate-400">
-                        <ShieldCheck className="size-8 text-slate-300 dark:text-white/20 mx-auto" />
-                        <p className="text-sm font-bold text-slate-700 dark:text-neutral-300">No activity logs found</p>
+                    <div className="p-12 text-center border border-dashed border-border rounded-3xl space-y-2 text-muted-foreground">
+                        <ShieldCheck className="size-8 text-muted-foreground/40 mx-auto" />
+                        <p className="text-sm font-bold text-foreground">No activity logs found</p>
                         <p className="text-xs">Actions you perform across the dashboard will appear here in real time.</p>
                     </div>
                 ) : (
@@ -314,7 +297,7 @@ export function AuditLogsSettingsTab() {
                         return (
                             <div
                                 key={log.id}
-                                className="group relative flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50/40 dark:bg-white/[0.02] hover:bg-slate-100/60 dark:hover:bg-white/5 transition-all gap-3"
+                                className="group relative flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl border border-border/70 bg-card/60 hover:bg-card hover:border-primary/30 transition-all gap-3 shadow-sm hover:shadow-md"
                             >
                                 <div className="flex items-start sm:items-center gap-3.5 min-w-0">
                                     <div className={cn("size-10 rounded-2xl flex items-center justify-center shrink-0 border", catInfo.badgeClass)}>
@@ -323,7 +306,7 @@ export function AuditLogsSettingsTab() {
 
                                     <div className="min-w-0">
                                         <div className="flex items-center gap-2 flex-wrap">
-                                            <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
+                                            <h4 className="text-xs sm:text-sm font-bold text-foreground truncate">
                                                 {log.title}
                                             </h4>
                                             <span className={cn("text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border", catInfo.badgeClass)}>
@@ -335,19 +318,19 @@ export function AuditLogsSettingsTab() {
                                                 </span>
                                             )}
                                         </div>
-                                        <p className="text-xs text-slate-500 dark:text-neutral-400 mt-0.5 leading-relaxed">
+                                        <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
                                             {log.description}
                                         </p>
                                     </div>
                                 </div>
 
-                                <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200/60 dark:border-white/5">
+                                <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/40">
                                     <div className="text-left sm:text-right">
-                                        <div className="flex items-center gap-1.5 text-[11px] font-medium text-slate-500 dark:text-neutral-400">
-                                            <Clock className="size-3 text-slate-400" />
+                                        <div className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
+                                            <Clock className="size-3 text-muted-foreground/60" />
                                             <ClientOnlyDate date={log.createdAt} format={{ month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }} />
                                         </div>
-                                        <span className="text-[10px] text-slate-400 dark:text-neutral-500 block font-mono">
+                                        <span className="text-[10px] text-muted-foreground/80 block font-mono">
                                             {log.device || "Web Application"}
                                         </span>
                                     </div>
@@ -355,7 +338,7 @@ export function AuditLogsSettingsTab() {
                                     <button
                                         type="button"
                                         onClick={() => setInspectingLog(log)}
-                                        className="size-8 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-500 hover:text-slate-900 dark:text-neutral-400 dark:hover:text-white flex items-center justify-center transition-colors"
+                                        className="size-8 rounded-xl neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-primary transition-all cursor-pointer"
                                         title="View Metadata"
                                     >
                                         <Eye className="size-3.5" />
@@ -369,9 +352,9 @@ export function AuditLogsSettingsTab() {
 
             {/* Pagination Controls Footer */}
             {logs.length > PAGE_SIZE && (
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-200/80 dark:border-white/10 text-xs">
-                    <span className="text-slate-500 dark:text-neutral-400 font-medium">
-                        Showing <strong className="font-bold text-slate-900 dark:text-white">{(currentPage - 1) * PAGE_SIZE + 1}</strong> to <strong className="font-bold text-slate-900 dark:text-white">{Math.min(currentPage * PAGE_SIZE, logs.length)}</strong> of <strong className="font-bold text-slate-900 dark:text-white">{logs.length}</strong> activities
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-border/80 text-xs">
+                    <span className="text-muted-foreground font-medium">
+                        Showing <strong className="font-bold text-foreground">{(currentPage - 1) * PAGE_SIZE + 1}</strong> to <strong className="font-bold text-foreground">{Math.min(currentPage * PAGE_SIZE, logs.length)}</strong> of <strong className="font-bold text-foreground">{logs.length}</strong> activities
                     </span>
 
                     <div className="flex items-center gap-1.5">
@@ -379,7 +362,7 @@ export function AuditLogsSettingsTab() {
                             type="button"
                             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                             disabled={currentPage === 1}
-                            className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 font-bold text-slate-700 dark:text-neutral-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-xl neumorphic-extruded font-bold text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                         >
                             <ChevronLeft className="size-3.5" />
                             <span>Previous</span>
@@ -392,10 +375,10 @@ export function AuditLogsSettingsTab() {
                                     type="button"
                                     onClick={() => setCurrentPage(pageNum)}
                                     className={cn(
-                                        "size-7 rounded-xl font-bold transition-all text-xs flex items-center justify-center",
+                                        "size-7 rounded-xl font-bold transition-all text-xs flex items-center justify-center cursor-pointer",
                                         currentPage === pageNum
-                                            ? "bg-emerald-500 text-white shadow-sm"
-                                            : "border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-600 dark:text-neutral-400 hover:bg-slate-50 dark:hover:bg-white/10"
+                                            ? "neumorphic-primary text-primary-foreground font-black shadow-sm shadow-primary/20"
+                                            : "neumorphic-extruded text-muted-foreground hover:text-foreground"
                                     )}
                                 >
                                     {pageNum}
@@ -407,7 +390,7 @@ export function AuditLogsSettingsTab() {
                             type="button"
                             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                             disabled={currentPage === totalPages}
-                            className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 font-bold text-slate-700 dark:text-neutral-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-xl neumorphic-extruded font-bold text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                         >
                             <span>Next</span>
                             <ChevronRight className="size-3.5" />
@@ -424,60 +407,60 @@ export function AuditLogsSettingsTab() {
                             initial={{ opacity: 0, scale: 0.95, y: 10 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                            className="w-full max-w-lg rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#131722] p-6 shadow-2xl space-y-4"
+                            className="w-full max-w-lg rounded-3xl border border-border bg-card p-6 shadow-2xl space-y-4"
                         >
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                    <div className="size-10 rounded-2xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                                    <div className="size-10 rounded-2xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center shrink-0">
                                         <FileText className="size-5" />
                                     </div>
                                     <div>
-                                        <h3 className="text-sm font-black text-slate-900 dark:text-white">Audit Event Details</h3>
-                                        <p className="text-xs text-slate-500 dark:text-neutral-400 font-mono">ID: {inspectingLog.id}</p>
+                                        <h3 className="text-sm font-black text-foreground">Audit Event Details</h3>
+                                        <p className="text-xs text-muted-foreground font-mono">ID: {inspectingLog.id}</p>
                                     </div>
                                 </div>
                                 <button
                                     onClick={() => setInspectingLog(null)}
-                                    className="size-8 rounded-xl border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white"
+                                    className="size-8 rounded-xl neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer"
                                 >
                                     <X className="size-4" />
                                 </button>
                             </div>
 
                             <div className="space-y-2 text-xs">
-                                <div className="flex justify-between py-1.5 border-b border-slate-200/60 dark:border-white/5">
-                                    <span className="text-slate-500 dark:text-neutral-400">Action Code</span>
-                                    <span className="font-mono font-bold text-slate-900 dark:text-white">{inspectingLog.action}</span>
+                                <div className="flex justify-between py-1.5 border-b border-border/50">
+                                    <span className="text-muted-foreground">Action Code</span>
+                                    <span className="font-mono font-bold text-foreground">{inspectingLog.action}</span>
                                 </div>
-                                <div className="flex justify-between py-1.5 border-b border-slate-200/60 dark:border-white/5">
-                                    <span className="text-slate-500 dark:text-neutral-400">Category</span>
-                                    <span className="font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">{inspectingLog.category}</span>
+                                <div className="flex justify-between py-1.5 border-b border-border/50">
+                                    <span className="text-muted-foreground">Category</span>
+                                    <span className="font-bold text-primary uppercase tracking-wider">{inspectingLog.category}</span>
                                 </div>
-                                <div className="flex justify-between py-1.5 border-b border-slate-200/60 dark:border-white/5">
-                                    <span className="text-slate-500 dark:text-neutral-400">Recorded At</span>
-                                    <span className="font-medium text-slate-900 dark:text-white">
+                                <div className="flex justify-between py-1.5 border-b border-border/50">
+                                    <span className="text-muted-foreground">Recorded At</span>
+                                    <span className="font-medium text-foreground">
                                         {new Date(inspectingLog.createdAt).toLocaleString()}
                                     </span>
                                 </div>
-                                <div className="flex justify-between py-1.5 border-b border-slate-200/60 dark:border-white/5">
-                                    <span className="text-slate-500 dark:text-neutral-400">Client / Device</span>
-                                    <span className="font-medium text-slate-900 dark:text-white">{inspectingLog.device || "Web Browser"}</span>
+                                <div className="flex justify-between py-1.5 border-b border-border/50">
+                                    <span className="text-muted-foreground">Client / Device</span>
+                                    <span className="font-medium text-foreground">{inspectingLog.device || "Web Browser"}</span>
                                 </div>
                             </div>
 
                             {/* JSON Payload Inspector */}
                             <div className="space-y-1.5">
-                                <label className="text-[11px] font-bold text-slate-500 dark:text-neutral-400">
+                                <label className="text-[11px] font-bold text-muted-foreground">
                                     Sanitized Event Metadata
                                 </label>
-                                <pre className="p-3.5 rounded-2xl bg-slate-900 text-emerald-400 text-[11px] font-mono overflow-x-auto max-h-48 custom-scrollbar-premium">
+                                <pre className="p-3.5 rounded-2xl bg-muted/80 text-primary text-[11px] font-mono overflow-x-auto max-h-48 border border-border/40 custom-scrollbar-premium">
                                     {JSON.stringify(inspectingLog.metadata, null, 2)}
                                 </pre>
                             </div>
 
                             <button
                                 onClick={() => setInspectingLog(null)}
-                                className="w-full py-3 rounded-xl bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/15 text-xs font-bold text-slate-800 dark:text-white transition-all"
+                                className="w-full py-3 rounded-xl neumorphic-extruded hover:text-primary text-xs font-bold text-foreground transition-all cursor-pointer"
                             >
                                 Close
                             </button>
