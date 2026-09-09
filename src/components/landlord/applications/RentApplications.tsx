@@ -232,9 +232,41 @@ const calculateApplicationProgress = (app: RentApplication) => {
 
 const resolveImage = (value: string | null | undefined) => value?.trim() ? value : FALLBACK_PROPERTY_IMAGE;
 
+const getApplicantAvatarStyles = (applicant: { name: string; avatarBgColor?: string | null }) => {
+  const rawBg = applicant.avatarBgColor?.trim().toLowerCase();
+  // Filter out legacy dark-mode default backgrounds (#171717, #121212, #0a0a0a, etc.)
+  const isDefaultDark = !rawBg || rawBg === "#171717" || rawBg === "#121212" || rawBg === "#0a0a0a" || rawBg === "#000000" || rawBg === "#18181b";
 
+  if (!isDefaultDark && rawBg?.startsWith("#")) {
+    const r = parseInt(rawBg.slice(1, 3), 16) || 0;
+    const g = parseInt(rawBg.slice(3, 5), 16) || 0;
+    const b = parseInt(rawBg.slice(5, 7), 16) || 0;
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    return {
+      style: { backgroundColor: rawBg },
+      className: brightness > 160 ? "text-neutral-900 border-border" : "text-white border-transparent",
+    };
+  }
 
-// ─── Sub-Components ──────────────────────────────────────────────────
+  if (!isDefaultDark && rawBg) {
+    return { className: rawBg };
+  }
+
+  // Consistent, vibrant palette based on applicant's name
+  const palettes = [
+    "bg-primary/15 text-primary border-primary/30",
+    "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30",
+    "bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30",
+    "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
+    "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30",
+    "bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30",
+    "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/30",
+    "bg-teal-500/15 text-teal-600 dark:text-teal-400 border-teal-500/30",
+  ];
+  const charCodeSum = (applicant.name || "A").split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return { className: palettes[charCodeSum % palettes.length] };
+};
+
 
 function ApplicationsSkeletonList() {
  return (
@@ -748,10 +780,10 @@ export function RentApplications() {
  {/* ─── Page Header ─────────────────────────────────────────── */}
  <div className="flex flex-col justify-between gap-6 md:flex-row md:items-center">
  <div className="space-y-1">
- <h1 className="text-4xl font-black tracking-tight text-white">
+ <h1 className="text-4xl font-black tracking-tight text-foreground">
  Applications
  </h1>
- <p className="text-sm font-medium text-neutral-400">
+ <p className="text-sm font-medium text-muted-foreground">
  Manage prospective tenants and review residency profiles.
  </p>
  </div>
@@ -759,7 +791,7 @@ export function RentApplications() {
  <div className="flex flex-wrap items-center gap-3">
  <button
  onClick={() => setShowInviteTools(true)}
- className="flex h-11 items-center gap-2 rounded-2xl neumorphic-panel px-5 text-xs font-black uppercase tracking-widest text-white transition-all hover:border-primary/30 hover:neumorphic-inset active:scale-95"
+ className="flex h-11 items-center gap-2 rounded-2xl neumorphic-panel px-5 text-xs font-black uppercase tracking-widest text-foreground transition-all hover:border-primary/30 hover:neumorphic-inset active:scale-95"
  >
  <Plus className="size-4" />
  Invite Manager
@@ -778,23 +810,23 @@ export function RentApplications() {
  {/* ─── Main Application Container ────────────────────────────── */}
  <div className="flex flex-col rounded-[2.5rem] neumorphic-panel overflow-hidden">
  {/* ─── Command Toolbar ─────────────────────────────────────── */}
- <div className="flex flex-col items-center justify-between gap-4 border-b border-white/5 neumorphic-panel p-4 md:p-6 backdrop-blur-xl xl:flex-row">
+ <div className="flex flex-col items-center justify-between gap-4 border-b border-border/50 neumorphic-panel p-4 md:p-6 backdrop-blur-xl xl:flex-row">
  <div className="flex items-center gap-1 rounded-2xl neumorphic-extruded p-1">
  {filterTabs.map((tab) => (
  <button
  key={tab.value}
  onClick={() => setActiveFilter(tab.value as any)}
  className={cn(
- "flex items-center gap-2 rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all",
+ "flex items-center gap-2 rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer",
  activeFilter === tab.value
- ? "neumorphic-panel text-white ring-1 ring-border"
- : "text-neutral-400 hover:neumorphic-inset hover:text-white"
+ ? "neumorphic-panel text-foreground ring-1 ring-border"
+ : "text-muted-foreground hover:neumorphic-inset hover:text-foreground"
  )}
  >
  {tab.label}
  <span className={cn(
  "rounded-lg px-1.5 py-0.5 text-[9px]",
- activeFilter === tab.value ? "bg-primary text-primary-foreground" : "neumorphic-inset text-neutral-400"
+ activeFilter === tab.value ? "bg-primary text-primary-foreground" : "neumorphic-inset text-muted-foreground"
  )}>
  {tab.count}
  </span>
@@ -804,16 +836,16 @@ export function RentApplications() {
 
  <div className="flex w-full items-center gap-3 xl:w-auto">
  <div className="relative flex-1 xl:w-80">
- <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-neutral-400" />
+ <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
  <input
  type="text"
  placeholder="Search applications..."
  value={searchQuery}
  onChange={(e) => setSearchQuery(e.target.value)}
- className="h-11 w-full rounded-2xl neumorphic-extruded pl-10 pr-4 text-xs font-black text-white focus:border-primary/50 focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all"
+ className="h-11 w-full rounded-2xl neumorphic-extruded pl-10 pr-4 text-xs font-black text-foreground placeholder:text-muted-foreground/60 focus:border-primary/50 focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all"
  />
  </div>
- <button className="flex h-11 items-center gap-2 rounded-2xl neumorphic-extruded px-5 text-[10px] font-black uppercase tracking-widest text-neutral-400 hover:neumorphic-inset hover:text-white transition-all">
+ <button className="flex h-11 items-center gap-2 rounded-2xl neumorphic-extruded px-5 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:neumorphic-inset hover:text-foreground transition-all cursor-pointer">
  <Filter className="size-4" />
  <span className="hidden sm:inline">Advanced</span>
  </button>
@@ -827,13 +859,13 @@ export function RentApplications() {
  ) : error ? (
  <div className="flex flex-col items-center justify-center py-12 text-center">
  <AlertCircle className="size-12 text-red-500/50 mb-4" />
- <p className="text-sm font-black text-white">{error}</p>
+ <p className="text-sm font-black text-foreground">{error}</p>
  </div>
  ) : filteredApplications.length === 0 ? (
  <div className="flex flex-col items-center justify-center py-24 text-center">
- <Users className="size-12 text-neutral-400/30 mb-4" />
- <h3 className="text-xl font-black text-white">No Applications Found</h3>
- <p className="text-sm font-medium text-neutral-400 max-w-xs mt-2">
+ <Users className="size-12 text-muted-foreground/30 mb-4" />
+ <h3 className="text-xl font-black text-foreground">No Applications Found</h3>
+ <p className="text-sm font-medium text-muted-foreground max-w-xs mt-2">
  We couldn&apos;t find any applications matching your current criteria.
  </p>
  </div>
@@ -850,7 +882,7 @@ export function RentApplications() {
  animate={{ opacity: 1, y: 0 }}
  transition={{ delay: idx * 0.03 }}
  onClick={() => setSelectedApp(app)}
- className="group relative flex cursor-pointer items-center overflow-hidden rounded-3xl neumorphic-extruded p-3 transition-all hover:border-primary/20 hover:neumorphic-panel hover: active:scale-[0.99]"
+ className="group relative flex cursor-pointer items-center overflow-hidden rounded-3xl neumorphic-extruded p-3 transition-all hover:border-primary/20 hover:neumorphic-panel active:scale-[0.99]"
  >
  <div className="relative h-20 w-28 shrink-0 overflow-hidden rounded-2xl neumorphic-inset">
  <Image src={resolveImage(app.propertyImage)} alt="" fill sizes="112px" className="object-cover transition-transform duration-700 group-hover:scale-110" />
@@ -860,12 +892,27 @@ export function RentApplications() {
 
  <div className="grid flex-1 grid-cols-1 items-center gap-6 px-6 lg:grid-cols-[1fr_120px_180px] xl:grid-cols-[1fr_120px_120px_180px]">
  <div className="flex items-center gap-4 min-w-0">
- <div className="relative size-12 shrink-0 rounded-full border-2 border-white/5 neumorphic-inset flex items-center justify-center font-black text-neutral-400" style={{ backgroundColor: app.applicant.avatarBgColor || "" }}>
- {app.applicant.avatar ? <Image src={app.applicant.avatar} alt={`${app.applicant.name} avatar`} fill sizes="48px" className="object-cover" /> : app.applicant.name[0]}
- </div>
+ {(() => {
+ const avatarStyle = getApplicantAvatarStyles(app.applicant);
+   return (
+                        <div 
+                          style={avatarStyle.style}
+                          className={cn(
+                            "relative size-12 shrink-0 rounded-full border-2 flex items-center justify-center font-black text-sm transition-all",
+                            avatarStyle.className
+                          )}
+                        >
+                          {app.applicant.avatar ? (
+                            <Image src={app.applicant.avatar} alt={`${app.applicant.name} avatar`} fill sizes="48px" className="object-cover rounded-full" />
+                          ) : (
+                            app.applicant.name[0]?.toUpperCase() || "?"
+                          )}
+                        </div>
+                      );
+                    })()}
  <div className="min-w-0 flex-1">
- <h3 className="truncate text-lg font-black tracking-tight text-white">{app.applicant.name}</h3>
- <p className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-neutral-400 truncate">
+ <h3 className="truncate text-lg font-black tracking-tight text-foreground group-hover:text-primary transition-colors">{app.applicant.name}</h3>
+ <p className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-muted-foreground truncate">
  <Briefcase className="size-3 shrink-0" />
  {app.applicant.occupation || "Unspecified"}
  </p>
@@ -873,13 +920,13 @@ export function RentApplications() {
  </div>
 
  <div className="hidden lg:flex flex-col">
- <span className="text-[9px] font-black uppercase tracking-widest text-neutral-400">Rent</span>
- <span className="text-sm font-black text-white">{formatCurrency(app.monthlyRent)}</span>
+ <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Rent</span>
+ <span className="text-sm font-black text-foreground">{formatCurrency(app.monthlyRent)}</span>
  </div>
 
  <div className="hidden xl:flex flex-col">
- <span className="text-[9px] font-black uppercase tracking-widest text-neutral-400">Move-in</span>
- <span className="text-sm font-black text-white">{formatDate(app.requestedMoveIn)}</span>
+ <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Move-in</span>
+ <span className="text-sm font-black text-foreground">{formatDate(app.requestedMoveIn)}</span>
  </div>
 
  <div className="flex items-center justify-end gap-3">
@@ -890,7 +937,7 @@ export function RentApplications() {
  <config.icon className="size-3.5" />
  {config.label}
  </div>
- <button className="neumorphic-extruded flex size-10 shrink-0 items-center justify-center rounded-xl neumorphic-panel transition-all hover:bg-primary hover:text-white hover:border-primary">
+ <button className="neumorphic-extruded flex size-10 shrink-0 items-center justify-center rounded-xl neumorphic-panel transition-all text-muted-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary">
  <Eye className="size-4" />
  </button>
  </div>
@@ -921,20 +968,20 @@ export function RentApplications() {
  animate={{ x: 0 }}
  exit={{ x: "100%" }}
  transition={{ type: "spring", damping: 30, stiffness: 300 }}
- className="fixed right-0 top-0 z-[120] flex h-screen w-full max-w-2xl flex-col border-l border-white/5 neumorphic-panel "
+ className="fixed right-0 top-0 z-[120] flex h-screen w-full max-w-2xl flex-col border-l border-border/50 neumorphic-panel"
  >
- <div className="flex items-center justify-between border-b border-white/5 p-8 neumorphic-panel backdrop-blur-xl">
+ <div className="flex items-center justify-between border-b border-border/50 p-8 neumorphic-panel backdrop-blur-xl">
  <div>
  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-1">
  <div className="size-1.5 rounded-full bg-primary" />
  Application Record
  </div>
- <h2 className="text-3xl font-black tracking-tighter text-white">
- Dossier <span className="text-neutral-400/30">Review</span>
+ <h2 className="text-3xl font-black tracking-tighter text-foreground">
+ Dossier <span className="text-muted-foreground/40">Review</span>
  </h2>
  </div>
  <div className="flex items-center gap-2">
- <button onClick={() => setSelectedApp(null)} className="flex size-11 items-center justify-center rounded-2xl neumorphic-extruded transition-all hover:neumorphic-inset active:scale-95">
+ <button onClick={() => setSelectedApp(null)} className="flex size-11 items-center justify-center rounded-2xl neumorphic-extruded text-muted-foreground hover:text-foreground transition-all hover:neumorphic-inset active:scale-95 cursor-pointer">
  <X className="size-5" />
  </button>
  </div>
@@ -947,7 +994,7 @@ export function RentApplications() {
  <button
  onClick={() => handleQuickApprove()}
  disabled={updatingStatusId === selectedApp.id}
- className="flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-emerald-500 disabled:opacity-50"
+ className="flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-emerald-500 disabled:opacity-50 cursor-pointer"
  >
  {updatingStatusId === selectedApp.id ? (
  <Loader2 className="size-4 animate-spin" />
@@ -958,13 +1005,13 @@ export function RentApplications() {
  </button>
  <button
  onClick={() => openApprovalModal(selectedApp)}
- className="flex items-center gap-2 rounded-xl bg-primary/10 px-5 py-2.5 text-xs font-black uppercase tracking-widest text-primary transition-all hover:bg-primary/20"
+ className="flex items-center gap-2 rounded-xl bg-primary/10 px-5 py-2.5 text-xs font-black uppercase tracking-widest text-primary transition-all hover:bg-primary/20 cursor-pointer"
  >
  <Wallet className="size-4" />
  {selectedApp.status === "payment_pending" ? "Finalize" : "Request Payment"}
  </button>
  </div>
- <p className="mt-3 text-[10px] font-medium text-neutral-400">
+ <p className="mt-3 text-[10px] font-medium text-muted-foreground">
  Quick Approve skips payment and directly creates tenant account.
  </p>
  </div>
@@ -989,7 +1036,7 @@ export function RentApplications() {
  return (
  <div className="space-y-4">
  <div className="flex items-center justify-between px-2">
- <h4 className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Onboarding Progress</h4>
+ <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Onboarding Progress</h4>
  <span className={cn(
  "text-[10px] font-black uppercase tracking-widest",
  percentage === 100 ? "text-emerald-500" : "text-primary"
@@ -1014,7 +1061,7 @@ export function RentApplications() {
  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-500">Missing Prerequisites</p>
  <ul className="space-y-1.5">
  {missing.map((item) => (
- <li key={item} className="flex items-center gap-2 text-[11px] font-black text-neutral-400/80">
+ <li key={item} className="flex items-center gap-2 text-[11px] font-black text-muted-foreground">
  <div className="size-1 rounded-full bg-amber-500/40" />
  {item}
  </li>
@@ -1029,57 +1076,72 @@ export function RentApplications() {
 
  {/* Applicant Profile */}
  <div className="space-y-4">
- <h4 className="text-[10px] font-black uppercase tracking-widest text-neutral-400 px-2">Tenant Profile</h4>
+ <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2">Tenant Profile</h4>
  <div className="rounded-[2.5rem] neumorphic-extruded p-8 space-y-8">
  <div className="flex items-center gap-6">
- <div className="relative size-20 rounded-full border-4 border-white/5 flex items-center justify-center text-3xl font-black text-white" style={{ backgroundColor: selectedApp.applicant.avatarBgColor || "#171717" }}>
- {selectedApp.applicant.avatar ? <Image src={selectedApp.applicant.avatar} alt={`${selectedApp.applicant.name} avatar`} fill sizes="80px" className="object-cover" /> : selectedApp.applicant.name[0]}
- </div>
+ {(() => {
+ const avatarStyle = getApplicantAvatarStyles(selectedApp.applicant);
+   return (
+                            <div 
+                              style={avatarStyle.style}
+                              className={cn(
+                                "relative size-20 rounded-full border-4 flex items-center justify-center text-3xl font-black transition-all",
+                                avatarStyle.className
+                              )}
+                            >
+                              {selectedApp.applicant.avatar ? (
+                                <Image src={selectedApp.applicant.avatar} alt={`${selectedApp.applicant.name} avatar`} fill sizes="80px" className="object-cover rounded-full" />
+                              ) : (
+                                selectedApp.applicant.name[0]?.toUpperCase() || "?"
+                              )}
+                            </div>
+                          );
+                        })()}
  <div>
- <h3 className="text-2xl font-black text-white">{selectedApp.applicant.name}</h3>
- <p className="text-sm font-black text-neutral-400">{selectedApp.applicant.occupation || "Unspecified Occupation"}</p>
+ <h3 className="text-2xl font-black text-foreground">{selectedApp.applicant.name}</h3>
+ <p className="text-sm font-black text-muted-foreground">{selectedApp.applicant.occupation || "Unspecified Occupation"}</p>
  </div>
  </div>
 
  <div className="grid grid-cols-2 gap-6">
  <div className="space-y-1">
- <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-neutral-400">
+ <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
  <Mail className="size-3" /> Email
  </span>
- <p className="text-sm font-black text-white">{selectedApp.applicant.email}</p>
+ <p className="text-sm font-black text-foreground">{selectedApp.applicant.email}</p>
  </div>
  <div className="space-y-1">
- <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-neutral-400">
+ <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
  <Phone className="size-3" /> Phone
  </span>
- <p className="text-sm font-black text-white">{selectedApp.applicant.phone || "Not provided"}</p>
+ <p className="text-sm font-black text-foreground">{selectedApp.applicant.phone || "Not provided"}</p>
  </div>
  <div className="space-y-1">
- <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-neutral-400">
+ <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
  <Banknote className="size-3" /> Income
  </span>
- <p className="text-sm font-black text-white">{formatCurrency(selectedApp.applicant.monthlyIncome)}</p>
+ <p className="text-sm font-black text-foreground">{formatCurrency(selectedApp.applicant.monthlyIncome)}</p>
  </div>
 
  <div className="space-y-1">
- <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-neutral-400">
+ <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
  <Clock className="size-3" /> Application Date
  </span>
- <p className="text-sm font-black text-white">{formatDate(selectedApp.submittedDate)}</p>
+ <p className="text-sm font-black text-foreground">{formatDate(selectedApp.submittedDate)}</p>
  </div>
 
  <div className="space-y-1">
- <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-neutral-400">
+ <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
  <Calendar className="size-3" /> Preferred Move-in
  </span>
- <p className="text-sm font-black text-white">{formatDate(selectedApp.requestedMoveIn)}</p>
+ <p className="text-sm font-black text-foreground">{formatDate(selectedApp.requestedMoveIn)}</p>
  </div>
 
  <div className="space-y-1">
- <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-neutral-400">
+ <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
  <Filter className="size-3" /> Intake Source
  </span>
- <p className="text-sm font-black text-white capitalize">
+ <p className="text-sm font-black text-foreground capitalize">
  {selectedApp.source?.replace(/_/g, ' ') || "Online"}
  </p>
  </div>
@@ -1089,7 +1151,7 @@ export function RentApplications() {
 
  {/* Compliance Checklist */}
  <div className="space-y-4">
- <h4 className="text-[10px] font-black uppercase tracking-widest text-neutral-400 px-2">Compliance Roadmap</h4>
+ <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2">Compliance Roadmap</h4>
  <div className="grid grid-cols-2 gap-3">
  {[
  { key: 'valid_id', label: 'Identity Verify' },
@@ -1101,8 +1163,8 @@ export function RentApplications() {
  key={req.key}
  onClick={() => toggleRequirement(selectedApp.id, selectedApp.complianceChecklist as any || {}, req.key)}
  className={cn(
- "flex h-14 items-center justify-between rounded-2xl border p-4 transition-all active:scale-95",
- isDone ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500" : "neumorphic-extruded border-white/5 text-neutral-400 hover:border-primary/30"
+ "flex h-14 items-center justify-between rounded-2xl border p-4 transition-all active:scale-95 cursor-pointer",
+ isDone ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500" : "neumorphic-extruded border-border/50 text-muted-foreground hover:border-primary/30 hover:text-foreground"
  )}
  >
  <span className="text-[10px] font-black uppercase tracking-widest">{req.label}</span>
@@ -1115,13 +1177,13 @@ export function RentApplications() {
 
  {/* Documents */}
  <div className="space-y-4">
- <h4 className="text-[10px] font-black uppercase tracking-widest text-neutral-400 px-2">Supporting Files</h4>
+ <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2">Supporting Files</h4>
  <div className="grid grid-cols-1 gap-3">
  {selectedApp.documents.map((doc) => (
- <button key={doc} onClick={() => setPreviewUrl(doc)} className="flex items-center justify-between rounded-2xl neumorphic-extruded p-4 hover:border-primary/30 transition-all">
+ <button key={doc} onClick={() => setPreviewUrl(doc)} className="flex items-center justify-between rounded-2xl neumorphic-extruded p-4 hover:border-primary/30 transition-all cursor-pointer">
  <div className="flex items-center gap-3">
- <FileText className="size-5 text-neutral-400" />
- <span className="text-[11px] font-black text-white">{formatDocumentLabel(doc)}</span>
+ <FileText className="size-5 text-muted-foreground" />
+ <span className="text-[11px] font-black text-foreground">{formatDocumentLabel(doc)}</span>
  </div>
  <Eye className="size-4 text-primary" />
  </button>
@@ -1132,7 +1194,7 @@ export function RentApplications() {
  {/* Lease Agreement (§6.4) */}
  {selectedApp.status === "approved" && (
  <div className="space-y-4">
- <h4 className="text-[10px] font-black uppercase tracking-widest text-neutral-400 px-2">Lease Agreement</h4>
+ <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2">Lease Agreement</h4>
  <div className="rounded-[2.5rem] neumorphic-extruded p-6 space-y-6">
  {selectedApp.lease ? (
  <>
@@ -1142,9 +1204,9 @@ export function RentApplications() {
  <FileText className="size-6 text-primary" />
  </div>
  <div>
- <p className="text-sm font-black text-white">Digital Lease Contract</p>
+ <p className="text-sm font-black text-foreground">Digital Lease Contract</p>
  <div className="flex items-center gap-2 mt-0.5">
- <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">ID: {selectedApp.lease.id.slice(0, 8)}…</span>
+ <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">ID: {selectedApp.lease.id.slice(0, 8)}…</span>
  </div>
  </div>
  </div>
@@ -1164,7 +1226,7 @@ export function RentApplications() {
  <button 
  onClick={(e) => { e.stopPropagation(); handleGenerateSigningLink(selectedApp.id); }} 
  disabled={signingLinkState.loading}
- className="mt-4 inline-flex items-center gap-2 rounded-xl bg-amber-500 px-6 py-2.5 text-[10px] font-black uppercase tracking-widest text-black shadow-amber-500/20 transition-all hover:bg-amber-400 active:scale-95 disabled:opacity-50"
+ className="mt-4 inline-flex items-center gap-2 rounded-xl bg-amber-500 px-6 py-2.5 text-[10px] font-black uppercase tracking-widest text-black shadow-amber-500/20 transition-all hover:bg-amber-400 active:scale-95 disabled:opacity-50 cursor-pointer"
  >
  {signingLinkState.loading ? (
  <Loader2 className="size-3.5 animate-spin" />
@@ -1191,8 +1253,8 @@ export function RentApplications() {
  )}
  {signingLinkState.signingUrl && signingLinkState.emailSent === false && (
  <div className="mt-2 flex items-center gap-2">
- <input readOnly value={signingLinkState.signingUrl} className="flex-1 rounded-lg neumorphic-inset px-3 py-1.5 text-[10px] font-mono text-neutral-400 truncate" />
- <button onClick={() => navigator.clipboard.writeText(signingLinkState.signingUrl!)} className="shrink-0 rounded-lg bg-primary/10 px-3 py-1.5 text-[10px] font-black uppercase text-primary hover:bg-primary/20">Copy</button>
+ <input readOnly value={signingLinkState.signingUrl} className="flex-1 rounded-lg neumorphic-inset px-3 py-1.5 text-[10px] font-mono text-foreground truncate" />
+ <button onClick={() => navigator.clipboard.writeText(signingLinkState.signingUrl!)} className="shrink-0 rounded-lg bg-primary/10 px-3 py-1.5 text-[10px] font-black uppercase text-primary hover:bg-primary/20 cursor-pointer">Copy</button>
  </div>
  )}
  </div>
@@ -1219,7 +1281,7 @@ export function RentApplications() {
  <button 
  onClick={(e) => { e.stopPropagation(); void handleCountersignRedirect(selectedApp.lease!.id); }} 
  disabled={countersignRedirectLoading}
- className="mt-4 w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-6 py-3 text-[10px] font-black uppercase tracking-widest text-black shadow-emerald-500/20 transition-all hover:bg-emerald-400 active:scale-95 disabled:opacity-50"
+ className="mt-4 w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-6 py-3 text-[10px] font-black uppercase tracking-widest text-black shadow-emerald-500/20 transition-all hover:bg-emerald-400 active:scale-95 disabled:opacity-50 cursor-pointer"
  >
  {countersignRedirectLoading ? (
  <Loader2 className="size-3.5 animate-spin" />
@@ -1234,19 +1296,19 @@ export function RentApplications() {
  </>
  ) : (
  <div className="flex flex-col items-center justify-center py-8 text-center space-y-4">
- <div className="flex size-16 items-center justify-center rounded-[2rem] neumorphic-inset text-neutral-400/30">
+ <div className="flex size-16 items-center justify-center rounded-[2rem] neumorphic-inset text-muted-foreground/30">
  <FileText className="size-8" />
  </div>
  <div className="space-y-1">
- <p className="text-sm font-black text-white">No Lease Generated</p>
- <p className="text-[11px] font-medium text-neutral-400 max-w-[240px] mx-auto leading-relaxed">
+ <p className="text-sm font-black text-foreground">No Lease Generated</p>
+ <p className="text-[11px] font-medium text-muted-foreground max-w-[240px] mx-auto leading-relaxed">
  This approved application doesn&apos;t have an active lease record linked. 
  </p>
  </div>
  <button 
  onClick={() => handleGenerateSigningLink(selectedApp.id)} 
  disabled={signingLinkState.loading}
- className="rounded-2xl bg-primary px-8 py-3 text-[10px] font-black uppercase tracking-widest text-primary-foreground shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-50"
+ className="rounded-2xl bg-primary px-8 py-3 text-[10px] font-black uppercase tracking-widest text-primary-foreground shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-50 cursor-pointer"
  >
  {signingLinkState.loading ? <Loader2 className="size-4 animate-spin" /> : "Generate & Link Lease"}
  </button>
@@ -1372,10 +1434,10 @@ export function RentApplications() {
  className="absolute inset-0 bg-black/90 backdrop-blur-xl cursor-default"
  aria-label="Close document preview"
  />
- <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative z-[210] flex h-full w-full max-w-6xl flex-col overflow-hidden rounded-[2.5rem] neumorphic-panel ">
- <div className="flex items-center justify-between border-b border-white/5 bg-white/5 px-8 py-6 backdrop-blur-md">
- <h3 className="text-xl font-black text-white">{formatDocumentLabel(previewUrl)}</h3>
- <button onClick={() => setPreviewUrl(null)} className="flex size-12 items-center justify-center rounded-xl bg-red-500/10 text-red-500 transition-all hover:bg-red-500 hover:text-white">
+ <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative z-[210] flex h-full w-full max-w-6xl flex-col overflow-hidden rounded-[2.5rem] neumorphic-panel border border-border/50">
+ <div className="flex items-center justify-between border-b border-border/50 bg-background/50 px-8 py-6 backdrop-blur-md">
+ <h3 className="text-xl font-black text-foreground">{formatDocumentLabel(previewUrl)}</h3>
+ <button onClick={() => setPreviewUrl(null)} className="flex size-12 items-center justify-center rounded-xl bg-red-500/10 text-red-500 transition-all hover:bg-red-500 hover:text-white cursor-pointer">
  <X className="size-6" />
  </button>
  </div>
@@ -1402,26 +1464,26 @@ export function RentApplications() {
  className="absolute inset-0 bg-black/60 backdrop-blur-md cursor-default"
  aria-label="Close credentials panel"
  />
- <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative z-[310] w-full max-w-md rounded-[2.5rem] border border-emerald-500/20 neumorphic-panel p-8 ">
+ <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative z-[310] w-full max-w-md rounded-[2.5rem] border border-emerald-500/20 neumorphic-panel p-8">
  <div className="mb-6 flex items-center gap-4">
  <div className="flex size-12 items-center justify-center rounded-2xl bg-emerald-500/10 border border-emerald-500/20"><CheckCircle2 className="size-6 text-emerald-500" /></div>
  <div>
- <h3 className="text-xl font-black text-white">Access Generated</h3>
- <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Tenant credentials provisioned</p>
+ <h3 className="text-xl font-black text-foreground">Access Generated</h3>
+ <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tenant credentials provisioned</p>
  </div>
  </div>
  <div className="space-y-4">
  <div className="rounded-2xl neumorphic-extruded p-4">
- <span className="text-[9px] font-black uppercase text-neutral-400">Tenant Email</span>
- <p className="font-mono text-sm font-black text-white">{tenantCredentials.email}</p>
+ <span className="text-[9px] font-black uppercase text-muted-foreground">Tenant Email</span>
+ <p className="font-mono text-sm font-black text-foreground">{tenantCredentials.email}</p>
  </div>
  {tenantCredentials.tempPassword && (
  <div className="rounded-2xl neumorphic-extruded p-4">
- <span className="text-[9px] font-black uppercase text-neutral-400">Initial Password</span>
+ <span className="text-[9px] font-black uppercase text-muted-foreground">Initial Password</span>
  <p className="font-mono text-sm font-black text-emerald-500 tracking-widest">{tenantCredentials.tempPassword}</p>
  </div>
  )}
- <button onClick={() => setTenantCredentials(null)} className="w-full rounded-2xl bg-primary py-4 text-xs font-black uppercase tracking-widest text-primary-foreground shadow-primary/20 hover:bg-primary/90 transition-all">
+ <button onClick={() => setTenantCredentials(null)} className="w-full rounded-2xl bg-primary py-4 text-xs font-black uppercase tracking-widest text-primary-foreground shadow-primary/20 hover:bg-primary/90 transition-all cursor-pointer">
  Close Secure Panel
  </button>
  </div>
@@ -1441,10 +1503,10 @@ export function RentApplications() {
  className="absolute inset-0 bg-black/60 backdrop-blur-md cursor-default"
  aria-label="Close invite tools"
  />
- <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="relative z-[160] h-[90vh] w-full max-w-6xl overflow-hidden rounded-[2.5rem] neumorphic-extruded ">
- <div className="flex items-center justify-between border-b border-white/5 neumorphic-panel px-8 py-6">
- <h3 className="text-xl font-black tracking-tighter text-white">Intake Manager</h3>
- <button onClick={() => setShowInviteTools(false)} className="rounded-xl neumorphic-extruded p-2 transition-all hover:neumorphic-inset"><X className="size-6" /></button>
+ <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="relative z-[160] h-[90vh] w-full max-w-6xl overflow-hidden rounded-[2.5rem] neumorphic-extruded border border-border/50">
+ <div className="flex items-center justify-between border-b border-border/50 neumorphic-panel px-8 py-6">
+ <h3 className="text-xl font-black tracking-tighter text-foreground">Intake Manager</h3>
+ <button onClick={() => setShowInviteTools(false)} className="rounded-xl neumorphic-extruded p-2 text-muted-foreground hover:text-foreground transition-all hover:neumorphic-inset cursor-pointer"><X className="size-6" /></button>
  </div>
  <div className="h-full overflow-y-auto p-8 pb-24"><TenantInviteManager availableUnits={scopedAvailableUnits} invites={scopedTenantInvites} onRefresh={loadInvites} /></div>
  </motion.div>
@@ -1464,15 +1526,15 @@ export function RentApplications() {
  className="absolute inset-0 bg-black/60 backdrop-blur-md cursor-default"
  aria-label="Close countersign modal"
  />
- <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative z-[410] w-full max-w-2xl rounded-[2.5rem] neumorphic-panel p-8 ">
- <h3 className="text-2xl font-black text-white mb-6">Countersign Lease</h3>
+ <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative z-[410] w-full max-w-2xl rounded-[2.5rem] neumorphic-panel p-8 border border-border/50">
+ <h3 className="text-2xl font-black text-foreground mb-6">Countersign Lease</h3>
  <div className="space-y-6">
  <div className="rounded-2xl neumorphic-inset p-4">
- <p className="text-[10px] font-black uppercase text-neutral-400 mb-2">Tenant Signature</p>
+ <p className="text-[10px] font-black uppercase text-muted-foreground mb-2">Tenant Signature</p>
  <Image src={selectedApp.lease.tenant_signature || ""} alt="" width={300} height={96} className="object-contain" style={{maxHeight: '6rem'}} />
  </div>
  <div className="space-y-2">
- <p className="text-[10px] font-black uppercase text-neutral-400">Your Signature</p>
+ <p className="text-[10px] font-black uppercase text-muted-foreground">Your Signature</p>
  <SignaturePad 
  onSave={setPendingCountersignature} 
  onClear={() => setPendingCountersignature(null)} 
@@ -1482,7 +1544,7 @@ export function RentApplications() {
  documentTitle={`Lease - ${selectedApp.propertyName} ${selectedApp.unitNumber}`}
  />
  </div>
- <button disabled={countersignState.loading || !pendingCountersignature} onClick={() => handleCountersignLease(selectedApp.lease!.id, pendingCountersignature!)} className="w-full rounded-2xl bg-emerald-500 py-4 text-xs font-black uppercase tracking-widest text-black hover:bg-emerald-400 disabled:opacity-50">
+ <button disabled={countersignState.loading || !pendingCountersignature} onClick={() => handleCountersignLease(selectedApp.lease!.id, pendingCountersignature!)} className="w-full rounded-2xl bg-emerald-500 py-4 text-xs font-black uppercase tracking-widest text-black hover:bg-emerald-400 disabled:opacity-50 cursor-pointer">
  {countersignState.loading ? "Signing..." : "Complete Execution"}
  </button>
  </div>
@@ -1503,28 +1565,28 @@ export function RentApplications() {
  className="absolute inset-0 bg-black/60 backdrop-blur-md cursor-default"
  aria-label="Close decline confirmation"
  />
- <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative z-[310] w-full max-w-md rounded-[2.5rem] neumorphic-panel p-8">
+ <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative z-[310] w-full max-w-md rounded-[2.5rem] neumorphic-panel p-8 border border-border/50">
  <div className="mb-6 flex items-center gap-4">
  <div className="neumorphic-inset-card size-12 flex items-center justify-center rounded-2xl bg-red-500/10 border border-red-500/20">
  <AlertCircle className="size-6 text-red-500" />
  </div>
  <div>
- <h3 className="text-xl font-black text-white">Decline Application</h3>
- <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400">This action cannot be undone</p>
+ <h3 className="text-xl font-black text-foreground">Decline Application</h3>
+ <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">This action cannot be undone</p>
  </div>
  </div>
  <div className="space-y-4">
  <div className="rounded-2xl neumorphic-inset p-4 overflow-hidden">
- <p className="text-sm font-medium text-neutral-300">
- You are about to decline the application from <span className="font-black text-white">{selectedApp.applicant.name}</span> for <span className="font-black text-white">{selectedApp.propertyName} - {selectedApp.unitNumber}</span>.
+ <p className="text-sm font-medium text-foreground/80">
+ You are about to decline the application from <span className="font-black text-foreground">{selectedApp.applicant.name}</span> for <span className="font-black text-foreground">{selectedApp.propertyName} - {selectedApp.unitNumber}</span>.
  </p>
  </div>
  <div className="space-y-2">
- <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Rejection Reason (Required)</label>
+ <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Rejection Reason (Required)</label>
  <textarea
  id="rejection-reason"
  placeholder="Enter the reason for declining this application..."
- className="neumorphic-inset w-full py-4 px-4 text-sm font-medium text-white placeholder:text-neutral-600 focus:outline-none focus:ring-2 focus:ring-red-500/20 transition-all resize-none"
+ className="neumorphic-inset w-full py-4 px-4 text-sm font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-red-500/20 transition-all resize-none"
  rows={3}
  onChange={(e) => {
  const reason = e.target.value;
@@ -1538,7 +1600,7 @@ export function RentApplications() {
  setShowDeclineConfirm(false);
  setDeclineReason("");
  }} 
- className="neumorphic-extruded flex-1 py-4 text-xs font-black uppercase tracking-widest text-white hover:bg-white/5 active:scale-95 transition-all"
+ className="neumorphic-extruded flex-1 py-4 text-xs font-black uppercase tracking-widest text-foreground hover:bg-muted active:scale-95 transition-all cursor-pointer"
  >
  Cancel
  </button>
