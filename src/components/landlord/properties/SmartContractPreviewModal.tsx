@@ -116,8 +116,8 @@ export function SmartContractPreviewModal({
 
                 {/* Content Area */}
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-6 sm:p-10 bg-muted/20">
-                    <div className="max-w-4xl mx-auto shadow-2xl">
-                        <LeaseDocument {...leaseData} />
+                    <div className="max-w-3xl mx-auto shadow-xl rounded-xl overflow-hidden bg-white border border-zinc-200/70">
+                        <LeaseDocument className="shadow-none border-none max-w-none p-8 sm:p-10" {...leaseData} />
                     </div>
                 </div>
 

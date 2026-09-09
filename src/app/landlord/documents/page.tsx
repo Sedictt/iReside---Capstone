@@ -487,8 +487,9 @@ export default function DocumentsPage() {
                         </div>
 
                         <div className="flex-1 overflow-y-auto p-12 custom-scrollbar">
-                            <div className="max-w-3xl mx-auto rounded-2xl overflow-hidden bg-white shadow-2xl">
-<LeaseDocument 
+                            <div className="max-w-3xl mx-auto rounded-xl overflow-hidden bg-white shadow-xl border border-zinc-200/70">
+                                <LeaseDocument 
+                                    className="shadow-none border-none max-w-none p-8 sm:p-10"
                                     id="PREVIEW-MODE"
                                     start_date={previewStartDate}
                                     end_date={previewEndDate}

@@ -82,7 +82,7 @@ export async function POST(
   // Fetch lease record
   const { data: lease, error: leaseError } = await supabase
     .from("leases")
-    .select("id, status, tenant_id, landlord_id, landlord_signature")
+    .select("id, status, tenant_id, landlord_id, landlord_signature, tenant_signature")
     .eq("id", leaseId)
     .maybeSingle();
 
@@ -110,7 +110,12 @@ export async function POST(
   }
 
   // Validate lease status
-  if (lease.status !== "pending_signature" && lease.status !== "pending_tenant_signature") {
+  const isDirectActiveUnsigned = lease.status === "active" && !lease.tenant_signature;
+  if (
+    lease.status !== "pending_signature" &&
+    lease.status !== "pending_tenant_signature" &&
+    !isDirectActiveUnsigned
+  ) {
     return NextResponse.json(
       { error: `Cannot sign lease with status: ${lease.status}` },
       { status: 409 }
@@ -118,8 +123,11 @@ export async function POST(
   }
 
   // Validate status transition
-  const newStatus = "pending_landlord_signature";
-  if (!isValidLeaseStatusTransition(lease.status, newStatus)) {
+  const newStatus = isDirectActiveUnsigned
+    ? (lease.landlord_signature ? "active" : "pending_landlord_signature")
+    : "pending_landlord_signature";
+
+  if (!isDirectActiveUnsigned && !isValidLeaseStatusTransition(lease.status, newStatus)) {
     return NextResponse.json(
       { error: getTransitionErrorMessage(lease.status, newStatus) },
       { status: 409 }

@@ -513,7 +513,7 @@ export class LeaseService {
   ): Promise<{ signingUrl: string; leaseId: string; status: Database["public"]["Tables"]["leases"]["Row"]["status"] }> {
     const { data: lease, error: leaseError } = await this.supabase
       .from("leases")
-      .select("id, status, landlord_id, tenant_signature, tenant_signed_at")
+      .select("id, status, landlord_id, tenant_signature, tenant_signed_at, landlord_signed_at")
       .eq("id", leaseId)
       .maybeSingle();
 
@@ -529,7 +529,11 @@ export class LeaseService {
       throw new LeaseAccessError("Unauthorized: You are not the landlord for this lease");
     }
 
-    if (lease.status !== "pending_landlord_signature") {
+    const isEligibleForSigningLink =
+      lease.status === "pending_landlord_signature" ||
+      (lease.status === "active" && !lease.landlord_signed_at);
+
+    if (!isEligibleForSigningLink) {
       throw new LeaseSigningEligibilityError(
         `Cannot generate signing link. Lease status is: ${lease.status}. Expected: pending_landlord_signature`,
       );
@@ -566,7 +570,7 @@ export class LeaseService {
     // 1. Fetch and validate lease
     const { data: lease, error: leaseError } = await this.supabase
       .from("leases")
-      .select("id, status, landlord_id, tenant_signature, tenant_signed_at")
+      .select("id, status, landlord_id, tenant_signature, tenant_signed_at, landlord_signed_at")
       .eq("id", leaseId)
       .maybeSingle();
 
@@ -582,14 +586,18 @@ export class LeaseService {
       throw new LeaseAccessError("Unauthorized: You are not the landlord for this lease");
     }
 
-    if (lease.status !== "pending_landlord_signature") {
+    const isEligibleToSign =
+      lease.status === "pending_landlord_signature" ||
+      (lease.status === "active" && !lease.landlord_signed_at);
+
+    if (!isEligibleToSign) {
       throw new LeaseSigningEligibilityError(
         `Cannot sign lease with status: ${lease.status}. Lease must be in 'pending_landlord_signature' status.`,
       );
     }
 
     const newStatus = "active" as const;
-    if (!isValidLeaseStatusTransition(lease.status, newStatus)) {
+    if (lease.status !== "active" && !isValidLeaseStatusTransition(lease.status, newStatus)) {
       throw new InvalidLeaseTransitionError(getTransitionErrorMessage(lease.status, newStatus));
     }
 

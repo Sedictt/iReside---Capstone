@@ -1161,8 +1161,9 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                         {/* Lightbox Body (Preview Content) */}
                                         <div className="flex-1 overflow-y-auto p-4 md:p-12 custom-scrollbar bg-zinc-900/50">
                                             {contractMode === "generate" ? (
-                                                <div id="contract-preview-container" className="max-w-4xl mx-auto shadow-2xl">
+                                                <div id="contract-preview-container" className="max-w-3xl mx-auto rounded-xl overflow-hidden bg-white shadow-xl border border-zinc-200/70">
                                                     <LeaseDocument 
+                                                        className="shadow-none border-none max-w-none p-8 sm:p-10"
                                                         id="TEMP-0001"
                                                         start_date={onboardingStartDate}
                                                         end_date={onboardingEndDate}

@@ -25,6 +25,10 @@ import {
  FileText,
  LayoutDashboard,
  LayoutGrid,
+ HandCoins,
+ Copy,
+ Check,
+ Send,
 } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { m as motion } from "framer-motion";
@@ -65,6 +69,8 @@ function LeasesContent() {
  const [error, setError] = useState<string | null>(null);
  const [countersignLoading, setCountersignLoading] = useState(false);
   const [leaseViewMode, setLeaseViewMode] = useState<"document" | "overview">("document");
+  const [copyLinkLoading, setCopyLinkLoading] = useState(false);
+  const [copyLinkSuccess, setCopyLinkSuccess] = useState(false);
 
  const formattedLeaseData: LeaseDocumentProps | null = useMemo(() => {
    if (!lease) return null;
@@ -143,7 +149,300 @@ function LeasesContent() {
  });
  };
 
- const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const getOrdinalSuffix = (num: number) => {
+    const j = num % 10;
+    const k = num % 100;
+    if (j === 1 && k !== 11) return "st";
+    if (j === 2 && k !== 12) return "nd";
+    if (j === 3 && k !== 13) return "rd";
+    return "th";
+  };
+
+  const renderLeaseTerms = (terms: any) => {
+    if (!terms) {
+      return (
+        <p className="text-sm italic text-muted-foreground">
+          Standard residential tenancy terms apply.
+        </p>
+      );
+    }
+
+    if (typeof terms === "string") {
+      return (
+        <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">
+          {terms}
+        </p>
+      );
+    }
+
+    if (typeof terms === "object" && !Array.isArray(terms)) {
+      const dueDay = terms.due_day ?? terms.dueDay ?? terms.rent_due_day;
+      const lateFee =
+        terms.late_fee ?? terms.lateFee ?? terms.late_fee_amount ?? terms.lateFeeAmount;
+      const allowPartial =
+        terms.allow_partial ??
+        terms.allowPartial ??
+        terms.allow_partial_payments ??
+        terms.allowPartialPayments;
+      const gracePeriod =
+        terms.grace_period_days ?? terms.gracePeriodDays ?? terms.grace_period;
+      const lateFeeDay = terms.late_fee_day ?? terms.lateFeeDay;
+      const utilitiesDesc =
+        terms.utilities_description ?? terms.utilitiesDescription;
+      const rules = Array.isArray(terms.rules)
+        ? terms.rules
+        : Array.isArray(terms.house_rules)
+          ? terms.house_rules
+          : null;
+      const notes =
+        terms.notes ??
+        terms.additional_terms ??
+        terms.custom_terms ??
+        terms.clauses;
+
+      const recognizedKeys = new Set([
+        "due_day",
+        "dueDay",
+        "rent_due_day",
+        "late_fee",
+        "lateFee",
+        "late_fee_amount",
+        "lateFeeAmount",
+        "allow_partial",
+        "allowPartial",
+        "allow_partial_payments",
+        "allowPartialPayments",
+        "grace_period_days",
+        "gracePeriodDays",
+        "grace_period",
+        "late_fee_day",
+        "lateFeeDay",
+        "utilities_description",
+        "utilitiesDescription",
+        "rules",
+        "house_rules",
+        "notes",
+        "additional_terms",
+        "custom_terms",
+        "clauses",
+      ]);
+
+      const otherEntries = Object.entries(terms).filter(
+        ([k, v]) => !recognizedKeys.has(k) && v !== undefined && v !== null,
+      );
+
+      const hasStructuredContent =
+        dueDay !== undefined ||
+        lateFee !== undefined ||
+        allowPartial !== undefined ||
+        utilitiesDesc ||
+        (rules && rules.length > 0) ||
+        notes ||
+        otherEntries.length > 0;
+
+      if (!hasStructuredContent) {
+        return (
+          <p className="text-sm italic text-muted-foreground">
+            Standard residential tenancy terms apply.
+          </p>
+        );
+      }
+
+      return (
+        <div className="space-y-6">
+          {/* Key Term Badges */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {dueDay !== undefined && dueDay !== null && (
+              <div className="flex items-start gap-3.5 rounded-2xl neumorphic-inset p-4">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <CalendarRange className="size-5" />
+                </div>
+                <div className="min-w-0 space-y-0.5">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                    Rent Due Day
+                  </p>
+                  <p className="text-sm font-black text-foreground sm:text-base">
+                    {Number(dueDay)}
+                    {getOrdinalSuffix(Number(dueDay))} of every month
+                  </p>
+                  <p className="text-[11px] font-medium text-muted-foreground">
+                    Monthly recurring schedule
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {lateFee !== undefined && lateFee !== null && (
+              <div className="flex items-start gap-3.5 rounded-2xl neumorphic-inset p-4">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500">
+                  <HandCoins className="size-5" />
+                </div>
+                <div className="min-w-0 space-y-0.5">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                    Late Payment Fee
+                  </p>
+                  <p className="text-sm font-black text-foreground sm:text-base">
+                    {typeof lateFee === "number"
+                      ? formatCurrency(lateFee)
+                      : lateFee}
+                  </p>
+                  <p className="text-[11px] font-medium text-muted-foreground">
+                    {gracePeriod
+                      ? `After ${gracePeriod} day(s) grace period`
+                      : lateFeeDay
+                        ? `Applied on day ${lateFeeDay}`
+                        : "Charged when payment is overdue"}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {allowPartial !== undefined && allowPartial !== null && (
+              <div className="flex items-start gap-3.5 rounded-2xl neumorphic-inset p-4">
+                <div
+                  className={cn(
+                    "flex size-10 shrink-0 items-center justify-center rounded-xl",
+                    allowPartial
+                      ? "bg-emerald-500/10 text-emerald-500"
+                      : "bg-neutral-500/10 text-muted-foreground",
+                  )}
+                >
+                  {allowPartial ? (
+                    <CheckCircle2 className="size-5" />
+                  ) : (
+                    <ShieldCheck className="size-5" />
+                  )}
+                </div>
+                <div className="min-w-0 space-y-0.5">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                    Partial Payments
+                  </p>
+                  <p className="text-sm font-black text-foreground sm:text-base">
+                    {allowPartial ? "Allowed" : "Not Allowed"}
+                  </p>
+                  <p className="text-[11px] font-medium text-muted-foreground">
+                    {allowPartial
+                      ? "Installment payments accepted"
+                      : "Full billing balance required"}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Utilities Policy */}
+          {utilitiesDesc && (
+            <div className="rounded-2xl neumorphic-inset p-4">
+              <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-primary">
+                Utility Policy
+              </p>
+              <p className="text-xs font-medium leading-relaxed text-foreground/90">
+                {utilitiesDesc}
+              </p>
+            </div>
+          )}
+
+          {/* House Rules */}
+          {rules && rules.length > 0 && (
+            <div className="rounded-2xl neumorphic-inset p-4">
+              <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-primary">
+                House Rules & Stipulations
+              </p>
+              <ul className="list-disc space-y-1.5 pl-4 text-xs font-medium text-muted-foreground">
+                {rules.map((rule: string, idx: number) => (
+                  <li key={idx} className="leading-relaxed text-foreground/80">
+                    {rule}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Additional Notes or Custom Terms */}
+          {notes && (
+            <div className="rounded-2xl neumorphic-inset p-4">
+              <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-primary">
+                Additional Terms & Provisions
+              </p>
+              <p className="whitespace-pre-wrap text-xs font-medium leading-relaxed text-foreground/90">
+                {typeof notes === "string"
+                  ? notes
+                  : JSON.stringify(notes, null, 2)}
+              </p>
+            </div>
+          )}
+
+          {/* Other Arbitrary Key-Values */}
+          {otherEntries.length > 0 && (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {otherEntries.map(([key, val]) => (
+                <div
+                  key={key}
+                  className="flex items-center justify-between rounded-xl neumorphic-inset px-4 py-3"
+                >
+                  <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                    {key.replace(/_/g, " ")}
+                  </span>
+                  <span className="text-xs font-bold text-foreground">
+                    {typeof val === "boolean"
+                      ? val
+                        ? "Yes"
+                        : "No"
+                      : typeof val === "object"
+                        ? JSON.stringify(val)
+                        : String(val)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <p className="text-sm italic text-muted-foreground">
+        Standard residential tenancy terms apply.
+      </p>
+    );
+  };
+
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
+
+  const handleCopySigningLink = async () => {
+    if (!lease) return;
+    setCopyLinkLoading(true);
+    try {
+      const res = await fetch(`/api/landlord/leases/${lease.id}/signing-link`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ role: "tenant" }),
+      });
+
+      if (!res.ok) {
+        const errorResponse = await res.json().catch(() => ({}));
+        throw new Error(
+          errorResponse.error || "Failed to generate tenant signing link"
+        );
+      }
+
+      const signingResponse = await res.json();
+      if (!signingResponse.signingUrl) {
+        throw new Error("No signing link returned from server");
+      }
+
+      await navigator.clipboard.writeText(signingResponse.signingUrl);
+      setCopyLinkSuccess(true);
+      toast.success("Tenant digital signing link copied to clipboard!");
+      setTimeout(() => setCopyLinkSuccess(false), 3000);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to copy signing link");
+    } finally {
+      setCopyLinkLoading(false);
+    }
+  };
 
  const handleExportPdf = async () => {
     if (!lease || !formattedLeaseData) return;
@@ -167,30 +466,33 @@ function LeasesContent() {
         }
       }
 
-      // 2. Fallback: If DOM capture failed and a stored document exists, attempt download
-      if (!pdfBlob && lease.signed_document_url) {
-        try {
-          const response = await fetch(lease.signed_document_url);
-          if (response.ok) {
-            pdfBlob = await response.blob();
-          }
-        } catch (fetchErr) {
-          console.warn("[Export PDF] Stored signed doc fetch failed:", fetchErr);
-        }
-      }
-
-      // 3. Fallback to direct jsPDF generator if DOM capture was not available
+      // 2. Fresh generation with exact 1-page Letter layout matching the live preview
       if (!pdfBlob) {
+        const formatFullDate = (d?: string) => {
+          if (!d) return "N/A";
+          try {
+            return new Date(d).toLocaleDateString("en-US", {
+              month: "long",
+              day: "numeric",
+              year: "numeric",
+            });
+          } catch {
+            return d;
+          }
+        };
+
         pdfBlob = await generateLeasePdf({
           id: lease.id,
-          startDate: formatDate(lease.start_date),
-          endDate: formatDate(lease.end_date),
+          startDate: formatFullDate(lease.start_date),
+          endDate: formatFullDate(lease.end_date),
           monthlyRent: Number(lease.monthly_rent || 0),
           securityDeposit: Number(lease.security_deposit || 0),
           property: {
             name: lease.unit?.property?.name || lease.property?.name || "Residential Property",
             address: lease.unit?.property?.address || lease.property?.address || "Address not specified",
             contract_template: lease.unit?.property?.contract_template || lease.property?.contract_template,
+            house_rules: lease.unit?.property?.house_rules || lease.property?.house_rules,
+            amenities: lease.unit?.property?.amenities || lease.property?.amenities,
           },
           unit: {
             name: lease.unit?.name || "Unit",
@@ -265,6 +567,52 @@ function LeasesContent() {
  ) : lease ? (
  <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
  <div className="space-y-8 lg:col-span-2">
+            {/* Signing Banner for Tenant Signature (TC-LM-027) */}
+            {(lease.status === "pending_tenant_signature" ||
+              lease.status === "pending_signature" ||
+              !lease.tenant_signed_at) && (
+              <div className="relative overflow-hidden rounded-[2.5rem] neumorphic-panel p-6 sm:p-8 border border-amber-500/20 bg-amber-500/5">
+                <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-start gap-4">
+                    <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500">
+                      <Send className="size-6" />
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs font-black uppercase tracking-widest text-amber-500">
+                          Awaiting Tenant Signature
+                        </p>
+                        <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-500">
+                          Action Required
+                        </span>
+                      </div>
+                      <p className="text-base font-black text-foreground">
+                        Digital Signing Link for {lease.tenant?.full_name || "Tenant"}
+                      </p>
+                      <p className="text-xs font-medium text-muted-foreground">
+                        Copy the online digital signing link to send to the tenant so they can sign on their phone or computer.
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={handleCopySigningLink}
+                    disabled={copyLinkLoading}
+                    className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-2xl bg-amber-500 px-6 text-xs font-black uppercase tracking-widest text-black shadow-lg shadow-amber-500/20 transition-all hover:bg-amber-400 active:scale-95 disabled:opacity-50"
+                  >
+                    {copyLinkLoading ? (
+                      <Loader2 className="size-4 animate-spin text-black" />
+                    ) : copyLinkSuccess ? (
+                      <Check className="size-4 text-black" />
+                    ) : (
+                      <Copy className="size-4 text-black" />
+                    )}
+                    <span>{copyLinkSuccess ? "Link Copied!" : "Copy Signing Link"}</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
  <div className="overflow-hidden rounded-[2.5rem] neumorphic-panel ">
               <div className="border-b border-border/30 neumorphic-inset px-6 py-5 sm:px-8 sm:py-6">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -336,7 +684,7 @@ function LeasesContent() {
                     <LeaseDocument
                       containerId="official-lease-document-visible"
                       disableAnimation={false}
-                      className="shadow-none border-none max-w-none p-6 sm:p-8 md:p-10"
+                      className="shadow-none border-none max-w-none p-8 sm:p-10"
                       {...formattedLeaseData}
                     />
                   )}
@@ -455,25 +803,11 @@ function LeasesContent() {
           </div>
 
           {leaseViewMode === "overview" && (
-            <div className="rounded-[2.5rem] neumorphic-panel p-8 ">
+            <div className="rounded-[2.5rem] neumorphic-panel p-8">
               <h3 className="mb-6 text-[10px] font-black uppercase tracking-[0.2em] text-primary">
                 Lease Terms & Conditions
               </h3>
-              <div className="prose prose-sm prose-invert max-w-none text-muted-foreground">
-                {lease.terms ? (
-                  typeof lease.terms === "string" ? (
-                    <p className="whitespace-pre-wrap leading-relaxed">
-                      {lease.terms}
-                    </p>
-                  ) : (
-                    <pre className="overflow-x-auto rounded-xl neumorphic-inset p-4 text-xs">
-                      {JSON.stringify(lease.terms, null, 2)}
-                    </pre>
-                  )
-                ) : (
-                  <p className="italic">Standard lease terms apply.</p>
-                )}
-              </div>
+              {renderLeaseTerms(lease.terms)}
             </div>
           )}
 
@@ -482,21 +816,21 @@ function LeasesContent() {
             <div
               style={{
                 position: "fixed",
-                left: "-9999px",
                 top: 0,
-                width: "850px",
+                left: 0,
+                width: "816px",
+                backgroundColor: "#ffffff",
                 pointerEvents: "none",
-                zIndex: -100,
+                zIndex: -9999,
               }}
               aria-hidden="true"
             >
-              <div className="bg-white p-4">
-                <LeaseDocument
-                  containerId="official-lease-document-hidden"
-                  disableAnimation={true}
-                  {...formattedLeaseData}
-                />
-              </div>
+              <LeaseDocument
+                containerId="official-lease-document-hidden"
+                disableAnimation={true}
+                className="shadow-none border-none max-w-none w-[816px] p-8 sm:p-10"
+                {...formattedLeaseData}
+              />
             </div>
           )}
         </div>
@@ -574,9 +908,34 @@ function LeasesContent() {
  </div>
  </div>
  </div>
- </div>
+            </div>
 
- {lease.status === "pending_landlord_signature" && (
+            {(lease.status === "pending_tenant_signature" ||
+              lease.status === "pending_signature" ||
+              !lease.tenant_signed_at) && (
+              <button
+                onClick={handleCopySigningLink}
+                disabled={copyLinkLoading}
+                className="w-full rounded-2xl neumorphic-panel px-6 py-4 text-xs font-black uppercase tracking-widest text-primary transition-all hover:neumorphic-inset disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {copyLinkLoading ? (
+                  <Loader2 className="size-4 animate-spin text-primary" />
+                ) : copyLinkSuccess ? (
+                  <>
+                    <Check className="size-4 text-emerald-500" />
+                    <span>Link Copied</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="size-4" />
+                    <span>Copy Signing Link</span>
+                  </>
+                )}
+              </button>
+            )}
+
+ {(lease.status === "pending_landlord_signature" ||
+  (Boolean(lease.tenant_signed_at) && !lease.landlord_signed_at)) && (
  <button
  onClick={async () => {
  setCountersignLoading(true);
@@ -633,7 +992,7 @@ function LeasesContent() {
           <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">
             Lease Hub
           </h1>
-          <p className="text-sm font-medium text-neutral-400">
+          <p className="text-sm font-medium text-muted-foreground">
             Monitor and manage all tenancy agreements across your portfolio.
           </p>
         </div>
@@ -641,7 +1000,7 @@ function LeasesContent() {
         <div className="flex flex-wrap items-center gap-3">
           <button 
             onClick={() => window.location.reload()}
-            className="group flex h-11 items-center gap-2 rounded-2xl neumorphic-panel px-4 text-xs font-black uppercase tracking-widest text-neutral-400 transition-all hover:border-primary/30 hover:neumorphic-inset hover:text-white active:scale-95 cursor-pointer"
+            className="group flex h-11 items-center gap-2 rounded-2xl neumorphic-panel px-4 text-xs font-black uppercase tracking-widest text-muted-foreground transition-all hover:border-primary/30 hover:neumorphic-inset hover:text-foreground active:scale-95 cursor-pointer"
           >
             <RefreshCw className="size-4 transition-transform group-hover:rotate-180 duration-500" />
             Refresh
@@ -658,7 +1017,7 @@ function LeasesContent() {
       </div>
 
       {/* ─── Unified Command Bar ──────────────────────────────────── */}
-      <div className="flex flex-col items-center justify-between gap-4 border border-white/5 neumorphic-panel p-3 md:p-4 rounded-3xl backdrop-blur-xl xl:flex-row">
+      <div className="flex flex-col items-center justify-between gap-4 border border-border/50 neumorphic-panel p-3 md:p-4 rounded-3xl backdrop-blur-xl xl:flex-row">
         {/* Segmented Pill Tabs */}
         <div className="flex items-center gap-1 rounded-2xl neumorphic-extruded p-1 w-full sm:w-auto overflow-x-auto">
           {[
@@ -672,11 +1031,11 @@ function LeasesContent() {
               className={cn(
                 "flex items-center gap-2 rounded-xl px-5 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap cursor-pointer",
                 activeTab === tab.id
-                  ? "neumorphic-panel text-white ring-1 ring-border shadow-sm"
-                  : "text-neutral-400 hover:neumorphic-inset hover:text-white"
+                  ? "neumorphic-panel text-foreground shadow-sm ring-1 ring-border"
+                  : "text-muted-foreground hover:neumorphic-inset hover:text-foreground"
               )}
             >
-              <tab.icon className={cn("size-3.5", activeTab === tab.id ? "text-primary" : "text-neutral-400")} />
+              <tab.icon className={cn("size-3.5", activeTab === tab.id ? "text-primary" : "text-muted-foreground")} />
               {tab.label}
             </button>
           ))}
@@ -685,43 +1044,43 @@ function LeasesContent() {
         {/* Search, Scope, and Refine Controls */}
         <div className="flex w-full items-center gap-3 xl:w-auto">
           <div className="relative flex-1 xl:w-72">
-            <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-neutral-400" />
+            <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <input 
               type="text" 
               placeholder="Search tenant or unit..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-11 w-full rounded-2xl neumorphic-extruded pl-10 pr-4 text-xs font-black text-white focus:border-primary/50 focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all placeholder:text-neutral-500"
+              className="h-11 w-full rounded-2xl neumorphic-extruded pl-10 pr-4 text-xs font-black text-foreground focus:border-primary/50 focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all placeholder:text-muted-foreground/60"
             />
           </div>
 
-          <div className="flex h-11 items-center gap-2 rounded-2xl neumorphic-extruded px-3.5 text-xs font-black uppercase tracking-wider text-neutral-300">
-            <Building2 className="size-4 text-neutral-400 shrink-0" />
+          <div className="flex h-11 items-center gap-2 rounded-2xl neumorphic-extruded px-3.5 text-xs font-black uppercase tracking-wider text-foreground">
+            <Building2 className="size-4 text-muted-foreground shrink-0" />
             <select 
               value={selectedPropertyId}
               onChange={(e) => setSelectedPropertyId(e.target.value as any)}
-              className="bg-transparent text-xs font-black text-white focus:outline-none cursor-pointer pr-1"
+              className="bg-transparent text-xs font-black text-foreground focus:outline-none cursor-pointer pr-1"
             >
-              <option value="all" className="bg-zinc-900 text-white">All Properties</option>
+              <option value="all" className="bg-background text-foreground dark:bg-zinc-900 dark:text-white">All Properties</option>
               {properties.map(p => (
-                <option key={p.id} value={p.id} className="bg-zinc-900 text-white">{p.name}</option>
+                <option key={p.id} value={p.id} className="bg-background text-foreground dark:bg-zinc-900 dark:text-white">{p.name}</option>
               ))}
             </select>
           </div>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex size-11 shrink-0 items-center justify-center rounded-2xl neumorphic-extruded text-neutral-400 hover:neumorphic-inset hover:text-white transition-all cursor-pointer">
+              <button className="flex size-11 shrink-0 items-center justify-center rounded-2xl neumorphic-extruded text-muted-foreground hover:neumorphic-inset hover:text-foreground transition-all cursor-pointer">
                 <Filter className="size-4" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-64 p-2 rounded-2xl neumorphic-panel border border-white/10">
+            <DropdownMenuContent align="end" className="w-64 p-2 rounded-2xl neumorphic-panel border border-border">
               <div className="px-3 py-2">
                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">
                   Refine Results
                 </p>
               </div>
-              <DropdownMenuSeparator className="mx-2 bg-white/10" />
+              <DropdownMenuSeparator className="mx-2 bg-border" />
               
               <div className="mt-2 px-3 pb-1">
                 <p className="text-[11px] font-bold text-muted-foreground/70">Sort by Rent</p>
@@ -751,9 +1110,9 @@ function LeasesContent() {
                 </div>
               </DropdownMenuItem>
 
-              <DropdownMenuSeparator className="mx-2 my-2 bg-white/10" />
+              <DropdownMenuSeparator className="mx-2 my-2 bg-border" />
               
-              <div className="px-3 pb-1">
+              <div className="mt-2 px-3 pb-1">
                 <p className="text-[11px] font-bold text-muted-foreground/70">Lease Expiry</p>
               </div>
               <DropdownMenuItem 
@@ -769,7 +1128,7 @@ function LeasesContent() {
                 </div>
               </DropdownMenuItem>
 
-              <DropdownMenuSeparator className="mx-2 my-2 bg-white/10" />
+              <DropdownMenuSeparator className="mx-2 my-2 bg-border" />
               
               <DropdownMenuItem 
                 onClick={() => setSortBy("default")}
