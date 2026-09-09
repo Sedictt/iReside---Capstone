@@ -255,8 +255,8 @@ export const LeasePreviewModal = ({
                                 <p className="text-sm font-bold">{error}</p>
                             </div>
                         ) : leaseData ? (
-                            <div className="max-w-[850px] mx-auto shadow-2xl rounded-sm overflow-hidden bg-white">
-                                <LeaseDocument {...leaseData} />
+                            <div className="max-w-3xl mx-auto shadow-xl rounded-xl overflow-hidden bg-white border border-zinc-200/70">
+                                <LeaseDocument className="shadow-none border-none max-w-none p-8 sm:p-10" {...leaseData} />
                             </div>
                         ) : null}
                     </div>

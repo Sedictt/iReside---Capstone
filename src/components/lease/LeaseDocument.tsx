@@ -103,7 +103,7 @@ export function LeaseDocument(leaseDataProps: LeaseDocumentProps) {
     const dueDay = leaseDataProps.terms?.due_day ?? leaseDataProps.terms?.rent_due_day;
     const rentDetails = {
         monthly: monthly_rent || 0,
-        due: dueDay ? `${dueDay}${getOrdinalSuffix(Number(dueDay))} of the month` : "1st of the month"
+        due: dueDay ? `${dueDay}${getOrdinalSuffix(Number(dueDay))}` : "1st"
     };
 
     const deposit = security_deposit || 0;
@@ -117,7 +117,7 @@ export function LeaseDocument(leaseDataProps: LeaseDocumentProps) {
         <div
             id={containerId}
             className={cn(
-                "relative mx-auto w-full max-w-4xl bg-white p-6 text-zinc-900 shadow-2xl md:p-8 lg:p-10 print:shadow-none print:mb-0 transform-gpu font-serif",
+                "relative mx-auto w-full max-w-4xl bg-white text-zinc-900 shadow-2xl p-8 sm:p-10 md:p-12 print:shadow-none print:p-8 transform-gpu font-serif",
                 className
             )}
             style={{ fontFamily: "'Times New Roman', Times, serif" }}
@@ -144,7 +144,7 @@ export function LeaseDocument(leaseDataProps: LeaseDocumentProps) {
                     <p className="text-zinc-800">
                         This Agreement is entered into on <span className="font-black">{currentDate}</span>, by and between:
                     </p>
-                    <div className="grid gap-6 md:grid-cols-2 pt-0.5">
+                    <div className="grid grid-cols-2 gap-6 pt-0.5">
                         <div className="space-y-0">
                             <p className="text-[8px] font-black uppercase tracking-widest text-zinc-400">Landlord</p>
                             <p className="text-sm font-black text-zinc-950 underline decoration-border underline-offset-2">{parties.landlord}</p>
@@ -235,7 +235,7 @@ export function LeaseDocument(leaseDataProps: LeaseDocumentProps) {
                 </div>
 
                 <div className="mt-8 pt-4 border-t border-zinc-200">
-                    <div className="grid md:grid-cols-2 gap-12">
+                    <div className="grid grid-cols-2 gap-8 md:gap-12">
                         {/* Tenant signature block */}
                         <div className="space-y-1.5">
                             <div className="h-12 border-b border-zinc-400 flex items-end pb-1">
@@ -293,8 +293,15 @@ export function LeaseDocument(leaseDataProps: LeaseDocumentProps) {
                 </div>
             </section>
 
-            <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center overflow-hidden opacity-[0.02]">
-                <p className="-rotate-45 text-[min(8rem,10vw)] font-black uppercase text-zinc-950 select-none tracking-widest">
+            <div 
+                className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center overflow-hidden select-none"
+                style={{ opacity: 0.035 }}
+                aria-hidden="true"
+            >
+                <p 
+                    className="-rotate-45 font-black uppercase tracking-widest text-zinc-400"
+                    style={{ fontSize: "clamp(3rem, 7.5vw, 6rem)", color: "#a1a1aa" }}
+                >
                     {leaseDataProps.signed_at || leaseDataProps.landlord_signed_at || leaseDataProps.status === "active" 
                         ? "OFFICIAL LEASE" 
                         : "LEGAL DRAFT"}

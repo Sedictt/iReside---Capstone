@@ -1,10 +1,11 @@
-"use client";
-
+import { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { X, Download, Printer, FileText } from "lucide-react";
+import { X, Download, Printer, FileText, Loader2 } from "lucide-react";
 import { LeaseDocument } from "@/components/lease/LeaseDocument";
+import { exportLeaseDocumentElementToPdf } from "@/lib/lease-pdf";
 import { cn } from "@/lib/utils";
 import { LeaseData } from "@/types/lease";
+import { toast } from "sonner";
 
 interface LeaseModalProps {
     open: boolean;
@@ -13,6 +14,33 @@ interface LeaseModalProps {
 }
 
 export default function LeaseModal({ open, onOpenChange, leaseData }: LeaseModalProps) {
+    const [isExporting, setIsExporting] = useState(false);
+
+    const handleDownload = async () => {
+        const el = document.getElementById("tenant-lease-modal-doc");
+        if (!el) {
+            toast.error("Document not ready for download");
+            return;
+        }
+        setIsExporting(true);
+        try {
+            const pdfBlob = await exportLeaseDocumentElementToPdf(el, `Lease_Agreement_${leaseData.id}.pdf`);
+            const url = URL.createObjectURL(pdfBlob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `Lease_Agreement_${leaseData.id.slice(0, 8)}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            toast.success("Lease Agreement downloaded");
+        } catch (err) {
+            console.error("Export failed:", err);
+            toast.error("Failed to generate PDF download");
+        } finally {
+            setIsExporting(false);
+        }
+    };
 
     return (
         <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -33,13 +61,24 @@ export default function LeaseModal({ open, onOpenChange, leaseData }: LeaseModal
                         </div>
 
                         <div className="flex items-center gap-2">
-                            <button className="hidden sm:flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-foreground px-4 py-2 rounded-xl transition-colors neumorphic-extruded">
+                            <button 
+                                onClick={() => window.print()}
+                                className="hidden sm:flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-foreground px-4 py-2 rounded-xl transition-colors neumorphic-extruded"
+                            >
                                 <Printer className="size-4" />
                                 <span>Print</span>
                             </button>
-                            <button className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all neumorphic-primary">
-                                <Download className="size-4" />
-                                <span className="hidden sm:inline">Download PDF</span>
+                            <button 
+                                onClick={handleDownload}
+                                disabled={isExporting}
+                                className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all neumorphic-primary disabled:opacity-50"
+                            >
+                                {isExporting ? (
+                                    <Loader2 className="size-4 animate-spin" />
+                                ) : (
+                                    <Download className="size-4" />
+                                )}
+                                <span className="hidden sm:inline">{isExporting ? "Generating..." : "Download PDF"}</span>
                             </button>
                             <div className="w-px h-6 bg-border mx-2" />
                             <Dialog.Close className="size-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors neumorphic-extruded">
@@ -50,8 +89,12 @@ export default function LeaseModal({ open, onOpenChange, leaseData }: LeaseModal
 
                     {/* Content Area - Dark Container for the Light Document */}
                     <div className="flex-1 overflow-y-auto p-4 md:p-12 space-y-8 custom-scrollbar neumorphic-inset">
-                        <div className="max-w-[850px] mx-auto shadow-2xl rounded-sm overflow-hidden">
-                            <LeaseDocument {...leaseData} />
+                        <div className="max-w-3xl mx-auto shadow-xl rounded-xl overflow-hidden bg-white border border-zinc-200/70">
+                            <LeaseDocument 
+                                containerId="tenant-lease-modal-doc"
+                                className="shadow-none border-none max-w-none p-8 sm:p-10"
+                                {...leaseData} 
+                            />
                         </div>
                     </div>
 

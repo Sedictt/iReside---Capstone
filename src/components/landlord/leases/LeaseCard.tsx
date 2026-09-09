@@ -270,7 +270,9 @@ export function LeaseCard({ lease, variant, onClick, index = 0 }: LeaseCardProps
  <div className="min-w-0">
  <p className="truncate text-sm font-bold text-foreground">{lease.unit.property.name}</p>
  <p className="truncate text-xs font-medium text-muted-foreground">
- Unit {lease.unit.name}
+ {lease.unit.name?.trim().toLowerCase().startsWith("unit") 
+  ? lease.unit.name 
+  : `Unit ${lease.unit.name}`}
  </p>
  </div>
  </div>

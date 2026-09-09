@@ -771,7 +771,7 @@ export function DigitalSigner({
                     onClick={handleExport}
                     className="w-full h-16 rounded-2xl bg-primary text-primary-foreground font-black text-sm uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
                   >
-                    Confirm & Finalize
+                    Confirm & Finalize Signature
                   </button>
                   <button 
                     onClick={() => setShowConfirmation(false)}
