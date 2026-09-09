@@ -1,0 +1,430 @@
+/* ============================================================
+   iReside Mobile Design System
+   Mobile-specific overrides and utilities for the mobile-2.0
+   companion app. Builds on the existing globals.css tokens.
+   ============================================================ */
+
+/* ----------------------------------------------------------
+   Mobile Layout Utilities
+   ---------------------------------------------------------- */
+
+/* Safe area insets for notch / home indicator (iOS) */
+.mobile-safe-top {
+    padding-top: env(safe-area-inset-top, 0px);
+}
+
+.mobile-safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.mobile-safe-x {
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+}
+
+/* Bottom tab bar height token */
+:root {
+    --bottom-tab-height: 64px;
+    --mobile-header-height: 56px;
+}
+
+/* Prevent content being hidden behind bottom tab bar */
+.mobile-content-pad {
+    padding-bottom: calc(var(--bottom-tab-height) + env(safe-area-inset-bottom, 12px));
+}
+
+/* ----------------------------------------------------------
+   Mobile Card Overrides (lighter neumorphic)
+   Full-depth desktop shadows → flatter, border-led cards
+   ---------------------------------------------------------- */
+
+.mobile-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+
+    /* Lighter neumorphic: gentle single shadow, no heavy layering */
+    box-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.06),
+        0 1px 2px rgba(0, 0, 0, 0.04);
+
+    transition: box-shadow 0.2s ease;
+}
+
+.mobile-card:active {
+    box-shadow:
+        0 0 0 1px var(--border),
+        0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.dark .mobile-card {
+    box-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.2),
+        0 1px 2px rgba(0, 0, 0, 0.16);
+}
+
+/* ----------------------------------------------------------
+   Mobile Typography Adjustments
+   Slightly larger base for thumb-readable text
+   ---------------------------------------------------------- */
+
+.mobile-body {
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+.mobile-caption {
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--muted-foreground);
+}
+
+.mobile-heading {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+}
+
+.mobile-subheading {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted-foreground);
+}
+
+/* ----------------------------------------------------------
+   Sage Green CTA Button (Mobile Primary)
+   ---------------------------------------------------------- */
+
+.btn-mobile-primary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 14px 20px;
+    border-radius: 14px;
+    font-size: 15px;
+    font-weight: 600;
+    background: #5e9a7a;
+    color: #ffffff;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.15s ease, opacity 0.2s ease;
+    min-height: 48px; /* WCAG 44×44 touch target */
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn-mobile-primary:hover {
+    background: #4e8469;
+}
+
+.btn-mobile-primary:active {
+    transform: scale(0.97);
+    background: #426e59;
+}
+
+.btn-mobile-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.dark .btn-mobile-primary {
+    background: #4a7a60;
+    color: #f0faf5;
+}
+
+.dark .btn-mobile-primary:hover {
+    background: #3d6650;
+}
+
+/* Ghost / secondary */
+.btn-mobile-ghost {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 500;
+    background: transparent;
+    color: var(--foreground);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    min-height: 48px;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.15s ease;
+}
+
+.btn-mobile-ghost:active {
+    background: var(--muted);
+}
+
+/* ----------------------------------------------------------
+   Status Badge Chips
+   ---------------------------------------------------------- */
+
+.badge-mobile {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+}
+
+.badge-mobile.paid    { background: #d1fae5; color: #065f46; }
+.badge-mobile.pending { background: #fef3c7; color: #92400e; }
+.badge-mobile.overdue { background: #fee2e2; color: #991b1b; }
+.badge-mobile.active  { background: #e0f2fe; color: #0369a1; }
+.badge-mobile.info    { background: var(--muted); color: var(--muted-foreground); }
+
+.dark .badge-mobile.paid    { background: #065f4620; color: #6ee7b7; }
+.dark .badge-mobile.pending { background: #92400e20; color: #fcd34d; }
+.dark .badge-mobile.overdue { background: #991b1b20; color: #fca5a5; }
+.dark .badge-mobile.active  { background: #0369a120; color: #7dd3fc; }
+
+/* ----------------------------------------------------------
+   Bottom Tab Bar
+   ---------------------------------------------------------- */
+
+.mobile-tab-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    height: var(--bottom-tab-height);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: stretch;
+}
+
+.mobile-tab-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 0.15s ease;
+    color: var(--muted-foreground);
+    font-size: 10px;
+    font-weight: 500;
+    text-decoration: none;
+    position: relative;
+    min-height: 44px; /* WCAG touch target */
+}
+
+.mobile-tab-item.active {
+    color: #5e9a7a;
+}
+
+.mobile-tab-item .tab-icon {
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.mobile-tab-item.active .tab-icon {
+    transform: translateY(-1px);
+}
+
+/* Badge on tab */
+.mobile-tab-badge {
+    position: absolute;
+    top: 6px;
+    right: calc(50% - 16px);
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 8px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ----------------------------------------------------------
+   Mobile Header
+   ---------------------------------------------------------- */
+
+.mobile-header {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    height: var(--mobile-header-height);
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    padding-top: env(safe-area-inset-top, 0px);
+
+    /* Subtle glass blur for depth */
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+/* ----------------------------------------------------------
+   Scroll Area
+   ---------------------------------------------------------- */
+
+.mobile-scroll {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    overscroll-behavior-y: contain;
+}
+
+/* Hide scrollbar on mobile for cleaner look */
+.mobile-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+.mobile-scroll {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* ----------------------------------------------------------
+   Section Separator
+   ---------------------------------------------------------- */
+
+.mobile-section {
+    margin-bottom: 24px;
+}
+
+.mobile-section-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--muted-foreground);
+    margin-bottom: 10px;
+    padding: 0 4px;
+}
+
+/* ----------------------------------------------------------
+   Divider
+   ---------------------------------------------------------- */
+
+.mobile-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 12px 0;
+}
+
+/* ----------------------------------------------------------
+   Metric / KPI Widget
+   ---------------------------------------------------------- */
+
+.mobile-metric {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.mobile-metric-value {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--foreground);
+    line-height: 1;
+}
+
+.mobile-metric-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted-foreground);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* ----------------------------------------------------------
+   Photo / Image Upload Area
+   ---------------------------------------------------------- */
+
+.mobile-upload-area {
+    border: 2px dashed var(--border);
+    border-radius: 16px;
+    padding: 28px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease;
+    text-align: center;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-upload-area:active {
+    border-color: #5e9a7a;
+    background: rgba(94, 154, 122, 0.05);
+}
+
+/* ----------------------------------------------------------
+   Chat Bubble (Messaging)
+   ---------------------------------------------------------- */
+
+.chat-bubble-sent {
+    max-width: 75%;
+    align-self: flex-end;
+    background: #5e9a7a;
+    color: #ffffff;
+    border-radius: 18px 18px 4px 18px;
+    padding: 10px 14px;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.chat-bubble-received {
+    max-width: 75%;
+    align-self: flex-start;
+    background: var(--muted);
+    color: var(--foreground);
+    border-radius: 18px 18px 18px 4px;
+    padding: 10px 14px;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+/* ----------------------------------------------------------
+   Empty State
+   ---------------------------------------------------------- */
+
+.mobile-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 48px 24px;
+    text-align: center;
+    color: var(--muted-foreground);
+}
+
+.mobile-empty-state-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted-foreground);
+}
