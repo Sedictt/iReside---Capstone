@@ -87,62 +87,62 @@ export function CookieConsent() {
           )}>
             <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-transparent via-primary/40 to-transparent" />
 
-            <div className="p-7 md:p-9">
+            <div className="p-4 md:p-9">
               {!isManaging ? (
-                <div className="space-y-6">
-                  <div className="flex items-start gap-5">
+                <div className="space-y-3 md:space-y-6">
+                  <div className="flex items-start gap-3 md:gap-5">
                     <div className="relative flex-shrink-0">
-                      <div className="flex size-14 items-center justify-center rounded-3xl bg-primary/10 text-primary shadow-inner">
-                        <Cookie className="size-7" />
+                      <div className="flex size-9 md:size-14 items-center justify-center rounded-2xl md:rounded-3xl bg-primary/10 text-primary shadow-inner">
+                        <Cookie className="size-4 md:size-7" />
                       </div>
                       <motion.div 
                         animate={{ opacity: [0.5, 1, 0.5] }}
                         transition={{ duration: 2, repeat: Infinity }}
-                        className="absolute -top-1 -right-1 size-3 rounded-full bg-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)]"
+                        className="absolute -top-0.5 -right-0.5 size-2.5 md:size-3 rounded-full bg-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)]"
                       />
                     </div>
-                    <div className="flex-1 space-y-1.5">
-                      <h3 className="font-display text-xl font-black tracking-tight text-foreground">
+                    <div className="flex-1 space-y-1">
+                      <h3 className="font-display text-base md:text-xl font-black tracking-tight text-foreground">
                         Privacy Preferences
                       </h3>
-                      <p className="text-sm leading-relaxed text-muted-foreground">
-                        We use technical cookies to power the iReside dashboard and optional analytics to improve your property management experience.
+                      <p className="text-xs md:text-sm leading-relaxed text-muted-foreground">
+                        We use technical cookies to power iReside and optional analytics to improve your experience.
                       </p>
-                      <p className="text-xs text-muted-foreground/60">
+                      <p className="text-[10px] md:text-xs text-muted-foreground/60">
                         By continuing, you agree to our{" "}
-                        <Link href="/terms" className="underline hover:text-primary transition-colors">Terms of Service</Link>
+                        <Link href="/terms" className="underline hover:text-primary transition-colors">Terms</Link>
                         {" "}and{" "}
                         <Link href="/privacy" className="underline hover:text-primary transition-colors">Privacy Policy</Link>.
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-3.5">
-                    <div className="flex gap-2.5">
+                  <div className="flex flex-col gap-2 md:gap-3.5">
+                    <div className="flex gap-2">
                       <Button
                         onClick={handleAcceptAll}
-                        className="flex-1 h-12 rounded-2xl bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all active:scale-[0.97]"
+                        className="flex-1 h-9 md:h-12 rounded-xl md:rounded-2xl bg-primary text-primary-foreground text-xs md:text-sm font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all active:scale-[0.97]"
                       >
                         Accept all cookies
                       </Button>
                       <Button
                         variant="outline"
                         onClick={() => setIsManaging(true)}
-                        className="px-4 h-12 rounded-2xl border-border bg-transparent hover:bg-muted/50 transition-colors"
+                        className="px-3 md:px-4 h-9 md:h-12 rounded-xl md:rounded-2xl border-border bg-transparent hover:bg-muted/50 transition-colors"
                         aria-label="Customize settings"
                       >
-                        <Settings className="size-5" />
+                        <Settings className="size-4 md:size-5" />
                       </Button>
                     </div>
-                    <div className="flex items-center justify-between px-1.5">
+                    <div className="flex items-center justify-between px-1">
                       <button
                         onClick={handleAcceptEssential}
-                        className="text-xs font-bold text-muted-foreground hover:text-primary transition-colors underline underline-offset-4 decoration-primary/20"
+                        className="text-[11px] md:text-xs font-bold text-muted-foreground hover:text-primary transition-colors underline underline-offset-4 decoration-primary/20"
                       >
                         Essential only
                       </button>
-                      <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-tighter font-black text-muted-foreground/40">
-                        <Shield className="size-3" />
+                      <div className="flex items-center gap-1 text-[9px] md:text-[10px] uppercase tracking-tighter font-black text-muted-foreground/40">
+                        <Shield className="size-2.5 md:size-3" />
                         Encrypted & Private
                       </div>
                     </div>
@@ -152,21 +152,21 @@ export function CookieConsent() {
                 <motion.div 
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="space-y-6"
+                  className="space-y-3 md:space-y-6"
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 md:gap-3">
                       <button 
                         onClick={() => setIsManaging(false)}
-                        className="p-1.5 rounded-xl hover:bg-muted transition-colors text-muted-foreground"
+                        className="p-1 md:p-1.5 rounded-xl hover:bg-muted transition-colors text-muted-foreground"
                       >
-                        <X className="size-5" />
+                        <X className="size-4 md:size-5" />
                       </button>
-                      <h3 className="font-display text-lg font-black tracking-tight">Configure Privacy</h3>
+                      <h3 className="font-display text-base md:text-lg font-black tracking-tight">Configure Privacy</h3>
                     </div>
                   </div>
 
-                  <div className="space-y-3.5">
+                  <div className="space-y-2 md:space-y-3.5">
                     <SettingToggle 
                       title="Platform Core" 
                       description="Required for authentication and session stability."
@@ -187,17 +187,17 @@ export function CookieConsent() {
                     />
                   </div>
 
-                  <div className="pt-2 flex gap-3">
+                  <div className="pt-1 md:pt-2 flex gap-2 md:gap-3">
                     <Button
                       onClick={handleSaveSettings}
-                      className="flex-1 h-11 rounded-2xl bg-primary text-primary-foreground font-bold shadow-md shadow-primary/10"
+                      className="flex-1 h-9 md:h-11 rounded-xl md:rounded-2xl text-xs md:text-sm bg-primary text-primary-foreground font-bold shadow-md shadow-primary/10"
                     >
                       Save my choices
                     </Button>
                     <Button
                       variant="ghost"
                       onClick={handleAcceptAll}
-                      className="flex-1 h-11 rounded-2xl text-primary font-bold hover:bg-primary/5"
+                      className="flex-1 h-9 md:h-11 rounded-xl md:rounded-2xl text-xs md:text-sm text-primary font-bold hover:bg-primary/5"
                     >
                       Enable all
                     </Button>
@@ -228,15 +228,15 @@ function SettingToggle({
   return (
     <div 
       className={cn(
-        "flex items-center justify-between p-4 rounded-[1.5rem] border transition-all cursor-pointer",
+        "flex items-center justify-between p-3 md:p-4 rounded-2xl md:rounded-[1.5rem] border transition-all cursor-pointer",
         active ? "border-primary/20 bg-primary/5" : "border-border bg-muted/20",
         readOnly && "cursor-default opacity-80"
       )}
       onClick={!readOnly ? onToggle : undefined}
     >
-      <div className="flex-1 pr-4">
-        <h4 className="text-sm font-black text-foreground leading-tight">{title}</h4>
-        <p className="text-[11px] text-muted-foreground mt-1 leading-snug">{description}</p>
+      <div className="flex-1 pr-3 md:pr-4">
+        <h4 className="text-xs md:text-sm font-black text-foreground leading-tight">{title}</h4>
+        <p className="text-[10px] md:text-[11px] text-muted-foreground mt-0.5 md:mt-1 leading-snug">{description}</p>
       </div>
       <div className={cn(
         "relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors",
