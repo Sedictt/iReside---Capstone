@@ -131,7 +131,7 @@ export function PullToRefresh({
                         'flex items-center gap-2 px-3 py-1.5 rounded-full border shadow-sm transition-all duration-200',
                         isReady || isRefreshing
                             ? 'bg-primary text-primary-foreground border-primary/40 shadow-primary/20 scale-105'
-                            : 'bg-card/90 text-muted-foreground border-white/10 scale-95'
+                            : 'bg-card/95 text-muted-foreground border-slate-200/90 dark:border-white/10 shadow-xs scale-95'
                     )}
                 >
                     {isRefreshing ? (

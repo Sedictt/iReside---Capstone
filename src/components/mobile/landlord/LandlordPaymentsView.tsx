@@ -141,7 +141,7 @@ export function LandlordPaymentsView() {
                             placeholder="Search tenant or unit…"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-card/80 border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                            className="w-full bg-card/90 dark:bg-card/80 border border-slate-200 dark:border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-xs"
                         />
                     </div>
                 </div>
@@ -169,7 +169,7 @@ export function LandlordPaymentsView() {
                         "px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5",
                         activeTab === 'proofs'
                             ? "bg-primary text-primary-foreground shadow-sm"
-                            : "bg-card/70 border border-white/10 text-muted-foreground"
+                            : "bg-slate-100/80 dark:bg-card/70 border border-slate-200/90 dark:border-white/10 text-muted-foreground"
                     )}
                 >
                     <span>Proofs to Review</span>
@@ -189,7 +189,7 @@ export function LandlordPaymentsView() {
                         "px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all",
                         activeTab === 'all'
                             ? "bg-primary text-primary-foreground shadow-sm"
-                            : "bg-card/70 border border-white/10 text-muted-foreground"
+                            : "bg-slate-100/80 dark:bg-card/70 border border-slate-200/90 dark:border-white/10 text-muted-foreground"
                     )}
                 >
                     All Invoices
@@ -201,7 +201,7 @@ export function LandlordPaymentsView() {
                         "px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all",
                         activeTab === 'overdue'
                             ? "bg-primary text-primary-foreground shadow-sm"
-                            : "bg-card/70 border border-white/10 text-muted-foreground"
+                            : "bg-slate-100/80 dark:bg-card/70 border border-slate-200/90 dark:border-white/10 text-muted-foreground"
                     )}
                 >
                     Overdue
@@ -213,7 +213,7 @@ export function LandlordPaymentsView() {
                         "px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all",
                         activeTab === 'paid'
                             ? "bg-primary text-primary-foreground shadow-sm"
-                            : "bg-card/70 border border-white/10 text-muted-foreground"
+                            : "bg-slate-100/80 dark:bg-card/70 border border-slate-200/90 dark:border-white/10 text-muted-foreground"
                     )}
                 >
                     Paid
@@ -228,7 +228,7 @@ export function LandlordPaymentsView() {
                         <span className="text-xs text-muted-foreground">Loading payments…</span>
                     </div>
                 ) : filteredInvoices.length === 0 ? (
-                    <div className="rounded-2xl border border-white/10 bg-card/50 p-8 text-center flex flex-col items-center justify-center">
+                    <div className="rounded-2xl border border-slate-200/90 dark:border-white/10 bg-card/70 dark:bg-card/50 p-8 text-center flex flex-col items-center justify-center">
                         <CreditCard className="size-8 text-muted-foreground/50 mb-2" />
                         <h4 className="text-xs font-bold text-foreground">No invoices found</h4>
                         <p className="text-[11px] text-muted-foreground mt-0.5">
@@ -245,7 +245,7 @@ export function LandlordPaymentsView() {
                         return (
                             <div 
                                 key={invoice.id} 
-                                className="rounded-2xl border border-white/10 bg-card/80 p-3.5 shadow-xs flex flex-col gap-2.5"
+                                className="rounded-2xl border border-slate-200/90 dark:border-white/10 bg-card/95 dark:bg-card/80 p-3.5 shadow-xs flex flex-col gap-2.5"
                             >
                                 {/* Top Row: Tenant & Amount */}
                                 <div className="flex items-start justify-between gap-2">
@@ -269,7 +269,7 @@ export function LandlordPaymentsView() {
                                 </div>
 
                                 {/* Due Date / Info */}
-                                <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1 border-t border-white/5">
+                                <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1 border-t border-slate-100 dark:border-white/5">
                                     <span className="flex items-center gap-1">
                                         <Clock className="size-3 text-muted-foreground" />
                                         Due: {invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A'}
@@ -278,9 +278,9 @@ export function LandlordPaymentsView() {
 
                                 {/* Proof Screenshot Preview (if submitted) */}
                                 {hasProof && invoice.paymentProofUrl && (
-                                    <div className="mt-1 p-2 rounded-xl bg-background/60 border border-white/5 flex items-center justify-between gap-3">
+                                    <div className="mt-1 p-2 rounded-xl bg-background/60 border border-slate-200/60 dark:border-white/5 flex items-center justify-between gap-3">
                                         <div className="flex items-center gap-2 min-w-0">
-                                            <div className="relative size-12 rounded-lg overflow-hidden border border-white/10 bg-black/40 shrink-0">
+                                            <div className="relative size-12 rounded-lg overflow-hidden border border-slate-200 dark:border-white/10 bg-black/40 shrink-0">
                                                 <Image 
                                                     src={invoice.paymentProofUrl} 
                                                     alt="Proof" 

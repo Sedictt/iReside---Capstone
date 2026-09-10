@@ -140,7 +140,7 @@ export function LandlordTicketsView() {
                             placeholder="Search tickets, units…"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-card/80 border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                            className="w-full bg-card/90 dark:bg-card/80 border border-slate-200 dark:border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-xs"
                         />
                     </div>
                 </div>
@@ -168,7 +168,7 @@ export function LandlordTicketsView() {
                         "px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5",
                         statusFilter === 'open'
                             ? "bg-primary text-primary-foreground shadow-sm"
-                            : "bg-card/70 border border-white/10 text-muted-foreground"
+                            : "bg-slate-100/80 dark:bg-card/70 border border-slate-200/90 dark:border-white/10 text-muted-foreground"
                     )}
                 >
                     <span>Open</span>
@@ -188,7 +188,7 @@ export function LandlordTicketsView() {
                         "px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all",
                         statusFilter === 'in_progress'
                             ? "bg-primary text-primary-foreground shadow-sm"
-                            : "bg-card/70 border border-white/10 text-muted-foreground"
+                            : "bg-slate-100/80 dark:bg-card/70 border border-slate-200/90 dark:border-white/10 text-muted-foreground"
                     )}
                 >
                     In Progress
@@ -200,7 +200,7 @@ export function LandlordTicketsView() {
                         "px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all",
                         statusFilter === 'resolved'
                             ? "bg-primary text-primary-foreground shadow-sm"
-                            : "bg-card/70 border border-white/10 text-muted-foreground"
+                            : "bg-slate-100/80 dark:bg-card/70 border border-slate-200/90 dark:border-white/10 text-muted-foreground"
                     )}
                 >
                     Resolved
@@ -212,7 +212,7 @@ export function LandlordTicketsView() {
                         "px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all",
                         statusFilter === 'all'
                             ? "bg-primary text-primary-foreground shadow-sm"
-                            : "bg-card/70 border border-white/10 text-muted-foreground"
+                            : "bg-slate-100/80 dark:bg-card/70 border border-slate-200/90 dark:border-white/10 text-muted-foreground"
                     )}
                 >
                     All
@@ -227,7 +227,7 @@ export function LandlordTicketsView() {
                         <span className="text-xs text-muted-foreground">Loading maintenance tickets…</span>
                     </div>
                 ) : filteredTickets.length === 0 ? (
-                    <div className="rounded-2xl border border-white/10 bg-card/50 p-8 text-center flex flex-col items-center justify-center">
+                    <div className="rounded-2xl border border-slate-200/90 dark:border-white/10 bg-card/70 dark:bg-card/50 p-8 text-center flex flex-col items-center justify-center">
                         <Wrench className="size-8 text-muted-foreground/50 mb-2" />
                         <h4 className="text-xs font-bold text-foreground">No tickets found</h4>
                         <p className="text-[11px] text-muted-foreground mt-0.5">
@@ -244,7 +244,7 @@ export function LandlordTicketsView() {
                         return (
                             <div
                                 key={ticket.id}
-                                className="rounded-2xl border border-white/10 bg-card/80 p-3.5 shadow-xs flex flex-col gap-2.5 transition-all"
+                                className="rounded-2xl border border-slate-200/90 dark:border-white/10 bg-card/95 dark:bg-card/80 p-3.5 shadow-xs flex flex-col gap-2.5 transition-all"
                             >
                                 {/* Header: Priority Badge & Date */}
                                 <div className="flex items-start justify-between gap-2">
@@ -306,7 +306,7 @@ export function LandlordTicketsView() {
                                             <button
                                                 key={i}
                                                 onClick={() => setLightboxImage(imgUrl)}
-                                                className="relative size-14 rounded-lg overflow-hidden border border-white/10 bg-black/40 shrink-0 hover:opacity-80 active:scale-95 transition-all"
+                                                className="relative size-14 rounded-lg overflow-hidden border border-slate-200 dark:border-white/10 bg-black/40 shrink-0 hover:opacity-80 active:scale-95 transition-all"
                                                 aria-label="Inspect issue photo"
                                             >
                                                 <Image src={imgUrl} alt="Issue photo" fill sizes="56px" className="object-cover" />
@@ -316,7 +316,7 @@ export function LandlordTicketsView() {
                                 )}
 
                                 {/* Bottom Expand & Action Bar */}
-                                <div className="flex items-center justify-between pt-1 border-t border-white/5 gap-2">
+                                <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-white/5 gap-2">
                                     <button
                                         onClick={() => setExpandedId(isExpanded ? null : ticket.id)}
                                         className="text-[10px] font-bold text-primary flex items-center gap-0.5"

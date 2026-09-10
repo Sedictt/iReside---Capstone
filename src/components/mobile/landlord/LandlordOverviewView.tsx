@@ -111,11 +111,19 @@ export function LandlordOverviewView() {
         const months = analytics?.financialChart?.month?.labels || ['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'];
         const values = analytics?.financialChart?.month?.earnings || [45000, 52000, 48000, 61000, 58000, 65000];
         const max = Math.max(...values, 10000);
-        return months.map((label, i) => ({
-            label: label.slice(0, 3),
-            value: values[i] || 0,
-            heightPercent: Math.round(((values[i] || 0) / max) * 100),
-        }));
+        return months.map((label, i) => {
+            let displayLabel = label;
+            if (label.toLowerCase().startsWith('week')) {
+                displayLabel = label.replace(/week\s*/i, 'W');
+            } else if (label.length > 4) {
+                displayLabel = label.slice(0, 3);
+            }
+            return {
+                label: displayLabel,
+                value: values[i] || 0,
+                heightPercent: Math.round(((values[i] || 0) / max) * 100),
+            };
+        });
     }, [analytics]);
 
     // KPI values
@@ -181,7 +189,7 @@ export function LandlordOverviewView() {
             {/* Key Metrics Grid */}
             <div className="grid grid-cols-2 gap-3 px-4">
                 {/* Occupancy Card */}
-                <div className="rounded-2xl p-3.5 bg-card/80 border border-white/10 shadow-xs flex flex-col justify-between">
+                <div className="rounded-2xl p-3.5 bg-card/90 dark:bg-card/80 border border-slate-200/90 dark:border-white/10 shadow-xs flex flex-col justify-between">
                     <div className="flex items-center justify-between">
                         <span className="text-[11px] font-medium text-muted-foreground">Occupancy</span>
                         <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-500">
@@ -195,7 +203,7 @@ export function LandlordOverviewView() {
                 </div>
 
                 {/* Revenue / Collections Card */}
-                <div className="rounded-2xl p-3.5 bg-card/80 border border-white/10 shadow-xs flex flex-col justify-between">
+                <div className="rounded-2xl p-3.5 bg-card/90 dark:bg-card/80 border border-slate-200/90 dark:border-white/10 shadow-xs flex flex-col justify-between">
                     <div className="flex items-center justify-between">
                         <span className="text-[11px] font-medium text-muted-foreground">Collected</span>
                         <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
@@ -221,7 +229,7 @@ export function LandlordOverviewView() {
                     {/* Payments Attention */}
                     <Link
                         href="/mobile/landlord/payments"
-                        className="flex items-center justify-between p-3 rounded-xl bg-card/70 border border-white/10 active:scale-[0.98] transition-all"
+                        className="flex items-center justify-between p-3 rounded-xl bg-card/90 dark:bg-card/70 border border-slate-200/80 dark:border-white/10 shadow-2xs active:scale-[0.98] transition-all"
                     >
                         <div className="flex items-center gap-2.5 min-w-0">
                             <div className={cn(
@@ -245,7 +253,7 @@ export function LandlordOverviewView() {
                     {/* Maintenance Tickets */}
                     <Link
                         href="/mobile/landlord/tickets"
-                        className="flex items-center justify-between p-3 rounded-xl bg-card/70 border border-white/10 active:scale-[0.98] transition-all"
+                        className="flex items-center justify-between p-3 rounded-xl bg-card/90 dark:bg-card/70 border border-slate-200/80 dark:border-white/10 shadow-2xs active:scale-[0.98] transition-all"
                     >
                         <div className="flex items-center gap-2.5 min-w-0">
                             <div className={cn(
@@ -269,7 +277,7 @@ export function LandlordOverviewView() {
                     {/* Tenant Broadcast Quick Link */}
                     <Link
                         href="/mobile/landlord/messages"
-                        className="flex items-center justify-between p-3 rounded-xl bg-card/70 border border-white/10 active:scale-[0.98] transition-all"
+                        className="flex items-center justify-between p-3 rounded-xl bg-card/90 dark:bg-card/70 border border-slate-200/80 dark:border-white/10 shadow-2xs active:scale-[0.98] transition-all"
                     >
                         <div className="flex items-center gap-2.5 min-w-0">
                             <div className="size-8 rounded-lg bg-blue-500/15 text-blue-500 flex items-center justify-center shrink-0">
@@ -291,7 +299,7 @@ export function LandlordOverviewView() {
 
             {/* Brief Revenue Trend Chart (Mobile-optimized) */}
             <div className="px-4">
-                <div className="rounded-2xl p-4 bg-card/80 border border-white/10 shadow-xs">
+                <div className="rounded-2xl p-4 bg-card/90 dark:bg-card/80 border border-slate-200/90 dark:border-white/10 shadow-xs">
                     <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-1.5">
                             <TrendingUp className="size-3.5 text-primary" />
