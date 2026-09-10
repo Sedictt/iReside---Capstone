@@ -56,7 +56,10 @@ import {
     Clock,
     EyeOff,
     AlertCircle,
-    CheckCircle2
+    CheckCircle2,
+    Calendar,
+    ChevronDown,
+    FileSpreadsheet
 } from "lucide-react";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
@@ -420,6 +423,84 @@ export function LandlordSettings() {
             }
         }
     }, []);
+
+    // Scoped Data Export State
+    type ExportCategory = "financials" | "properties" | "rent_roll";
+    type ExportRange = "ytd" | "12m" | "all";
+    type ExportFormat = "csv" | "json";
+
+    const [exportCategory, setExportCategory] = useState<ExportCategory>("financials");
+    const [exportRange, setExportRange] = useState<ExportRange>("ytd");
+    const [exportFormat, setExportFormat] = useState<ExportFormat>("csv");
+    const [isExporting, setIsExporting] = useState(false);
+
+    const handleExportData = async () => {
+        setIsExporting(true);
+        try {
+            const queryParams = new URLSearchParams({
+                category: exportCategory,
+                range: exportRange,
+            });
+            const res = await fetch(`/api/landlord/export?${queryParams.toString()}`);
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.error || "Failed to generate export");
+            }
+            const result = await res.json();
+            const records: Record<string, unknown>[] = result.data || [];
+            const filename = result.filename || `iReside_Export_${new Date().toISOString().split("T")[0]}`;
+
+            if (records.length === 0) {
+                toast.info("No records found for the selected export criteria.");
+                return;
+            }
+
+            if (exportFormat === "json") {
+                const blob = new Blob([JSON.stringify(records, null, 2)], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `${filename}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                toast.success(`Exported ${records.length} records as JSON!`);
+            } else {
+                const headers = Object.keys(records[0]);
+                const escapeCSV = (val: unknown) => {
+                    const str = String(val ?? "");
+                    if (str.includes(",") || str.includes('"') || str.includes("\n") || str.includes("\r")) {
+                        return `"${str.replace(/"/g, '""')}"`;
+                    }
+                    return str;
+                };
+
+                const rows = records.map((row) =>
+                    headers.map((h) => escapeCSV(row[h])).join(",")
+                );
+
+                // Prefix with UTF-8 BOM (\uFEFF) so Excel displays currency and UTF-8 characters properly
+                const csvContent = "\uFEFF" + [headers.join(","), ...rows].join("\r\n");
+                const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `${filename}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                toast.success(`Exported ${records.length} records to CSV!`);
+            }
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : "Failed to export data.";
+            console.error("Export error:", err);
+            toast.error(message);
+        } finally {
+            setIsExporting(false);
+        }
+    };
 
     // Theme & High Contrast
     const { theme, setTheme, resolvedTheme } = useTheme();
@@ -2955,12 +3036,163 @@ export function LandlordSettings() {
             switch (currentSubTab) {
                 case "Export":
                     return (
-                        <GlassCard title="Data Export" description="Download a copy of your records in JSON or CSV format.">
-                            <div className="space-y-4 max-w-lg">
-                                <p className="text-xs text-muted-foreground">This includes your properties, tenant history, and financial ledgers.</p>
-                                <button className="flex items-center gap-2 rounded-2xl neumorphic-extruded px-6 py-3 text-sm font-black transition-all text-foreground hover:text-primary">
-                                    <Download className="size-4" /> Request Data Export
-                                </button>
+                        <GlassCard title="Data Export" description="Download structured business records in CSV (Excel) or JSON format.">
+                            <div className="space-y-6 max-w-2xl">
+                                {/* Dataset Category */}
+                                <div className="space-y-3">
+                                    <label className="text-xs font-black uppercase tracking-wider text-foreground/80">
+                                        Select Dataset
+                                    </label>
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                        {[
+                                            {
+                                                id: "financials" as const,
+                                                label: "Financial Ledger",
+                                                desc: "Invoices, payments, balances, and utility records",
+                                                icon: CreditCard,
+                                            },
+                                            {
+                                                id: "properties" as const,
+                                                label: "Property Portfolio",
+                                                desc: "Buildings, unit inventory, and occupancy rates",
+                                                icon: Building2,
+                                            },
+                                            {
+                                                id: "rent_roll" as const,
+                                                label: "Active Rent Roll",
+                                                desc: "Tenant leases, contact info, and rental terms",
+                                                icon: FileText,
+                                            },
+                                        ].map((item) => {
+                                            const isSelected = exportCategory === item.id;
+                                            const Icon = item.icon;
+                                            return (
+                                                <button
+                                                    key={item.id}
+                                                    type="button"
+                                                    onClick={() => setExportCategory(item.id)}
+                                                    className={cn(
+                                                        "flex flex-col justify-between p-4 rounded-2xl border text-left transition-all cursor-pointer h-full",
+                                                        isSelected
+                                                            ? "neumorphic-inset border-primary/40 bg-primary/[0.04]"
+                                                            : "neumorphic-panel border-border/60 hover:border-border/90"
+                                                    )}
+                                                >
+                                                    <div className="flex items-center justify-between w-full mb-3">
+                                                        <div className={cn(
+                                                            "size-9 rounded-xl flex items-center justify-center transition-colors",
+                                                            isSelected ? "bg-primary/20 text-primary" : "bg-surface-2 text-muted-foreground"
+                                                        )}>
+                                                            <Icon className="size-4" />
+                                                        </div>
+                                                        <div className={cn(
+                                                            "size-4 rounded-full border flex items-center justify-center transition-all",
+                                                            isSelected ? "border-primary bg-primary" : "border-border bg-transparent"
+                                                        )}>
+                                                            {isSelected && <div className="size-1.5 rounded-full bg-white" />}
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-xs font-black tracking-tight text-foreground block">
+                                                            {item.label}
+                                                        </span>
+                                                        <span className="text-[11px] text-muted-foreground mt-1 leading-snug block">
+                                                            {item.desc}
+                                                        </span>
+                                                    </div>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* Options: Date Range & Format */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                                    {exportCategory === "financials" ? (
+                                        <SettingField label="Date Range" icon={Calendar}>
+                                            <div className="relative">
+                                                <select
+                                                    value={exportRange}
+                                                    onChange={(e) => setExportRange(e.target.value as ExportRange)}
+                                                    className="w-full rounded-xl neumorphic-inset px-4 py-3 text-xs font-bold text-foreground focus:outline-none appearance-none cursor-pointer bg-transparent"
+                                                >
+                                                    <option value="ytd" className="bg-card text-foreground">Year to Date (2026)</option>
+                                                    <option value="12m" className="bg-card text-foreground">Past 12 Months</option>
+                                                    <option value="all" className="bg-card text-foreground">All Time (Full History)</option>
+                                                </select>
+                                                <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+                                            </div>
+                                        </SettingField>
+                                    ) : (
+                                        <SettingField label="Date Range" icon={Calendar} description="All active records included">
+                                            <div className="w-full rounded-xl neumorphic-inset px-4 py-3 text-xs font-bold text-muted-foreground flex items-center justify-between">
+                                                <span>Active Records</span>
+                                                <span className="text-[10px] uppercase font-black tracking-wider text-muted-foreground/80">Current State</span>
+                                            </div>
+                                        </SettingField>
+                                    )}
+
+                                    <SettingField label="File Format" icon={FileSpreadsheet}>
+                                        <div className="relative">
+                                            <select
+                                                value={exportFormat}
+                                                onChange={(e) => setExportFormat(e.target.value as ExportFormat)}
+                                                className="w-full rounded-xl neumorphic-inset px-4 py-3 text-xs font-bold text-foreground focus:outline-none appearance-none cursor-pointer bg-transparent"
+                                            >
+                                                <option value="csv" className="bg-card text-foreground">CSV (Microsoft Excel / Spreadsheets)</option>
+                                                <option value="json" className="bg-card text-foreground">JSON (Raw Structured Data)</option>
+                                            </select>
+                                            <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+                                        </div>
+                                    </SettingField>
+                                </div>
+
+                                {/* All Time Scope Warning */}
+                                {exportCategory === "financials" && exportRange === "all" && (
+                                    <div className="flex items-start gap-3 p-3.5 rounded-xl border border-amber-500/25 bg-amber-500/[0.08] text-xs">
+                                        <AlertTriangle className="size-4 text-amber-500 shrink-0 mt-0.5" />
+                                        <div className="space-y-0.5">
+                                            <p className="font-bold text-amber-600 dark:text-amber-400">Large Export Warning</p>
+                                            <p className="text-muted-foreground leading-relaxed">
+                                                Exporting all-time financial records will retrieve all historical invoices and payments. This may take longer to generate and result in a larger file.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Action & File Summary Bar */}
+                                <div className="pt-4 border-t border-border/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                    <div className="text-xs text-muted-foreground">
+                                        <span className="font-bold text-foreground">Scope:</span>{" "}
+                                        {exportCategory === "financials"
+                                            ? "Financial Ledger"
+                                            : exportCategory === "properties"
+                                            ? "Property Portfolio"
+                                            : "Active Rent Roll"}
+                                        {exportCategory === "financials" && ` (${exportRange === "ytd" ? "YTD 2026" : exportRange === "12m" ? "Past 12M" : "All Time"})`}
+                                        {" • "}
+                                        <span className="uppercase font-bold text-foreground">{exportFormat}</span>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        onClick={handleExportData}
+                                        disabled={isExporting}
+                                        className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl neumorphic-primary text-xs font-black uppercase tracking-wider text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50 cursor-pointer shrink-0"
+                                    >
+                                        {isExporting ? (
+                                            <>
+                                                <Loader2 className="size-3.5 animate-spin" />
+                                                <span>Exporting...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Download className="size-3.5" />
+                                                <span>Download {exportFormat.toUpperCase()}</span>
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
                             </div>
                         </GlassCard>
                     );
