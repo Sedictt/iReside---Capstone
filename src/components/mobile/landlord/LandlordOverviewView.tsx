@@ -113,7 +113,11 @@ export function LandlordOverviewView() {
         const max = Math.max(...values, 10000);
         return months.map((label, i) => {
             let displayLabel = label;
-            if (label.toLowerCase().startsWith('week')) {
+            if (/^week\s*(\d+)/i.test(label)) {
+                displayLabel = label.replace(/^week\s*(\d+)/i, 'W$1');
+            } else if (/^wk\s*(\d+)/i.test(label)) {
+                displayLabel = label.replace(/^wk\s*(\d+)/i, 'W$1');
+            } else if (label.toLowerCase().startsWith('week')) {
                 displayLabel = label.replace(/week\s*/i, 'W');
             } else if (label.length > 4) {
                 displayLabel = label.slice(0, 3);
@@ -136,7 +140,7 @@ export function LandlordOverviewView() {
                 {/* Prominently Highlighted Property Dropdown Selector */}
                 <div className="px-4 pt-1">
                     <div className="relative w-full">
-                        <div className="flex items-center justify-between w-full px-3.5 py-3 rounded-2xl bg-card border-2 border-primary/35 shadow-xs hover:border-primary/60 transition-all active:scale-[0.99] pointer-events-none">
+                        <div className="flex items-center justify-between w-full px-3.5 py-3 rounded-2xl bg-white dark:bg-card border-2 border-primary/40 shadow-xs hover:border-primary/60 transition-all active:scale-[0.99] pointer-events-none">
                             <div className="flex items-center gap-2.5 min-w-0">
                                 <div className="flex size-8 items-center justify-center rounded-xl bg-primary/20 text-primary shrink-0 shadow-xs">
                                     <Building2 className="size-4" />
@@ -189,7 +193,7 @@ export function LandlordOverviewView() {
             {/* Key Metrics Grid */}
             <div className="grid grid-cols-2 gap-3 px-4">
                 {/* Occupancy Card */}
-                <div className="rounded-2xl p-3.5 bg-card/90 dark:bg-card/80 border border-slate-200/90 dark:border-white/10 shadow-xs flex flex-col justify-between">
+                <div className="rounded-2xl p-4 bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 shadow-xs flex flex-col justify-between">
                     <div className="flex items-center justify-between">
                         <span className="text-[11px] font-medium text-muted-foreground">Occupancy</span>
                         <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-500">
@@ -203,7 +207,7 @@ export function LandlordOverviewView() {
                 </div>
 
                 {/* Revenue / Collections Card */}
-                <div className="rounded-2xl p-3.5 bg-card/90 dark:bg-card/80 border border-slate-200/90 dark:border-white/10 shadow-xs flex flex-col justify-between">
+                <div className="rounded-2xl p-4 bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 shadow-xs flex flex-col justify-between">
                     <div className="flex items-center justify-between">
                         <span className="text-[11px] font-medium text-muted-foreground">Collected</span>
                         <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
@@ -225,11 +229,11 @@ export function LandlordOverviewView() {
                     </h3>
                 </div>
 
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2.5">
                     {/* Payments Attention */}
                     <Link
                         href="/mobile/landlord/payments"
-                        className="flex items-center justify-between p-3 rounded-xl bg-card/90 dark:bg-card/70 border border-slate-200/80 dark:border-white/10 shadow-2xs active:scale-[0.98] transition-all"
+                        className="flex items-center justify-between p-3.5 rounded-2xl bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 shadow-xs active:scale-[0.98] transition-all hover:border-primary/40"
                     >
                         <div className="flex items-center gap-2.5 min-w-0">
                             <div className={cn(
@@ -253,7 +257,7 @@ export function LandlordOverviewView() {
                     {/* Maintenance Tickets */}
                     <Link
                         href="/mobile/landlord/tickets"
-                        className="flex items-center justify-between p-3 rounded-xl bg-card/90 dark:bg-card/70 border border-slate-200/80 dark:border-white/10 shadow-2xs active:scale-[0.98] transition-all"
+                        className="flex items-center justify-between p-3.5 rounded-2xl bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 shadow-xs active:scale-[0.98] transition-all hover:border-primary/40"
                     >
                         <div className="flex items-center gap-2.5 min-w-0">
                             <div className={cn(
@@ -277,7 +281,7 @@ export function LandlordOverviewView() {
                     {/* Tenant Broadcast Quick Link */}
                     <Link
                         href="/mobile/landlord/messages"
-                        className="flex items-center justify-between p-3 rounded-xl bg-card/90 dark:bg-card/70 border border-slate-200/80 dark:border-white/10 shadow-2xs active:scale-[0.98] transition-all"
+                        className="flex items-center justify-between p-3.5 rounded-2xl bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 shadow-xs active:scale-[0.98] transition-all hover:border-primary/40"
                     >
                         <div className="flex items-center gap-2.5 min-w-0">
                             <div className="size-8 rounded-lg bg-blue-500/15 text-blue-500 flex items-center justify-center shrink-0">
@@ -299,7 +303,7 @@ export function LandlordOverviewView() {
 
             {/* Brief Revenue Trend Chart (Mobile-optimized) */}
             <div className="px-4">
-                <div className="rounded-2xl p-4 bg-card/90 dark:bg-card/80 border border-slate-200/90 dark:border-white/10 shadow-xs">
+                <div className="rounded-2xl p-4 bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 shadow-xs">
                     <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-1.5">
                             <TrendingUp className="size-3.5 text-primary" />
@@ -315,7 +319,7 @@ export function LandlordOverviewView() {
                                 <div className="text-[9px] font-semibold text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
                                     ₱{(item.value / 1000).toFixed(0)}k
                                 </div>
-                                <div className="w-full bg-muted/40 rounded-t-md relative flex items-end justify-center h-full overflow-hidden">
+                                <div className="w-full bg-slate-100 dark:bg-muted/40 rounded-t-md relative flex items-end justify-center h-full overflow-hidden border border-slate-200/80 dark:border-white/5">
                                     <div 
                                         className={cn(
                                             "w-full rounded-t-md transition-all duration-500",

@@ -308,7 +308,7 @@ export function LandlordMessagesView() {
                         "flex-1 py-2 rounded-xl text-xs font-black uppercase tracking-tight transition-all flex items-center justify-center gap-1.5",
                         viewMode === 'chats'
                             ? "bg-primary text-primary-foreground shadow-xs"
-                            : "bg-slate-100/80 dark:bg-card/70 border border-slate-200/90 dark:border-white/10 text-muted-foreground"
+                            : "bg-slate-100/90 dark:bg-card/70 border border-slate-300/80 dark:border-white/15 text-muted-foreground"
                     )}
                 >
                     <MessageCircle className="size-3.5" />
@@ -321,7 +321,7 @@ export function LandlordMessagesView() {
                         "flex-1 py-2 rounded-xl text-xs font-black uppercase tracking-tight transition-all flex items-center justify-center gap-1.5",
                         viewMode === 'broadcasts'
                             ? "bg-primary text-primary-foreground shadow-xs"
-                            : "bg-slate-100/80 dark:bg-card/70 border border-slate-200/90 dark:border-white/10 text-muted-foreground"
+                            : "bg-slate-100/90 dark:bg-card/70 border border-slate-300/80 dark:border-white/15 text-muted-foreground"
                     )}
                 >
                     <Megaphone className="size-3.5" />
@@ -341,7 +341,7 @@ export function LandlordMessagesView() {
                                 placeholder="Search tenant conversations…"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full bg-card/90 dark:bg-card/80 border border-slate-200 dark:border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-xs"
+                                className="w-full bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 rounded-xl pl-9 pr-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-xs"
                             />
                         </div>
                     </div>
@@ -354,7 +354,7 @@ export function LandlordMessagesView() {
                                 <span className="text-xs text-muted-foreground">Loading conversations…</span>
                             </div>
                         ) : filteredConversations.length === 0 ? (
-                            <div className="rounded-2xl border border-slate-200/90 dark:border-white/10 bg-card/70 dark:bg-card/50 p-8 text-center flex flex-col items-center justify-center">
+                            <div className="rounded-2xl border border-slate-300 dark:border-white/15 bg-white dark:bg-card/50 p-8 text-center flex flex-col items-center justify-center shadow-xs">
                                 <MessageCircle className="size-8 text-muted-foreground/50 mb-2" />
                                 <h4 className="text-xs font-bold text-foreground">No active chats</h4>
                                 <p className="text-[11px] text-muted-foreground mt-0.5">
@@ -372,7 +372,7 @@ export function LandlordMessagesView() {
                                     <button
                                         key={conv.id}
                                         onClick={() => handleOpenChat(conv)}
-                                        className="w-full p-3 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-card/95 dark:bg-card/80 hover:bg-card active:scale-[0.98] transition-all flex items-center gap-3 text-left shadow-2xs"
+                                        className="w-full p-3 rounded-2xl border border-slate-300 dark:border-white/15 bg-white dark:bg-card/80 hover:bg-card active:scale-[0.98] transition-all flex items-center gap-3 text-left shadow-xs"
                                     >
                                         <div className="relative size-11 rounded-full overflow-hidden border border-slate-200 dark:border-white/10 bg-muted shrink-0">
                                             <Image src={avatar} alt={name} fill sizes="44px" className="object-cover" />

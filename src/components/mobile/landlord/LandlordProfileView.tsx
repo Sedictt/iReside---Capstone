@@ -86,7 +86,7 @@ export function LandlordProfileView() {
         <PullToRefresh onRefresh={fetchAuditLogs}>
             <div className="flex flex-col gap-4 pb-8">
                 {/* User Profile Summary Card */}
-                <div className="mx-4 mt-1 p-4 rounded-2xl bg-card/95 dark:bg-card/80 border border-slate-200/90 dark:border-white/10 shadow-xs flex items-center gap-3.5">
+                <div className="mx-4 mt-1 p-4 rounded-2xl bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 shadow-xs flex items-center gap-3.5">
                     <div className="relative size-14 rounded-full overflow-hidden border-2 border-primary/30 bg-muted shrink-0 shadow-xs">
                         <Image src={avatarUrl} alt={fullName} fill sizes="56px" className="object-cover" />
                     </div>
@@ -110,7 +110,7 @@ export function LandlordProfileView() {
                     {/* Theme Toggle */}
                     <button
                         onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                        className="p-3 rounded-xl bg-card/90 dark:bg-card/70 border border-slate-200/90 dark:border-white/10 flex items-center justify-between active:scale-[0.98] transition-all"
+                        className="p-3 rounded-xl bg-white dark:bg-card/70 border border-slate-300 dark:border-white/15 flex items-center justify-between active:scale-[0.98] transition-all shadow-2xs"
                     >
                         <div className="flex items-center gap-2">
                             {theme === 'dark' ? <Moon className="size-3.5 text-primary" /> : <Sun className="size-3.5 text-amber-500" />}
@@ -152,7 +152,7 @@ export function LandlordProfileView() {
                                 placeholder="Filter actions or keywords…"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full bg-card/90 dark:bg-card/80 border border-slate-200 dark:border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-xs"
+                                className="w-full bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 rounded-xl pl-9 pr-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-xs"
                             />
                         </div>
                         <button
@@ -173,7 +173,7 @@ export function LandlordProfileView() {
                                 "px-3 py-1 rounded-xl text-[11px] font-bold capitalize whitespace-nowrap transition-all",
                                 categoryFilter === cat
                                     ? "bg-primary text-primary-foreground shadow-xs"
-                                    : "bg-slate-100/80 dark:bg-card/70 border border-slate-200/90 dark:border-white/10 text-muted-foreground"
+                                    : "bg-slate-100/90 dark:bg-card/70 border border-slate-300/80 dark:border-white/15 text-muted-foreground"
                             )}
                         >
                             {cat}
@@ -189,7 +189,7 @@ export function LandlordProfileView() {
                             <span className="text-xs text-muted-foreground">Loading audit records…</span>
                         </div>
                     ) : logs.length === 0 ? (
-                        <div className="rounded-2xl border border-slate-200/90 dark:border-white/10 bg-card/70 dark:bg-card/50 p-8 text-center flex flex-col items-center justify-center">
+                        <div className="rounded-2xl border border-slate-300 dark:border-white/15 bg-white dark:bg-card/50 p-8 text-center flex flex-col items-center justify-center shadow-xs">
                             <ShieldCheck className="size-8 text-muted-foreground/50 mb-2" />
                             <h4 className="text-xs font-bold text-foreground">No audit logs found</h4>
                             <p className="text-[11px] text-muted-foreground mt-0.5">
@@ -205,7 +205,7 @@ export function LandlordProfileView() {
                             return (
                                 <div
                                     key={item.id}
-                                    className="p-3 rounded-xl border border-slate-200/80 dark:border-white/10 bg-card/95 dark:bg-card/80 shadow-2xs flex flex-col gap-1.5 text-left"
+                                    className="p-3 rounded-xl border border-slate-300 dark:border-white/15 bg-white dark:bg-card/80 shadow-2xs flex flex-col gap-1.5 text-left"
                                 >
                                     {/* Top Row: Category tag & Timestamp */}
                                     <div className="flex items-center justify-between gap-2">
