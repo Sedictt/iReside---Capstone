@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useProperty } from '@/context/PropertyContext';
 import { useRouter } from 'next/navigation';
+import { signOut } from '@/lib/supabase/client-auth';
 import Image from 'next/image';
 import { 
     User, 
@@ -30,7 +31,7 @@ import type { AuditLogItem } from '@/app/api/audit-logs/route';
 const FALLBACK_AVATAR = "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&w=150&q=80";
 
 export function LandlordProfileView() {
-    const { profile, signOut } = useAuth();
+    const { profile } = useAuth();
     const { properties } = useProperty();
     const { theme, setTheme } = useTheme();
     const router = useRouter();
@@ -84,9 +85,9 @@ export function LandlordProfileView() {
 
     return (
         <PullToRefresh onRefresh={fetchAuditLogs}>
-            <div className="flex flex-col gap-4 pb-3">
+            <div className="flex flex-col gap-3.5 pb-3">
                 {/* User Profile Summary Card */}
-                <div className="mx-4 mt-1 p-4 rounded-2xl bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 shadow-xs flex items-center gap-3.5">
+                <div className="mx-4 p-4 rounded-2xl bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 shadow-xs flex items-center gap-3.5">
                     <div className="relative size-14 rounded-full overflow-hidden border-2 border-primary/30 bg-muted shrink-0 shadow-xs">
                         <Image src={avatarUrl} alt={fullName} fill sizes="56px" className="object-cover" />
                     </div>
@@ -131,16 +132,13 @@ export function LandlordProfileView() {
                     </button>
                 </div>
 
-                {/* READ-ONLY AUDIT LOGS VIEWER */}
+                {/* AUDIT LOGS VIEWER */}
                 <div className="flex flex-col gap-3 px-4 pt-2">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5">
-                            <Activity className="size-4 text-primary" />
-                            <h3 className="text-xs font-black uppercase tracking-wider text-foreground">
-                                Audit &amp; Activity Log
-                            </h3>
-                        </div>
-                        <span className="text-[10px] text-muted-foreground">Read-Only</span>
+                    <div className="flex items-center gap-1.5">
+                        <Activity className="size-4 text-primary" />
+                        <h3 className="text-xs font-black uppercase tracking-wider text-foreground">
+                            Audit &amp; Activity Log
+                        </h3>
                     </div>
 
                     {/* Search Bar */}

@@ -1,17 +1,16 @@
-﻿import { MobileHeader } from '@/components/mobile/layout/MobileHeader'
+import { MobileHeader } from '@/components/mobile/layout/MobileHeader'
+import { TenantPayView } from '@/components/mobile/tenant/TenantPayView'
 
 export const metadata = {
-    title: 'Pay | iReside',
-    description: 'Payment history and proof submission',
+    title: 'Pay Rent | iReside',
+    description: 'Pay your rent and view payment history',
 }
 
 export default function TenantPayPage() {
     return (
         <>
-            <MobileHeader title="Pay" />
-            <div className="px-4 py-5">
-                <p className="text-muted-foreground text-sm">Pay screen — coming soon in next phase.</p>
-            </div>
+            <MobileHeader title="Payments" />
+            <TenantPayView />
         </>
     )
 }

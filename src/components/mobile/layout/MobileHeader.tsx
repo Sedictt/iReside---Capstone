@@ -2,9 +2,10 @@
 
 import Link from 'next/link'
 import { Bell, ChevronLeft } from 'lucide-react'
-import { ThemeToggle } from '@/components/theme-toggle'
 import { cn } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
+
+import { useNotifications } from '@/context/NotificationContext'
 
 interface MobileHeaderProps {
     /** Page title displayed in the center */
@@ -27,12 +28,14 @@ export function MobileHeader({
     title,
     showBack = false,
     backHref,
-    notificationCount = 0,
+    notificationCount,
     notificationsHref = '/mobile/notifications',
     className,
     rightAction,
 }: MobileHeaderProps) {
     const router = useRouter()
+    const { unreadCount = 0 } = useNotifications()
+    const effectiveCount = notificationCount !== undefined ? notificationCount : unreadCount
 
     const handleBack = () => {
         if (backHref) {
@@ -43,7 +46,7 @@ export function MobileHeader({
     }
 
     return (
-        <header className={cn('mobile-header', className)}>
+        <header className={cn('mobile-header shrink-0', className)}>
             {/* Left: back button or spacer */}
             <div className="w-10 flex items-center justify-start">
                 {showBack ? (
@@ -63,25 +66,24 @@ export function MobileHeader({
             </h1>
 
             {/* Right: notification bell or custom action */}
-            <div className="w-10 flex items-center justify-end gap-1">
-                <ThemeToggle variant="sidebar" className="size-9" />
+            <div className="w-10 flex items-center justify-end">
                 {rightAction ?? (
                     <Link
                         href={notificationsHref}
                         className="relative flex items-center justify-center w-9 h-9 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                         aria-label={
-                            notificationCount > 0
-                                ? `${notificationCount} unread notifications`
+                            effectiveCount > 0
+                                ? `${effectiveCount} unread notifications`
                                 : 'Notifications'
                         }
                     >
                         <Bell size={20} strokeWidth={1.8} />
-                        {notificationCount > 0 && (
+                        {effectiveCount > 0 && (
                             <span
-                                className="absolute top-1 right-1 min-w-[14px] h-[14px] px-[3px] rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center"
+                                className="absolute top-1 right-1 min-w-[14px] h-[14px] px-[3px] rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center animate-pulse"
                                 aria-hidden="true"
                             >
-                                {notificationCount > 9 ? '9+' : notificationCount}
+                                {effectiveCount > 9 ? '9+' : effectiveCount}
                             </span>
                         )}
                     </Link>

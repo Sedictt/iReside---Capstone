@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useProperty } from '@/context/PropertyContext';
 import Image from 'next/image';
@@ -58,6 +59,11 @@ export function LandlordMessagesView() {
     const [broadcastSuccess, setBroadcastSuccess] = useState(false);
     const [broadcastsList, setBroadcastsList] = useState<Array<{ id: string; title: string; content: string; created_at: string; is_pinned?: boolean }>>([]);
     const [loadingBroadcasts, setLoadingBroadcasts] = useState(false);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     // Load conversations
     const loadConversations = async () => {
@@ -194,24 +200,25 @@ export function LandlordMessagesView() {
     }, [conversations, searchQuery]);
 
     // IF in active chat view, render the dedicated mobile chat room
-    if (activeChat) {
+    if (activeChat && mounted) {
         const otherParticipant = activeChat.otherParticipants[0];
         const participantName = otherParticipant?.fullName || 'Tenant';
         const avatarUrl = otherParticipant?.avatarUrl || FALLBACK_AVATAR;
 
-        return (
-            <div className="fixed inset-0 z-[120] bg-background flex flex-col max-w-md mx-auto">
+        return createPortal(
+            <div className="fixed inset-0 z-[120] bg-background flex flex-col max-w-md mx-auto h-[100dvh]">
                 {/* Chat Top Bar */}
-                <div className="px-4 py-3 border-b border-slate-200/90 dark:border-white/10 flex items-center justify-between bg-card/90 backdrop-blur-md">
+                <div className="px-4 py-3 border-b border-slate-200/90 dark:border-white/10 flex items-center justify-between bg-card/95 backdrop-blur-md shrink-0">
                     <div className="flex items-center gap-3">
                         <button
+                            type="button"
                             onClick={() => setActiveChat(null)}
-                            className="p-1.5 -ml-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-muted-foreground hover:text-foreground"
+                            className="p-1.5 -ml-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-muted-foreground hover:text-foreground active:scale-95 transition-all cursor-pointer"
                             aria-label="Back to conversations"
                         >
                             <ArrowLeft className="size-5" />
                         </button>
-                        <div className="relative size-9 rounded-full overflow-hidden border border-slate-200 dark:border-white/10 bg-muted">
+                        <div className="relative size-9 rounded-full overflow-hidden border border-slate-200 dark:border-white/10 bg-muted shrink-0">
                             <Image src={avatarUrl} alt={participantName} fill sizes="36px" className="object-cover" />
                         </div>
                         <div>
@@ -219,14 +226,6 @@ export function LandlordMessagesView() {
                             <span className="text-[10px] text-muted-foreground capitalize">{otherParticipant?.role || 'Tenant'}</span>
                         </div>
                     </div>
-
-                    <button
-                        onClick={() => handleOpenChat(activeChat)}
-                        className="p-2 rounded-xl text-muted-foreground hover:text-foreground"
-                        aria-label="Refresh messages"
-                    >
-                        <RefreshCw className={cn('size-3.5', loadingMessages && 'animate-spin text-primary')} />
-                    </button>
                 </div>
 
                 {/* Messages Thread */}
@@ -294,12 +293,13 @@ export function LandlordMessagesView() {
                         <Send className="size-4" />
                     </button>
                 </form>
-            </div>
+            </div>,
+            document.body
         );
     }
 
     return (
-        <div className="flex flex-col gap-3.5 pb-3">
+        <div className="flex flex-col gap-3 pb-3">
             {/* View Mode Tabs */}
             <div className="px-4 pt-1 flex gap-2">
                 <button

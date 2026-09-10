@@ -8,9 +8,11 @@ export const metadata = {
 
 export default function LandlordOverviewPage() {
     return (
-        <>
+        <div className="flex-1 min-h-0 flex flex-col">
             <MobileHeader title="Overview" />
-            <LandlordOverviewView />
-        </>
+            <div className="flex-1 min-h-0 flex flex-col">
+                <LandlordOverviewView />
+            </div>
+        </div>
     )
 }

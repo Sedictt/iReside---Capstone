@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useProperty } from '@/context/PropertyContext';
 import Image from 'next/image';
 import { 
@@ -131,7 +132,7 @@ export function LandlordPaymentsView() {
 
     return (
         <PullToRefresh onRefresh={fetchInvoices}>
-            <div className="flex flex-col gap-3.5 pb-3">
+            <div className="flex flex-col gap-3 pb-3">
                 {/* Search Bar */}
                 <div className="px-4 pt-1 flex items-center">
                     <div className="relative flex-1">
@@ -333,8 +334,8 @@ export function LandlordPaymentsView() {
             </div>
 
             {/* Tap-to-Enlarge Lightbox Modal */}
-            {inspectInvoice && inspectInvoice.paymentProofUrl && (
-                <div className="fixed inset-0 z-[120] bg-black/85 backdrop-blur-md flex flex-col p-4 animate-in fade-in duration-200">
+            {inspectInvoice && inspectInvoice.paymentProofUrl && typeof document !== 'undefined' && createPortal(
+                <div className="fixed inset-0 z-[9999] bg-black/85 backdrop-blur-md flex flex-col p-4 animate-in fade-in duration-200">
                     {/* Header */}
                     <div className="flex items-center justify-between pb-3 text-white border-b border-white/10">
                         <div>
@@ -380,7 +381,8 @@ export function LandlordPaymentsView() {
                             <span>Reject</span>
                         </button>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
             </div>
         </PullToRefresh>

@@ -116,7 +116,7 @@ export function PullToRefresh({
             onMouseMove={isPulling ? handleTouchMove : undefined}
             onMouseUp={isPulling ? handleTouchEnd : undefined}
             onMouseLeave={isPulling ? handleTouchEnd : undefined}
-            className={cn('relative w-full overflow-hidden', isPulling && 'select-none', className)}
+            className={cn('relative w-full', isPulling && 'select-none', className)}
         >
             {/* Pull Indicator Area */}
             <div
@@ -160,6 +160,7 @@ export function PullToRefresh({
 
             {/* Content Container */}
             <div
+                className={cn('w-full', className?.includes('h-full') ? 'h-full flex flex-col' : '')}
                 style={{
                     transform: `translateY(${pullDistance > 0 ? pullDistance * 0.15 : 0}px)`,
                     transition: isPulling ? 'none' : 'transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1)',

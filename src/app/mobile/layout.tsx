@@ -18,6 +18,16 @@ function MobileLayoutInner({ children }: { children: React.ReactNode }) {
     const { profile, loading } = useAuth()
     const router = useRouter()
 
+    // Ensure no outer window scrollbar appears on mobile portal
+    useEffect(() => {
+        document.documentElement.classList.add('mobile-viewport')
+        document.body.classList.add('mobile-viewport')
+        return () => {
+            document.documentElement.classList.remove('mobile-viewport')
+            document.body.classList.remove('mobile-viewport')
+        }
+    }, [])
+
     // Redirect unauthenticated users to login
     useEffect(() => {
         if (!loading && !profile) {
@@ -51,16 +61,6 @@ function MobileLayoutInner({ children }: { children: React.ReactNode }) {
         return null
     }
 
-    // Ensure no outer window scrollbar appears on mobile portal
-    useEffect(() => {
-        document.documentElement.classList.add('mobile-viewport')
-        document.body.classList.add('mobile-viewport')
-        return () => {
-            document.documentElement.classList.remove('mobile-viewport')
-            document.body.classList.remove('mobile-viewport')
-        }
-    }, [])
-
     return (
         <div
             className={cn(
@@ -68,8 +68,8 @@ function MobileLayoutInner({ children }: { children: React.ReactNode }) {
                 'flex flex-col overflow-hidden select-none'
             )}
         >
-            {/* Page content — scrollable, padded above bottom tab bar */}
-            <main className="flex-1 min-h-0 overflow-y-auto mobile-scroll mobile-content-pad [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {/* Page content — scrollable only when content exceeds screen */}
+            <main className="flex-1 min-h-0 overflow-y-auto flex flex-col mobile-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {children}
             </main>
 

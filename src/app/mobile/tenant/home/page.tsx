@@ -1,4 +1,5 @@
 import { MobileHeader } from '@/components/mobile/layout/MobileHeader'
+import { TenantHomeView } from '@/components/mobile/tenant/TenantHomeView'
 
 export const metadata = {
     title: 'Home | iReside',
@@ -9,9 +10,7 @@ export default function TenantHomePage() {
     return (
         <>
             <MobileHeader title="Home" />
-            <div className="px-4 py-5">
-                <p className="text-muted-foreground text-sm">Dashboard coming in Phase 3.</p>
-            </div>
+            <TenantHomeView />
         </>
     )
 }

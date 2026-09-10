@@ -47,7 +47,7 @@ body.mobile-viewport::-webkit-scrollbar {
 
 /* Prevent content being hidden behind bottom tab bar with exact compact clearance */
 .mobile-content-pad {
-    padding-bottom: calc(var(--bottom-tab-height) + env(safe-area-inset-bottom, 8px) + 12px);
+    padding-bottom: calc(var(--bottom-tab-height) + env(safe-area-inset-bottom, 8px) + 8px);
 }
 
 /* ----------------------------------------------------------
@@ -213,12 +213,11 @@ body.mobile-viewport::-webkit-scrollbar {
    ---------------------------------------------------------- */
 
 .mobile-tab-bar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    position: relative;
     z-index: 50;
-    height: var(--bottom-tab-height);
+    width: 100%;
+    flex-shrink: 0;
+    height: calc(var(--bottom-tab-height) + env(safe-area-inset-bottom, 0px));
     padding-bottom: env(safe-area-inset-bottom, 0px);
     background: var(--card);
     border-top: 1px solid var(--border);
@@ -290,6 +289,7 @@ body.mobile-viewport::-webkit-scrollbar {
     justify-content: space-between;
     padding: 0 16px;
     padding-top: env(safe-area-inset-top, 0px);
+    margin-bottom: 16px;
 
     /* Subtle glass blur for depth */
     backdrop-filter: blur(8px);
@@ -303,7 +303,7 @@ body.mobile-viewport::-webkit-scrollbar {
 .mobile-scroll {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    scroll-behavior: smooth;
+    scroll-behavior: auto;
     overscroll-behavior-y: contain;
     -ms-overflow-style: none !important;
     scrollbar-width: none !important;

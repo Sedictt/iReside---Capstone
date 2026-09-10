@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useProperty } from '@/context/PropertyContext';
 import Image from 'next/image';
 import { 
@@ -130,7 +131,7 @@ export function LandlordTicketsView() {
 
     return (
         <PullToRefresh onRefresh={fetchTickets}>
-            <div className="flex flex-col gap-3.5 pb-3">
+            <div className="flex flex-col gap-3 pb-3">
                 {/* Search Bar */}
                 <div className="px-4 pt-1 flex items-center">
                     <div className="relative flex-1">
@@ -227,7 +228,7 @@ export function LandlordTicketsView() {
                         <span className="text-xs text-muted-foreground">Loading maintenance tickets…</span>
                     </div>
                 ) : filteredTickets.length === 0 ? (
-                    <div className="rounded-2xl border border-slate-300 dark:border-white/15 bg-white dark:bg-card/50 p-8 text-center flex flex-col items-center justify-center shadow-xs">
+                    <div className="rounded-2xl border border-slate-300 dark:border-white/15 bg-white dark:bg-card/50 p-6 text-center flex flex-col items-center justify-center shadow-xs">
                         <Wrench className="size-8 text-muted-foreground/50 mb-2" />
                         <h4 className="text-xs font-bold text-foreground">No tickets found</h4>
                         <p className="text-[11px] text-muted-foreground mt-0.5">
@@ -357,8 +358,8 @@ export function LandlordTicketsView() {
             </div>
 
             {/* Photo Lightbox */}
-            {lightboxImage && (
-                <div className="fixed inset-0 z-[120] bg-black/90 backdrop-blur-md flex flex-col p-4 animate-in fade-in duration-200">
+            {lightboxImage && typeof document !== 'undefined' && createPortal(
+                <div className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md flex flex-col p-4 animate-in fade-in duration-200">
                     <div className="flex justify-end">
                         <button
                             onClick={() => setLightboxImage(null)}
@@ -371,7 +372,8 @@ export function LandlordTicketsView() {
                     <div className="flex-1 relative my-3 flex items-center justify-center overflow-hidden rounded-xl">
                         <Image src={lightboxImage} alt="Enlarged issue" fill sizes="100vw" className="object-contain" />
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
             </div>
         </PullToRefresh>
