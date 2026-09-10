@@ -29,6 +29,7 @@ import {
     MapPin,
     Wallet,
     PenTool,
+    Search,
 } from "lucide-react";
 
 const SignaturePad = dynamic(() => import("./SignaturePad").then(mod => mod.SignaturePad), {
@@ -313,11 +314,77 @@ export function WalkInApplicationModal({
         setFormErrors({});
         setTouchedFields({});
         setError(null);
+        setUnitSearchQuery("");
+        setSelectedPropertyFilter("all");
+        setAvailabilityFilter("available");
     }, [selectedUnitId]);
 
     const [step, setStep] = useState(0);
     const [paymentSubStep, setPaymentSubStep] = useState(0);
     const [selectedUnit, setSelectedUnit] = useState(selectedUnitId || "");
+    const [unitSearchQuery, setUnitSearchQuery] = useState("");
+    const [selectedPropertyFilter, setSelectedPropertyFilter] = useState("all");
+    const [availabilityFilter, setAvailabilityFilter] = useState<"available" | "all">("available");
+
+    const propertyOptions = useMemo(() => {
+        const map = new Map<string, { id: string; name: string; count: number }>();
+        units.forEach((u) => {
+            if (u.property_id && u.property_name) {
+                const existing = map.get(u.property_id);
+                if (existing) {
+                    existing.count += 1;
+                } else {
+                    map.set(u.property_id, { id: u.property_id, name: u.property_name, count: 1 });
+                }
+            }
+        });
+        return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+    }, [units]);
+
+    const availableCount = useMemo(() => {
+        return units.filter((u) => (u.status ?? "").toLowerCase() !== "occupied").length;
+    }, [units]);
+
+    const filteredUnits = useMemo(() => {
+        return units.filter((u) => {
+            const isCurrentSelected = u.id === selectedUnit;
+
+            // 1. Property filter
+            if (selectedPropertyFilter !== "all" && u.property_id !== selectedPropertyFilter && !isCurrentSelected) {
+                return false;
+            }
+
+            // 2. Availability filter
+            const isOccupied = (u.status ?? "").toLowerCase() === "occupied";
+            if (availabilityFilter === "available" && isOccupied && !isCurrentSelected) {
+                return false;
+            }
+
+            // 3. Search query
+            if (unitSearchQuery.trim() && !isCurrentSelected) {
+                const query = unitSearchQuery.toLowerCase().trim();
+                const matchesName = u.name.toLowerCase().includes(query);
+                const matchesProperty = u.property_name.toLowerCase().includes(query);
+                if (!matchesName && !matchesProperty) {
+                    return false;
+                }
+            }
+
+            return true;
+        });
+    }, [units, selectedPropertyFilter, availabilityFilter, unitSearchQuery, selectedUnit]);
+
+    const groupedFilteredUnits = useMemo(() => {
+        const groups = new Map<string, WalkInUnit[]>();
+        filteredUnits.forEach((u) => {
+            const propName = u.property_name || "Property";
+            const list = groups.get(propName) || [];
+            list.push(u);
+            groups.set(propName, list);
+        });
+        return Array.from(groups.entries());
+    }, [filteredUnits]);
+
     const [submitting, setSubmitting] = useState(false);
     const [confirmApproval, setConfirmApproval] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -870,11 +937,96 @@ export function WalkInApplicationModal({
                                 {step === 0 && (
                                     <div className="space-y-10 max-w-3xl">
                                         <div className="space-y-8">
-                                            <section className="space-y-6">
-                                                  <div className="flex items-center gap-4 text-primary">
-                                                     <MapPin size={18} strokeWidth={2.5} />
-                                                  <label htmlFor="unit-select" className="cursor-pointer text-[11px] font-black uppercase tracking-[0.3em] text-muted-foreground">Select Unit</label>
-                                                 </div>
+                                            <section className="space-y-4">
+                                                <div className="flex flex-wrap items-center justify-between gap-3">
+                                                    <div className="flex items-center gap-3 text-primary">
+                                                        <MapPin size={18} strokeWidth={2.5} />
+                                                        <label htmlFor="unit-select" className="cursor-pointer text-[11px] font-black uppercase tracking-[0.3em] text-muted-foreground">
+                                                            Select Unit
+                                                        </label>
+                                                        <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-black tracking-wider text-primary">
+                                                            {filteredUnits.length} {filteredUnits.length === 1 ? "Unit" : "Units"}
+                                                        </span>
+                                                    </div>
+
+                                                    {!existingApplication && units.length > 1 && (
+                                                        <div className="inline-flex items-center rounded-xl bg-muted/60 p-1 dark:bg-zinc-900 border border-border/50 text-xs">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setAvailabilityFilter("available")}
+                                                                className={cn(
+                                                                    "rounded-lg px-3 py-1.5 font-bold transition-all",
+                                                                    availabilityFilter === "available"
+                                                                        ? "bg-card text-foreground shadow-sm dark:bg-zinc-800"
+                                                                        : "text-muted-foreground hover:text-foreground"
+                                                                )}
+                                                            >
+                                                                Available ({availableCount})
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setAvailabilityFilter("all")}
+                                                                className={cn(
+                                                                    "rounded-lg px-3 py-1.5 font-bold transition-all",
+                                                                    availabilityFilter === "all"
+                                                                        ? "bg-card text-foreground shadow-sm dark:bg-zinc-800"
+                                                                        : "text-muted-foreground hover:text-foreground"
+                                                                )}
+                                                            >
+                                                                All ({units.length})
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {!existingApplication && units.length > 2 && (
+                                                    <div className={cn(
+                                                        "grid gap-2.5",
+                                                        propertyOptions.length > 1 ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"
+                                                    )}>
+                                                        <div className="relative">
+                                                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+                                                            <input
+                                                                type="text"
+                                                                placeholder="Filter unit by name or number..."
+                                                                value={unitSearchQuery}
+                                                                onChange={(e) => setUnitSearchQuery(e.target.value)}
+                                                                className="w-full h-11 rounded-2xl border border-border/80 bg-card/70 pl-10 pr-8 text-xs font-semibold text-foreground placeholder:text-muted-foreground/70 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10 dark:bg-zinc-900/70"
+                                                            />
+                                                            {unitSearchQuery && (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setUnitSearchQuery("")}
+                                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded-full hover:bg-muted"
+                                                                    aria-label="Clear unit search"
+                                                                >
+                                                                    <X size={13} />
+                                                                </button>
+                                                            )}
+                                                        </div>
+
+                                                        {propertyOptions.length > 1 && (
+                                                            <div className="relative">
+                                                                <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+                                                                <select
+                                                                    value={selectedPropertyFilter}
+                                                                    onChange={(e) => setSelectedPropertyFilter(e.target.value)}
+                                                                    className="w-full h-11 appearance-none cursor-pointer rounded-2xl border border-border/80 bg-card/70 pl-10 pr-8 text-xs font-semibold text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10 dark:bg-zinc-900/70"
+                                                                >
+                                                                    <option value="all" className="bg-card dark:bg-zinc-900 text-foreground py-2">
+                                                                        All Properties ({units.length})
+                                                                    </option>
+                                                                    {propertyOptions.map((p) => (
+                                                                        <option key={p.id} value={p.id} className="bg-card dark:bg-zinc-900 text-foreground py-2">
+                                                                            {p.name} ({p.count})
+                                                                        </option>
+                                                                    ))}
+                                                                </select>
+                                                                <ArrowRight size={14} className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 rotate-90 text-muted-foreground" />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
                                                 
                                                 <CardFrame className="!p-0" glow={false}>
                                                     <div className="relative group">
@@ -900,27 +1052,74 @@ export function WalkInApplicationModal({
                                                                  formErrors.unit && "text-red-400"
                                                              )}
                                                          >
-                                                             <option value="" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100 text-sm">Select Target Unit...</option>
-                                                             {units.map((u) => {
-                                                                 const isOccupied = (u.status ?? "").toLowerCase() === "occupied";
-                                                                 return (
-                                                                     <option 
-                                                                         key={u.id} 
-                                                                         value={u.id} 
-                                                                         disabled={isOccupied}
-                                                                         className={cn(
-                                                                             "bg-card py-4 text-sm text-foreground dark:bg-zinc-900 dark:text-zinc-100",
-                                                                             isOccupied && "text-muted-foreground/50 dark:text-zinc-500 bg-muted/40 dark:bg-zinc-950"
-                                                                         )}
+                                                             <option value="" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100 text-sm">
+                                                                 {filteredUnits.length > 0 ? "Select Target Unit..." : "No units match your filter..."}
+                                                             </option>
+                                                             {propertyOptions.length > 1 && selectedPropertyFilter === "all" ? (
+                                                                 groupedFilteredUnits.map(([propName, groupUnits]) => (
+                                                                     <optgroup 
+                                                                         key={propName} 
+                                                                         label={`— ${propName} (${groupUnits.length}) —`} 
+                                                                         className="bg-muted/80 dark:bg-zinc-950 font-black text-xs text-muted-foreground py-2"
                                                                      >
-                                                                         {u.name} — {u.property_name}{isOccupied ? " • (Occupied — Unavailable)" : ""}
-                                                                     </option>
-                                                                 );
-                                                             })}
+                                                                         {groupUnits.map((u) => {
+                                                                             const isOccupied = (u.status ?? "").toLowerCase() === "occupied";
+                                                                             return (
+                                                                                 <option 
+                                                                                     key={u.id} 
+                                                                                     value={u.id} 
+                                                                                     disabled={isOccupied}
+                                                                                     className={cn(
+                                                                                         "bg-card py-3 text-sm font-semibold text-foreground dark:bg-zinc-900 dark:text-zinc-100",
+                                                                                         isOccupied && "text-muted-foreground/50 dark:text-zinc-500 bg-muted/40 dark:bg-zinc-950 font-normal"
+                                                                                     )}
+                                                                                 >
+                                                                                     {u.name} {isOccupied ? "• (Occupied — Unavailable)" : `— ₱${u.rent_amount.toLocaleString()}/mo`}
+                                                                                 </option>
+                                                                             );
+                                                                         })}
+                                                                     </optgroup>
+                                                                 ))
+                                                             ) : (
+                                                                 filteredUnits.map((u) => {
+                                                                     const isOccupied = (u.status ?? "").toLowerCase() === "occupied";
+                                                                     return (
+                                                                         <option 
+                                                                             key={u.id} 
+                                                                             value={u.id} 
+                                                                             disabled={isOccupied}
+                                                                             className={cn(
+                                                                                 "bg-card py-3 text-sm font-semibold text-foreground dark:bg-zinc-900 dark:text-zinc-100",
+                                                                                 isOccupied && "text-muted-foreground/50 dark:text-zinc-500 bg-muted/40 dark:bg-zinc-950 font-normal"
+                                                                             )}
+                                                                         >
+                                                                             {u.name} — {u.property_name} {isOccupied ? "• (Occupied — Unavailable)" : `— ₱${u.rent_amount.toLocaleString()}/mo`}
+                                                                         </option>
+                                                                     );
+                                                                 })
+                                                             )}
                                                          </select>
                                                         <ArrowRight size={20} className="pointer-events-none absolute right-6 top-1/2 -translate-y-1/2 rotate-90 text-muted-foreground" />
                                                     </div>
                                                 </CardFrame>
+
+                                                {filteredUnits.length === 0 && (
+                                                    <div className="flex items-center justify-between rounded-2xl bg-muted/40 px-4 py-3 text-xs text-muted-foreground dark:bg-zinc-900/60 border border-border/40">
+                                                        <span>No units match your current search or filter criteria.</span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setUnitSearchQuery("");
+                                                                setSelectedPropertyFilter("all");
+                                                                setAvailabilityFilter("all");
+                                                            }}
+                                                            className="font-bold text-primary hover:underline"
+                                                        >
+                                                            Reset filters
+                                                        </button>
+                                                    </div>
+                                                )}
+
                                                 {formErrors.unit && <p className="text-[10px] text-red-400 font-black uppercase tracking-wider ml-1 mt-1">{formErrors.unit}</p>}
                                                 {currentUnit && (
                                                     <div className="space-y-3">
