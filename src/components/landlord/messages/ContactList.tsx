@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import Image from 'next/image';
 import { Search, ArrowLeft, AlertTriangle, X } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -40,6 +41,16 @@ export function ContactList({
     setConversationsError,
     dashboardHref = "/landlord/dashboard"
 }: ContactListProps) {
+    const filteredContacts = useMemo(() => {
+        if (!searchQuery.trim()) return contacts;
+        const q = searchQuery.trim().toLowerCase();
+        return contacts.filter((c) => {
+            const nameMatch = (c.name || "").toLowerCase().includes(q);
+            const unitMatch = (c.unit || "").toLowerCase().includes(q);
+            return nameMatch || unitMatch;
+        });
+    }, [contacts, searchQuery]);
+
     return (
         <div className={cn(
             "flex h-full flex-col overflow-hidden neumorphic-panel transition-all duration-300",
@@ -71,20 +82,28 @@ export function ContactList({
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search people..."
-                        className="w-full rounded-2xl neumorphic-inset py-2.5 pl-10 pr-4 text-sm text-high placeholder:text-disabled transition-all focus:ring-4 focus:ring-primary/5"
+                        placeholder="Search by name or room..."
+                        className="w-full rounded-2xl neumorphic-inset py-2.5 pl-10 pr-9 text-sm text-high placeholder:text-disabled transition-all focus:ring-4 focus:ring-primary/5"
                     />
+                    {searchQuery && (
+                        <button
+                            type="button"
+                            onClick={() => setSearchQuery("")}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full text-disabled hover:text-high hover:bg-surface-3 transition-colors"
+                            title="Clear search"
+                        >
+                            <X className="size-3.5" />
+                        </button>
+                    )}
 
-                    {searchQuery.trim().length >= 2 && (
+                    {searchQuery.trim().length >= 2 && (userSearchResults.length > 0 || isSearchingUsers || userSearchError) && (
                         <div className="absolute left-0 right-0 top-[calc(100%+0.75rem)] z-50 max-h-80 overflow-y-auto rounded-3xl border border-border bg-card p-2 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+                            <div className="px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-disabled">Directory Search</div>
                             {isSearchingUsers && (
-                                <div className="px-4 py-3 text-xs font-black text-disabled uppercase tracking-widest animate-pulse">Searching...</div>
+                                <div className="px-4 py-3 text-xs font-black text-disabled uppercase tracking-widest animate-pulse">Searching users...</div>
                             )}
                             {!isSearchingUsers && userSearchError && (
                                 <div className="px-4 py-3 text-xs text-red-500 font-medium">{userSearchError}</div>
-                            )}
-                            {!isSearchingUsers && !userSearchError && userSearchResults.length === 0 && (
-                                <div className="px-4 py-3 text-xs text-disabled font-medium">No results found</div>
                             )}
                             {!isSearchingUsers && !userSearchError && userSearchResults.map((result, idx) => (
                                 <button
@@ -141,8 +160,15 @@ export function ContactList({
                             </div>
                         ))}
                     </div>
+                ) : filteredContacts.length === 0 ? (
+                    <div className="py-12 px-4 text-center">
+                        <p className="text-sm font-bold text-medium">No conversations found</p>
+                        <p className="text-xs text-disabled mt-1">
+                            {searchQuery ? `No chats matching "${searchQuery}"` : "You have no active conversations"}
+                        </p>
+                    </div>
                 ) : (
-                    contacts.map((contact, idx) => (
+                    filteredContacts.map((contact, idx) => (
                         <ContactItem
                             key={contact.id || `contact-${contact.participantUserId || idx}-${idx}`}
                             contact={contact}

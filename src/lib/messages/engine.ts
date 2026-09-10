@@ -9,6 +9,7 @@ type ProfilePreview = {
     avatarUrl: string | null;
     avatarBgColor: string | null;
     role: Database["public"]["Enums"]["user_role"];
+    unitName?: string | null;
 };
 
 type MessagePreview = {
@@ -53,6 +54,7 @@ const resolvePartnerRelationshipData = async (
             leasePartnerIds: new Set<string>(),
             applicationPartnerIds: new Set<string>(),
             paymentPartnerIds: new Set<string>(),
+            partnerUnitMap: new Map<string, string>(),
         };
     }
 
@@ -66,23 +68,23 @@ const resolvePartnerRelationshipData = async (
     ] = await Promise.all([
         supabase
             .from("leases")
-            .select("landlord_id")
+            .select("landlord_id, unit_id, units(name)")
             .eq("tenant_id", currentUserId)
             .in("landlord_id", uniquePartnerIds),
         supabase
             .from("leases")
-            .select("tenant_id")
+            .select("tenant_id, unit_id, units(name)")
             .eq("landlord_id", currentUserId)
             .in("tenant_id", uniquePartnerIds),
         supabase
             .from("applications")
-            .select("landlord_id")
+            .select("landlord_id, unit_id, units(name)")
             .eq("applicant_id", currentUserId)
             .in("landlord_id", uniquePartnerIds)
             .in("status", PARTNER_RELEVANT_APPLICATION_STATUSES),
         supabase
             .from("applications")
-            .select("applicant_id")
+            .select("applicant_id, unit_id, units(name)")
             .eq("landlord_id", currentUserId)
             .in("applicant_id", uniquePartnerIds)
             .in("status", PARTNER_RELEVANT_APPLICATION_STATUSES),
@@ -119,6 +121,37 @@ const resolvePartnerRelationshipData = async (
         });
     }
 
+    const extractUnitName = (row: any): string | null => {
+        if (!row) return null;
+        if (typeof row.units?.name === "string") return row.units.name;
+        if (Array.isArray(row.units) && row.units[0] && typeof row.units[0].name === "string") return row.units[0].name;
+        if (typeof row.unit?.name === "string") return row.unit.name;
+        return null;
+    };
+
+    const partnerUnitMap = new Map<string, string>();
+
+    ((tenantLeases as any[]) ?? []).forEach((row) => {
+        const uName = extractUnitName(row);
+        if (uName && row.landlord_id) partnerUnitMap.set(row.landlord_id, uName);
+    });
+    ((landlordLeases as any[]) ?? []).forEach((row) => {
+        const uName = extractUnitName(row);
+        if (uName && row.tenant_id) partnerUnitMap.set(row.tenant_id, uName);
+    });
+    ((tenantApplications as any[]) ?? []).forEach((row) => {
+        const uName = extractUnitName(row);
+        if (uName && row.landlord_id && !partnerUnitMap.has(row.landlord_id)) {
+            partnerUnitMap.set(row.landlord_id, uName);
+        }
+    });
+    ((landlordApplications as any[]) ?? []).forEach((row) => {
+        const uName = extractUnitName(row);
+        if (uName && row.applicant_id && !partnerUnitMap.has(row.applicant_id)) {
+            partnerUnitMap.set(row.applicant_id, uName);
+        }
+    });
+
     const leasePartnerIds = new Set<string>([
         ...(tenantLeasesError ? [] : (tenantLeases ?? [])).map((row) => row.landlord_id),
         ...(landlordLeasesError ? [] : (landlordLeases ?? [])).map((row) => row.tenant_id),
@@ -142,6 +175,7 @@ const resolvePartnerRelationshipData = async (
         leasePartnerIds,
         applicationPartnerIds,
         paymentPartnerIds,
+        partnerUnitMap,
     };
 };
 
@@ -399,7 +433,7 @@ export const buildConversationSummaries = async (
         })
         .filter((id): id is string => Boolean(id));
 
-    const [{ leasePartnerIds, applicationPartnerIds, paymentPartnerIds }, partnerActionState] = await Promise.all([
+    const [{ leasePartnerIds, applicationPartnerIds, paymentPartnerIds, partnerUnitMap }, partnerActionState] = await Promise.all([
         resolvePartnerRelationshipData(supabase, currentUserId, partnerIds),
         resolvePartnerActionState(supabase, currentUserId, partnerIds),
     ]);
@@ -409,7 +443,12 @@ export const buildConversationSummaries = async (
         const participants = participantIdsForConversation
             .map((id) => profileMap.get(id))
             .filter((profile): profile is ProfilePreview => Boolean(profile));
-        const otherParticipants = participants.filter((profile) => profile.id !== currentUserId);
+        const otherParticipants = participants
+            .filter((profile) => profile.id !== currentUserId)
+            .map((profile) => ({
+                ...profile,
+                unitName: partnerUnitMap.get(profile.id) ?? null,
+            }));
         const primaryOtherParticipant = otherParticipants[0] ?? null;
 
         const relationshipStatus: ConversationSummary["relationshipStatus"] = primaryOtherParticipant

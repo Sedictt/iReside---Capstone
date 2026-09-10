@@ -9,7 +9,8 @@ import {
     Image as ImageIcon, 
     X, 
     Zap,
-    Smile
+    Smile,
+    Receipt
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PendingAttachment } from "./types";
@@ -31,6 +32,8 @@ interface MessageComposerProps {
     isOtherUserTyping: boolean;
     otherUserName?: string;
     isLoading?: boolean;
+    onOpenAttachInvoice?: () => void;
+    onOpenQuickActions?: () => void;
 }
 
 export function MessageComposer({
@@ -45,17 +48,33 @@ export function MessageComposer({
     isOtherUserTyping,
     otherUserName,
     isLoading = false,
+    onOpenAttachInvoice,
+    onOpenQuickActions,
 }: MessageComposerProps) {
     const { resolvedTheme } = useTheme();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const textAreaRef = useRef<HTMLTextAreaElement>(null);
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const emojiPickerRef = useRef<HTMLDivElement>(null);
+    const [showAttachMenu, setShowAttachMenu] = useState(false);
+    const attachMenuRef = useRef<HTMLDivElement>(null);
 
     const handleEmojiSelect = (emoji: { native: string }) => {
         setMessageInput(messageInput + emoji.native);
         textAreaRef.current?.focus();
     };
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (attachMenuRef.current && !attachMenuRef.current.contains(event.target as Node)) {
+                setShowAttachMenu(false);
+            }
+        };
+        if (showAttachMenu) {
+            document.addEventListener("mousedown", handleClickOutside);
+        }
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, [showAttachMenu]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -173,13 +192,107 @@ export function MessageComposer({
                 </AnimatePresence>
 
                 <div className="flex items-end gap-3 neumorphic-inset rounded-[2rem] p-2 pl-4 pr-2 transition-all relative overflow-visible group/composer">
-                    <button 
-                        onClick={() => fileInputRef.current?.click()}
-                        className="p-2.5 rounded-full hover:bg-surface-3 transition-colors text-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
-                        title="Attach files"
-                    >
-                        <ImageIcon className="size-5" />
-                    </button>
+                    {/* Attachment & Actions Dropdown */}
+                    <div className="relative" ref={attachMenuRef}>
+                        <button 
+                            type="button"
+                            onClick={() => setShowAttachMenu((prev) => !prev)}
+                            className={cn(
+                                "p-2.5 rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
+                                showAttachMenu 
+                                    ? "bg-primary/20 text-primary scale-105" 
+                                    : "hover:bg-surface-3 text-medium hover:text-high"
+                            )}
+                            title="Attach files, invoices, or quick actions"
+                            aria-label="Attachment options"
+                        >
+                            <Paperclip className="size-5" />
+                        </button>
+
+                        <AnimatePresence>
+                            {showAttachMenu && (
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                                    transition={{ duration: 0.15 }}
+                                    className="absolute bottom-full left-0 mb-3 z-50 w-64 rounded-3xl border border-border bg-card p-2 shadow-2xl animate-in fade-in zoom-in-95 backdrop-blur-md"
+                                >
+                                    <div className="px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-disabled">
+                                        Attachments & Actions
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setShowAttachMenu(false);
+                                            fileInputRef.current?.click();
+                                        }}
+                                        className="flex w-full items-center gap-3 rounded-2xl p-2.5 text-left transition-all hover:bg-surface-2 group"
+                                    >
+                                        <div className="flex size-9 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500 group-hover:scale-105 transition-transform">
+                                            <Paperclip className="size-4" />
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <div className="text-xs font-black text-high group-hover:text-primary transition-colors">
+                                                Upload File or Photo
+                                            </div>
+                                            <div className="text-[10px] font-medium text-disabled">
+                                                Images, documents, or PDFs
+                                            </div>
+                                        </div>
+                                    </button>
+
+                                    {onOpenAttachInvoice && (
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setShowAttachMenu(false);
+                                                onOpenAttachInvoice();
+                                            }}
+                                            className="flex w-full items-center gap-3 rounded-2xl p-2.5 text-left transition-all hover:bg-surface-2 group"
+                                        >
+                                            <div className="flex size-9 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500 group-hover:scale-105 transition-transform">
+                                                <Receipt className="size-4" />
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <div className="text-xs font-black text-high group-hover:text-primary transition-colors">
+                                                    Attach Bill / Invoice
+                                                </div>
+                                                <div className="text-[10px] font-medium text-disabled">
+                                                    Send invoice directly to chat
+                                                </div>
+                                            </div>
+                                        </button>
+                                    )}
+
+                                    {onOpenQuickActions && (
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setShowAttachMenu(false);
+                                                onOpenQuickActions();
+                                            }}
+                                            className="flex w-full items-center gap-3 rounded-2xl p-2.5 text-left transition-all hover:bg-surface-2 group"
+                                        >
+                                            <div className="flex size-9 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500 group-hover:scale-105 transition-transform">
+                                                <Zap className="size-4" />
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <div className="text-xs font-black text-high group-hover:text-primary transition-colors">
+                                                    Quick Actions
+                                                </div>
+                                                <div className="text-[10px] font-medium text-disabled">
+                                                    Payment request, notice, repairs
+                                                </div>
+                                            </div>
+                                        </button>
+                                    )}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+
                     <input 
                         type="file" 
                         ref={fileInputRef} 
