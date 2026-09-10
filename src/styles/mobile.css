@@ -30,7 +30,7 @@
 
 /* Prevent content being hidden behind bottom tab bar */
 .mobile-content-pad {
-    padding-bottom: calc(var(--bottom-tab-height) + env(safe-area-inset-bottom, 12px));
+    padding-bottom: calc(var(--bottom-tab-height) + env(safe-area-inset-bottom, 16px) + 32px);
 }
 
 /* ----------------------------------------------------------

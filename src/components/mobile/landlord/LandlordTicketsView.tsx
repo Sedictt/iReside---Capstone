@@ -130,7 +130,7 @@ export function LandlordTicketsView() {
 
     return (
         <PullToRefresh onRefresh={fetchTickets}>
-            <div className="flex flex-col gap-3.5 pb-6">
+            <div className="flex flex-col gap-3.5 pb-28">
                 {/* Search Bar */}
                 <div className="px-4 pt-1 flex items-center">
                     <div className="relative flex-1">
