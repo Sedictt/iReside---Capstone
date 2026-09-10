@@ -13,6 +13,7 @@ export type ConversationSummary = {
         avatarUrl: string | null;
         avatarBgColor: string | null;
         role: "tenant" | "landlord" | "admin";
+        unitName?: string | null;
     }>;
     lastMessage: {
         id: string;

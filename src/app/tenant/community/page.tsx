@@ -565,6 +565,8 @@ export default function TenantCommunityHubPage() {
                     isCollapsed={isAnnouncementCollapsed}
                     onToggle={setIsAnnouncementCollapsed}
                     formatRelative={formatRelative}
+                    canDelete={isManagementUser || topAnnouncement?.author_id === user?.id}
+                    onDelete={handleDeletePost}
                 />
 
                 <main className="space-y-8">

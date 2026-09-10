@@ -42,6 +42,7 @@ import { ContactList } from "@/components/landlord/messages/ContactList";
 import { ChatHeader } from "@/components/landlord/messages/ChatHeader";
 import { MessageList } from "@/components/landlord/messages/MessageList";
 import { MessageComposer } from "@/components/landlord/messages/MessageComposer";
+import { AttachInvoiceModal } from "@/components/landlord/messages/AttachInvoiceModal";
 import { 
     ContactItem as ContactItemType, 
     UiMessage as UiMessageType, 
@@ -273,6 +274,7 @@ function MessagesContent() {
     const [showPaymentHistoryModal, setShowPaymentHistoryModal] = useState(false);
     const [isPaymentHistoryExpanded, setIsPaymentHistoryExpanded] = useState(false);
     const [selectedQuickAction, setSelectedQuickAction] = useState<string | null>(null);
+    const [showAttachInvoiceModal, setShowAttachInvoiceModal] = useState(false);
     const [paymentHistory, setPaymentHistory] = useState<PaymentHistoryEntry[]>([]);
     const [paymentHistoryTotal, setPaymentHistoryTotal] = useState(0);
     const [paymentHistoryLoading, setPaymentHistoryLoading] = useState(false);
@@ -679,12 +681,18 @@ const seen = new Set<string>();
 
     const mapConversationToContact = (conversation: ConversationSummary): ContactItemType => {
         const other = conversation.otherParticipants[0];
+        const formattedUnit = other?.unitName
+            ? (other.unitName.toLowerCase().startsWith("unit") || other.unitName.toLowerCase().startsWith("room")
+                ? other.unitName
+                : `Room ${other.unitName}`)
+            : (other?.role === "tenant" ? "Tenant" : other?.role === "landlord" ? "Landlord" : "Participant");
+
         return {
             id: conversation.id,
             participantUserId: other?.id ?? null,
             name: other?.fullName ?? "Conversation",
             role: other?.role ?? null,
-            unit: other?.role === "tenant" ? "Tenant" : other?.role === "landlord" ? "Landlord" : "Participant",
+            unit: formattedUnit,
             unread: conversation.unreadCount,
             lastContact: conversation.lastMessage ? new Date(conversation.lastMessage.createdAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "No messages yet",
             avatarUrl: other?.avatarUrl || null,
@@ -1495,6 +1503,8 @@ setPaymentHistoryLoading(true);
                     isOtherUserTyping={isOtherUserTyping}
                     otherUserName={displayContact.name}
                     isLoading={isChatLoading}
+                    onOpenAttachInvoice={() => setShowAttachInvoiceModal(true)}
+                    onOpenQuickActions={() => handleQuickAction(activeQuickActions[0]?.key || "request-payment")}
                 />
             </div>
 
@@ -1706,6 +1716,19 @@ setPaymentHistoryLoading(true);
                 currentUserRole="landlord"
                 onInsertMessage={(text) => setMessageInput(text)}
             />
+
+            {activeConversationId && (
+                <AttachInvoiceModal
+                    isOpen={showAttachInvoiceModal}
+                    onClose={() => setShowAttachInvoiceModal(false)}
+                    conversationId={activeConversationId}
+                    contact={displayContact}
+                    onSuccess={() => {
+                        void refreshMessages(activeConversationId);
+                        void refreshConversations();
+                    }}
+                />
+            )}
 
             <PaymentHistoryModal
                 isOpen={showPaymentHistoryModal}
