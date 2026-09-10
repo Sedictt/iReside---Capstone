@@ -15,7 +15,6 @@ import {
     Moon, 
     Sun, 
     Building2, 
-    RefreshCw, 
     AlertCircle, 
     CheckCircle2, 
     FileText, 
@@ -25,6 +24,7 @@ import {
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
+import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
 import type { AuditLogItem } from '@/app/api/audit-logs/route';
 
 const FALLBACK_AVATAR = "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&w=150&q=80";
@@ -37,7 +37,6 @@ export function LandlordProfileView() {
 
     const [logs, setLogs] = useState<AuditLogItem[]>([]);
     const [loadingLogs, setLoadingLogs] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [categoryFilter, setCategoryFilter] = useState<'all' | 'billing' | 'maintenance' | 'auth' | 'system'>('all');
     const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
@@ -57,7 +56,6 @@ export function LandlordProfileView() {
             console.error('Failed to load audit logs:', err);
         } finally {
             setLoadingLogs(false);
-            setRefreshing(false);
         }
     };
 
@@ -69,11 +67,6 @@ export function LandlordProfileView() {
     const handleSearchSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         setLoadingLogs(true);
-        fetchAuditLogs();
-    };
-
-    const handleRefresh = () => {
-        setRefreshing(true);
         fetchAuditLogs();
     };
 
@@ -90,93 +83,85 @@ export function LandlordProfileView() {
     const avatarUrl = profile?.avatar_url || FALLBACK_AVATAR;
 
     return (
-        <div className="flex flex-col gap-4 pb-8">
-            {/* User Profile Summary Card */}
-            <div className="mx-4 mt-1 p-4 rounded-2xl bg-card/80 border border-white/10 shadow-xs flex items-center gap-3.5">
-                <div className="relative size-14 rounded-full overflow-hidden border-2 border-primary/30 bg-muted shrink-0 shadow-xs">
-                    <Image src={avatarUrl} alt={fullName} fill sizes="56px" className="object-cover" />
-                </div>
-                <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                        <h3 className="text-sm font-black text-foreground truncate">{fullName}</h3>
-                        <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-primary/15 text-primary">
-                            Landlord
-                        </span>
+        <PullToRefresh onRefresh={fetchAuditLogs}>
+            <div className="flex flex-col gap-4 pb-8">
+                {/* User Profile Summary Card */}
+                <div className="mx-4 mt-1 p-4 rounded-2xl bg-card/80 border border-white/10 shadow-xs flex items-center gap-3.5">
+                    <div className="relative size-14 rounded-full overflow-hidden border-2 border-primary/30 bg-muted shrink-0 shadow-xs">
+                        <Image src={avatarUrl} alt={fullName} fill sizes="56px" className="object-cover" />
                     </div>
-                    <p className="text-xs text-muted-foreground truncate mt-0.5">{profile?.email || 'landlord@ireside.ph'}</p>
-                    <div className="flex items-center gap-1 mt-1 text-[11px] text-muted-foreground">
-                        <Building2 className="size-3 text-primary" />
-                        <span>{properties.length} Managed Propert{properties.length === 1 ? 'y' : 'ies'}</span>
+                    <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                            <h3 className="text-sm font-black text-foreground truncate">{fullName}</h3>
+                            <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-primary/15 text-primary">
+                                Landlord
+                            </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground truncate mt-0.5">{profile?.email || 'landlord@ireside.ph'}</p>
+                        <div className="flex items-center gap-1 mt-1 text-[11px] text-muted-foreground">
+                            <Building2 className="size-3 text-primary" />
+                            <span>{properties.length} Managed Propert{properties.length === 1 ? 'y' : 'ies'}</span>
+                        </div>
                     </div>
-                </div>
-            </div>
-
-            {/* Quick Preferences Bar */}
-            <div className="mx-4 grid grid-cols-2 gap-2.5">
-                {/* Theme Toggle */}
-                <button
-                    onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                    className="p-3 rounded-xl bg-card/70 border border-white/10 flex items-center justify-between active:scale-[0.98] transition-all"
-                >
-                    <div className="flex items-center gap-2">
-                        {theme === 'dark' ? <Moon className="size-3.5 text-primary" /> : <Sun className="size-3.5 text-amber-500" />}
-                        <span className="text-xs font-bold text-foreground">Appearance</span>
-                    </div>
-                    <span className="text-[10px] font-bold text-muted-foreground capitalize">{theme || 'dark'}</span>
-                </button>
-
-                {/* Logout Button */}
-                <button
-                    onClick={handleLogout}
-                    className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-between text-red-400 active:scale-[0.98] transition-all"
-                >
-                    <div className="flex items-center gap-2">
-                        <LogOut className="size-3.5" />
-                        <span className="text-xs font-bold">Sign Out</span>
-                    </div>
-                </button>
-            </div>
-
-            {/* READ-ONLY AUDIT LOGS VIEWER */}
-            <div className="flex flex-col gap-3 px-4 pt-2">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5">
-                        <Activity className="size-4 text-primary" />
-                        <h3 className="text-xs font-black uppercase tracking-wider text-foreground">
-                            Audit &amp; Activity Log
-                        </h3>
-                    </div>
-                    <span className="text-[10px] text-muted-foreground">Read-Only</span>
                 </div>
 
-                {/* Search Bar */}
-                <form onSubmit={handleSearchSubmit} className="flex items-center gap-2">
-                    <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-                        <input
-                            type="text"
-                            placeholder="Filter actions or keywords…"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-card/80 border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                        />
-                    </div>
+                {/* Quick Preferences Bar */}
+                <div className="mx-4 grid grid-cols-2 gap-2.5">
+                    {/* Theme Toggle */}
                     <button
-                        type="submit"
-                        className="px-3 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-bold active:scale-95 transition-all"
+                        onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                        className="p-3 rounded-xl bg-card/70 border border-white/10 flex items-center justify-between active:scale-[0.98] transition-all"
                     >
-                        Search
+                        <div className="flex items-center gap-2">
+                            {theme === 'dark' ? <Moon className="size-3.5 text-primary" /> : <Sun className="size-3.5 text-amber-500" />}
+                            <span className="text-xs font-bold text-foreground">Appearance</span>
+                        </div>
+                        <span className="text-[10px] font-bold text-muted-foreground capitalize">{theme || 'dark'}</span>
                     </button>
+
+                    {/* Logout Button */}
                     <button
-                        type="button"
-                        onClick={handleRefresh}
-                        disabled={refreshing}
-                        className="p-2 rounded-xl bg-card/80 border border-white/10 text-muted-foreground hover:text-foreground"
-                        aria-label="Refresh audit logs"
+                        onClick={handleLogout}
+                        className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-between text-red-400 active:scale-[0.98] transition-all"
                     >
-                        <RefreshCw className={cn('size-3.5', refreshing && 'animate-spin text-primary')} />
+                        <div className="flex items-center gap-2">
+                            <LogOut className="size-3.5" />
+                            <span className="text-xs font-bold">Sign Out</span>
+                        </div>
                     </button>
-                </form>
+                </div>
+
+                {/* READ-ONLY AUDIT LOGS VIEWER */}
+                <div className="flex flex-col gap-3 px-4 pt-2">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                            <Activity className="size-4 text-primary" />
+                            <h3 className="text-xs font-black uppercase tracking-wider text-foreground">
+                                Audit &amp; Activity Log
+                            </h3>
+                        </div>
+                        <span className="text-[10px] text-muted-foreground">Read-Only</span>
+                    </div>
+
+                    {/* Search Bar */}
+                    <form onSubmit={handleSearchSubmit} className="flex items-center gap-2">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+                            <input
+                                type="text"
+                                placeholder="Filter actions or keywords…"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full bg-card/80 border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                            />
+                        </div>
+                        <button
+                            type="submit"
+                            className="px-3 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-bold active:scale-95 transition-all"
+                        >
+                            Search
+                        </button>
+                    </form>
 
                 {/* Category Pills */}
                 <div className="flex gap-1.5 overflow-x-auto scrollbar-none pb-1">
@@ -274,5 +259,6 @@ export function LandlordProfileView() {
                 </div>
             </div>
         </div>
+        </PullToRefresh>
     );
 }

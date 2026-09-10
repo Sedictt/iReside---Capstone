@@ -14,12 +14,13 @@ import {
     CheckCircle2, 
     Clock, 
     ChevronRight,
+    ChevronDown,
     TrendingUp,
-    RefreshCw,
     MessageSquare,
     ShieldAlert
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
 
 interface AnalyticsData {
     primaryKpis?: Array<{
@@ -55,7 +56,6 @@ export function LandlordOverviewView() {
     const [payments, setPayments] = useState<PaymentOverviewData | null>(null);
     const [ticketsCount, setTicketsCount] = useState<number>(0);
     const [loading, setLoading] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
 
     const fetchData = async () => {
         try {
@@ -88,7 +88,6 @@ export function LandlordOverviewView() {
             console.error('[MobileOverview] Error loading data:', err);
         } finally {
             setLoading(false);
-            setRefreshing(false);
         }
     };
 
@@ -97,14 +96,15 @@ export function LandlordOverviewView() {
         fetchData();
     }, [selectedPropertyId]);
 
-    const handleRefresh = () => {
-        setRefreshing(true);
-        fetchData();
-    };
-
     const overdueCount = payments?.Overdue?.length || 0;
     const nearDueCount = payments?.['Near Due']?.length || 0;
     const paidCount = payments?.Paid?.length || 0;
+
+    // Selected Property name
+    const currentPropertyName = useMemo(() => {
+        if (!selectedPropertyId || selectedPropertyId === 'all') return 'All Properties';
+        return properties.find(p => p.id === selectedPropertyId)?.name || 'All Properties';
+    }, [properties, selectedPropertyId]);
 
     // Monthly revenue mini-chart data
     const chartData = useMemo(() => {
@@ -123,32 +123,43 @@ export function LandlordOverviewView() {
     const totalCollectedKpi = analytics?.primaryKpis?.find(k => k.title.toLowerCase().includes('collected') || k.title.toLowerCase().includes('revenue'))?.value || '₱0';
 
     return (
-        <div className="flex flex-col gap-4 pb-6">
-            {/* Top Property Selector & Status Header */}
-            <div className="flex items-center justify-between gap-2 px-4 pt-1">
-                <div className="flex items-center gap-2 overflow-hidden flex-1 min-w-0">
-                    <Building2 className="size-4 text-primary shrink-0" />
-                    <select
-                        value={selectedPropertyId || 'all'}
-                        onChange={(e) => setSelectedPropertyId(e.target.value)}
-                        className="bg-card/80 text-foreground text-xs font-bold rounded-xl px-2.5 py-1.5 border border-white/10 truncate focus:outline-none focus:ring-1 focus:ring-primary w-full max-w-[200px]"
-                    >
-                        <option value="all">All Properties</option>
-                        {properties.map((p) => (
-                            <option key={p.id} value={p.id}>{p.name}</option>
-                        ))}
-                    </select>
+        <PullToRefresh onRefresh={fetchData}>
+            <div className="flex flex-col gap-4 pb-6">
+                {/* Prominently Highlighted Property Dropdown Selector */}
+                <div className="px-4 pt-1">
+                    <div className="relative w-full">
+                        <div className="flex items-center justify-between w-full px-3.5 py-3 rounded-2xl bg-card border-2 border-primary/35 shadow-xs hover:border-primary/60 transition-all active:scale-[0.99] pointer-events-none">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                                <div className="flex size-8 items-center justify-center rounded-xl bg-primary/20 text-primary shrink-0 shadow-xs">
+                                    <Building2 className="size-4" />
+                                </div>
+                                <div className="flex flex-col text-left min-w-0">
+                                    <span className="text-[9px] font-black uppercase tracking-wider text-primary leading-none mb-1">Select Property</span>
+                                    <span className="text-sm font-bold text-foreground truncate">
+                                        {currentPropertyName}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0 pl-2">
+                                <span className="text-[10px] font-extrabold text-primary uppercase tracking-tight bg-primary/10 px-2 py-0.5 rounded-md">Switch</span>
+                                <div className="flex size-7 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                                    <ChevronDown className="size-4" />
+                                </div>
+                            </div>
+                        </div>
+                        <select
+                            value={selectedPropertyId || 'all'}
+                            onChange={(e) => setSelectedPropertyId(e.target.value)}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 text-base"
+                            aria-label="Filter by property"
+                        >
+                            <option value="all">All Properties</option>
+                            {properties.map((p) => (
+                                <option key={p.id} value={p.id}>{p.name}</option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
-
-                <button
-                    onClick={handleRefresh}
-                    disabled={refreshing}
-                    className="p-2 rounded-xl bg-card/60 border border-white/10 text-muted-foreground hover:text-foreground active:scale-95 transition-all"
-                    aria-label="Refresh overview"
-                >
-                    <RefreshCw className={cn('size-3.5', refreshing && 'animate-spin text-primary')} />
-                </button>
-            </div>
 
             {/* Greeting Hero Card */}
             <div className="mx-4 rounded-2xl p-4 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent border border-primary/20 shadow-sm relative overflow-hidden">
@@ -311,6 +322,6 @@ export function LandlordOverviewView() {
                     </div>
                 </div>
             </div>
-        </div>
+        </PullToRefresh>
     );
 }

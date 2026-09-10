@@ -10,7 +10,6 @@ import {
     AlertTriangle, 
     CheckCircle2, 
     X, 
-    RefreshCw, 
     ChevronDown, 
     ChevronUp,
     Wrench,
@@ -18,6 +17,7 @@ import {
     Image as ImageIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
 
 interface MaintenanceRequest {
     id: string;
@@ -38,7 +38,6 @@ export function LandlordTicketsView() {
     const { selectedPropertyId } = useProperty();
     const [tickets, setTickets] = useState<MaintenanceRequest[]>([]);
     const [loading, setLoading] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<'all' | 'open' | 'in_progress' | 'resolved'>('open');
     const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -60,7 +59,6 @@ export function LandlordTicketsView() {
             console.error('[MobileTickets] Failed to fetch maintenance:', err);
         } finally {
             setLoading(false);
-            setRefreshing(false);
         }
     };
 
@@ -68,11 +66,6 @@ export function LandlordTicketsView() {
         setLoading(true);
         fetchTickets();
     }, [selectedPropertyId]);
-
-    const handleRefresh = () => {
-        setRefreshing(true);
-        fetchTickets();
-    };
 
     const handleUpdateStatus = async (ticketId: string, nextStatus: 'in_progress' | 'resolved') => {
         setUpdatingId(ticketId);
@@ -136,28 +129,21 @@ export function LandlordTicketsView() {
     }, [tickets, searchQuery, statusFilter]);
 
     return (
-        <div className="flex flex-col gap-3.5 pb-6">
-            {/* Search and Refresh Bar */}
-            <div className="px-4 pt-1 flex items-center gap-2">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-                    <input
-                        type="text"
-                        placeholder="Search tickets, units…"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full bg-card/80 border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                    />
+        <PullToRefresh onRefresh={fetchTickets}>
+            <div className="flex flex-col gap-3.5 pb-6">
+                {/* Search Bar */}
+                <div className="px-4 pt-1 flex items-center">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+                        <input
+                            type="text"
+                            placeholder="Search tickets, units…"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full bg-card/80 border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                        />
+                    </div>
                 </div>
-                <button
-                    onClick={handleRefresh}
-                    disabled={refreshing}
-                    className="p-2.5 rounded-xl bg-card/80 border border-white/10 text-muted-foreground hover:text-foreground active:scale-95 transition-all"
-                    aria-label="Refresh tickets"
-                >
-                    <RefreshCw className={cn('size-3.5', refreshing && 'animate-spin text-primary')} />
-                </button>
-            </div>
 
             {/* Notification Banner */}
             {toast && (
@@ -387,6 +373,7 @@ export function LandlordTicketsView() {
                     </div>
                 </div>
             )}
-        </div>
+            </div>
+        </PullToRefresh>
     );
 }

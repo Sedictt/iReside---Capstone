@@ -13,11 +13,11 @@ import {
     FileText, 
     Maximize2, 
     X, 
-    RefreshCw,
-    Filter,
+    Filter, 
     ArrowUpRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
 
 interface InvoiceItem {
     id: string;
@@ -36,7 +36,6 @@ export function LandlordPaymentsView() {
     const { selectedPropertyId } = useProperty();
     const [invoices, setInvoices] = useState<InvoiceItem[]>([]);
     const [loading, setLoading] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTab, setActiveTab] = useState<'proofs' | 'all' | 'overdue' | 'paid'>('proofs');
     
@@ -59,7 +58,6 @@ export function LandlordPaymentsView() {
             console.error('[MobilePayments] Failed to fetch invoices:', err);
         } finally {
             setLoading(false);
-            setRefreshing(false);
         }
     };
 
@@ -67,11 +65,6 @@ export function LandlordPaymentsView() {
         setLoading(true);
         fetchInvoices();
     }, [selectedPropertyId]);
-
-    const handleRefresh = () => {
-        setRefreshing(true);
-        fetchInvoices();
-    };
 
     // Filter logic
     const pendingProofsCount = useMemo(() => {
@@ -137,28 +130,21 @@ export function LandlordPaymentsView() {
     };
 
     return (
-        <div className="flex flex-col gap-3.5 pb-6">
-            {/* Search and Refresh Bar */}
-            <div className="px-4 pt-1 flex items-center gap-2">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-                    <input
-                        type="text"
-                        placeholder="Search tenant or unit…"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full bg-card/80 border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                    />
+        <PullToRefresh onRefresh={fetchInvoices}>
+            <div className="flex flex-col gap-3.5 pb-6">
+                {/* Search Bar */}
+                <div className="px-4 pt-1 flex items-center">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+                        <input
+                            type="text"
+                            placeholder="Search tenant or unit…"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full bg-card/80 border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                        />
+                    </div>
                 </div>
-                <button
-                    onClick={handleRefresh}
-                    disabled={refreshing}
-                    className="p-2.5 rounded-xl bg-card/80 border border-white/10 text-muted-foreground hover:text-foreground active:scale-95 transition-all"
-                    aria-label="Refresh invoices"
-                >
-                    <RefreshCw className={cn('size-3.5', refreshing && 'animate-spin text-primary')} />
-                </button>
-            </div>
 
             {/* Notification Banner */}
             {actionMessage && (
@@ -396,6 +382,7 @@ export function LandlordPaymentsView() {
                     </div>
                 </div>
             )}
-        </div>
+            </div>
+        </PullToRefresh>
     );
 }
