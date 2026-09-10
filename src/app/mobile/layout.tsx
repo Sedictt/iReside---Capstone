@@ -51,15 +51,25 @@ function MobileLayoutInner({ children }: { children: React.ReactNode }) {
         return null
     }
 
+    // Ensure no outer window scrollbar appears on mobile portal
+    useEffect(() => {
+        document.documentElement.classList.add('mobile-viewport')
+        document.body.classList.add('mobile-viewport')
+        return () => {
+            document.documentElement.classList.remove('mobile-viewport')
+            document.body.classList.remove('mobile-viewport')
+        }
+    }, [])
+
     return (
         <div
             className={cn(
-                'relative min-h-[100dvh] w-full max-w-md mx-auto bg-background text-foreground',
-                'flex flex-col overflow-hidden'
+                'mobile-app-root relative h-[100dvh] max-h-[100dvh] min-h-[100dvh] w-full max-w-md mx-auto bg-background text-foreground',
+                'flex flex-col overflow-hidden select-none'
             )}
         >
             {/* Page content — scrollable, padded above bottom tab bar */}
-            <main className="flex-1 overflow-y-auto mobile-scroll mobile-content-pad">
+            <main className="flex-1 min-h-0 overflow-y-auto mobile-scroll mobile-content-pad [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {children}
             </main>
 

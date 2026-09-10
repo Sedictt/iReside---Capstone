@@ -136,7 +136,7 @@ export function LandlordOverviewView() {
 
     return (
         <PullToRefresh onRefresh={fetchData}>
-            <div className="flex flex-col gap-4 pb-28">
+            <div className="flex flex-col gap-4 pb-3">
                 {/* Prominently Highlighted Property Dropdown Selector */}
                 <div className="px-4 pt-1">
                     <div className="relative w-full">

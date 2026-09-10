@@ -28,9 +28,26 @@
     --mobile-header-height: 56px;
 }
 
-/* Prevent content being hidden behind bottom tab bar */
+/* Global viewport lock for mobile route - prevents window scrollbars */
+html.mobile-viewport,
+body.mobile-viewport {
+    overflow: hidden !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+
+html.mobile-viewport::-webkit-scrollbar,
+body.mobile-viewport::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+/* Prevent content being hidden behind bottom tab bar with exact compact clearance */
 .mobile-content-pad {
-    padding-bottom: calc(var(--bottom-tab-height) + env(safe-area-inset-bottom, 16px) + 32px);
+    padding-bottom: calc(var(--bottom-tab-height) + env(safe-area-inset-bottom, 8px) + 12px);
 }
 
 /* ----------------------------------------------------------
@@ -288,16 +305,17 @@
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
     overscroll-behavior-y: contain;
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
 }
 
 /* Hide scrollbar on mobile for cleaner look */
-.mobile-scroll::-webkit-scrollbar {
-    display: none;
-}
-
-.mobile-scroll {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+.mobile-scroll::-webkit-scrollbar,
+.mobile-scroll *::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
 }
 
 /* ----------------------------------------------------------

@@ -84,7 +84,7 @@ export function LandlordProfileView() {
 
     return (
         <PullToRefresh onRefresh={fetchAuditLogs}>
-            <div className="flex flex-col gap-4 pb-28">
+            <div className="flex flex-col gap-4 pb-3">
                 {/* User Profile Summary Card */}
                 <div className="mx-4 mt-1 p-4 rounded-2xl bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 shadow-xs flex items-center gap-3.5">
                     <div className="relative size-14 rounded-full overflow-hidden border-2 border-primary/30 bg-muted shrink-0 shadow-xs">

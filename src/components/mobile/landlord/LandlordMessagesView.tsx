@@ -299,7 +299,7 @@ export function LandlordMessagesView() {
     }
 
     return (
-        <div className="flex flex-col gap-3.5 pb-28">
+        <div className="flex flex-col gap-3.5 pb-3">
             {/* View Mode Tabs */}
             <div className="px-4 pt-1 flex gap-2">
                 <button

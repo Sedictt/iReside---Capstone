@@ -131,7 +131,7 @@ export function LandlordPaymentsView() {
 
     return (
         <PullToRefresh onRefresh={fetchInvoices}>
-            <div className="flex flex-col gap-3.5 pb-28">
+            <div className="flex flex-col gap-3.5 pb-3">
                 {/* Search Bar */}
                 <div className="px-4 pt-1 flex items-center">
                     <div className="relative flex-1">
