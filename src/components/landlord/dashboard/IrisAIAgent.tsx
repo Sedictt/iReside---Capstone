@@ -5,6 +5,7 @@ import { m as motion, AnimatePresence } from "framer-motion";
 import { X, RefreshCcw, ChevronRight, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ClientOnlyTime } from "@/components/ui/client-only-date";
+import { IrisDeepInsightsModal } from "./IrisDeepInsightsModal";
 
 type IrisAnalysis = {
     goodThings: string[];
@@ -30,6 +31,7 @@ interface IrisAIAgentProps {
 
 export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilityChange, showVisibilityToggle = true, landlordFirstName }: IrisAIAgentProps) {
     const [isOpen, setIsOpen] = useState(false);
+    const [isDeepInsightsOpen, setIsDeepInsightsOpen] = useState(false);
     const [internalIsVisible, setInternalIsVisible] = useState(true);
     const [analysis, setAnalysis] = useState<IrisAnalysis | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -398,18 +400,22 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
                                                 </div>
                                             </div>
 
-                                            <div className="rounded-3xl border border-white/5 bg-primary/5 p-6 flex items-center justify-between">
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsDeepInsightsOpen(true)}
+                                                className="w-full text-left rounded-3xl border border-primary/20 bg-primary/5 hover:bg-primary/10 p-6 flex items-center justify-between transition-all group/btn cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/40 active:scale-[0.99]"
+                                            >
                                                 <div className="flex items-center gap-4">
-                                                    <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                                                    <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover/btn:scale-105 transition-transform">
                                                         <MessageSquare className="size-5 text-primary" />
                                                     </div>
                                                     <div>
                                                         <p className="text-xs font-black text-foreground">Need deeper insights?</p>
-                                                        <p className="text-[10px] font-medium text-muted-foreground">Ask iRis in the command center.</p>
+                                                        <p className="text-[10px] font-medium text-muted-foreground">View detailed breakdowns and operational recommendations.</p>
                                                     </div>
                                                 </div>
-                                                <ChevronRight className="size-5 text-muted-foreground/40" />
-                                            </div>
+                                                <ChevronRight className="size-5 text-muted-foreground/60 group-hover/btn:translate-x-1 group-hover/btn:text-foreground transition-all" />
+                                            </button>
                                         </>
                                     ) : (
                                         <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -448,6 +454,16 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
                     </div>
                 )}
             </AnimatePresence>
+
+            {/* Deep Insights & Recommendations Modal */}
+            <IrisDeepInsightsModal
+                isOpen={isDeepInsightsOpen}
+                onClose={() => setIsDeepInsightsOpen(false)}
+                onBackToSummary={() => setIsDeepInsightsOpen(false)}
+                stats={stats}
+                analysis={analysis}
+                landlordFirstName={landlordFirstName}
+            />
         </>
     );
 }

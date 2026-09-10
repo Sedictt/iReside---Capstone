@@ -106,10 +106,11 @@ export async function GET(request: Request) {
     if (leaseId) {
       query = query.eq("lease_id", leaseId);
     }
-    if (month) {
+    if (month && /^\d{4}-\d{2}$/.test(month)) {
       const [year, monthNum] = month.split("-").map(Number);
-      const startDate = new Date(year, monthNum - 1, 1).toISOString().slice(0, 10);
-      const endDate = new Date(year, monthNum, 0).toISOString().slice(0, 10);
+      const startDate = `${month}-01`;
+      const lastDay = new Date(Date.UTC(year, monthNum, 0)).getUTCDate();
+      const endDate = `${month}-${String(lastDay).padStart(2, "0")}`;
       query = query.gte("billing_period_start", startDate).lte("billing_period_end", endDate);
     }
 

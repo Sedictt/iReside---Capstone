@@ -18,7 +18,8 @@ import {
  Check,
  ArrowUpRight,
  Trash2,
- BarChart3
+ BarChart3,
+ Calendar
 } from "lucide-react";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
 import { m as motion, AnimatePresence } from "framer-motion";
@@ -67,7 +68,7 @@ export function UtilityBillingDashboard() {
  const [saving, setSaving] = useState(false);
  const [searchQuery, setSearchQuery] = useState("");
  const [selectedPropertyId, setSelectedPropertyId] = useState<string>("all");
- const [selectedMonth] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
+ const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
  const [selectedHistoryMonth, setSelectedHistoryMonth] = useState<string | null>(null);
 
  // History summary data per month
@@ -118,18 +119,9 @@ export function UtilityBillingDashboard() {
 						// eslint-disable-next-line @typescript-eslint/no-explicit-any
 						const currentElec = readingsData.readings.find((r: any) => r.lease_id === lease.id && r.utility_type === "electricity");
 
-						// eslint-disable-next-line @typescript-eslint/no-explicit-any
-						const prevWaterReading = allReadings.find((r: any) => 
-							r.lease_id === lease.id && 
-							r.utility_type === "water" && 
-							r.id !== currentWater?.id
-						);
-						// eslint-disable-next-line @typescript-eslint/no-explicit-any
-						const prevElecReading = allReadings.find((r: any) => 
-							r.lease_id === lease.id && 
-							r.utility_type === "electricity" && 
-							r.id !== currentElec?.id
-						);
+						// Find the most recent reading for baseline
+						const sortedWater = allReadings.filter((r: any) => r.lease_id === lease.id && r.utility_type === "water").sort((a: any, b: any) => new Date(b.billing_period_end).getTime() - new Date(a.billing_period_end).getTime());
+						const sortedElec = allReadings.filter((r: any) => r.lease_id === lease.id && r.utility_type === "electricity").sort((a: any, b: any) => new Date(b.billing_period_end).getTime() - new Date(a.billing_period_end).getTime());
 
 						// eslint-disable-next-line @typescript-eslint/no-explicit-any
 						const propertyWaterConfig = (workspaceData.utilityConfigs || []).find((c: any) => c.property_id === lease.property?.id && c.utility_type === "water" && c.unit_id === null);
@@ -147,13 +139,13 @@ export function UtilityBillingDashboard() {
 							propertyId: lease.property?.id || "",
 							rentAmount: lease.monthly_rent || 0,
 							water: {
-								previous: currentWater ? currentWater.previous_reading : (prevWaterReading?.current_reading || 0),
+								previous: currentWater ? currentWater.previous_reading : (sortedWater[0]?.current_reading || 0),
 								current: currentWater ? currentWater.current_reading.toString() : "",
 								exists: !!currentWater,
 								rate: unitWaterConfig?.rate_per_unit || propertyWaterConfig?.rate_per_unit || 0
 							},
 							electricity: {
-								previous: currentElec ? currentElec.previous_reading : (prevElecReading?.current_reading || 0),
+								previous: currentElec ? currentElec.previous_reading : (sortedElec[0]?.current_reading || 0),
 								current: currentElec ? currentElec.current_reading.toString() : "",
 								exists: !!currentElec,
 								rate: unitElecConfig?.rate_per_unit || propertyElecConfig?.rate_per_unit || 0
@@ -187,18 +179,8 @@ export function UtilityBillingDashboard() {
 					// eslint-disable-next-line @typescript-eslint/no-explicit-any
 					const currentElec = readingsData.readings.find((r: any) => r.lease_id === lease.id && r.utility_type === "electricity");
 
-					// eslint-disable-next-line @typescript-eslint/no-explicit-any
-					const prevWaterReading = allReadings.find((r: any) => 
-						r.lease_id === lease.id && 
-						r.utility_type === "water" && 
-						r.id !== currentWater?.id
-					);
-					// eslint-disable-next-line @typescript-eslint/no-explicit-any
-					const prevElecReading = allReadings.find((r: any) => 
-						r.lease_id === lease.id && 
-						r.utility_type === "electricity" && 
-						r.id !== currentElec?.id
-					);
+					const sortedWater = allReadings.filter((r: any) => r.lease_id === lease.id && r.utility_type === "water").sort((a: any, b: any) => new Date(b.billing_period_end).getTime() - new Date(a.billing_period_end).getTime());
+					const sortedElec = allReadings.filter((r: any) => r.lease_id === lease.id && r.utility_type === "electricity").sort((a: any, b: any) => new Date(b.billing_period_end).getTime() - new Date(a.billing_period_end).getTime());
 
 					// eslint-disable-next-line @typescript-eslint/no-explicit-any
 					const propertyWaterConfig = (workspaceData.utilityConfigs || []).find((c: any) => c.property_id === lease.property?.id && c.utility_type === "water" && c.unit_id === null);
@@ -216,13 +198,13 @@ export function UtilityBillingDashboard() {
 						propertyId: lease.property?.id || "",
 						rentAmount: lease.monthly_rent || 0,
 						water: {
-							previous: currentWater ? currentWater.previous_reading : (prevWaterReading?.current_reading || 0),
+							previous: currentWater ? currentWater.previous_reading : (sortedWater[0]?.current_reading || 0),
 							current: currentWater ? currentWater.current_reading.toString() : "",
 							exists: !!currentWater,
 							rate: unitWaterConfig?.rate_per_unit || propertyWaterConfig?.rate_per_unit || 0
 						},
 						electricity: {
-							previous: currentElec ? currentElec.previous_reading : (prevElecReading?.current_reading || 0),
+							previous: currentElec ? currentElec.previous_reading : (sortedElec[0]?.current_reading || 0),
 							current: currentElec ? currentElec.current_reading.toString() : "",
 							exists: !!currentElec,
 							rate: unitElecConfig?.rate_per_unit || propertyElecConfig?.rate_per_unit || 0
@@ -306,8 +288,10 @@ export function UtilityBillingDashboard() {
 
 	const handleSaveReadings = async () => {
 		const toSave: ReadingSaveRequest[] = [];
+		const [y, m] = selectedMonth.split("-").map(Number);
 		const start = `${selectedMonth}-01`;
-		const end = new Date(new Date(selectedMonth).getFullYear(), new Date(selectedMonth).getMonth() + 1, 0).toISOString().slice(0, 10);
+		const lastDay = new Date(y, m, 0).getDate();
+		const end = `${selectedMonth}-${String(lastDay).padStart(2, "0")}`;
 
 		drafts.forEach(d => {
 			if (!d.water.exists && d.water.current !== "") {
@@ -476,8 +460,19 @@ export function UtilityBillingDashboard() {
                     </div>
                 )}
 
-                <div className="flex h-11 items-center gap-2 rounded-2xl neumorphic-extruded px-4 text-[10px] font-black uppercase tracking-widest text-neutral-400 shrink-0">
-                    Latest Cycle
+                <div className="flex h-11 items-center gap-2 rounded-2xl neumorphic-extruded px-4 text-xs font-black text-foreground shrink-0" title="Selected Billing Cycle">
+                    <Calendar className="size-3.5 text-primary shrink-0" />
+                    <input 
+                        type="month"
+                        value={selectedMonth}
+                        onChange={(e) => {
+                            if (e.target.value) {
+                                setSelectedMonth(e.target.value);
+                            }
+                        }}
+                        className="bg-transparent text-[11px] font-black uppercase tracking-wider text-foreground outline-none cursor-pointer"
+                        aria-label="Select billing cycle month"
+                    />
                 </div>
             </div>
         </div>
@@ -523,62 +518,94 @@ export function UtilityBillingDashboard() {
  </td>
  
  <td className="px-6 py-5">
- <div className="flex items-center justify-center gap-4">
- <div className="text-center">
- <span className="text-[10px] block text-muted-foreground uppercase font-black mb-0.5">Prev</span>
- <span className="font-mono text-sm text-muted-foreground/60">{draft.water.previous}</span>
- </div>
- <div className="h-8 w-px bg-border" />
- <div className="text-center">
- <span className="text-[10px] block text-sky-600 uppercase font-black mb-0.5">Current</span>
- {draft.water.exists ? (
- <span className="font-mono text-sm font-black text-sky-600">{draft.water.current}</span>
- ) : (
- <input 
- type="number" 
- value={draft.water.current}
- placeholder="----"
- onChange={(e) => {
- const newDrafts = [...drafts];
- const index = drafts.findIndex(d => d.leaseId === draft.leaseId);
- newDrafts[index] = { ...newDrafts[index], water: { ...draft.water, current: e.target.value } };
- setDrafts(newDrafts);
- }}
- className="w-16 neumorphic-inset dark:bg-white/[0.05] rounded-md px-2 py-1 text-center font-mono text-sm font-black text-sky-600 dark:text-sky-400 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20"
- />
- )}
- </div>
- </div>
- </td>
+  <div className="flex items-center justify-center gap-4">
+  <div className="text-center">
+  <span className="text-[10px] block text-muted-foreground uppercase font-black mb-0.5">Prev</span>
+  {draft.water.exists ? (
+  <span className="font-mono text-sm text-muted-foreground/70">{draft.water.previous}</span>
+  ) : (
+  <input 
+  type="number" 
+  value={draft.water.previous}
+  placeholder="0"
+  onChange={(e) => {
+  const val = parseFloat(e.target.value);
+  const newDrafts = [...drafts];
+  const index = drafts.findIndex(d => d.leaseId === draft.leaseId);
+  newDrafts[index] = { ...newDrafts[index], water: { ...draft.water, previous: isNaN(val) ? 0 : val } };
+  setDrafts(newDrafts);
+  }}
+  className="w-16 neumorphic-inset dark:bg-white/[0.05] rounded-md px-2 py-1 text-center font-mono text-sm font-semibold text-muted-foreground outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20"
+  />
+  )}
+  </div>
+  <div className="h-8 w-px bg-border" />
+  <div className="text-center">
+  <span className="text-[10px] block text-sky-600 uppercase font-black mb-0.5">Current</span>
+  {draft.water.exists ? (
+  <span className="font-mono text-sm font-black text-sky-600">{draft.water.current}</span>
+  ) : (
+  <input 
+  type="number" 
+  value={draft.water.current}
+  placeholder="----"
+  onChange={(e) => {
+  const newDrafts = [...drafts];
+  const index = drafts.findIndex(d => d.leaseId === draft.leaseId);
+  newDrafts[index] = { ...newDrafts[index], water: { ...draft.water, current: e.target.value } };
+  setDrafts(newDrafts);
+  }}
+  className="w-16 neumorphic-inset dark:bg-white/[0.05] rounded-md px-2 py-1 text-center font-mono text-sm font-black text-sky-600 dark:text-sky-400 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20"
+  />
+  )}
+  </div>
+  </div>
+  </td>
 
- <td className="px-6 py-5">
- <div className="flex items-center justify-center gap-4">
- <div className="text-center">
- <span className="text-[10px] block text-muted-foreground uppercase font-black mb-0.5">Prev</span>
- <span className="font-mono text-sm text-muted-foreground/60">{draft.electricity.previous}</span>
- </div>
- <div className="h-8 w-px bg-border" />
- <div className="text-center">
- <span className="text-[10px] block text-amber-600 uppercase font-black mb-0.5">Current</span>
- {draft.electricity.exists ? (
- <span className="font-mono text-sm font-black text-amber-600">{draft.electricity.current}</span>
- ) : (
- <input 
- type="number" 
- value={draft.electricity.current}
- placeholder="----"
- onChange={(e) => {
- const newDrafts = [...drafts];
- const index = drafts.findIndex(d => d.leaseId === draft.leaseId);
- newDrafts[index] = { ...newDrafts[index], electricity: { ...draft.electricity, current: e.target.value } };
- setDrafts(newDrafts);
- }}
- className="w-16 neumorphic-inset dark:bg-white/[0.05] rounded-md px-2 py-1 text-center font-mono text-sm font-black text-amber-600 dark:text-amber-400 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20"
- />
- )}
- </div>
- </div>
- </td>
+  <td className="px-6 py-5">
+  <div className="flex items-center justify-center gap-4">
+  <div className="text-center">
+  <span className="text-[10px] block text-muted-foreground uppercase font-black mb-0.5">Prev</span>
+  {draft.electricity.exists ? (
+  <span className="font-mono text-sm text-muted-foreground/70">{draft.electricity.previous}</span>
+  ) : (
+  <input 
+  type="number" 
+  value={draft.electricity.previous}
+  placeholder="0"
+  onChange={(e) => {
+  const val = parseFloat(e.target.value);
+  const newDrafts = [...drafts];
+  const index = drafts.findIndex(d => d.leaseId === draft.leaseId);
+  newDrafts[index] = { ...newDrafts[index], electricity: { ...draft.electricity, previous: isNaN(val) ? 0 : val } };
+  setDrafts(newDrafts);
+  }}
+  className="w-16 neumorphic-inset dark:bg-white/[0.05] rounded-md px-2 py-1 text-center font-mono text-sm font-semibold text-muted-foreground outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20"
+  />
+  )}
+  </div>
+  <div className="h-8 w-px bg-border" />
+  <div className="text-center">
+  <span className="text-[10px] block text-amber-600 uppercase font-black mb-0.5">Current</span>
+  {draft.electricity.exists ? (
+  <span className="font-mono text-sm font-black text-amber-600">{draft.electricity.current}</span>
+  ) : (
+  <input 
+  type="number" 
+  value={draft.electricity.current}
+  placeholder="----"
+  onChange={(e) => {
+  const newDrafts = [...drafts];
+  const index = drafts.findIndex(d => d.leaseId === draft.leaseId);
+  newDrafts[index] = { ...newDrafts[index], electricity: { ...draft.electricity, current: e.target.value } };
+  setDrafts(newDrafts);
+  }}
+  className="w-16 neumorphic-inset dark:bg-white/[0.05] rounded-md px-2 py-1 text-center font-mono text-sm font-black text-amber-600 dark:text-amber-400 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20"
+  />
+  )}
+  </div>
+  </div>
+  </td>
 
  <td className="px-6 py-5 text-right">
  <div className="flex items-center justify-end gap-3">
