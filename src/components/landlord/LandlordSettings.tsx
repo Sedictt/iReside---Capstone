@@ -79,9 +79,17 @@ import { FontSizeToggle } from "@/components/ui/FontSizeToggle";
 import { CURATED_BANNER_PRESETS, DEFAULT_BANNER_URL } from "@/components/landlord/dashboard/BannerCustomizerModal";
 import { ColorPickerModal } from "@/components/ui/ColorPickerModal";
 import { UnsavedChangesModal } from "@/components/ui/UnsavedChangesModal";
-import { useBrand } from "@/context/BrandContext";
+import { useBrand, DEFAULT_BRANDING } from "@/context/BrandContext";
 import { applyBrandCssVariables } from "@/lib/branding/colors";
 import Link from "next/link";
+
+export function normalizeRentalArchetype(val?: string | null): "apartment" | "dormitory" | "boarding_house" {
+    if (!val) return "apartment";
+    const lower = val.toLowerCase().trim();
+    if (lower === "dormitory" || lower === "dorm") return "dormitory";
+    if (lower === "boarding" || lower === "boarding_house") return "boarding_house";
+    return "apartment";
+}
 
 // --- Types ---
 type SettingsCategory = "Identity" | "Personalization" | "Finance" | "Security" | "Notifications" | "Data" | "AuditLogs";
@@ -345,13 +353,19 @@ export function LandlordSettings() {
     }, []);
 
     const handleMobileTabClick = useCallback((tabId: SettingsCategory) => {
+        if (tabId === activeTab) return;
+        if (isDirtyRef.current) {
+            pendingTabRef.current = tabId;
+            setIsUnsavedModalOpen(true);
+            return;
+        }
         setActiveTab(tabId);
         const el = mobileTabRailRef.current;
         if (el) {
             const btn = el.querySelector(`[data-tab-id="${tabId}"]`) as HTMLElement | null;
             btn?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
         }
-    }, []);
+    }, [activeTab]);
 
     // Sync & Cache States
     const [isSyncing, setIsSyncing] = useState(true);
@@ -420,11 +434,11 @@ export function LandlordSettings() {
     const [customBannerInput, setCustomBannerInput] = useState<string>("");
     const [propertyTradeName, setPropertyTradeName] = useState<string>(() => {
         const cached = getCachedSettings();
-        return cached?.personalization?.propertyTradeName || (typeof window !== "undefined" ? (localStorage.getItem("ireside_property_name") || brand.propertyName || "Skyline Lofts") : (brand.propertyName || "Skyline Lofts"));
+        return cached?.personalization?.propertyTradeName || (typeof window !== "undefined" ? (localStorage.getItem("ireside_property_name") || brand.propertyName || DEFAULT_BRANDING.propertyName) : (brand.propertyName || DEFAULT_BRANDING.propertyName));
     });
     const [propertyTagline, setPropertyTagline] = useState<string>(() => {
         const cached = getCachedSettings();
-        return cached?.personalization?.propertyTagline || (typeof window !== "undefined" ? (localStorage.getItem("ireside_property_tagline") || brand.propertyTagline || "Modern Urban Residences & Studios") : (brand.propertyTagline || "Modern Urban Residences & Studios"));
+        return cached?.personalization?.propertyTagline || (typeof window !== "undefined" ? (localStorage.getItem("ireside_property_tagline") || brand.propertyTagline || DEFAULT_BRANDING.propertyTagline) : (brand.propertyTagline || DEFAULT_BRANDING.propertyTagline));
     });
     const [propertyLogoUrl, setPropertyLogoUrl] = useState<string | null>(() => {
         const cached = getCachedSettings();
@@ -432,28 +446,52 @@ export function LandlordSettings() {
     });
     const [rentalArchetype, setRentalArchetype] = useState<string>(() => {
         const cached = getCachedSettings();
-        return cached?.personalization?.rentalArchetype || (typeof window !== "undefined" ? (localStorage.getItem("ireside_rental_archetype") || brand.rentalArchetype || "apartments") : (brand.rentalArchetype || "apartments"));
+        return normalizeRentalArchetype(cached?.personalization?.rentalArchetype || (typeof window !== "undefined" ? (localStorage.getItem("ireside_rental_archetype") || brand.rentalArchetype || DEFAULT_BRANDING.rentalArchetype) : (brand.rentalArchetype || DEFAULT_BRANDING.rentalArchetype)));
     });
     const [brandPrimaryHex, setBrandPrimaryHex] = useState<string>(() => {
         const cached = getCachedSettings();
-        return cached?.personalization?.brandPrimaryHex || (typeof window !== "undefined" ? (localStorage.getItem("ireside_brand_primary") || brand.primaryColor || "#c4b0ff") : (brand.primaryColor || "#c4b0ff"));
+        return cached?.personalization?.brandPrimaryHex || (typeof window !== "undefined" ? (localStorage.getItem("ireside_brand_primary") || brand.primaryColor || DEFAULT_BRANDING.primaryColor) : (brand.primaryColor || DEFAULT_BRANDING.primaryColor));
     });
     const [brandSecondaryHex, setBrandSecondaryHex] = useState<string>(() => {
         const cached = getCachedSettings();
-        return cached?.personalization?.brandSecondaryHex || (typeof window !== "undefined" ? (localStorage.getItem("ireside_brand_secondary") || brand.secondaryColor || "#06b6d4") : (brand.secondaryColor || "#06b6d4"));
+        return cached?.personalization?.brandSecondaryHex || (typeof window !== "undefined" ? (localStorage.getItem("ireside_brand_secondary") || brand.secondaryColor || DEFAULT_BRANDING.secondaryColor) : (brand.secondaryColor || DEFAULT_BRANDING.secondaryColor));
     });
     const [isPrimaryColorPickerOpen, setIsPrimaryColorPickerOpen] = useState(false);
     const [isSecondaryColorPickerOpen, setIsSecondaryColorPickerOpen] = useState(false);
     const [isUnsavedModalOpen, setIsUnsavedModalOpen] = useState(false);
+    const [hasUserEdited, setHasUserEdited] = useState(false);
+    const [isFinanceDirty, setIsFinanceDirty] = useState(false);
+    const financeSaveRef = useRef<(() => Promise<boolean>) | null>(null);
+    const financeDiscardRef = useRef<(() => void) | null>(null);
+    const pendingExitUrlRef = useRef<string | null>(null);
+    const pendingTabRef = useRef<SettingsCategory | null>(null);
+    const [hasVisitedFinance, setHasVisitedFinance] = useState(() => activeTab === "Finance");
+
+    useEffect(() => {
+        if (activeTab === "Finance") setHasVisitedFinance(true);
+    }, [activeTab]);
+
+    const handleTabChange = useCallback((tabId: SettingsCategory) => {
+        if (tabId === activeTab) return;
+        if (isDirtyRef.current) {
+            pendingTabRef.current = tabId;
+            setIsUnsavedModalOpen(true);
+            return;
+        }
+        setActiveTab(tabId);
+    }, [activeTab]);
+
     const logoFileInputRef = useRef<HTMLInputElement>(null);
     const bannerFileInputRef = useRef<HTMLInputElement>(null);
 
     const handleSelectBannerPreset = (presetUrl: string) => {
+        setHasUserEdited(true);
         setBannerUrl(presetUrl);
         toast.info("Banner preview updated. Save all changes to apply permanently.");
     };
 
     const handleResetBanner = () => {
+        setHasUserEdited(true);
         setBannerUrl(DEFAULT_BANNER_URL);
         toast.info("Banner reset to default preview. Save all changes to apply permanently.");
     };
@@ -465,6 +503,7 @@ export function LandlordSettings() {
             toast.error("Please enter an image URL");
             return;
         }
+        setHasUserEdited(true);
         setBannerUrl(trimmed);
         setCustomBannerInput("");
         toast.info("Custom banner preview applied. Save all changes to apply permanently.");
@@ -488,6 +527,7 @@ export function LandlordSettings() {
         reader.onload = (event) => {
             const dataUrl = event.target?.result as string;
             if (dataUrl) {
+                setHasUserEdited(true);
                 setBannerUrl(dataUrl);
                 toast.info("Banner preview uploaded. Save all changes to apply permanently.");
             }
@@ -514,6 +554,7 @@ export function LandlordSettings() {
         reader.onload = (event) => {
             const dataUrl = event.target?.result as string;
             if (dataUrl) {
+                setHasUserEdited(true);
                 setPropertyLogoUrl(dataUrl);
             }
         };
@@ -533,6 +574,7 @@ export function LandlordSettings() {
             if (res.ok) {
                 const data = await res.json();
                 if (data.logoUrl) {
+                    setHasUserEdited(true);
                     setPropertyLogoUrl(data.logoUrl);
                     toast.dismiss(uploadToast);
                     toast.success("Logo uploaded to cloud! Save changes to apply across all devices.");
@@ -548,6 +590,7 @@ export function LandlordSettings() {
     };
 
     const handleRemoveLogo = () => {
+        setHasUserEdited(true);
         setPropertyLogoUrl(null);
         toast.info("Logo removed in preview. Save all changes to apply permanently.");
     };
@@ -655,7 +698,13 @@ export function LandlordSettings() {
         return DEFAULT_NOTIFICATION_PREFERENCES;
     });
 
+    const updateFormData = useCallback((patch: Partial<typeof formData>) => {
+        setHasUserEdited(true);
+        setFormData((prev) => ({ ...prev, ...patch }));
+    }, []);
+
     const handleToggleNotification = (category: NotificationCategoryKey, channel: "email" | "push") => {
+        setHasUserEdited(true);
         setNotificationPreferences((prev) => ({
             ...prev,
             [category]: {
@@ -666,6 +715,7 @@ export function LandlordSettings() {
     };
 
     const handleResetNotificationDefaults = () => {
+        setHasUserEdited(true);
         setNotificationPreferences(DEFAULT_NOTIFICATION_PREFERENCES);
         toast.info("Notification preferences reset to defaults. Save changes to apply.");
     };
@@ -686,13 +736,13 @@ export function LandlordSettings() {
             return {
                 formData: JSON.parse(JSON.stringify(cached.formData)),
                 notificationPreferences: JSON.parse(JSON.stringify(cached.notificationPreferences)),
-                propertyTradeName: cached.personalization?.propertyTradeName || "Skyline Lofts",
-                propertyTagline: cached.personalization?.propertyTagline || "Modern Urban Residences & Studios",
-                rentalArchetype: cached.personalization?.rentalArchetype || "apartments",
-                brandPrimaryHex: cached.personalization?.brandPrimaryHex || "#c4b0ff",
-                brandSecondaryHex: cached.personalization?.brandSecondaryHex || "#06b6d4",
-                bannerUrl: cached.personalization?.bannerUrl || DEFAULT_BANNER_URL,
-                propertyLogoUrl: cached.personalization?.propertyLogoUrl ?? null,
+                propertyTradeName: cached.personalization?.propertyTradeName || (typeof window !== "undefined" ? (localStorage.getItem("ireside_property_name") || brand.propertyName || DEFAULT_BRANDING.propertyName) : DEFAULT_BRANDING.propertyName),
+                propertyTagline: cached.personalization?.propertyTagline || (typeof window !== "undefined" ? (localStorage.getItem("ireside_property_tagline") || brand.propertyTagline || DEFAULT_BRANDING.propertyTagline) : DEFAULT_BRANDING.propertyTagline),
+                rentalArchetype: normalizeRentalArchetype(cached.personalization?.rentalArchetype || (typeof window !== "undefined" ? (localStorage.getItem("ireside_rental_archetype") || brand.rentalArchetype || DEFAULT_BRANDING.rentalArchetype) : DEFAULT_BRANDING.rentalArchetype)),
+                brandPrimaryHex: cached.personalization?.brandPrimaryHex || (typeof window !== "undefined" ? (localStorage.getItem("ireside_brand_primary") || brand.primaryColor || DEFAULT_BRANDING.primaryColor) : DEFAULT_BRANDING.primaryColor),
+                brandSecondaryHex: cached.personalization?.brandSecondaryHex || (typeof window !== "undefined" ? (localStorage.getItem("ireside_brand_secondary") || brand.secondaryColor || DEFAULT_BRANDING.secondaryColor) : DEFAULT_BRANDING.secondaryColor),
+                bannerUrl: cached.personalization?.bannerUrl || (typeof window !== "undefined" ? (localStorage.getItem("ireside_landlord_custom_banner_url") || DEFAULT_BANNER_URL) : DEFAULT_BANNER_URL),
+                propertyLogoUrl: cached.personalization?.propertyLogoUrl ?? (typeof window !== "undefined" ? (localStorage.getItem("ireside_property_logo") || brand.logoUrl || null) : (brand.logoUrl || null)),
             };
         }
         return null;
@@ -788,11 +838,11 @@ export function LandlordSettings() {
 
             const savedBanner = serverBranding?.bannerUrl || (typeof window !== "undefined" ? (localStorage.getItem("ireside_landlord_custom_banner_url") || DEFAULT_BANNER_URL) : DEFAULT_BANNER_URL);
             const savedLogo = serverBranding?.logoUrl ?? (typeof window !== "undefined" ? localStorage.getItem("ireside_property_logo") : null);
-            const savedName = serverBranding?.propertyName || (typeof window !== "undefined" ? (localStorage.getItem("ireside_property_name") || "Skyline Lofts") : "Skyline Lofts");
-            const savedTagline = serverBranding?.propertyTagline || (typeof window !== "undefined" ? (localStorage.getItem("ireside_property_tagline") || "Modern Urban Residences & Studios") : "Modern Urban Residences & Studios");
-            const savedArchetype = serverBranding?.rentalArchetype || (typeof window !== "undefined" ? (localStorage.getItem("ireside_rental_archetype") || "apartments") : "apartments");
-            const savedPrimary = serverBranding?.primaryColor || (typeof window !== "undefined" ? (localStorage.getItem("ireside_brand_primary") || "#c4b0ff") : "#c4b0ff");
-            const savedSecondary = serverBranding?.secondaryColor || (typeof window !== "undefined" ? (localStorage.getItem("ireside_brand_secondary") || "#06b6d4") : "#06b6d4");
+            const savedName = serverBranding?.propertyName || (typeof window !== "undefined" ? (localStorage.getItem("ireside_property_name") || DEFAULT_BRANDING.propertyName) : DEFAULT_BRANDING.propertyName);
+            const savedTagline = serverBranding?.propertyTagline || (typeof window !== "undefined" ? (localStorage.getItem("ireside_property_tagline") || DEFAULT_BRANDING.propertyTagline) : DEFAULT_BRANDING.propertyTagline);
+            const savedArchetype = normalizeRentalArchetype(serverBranding?.rentalArchetype || (typeof window !== "undefined" ? (localStorage.getItem("ireside_rental_archetype") || DEFAULT_BRANDING.rentalArchetype) : DEFAULT_BRANDING.rentalArchetype));
+            const savedPrimary = serverBranding?.primaryColor || (typeof window !== "undefined" ? (localStorage.getItem("ireside_brand_primary") || DEFAULT_BRANDING.primaryColor) : DEFAULT_BRANDING.primaryColor);
+            const savedSecondary = serverBranding?.secondaryColor || (typeof window !== "undefined" ? (localStorage.getItem("ireside_brand_secondary") || DEFAULT_BRANDING.secondaryColor) : DEFAULT_BRANDING.secondaryColor);
 
             if (serverBranding && typeof window !== "undefined") {
                 localStorage.setItem("ireside_property_name", savedName);
@@ -854,7 +904,7 @@ export function LandlordSettings() {
             }
 
             // Only overwrite active form inputs if user is not in the middle of editing
-            if (!isDirtyRef.current) {
+            if (!hasUserEdited) {
                 setFormData(syncedForm);
                 setNotificationPreferences(syncedNotifs);
                 setBannerUrl(savedBanner);
@@ -922,35 +972,55 @@ export function LandlordSettings() {
     }, [syncSettingsWithDatabase]);
 
     const isDirty = useMemo(() => {
-        if (!initialSnapshot) return false;
+        if (isFinanceDirty) return true;
+        if (!hasUserEdited || !initialSnapshot) return false;
         return (
             JSON.stringify(formData) !== JSON.stringify(initialSnapshot.formData) ||
             JSON.stringify(notificationPreferences) !== JSON.stringify(initialSnapshot.notificationPreferences) ||
             propertyTradeName !== initialSnapshot.propertyTradeName ||
             propertyTagline !== initialSnapshot.propertyTagline ||
-            rentalArchetype !== initialSnapshot.rentalArchetype ||
-            brandPrimaryHex !== initialSnapshot.brandPrimaryHex ||
-            brandSecondaryHex !== initialSnapshot.brandSecondaryHex ||
+            normalizeRentalArchetype(rentalArchetype) !== normalizeRentalArchetype(initialSnapshot.rentalArchetype) ||
+            brandPrimaryHex.toLowerCase() !== initialSnapshot.brandPrimaryHex.toLowerCase() ||
+            brandSecondaryHex.toLowerCase() !== initialSnapshot.brandSecondaryHex.toLowerCase() ||
             bannerUrl !== initialSnapshot.bannerUrl ||
             propertyLogoUrl !== initialSnapshot.propertyLogoUrl
         );
-    }, [formData, notificationPreferences, propertyTradeName, propertyTagline, rentalArchetype, brandPrimaryHex, brandSecondaryHex, bannerUrl, propertyLogoUrl, initialSnapshot]);
+    }, [isFinanceDirty, hasUserEdited, formData, notificationPreferences, propertyTradeName, propertyTagline, rentalArchetype, brandPrimaryHex, brandSecondaryHex, bannerUrl, propertyLogoUrl, initialSnapshot]);
 
     const isDirtyRef = useRef(false);
     isDirtyRef.current = isDirty;
 
     // Sync brand fields when BrandContext updates from server or realtime broadcast
     useEffect(() => {
-        if (!isDirtyRef.current && brand && !brand.isLoading) {
-            if (brand.primaryColor) setBrandPrimaryHex(brand.primaryColor);
-            if (brand.secondaryColor) setBrandSecondaryHex(brand.secondaryColor);
-            if (brand.propertyName) setPropertyTradeName(brand.propertyName);
-            if (brand.propertyTagline) setPropertyTagline(brand.propertyTagline);
-            if (brand.rentalArchetype) setRentalArchetype(brand.rentalArchetype);
-            if (brand.logoUrl !== undefined) setPropertyLogoUrl(brand.logoUrl);
-            if (brand.bannerUrl) setBannerUrl(brand.bannerUrl);
+        if (!hasUserEdited && brand && !brand.isLoading) {
+            const nextPrimary = brand.primaryColor || DEFAULT_BRANDING.primaryColor;
+            const nextSecondary = brand.secondaryColor || DEFAULT_BRANDING.secondaryColor;
+            const nextName = brand.propertyName || DEFAULT_BRANDING.propertyName;
+            const nextTagline = brand.propertyTagline || DEFAULT_BRANDING.propertyTagline;
+            const nextArchetype = normalizeRentalArchetype(brand.rentalArchetype || DEFAULT_BRANDING.rentalArchetype);
+            const nextLogo = brand.logoUrl !== undefined ? brand.logoUrl : null;
+            const nextBanner = brand.bannerUrl || DEFAULT_BANNER_URL;
+
+            setBrandPrimaryHex(nextPrimary);
+            setBrandSecondaryHex(nextSecondary);
+            setPropertyTradeName(nextName);
+            setPropertyTagline(nextTagline);
+            setRentalArchetype(nextArchetype);
+            if (brand.logoUrl !== undefined) setPropertyLogoUrl(nextLogo);
+            if (brand.bannerUrl) setBannerUrl(nextBanner);
+
+            setInitialSnapshot((prev) => prev ? {
+                ...prev,
+                brandPrimaryHex: nextPrimary,
+                brandSecondaryHex: nextSecondary,
+                propertyTradeName: nextName,
+                propertyTagline: nextTagline,
+                rentalArchetype: nextArchetype,
+                propertyLogoUrl: nextLogo,
+                bannerUrl: nextBanner,
+            } : null);
         }
-    }, [brand.primaryColor, brand.secondaryColor, brand.propertyName, brand.propertyTagline, brand.rentalArchetype, brand.logoUrl, brand.bannerUrl, brand.isLoading]);
+    }, [brand.primaryColor, brand.secondaryColor, brand.propertyName, brand.propertyTagline, brand.rentalArchetype, brand.logoUrl, brand.bannerUrl, brand.isLoading, hasUserEdited]);
 
     useEffect(() => {
         const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -963,15 +1033,40 @@ export function LandlordSettings() {
         return () => window.removeEventListener("beforeunload", handleBeforeUnload);
     }, [isDirty]);
 
-    const handleRequestExit = () => {
+    // Intercept client-side link navigation when there are unsaved changes
+    useEffect(() => {
+        const handleClickCapture = (e: MouseEvent) => {
+            if (!isDirtyRef.current) return;
+            const target = (e.target as HTMLElement)?.closest("a");
+            if (!target) return;
+            const href = target.getAttribute("href");
+            if (href && !href.startsWith("#") && !href.startsWith("javascript:") && href !== window.location.pathname) {
+                e.preventDefault();
+                e.stopPropagation();
+                pendingExitUrlRef.current = href;
+                setIsUnsavedModalOpen(true);
+            }
+        };
+
+        document.addEventListener("click", handleClickCapture, true);
+        return () => document.removeEventListener("click", handleClickCapture, true);
+    }, []);
+
+    const handleRequestExit = (targetUrl?: string | React.MouseEvent) => {
+        const url = typeof targetUrl === "string" ? targetUrl : undefined;
         if (isDirty) {
+            if (url) pendingExitUrlRef.current = url;
             setIsUnsavedModalOpen(true);
         } else {
-            router.push("/landlord/dashboard");
+            router.push(url || "/landlord/dashboard");
         }
     };
 
     const handleDiscardChanges = () => {
+        if (isFinanceDirty && financeDiscardRef.current) {
+            financeDiscardRef.current();
+            setIsFinanceDirty(false);
+        }
         if (!initialSnapshot) return;
         setFormData(JSON.parse(JSON.stringify(initialSnapshot.formData)));
         setNotificationPreferences(JSON.parse(JSON.stringify(initialSnapshot.notificationPreferences)));
@@ -983,6 +1078,7 @@ export function LandlordSettings() {
         setBannerUrl(initialSnapshot.bannerUrl);
         setPropertyLogoUrl(initialSnapshot.propertyLogoUrl);
         applyBrandCssVariables(initialSnapshot.brandPrimaryHex, initialSnapshot.brandSecondaryHex);
+        setHasUserEdited(false);
         toast.info("Unsaved changes discarded");
     };
 
@@ -1240,6 +1336,18 @@ export function LandlordSettings() {
         }, 12000);
 
         try {
+            // 0. Save finance changes if dirty
+            if (isFinanceDirty && financeSaveRef.current) {
+                const financeSuccess = await financeSaveRef.current();
+                if (!financeSuccess) {
+                    clearTimeout(safetyTimer);
+                    setIsSaving(false);
+                    toast.dismiss(loadingToast);
+                    return false;
+                }
+                setIsFinanceDirty(false);
+            }
+
             const hasFormChanged = !initialSnapshot || JSON.stringify(formData) !== JSON.stringify(initialSnapshot.formData);
             const hasNotifsChanged = !initialSnapshot || JSON.stringify(notificationPreferences) !== JSON.stringify(initialSnapshot.notificationPreferences);
 
@@ -1309,12 +1417,13 @@ export function LandlordSettings() {
                 notificationPreferences: JSON.parse(JSON.stringify(notificationPreferences)),
                 propertyTradeName,
                 propertyTagline,
-                rentalArchetype,
+                rentalArchetype: normalizeRentalArchetype(rentalArchetype),
                 brandPrimaryHex,
                 brandSecondaryHex,
                 bannerUrl,
                 propertyLogoUrl,
             });
+            setHasUserEdited(false);
 
             // 5. Update local cache immediately with latest persisted data
             const updatedCache: CachedLandlordSettings = {
@@ -1465,7 +1574,7 @@ export function LandlordSettings() {
                                     <input
                                         type="text"
                                         value={formData.full_name}
-                                        onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                                        onChange={(e) => updateFormData({ full_name: e.target.value })}
                                         placeholder="e.g. John Doe"
                                         className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
                                     />
@@ -1474,7 +1583,7 @@ export function LandlordSettings() {
                                     <input
                                         type="text"
                                         value={formData.business_name}
-                                        onChange={(e) => setFormData({ ...formData, business_name: e.target.value })}
+                                        onChange={(e) => updateFormData({ business_name: e.target.value })}
                                         placeholder="e.g. Acme Residences LLC"
                                         className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
                                     />
@@ -1483,7 +1592,7 @@ export function LandlordSettings() {
                                     <input
                                         type="email"
                                         value={formData.email}
-                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                        onChange={(e) => updateFormData({ email: e.target.value })}
                                         placeholder="name@example.com"
                                         className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
                                     />
@@ -1492,7 +1601,7 @@ export function LandlordSettings() {
                                     <input
                                         type="tel"
                                         value={formData.phone}
-                                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                        onChange={(e) => updateFormData({ phone: e.target.value })}
                                         className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
                                     />
                                 </SettingField>
@@ -1500,7 +1609,7 @@ export function LandlordSettings() {
                                     <input
                                         type="url"
                                         value={formData.website}
-                                        onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                                        onChange={(e) => updateFormData({ website: e.target.value })}
                                         className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
                                     />
                                 </SettingField>
@@ -1509,7 +1618,7 @@ export function LandlordSettings() {
                                         <input
                                             type="text"
                                             value={formData.address}
-                                            onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                                            onChange={(e) => updateFormData({ address: e.target.value })}
                                             className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
                                         />
                                     </SettingField>
@@ -1519,7 +1628,7 @@ export function LandlordSettings() {
                                         <textarea
                                             rows={4}
                                             value={formData.bio}
-                                            onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                                            onChange={(e) => updateFormData({ bio: e.target.value })}
                                             className="w-full resize-none rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
                                         />
                                     </SettingField>
@@ -1535,7 +1644,7 @@ export function LandlordSettings() {
                                     <input
                                         type="text"
                                         value={formData.emergency_contact_name}
-                                        onChange={(e) => setFormData({ ...formData, emergency_contact_name: e.target.value })}
+                                        onChange={(e) => updateFormData({ emergency_contact_name: e.target.value })}
                                         placeholder="e.g. Jane Doe (Property Manager)"
                                         className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
                                     />
@@ -1544,7 +1653,7 @@ export function LandlordSettings() {
                                     <input
                                         type="tel"
                                         value={formData.emergency_contact_phone}
-                                        onChange={(e) => setFormData({ ...formData, emergency_contact_phone: e.target.value })}
+                                        onChange={(e) => updateFormData({ emergency_contact_phone: e.target.value })}
                                         placeholder="e.g. +63 917 123 4567"
                                         className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
                                     />
@@ -1598,7 +1707,10 @@ export function LandlordSettings() {
                                         type="url"
                                         placeholder="https://facebook.com/your-page"
                                         value={formData.socials.facebook}
-                                        onChange={(e) => setFormData({ ...formData, socials: { ...formData.socials, facebook: e.target.value } })}
+                                        onChange={(e) => {
+                                            setHasUserEdited(true);
+                                            setFormData((prev) => ({ ...prev, socials: { ...prev.socials, facebook: e.target.value } }));
+                                        }}
                                         className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
                                     />
                                 </SettingField>
@@ -1607,7 +1719,10 @@ export function LandlordSettings() {
                                         type="url"
                                         placeholder="https://instagram.com/your-profile"
                                         value={formData.socials.instagram}
-                                        onChange={(e) => setFormData({ ...formData, socials: { ...formData.socials, instagram: e.target.value } })}
+                                        onChange={(e) => {
+                                            setHasUserEdited(true);
+                                            setFormData((prev) => ({ ...prev, socials: { ...prev.socials, instagram: e.target.value } }));
+                                        }}
                                         className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
                                     />
                                 </SettingField>
@@ -1616,7 +1731,10 @@ export function LandlordSettings() {
                                         type="url"
                                         placeholder="https://twitter.com/your-handle"
                                         value={formData.socials.twitter}
-                                        onChange={(e) => setFormData({ ...formData, socials: { ...formData.socials, twitter: e.target.value } })}
+                                        onChange={(e) => {
+                                            setHasUserEdited(true);
+                                            setFormData((prev) => ({ ...prev, socials: { ...prev.socials, twitter: e.target.value } }));
+                                        }}
                                         className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
                                     />
                                 </SettingField>
@@ -1625,7 +1743,10 @@ export function LandlordSettings() {
                                         type="url"
                                         placeholder="https://linkedin.com/in/your-profile"
                                         value={formData.socials.linkedin}
-                                        onChange={(e) => setFormData({ ...formData, socials: { ...formData.socials, linkedin: e.target.value } })}
+                                        onChange={(e) => {
+                                            setHasUserEdited(true);
+                                            setFormData((prev) => ({ ...prev, socials: { ...prev.socials, linkedin: e.target.value } }));
+                                        }}
                                         className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
                                     />
                                 </SettingField>
@@ -1640,7 +1761,7 @@ export function LandlordSettings() {
                                     <input
                                         type="text"
                                         value={formData.business_permit_number}
-                                        onChange={(e) => setFormData({ ...formData, business_permit_number: e.target.value })}
+                                        onChange={(e) => updateFormData({ business_permit_number: e.target.value })}
                                         className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
                                     />
                                 </SettingField>
@@ -1836,7 +1957,10 @@ export function LandlordSettings() {
                                             <input
                                                 type="text"
                                                 value={brandPrimaryHex}
-                                                onChange={(e) => setBrandPrimaryHex(e.target.value)}
+                                                onChange={(e) => {
+                                                    setHasUserEdited(true);
+                                                    setBrandPrimaryHex(e.target.value);
+                                                }}
                                                 placeholder="#C4B0FF"
                                                 className="w-24 sm:w-28 uppercase font-mono text-xs font-bold rounded-xl neumorphic-inset px-3 py-2.5 sm:py-3 text-foreground"
                                             />
@@ -1869,8 +1993,11 @@ export function LandlordSettings() {
                                             <input
                                                 type="text"
                                                 value={brandSecondaryHex}
-                                                onChange={(e) => setBrandSecondaryHex(e.target.value)}
-                                                placeholder="#06B6D4"
+                                                onChange={(e) => {
+                                                    setHasUserEdited(true);
+                                                    setBrandSecondaryHex(e.target.value);
+                                                }}
+                                                placeholder="#8B5CF6"
                                                 className="w-24 sm:w-28 uppercase font-mono text-xs font-bold rounded-xl neumorphic-inset px-3 py-2.5 sm:py-3 text-foreground"
                                             />
                                             <div 
@@ -1886,7 +2013,7 @@ export function LandlordSettings() {
                                 <div className="mt-6 flex flex-wrap gap-2 items-center pt-4 border-t border-border/40">
                                     <span className="text-[11px] font-black uppercase tracking-wider text-muted-foreground mr-2">Curated Palettes:</span>
                                     {[
-                                        { name: "Royal Lavender", primary: "#c4b0ff", secondary: "#06b6d4" },
+                                        { name: "Royal Lavender", primary: "#c4b0ff", secondary: "#8b5cf6" },
                                         { name: "Emerald Oasis", primary: "#10b981", secondary: "#065f46" },
                                         { name: "Amber Sunset", primary: "#f59e0b", secondary: "#ea580c" },
                                         { name: "Electric Indigo", primary: "#6366f1", secondary: "#3b82f6" },
@@ -1896,6 +2023,7 @@ export function LandlordSettings() {
                                             key={preset.name}
                                             type="button"
                                             onClick={() => {
+                                                setHasUserEdited(true);
                                                 setBrandPrimaryHex(preset.primary);
                                                 setBrandSecondaryHex(preset.secondary);
                                                 applyBrandCssVariables(preset.primary, preset.secondary);
@@ -1921,7 +2049,10 @@ export function LandlordSettings() {
                                         <input
                                             type="text"
                                             value={propertyTradeName}
-                                            onChange={(e) => setPropertyTradeName(e.target.value)}
+                                            onChange={(e) => {
+                                                setHasUserEdited(true);
+                                                setPropertyTradeName(e.target.value);
+                                            }}
                                             placeholder="e.g., Skyline Lofts"
                                             className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none font-bold"
                                         />
@@ -1931,7 +2062,10 @@ export function LandlordSettings() {
                                         <input
                                             type="text"
                                             value={propertyTagline}
-                                            onChange={(e) => setPropertyTagline(e.target.value)}
+                                            onChange={(e) => {
+                                                setHasUserEdited(true);
+                                                setPropertyTagline(e.target.value);
+                                            }}
                                             placeholder="e.g., Modern Urban Residences & Studios"
                                             className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
                                         />
@@ -2005,27 +2139,28 @@ export function LandlordSettings() {
                             <GlassCard title="Rental Business Archetype" description="Adapts terminology and automated billing cadences to match your operation.">
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                     {[
-                                        { id: "apartments", label: "Apartment Complex", desc: "Per-unit monthly leases with submeter utilities" },
+                                        { id: "apartment", label: "Apartment Complex", desc: "Per-unit monthly leases with submeter utilities" },
                                         { id: "dormitory", label: "Student Dormitory", desc: "Per-bed contracts with shared utility billing" },
-                                        { id: "boarding", label: "Boarding House", desc: "Flexible short/long-term room lodging" },
+                                        { id: "boarding_house", label: "Boarding House", desc: "Flexible short/long-term room lodging" },
                                     ].map((arch) => (
                                         <button
                                             key={arch.id}
                                             type="button"
                                             onClick={() => {
+                                                setHasUserEdited(true);
                                                 setRentalArchetype(arch.id);
                                                 toast.success(`Archetype set to ${arch.label}`);
                                             }}
                                             className={cn(
                                                 "p-4 rounded-2xl border text-left transition-all flex flex-col justify-between",
-                                                rentalArchetype === arch.id
+                                                normalizeRentalArchetype(rentalArchetype) === arch.id
                                                     ? "border-primary bg-primary/10 ring-2 ring-primary/40 text-foreground"
                                                     : "border-border/60 hover:border-border hover:bg-surface-2 text-muted-foreground"
                                             )}
                                         >
                                             <div className="flex items-center justify-between mb-2">
                                                 <span className="text-sm font-black text-foreground">{arch.label}</span>
-                                                {rentalArchetype === arch.id && <Check className="size-4 text-primary" />}
+                                                {normalizeRentalArchetype(rentalArchetype) === arch.id && <Check className="size-4 text-primary" />}
                                             </div>
                                             <span className="text-xs text-muted-foreground">{arch.desc}</span>
                                         </button>
@@ -2202,14 +2337,14 @@ export function LandlordSettings() {
             switch (currentSubTab) {
                 case "GCash":
                     return (
-                        <GlassCard className="!p-0">
-                            <div className="p-8">
-                                <BillingOperationsPanel 
-                                    viewMode="gcash"
-                                    propertyId={selectedPropertyId}
-                                />
-                            </div>
-                        </GlassCard>
+                        <BillingOperationsPanel 
+                            viewMode="gcash"
+                            propertyId={selectedPropertyId}
+                            embedded={true}
+                            onDirtyChange={setIsFinanceDirty}
+                            onRegisterSave={(fn) => { financeSaveRef.current = fn; }}
+                            onRegisterDiscard={(fn) => { financeDiscardRef.current = fn; }}
+                        />
                     );
                 case "Utilities":
                     return (
@@ -2232,15 +2367,15 @@ export function LandlordSettings() {
                                     </button>
                                 ))}
                             </div>
-                            <GlassCard className="!p-0">
-                                <div className="p-8">
-                                    <BillingOperationsPanel 
-                                        viewMode="rates"
-                                        utilityType={activeFinanceTab === "Water" ? "water" : "electricity"}
-                                        propertyId={selectedPropertyId}
-                                    />
-                                </div>
-                            </GlassCard>
+                            <BillingOperationsPanel 
+                                viewMode="rates"
+                                utilityType={activeFinanceTab === "Water" ? "water" : "electricity"}
+                                propertyId={selectedPropertyId}
+                                embedded={true}
+                                onDirtyChange={setIsFinanceDirty}
+                                onRegisterSave={(fn) => { financeSaveRef.current = fn; }}
+                                onRegisterDiscard={(fn) => { financeDiscardRef.current = fn; }}
+                            />
                         </div>
                     );
                 default: return null;
@@ -2899,16 +3034,23 @@ export function LandlordSettings() {
     };
 
     const renderContent = () => {
-        switch (activeTab) {
-            case "Identity": return renderIdentity();
-            case "Personalization": return renderPersonalization();
-            case "Finance": return renderFinance();
-            case "Security": return renderSecurity();
-            case "Notifications": return renderNotifications();
-            case "AuditLogs": return <AuditLogsSettingsTab />;
-            case "Data": return renderData();
-            default: return null;
-        }
+        return (
+            <>
+                <div style={{ display: activeTab === "Finance" ? "block" : "none" }}>
+                    {(activeTab === "Finance" || hasVisitedFinance) && renderFinance()}
+                </div>
+                {activeTab !== "Finance" && (
+                    <>
+                        {activeTab === "Identity" && renderIdentity()}
+                        {activeTab === "Personalization" && renderPersonalization()}
+                        {activeTab === "Security" && renderSecurity()}
+                        {activeTab === "Notifications" && renderNotifications()}
+                        {activeTab === "AuditLogs" && <AuditLogsSettingsTab />}
+                        {activeTab === "Data" && renderData()}
+                    </>
+                )}
+            </>
+        );
     };
 
     return (
@@ -3169,7 +3311,7 @@ export function LandlordSettings() {
                                 <button
                                     key={item.id}
                                     type="button"
-                                    onClick={() => setActiveTab(item.id)}
+                                    onClick={() => handleTabChange(item.id)}
                                     title={isSidebarCollapsed ? `${item.label} — ${item.description}` : undefined}
                                     className={cn(
                                         "group relative flex flex-col transition-all duration-300 text-left cursor-pointer",
@@ -3239,6 +3381,7 @@ export function LandlordSettings() {
                     color={brandPrimaryHex}
                     title="Primary Brand Accent"
                     onChange={(newColor) => {
+                        setHasUserEdited(true);
                         setBrandPrimaryHex(newColor);
                         applyBrandCssVariables(newColor, brandSecondaryHex);
                     }}
@@ -3250,6 +3393,7 @@ export function LandlordSettings() {
                     color={brandSecondaryHex}
                     title="Secondary Ambient Accent"
                     onChange={(newColor) => {
+                        setHasUserEdited(true);
                         setBrandSecondaryHex(newColor);
                         applyBrandCssVariables(brandPrimaryHex, newColor);
                     }}
@@ -3258,17 +3402,38 @@ export function LandlordSettings() {
                 {/* Unsaved Changes Exit Protection Modal */}
                 <UnsavedChangesModal
                     isOpen={isUnsavedModalOpen}
-                    onClose={() => setIsUnsavedModalOpen(false)}
+                    onClose={() => {
+                        setIsUnsavedModalOpen(false);
+                        pendingExitUrlRef.current = null;
+                        pendingTabRef.current = null;
+                    }}
                     isSaving={isSaving}
                     onConfirmDiscard={() => {
+                        handleDiscardChanges();
                         setIsUnsavedModalOpen(false);
-                        router.push("/landlord/dashboard");
+                        if (pendingTabRef.current) {
+                            const nextTab = pendingTabRef.current;
+                            pendingTabRef.current = null;
+                            setActiveTab(nextTab);
+                            return;
+                        }
+                        const destination = pendingExitUrlRef.current || "/landlord/dashboard";
+                        pendingExitUrlRef.current = null;
+                        router.push(destination);
                     }}
                     onSaveAndExit={async () => {
                         const success = await handleSaveAll();
                         if (success) {
                             setIsUnsavedModalOpen(false);
-                            router.push("/landlord/dashboard");
+                            if (pendingTabRef.current) {
+                                const nextTab = pendingTabRef.current;
+                                pendingTabRef.current = null;
+                                setActiveTab(nextTab);
+                                return;
+                            }
+                            const destination = pendingExitUrlRef.current || "/landlord/dashboard";
+                            pendingExitUrlRef.current = null;
+                            router.push(destination);
                         }
                     }}
                 />

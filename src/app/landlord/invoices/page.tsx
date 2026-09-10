@@ -6,6 +6,7 @@ import { CalendarDays, FileText, Plus, Search, Filter, Download, AlertCircle, Ch
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 import { InvoiceModal } from "@/components/landlord/invoices/InvoiceModal";
+import { IssueInvoiceModal } from "@/components/landlord/invoices/IssueInvoiceModal";
 import { RecordExpenseModal } from "@/components/landlord/invoices/RecordExpenseModal";
 import { Tooltip } from "@/components/ui/tooltip";
 import type { InvoiceListItem } from "@/lib/billing/server";
@@ -40,11 +41,17 @@ export default function InvoicesPage() {
   // Finance Hub Tabs
   const [activeTab, setActiveTab] = useState<"ledger" | "invoices" | "expenses">("ledger");
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
+  const [isIssueInvoiceModalOpen, setIsIssueInvoiceModalOpen] = useState(false);
 
   useEffect(() => {
     const queryId = searchParams.get("id") || searchParams.get("invoiceId");
     if (queryId) {
       setSelectedInvoiceId(queryId);
+    }
+    const action = searchParams.get("action");
+    if (action === "create" || action === "issue") {
+      setActiveTab("invoices");
+      setIsIssueInvoiceModalOpen(true);
     }
   }, [searchParams]);
 
@@ -227,6 +234,19 @@ export default function InvoicesPage() {
           <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">Finance Hub</h1>
           <p className="mt-2 text-sm text-muted-foreground">Manage your unified ledger, track expenses, and oversee rent invoices.</p>
         </div>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab("invoices");
+              setIsIssueInvoiceModalOpen(true);
+            }}
+            className="group inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-black text-primary-foreground shadow-sm transition-all hover:scale-105 hover:bg-primary/90 active:scale-95"
+          >
+            <Plus className="size-4" />
+            Issue Invoice
+          </button>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -307,14 +327,24 @@ export default function InvoicesPage() {
                 <p className="text-[10px] font-black uppercase tracking-[0.25em] text-primary">Ledger</p>
                 <h2 className="mt-1 text-2xl font-black text-foreground lg:text-3xl">Issued Invoices</h2>
               </div>
-              <div className="relative w-full sm:w-72">
-                <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Search tenant, unit, or invoice..."
-                  className="w-full rounded-xl border border-border/50 bg-background/60 py-2.5 pl-10 pr-4 text-xs font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-2 focus:ring-primary/10 hover:bg-background shadow-sm"
-                />
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div className="relative w-full sm:w-72">
+                  <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    placeholder="Search tenant, unit, or invoice..."
+                    className="w-full rounded-xl border border-border/50 bg-background/60 py-2.5 pl-10 pr-4 text-xs font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-2 focus:ring-primary/10 hover:bg-background shadow-sm"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsIssueInvoiceModalOpen(true)}
+                  className="group inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-xs font-black text-primary-foreground shadow-sm transition-all hover:scale-105 hover:bg-primary/90 active:scale-95 whitespace-nowrap"
+                >
+                  <Plus className="size-3.5" />
+                  Issue Invoice
+                </button>
               </div>
             </div>
             
@@ -653,6 +683,13 @@ export default function InvoicesPage() {
 
       <InvoiceModal invoiceId={selectedInvoiceId} onClose={() => setSelectedInvoiceId(null)} onUpdated={loadData} />
       <RecordExpenseModal isOpen={isExpenseModalOpen} onClose={() => setIsExpenseModalOpen(false)} onSaved={loadData} />
+      <IssueInvoiceModal
+        isOpen={isIssueInvoiceModalOpen}
+        onClose={() => setIsIssueInvoiceModalOpen(false)}
+        onIssued={loadData}
+        defaultUnitId={searchParams.get("unitId")}
+        propertyId={selectedPropertyId}
+      />
     </div>
   );
 }

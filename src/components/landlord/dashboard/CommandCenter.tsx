@@ -150,21 +150,21 @@ export function CommandCenter({
             {/* Background decorative elements */}
             <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 size-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none opacity-0 dark:opacity-100 transition-opacity duration-500" />
             
-            <div className="mb-8 flex flex-col gap-6 2xl:flex-row 2xl:items-end 2xl:justify-between relative z-10">
-                <div className="flex items-start gap-4">
+            <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between relative z-10">
+                <div className="flex items-center gap-3.5 sm:gap-4 min-w-0">
                     <div className="neumorphic-inset-card flex size-12 sm:size-14 items-center justify-center rounded-[1.25rem] text-primary dark:bg-primary/10 dark:border-primary/20 dark:shadow-none shrink-0">
                         <ShieldCheck className="size-6 sm:size-7" />
                     </div>
                     <div className="min-w-0">
                         <h2 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">Intelligence Hub</h2>
-                        <p className="text-xs sm:text-sm font-medium text-muted-foreground/80 leading-relaxed">
+                        <p className="text-xs sm:text-sm font-medium text-muted-foreground/80 leading-relaxed truncate sm:whitespace-normal">
                             Orchestrating your property ecosystem from one dashboard.
                         </p>
                     </div>
                 </div>
 
                 {/* Real-time stats pills */}
-                <div className="grid grid-cols-2 xl:grid-cols-4 2xl:flex 2xl:items-center gap-2.5 sm:gap-3 w-full 2xl:w-auto">
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:flex lg:items-center gap-2 sm:gap-2.5 xl:gap-3 w-full lg:w-auto shrink-0">
                     {statCards.map((stat) => {
                         const content = (
                             <>
@@ -181,7 +181,7 @@ export function CommandCenter({
                         );
 
                         const cardClass = cn(
-                            "neumorphic-extruded group relative flex items-center gap-2.5 sm:gap-3 rounded-2xl px-4 py-2.5 sm:py-3 active:scale-95 justify-start min-w-0",
+                            "neumorphic-extruded group relative flex items-center gap-2 sm:gap-2.5 xl:gap-3 rounded-2xl px-3 sm:px-3.5 xl:px-4 py-2 sm:py-2.5 active:scale-95 justify-start min-w-0 shrink-0",
                             "dark:bento-glass-card dark:hover:bg-white/[0.05] transition-all cursor-pointer",
                             stat.toneClass
                         );
@@ -213,7 +213,7 @@ export function CommandCenter({
                 </div>
             </div>
 
-            <div className="grid gap-6 2xl:grid-cols-[1fr_360px] relative z-10">
+            <div className="grid gap-6 lg:grid-cols-[1fr_340px] xl:grid-cols-[1fr_380px] relative z-10">
                 {/* Operations Center */}
                 <div className={cn(
                     "neumorphic-inset rounded-[2rem] p-4 sm:p-5 md:p-6 min-w-0",
@@ -294,13 +294,13 @@ export function CommandCenter({
                                 <Link
                                     href={action.href}
                                     className={cn(
-                                        "neumorphic-extruded group flex flex-col items-center justify-center text-center gap-2 rounded-[1.25rem] p-3 sm:p-4 min-w-0 w-full overflow-hidden",
-                                        "dark:bento-glass-card dark:hover:bg-primary/5 dark:hover:border-primary/20 dark:hover:shadow-[0_0_20px_rgba(196,176,255,0.1)] transition-all"
+                                        "neumorphic-extruded group flex flex-col items-center justify-center text-center gap-1.5 sm:gap-2 rounded-[1.25rem] p-2.5 sm:p-3 xl:p-3.5 min-w-0 w-full overflow-hidden transition-all",
+                                        "dark:bento-glass-card dark:hover:bg-primary/5 dark:hover:border-primary/20 dark:hover:shadow-[0_0_20px_rgba(196,176,255,0.1)] active:scale-95"
                                     )}
                                     aria-label={`${action.label}: ${action.description}`}
                                 >
                                     <div className={cn(
-                                        "neumorphic-inset-card flex size-9 sm:size-10 items-center justify-center rounded-xl transition-all duration-300 group-hover:scale-110 shrink-0",
+                                        "neumorphic-inset-card flex size-8 sm:size-9 xl:size-10 items-center justify-center rounded-xl transition-all duration-300 group-hover:scale-110 shrink-0",
                                         "dark:bg-white/[0.05] dark:border-white/10 dark:shadow-none",
                                         action.color
                                     )}>
@@ -327,7 +327,7 @@ export function CommandCenter({
                         Next Priorities
                     </h3>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-1 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
                         {nextMoves.map((move) => (
                             <div key={move.id} className={cn(
                                 "neumorphic-extruded group/item relative overflow-hidden rounded-2xl p-4",
