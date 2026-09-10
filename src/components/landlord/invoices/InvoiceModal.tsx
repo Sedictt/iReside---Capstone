@@ -967,7 +967,7 @@ export function InvoiceModal({
                                 <div className="space-y-3 text-center">
                                     <h3 className="text-2xl font-black text-text-high tracking-tight">Confirm Action</h3>
                                     <p className="text-sm font-medium leading-relaxed text-text-medium">
-                                        You are about to <span className="text-amber-400 font-black underline decoration-amber-500/30 underline-offset-4">{pendingAction.label}</span>. 
+                                        You are about to <span className="text-amber-400 font-black underline decoration-amber-500/30 underline-offset-4">{pendingAction.label}</span>.{" "}
                                         {pendingAction.desc}
                                     </p>
                                 </div>
@@ -977,27 +977,29 @@ export function InvoiceModal({
                                         disabled={confirmCountdown > 0}
                                         onClick={() => performAction(pendingAction.type)}
                                         className={cn(
-                                            "relative h-14 overflow-hidden rounded-2xl text-sm font-black uppercase tracking-widest transition-all active:scale-[0.98]",
+                                            "relative flex items-center justify-center gap-2.5 h-14 overflow-hidden rounded-2xl text-sm font-black uppercase tracking-widest transition-all active:scale-[0.98]",
                                             confirmCountdown > 0 
                                                 ? "bg-white/5 text-text-disabled cursor-not-allowed" 
-                                                : "bg-primary text-primary-foreground hover:brightness-110 shadow-lg"
+                                                : pendingAction.type === "reject"
+                                                    ? "bg-rose-600 text-white hover:bg-rose-500 shadow-lg shadow-rose-600/25"
+                                                    : "bg-primary text-primary-foreground hover:brightness-110 shadow-lg shadow-primary/25"
                                         )}
                                     >
                                         {confirmCountdown > 0 ? (
                                             <>
-                                                <Clock3 className="size-4 animate-pulse" />
-                                                Hold to Confirm ({confirmCountdown}s)
+                                                <Clock3 className="size-4 animate-pulse shrink-0" />
+                                                <span>Hold to Confirm ({confirmCountdown}s)</span>
                                             </>
                                         ) : (
                                             <>
-                                                <CheckCircle2 className="size-4" />
-                                                Yes, Proceed
+                                                <CheckCircle2 className="size-4 shrink-0" />
+                                                <span>Yes, Proceed</span>
                                             </>
                                         )}
                                     </button>
                                     <button 
                                         onClick={() => setPendingAction(null)}
-                                        className="h-14 rounded-2xl border border-white/10 bg-transparent text-sm font-black text-text-medium transition-all hover:bg-white/5"
+                                        className="flex items-center justify-center h-14 rounded-2xl border border-white/10 bg-transparent text-sm font-black text-text-medium transition-all hover:bg-white/5"
                                     >
                                         Cancel
                                     </button>

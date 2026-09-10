@@ -35,6 +35,7 @@ import { useNotifications } from "@/context/NotificationContext";
 import { RoleBadge } from "@/components/profile/RoleBadge";
 import { ProfileCardTrigger } from "@/components/ui/ProfileCardTrigger";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { LogoutConfirmationModal } from "@/components/ui/LogoutConfirmationModal";
 import { m as motion, AnimatePresence } from "framer-motion";
 import type { Notification, Profile } from "@/types/database";
 
@@ -104,6 +105,7 @@ export function TenantSidebar() {
     const router = useRouter();
     const [isMobileOpen, setIsMobileOpen] = useState(false);
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+    const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
     const notificationsRef = useRef<HTMLDivElement>(null);
     const mobileNotificationsRef = useRef<HTMLDivElement>(null);
     const { profile, user } = useAuth();
@@ -399,9 +401,7 @@ return (
                         </Link>
                         <button
                             type="button"
-                            onClick={() => {
-                                void signOut()
-                            }}
+                            onClick={() => setIsLogoutModalOpen(true)}
                             className="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground transition-all hover:text-red-500 hover:neumorphic-extruded text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                         >
                             <LogOut className="size-5" />
@@ -454,7 +454,8 @@ return (
                         <button
                             type="button"
                             onClick={() => {
-                                void signOut()
+                                setIsMobileOpen(false);
+                                setIsLogoutModalOpen(true);
                             }}
                             className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-500 hover:bg-red-500/10 text-left"
                         >
@@ -464,6 +465,11 @@ return (
                     </div>
                 </aside>
             </div>
+
+            <LogoutConfirmationModal
+                isOpen={isLogoutModalOpen}
+                onClose={() => setIsLogoutModalOpen(false)}
+            />
         </>
     );
 }
