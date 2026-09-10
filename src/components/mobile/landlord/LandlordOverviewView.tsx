@@ -322,6 +322,7 @@ export function LandlordOverviewView() {
                     </div>
                 </div>
             </div>
+            </div>
         </PullToRefresh>
     );
 }
