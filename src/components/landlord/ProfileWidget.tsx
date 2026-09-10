@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useHighContrast } from "@/hooks/useHighContrast";
 import { RoleBadge } from "@/components/profile/RoleBadge";
 import { ProfileCardTrigger } from "@/components/ui/ProfileCardTrigger";
+import { LogoutConfirmationModal } from "@/components/ui/LogoutConfirmationModal";
 import { cn } from "@/lib/utils";
 
 function readProviderAvatar(user: ReturnType<typeof useAuth>["user"]) {
@@ -40,6 +41,7 @@ function readProviderAvatar(user: ReturnType<typeof useAuth>["user"]) {
 
 export function ProfileWidget() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
     const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const [avatarFailed, setAvatarFailed] = useState(false);
@@ -221,7 +223,8 @@ export function ProfileWidget() {
                             <button
                                 type="button"
                                 onClick={() => {
-                                    void signOut();
+                                    setIsMenuOpen(false);
+                                    setIsLogoutModalOpen(true);
                                 }}
                                 className="flex w-full items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-black transition-all hover:neumorphic-inset-card active:scale-[0.98] text-red-400 hover:text-red-300 group text-left border border-transparent"
                             >
@@ -232,6 +235,11 @@ export function ProfileWidget() {
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            <LogoutConfirmationModal
+                isOpen={isLogoutModalOpen}
+                onClose={() => setIsLogoutModalOpen(false)}
+            />
         </div>
     );
 }

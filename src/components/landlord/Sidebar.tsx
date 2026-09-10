@@ -21,9 +21,11 @@ import {
     BookOpen,
     Download
 } from "lucide-react";
+import { useState } from "react";
 import { signOut } from "@/lib/supabase/client-auth";
 import { RoleSidebar, type SidebarNavSection } from "@/components/navigation/RoleSidebar";
 import { PropertySelector } from "@/components/landlord/PropertySelector";
+import { LogoutConfirmationModal } from "@/components/ui/LogoutConfirmationModal";
 import { useNotifications } from "@/context/NotificationContext";
 import { cn } from "@/lib/utils";
 
@@ -206,17 +208,23 @@ export function Sidebar({
         },
     ];
 
+    const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+
     return (
-        <RoleSidebar
-            sections={NAV_ITEMS}
-            header={<PropertySelector isCollapsed={isCollapsed} />}
-            onLogout={() => {
-                void signOut();
-            }}
-            isCollapsed={isCollapsed}
-            onToggleCollapse={onToggleCollapse}
-            showCollapseToggle={showCollapseToggle}
-            className={`neu-landlord-sidebar ${className || ''}`}
-        />
+        <>
+            <RoleSidebar
+                sections={NAV_ITEMS}
+                header={<PropertySelector isCollapsed={isCollapsed} />}
+                onLogout={() => setIsLogoutModalOpen(true)}
+                isCollapsed={isCollapsed}
+                onToggleCollapse={onToggleCollapse}
+                showCollapseToggle={showCollapseToggle}
+                className={`neu-landlord-sidebar ${className || ''}`}
+            />
+            <LogoutConfirmationModal
+                isOpen={isLogoutModalOpen}
+                onClose={() => setIsLogoutModalOpen(false)}
+            />
+        </>
     );
 }

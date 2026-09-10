@@ -13,8 +13,9 @@ import {
     MessageSquareWarning,
     PenTool,
 } from "lucide-react";
-import { signOut } from "@/lib/supabase/client-auth";
+import { useState } from "react";
 import { RoleSidebar, type SidebarNavSection } from "@/components/navigation/RoleSidebar";
+import { LogoutConfirmationModal } from "@/components/ui/LogoutConfirmationModal";
 
 const NAV_ITEMS: SidebarNavSection[] = [
     {
@@ -62,14 +63,20 @@ const NAV_ITEMS: SidebarNavSection[] = [
 ];
 
 export function AdminSidebar() {
+    const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+
     return (
-        <RoleSidebar
-            sections={NAV_ITEMS}
-            className="hidden md:flex"
-            onLogout={() => {
-                void signOut();
-            }}
-        />
+        <>
+            <RoleSidebar
+                sections={NAV_ITEMS}
+                className="hidden md:flex"
+                onLogout={() => setIsLogoutModalOpen(true)}
+            />
+            <LogoutConfirmationModal
+                isOpen={isLogoutModalOpen}
+                onClose={() => setIsLogoutModalOpen(false)}
+            />
+        </>
     );
 }
 
