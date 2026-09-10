@@ -153,10 +153,10 @@ export function PropertiesDashboard() {
         };
 
         const rows = properties.map((prop) => {
-            const total = prop.metrics?.total ?? prop.totalUnits ?? 0;
             const occupied = prop.metrics?.occupied ?? 0;
+            const total = Math.max(prop.metrics?.total ?? prop.totalUnits ?? 0, occupied, 1);
             const vacant = Math.max(0, total - occupied);
-            const occupancyRate = total > 0 ? `${Math.round((occupied / total) * 100)}%` : "0%";
+            const occupancyRate = `${Math.min(100, Math.round((occupied / total) * 100))}%`;
             const propertyType =
                 prop.type === "dormitory"
                     ? "Dormitory"
@@ -336,8 +336,9 @@ export function PropertiesDashboard() {
                 )}
 
                 {!isDataLoading && !loadError && filteredProperties.map((property) => {
-                    const occupancyRatio = property.metrics.total > 0 ? property.metrics.occupied / property.metrics.total : 0;
-                    const occupancyPercent = Math.round(occupancyRatio * 100);
+                    const totalUnits = Math.max(property.metrics.total, property.metrics.occupied, 1);
+                    const occupancyRatio = Math.min(1, totalUnits > 0 ? property.metrics.occupied / totalUnits : 0);
+                    const occupancyPercent = Math.min(100, Math.round(occupancyRatio * 100));
 
                     return (
                         <div key={property.id} className="neumorphic-panel group relative overflow-hidden rounded-3xl transition-all duration-500 hover:scale-[1.01]">
@@ -422,7 +423,7 @@ export function PropertiesDashboard() {
                                                     <p className="text-xs font-black uppercase tracking-wider text-muted-foreground/80">Occupancy</p>
                                                     <div className="flex items-baseline gap-1.5">
                                                         <span className="text-xl font-black text-foreground">{property.metrics.occupied}</span>
-                                                        <span className="text-xs font-medium text-muted-foreground">/ {property.metrics.total} Units</span>
+                                                        <span className="text-xs font-medium text-muted-foreground">/ {totalUnits} Units</span>
                                                     </div>
                                                     <p className={cn(
                                                         "text-[10px] font-black uppercase tracking-tight",

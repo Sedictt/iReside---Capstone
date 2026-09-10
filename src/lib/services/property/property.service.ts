@@ -250,7 +250,7 @@ export class PropertyService {
     return properties.map((property) => {
       const propertyUnits = (units ?? []).filter((u) => u.property_id === property.id);
       const occupiedUnits = propertyUnits.filter((u) => u.status === "occupied").length;
-      const totalUnits = propertyUnits.length;
+      const totalUnits = Math.max(propertyUnits.length, occupiedUnits, 1);
       const monthlyRevenue = propertyUnits
         .filter((u) => u.status === "occupied")
         .reduce((sum, u) => sum + Number(u.rent_amount ?? 0), 0);
@@ -267,7 +267,7 @@ export class PropertyService {
         image: imageList[0] ?? FALLBACK_PROPERTY_IMAGE,
         totalUnits,
         occupiedUnits,
-        occupancyRate: totalUnits > 0 ? Math.round((occupiedUnits / totalUnits) * 100) : 0,
+        occupancyRate: totalUnits > 0 ? Math.min(100, Math.round((occupiedUnits / totalUnits) * 100)) : 0,
         monthlyRevenue,
         formattedRevenue: formatCompactCurrency(monthlyRevenue),
         status: getPortfolioStatus(occupiedUnits, totalUnits, maintenanceCount),

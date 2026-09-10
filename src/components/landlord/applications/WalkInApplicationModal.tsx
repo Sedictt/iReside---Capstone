@@ -563,6 +563,12 @@ export function WalkInApplicationModal({
 
     const validateStep = (currentStep: number) => {
         const errors = validateFormStep(currentStep, selectedUnit, formData, { requireUnit: !existingApplication });
+        if (currentStep === 0 && !existingApplication && selectedUnit) {
+            const chosenUnit = units.find((unit) => unit.id === selectedUnit);
+            if ((chosenUnit?.status ?? "").toLowerCase() === "occupied") {
+                errors.unit = "Selected unit is currently occupied and unavailable.";
+            }
+        }
         const stepKeys = STEP_FIELD_KEYS[currentStep] || [];
 
         setTouchedFields((prev) => {
@@ -598,12 +604,19 @@ export function WalkInApplicationModal({
 
     const handleSubmit = async (asPending = false) => {
         if (!existingApplication) {
-            const hasSelectedUnit = units.some((unit) => unit.id === selectedUnit);
-            if (!hasSelectedUnit) {
+            const chosenUnit = units.find((unit) => unit.id === selectedUnit);
+            if (!chosenUnit) {
                 setFormErrors((prev) => ({ ...prev, unit: "Please select a valid unit." }));
                 setTouchedFields((prev) => ({ ...prev, unit: true }));
                 setStep(0);
                 setError("Selected unit is no longer valid. Please re-select a unit.");
+                return;
+            }
+            if ((chosenUnit.status ?? "").toLowerCase() === "occupied") {
+                setFormErrors((prev) => ({ ...prev, unit: "Selected unit is currently occupied and unavailable." }));
+                setTouchedFields((prev) => ({ ...prev, unit: true }));
+                setStep(0);
+                setError("Selected unit is currently occupied. Please select a vacant unit.");
                 return;
             }
         }
@@ -870,11 +883,15 @@ export function WalkInApplicationModal({
                                                              id="unit-select"
                                                              value={selectedUnit}
                                                              onChange={(e) => {
-                                                                                     const nextUnit = e.target.value;
-                                                                                     setSelectedUnit(nextUnit);
-                                                                                     setTouchedFields((prev) => ({ ...prev, unit: true }));
-                                                                                     const liveErrors = validateFormStep(step, nextUnit, formData, { requireUnit: !existingApplication });
-                                                                                     setFormErrors((prev) => ({ ...prev, unit: liveErrors.unit }));
+                                                                 const nextUnit = e.target.value;
+                                                                 setSelectedUnit(nextUnit);
+                                                                 setTouchedFields((prev) => ({ ...prev, unit: true }));
+                                                                 const liveErrors = validateFormStep(step, nextUnit, formData, { requireUnit: !existingApplication });
+                                                                 const chosen = units.find((u) => u.id === nextUnit);
+                                                                 if ((chosen?.status ?? "").toLowerCase() === "occupied") {
+                                                                     liveErrors.unit = "Selected unit is currently occupied and unavailable.";
+                                                                 }
+                                                                 setFormErrors((prev) => ({ ...prev, unit: liveErrors.unit }));
                                                              }}
                                                              disabled={!!existingApplication}
                                                              className={cn(
@@ -883,22 +900,41 @@ export function WalkInApplicationModal({
                                                                  formErrors.unit && "text-red-400"
                                                              )}
                                                          >
-                                                            <option value="" className="bg-card text-sm text-foreground">Select Target Unit...</option>
-                                                             {units.map((u) => (
-                                                                <option key={u.id} value={u.id} className="bg-card py-4 text-sm text-foreground">
-                                                                    {u.name} — {u.property_name}
-                                                                </option>
-                                                            ))}
-                                                        </select>
+                                                             <option value="" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100 text-sm">Select Target Unit...</option>
+                                                             {units.map((u) => {
+                                                                 const isOccupied = (u.status ?? "").toLowerCase() === "occupied";
+                                                                 return (
+                                                                     <option 
+                                                                         key={u.id} 
+                                                                         value={u.id} 
+                                                                         disabled={isOccupied}
+                                                                         className={cn(
+                                                                             "bg-card py-4 text-sm text-foreground dark:bg-zinc-900 dark:text-zinc-100",
+                                                                             isOccupied && "text-muted-foreground/50 dark:text-zinc-500 bg-muted/40 dark:bg-zinc-950"
+                                                                         )}
+                                                                     >
+                                                                         {u.name} — {u.property_name}{isOccupied ? " • (Occupied — Unavailable)" : ""}
+                                                                     </option>
+                                                                 );
+                                                             })}
+                                                         </select>
                                                         <ArrowRight size={20} className="pointer-events-none absolute right-6 top-1/2 -translate-y-1/2 rotate-90 text-muted-foreground" />
                                                     </div>
                                                 </CardFrame>
                                                 {formErrors.unit && <p className="text-[10px] text-red-400 font-black uppercase tracking-wider ml-1 mt-1">{formErrors.unit}</p>}
                                                 {currentUnit && (
-                                                    <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="flex justify-between items-center px-4 py-3 bg-primary/5 border border-primary/20 rounded-2xl">
-                                                         <span className="text-[10px] font-black uppercase text-primary tracking-widest">Monthly Rent</span>
-                                                        <span className="text-lg font-black italic text-foreground">₱{currentUnit.rent_amount.toLocaleString()}</span>
-                                                    </motion.div>
+                                                    <div className="space-y-3">
+                                                        <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="flex justify-between items-center px-4 py-3 bg-primary/5 border border-primary/20 rounded-2xl">
+                                                             <span className="text-[10px] font-black uppercase text-primary tracking-widest">Monthly Rent</span>
+                                                            <span className="text-lg font-black italic text-foreground">₱{currentUnit.rent_amount.toLocaleString()}</span>
+                                                        </motion.div>
+                                                        {(currentUnit.status ?? "").toLowerCase() === "occupied" && (
+                                                            <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-2.5 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs font-bold text-amber-600 dark:text-amber-400">
+                                                                <AlertCircle size={16} className="shrink-0" />
+                                                                <span>This unit is currently occupied and unavailable for new tenant applications.</span>
+                                                            </motion.div>
+                                                        )}
+                                                    </div>
                                                 )}
                                             </section>
 

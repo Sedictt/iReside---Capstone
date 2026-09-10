@@ -17,7 +17,7 @@ const formatCompactCurrency = (value: number) => {
 };
 
 const getStatus = (occupied: number, total: number, maintenanceCount: number): PortfolioStatus => {
-    const occupancyRate = total > 0 ? (occupied / total) * 100 : 0;
+    const occupancyRate = total > 0 ? Math.min(100, (occupied / total) * 100) : 0;
 
     if (maintenanceCount >= 5 || occupancyRate < 70) {
         return "Attention Required";
@@ -152,7 +152,16 @@ export async function GET() {
         const propertyUnits = unitsByProperty.get(property.id) ?? [];
         const occupied = propertyUnits.filter((unit) => unit.status === "occupied").length;
         const configuredUnits = Number(property.total_units) || 0;
-        const total = configuredUnits > 0 ? configuredUnits : Math.max(propertyUnits.length, 1);
+        const actualUnitsCount = propertyUnits.length;
+        const total = Math.max(actualUnitsCount, configuredUnits, occupied, 1);
+
+        // Self-heal out-of-sync property total_units column in the background if units exist
+        if (actualUnitsCount > configuredUnits) {
+            void supabase
+                .from("properties")
+                .update({ total_units: actualUnitsCount, updated_at: new Date().toISOString() })
+                .eq("id", property.id);
+        }
 
         const propertyUnitIds = new Set(propertyUnits.map((unit) => unit.id));
         const activeMaintenance = (maintenanceRows ?? []).filter(

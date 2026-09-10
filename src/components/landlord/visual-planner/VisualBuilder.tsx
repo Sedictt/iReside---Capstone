@@ -4877,7 +4877,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                         name: u.name,
                         rent_amount: u.rent_amount,
                         property_id: selectedPropertyId,
-                        property_name: selectedProperty?.name || "Property"
+                        property_name: selectedProperty?.name || "Property",
+                        status: u.status,
                     }))}
                     onSuccess={() => {
                         setRefreshKey(prev => prev + 1);
