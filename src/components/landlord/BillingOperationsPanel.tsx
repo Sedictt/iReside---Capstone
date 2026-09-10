@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useReducer, useCallback, useMemo, type ReactNode } from "react";
+import { useEffect, useState, useReducer, useCallback, useMemo, useRef, type ReactNode } from "react";
 import {
  Building2,
  Droplets,
@@ -24,7 +24,12 @@ import {
  ChevronDown,
  ChevronUp,
  HelpCircle,
- X
+ X,
+ User,
+ Phone,
+ Upload,
+ Check,
+ AlertCircle
 } from "lucide-react";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
 import Image from "next/image";
@@ -160,162 +165,300 @@ const initialState: State = {
 };
 
 export function BillingOperationsPanel({
- viewMode = "rates",
- propertyId = "all",
- utilityType
+	viewMode = "rates",
+	propertyId = "all",
+	utilityType,
+	embedded = false,
+	onDirtyChange,
+	onRegisterSave,
+	onRegisterDiscard,
 }: {
- viewMode?: "rates" | "gcash",
- propertyId?: string,
- utilityType?: "water" | "electricity"
+	viewMode?: "rates" | "gcash";
+	propertyId?: string;
+	utilityType?: "water" | "electricity";
+	embedded?: boolean;
+	onDirtyChange?: (isDirty: boolean) => void;
+	onRegisterSave?: (saveFn: () => Promise<boolean>) => void;
+	onRegisterDiscard?: (discardFn: () => void) => void;
 }) {
- const [state, dispatch] = useReducer(reducer, initialState);
- const {
- workspace,
- configs,
- loading,
- saving,
- message,
- isFooterExpanded,
- showBreakdown,
- helpContent,
- accountName,
- accountNumber,
- isEnabled,
- qrPreview,
- removeQr
- } = state;
+	const [state, dispatch] = useReducer(reducer, initialState);
+	const {
+		workspace,
+		configs,
+		loading,
+		saving,
+		message,
+		isFooterExpanded,
+		showBreakdown,
+		helpContent,
+		accountName,
+		accountNumber,
+		isEnabled,
+		qrPreview,
+		removeQr
+	} = state;
 
- const [mounted, setMounted] = useState(false);
- useEffect(() => {
- setMounted(true);
- }, []);
+	const [mounted, setMounted] = useState(false);
+	useEffect(() => {
+		setMounted(true);
+	}, []);
 
- useEffect(() => {
- let alive = true;
- const load = async () => {
- try {
- const response = await fetch("/api/landlord/payment-settings", { cache: "no-store" });
- if (!response.ok) throw new Error();
- const payload = (await response.json()) as BillingWorkspace;
- if (!alive) return;
- 
- const seededConfigs = payload.utilityConfigs.map((config) =>
- makeDraft({
- localId: config.id,
- id: config.id,
- property_id: config.property_id,
- unit_id: config.unit_id,
- utility_type: config.utility_type,
- billing_mode: config.billing_mode,
- rate_per_unit: Number(config.rate_per_unit),
- unit_label: config.unit_label as "kwh" | "cubic_meter",
- is_active: config.is_active,
- effective_from: config.effective_from,
- effective_to: config.effective_to,
- note: config.note,
- }),
- );
+	const initialPaymentRef = useRef<{
+		accountName: string;
+		accountNumber: string;
+		isEnabled: boolean;
+		qrPreview: string | null;
+	} | null>(null);
 
- for (const property of payload.properties) {
- for (const utility of ["water", "electricity"] as const) {
- const exists = seededConfigs.some((config) => 
- config.property_id === property.id && 
- config.utility_type === utility && 
- config.unit_id === null
- );
- if (!exists) {
- seededConfigs.push(makeDraft({ 
- property_id: property.id, 
- utility_type: utility, 
- unit_label: utility === "water" ? "cubic_meter" : "kwh" 
- }));
- }
- }
- }
- 
- dispatch({ type: "SET_WORKSPACE", payload });
- dispatch({ type: "SET_CONFIGS", payload: seededConfigs });
- dispatch({ 
- type: "UPDATE_PAYMENT", 
- payload: {
- accountName: (payload.paymentDestination as any)?.account_name ?? "",
- accountNumber: (payload.paymentDestination as any)?.account_number ?? "",
- isEnabled: (payload.paymentDestination as any)?.is_enabled ?? true,
- qrPreview: (payload.paymentDestination as any)?.qr_image_url ?? null
- }
- });
- } catch (err) {
- console.error(err);
- if (alive) dispatch({ type: "SET_MESSAGE", payload: { type: "error", value: "Unable to load billing settings." } });
- } finally {
- if (alive) dispatch({ type: "SET_LOADING", payload: false });
- }
- };
- load();
- return () => { alive = false; };
- }, []);
+	const initialConfigsRef = useRef<string | null>(null);
 
- const updateConfig = useCallback((localId: string, patch: Partial<UtilityConfigDraft>) => {
- dispatch({ type: "UPDATE_CONFIG", id: localId, payload: patch });
- }, []);
+	useEffect(() => {
+		let alive = true;
+		const load = async () => {
+			try {
+				const response = await fetch("/api/landlord/payment-settings", { cache: "no-store" });
+				if (!response.ok) throw new Error();
+				const payload = (await response.json()) as BillingWorkspace;
+				if (!alive) return;
+				
+				const seededConfigs = payload.utilityConfigs.map((config) =>
+					makeDraft({
+						localId: config.id,
+						id: config.id,
+						property_id: config.property_id,
+						unit_id: config.unit_id,
+						utility_type: config.utility_type,
+						billing_mode: config.billing_mode,
+						rate_per_unit: Number(config.rate_per_unit),
+						unit_label: config.unit_label as "kwh" | "cubic_meter",
+						is_active: config.is_active,
+						effective_from: config.effective_from,
+						effective_to: config.effective_to,
+						note: config.note,
+					}),
+				);
 
- const addOverride = useCallback((pId: string, type: "water" | "electricity") => {
- dispatch({ type: "ADD_CONFIG", payload: makeDraft({ property_id: pId, utility_type: type, unit_label: type === "water" ? "cubic_meter" : "kwh", unit_id: "" }) });
- }, []);
+				for (const property of payload.properties) {
+					for (const utility of ["water", "electricity"] as const) {
+						const exists = seededConfigs.some((config) => 
+							config.property_id === property.id && 
+							config.utility_type === utility && 
+							config.unit_id === null
+						);
+						if (!exists) {
+							seededConfigs.push(makeDraft({ 
+								property_id: property.id, 
+								utility_type: utility, 
+								unit_label: utility === "water" ? "cubic_meter" : "kwh" 
+							}));
+						}
+					}
+				}
+				
+				initialPaymentRef.current = {
+					accountName: (payload.paymentDestination as any)?.account_name ?? "",
+					accountNumber: (payload.paymentDestination as any)?.account_number ?? "",
+					isEnabled: (payload.paymentDestination as any)?.is_enabled ?? true,
+					qrPreview: (payload.paymentDestination as any)?.qr_image_url ?? null
+				};
 
- const removeConfig = useCallback((localId: string) => {
- dispatch({ type: "REMOVE_CONFIG", id: localId });
- }, []);
+				initialConfigsRef.current = JSON.stringify(seededConfigs.map((c) => ({
+					id: c.id,
+					property_id: c.property_id,
+					unit_id: c.unit_id,
+					utility_type: c.utility_type,
+					billing_mode: c.billing_mode,
+					rate_per_unit: Number(c.rate_per_unit) || 0,
+					responsibility_mode: c.responsibility_mode
+				})));
 
- const save = async () => {
- try {
- dispatch({ type: "SET_SAVING", payload: true });
- dispatch({ type: "SET_MESSAGE", payload: null });
- const formData = new FormData();
- formData.append("accountName", accountName);
- formData.append("accountNumber", accountNumber);
- formData.append("isEnabled", String(isEnabled));
- formData.append("removeQr", String(removeQr));
- formData.append(
- "utilityConfigs",
- JSON.stringify(
- configs.map((config) => ({
- id: config.id,
- property_id: config.property_id,
- unit_id: config.unit_id,
- utility_type: config.utility_type,
- billing_mode: config.billing_mode,
- rate_per_unit: config.rate_per_unit,
- unit_label: config.unit_label,
- is_active: config.is_active,
- effective_from: config.effective_from,
- effective_to: config.effective_to,
- note: config.note,
- })),
- ),
- );
- if (state.qrFile) formData.append("qr", state.qrFile);
+				dispatch({ type: "SET_WORKSPACE", payload });
+				dispatch({ type: "SET_CONFIGS", payload: seededConfigs });
+				dispatch({ 
+					type: "UPDATE_PAYMENT", 
+					payload: {
+						accountName: (payload.paymentDestination as any)?.account_name ?? "",
+						accountNumber: (payload.paymentDestination as any)?.account_number ?? "",
+						isEnabled: (payload.paymentDestination as any)?.is_enabled ?? true,
+						qrPreview: (payload.paymentDestination as any)?.qr_image_url ?? null
+					}
+				});
+			} catch (err) {
+				console.error(err);
+				if (alive) dispatch({ type: "SET_MESSAGE", payload: { type: "error", value: "Unable to load billing settings." } });
+			} finally {
+				if (alive) dispatch({ type: "SET_LOADING", payload: false });
+			}
+		};
+		load();
+		return () => { alive = false; };
+	}, []);
 
- const response = await fetch("/api/landlord/payment-settings", { method: "POST", body: formData });
- if (!response.ok) throw new Error();
- const payload = (await response.json()) as BillingWorkspace;
- 
- dispatch({ type: "SET_WORKSPACE", payload });
- dispatch({ 
- type: "UPDATE_PAYMENT", 
- payload: {
- qrFile: null,
- removeQr: false,
- qrPreview: (payload.paymentDestination as any)?.qr_image_url ?? null
- }
- });
- dispatch({ type: "SET_MESSAGE", payload: { type: "success", value: "Settings saved successfully." } });
- } catch {
- dispatch({ type: "SET_MESSAGE", payload: { type: "error", value: "Failed to save settings." } });
- } finally {
- dispatch({ type: "SET_SAVING", payload: false });
- }
- };
+	const updateConfig = useCallback((localId: string, patch: Partial<UtilityConfigDraft>) => {
+		dispatch({ type: "UPDATE_CONFIG", id: localId, payload: patch });
+	}, []);
+
+	const addOverride = useCallback((pId: string, type: "water" | "electricity") => {
+		dispatch({ type: "ADD_CONFIG", payload: makeDraft({ property_id: pId, utility_type: type, unit_label: type === "water" ? "cubic_meter" : "kwh", unit_id: "" }) });
+	}, []);
+
+	const removeConfig = useCallback((localId: string) => {
+		dispatch({ type: "REMOVE_CONFIG", id: localId });
+	}, []);
+
+	const isGcashDirty = useMemo(() => {
+		if (!initialPaymentRef.current) return false;
+		const init = initialPaymentRef.current;
+		return (
+			accountName !== init.accountName ||
+			accountNumber !== init.accountNumber ||
+			isEnabled !== init.isEnabled ||
+			removeQr ||
+			state.qrFile !== null
+		);
+	}, [accountName, accountNumber, isEnabled, removeQr, state.qrFile]);
+
+	const isRatesDirty = useMemo(() => {
+		if (!initialConfigsRef.current) return false;
+		const currentSerialized = JSON.stringify(configs.map((c) => ({
+			id: c.id,
+			property_id: c.property_id,
+			unit_id: c.unit_id,
+			utility_type: c.utility_type,
+			billing_mode: c.billing_mode,
+			rate_per_unit: Number(c.rate_per_unit) || 0,
+			responsibility_mode: c.responsibility_mode
+		})));
+		return currentSerialized !== initialConfigsRef.current;
+	}, [configs]);
+
+	const isPanelDirty = viewMode === "gcash" ? isGcashDirty : isRatesDirty;
+
+	useEffect(() => {
+		if (embedded && onDirtyChange) {
+			onDirtyChange(isPanelDirty);
+		}
+	}, [embedded, onDirtyChange, isPanelDirty]);
+
+	const save = useCallback(async (): Promise<boolean> => {
+		try {
+			dispatch({ type: "SET_SAVING", payload: true });
+			dispatch({ type: "SET_MESSAGE", payload: null });
+			const formData = new FormData();
+
+			if (viewMode === "gcash") {
+				const cleanName = accountName.trim();
+				const cleanNumber = accountNumber.replace(/\D/g, "");
+
+				if (!cleanName || cleanName.length < 2) {
+					dispatch({
+						type: "SET_MESSAGE",
+						payload: { type: "error", value: "Please provide a valid Account Name (minimum 2 characters)." }
+					});
+					return false;
+				}
+
+				if (!/^09\d{9}$/.test(cleanNumber)) {
+					dispatch({
+						type: "SET_MESSAGE",
+						payload: { type: "error", value: "Please provide a valid 11-digit GCash mobile number starting with 09 (e.g. 09171234567)." }
+					});
+					return false;
+				}
+
+				formData.append("saveType", "gcash");
+				formData.append("accountName", cleanName);
+				formData.append("accountNumber", cleanNumber);
+				formData.append("isEnabled", String(isEnabled));
+				formData.append("removeQr", String(removeQr));
+				if (state.qrFile) formData.append("qr", state.qrFile);
+			} else {
+				formData.append("saveType", "rates");
+				const validConfigs = configs
+					.filter((c) => c.property_id && c.property_id !== "all")
+					.map((config) => ({
+						id: config.id,
+						property_id: config.property_id,
+						unit_id: config.unit_id && typeof config.unit_id === "string" && config.unit_id.trim() ? config.unit_id.trim() : null,
+						utility_type: config.utility_type,
+						billing_mode: config.billing_mode,
+						rate_per_unit: Number(config.rate_per_unit) || 0,
+						unit_label: config.unit_label,
+						is_active: Boolean(config.is_active),
+						effective_from: config.effective_from || today,
+						effective_to: config.effective_to || null,
+						note: config.note || null,
+					}));
+				formData.append("utilityConfigs", JSON.stringify(validConfigs));
+			}
+
+			const response = await fetch("/api/landlord/payment-settings", { method: "POST", body: formData });
+			if (!response.ok) {
+				const errorData = await response.json().catch(() => null);
+				throw new Error(errorData?.error || "Failed to save settings.");
+			}
+			const payload = (await response.json()) as BillingWorkspace;
+			
+			dispatch({ type: "SET_WORKSPACE", payload });
+			initialPaymentRef.current = {
+				accountName: (payload.paymentDestination as any)?.account_name ?? accountName.trim(),
+				accountNumber: (payload.paymentDestination as any)?.account_number ?? accountNumber.replace(/\D/g, ""),
+				isEnabled: (payload.paymentDestination as any)?.is_enabled ?? isEnabled,
+				qrPreview: (payload.paymentDestination as any)?.qr_image_url ?? qrPreview
+			};
+			if (viewMode === "rates") {
+				initialConfigsRef.current = JSON.stringify(configs.map((c) => ({
+					id: c.id,
+					property_id: c.property_id,
+					unit_id: c.unit_id,
+					utility_type: c.utility_type,
+					billing_mode: c.billing_mode,
+					rate_per_unit: Number(c.rate_per_unit) || 0,
+					responsibility_mode: c.responsibility_mode
+				})));
+			}
+			dispatch({ 
+				type: "UPDATE_PAYMENT", 
+				payload: {
+					qrFile: null,
+					removeQr: false,
+					qrPreview: (payload.paymentDestination as any)?.qr_image_url ?? null
+				}
+			});
+			const successMsg = viewMode === "gcash" ? "GCash settings saved successfully." : "Utility rates saved successfully.";
+			dispatch({ type: "SET_MESSAGE", payload: { type: "success", value: successMsg } });
+			return true;
+		} catch (error: any) {
+			dispatch({ type: "SET_MESSAGE", payload: { type: "error", value: error?.message || "Failed to save settings." } });
+			return false;
+		} finally {
+			dispatch({ type: "SET_SAVING", payload: false });
+		}
+	}, [viewMode, accountName, accountNumber, isEnabled, removeQr, state.qrFile, configs, qrPreview]);
+
+	const discard = useCallback(() => {
+		if (viewMode === "gcash" && initialPaymentRef.current) {
+			dispatch({
+				type: "UPDATE_PAYMENT",
+				payload: {
+					accountName: initialPaymentRef.current.accountName,
+					accountNumber: initialPaymentRef.current.accountNumber,
+					isEnabled: initialPaymentRef.current.isEnabled,
+					qrPreview: initialPaymentRef.current.qrPreview,
+					qrFile: null,
+					removeQr: false,
+				}
+			});
+			dispatch({ type: "SET_MESSAGE", payload: null });
+		}
+	}, [viewMode]);
+
+	useEffect(() => {
+		if (embedded) {
+			onRegisterSave?.(save);
+			onRegisterDiscard?.(discard);
+		}
+	}, [embedded, onRegisterSave, onRegisterDiscard, save, discard]);
 
 
 
@@ -473,7 +616,8 @@ export function BillingOperationsPanel({
  </div>
  )}
  </AnimatePresence>
- {/* Collapsible Sticky Action Footer */}
+ {/* Collapsible Sticky Action Footer (Hidden when embedded in settings) */}
+ {!embedded && (
  <div className="fixed -bottom-4 left-0 right-0 z-50 flex justify-center pointer-events-none">
  <motion.div 
  layout
@@ -539,145 +683,323 @@ export function BillingOperationsPanel({
  </AnimatePresence>
  </motion.div>
  </div>
-
- {message && (
- <motion.div
- initial={{ opacity: 0, y: -10 }}
- animate={{ opacity: 1, y: 0 }}
- className={cn(
- "flex items-center gap-3 rounded-2xl border p-4",
- message.type === "success"
- ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400"
- : "border-red-200 bg-red-50 text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400"
- )}
- >
- {message.type === "success" ? <CheckCircle2 className="size-5" /> : <Info className="size-5" />}
- <span className="text-sm font-black">{message.value}</span>
- </motion.div>
  )}
 
- {/* GCASH MODE */}
- {viewMode === "gcash" && (
- <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
- <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
- <div className="lg:col-span-3 space-y-6">
- <div className="rounded-3xl neumorphic-panel p-8 ">
- <div className="flex items-center gap-4 mb-8">
- <div className="rounded-2xl bg-primary/10 p-3 text-primary">
- <Smartphone className="size-6" />
- </div>
- <div>
- <h4 className="text-lg font-black text-foreground">GCash Integration</h4>
- <p className="text-xs text-muted-foreground">Receive payments directly from tenants</p>
- </div>
- </div>
+				{message && (
+					<motion.div
+						initial={{ opacity: 0, y: -10 }}
+						animate={{ opacity: 1, y: 0 }}
+						exit={{ opacity: 0, y: -10 }}
+						className={cn(
+							"flex items-center justify-between gap-3 rounded-2xl border p-4 shadow-sm",
+							message.type === "success"
+								? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+								: "border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-300"
+						)}
+					>
+						<div className="flex items-center gap-3">
+							{message.type === "success" ? <CheckCircle2 className="size-5 text-emerald-500 shrink-0" /> : <Info className="size-5 text-red-500 shrink-0" />}
+							<span className="text-sm font-bold">{message.value}</span>
+						</div>
+						<button
+							type="button"
+							onClick={() => dispatch({ type: 'SET_MESSAGE', payload: null })}
+							className="size-8 flex items-center justify-center rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer text-muted-foreground hover:text-foreground"
+						>
+							<X className="size-4" />
+						</button>
+					</motion.div>
+				)}
 
- <div className="grid gap-6 md:grid-cols-2">
- <Field label="Account Name">
- <input
- value={accountName}
- placeholder="e.g. Juan Dela Cruz"
- onChange={(event) => dispatch({ type: 'UPDATE_PAYMENT', payload: { accountName: event.target.value } })}
- className="w-full rounded-xl neumorphic-inset dark:bg-white/[0.03] px-4 py-3 text-sm font-black text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10"
- />
- </Field>
- <Field label="GCash Number">
- <input
- value={accountNumber}
- placeholder="0917 XXX XXXX"
- onChange={(event) => dispatch({ type: 'UPDATE_PAYMENT', payload: { accountNumber: event.target.value } })}
- className="w-full rounded-xl neumorphic-inset dark:bg-white/[0.03] px-4 py-3 text-sm font-black text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10"
- />
- </Field>
- </div>
+				{/* GCASH MODE */}
+				{viewMode === "gcash" && (
+					<section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+						<div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+							{/* Configuration Form Card */}
+							<div className="lg:col-span-7 space-y-6">
+								<div className="rounded-3xl neumorphic-panel p-6 sm:p-8 space-y-6">
+									{/* Card Header */}
+									<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-border/60">
+										<div className="flex items-center gap-3.5">
+											<div className="size-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+												<Smartphone className="size-6" />
+											</div>
+											<div>
+												<h3 className="text-lg sm:text-xl font-black text-foreground tracking-tight">GCash Direct Payments</h3>
+												<p className="text-xs text-muted-foreground mt-0.5">Receive rent and utility payments directly to your GCash account</p>
+											</div>
+										</div>
 
- <div className="mt-8 flex flex-col sm:flex-row items-center gap-4">
- <div 
- onClick={() => dispatch({ type: 'UPDATE_PAYMENT', payload: { isEnabled: !isEnabled } })}
- className={cn(
- "flex flex-1 w-full cursor-pointer items-center justify-between rounded-2xl border p-4 transition-all select-none",
- isEnabled ? "border-primary/30 bg-primary/5 dark:bg-primary/[0.03]" : "border-border neumorphic-inset dark:bg-white/[0.02]"
- )}
- >
- <div className="space-y-0.5 pr-3">
- <span className="text-xs font-black text-foreground">Enable Payments</span>
- <p className="text-[10px] text-muted-foreground leading-tight">Allow tenants to use this method</p>
- </div>
- <div
- className={cn(
- "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out",
- isEnabled ? "bg-primary shadow-sm shadow-primary/30" : "bg-zinc-700/60 dark:bg-zinc-800"
- )}
- >
- <span
- className={cn(
- "pointer-events-none inline-block size-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out",
- isEnabled ? "translate-x-5" : "translate-x-0"
- )}
- />
- </div>
- <label htmlFor="enable-payments" className="sr-only">Enable Payments</label>
- <input id="enable-payments" type="checkbox" checked={isEnabled} onChange={() => dispatch({ type: 'UPDATE_PAYMENT', payload: { isEnabled: !isEnabled } })} className="hidden" />
- </div>
+										<div className={cn(
+											"inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-black shrink-0 self-start sm:self-auto transition-all",
+											isEnabled
+												? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+												: "bg-muted text-muted-foreground border border-border"
+										)}>
+											<span className={cn("size-2 rounded-full", isEnabled ? "bg-emerald-500 animate-pulse" : "bg-muted-foreground/50")} />
+											<span>{isEnabled ? "Accepting Payments" : "Payments Disabled"}</span>
+										</div>
+									</div>
 
- <label htmlFor="qr-upload" className="flex flex-1 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border p-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground transition-all hover:neumorphic-inset hover:border-primary/40 hover:text-primary">
- <input id="qr-upload" type="file" accept="image/*" className="hidden" onChange={(event) => { const file = event.target.files?.[0] ?? null; if (file) { dispatch({ type: 'UPDATE_PAYMENT', payload: { qrFile: file, qrPreview: URL.createObjectURL(file), removeQr: false } }); } else { dispatch({ type: 'UPDATE_PAYMENT', payload: { qrFile: null } }); } }} />
- <QrCode className="size-5 mb-1" />
- {qrPreview ? "Change QR Code" : "Upload QR Code"}
- </label>
- </div>
+									{/* Input Fields */}
+									<div className="grid gap-5 sm:grid-cols-2">
+										<div className="space-y-1.5 min-w-0">
+											<div className="flex items-center gap-1.5 px-1 whitespace-nowrap min-w-0">
+												<User className="size-3.5 text-primary shrink-0" />
+												<label className="text-xs font-black uppercase tracking-wider text-foreground/80 whitespace-nowrap">Account Name</label>
+											</div>
+											<input
+												value={accountName}
+												placeholder="e.g. Marina Reyes"
+												maxLength={60}
+												onChange={(event) => {
+													const sanitized = event.target.value.replace(/[^a-zA-Z\s.,'-]/g, "");
+													dispatch({ type: 'UPDATE_PAYMENT', payload: { accountName: sanitized } });
+												}}
+												className={cn(
+													"w-full rounded-xl neumorphic-inset px-4 py-3 text-sm font-bold text-foreground placeholder:text-muted-foreground/40 outline-none transition-all focus:ring-2",
+													accountName.length > 0 && accountName.trim().length < 2
+														? "ring-1 ring-rose-500/40 focus:ring-rose-500/30"
+														: "focus:ring-primary/20"
+												)}
+											/>
+											{accountName.length > 0 && accountName.trim().length < 2 ? (
+												<p className="px-1 text-[11px] font-bold text-rose-500 flex items-center gap-1 whitespace-nowrap">
+													<AlertCircle className="size-3 shrink-0" />
+													Minimum 2 characters required
+												</p>
+											) : (
+												<p className="px-1 text-[11px] text-muted-foreground whitespace-nowrap truncate">
+													Must match your verified GCash name
+												</p>
+											)}
+										</div>
 
- <AnimatePresence>
- {qrPreview && (
- <motion.button
- initial={{ opacity: 0, height: 0 }}
- animate={{ opacity: 1, height: "auto" }}
- exit={{ opacity: 0, height: 0 }}
- type="button"
- onClick={() => { dispatch({ type: 'UPDATE_PAYMENT', payload: { removeQr: true, qrFile: null, qrPreview: null } }); }}
- className="mt-4 w-full flex items-center justify-center gap-2 rounded-xl border border-red-100 dark:border-red-500/20 bg-red-50 dark:bg-red-500/10 px-4 py-3 text-xs font-black text-red-600 dark:text-red-400 transition-all hover:bg-red-100 dark:hover:bg-red-500/20"
- >
- <Trash2 className="size-4 w-4" />
- Remove QR Code
- </motion.button>
- )}
- </AnimatePresence>
- </div>
- </div>
+										<div className="space-y-1.5 min-w-0">
+											<div className="flex items-center gap-1.5 px-1 whitespace-nowrap min-w-0">
+												<Phone className="size-3.5 text-primary shrink-0" />
+												<label className="text-xs font-black uppercase tracking-wider text-foreground/80 whitespace-nowrap">GCash Number</label>
+											</div>
+											<input
+												type="tel"
+												inputMode="numeric"
+												value={accountNumber}
+												placeholder="09171234567"
+												maxLength={11}
+												onChange={(event) => {
+													const digitsOnly = event.target.value.replace(/\D/g, "").slice(0, 11);
+													dispatch({ type: 'UPDATE_PAYMENT', payload: { accountNumber: digitsOnly } });
+												}}
+												className={cn(
+													"w-full rounded-xl neumorphic-inset px-4 py-3 text-sm font-mono font-bold text-foreground placeholder:text-muted-foreground/40 outline-none transition-all focus:ring-2",
+													accountNumber.length > 0 && !/^09\d{9}$/.test(accountNumber)
+														? (accountNumber.length >= 2 && !accountNumber.startsWith("09"))
+															? "ring-1 ring-rose-500/40 focus:ring-rose-500/30"
+															: "ring-1 ring-amber-500/40 focus:ring-amber-500/30"
+														: "focus:ring-primary/20"
+												)}
+											/>
+											{accountNumber.length >= 2 && !accountNumber.startsWith("09") ? (
+												<p className="px-1 text-[11px] font-bold text-rose-500 flex items-center gap-1 whitespace-nowrap">
+													<AlertCircle className="size-3 shrink-0" />
+													Must begin with 09 (e.g. 0917...)
+												</p>
+											) : accountNumber.length > 0 && accountNumber.length < 11 ? (
+												<p className="px-1 text-[11px] font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1 whitespace-nowrap">
+													<AlertCircle className="size-3 shrink-0" />
+													{11 - accountNumber.length} more digit{11 - accountNumber.length > 1 ? "s" : ""} needed
+												</p>
+											) : (
+												<p className="px-1 text-[11px] text-muted-foreground whitespace-nowrap truncate">
+													11-digit mobile number starting with 09
+												</p>
+											)}
+										</div>
+									</div>
 
- {/* Simple Preview Card */}
- <div className="lg:col-span-2">
- <div className="sticky top-24 rounded-3xl neumorphic-panel p-8 text-center ">
- <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-6">Tenant View Preview</p>
+									{/* Payment Status Toggle Card */}
+									<div className="rounded-2xl border border-border/80 neumorphic-inset/30 p-4 sm:p-5 flex items-center justify-between gap-4">
+										<div className="space-y-0.5 pr-2">
+											<div className="flex items-center gap-2">
+												<span className="text-sm font-black text-foreground">Enable GCash for Rent Invoices</span>
+												{isEnabled && (
+													<span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 text-[10px] font-black uppercase tracking-wider">
+														Active
+													</span>
+												)}
+											</div>
+											<p className="text-xs text-muted-foreground leading-relaxed">
+												When enabled, tenants will see this recipient and QR code when paying monthly rent.
+											</p>
+										</div>
+										<button
+											type="button"
+											role="switch"
+											aria-checked={isEnabled}
+											onClick={() => dispatch({ type: 'UPDATE_PAYMENT', payload: { isEnabled: !isEnabled } })}
+											className={cn(
+												"relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary/30",
+												isEnabled ? "bg-primary" : "bg-neutral-300 dark:bg-neutral-700"
+											)}
+										>
+											<span
+												className={cn(
+													"pointer-events-none inline-block size-6 transform rounded-full bg-white shadow-md transition duration-200 ease-in-out",
+													isEnabled ? "translate-x-5" : "translate-x-0"
+												)}
+											/>
+										</button>
+									</div>
 
- <div className="relative mx-auto mb-6 aspect-square w-48 overflow-hidden rounded-2xl bg-white/90 dark:bg-white/10 p-6 ">
- {qrPreview ? (
- <Image src={qrPreview} alt="QR Preview" width={200} height={200} unoptimized className="h-full w-full object-contain" />
- ) : (
- <div className="flex h-full flex-col items-center justify-center gap-2 text-muted-foreground/30">
- <QrCode className="size-10" />
- <span className="text-[10px] font-black">No QR Uploaded</span>
- </div>
- )}
- </div>
 
- <div className="space-y-1.5 py-4 border-t border-border">
- <h5 className="text-lg font-black text-foreground truncate">{accountName || "Juan Dela Cruz"}</h5>
- <div className="flex items-center justify-center gap-2">
- <CreditCard className="size-3.5" />
- <p className="font-mono text-sm font-black text-primary tracking-tight">{accountNumber || "0000 000 0000"}</p>
- </div>
- </div>
 
- <div className="mt-6 flex justify-center items-center gap-2 text-[10px] font-black text-muted-foreground/40">
- <ShieldCheck className="size-3.5" />
- <span>iReside Secure Payment</span>
- </div>
- </div>
- </div>
- </div>
- </section>
- )}
+									{/* Footer Actions */}
+									<div className="pt-4 border-t border-border/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+										<div className="flex items-center gap-2 text-xs text-muted-foreground">
+											<ShieldCheck className="size-4 text-emerald-500 shrink-0" />
+											<span>Direct transfers • Zero platform deduction</span>
+										</div>
+
+										{!embedded && (
+											<button
+												type="button"
+												onClick={save}
+												disabled={saving}
+												className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl neumorphic-primary px-6 py-3 text-xs font-black uppercase tracking-wider text-primary-foreground shadow-md transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 cursor-pointer shrink-0"
+											>
+												{saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+												Save GCash Settings
+											</button>
+										)}
+									</div>
+								</div>
+							</div>
+
+							{/* Tenant View Preview Card */}
+							<div className="lg:col-span-5 sticky top-24">
+								<div className="rounded-3xl neumorphic-panel p-6 sm:p-7 relative overflow-hidden border border-border/80 space-y-5">
+									<div className="flex items-center justify-between pb-3 border-b border-border/60">
+										<div className="flex items-center gap-2">
+											<div className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+											<span className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Tenant View Preview</span>
+										</div>
+										<span className="text-[10px] font-bold text-muted-foreground/60 px-2 py-0.5 rounded-md bg-muted/50 border border-border/50">
+											Live Card
+										</span>
+									</div>
+
+									{/* Mobile Payment Card Mockup */}
+									<div className="rounded-2xl border border-border/80 bg-gradient-to-b from-card via-card to-muted/20 p-5 shadow-sm text-center space-y-4">
+										{/* Top Brand Pill */}
+										<div className="flex items-center justify-between px-1">
+											<div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-600 text-white text-[10px] font-black uppercase tracking-wider shadow-sm">
+												<Smartphone className="size-3" />
+												GCash Direct
+											</div>
+											<span className={cn("text-[10px] font-bold", isEnabled ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground")}>
+												● {isEnabled ? "Accepting" : "Disabled"}
+											</span>
+										</div>
+
+										{/* Interactive QR Code Container & Controls */}
+										<div className="space-y-3">
+											<div className="group/qr relative mx-auto aspect-square w-48 overflow-hidden rounded-2xl bg-white p-3.5 shadow-md border border-neutral-200/80 dark:border-neutral-700/80 flex flex-col items-center justify-center transition-all">
+												{qrPreview ? (
+													<>
+														<Image src={qrPreview} alt="GCash QR Preview" width={180} height={180} unoptimized className="h-full w-full object-contain" />
+														{/* Hover overlay */}
+														<label
+															htmlFor="side-qr-upload"
+															className="absolute inset-0 bg-black/60 opacity-0 group-hover/qr:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 text-white cursor-pointer"
+														>
+															<Upload className="size-6 text-white" />
+															<span className="text-xs font-black tracking-wide">Replace QR</span>
+														</label>
+														<button
+															type="button"
+															onClick={(e) => {
+																e.stopPropagation();
+																dispatch({ type: 'UPDATE_PAYMENT', payload: { removeQr: true, qrFile: null, qrPreview: null } });
+															}}
+															className="absolute top-2 right-2 z-10 size-7 rounded-lg bg-red-600 hover:bg-red-700 text-white flex items-center justify-center opacity-0 group-hover/qr:opacity-100 transition-opacity shadow-sm cursor-pointer"
+															title="Remove QR code"
+														>
+															<Trash2 className="size-3.5" />
+														</button>
+													</>
+												) : (
+													<label
+														htmlFor="side-qr-upload"
+														className="w-full h-full flex flex-col items-center justify-center gap-2 border-2 border-dashed border-primary/30 hover:border-primary rounded-xl text-muted-foreground hover:text-primary cursor-pointer transition-colors p-2 text-center group/empty"
+													>
+														<div className="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover/empty:scale-110 transition-transform">
+															<Upload className="size-4" />
+														</div>
+														<div className="space-y-0.5">
+															<span className="text-[11px] font-black text-foreground block">Upload GCash QR</span>
+															<span className="text-[9px] text-muted-foreground block">Click to select image</span>
+														</div>
+													</label>
+												)}
+											</div>
+
+											{/* Hidden file input */}
+											<input
+												id="side-qr-upload"
+												type="file"
+												accept="image/*"
+												className="hidden"
+												onChange={(event) => {
+													const file = event.target.files?.[0] ?? null;
+													if (file) {
+														dispatch({ type: 'UPDATE_PAYMENT', payload: { qrFile: file, qrPreview: URL.createObjectURL(file), removeQr: false } });
+													}
+												}}
+											/>
+
+											{/* Remove action if QR exists */}
+											{qrPreview && (
+												<div className="flex items-center justify-center">
+													<button
+														type="button"
+														onClick={() => dispatch({ type: 'UPDATE_PAYMENT', payload: { removeQr: true, qrFile: null, qrPreview: null } })}
+														className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-red-200 dark:border-red-500/20 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-xs font-bold text-red-600 dark:text-red-400 transition-all cursor-pointer shadow-xs"
+													>
+														<Trash2 className="size-3" />
+														<span>Remove QR</span>
+													</button>
+												</div>
+											)}
+										</div>
+
+										{/* Recipient Info */}
+										<div className="space-y-1 pt-1 border-t border-border/40">
+											<p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">Official Recipient</p>
+											<h4 className="text-base sm:text-lg font-black text-foreground truncate flex items-center justify-center gap-1.5">
+												{accountName || "Juan Dela Cruz"}
+												{accountName && <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />}
+											</h4>
+											<div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl neumorphic-inset text-xs font-mono font-black text-primary mt-1">
+												<Phone className="size-3 text-primary/70" />
+												<span>{accountNumber || "0917 XXX XXXX"}</span>
+											</div>
+										</div>
+
+										{/* Helper Notice */}
+										<p className="text-[11px] text-muted-foreground leading-relaxed px-2 border-t border-border/40 pt-3">
+											Tenants scan this QR code or use the number in their GCash app to send direct payments.
+										</p>
+									</div>
+
+									<div className="flex items-center justify-center gap-1.5 text-[10px] font-black text-muted-foreground/60 pt-1">
+										<ShieldCheck className="size-3.5 text-primary/70" />
+										<span>Verified iReside Landlord Payment Channel</span>
+									</div>
+								</div>
+							</div>
+						</div>
+					</section>
+				)}
 
  {/* RENT CONFIG MODE */}
  {viewMode === "rates" && (
@@ -849,6 +1171,32 @@ export function BillingOperationsPanel({
  </div>
  </div>
  ))}
+ {embedded && (
+ <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-6 rounded-2xl neumorphic-panel mt-8">
+ <div>
+ <p className="text-sm font-black text-foreground">Save Utility Rate Rules</p>
+ <p className="text-xs text-muted-foreground">Save default rates and unit overrides for this property.</p>
+ </div>
+ <div className="flex items-center gap-3">
+ <button
+ type="button"
+ onClick={() => dispatch({ type: 'SET_SHOW_BREAKDOWN', payload: true })}
+ className="px-4 py-2.5 rounded-xl border border-border/60 hover:neumorphic-inset text-xs font-black text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+ >
+ Review Breakdown
+ </button>
+ <button
+ type="button"
+ onClick={save}
+ disabled={saving}
+ className="inline-flex items-center gap-2 rounded-xl neumorphic-primary px-6 py-2.5 text-xs font-black uppercase tracking-wider text-primary-foreground shadow-md transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 cursor-pointer"
+ >
+ {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+ Confirm Changes
+ </button>
+ </div>
+ </div>
+ )}
  </section>
  )}
  </div>
@@ -865,9 +1213,9 @@ function Field({
  onHelp?: () => void;
 }) {
  return (
- <div className="block space-y-2">
- <div className="flex items-center gap-2 pl-1">
- <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{label}</span>
+ <div className="block space-y-2 min-w-0">
+ <div className="flex items-center gap-2 pl-1 whitespace-nowrap min-w-0">
+ <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground whitespace-nowrap">{label}</span>
  {onHelp && (
  <button 
  type="button"

@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, useRef, type ReactNode } from "react";
 import Image from "next/image";
 import { 
     CheckCircle2, Clock3, Loader2, QrCode, Receipt, Send, X, XCircle, 
     FileText, User, Building2, Hash, ArrowUpRight, ShieldCheck, 
-    AlertTriangle, Info, ChevronRight, MessageSquare, History,
+    AlertTriangle, Info, ChevronRight, ChevronDown, MessageSquare, History,
     CheckCircle, AlertCircle, HelpCircle, Wallet
 } from "lucide-react";
 import { createPortal } from "react-dom";
@@ -47,6 +47,50 @@ export function InvoiceModal({
     const [mismatchResolution, setMismatchResolution] = useState<"accept_partial" | "request_completion" | "reject">("accept_partial");
     const [activeTab, setActiveTab] = useState<"approve" | "issue">("approve");
     const [refundProofFile, setRefundProofFile] = useState<File | null>(null);
+
+    // Scroll Detection & Indicators
+    const leftPanelRef = useRef<HTMLDivElement>(null);
+    const rightPanelRef = useRef<HTMLDivElement>(null);
+    const [leftCanScroll, setLeftCanScroll] = useState(false);
+    const [rightCanScroll, setRightCanScroll] = useState(false);
+
+    const checkScroll = (el: HTMLElement | null, setter: (val: boolean) => void) => {
+        if (!el) {
+            setter(false);
+            return;
+        }
+        const hasMore = el.scrollHeight - el.scrollTop - el.clientHeight > 24;
+        setter(hasMore);
+    };
+
+    const handleLeftScroll = () => checkScroll(leftPanelRef.current, setLeftCanScroll);
+    const handleRightScroll = () => checkScroll(rightPanelRef.current, setRightCanScroll);
+
+    useEffect(() => {
+        const updateScroll = () => {
+            checkScroll(leftPanelRef.current, setLeftCanScroll);
+            checkScroll(rightPanelRef.current, setRightCanScroll);
+        };
+
+        const timer = setTimeout(updateScroll, 120);
+
+        const leftEl = leftPanelRef.current;
+        const rightEl = rightPanelRef.current;
+
+        let observer: ResizeObserver | null = null;
+        if (typeof ResizeObserver !== "undefined") {
+            observer = new ResizeObserver(() => {
+                updateScroll();
+            });
+            if (leftEl) observer.observe(leftEl);
+            if (rightEl) observer.observe(rightEl);
+        }
+
+        return () => {
+            clearTimeout(timer);
+            observer?.disconnect();
+        };
+    }, [invoice, activeTab, pendingAction, loading]);
 
     useEffect(() => {
         if (!invoiceId) return;
@@ -371,7 +415,12 @@ export function InvoiceModal({
 
                 <div className="grid flex-1 gap-0 overflow-hidden lg:grid-cols-[1.1fr_0.9fr]">
                     {/* Left Column: Details & Items */}
-                    <div className="space-y-8 p-8 overflow-y-auto custom-scrollbar-premium bg-surface-0">
+                    <div className="relative flex flex-col min-h-0 overflow-hidden bg-surface-0">
+                        <div 
+                            ref={leftPanelRef}
+                            onScroll={handleLeftScroll}
+                            className="flex-1 space-y-8 p-8 overflow-y-auto custom-scrollbar-premium"
+                        >
                         {loading || !invoice ? (
                             <div className="flex min-h-[400px] flex-col items-center justify-center gap-4 text-text-medium text-center">
                                 <div className="relative">
@@ -479,36 +528,43 @@ export function InvoiceModal({
 
                                     {invoice.paymentProofUrl ? (
                                         <button 
+                                            type="button"
                                             onClick={() => setLightboxUrl(invoice.paymentProofUrl)}
-                                            className="group relative w-full overflow-hidden rounded-3xl border border-white/10 bg-surface-1 p-2 transition-all hover:border-primary/30 cursor-zoom-in"
+                                            className="group relative flex w-full items-center gap-4 overflow-hidden rounded-2xl border border-white/10 bg-surface-1 p-3 transition-all hover:bg-surface-2 hover:border-primary/40 text-left shadow-sm cursor-zoom-in"
                                         >
-                                            <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-surface-2">
+                                            <div className="relative size-20 sm:size-24 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-surface-2">
                                                 <Image
                                                     src={invoice.paymentProofUrl}
-                                                    alt="Proof of Payment"
+                                                    alt="Proof of Payment Thumbnail"
                                                     fill
-                                                    className="object-cover transition-transform duration-700 group-hover:scale-110"
+                                                    className="object-cover transition-transform duration-500 group-hover:scale-105"
                                                 />
-                                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <div className="flex size-12 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-md border border-white/20">
-                                                        <ArrowUpRight className="size-6" />
-                                                    </div>
+                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                    <ArrowUpRight className="size-5 text-white" />
                                                 </div>
-                                                <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all">
-                                                    <p className="text-[10px] font-black text-white uppercase tracking-widest">Click to Expand Receipt</p>
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2">
+                                                    <p className="text-sm font-black text-text-high">Uploaded Receipt</p>
+                                                    <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
+                                                        Click to expand
+                                                    </span>
                                                 </div>
+                                                <p className="text-xs text-text-medium mt-1">Click thumbnail to inspect high-resolution image</p>
+                                            </div>
+                                            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-surface-2 text-text-disabled transition-all group-hover:bg-primary/10 group-hover:text-primary">
+                                                <ArrowUpRight className="size-4" />
                                             </div>
                                         </button>
                                     ) : (
-                                        <div className="relative overflow-hidden rounded-[2rem] border-2 border-dashed border-white/5 bg-surface-1/30 p-10 text-center group transition-all hover:border-white/10">
+                                        <div className="relative overflow-hidden rounded-2xl border-2 border-dashed border-white/5 bg-surface-1/30 p-6 text-center group transition-all hover:border-white/10">
                                             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/5 to-transparent opacity-20" />
-                                            <div className="relative flex flex-col items-center gap-4">
-                                                <div className="flex size-16 items-center justify-center rounded-2xl bg-surface-2 border border-white/5 text-text-disabled shadow-inner group-hover:scale-110 transition-transform">
-                                                    <Receipt className="size-8 opacity-20" />
+                                            <div className="relative flex flex-col items-center gap-3">
+                                                <div className="flex size-12 items-center justify-center rounded-xl bg-surface-2 border border-white/5 text-text-disabled shadow-inner group-hover:scale-105 transition-transform">
+                                                    <Receipt className="size-6 opacity-25" />
                                                 </div>
-                                                <div className="space-y-1">
-                                                    <p className="text-sm font-black text-text-medium">No Proof Attached</p>
+                                                <div className="space-y-0.5">
+                                                    <p className="text-xs font-black text-text-medium">No Proof Attached</p>
                                                     <p className="text-[10px] font-medium text-text-disabled max-w-[200px] mx-auto leading-relaxed">
                                                         The tenant has not uploaded a digital receipt for this transaction yet.
                                                     </p>
@@ -518,28 +574,38 @@ export function InvoiceModal({
                                     )}
 
                                     {(invoice.metadata as any)?.refund_proof_url && (
-                                        <div className="space-y-4 pt-8 border-t border-white/5 text-left">
+                                        <div className="space-y-4 pt-6 border-t border-white/5 text-left">
                                             <h3 className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-text-high">
                                                 <Wallet className="size-4 text-amber-400" />
                                                 Proof of Refund
                                             </h3>
                                             <button 
+                                                type="button"
                                                 onClick={() => setLightboxUrl((invoice.metadata as any).refund_proof_url)}
-                                                className="group relative w-full overflow-hidden rounded-3xl border border-amber-500/10 bg-amber-500/5 p-2 transition-all hover:border-amber-500/30 cursor-zoom-in text-left"
+                                                className="group relative flex w-full items-center gap-4 overflow-hidden rounded-2xl border border-amber-500/20 bg-amber-500/5 p-3 transition-all hover:bg-amber-500/10 hover:border-amber-500/40 cursor-zoom-in text-left shadow-sm"
                                             >
-                                                <div className="relative aspect-video overflow-hidden rounded-2xl bg-surface-2">
+                                                <div className="relative size-20 sm:size-24 shrink-0 overflow-hidden rounded-xl border border-amber-500/20 bg-surface-2">
                                                     <Image
                                                         src={(invoice.metadata as any).refund_proof_url}
-                                                        alt="Proof of Refund"
+                                                        alt="Proof of Refund Thumbnail"
                                                         fill
-                                                        className="object-cover transition-transform duration-700 group-hover:scale-110"
+                                                        className="object-cover transition-transform duration-500 group-hover:scale-105"
                                                     />
-                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <div className="flex size-12 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-md border border-white/20">
-                                                            <ArrowUpRight className="size-6" />
-                                                        </div>
+                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                        <ArrowUpRight className="size-5 text-white" />
                                                     </div>
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="text-sm font-black text-text-high">Refund Receipt</p>
+                                                        <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+                                                            Click to expand
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-xs text-text-medium mt-1">Click thumbnail to inspect high-resolution image</p>
+                                                </div>
+                                                <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-400 group-hover:bg-amber-500/20 transition-colors">
+                                                    <ArrowUpRight className="size-4" />
                                                 </div>
                                             </button>
                                         </div>
@@ -547,67 +613,79 @@ export function InvoiceModal({
                                 </section>
                             </>
                         )}
+                        </div>
+
+                        {/* Bottom Gradient Fade & Scroll Indicator for Left Panel */}
+                        <div 
+                            className={cn(
+                                "pointer-events-none absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-surface-0 to-transparent transition-opacity duration-300 z-10",
+                                leftCanScroll ? "opacity-100" : "opacity-0"
+                            )} 
+                        />
+                        <AnimatePresence>
+                            {leftCanScroll && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                    className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20"
+                                >
+                                    <button
+                                        type="button"
+                                        onClick={() => leftPanelRef.current?.scrollBy({ top: 220, behavior: "smooth" })}
+                                        className="flex items-center gap-1.5 rounded-full border border-white/10 bg-surface-2/95 hover:bg-surface-3 px-3 py-1.5 text-[11px] font-bold text-text-medium hover:text-text-high shadow-xl backdrop-blur-md transition-all cursor-pointer hover:scale-105"
+                                    >
+                                        <span>Scroll for details</span>
+                                        <ChevronDown className="size-3.5 text-primary animate-bounce" />
+                                    </button>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
 
                     {/* Right Column: Decisions Hub (Hidden for Tenants) */}
                     {role === "landlord" && (
-                        <div className="relative border-l border-white/5 bg-surface-1/40 backdrop-blur-xl overflow-y-auto custom-scrollbar-premium">
-                            <div className="space-y-6 p-8 pb-12">
-                            {invoice && (
-                                <>
-                                    {/* Verification Section */}
-                                    <section className="space-y-4">
-                                        <div className="flex items-center justify-between">
-                                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-text-medium">Payment Verification</h3>
-                                            {invoice.paymentProofUrl && (
-                                                <span className="flex items-center gap-1.5 text-[10px] font-black text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                                                    <ShieldCheck className="size-3" />
-                                                    Attachment Provided
-                                                </span>
-                                            )}
-                                        </div>
-                                        
-                                        <div className="grid gap-3">
-                                            <div className="grid grid-cols-2 gap-3">
-                                                <StatusLine label="Payment Method" value={invoice.paymentMethod ?? "Not specified"} icon={<CreditCardIcon className="size-3.5" />} />
-                                                <StatusLine label="Reference #" value={invoice.referenceNumber ?? "None"} icon={<Hash className="size-3.5" />} />
+                        <div className="relative flex flex-col min-h-0 overflow-hidden border-l border-white/5 bg-surface-1/40 backdrop-blur-xl">
+                            <div 
+                                ref={rightPanelRef}
+                                onScroll={handleRightScroll}
+                                className="flex-1 overflow-y-auto custom-scrollbar-premium"
+                            >
+                                <div className="space-y-6 p-8 pb-12">
+                                {invoice && (
+                                    <>
+                                        {/* Verification Section */}
+                                        <section className="space-y-4">
+                                            <div className="flex items-center justify-between">
+                                                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-text-medium">Payment Verification</h3>
+                                                {invoice.paymentProofUrl && (
+                                                    <span className="flex items-center gap-1.5 text-[10px] font-black text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                                                        <ShieldCheck className="size-3" />
+                                                        Attachment Provided
+                                                    </span>
+                                                )}
                                             </div>
+                                            
+                                            <div className="grid gap-3">
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    <StatusLine label="Payment Method" value={invoice.paymentMethod ?? "Not specified"} icon={<CreditCardIcon className="size-3.5" />} />
+                                                    <StatusLine label="Reference #" value={invoice.referenceNumber ?? "None"} icon={<Hash className="size-3.5" />} />
+                                                </div>
 
-                                            {invoice.paymentProofUrl && (
-                                                <a 
-                                                    href={invoice.paymentProofUrl} 
-                                                    target="_blank" 
-                                                    rel="noreferrer"
-                                                    className="group relative overflow-hidden flex items-center justify-between rounded-2xl border border-white/10 bg-surface-2 p-5 transition-all hover:bg-surface-3 hover:border-primary/40 shadow-sm"
-                                                >
-                                                    <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                    <div className="flex items-center gap-4 relative">
-                                                        <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 text-primary shadow-inner">
-                                                            <Receipt className="size-5" />
+                                                {invoice.paymentDestination && (
+                                                    <div className="rounded-2xl border border-white/10 bg-surface-2 p-5 space-y-3 shadow-sm">
+                                                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-text-disabled">
+                                                            <QrCode className="size-3.5" />
+                                                            Paid To
                                                         </div>
                                                         <div>
-                                                            <p className="text-sm font-black text-text-high">Review Payment Proof</p>
-                                                            <p className="text-[10px] text-text-medium font-medium">Click to view uploaded receipt image</p>
+                                                            <p className="text-sm font-black text-text-high">{(invoice.paymentDestination as any)?.account_name}</p>
+                                                            <p className="text-xs font-black text-primary mt-0.5 tracking-wider">{(invoice.paymentDestination as any)?.account_number}</p>
                                                         </div>
                                                     </div>
-                                                    <ArrowUpRight className="size-5 text-text-disabled transition-all group-hover:translate-x-1 group-hover:-translate-y-1 group-hover:text-primary" />
-                                                </a>
-                                            )}
-
-                                            {invoice.paymentDestination && (
-                                                <div className="rounded-2xl border border-white/10 bg-surface-2 p-5 space-y-3 shadow-sm">
-                                                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-text-disabled">
-                                                        <QrCode className="size-3.5" />
-                                                        Paid To
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm font-black text-text-high">{(invoice.paymentDestination as any)?.account_name}</p>
-                                                        <p className="text-xs font-black text-primary mt-0.5 tracking-wider">{(invoice.paymentDestination as any)?.account_number}</p>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </section>
+                                                )}
+                                            </div>
+                                        </section>
 
                                     {/* Decisions Hub */}
                                     <section className="space-y-4 pt-4 border-t border-white/5">
@@ -802,8 +880,36 @@ export function InvoiceModal({
                                     </section>
                                 </>
                             )}
+                                </div>
+                            </div>
+
+                            {/* Bottom Gradient Fade & Scroll Indicator for Right Panel */}
+                            <div 
+                                className={cn(
+                                    "pointer-events-none absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-surface-1 to-transparent transition-opacity duration-300 z-10",
+                                    rightCanScroll ? "opacity-100" : "opacity-0"
+                                )} 
+                            />
+                            <AnimatePresence>
+                                {rightCanScroll && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20"
+                                    >
+                                        <button
+                                            type="button"
+                                            onClick={() => rightPanelRef.current?.scrollBy({ top: 220, behavior: "smooth" })}
+                                            className="flex items-center gap-1.5 rounded-full border border-white/10 bg-surface-2/95 hover:bg-surface-3 px-3 py-1.5 text-[11px] font-bold text-text-medium hover:text-text-high shadow-xl backdrop-blur-md transition-all cursor-pointer hover:scale-105"
+                                        >
+                                            <span>Scroll for actions</span>
+                                            <ChevronDown className="size-3.5 text-primary animate-bounce" />
+                                        </button>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </div>
-                    </div>
                     )}
 
                     {role === "tenant" && (
@@ -929,9 +1035,9 @@ export function InvoiceModal({
                                     <X className="size-6" />
                                 </button>
                             </div>
-                            <div className="absolute bottom-6 left-1/2 -translate-x-1/2">
-                                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60 bg-black/40 backdrop-blur-md px-6 py-2 rounded-full border border-white/5">
-                                    Full Evidence Inspection
+                            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 pointer-events-none">
+                                <p className="text-xs font-semibold text-white/90 bg-black/60 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10 shadow-lg">
+                                    Proof of Payment
                                 </p>
                             </div>
                         </motion.div>
