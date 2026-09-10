@@ -51,33 +51,38 @@ export function PropertySelector({ isCollapsed = false }: { isCollapsed?: boolea
                 className={cn(
                     "group flex h-14 items-center transition-all focus:outline-none focus:ring-2 focus:ring-primary/40",
                     isCollapsed 
-                        ? "size-11 justify-center rounded-xl mx-auto neumorphic-extruded" 
-                        : "w-full gap-3 px-4 rounded-2xl neumorphic-extruded hover:scale-[1.02]",
-                    isOpen && !isCollapsed && "neumorphic-inset"
+                        ? "size-11 justify-center rounded-2xl mx-auto border border-primary/30 bg-primary/10 text-primary shadow-sm hover:bg-primary/20" 
+                        : "w-full gap-3 px-3.5 rounded-2xl border border-primary/25 bg-primary/[0.06] hover:bg-primary/[0.10] hover:border-primary/40 dark:bg-primary/[0.08] dark:border-primary/30 dark:hover:bg-primary/[0.14] dark:hover:border-primary/50 shadow-sm hover:scale-[1.01]",
+                    isOpen && !isCollapsed && "border-primary/50 bg-primary/[0.12] dark:bg-primary/[0.18] ring-2 ring-primary/20"
                 )}
                 title={isCollapsed ? (selectedPropertyId === 'all' ? 'All Properties' : selectedProperty?.name) : undefined}
             >
                 <div className={cn(
-                    "flex shrink-0 items-center justify-center rounded-xl transition-all",
+                    "flex shrink-0 items-center justify-center rounded-xl transition-all shadow-sm",
                     isCollapsed ? "size-7" : "size-10",
-                    isOpen ? "neumorphic-inset-card" : "neumorphic-inset-card"
+                    "bg-primary text-primary-foreground shadow-md shadow-primary/20 group-hover:scale-105"
                 )}>
                     {selectedPropertyId === 'all' ? (
-                        <LayoutGrid className={cn(isCollapsed ? "size-4" : "size-5")} />
+                        <LayoutGrid className={cn(isCollapsed ? "size-3.5" : "size-5")} />
                     ) : (
-                        <Building2 className={cn(isCollapsed ? "size-4" : "size-5")} />
+                        <Building2 className={cn(isCollapsed ? "size-3.5" : "size-5")} />
                     )}
                 </div>
                 
                 {!isCollapsed && (
-                    <div className="flex min-w-0 flex-1 items-center gap-2">
-                        <span className="truncate text-[11px] font-black uppercase tracking-widest text-foreground">
-                            {selectedPropertyId === 'all' 
-                                ? 'All Properties' 
-                                : (selectedProperty?.name || (loading ? 'Loading…' : (properties.length > 0 ? properties[0].name : 'Select Property')))}
-                        </span>
+                    <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
+                        <div className="flex min-w-0 flex-1 flex-col items-start leading-tight text-left">
+                            <span className="text-[9px] font-black uppercase tracking-[0.22em] text-primary/90 dark:text-primary">
+                                Property
+                            </span>
+                            <span className="truncate text-xs font-black uppercase tracking-wider text-foreground mt-0.5">
+                                {selectedPropertyId === 'all' 
+                                    ? 'All Properties' 
+                                    : (selectedProperty?.name || (loading ? 'Loading…' : (properties.length > 0 ? properties[0].name : 'Select Property')))}
+                            </span>
+                        </div>
                         <ChevronDown className={cn(
-                            "size-4 text-muted-foreground transition-transform duration-300 ml-auto",
+                            "size-4 text-primary transition-transform duration-300 ml-auto shrink-0",
                             isOpen && "rotate-180"
                         )} />
                     </div>
@@ -111,7 +116,7 @@ export function PropertySelector({ isCollapsed = false }: { isCollapsed?: boolea
                                     }}
                                     className={cn(
                                         "group flex w-full items-center gap-3 rounded-2xl p-3 px-4 transition-all mb-2",
-                                        selectedPropertyId === 'all' ? "neumorphic-inset" : "neumorphic-extruded hover:scale-[1.01]"
+                                        selectedPropertyId === 'all' ? "neumorphic-inset border border-primary/30 bg-primary/5" : "neumorphic-extruded hover:scale-[1.01]"
                                     )}
                                 >
                                     <div className={cn(
@@ -149,7 +154,7 @@ export function PropertySelector({ isCollapsed = false }: { isCollapsed?: boolea
                                         }}
                                         className={cn(
                                             "group flex w-full items-center gap-3 rounded-2xl p-3 px-4 transition-all",
-                                            selectedPropertyId === property.id ? "neumorphic-inset" : "neumorphic-extruded hover:scale-[1.01]"
+                                            selectedPropertyId === property.id ? "neumorphic-inset border border-primary/30 bg-primary/5" : "neumorphic-extruded hover:scale-[1.01]"
                                         )}
                                     >
                                         <div className={cn(
