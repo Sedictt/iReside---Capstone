@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { m as motion, AnimatePresence } from "framer-motion";
 import {
  X,
  Clock,
@@ -21,7 +22,9 @@ import {
  ChevronDown,
  Camera,
  Wrench,
- Sparkles
+ Check,
+ Send,
+ Bot
 } from "lucide-react";
 import type { MaintenanceRequest } from "./MaintenanceDashboard";
 
@@ -80,6 +83,20 @@ export function MaintenanceRequestModal({
  const [createPriority, setCreatePriority] = useState<"Critical" | "High" | "Medium" | "Low">("Medium");
  const [isSubmitting, setIsSubmitting] = useState(false);
  const [submitError, setSubmitError] = useState<string | null>(null);
+
+ // Action dropdown state
+ const [isActionDropdownOpen, setIsActionDropdownOpen] = useState(false);
+ const actionDropdownRef = useRef<HTMLDivElement>(null);
+
+ useEffect(() => {
+  const handleClickOutside = (e: MouseEvent) => {
+   if (actionDropdownRef.current && !actionDropdownRef.current.contains(e.target as Node)) {
+    setIsActionDropdownOpen(false);
+   }
+  };
+  document.addEventListener("mousedown", handleClickOutside);
+  return () => document.removeEventListener("mousedown", handleClickOutside);
+ }, []);
 
  // Early return for closed modal
  if (!isOpen) return null;
@@ -181,9 +198,9 @@ export function MaintenanceRequestModal({
  required
  className="w-full appearance-none rounded-xl neumorphic-panel/50 py-3.5 pl-[3.25rem] pr-10 text-sm font-black text-foreground outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all hover:border-border cursor-pointer"
  >
- <option value="">Select a unit</option>
+ <option value="" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">Select a unit</option>
  {units.map((unit) => (
- <option key={unit.id} value={unit.id}>
+ <option key={unit.id} value={unit.id} className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">
  {unit.name}
  </option>
  ))}
@@ -230,10 +247,10 @@ export function MaintenanceRequestModal({
  onChange={(e) => setCreatePriority(e.target.value as "Critical" | "High" | "Medium" | "Low")}
  className="w-full appearance-none rounded-xl neumorphic-panel/50 py-3.5 pl-[3.25rem] pr-10 text-sm font-black text-foreground outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all hover:border-border cursor-pointer"
  >
- <option value="Critical">Critical</option>
- <option value="High">High</option>
- <option value="Medium">Medium (default)</option>
- <option value="Low">Low</option>
+ <option value="Critical" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">Critical</option>
+ <option value="High" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">High</option>
+ <option value="Medium" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">Medium (default)</option>
+ <option value="Low" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">Low</option>
  </select>
  <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground group-focus-within:text-primary transition-colors">
  <ChevronDown className="size-4" />
@@ -289,7 +306,7 @@ export function MaintenanceRequestModal({
  </>
  ) : (
  <>
- <Sparkles className="size-4" />
+ <Send className="size-4" />
  Submit Request
  </>
  )}
@@ -598,7 +615,7 @@ export function MaintenanceRequestModal({
  
  <div className="flex items-center gap-2 mb-3">
  <div className="p-2 bg-primary/10 rounded-xl">
- <Sparkles className="size-4 text-primary" />
+ <Bot className="size-4 text-primary" />
  </div>
  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
  IRIS AI Smart Triage
@@ -783,22 +800,78 @@ export function MaintenanceRequestModal({
  <label htmlFor="select-action" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2 block">
  Select Action
  </label>
- <div className="relative group">
- <div className="absolute left-3.5 top-1/2 -translate-y-1/2 p-1.5 neumorphic-primary/10 text-primary rounded-md group-focus-within:bg-primary group-focus-within: transition-colors pointer-events-none ">
+ <div className="relative" ref={actionDropdownRef}>
+ <button
+ type="button"
+ id="select-action"
+ onClick={() => setIsActionDropdownOpen(!isActionDropdownOpen)}
+ className={cn(
+ "w-full flex items-center justify-between rounded-xl neumorphic-panel/50 py-3.5 pl-[3.25rem] pr-4 text-sm font-black text-foreground outline-none transition-all hover:border-border cursor-pointer text-left relative",
+ isActionDropdownOpen ? "border-primary/50 ring-4 ring-primary/10" : ""
+ )}
+ >
+ <div className="absolute left-3.5 top-1/2 -translate-y-1/2 p-1.5 neumorphic-primary/10 text-primary rounded-md pointer-events-none">
  {processPlan === "landlord" ? <Hammer className="size-3.5" /> : <UserRound className="size-3.5" />}
  </div>
- <select
- id="select-action"
- value={processPlan}
- onChange={(e) => setProcessPlan(e.target.value as ProcessPlan)}
- className="w-full appearance-none rounded-xl neumorphic-panel/50 py-3.5 pl-[3.25rem] pr-10 text-sm font-black text-foreground outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all hover:border-border cursor-pointer"
+ <span className="truncate">
+ {processPlan === "landlord" ? "Landlord Repair (You handle it)" : "Third Party Repair (Assign contractor)"}
+ </span>
+ <ChevronDown className={cn("size-4 text-muted-foreground transition-transform duration-200", isActionDropdownOpen && "rotate-180 text-primary")} />
+ </button>
+
+ <AnimatePresence>
+ {isActionDropdownOpen && (
+ <motion.div
+ initial={{ opacity: 0, y: -4, scale: 0.98 }}
+ animate={{ opacity: 1, y: 0, scale: 1 }}
+ exit={{ opacity: 0, y: -4, scale: 0.98 }}
+ transition={{ duration: 0.15 }}
+ className="absolute left-0 right-0 top-full z-50 mt-1.5 overflow-hidden rounded-2xl border border-border/60 bg-card p-1.5 shadow-2xl neumorphic-panel"
  >
- <option value="landlord">Landlord Repair (You handle it)</option>
- <option value="third_party">Third Party Repair (Assign contractor)</option>
- </select>
- <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground group-focus-within:text-primary transition-colors">
- <ChevronDown className="size-4" />
+ <div
+ onClick={() => {
+ setProcessPlan("landlord");
+ setIsActionDropdownOpen(false);
+ }}
+ className={cn(
+ "flex items-center justify-between gap-3 rounded-xl px-3.5 py-3 text-xs font-black cursor-pointer transition-all",
+ processPlan === "landlord"
+ ? "bg-primary/15 text-primary"
+ : "text-foreground hover:bg-muted/60"
+ )}
+ >
+ <div className="flex items-center gap-3">
+ <div className={cn("p-1.5 rounded-lg", processPlan === "landlord" ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground")}>
+ <Hammer className="size-3.5" />
  </div>
+ <span>Landlord Repair (You handle it)</span>
+ </div>
+ {processPlan === "landlord" && <Check className="size-4 text-primary" />}
+ </div>
+
+ <div
+ onClick={() => {
+ setProcessPlan("third_party");
+ setIsActionDropdownOpen(false);
+ }}
+ className={cn(
+ "flex items-center justify-between gap-3 rounded-xl px-3.5 py-3 text-xs font-black cursor-pointer transition-all",
+ processPlan === "third_party"
+ ? "bg-primary/15 text-primary"
+ : "text-foreground hover:bg-muted/60"
+ )}
+ >
+ <div className="flex items-center gap-3">
+ <div className={cn("p-1.5 rounded-lg", processPlan === "third_party" ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground")}>
+ <UserRound className="size-3.5" />
+ </div>
+ <span>Third Party Repair (Assign contractor)</span>
+ </div>
+ {processPlan === "third_party" && <Check className="size-4 text-primary" />}
+ </div>
+ </motion.div>
+ )}
+ </AnimatePresence>
  </div>
  </div>
 

@@ -217,11 +217,11 @@ export function MaintenanceDashboard() {
  onChange={(e) => setFilter(e.target.value as any)}
  className="bg-transparent text-[10px] font-black uppercase tracking-widest text-foreground outline-none cursor-pointer min-w-[100px]"
  >
- <option value="All">All Status</option>
- <option value="Pending">Pending</option>
- <option value="Assigned">Assigned</option>
- <option value="In Progress">In Progress</option>
- <option value="Resolved">Resolved</option>
+ <option value="All" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">All Status</option>
+ <option value="Pending" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">Pending</option>
+ <option value="Assigned" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">Assigned</option>
+ <option value="In Progress" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">In Progress</option>
+ <option value="Resolved" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">Resolved</option>
  </select>
  </div>
 
@@ -232,11 +232,11 @@ export function MaintenanceDashboard() {
  onChange={(e) => setPriorityFilter(e.target.value as any)}
  className="bg-transparent text-[10px] font-black uppercase tracking-widest text-foreground outline-none cursor-pointer min-w-[100px]"
  >
- <option value="All">All Priority</option>
- <option value="Critical">Critical Only</option>
- <option value="High">High Only</option>
- <option value="Medium">Medium Only</option>
- <option value="Low">Low Only</option>
+ <option value="All" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">All Priority</option>
+ <option value="Critical" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">Critical Only</option>
+ <option value="High" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">High Only</option>
+ <option value="Medium" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">Medium Only</option>
+ <option value="Low" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">Low Only</option>
  </select>
  </div>
 
@@ -247,10 +247,10 @@ export function MaintenanceDashboard() {
  onChange={(e) => setSortBy(e.target.value as any)}
  className="bg-transparent text-[10px] font-black uppercase tracking-widest text-foreground outline-none cursor-pointer min-w-[150px]"
  >
- <option value="priority-desc">Smart Triage</option>
- <option value="newest">Newest First</option>
- <option value="oldest">Oldest First</option>
- <option value="priority-asc">Priority (L-H)</option>
+ <option value="priority-desc" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">Smart Triage</option>
+ <option value="newest" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">Newest First</option>
+ <option value="oldest" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">Oldest First</option>
+ <option value="priority-asc" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">Priority (L-H)</option>
  </select>
  </div>
 
