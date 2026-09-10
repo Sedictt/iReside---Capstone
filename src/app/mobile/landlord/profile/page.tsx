@@ -1,17 +1,16 @@
-﻿import { MobileHeader } from '@/components/mobile/layout/MobileHeader'
+import { MobileHeader } from '@/components/mobile/layout/MobileHeader'
+import { LandlordProfileView } from '@/components/mobile/landlord/LandlordProfileView'
 
 export const metadata = {
     title: 'Profile | iReside',
-    description: 'Your profile and settings',
+    description: 'Your profile, settings, and audit logs',
 }
 
 export default function LandlordProfilePage() {
     return (
         <>
             <MobileHeader title="Profile" />
-            <div className="px-4 py-5">
-                <p className="text-muted-foreground text-sm">Profile screen — coming soon in next phase.</p>
-            </div>
+            <LandlordProfileView />
         </>
     )
 }

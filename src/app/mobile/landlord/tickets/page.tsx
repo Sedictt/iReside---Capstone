@@ -1,4 +1,5 @@
-﻿import { MobileHeader } from '@/components/mobile/layout/MobileHeader'
+import { MobileHeader } from '@/components/mobile/layout/MobileHeader'
+import { LandlordTicketsView } from '@/components/mobile/landlord/LandlordTicketsView'
 
 export const metadata = {
     title: 'Tickets | iReside',
@@ -9,9 +10,7 @@ export default function LandlordTicketsPage() {
     return (
         <>
             <MobileHeader title="Tickets" />
-            <div className="px-4 py-5">
-                <p className="text-muted-foreground text-sm">Tickets screen — coming soon in next phase.</p>
-            </div>
+            <LandlordTicketsView />
         </>
     )
 }

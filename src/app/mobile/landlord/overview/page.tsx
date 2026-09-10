@@ -1,4 +1,5 @@
-﻿import { MobileHeader } from '@/components/mobile/layout/MobileHeader'
+import { MobileHeader } from '@/components/mobile/layout/MobileHeader'
+import { LandlordOverviewView } from '@/components/mobile/landlord/LandlordOverviewView'
 
 export const metadata = {
     title: 'Overview | iReside',
@@ -9,9 +10,7 @@ export default function LandlordOverviewPage() {
     return (
         <>
             <MobileHeader title="Overview" />
-            <div className="px-4 py-5">
-                <p className="text-muted-foreground text-sm">Overview screen — coming soon in next phase.</p>
-            </div>
+            <LandlordOverviewView />
         </>
     )
 }

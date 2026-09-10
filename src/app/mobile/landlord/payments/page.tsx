@@ -1,4 +1,5 @@
-﻿import { MobileHeader } from '@/components/mobile/layout/MobileHeader'
+import { MobileHeader } from '@/components/mobile/layout/MobileHeader'
+import { LandlordPaymentsView } from '@/components/mobile/landlord/LandlordPaymentsView'
 
 export const metadata = {
     title: 'Payments | iReside',
@@ -9,9 +10,7 @@ export default function LandlordPaymentsPage() {
     return (
         <>
             <MobileHeader title="Payments" />
-            <div className="px-4 py-5">
-                <p className="text-muted-foreground text-sm">Payments screen — coming soon in next phase.</p>
-            </div>
+            <LandlordPaymentsView />
         </>
     )
 }
