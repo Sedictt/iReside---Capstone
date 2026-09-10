@@ -185,7 +185,16 @@ export async function updateSession(request: NextRequest) {
     // If user is already logged in, prevent them from accessing auth pages.
     if (user && (request.nextUrl.pathname.startsWith("/login") || request.nextUrl.pathname.startsWith("/signup"))) {
         const url = request.nextUrl.clone();
-        if (role === "admin" || role === "landlord") {
+        const userAgent = request.headers.get("user-agent") || "";
+        const isMobileDevice = /Mobile|Android|iPhone|iPad|iPod/i.test(userAgent);
+        const redirectParam = request.nextUrl.searchParams.get("redirect");
+
+        if (redirectParam) {
+            url.pathname = redirectParam;
+            url.search = "";
+        } else if (isMobileDevice) {
+            url.pathname = role === "tenant" ? "/mobile/tenant/home" : "/mobile/landlord/overview";
+        } else if (role === "admin" || role === "landlord") {
             url.pathname = "/landlord/dashboard";
         } else {
             url.pathname = "/tenant/dashboard";
@@ -201,14 +210,30 @@ export async function updateSession(request: NextRequest) {
         }
         const url = request.nextUrl.clone();
         url.pathname = "/login";
+        if (request.nextUrl.pathname.startsWith("/mobile")) {
+            url.searchParams.set("redirect", request.nextUrl.pathname);
+        }
         return NextResponse.redirect(url);
     }
 
-    // Role-based portal protection: prevent tenants from accessing landlord or setup routes
+    // Role-based portal protection: prevent cross-portal access for both desktop and mobile
     if (user && role === "tenant") {
         if (request.nextUrl.pathname.startsWith("/landlord") || request.nextUrl.pathname.startsWith("/setup")) {
             const url = request.nextUrl.clone();
             url.pathname = "/tenant/dashboard";
+            return NextResponse.redirect(url);
+        }
+        if (request.nextUrl.pathname.startsWith("/mobile/landlord")) {
+            const url = request.nextUrl.clone();
+            url.pathname = "/mobile/tenant/home";
+            return NextResponse.redirect(url);
+        }
+    }
+
+    if (user && (role === "landlord" || role === "admin")) {
+        if (request.nextUrl.pathname.startsWith("/mobile/tenant")) {
+            const url = request.nextUrl.clone();
+            url.pathname = "/mobile/landlord/overview";
             return NextResponse.redirect(url);
         }
     }

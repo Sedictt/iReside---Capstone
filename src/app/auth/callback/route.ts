@@ -1,7 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
-const getDashboardPathForRole = (role: string) => {
+const getDashboardPathForRole = (role: string, isMobile: boolean) => {
+  if (isMobile) {
+    return role === 'tenant' ? '/mobile/tenant/home' : '/mobile/landlord/overview'
+  }
   if (role === 'tenant') return '/tenant/dashboard'
   // Both landlord and legacy admin roles map to turnkey landlord dashboard
   return '/landlord/dashboard'
@@ -25,7 +28,9 @@ export async function GET(request: Request) {
         role = profile?.role ?? undefined
       }
 
-      const redirectPath = next || getDashboardPathForRole(role || 'tenant')
+      const userAgent = request.headers.get('user-agent') || ''
+      const isMobile = /Mobile|Android|iPhone|iPad|iPod/i.test(userAgent)
+      const redirectPath = next || getDashboardPathForRole(role || 'tenant', isMobile)
       return NextResponse.redirect(`${origin}${redirectPath}`)
     }
   }
