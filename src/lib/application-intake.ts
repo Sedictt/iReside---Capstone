@@ -5,6 +5,7 @@ export interface WalkInUnit {
     property_id: string;
     property_name: string;
     property_contract_template?: Record<string, unknown> | null;
+    status?: string;
 }
 
 export interface RequirementsChecklist {

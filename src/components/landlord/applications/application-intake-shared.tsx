@@ -166,14 +166,25 @@ export function ApplicationIdentityStep({
                                         formErrors.unit && "text-red-400"
                                     )}
                                 >
-                                    <option value="" className="bg-card text-sm text-foreground">
+                                    <option value="" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100 text-sm">
                                         Select Target Unit...
                                     </option>
-                                    {units.map((u) => (
-                                        <option key={u.id} value={u.id} className="bg-card py-4 text-sm text-foreground">
-                                            {u.name} - {u.property_name}
-                                        </option>
-                                    ))}
+                                    {units.map((u) => {
+                                        const isOccupied = (u.status ?? "").toLowerCase() === "occupied";
+                                        return (
+                                            <option 
+                                                key={u.id} 
+                                                value={u.id} 
+                                                disabled={isOccupied}
+                                                className={cn(
+                                                    "bg-card py-4 text-sm text-foreground dark:bg-zinc-900 dark:text-zinc-100",
+                                                    isOccupied && "text-muted-foreground/50 dark:text-zinc-500 bg-muted/40 dark:bg-zinc-950"
+                                                )}
+                                            >
+                                                {u.name} - {u.property_name}{isOccupied ? " • (Occupied — Unavailable)" : ""}
+                                            </option>
+                                        );
+                                    })}
                                 </select>
                                 <ArrowRight size={20} className="pointer-events-none absolute right-6 top-1/2 -translate-y-1/2 rotate-90 text-muted-foreground" />
                             </div>

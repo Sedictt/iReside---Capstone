@@ -141,7 +141,7 @@ function NewAssetContent() {
                 setFormData({
                     propertyName: p.name,
                     address: p.address,
-                    totalUnits: String(p.total_units ?? 1),
+                    totalUnits: String(Math.max(Number(p.total_units) || 0, Number(p.unitCount) || 0, 1)),
                     floorCount: String(p.total_floors ?? 1),
                     description: p.description ?? "",
                     occupancyLimit: String(p.env_policy?.max_occupants_per_unit ?? 5),

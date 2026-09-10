@@ -110,9 +110,19 @@ export async function PUT(
             return NextResponse.json({ error: "Property not found or access denied." }, { status: 404 });
         }
 
+        const admin = createServiceRoleSupabaseClient();
+        const { data: existingUnits } = await (admin as any)
+            .from("units")
+            .select("id, name, floor, rent_amount")
+            .eq("property_id", propertyId);
+
+        const currentUnitCount = existingUnits?.length || 0;
+        const requestedUnits = parseInt(String(total_units || 1), 10) || 1;
+        const finalTotalUnits = Math.max(requestedUnits, currentUnitCount);
+
         const updatePayload: Record<string, any> = {
             type: type || "apartment",
-            total_units: parseInt(String(total_units || 1), 10) || 1,
+            total_units: finalTotalUnits,
             total_floors: parseInt(String(total_floors || 1), 10) || 1,
             base_rent_amount: parseFloat(String(base_rent_amount || 0)) || 0,
             description: description ?? "",
@@ -172,7 +182,6 @@ export async function PUT(
         };
         const mapping = policyMapping[utility_billing] || policyMapping.fixed_charge;
 
-        const admin = createServiceRoleSupabaseClient();
         await (admin as any).from("property_environment_policies").upsert(
             {
                 property_id: propertyId,
@@ -187,17 +196,11 @@ export async function PUT(
         );
 
         // Sync Units & Floor Configs
-        const targetUnits = parseInt(String(total_units || 1), 10) || 1;
+        const targetUnits = finalTotalUnits;
         const targetFloors = parseInt(String(total_floors || 1), 10) || 1;
         const targetRent = parseFloat(String(base_rent_amount || 0)) || 0;
         const propType = type || "apartment";
 
-        const { data: existingUnits } = await (admin as any)
-            .from("units")
-            .select("id, name, floor, rent_amount")
-            .eq("property_id", propertyId);
-
-        const currentUnitCount = existingUnits?.length || 0;
         if (targetUnits > currentUnitCount) {
             const unitsPerFloor = Math.max(1, Math.ceil(targetUnits / targetFloors));
             const prefix = unit_prefix || (propType === "dormitory" ? "Room" : propType === "boarding_house" ? "Room" : "Unit");
