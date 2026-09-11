@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Image from 'next/image';
-import { ArrowUp, Wifi, Copy, ShieldCheck, Search, Folder, MoreVertical } from "lucide-react";
+import { ArrowUp, ArrowLeft, Wifi, Copy, ShieldCheck, Search, Folder, MoreVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { fetchIrisHistory, getCachedIrisHistory, setCachedIrisHistory, type IrisHistoryMessage } from "@/lib/iris/client";
@@ -13,6 +13,10 @@ interface Message {
     content: string;
     timestamp: Date;
     hasDataCard?: boolean;
+}
+
+interface TenantIrisChatProps {
+    onBack?: () => void;
 }
 
 const getFirstName = (fullName?: string | null) => {
@@ -35,7 +39,7 @@ const buildWelcomeMessage = (firstName?: string | null) => {
     return `Welcome back${nameSegment}! 👋 I am your virtual property assistant. How can I help you settle in or manage your apartment today?`;
 };
 
-export function TenantIrisChat() {
+export function TenantIrisChat({ onBack }: TenantIrisChatProps = {}) {
     const INITIAL_CHAT_SKELETON_COUNT = 6;
     const { profile, user } = useAuth();
 
@@ -215,10 +219,20 @@ export function TenantIrisChat() {
     };
 
     return (
-        <div className="flex-1 flex flex-col min-w-0 h-full rounded-2xl border border-border bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-card via-background to-background overflow-hidden shadow-[0_24px_60px_-30px_rgba(15,23,42,0.24)] relative" data-tour-id="tour-messages-chat">
+        <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative" data-tour-id="tour-messages-chat">
             {/* Header */}
-            <div className="h-20 border-b border-border px-6 flex items-center justify-between shrink-0 bg-card/80 backdrop-blur-md z-10">
+            <div className="h-20 border-b border-border/40 px-6 flex items-center justify-between shrink-0 bg-surface-1/80 backdrop-blur-md z-10">
                 <div className="flex items-center gap-4">
+                    {onBack && (
+                        <button
+                            type="button"
+                            onClick={onBack}
+                            className="flex sm:hidden items-center justify-center p-2 rounded-xl neumorphic-extruded transition-all active:scale-95 text-high hover:text-primary"
+                            title="Back to List"
+                        >
+                            <ArrowLeft className="size-4" />
+                        </button>
+                    )}
                     <div className="relative">
                         <div className="relative size-10 rounded-full bg-white overflow-hidden border border-border flex items-center justify-center">
                             <Image src="/logos/favicon.png" alt="iRis" fill sizes="40px" className="object-cover" />

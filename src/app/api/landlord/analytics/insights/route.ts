@@ -141,7 +141,7 @@ export async function POST(request: Request) {
         ].join("\n");
 
         const completion = await openai.chat.completions.create({
-            model: "llama-3.1-8b-instant",
+            model: "groq/compound-mini",
             temperature: 0.4,
             max_tokens: 900,
             messages: [
