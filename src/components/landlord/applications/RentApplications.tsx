@@ -39,6 +39,8 @@ import {
  Lock,
  Copy,
  Check,
+ UploadCloud,
+ FileCheck,
 } from "lucide-react";
 import { ToolAccessBar } from "./ToolAccessBar";
 import { LeaseOfflineSigner } from "@/lib/offline/leaseOfflineSigner";
@@ -408,7 +410,10 @@ export function RentApplications() {
  const [resolutionAmount, setResolutionAmount] = useState("");
  const [resolutionNote, setResolutionNote] = useState("");
  const [resolutionProofUrl, setResolutionProofUrl] = useState("");
+ const [resolutionProofFile, setResolutionProofFile] = useState<File | null>(null);
+ const resolutionFileInputRef = useRef<HTMLInputElement | null>(null);
  const [resolutionLoading, setResolutionLoading] = useState(false);
+
  const [copiedTxn, setCopiedTxn] = useState<string | null>(null);
 
  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -742,55 +747,71 @@ export function RentApplications() {
  setShowContractModal(true);
  };
 
- const openResolutionModal = (req: any) => {
- setResolutionRequest(req);
- setResolutionAction("return_payment");
- setResolutionAmount("");
- setResolutionNote("");
- setResolutionProofUrl("");
- setShowResolutionModal(true);
- };
+  const openResolutionModal = (req: any) => {
+    setResolutionRequest(req);
+    setResolutionAction("return_payment");
+    setResolutionAmount("");
+    setResolutionNote("");
+    setResolutionProofUrl("");
+    setResolutionProofFile(null);
+    setShowResolutionModal(true);
+  };
 
- const reviewPreApprovalPayment = async (
- requestId: string,
- action: PaymentReviewAction,
- options?: { note?: string; amount?: number; refundProofUrl?: string }
- ) => {
- if (!selectedApp) return;
- setReviewingReqId(requestId);
- setActionError(null);
- try {
- const response = await fetch(`/api/landlord/applications/${selectedApp.id}/payment-requests/${requestId}/review`, {
- method: "POST",
- headers: { "Content-Type": "application/json" },
- body: JSON.stringify({
- action,
- note: options?.note,
- amount: options?.amount,
- refundProofUrl: options?.refundProofUrl,
- }),
- });
- const data = await response.json().catch(() => ({}));
- if (!response.ok) throw new Error(data.error || "Failed review");
+  const reviewPreApprovalPayment = async (
+    requestId: string,
+    action: PaymentReviewAction,
+    options?: { note?: string; amount?: number; refundProofUrl?: string; refundProofFile?: File | null }
+  ) => {
+    if (!selectedApp) return;
+    setReviewingReqId(requestId);
+    setActionError(null);
+    try {
+      let response: Response;
+      if (options?.refundProofFile) {
+        const formData = new FormData();
+        formData.append("action", action);
+        if (options.note) formData.append("note", options.note);
+        if (options.amount !== undefined && options.amount !== null) formData.append("amount", String(options.amount));
+        if (options.refundProofUrl) formData.append("refundProofUrl", options.refundProofUrl);
+        formData.append("refundProofFile", options.refundProofFile);
 
- const successLabels: Record<PaymentReviewAction, string> = {
- confirm: "Payment confirmed successfully!",
- reject: "Payment rejected.",
- needs_correction: "Payment flagged for correction.",
- return_payment: "Payment returned and tenant notified.",
- return_overpayment: "Overpayment refund recorded and tenant notified.",
- request_shortfall: "Shortfall request emailed to applicant.",
- };
- toast.success(successLabels[action] || "Payment updated successfully.");
- setShowResolutionModal(false);
- refreshApplications();
- } catch (err: any) {
- setActionError(err.message || "Failed to review payment request.");
- toast.error(err.message || "Failed to review payment request.");
- } finally {
- setReviewingReqId(null);
- }
- };
+        response = await fetch(`/api/landlord/applications/${selectedApp.id}/payment-requests/${requestId}/review`, {
+          method: "POST",
+          body: formData,
+        });
+      } else {
+        response = await fetch(`/api/landlord/applications/${selectedApp.id}/payment-requests/${requestId}/review`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action,
+            note: options?.note,
+            amount: options?.amount,
+            refundProofUrl: options?.refundProofUrl,
+          }),
+        });
+      }
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Failed review");
+
+      const successLabels: Record<PaymentReviewAction, string> = {
+        confirm: "Payment confirmed successfully!",
+        reject: "Payment rejected.",
+        needs_correction: "Payment flagged for correction.",
+        return_payment: "Payment returned and tenant notified.",
+        return_overpayment: "Overpayment refund recorded and tenant notified.",
+        request_shortfall: "Shortfall request emailed to applicant.",
+      };
+      toast.success(successLabels[action] || "Payment updated successfully.");
+      setShowResolutionModal(false);
+      refreshApplications();
+    } catch (err: any) {
+      setActionError(err.message || "Failed to review payment request.");
+      toast.error(err.message || "Failed to review payment request.");
+    } finally {
+      setReviewingReqId(null);
+    }
+  };
 
  const runPaymentBypass = async () => {
  if (!selectedApp) return;
@@ -2263,16 +2284,53 @@ export function RentApplications() {
                   </div>
 
                   {(resolutionAction === "return_payment" || resolutionAction === "return_overpayment") && (
-                    <div className="space-y-1.5">
+                    <div className="space-y-2">
                       <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                        Proof of Return / Refund Transaction (Optional URL or Reference)
+                        Proof of Return / Refund Receipt (Attached to Email)
                       </label>
+
+                      <input
+                        ref={resolutionFileInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,application/pdf"
+                        onChange={(e) => setResolutionProofFile(e.target.files?.[0] ?? null)}
+                        className="hidden"
+                      />
+
+                      {resolutionProofFile ? (
+                        <div className="rounded-2xl border border-border/40 bg-background/40 p-3 flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <FileCheck className="size-4 text-emerald-500 shrink-0" />
+                            <span className="text-xs font-bold text-foreground truncate">{resolutionProofFile.name}</span>
+                            <span className="text-[10px] text-muted-foreground shrink-0">({(resolutionProofFile.size / 1024).toFixed(0)} KB)</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setResolutionProofFile(null);
+                              if (resolutionFileInputRef.current) resolutionFileInputRef.current.value = "";
+                            }}
+                            className="text-muted-foreground hover:text-red-500 text-xs font-bold cursor-pointer"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ) : (
+                        <div
+                          onClick={() => resolutionFileInputRef.current?.click()}
+                          className="rounded-2xl border border-dashed border-border hover:border-primary/50 bg-background/20 hover:bg-background/40 p-3 text-center cursor-pointer transition-all flex items-center justify-center gap-2"
+                        >
+                          <UploadCloud className="size-4 text-primary" />
+                          <span className="text-xs font-bold text-muted-foreground">Click to upload refund screenshot / receipt</span>
+                        </div>
+                      )}
+
                       <input
                         type="text"
-                        placeholder="e.g., GCash ref # or receipt link"
+                        placeholder="Or paste GCash ref # or receipt link (optional)"
                         value={resolutionProofUrl}
                         onChange={(e) => setResolutionProofUrl(e.target.value)}
-                        className="w-full rounded-2xl neumorphic-inset px-4 py-3 text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+                        className="w-full rounded-2xl neumorphic-inset px-4 py-2.5 text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
                       />
                     </div>
                   )}
@@ -2299,6 +2357,7 @@ export function RentApplications() {
                         note: resolutionNote,
                         amount: resolutionAmount ? Number(resolutionAmount) : undefined,
                         refundProofUrl: resolutionProofUrl || undefined,
+                        refundProofFile: resolutionProofFile,
                       });
                     }}
                     disabled={reviewingReqId === resolutionRequest.id || !resolutionNote.trim()}

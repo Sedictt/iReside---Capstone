@@ -3,8 +3,12 @@ import { NextResponse } from "next/server";
 import {
     applyPaymentPendingExpiry,
     areRequiredPaymentRequestsCompleted,
+    buildPortalToken,
+    buildPortalUrl,
     logApplicationPaymentAudit,
+    resolvePaymentPendingExpiry,
 } from "@/lib/application-payment-pending";
+import { uploadBillingFile, BILLING_BUCKETS } from "@/lib/billing/storage";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { sendPaymentReviewResolutionEmail } from "@/lib/email";
@@ -29,14 +33,49 @@ export async function POST(request: Request, context: RouteContext) {
     if (!("userId" in authContext)) return authContext as Response;
     const { userId } = authContext;
 
-    const body = (await request.json()) as { 
-        action?: ReviewAction; 
-        note?: string | null;
-        refundProofUrl?: string | null;
-        amount?: number | null;
-    };
-    const action = body.action;
-    const note = typeof body.note === "string" ? body.note.trim() : "";
+    let action: ReviewAction | undefined;
+    let note = "";
+    let refundProofUrl: string | null = null;
+    let amount: number | null = null;
+
+    const contentType = request.headers.get("content-type") || "";
+    if (contentType.includes("multipart/form-data")) {
+        const formData = await request.formData();
+        action = formData.get("action") as ReviewAction;
+        note = String(formData.get("note") || "").trim();
+        const rawAmount = formData.get("amount");
+        if (rawAmount !== null && rawAmount !== undefined && String(rawAmount).trim() !== "") {
+            const parsed = Number(rawAmount);
+            if (!Number.isNaN(parsed)) amount = parsed;
+        }
+        refundProofUrl = String(formData.get("refundProofUrl") || "").trim() || null;
+
+        const proofFile = formData.get("refundProofFile");
+        if (proofFile instanceof File && proofFile.size > 0) {
+            try {
+                const uploadResult = await uploadBillingFile({
+                    bucketName: BILLING_BUCKETS.paymentProofs,
+                    ownerId: applicationId,
+                    scope: `payment-refund/${applicationId}`,
+                    file: proofFile,
+                });
+                refundProofUrl = uploadResult.publicUrl;
+            } catch (uploadErr) {
+                console.error("[payment-review] Error uploading refund proof file:", uploadErr);
+            }
+        }
+    } else {
+        const body = (await request.json()) as { 
+            action?: ReviewAction; 
+            note?: string | null;
+            refundProofUrl?: string | null;
+            amount?: number | null;
+        };
+        action = body.action;
+        note = typeof body.note === "string" ? body.note.trim() : "";
+        refundProofUrl = typeof body.refundProofUrl === "string" ? body.refundProofUrl.trim() || null : null;
+        amount = typeof body.amount === "number" ? body.amount : null;
+    }
 
     const VALID_ACTIONS: ReviewAction[] = [
         "confirm",
@@ -125,8 +164,8 @@ export async function POST(request: Request, context: RouteContext) {
             ...(req.metadata || {}),
             resolution_action: action,
             resolution_note: note || null,
-            refund_proof_url: body.refundProofUrl || null,
-            resolved_amount: body.amount ?? null,
+            refund_proof_url: refundProofUrl || null,
+            resolved_amount: amount ?? null,
             resolved_at: nowIso,
             resolved_by: userId,
         };
@@ -160,8 +199,8 @@ export async function POST(request: Request, context: RouteContext) {
             metadata: {
                 status: nextStatus,
                 action,
-                refund_proof_url: body.refundProofUrl || null,
-                amount: body.amount ?? null,
+                refund_proof_url: refundProofUrl || null,
+                amount: amount ?? null,
             },
         });
     }
@@ -182,6 +221,24 @@ export async function POST(request: Request, context: RouteContext) {
             const applicantName = application.applicant_name || "Applicant";
             const systemTxn = targetRequests[0]?.metadata?.system_reference_number || targetRequests[0]?.metadata?.transaction_reference || "IR-TXN-REF";
 
+            // If returning payment or requesting shortfall, generate a fresh portal token so applicant can easily return to the portal
+            let paymentPortalUrl: string | null = null;
+            if (action === "return_payment" || action === "request_shortfall") {
+                const { token, hash: tokenHash } = buildPortalToken();
+                const now = new Date();
+                const expiresAt = resolvePaymentPendingExpiry(now);
+                await adminClient
+                    .from("applications")
+                    .update({
+                        payment_portal_token_hash: tokenHash,
+                        payment_portal_token_expires_at: expiresAt.toISOString(),
+                        payment_pending_expires_at: expiresAt.toISOString(),
+                    } as any)
+                    .eq("id", application.id);
+
+                paymentPortalUrl = buildPortalUrl(new URL(request.url).origin, token);
+            }
+
             await sendPaymentReviewResolutionEmail({
                 to: application.applicant_email.trim(),
                 applicantName,
@@ -189,9 +246,10 @@ export async function POST(request: Request, context: RouteContext) {
                 unitName,
                 resolutionType,
                 transactionReference: systemTxn,
-                amount: typeof body.amount === "number" ? body.amount : null,
+                amount: typeof amount === "number" ? amount : null,
                 note: note || null,
-                proofUrl: body.refundProofUrl || null,
+                proofUrl: refundProofUrl || null,
+                paymentPortalUrl,
             });
             console.log(`[payment-review] Sent ${resolutionType} resolution email to ${application.applicant_email}`);
         } catch (emailErr) {

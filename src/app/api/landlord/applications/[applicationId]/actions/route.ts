@@ -18,6 +18,11 @@ import {
     logApplicationPaymentAudit,
     type PaymentPendingConfig,
 } from "@/lib/application-payment-pending";
+import {
+    buildInviteUrl,
+    generateInviteToken,
+    hashInviteToken,
+} from "@/lib/tenant-intake-invites";
 
 type ActionBody = {
     status?: ApplicationStatus;
@@ -541,18 +546,42 @@ export async function POST(
                 let resubmitUrl: string | null = null;
 
                 const propertyId = (application as any).unit?.property?.id;
+                const unitId = application.unit_id;
+                const landlordId = (application as any).unit?.property?.landlord_id || (application as any).landlord_id || userId;
+
                 if (propertyId) {
                     const { data: inviteRow } = await adminClient
-                        .from("tenant_invites" as any)
-                        .select("share_token, id")
+                        .from("tenant_intake_invites" as any)
+                        .select("public_token, id")
                         .eq("property_id", propertyId)
                         .eq("status", "active")
                         .order("created_at", { ascending: false })
                         .limit(1)
                         .maybeSingle() as any;
 
-                    if (inviteRow?.share_token) {
-                        resubmitUrl = `${reqUrl.origin}/apply/${inviteRow.share_token}`;
+                    if (inviteRow?.public_token) {
+                        resubmitUrl = buildInviteUrl(reqUrl.origin, inviteRow.public_token);
+                    } else {
+                        // Create a fresh active invite so the applicant always has a direct application link to reapply
+                        const token = generateInviteToken();
+                        const inviteId = crypto.randomUUID();
+                        const { error: inviteErr } = await adminClient.from("tenant_intake_invites" as any).insert({
+                            id: inviteId,
+                            landlord_id: landlordId,
+                            property_id: propertyId,
+                            unit_id: unitId || null,
+                            mode: unitId ? "unit" : "property",
+                            application_type: "online",
+                            required_requirements: ["valid_id", "proof_of_income", "application_form"],
+                            public_token: token,
+                            token_hash: hashInviteToken(token),
+                            max_uses: 1,
+                            use_count: 0,
+                            status: "active",
+                        });
+                        if (!inviteErr) {
+                            resubmitUrl = buildInviteUrl(reqUrl.origin, token);
+                        }
                     }
                 }
 
