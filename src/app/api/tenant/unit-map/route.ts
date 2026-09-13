@@ -105,8 +105,12 @@ export async function GET() {
     }
 
     const placedCount = unitsWithPositions.filter(u => u.position !== null).length;
-    const isSetupComplete = placedCount > 0;
     const isFullyPlaced = unitsWithPositions.length > 0 && placedCount === unitsWithPositions.length;
+    const currentUnit = unitsWithPositions.find(u => u.id === unitInfo.id);
+    const isCurrentUnitPlaced = Boolean(currentUnit?.position);
+
+    // Map setup is complete only if the property has units, all units have been placed, and the tenant's own unit is placed
+    const isSetupComplete = unitsWithPositions.length > 0 && isFullyPlaced && isCurrentUnitPlaced;
 
     return NextResponse.json({
         property,
@@ -121,6 +125,7 @@ export async function GET() {
         mapDecorations: (property as any).map_decorations ?? {},
         isSetupComplete,
         isFullyPlaced,
+        isCurrentUnitPlaced,
         placedCount,
         totalUnits: unitsWithPositions.length
     });
