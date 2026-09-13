@@ -60,6 +60,8 @@ const SignaturePad = dynamic(() => import("./SignaturePad").then(mod => mod.Sign
 });
 import { useProperty } from "@/context/PropertyContext";
 import { generateLeasePdf } from "@/lib/lease-pdf";
+import { useAuth } from "@/hooks/useAuth";
+import { createClient } from "@/lib/supabase/client";
 
 // ─── Types ────────────────────────────────────────────────────────────
 type ApplicationStatus =
@@ -296,9 +298,11 @@ function ApplicationsSkeletonList() {
 // ─── Main Component ───────────────────────────────────────────────────
 
 export function RentApplications() {
- const { selectedPropertyId } = useProperty();
- const mounted = useRef(false);
- const searchParams = useSearchParams();
+  const { user } = useAuth();
+  const { selectedPropertyId } = useProperty();
+  const supabase = useMemo(() => createClient(), []);
+  const mounted = useRef(false);
+  const searchParams = useSearchParams();
 
  const [activeTab, setActiveTab] = useState<"pending" | "approved" | "rejected" | "archived">("pending");
  const [searchQuery, setSearchQuery] = useState(() => searchParams?.get("search") || "");
@@ -367,12 +371,14 @@ export function RentApplications() {
  shareUrl: string;
  qrUrl: string;
  }>>([]);
- const [reloadTrigger, setReloadTrigger] = useState(0);
- const reloadKey = useRef(0);
- const refreshApplications = useCallback(() => {
-   reloadKey.current += 1;
-   setReloadTrigger((prev) => prev + 1);
- }, []);
+  const [reloadTrigger, setReloadTrigger] = useState(0);
+  const reloadKey = useRef(0);
+  const isSilentReload = useRef(false);
+  const refreshApplications = useCallback((options?: { silent?: boolean }) => {
+    isSilentReload.current = options?.silent ?? false;
+    reloadKey.current += 1;
+    setReloadTrigger((prev) => prev + 1);
+  }, []);
  const [signingLinkState, setSigningLinkState] = useState<{
  loading: boolean;
  message: string | null;
@@ -454,76 +460,134 @@ export function RentApplications() {
  generate();
  }, [selectedApp]);
 
- useEffect(() => { if (previewUrl) documentLoading.current = true; }, [previewUrl]);
+  useEffect(() => { if (previewUrl) documentLoading.current = true; }, [previewUrl]);
 
- useEffect(() => {
- setBypassReason("");
- setBypassPassword("");
- setReviewingReqId(null);
- setShowBypassModal(false);
- setShowResolutionModal(false);
- }, [selectedApp?.id]);
+  useEffect(() => {
+    setBypassReason("");
+    setBypassPassword("");
+    setReviewingReqId(null);
+    setShowBypassModal(false);
+    setShowResolutionModal(false);
+  }, [selectedApp?.id]);
 
- useEffect(() => {
- mounted.current = true;
- setLoading(true);
- const action = searchParams.get("action");
- if (action === "tenant-application" || action === "walk-in") {
- setShowTenantApplicationModal(true);
- }
- }, [searchParams]);
+  useEffect(() => {
+    mounted.current = true;
+    setLoading(true);
+    const action = searchParams.get("action");
+    if (action === "tenant-application" || action === "walk-in") {
+      setShowTenantApplicationModal(true);
+    }
+  }, [searchParams]);
 
- useEffect(() => {
- const controller = new AbortController();
- const startTime = Date.now();
- let loadingTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  useEffect(() => {
+    const controller = new AbortController();
+    const startTime = Date.now();
+    let loadingTimeoutId: ReturnType<typeof setTimeout> | null = null;
+    const silent = isSilentReload.current;
+    isSilentReload.current = false;
 
- const loadApplications = async () => {
- setLoading(true);
- setError(null);
- try {
- const params = new URLSearchParams({ propertyId: selectedPropertyId });
- const response = await fetch(`/api/landlord/applications?${params.toString()}`, {
- method: "GET",
- signal: controller.signal,
- });
- if (!response.ok) throw new Error("Failed to load applications");
- const payload = (await response.json()) as { applications?: RentApplication[] };
- if (!controller.signal.aborted) {
- const fetchedApps = Array.isArray(payload.applications) ? payload.applications : [];
- setApplications(fetchedApps);
+    const loadApplications = async () => {
+      if (!silent) {
+        setLoading(true);
+      }
+      setError(null);
+      try {
+        const params = new URLSearchParams({ propertyId: selectedPropertyId });
+        const response = await fetch(`/api/landlord/applications?${params.toString()}`, {
+          method: "GET",
+          signal: controller.signal,
+        });
+        if (!response.ok) throw new Error("Failed to load applications");
+        const payload = (await response.json()) as { applications?: RentApplication[] };
+        if (!controller.signal.aborted) {
+          const fetchedApps = Array.isArray(payload.applications) ? payload.applications : [];
+          setApplications(fetchedApps);
 
- // Keep selectedApp updated with latest data if it's currently selected or via deep link
- setSelectedApp((prev) => {
- if (!prev) {
- const deepLinkId = searchParams.get("id");
- return deepLinkId ? fetchedApps.find((a) => a.id === deepLinkId) ?? null : null;
- }
- return fetchedApps.find((a) => a.id === prev.id) ?? prev;
- });
- }
- } catch (fetchError) {
- if ((fetchError as Error).name !== "AbortError" && !controller.signal.aborted) {
- setError("Unable to load applications right now.");
- setApplications([]);
- }
- } finally {
- if (!controller.signal.aborted) {
- const elapsed = Date.now() - startTime;
- const minTime = 400;
- loadingTimeoutId = setTimeout(() => setLoading(false), Math.max(0, minTime - elapsed));
- }
- }
- };
+          // Keep selectedApp updated with latest data if it's currently selected or via deep link
+          setSelectedApp((prev) => {
+            if (!prev) {
+              const deepLinkId = searchParams.get("id");
+              return deepLinkId ? fetchedApps.find((a) => a.id === deepLinkId) ?? null : null;
+            }
+            return fetchedApps.find((a) => a.id === prev.id) ?? prev;
+          });
+        }
+      } catch (fetchError) {
+        if ((fetchError as Error).name !== "AbortError" && !controller.signal.aborted) {
+          setError("Unable to load applications right now.");
+          setApplications([]);
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          if (!silent) {
+            const elapsed = Date.now() - startTime;
+            const minTime = 400;
+            loadingTimeoutId = setTimeout(() => setLoading(false), Math.max(0, minTime - elapsed));
+          } else {
+            setLoading(false);
+          }
+        }
+      }
+    };
 
- loadApplications();
- return () => {
- controller.abort();
- if (loadingTimeoutId) {
- clearTimeout(loadingTimeoutId);
- }
- };
- }, [selectedPropertyId]);
+    loadApplications();
+    return () => {
+      controller.abort();
+      if (loadingTimeoutId) {
+        clearTimeout(loadingTimeoutId);
+      }
+    };
+  }, [selectedPropertyId, reloadTrigger]);
+
+  // Realtime subscription for incoming applications and payment requests
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channelName = `landlord-applications-live-${user.id}`;
+    const channel = supabase
+      .channel(channelName)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "applications",
+          filter: `landlord_id=eq.${user.id}`,
+        },
+        (payload) => {
+          if (payload.eventType === "INSERT") {
+            const newRecord = payload.new as any;
+            const applicantName = newRecord?.applicant_name || "a new applicant";
+            toast.info(`New application received from ${applicantName}!`);
+          }
+          refreshApplications({ silent: true });
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "application_payment_requests",
+          filter: `landlord_id=eq.${user.id}`,
+        },
+        (payload) => {
+          if (payload.eventType === "UPDATE") {
+            const updatedReq = payload.new as any;
+            if (updatedReq?.status === "processing" || updatedReq?.payment_proof_url) {
+              toast.info("Payment proof submitted for an application.");
+            }
+          }
+          refreshApplications({ silent: true });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, supabase, refreshApplications]);
+
 
  const toggleRequirement = async (applicationId: string, currentChecklist: Record<string, boolean>, key: string) => {
  const updatedChecklist = { ...currentChecklist, [key]: !currentChecklist[key] };

@@ -13,6 +13,7 @@ import {
     type TenantInviteApplicationType,
     type TenantInviteRequirementKey,
 } from "@/lib/tenant-intake-invites";
+import { sendNewApplicationReceivedEmail } from "@/lib/email";
 import type { Database } from "@/types/database";
 
 type InviteRecord = {
@@ -420,6 +421,100 @@ export async function POST(
                 unitId: resolvedUnitId,
             },
         });
+
+        // 1. Resolve unit & property labels for landlord notification
+        let resolvedPropertyName = "Property";
+        let resolvedUnitName = "Unit";
+        try {
+            const { data: unitData } = await adminClient
+                .from("units")
+                .select("name, property:properties(name)")
+                .eq("id", resolvedUnitId)
+                .maybeSingle();
+
+            if (unitData) {
+                resolvedUnitName = unitData.name || "Unit";
+                resolvedPropertyName = (unitData.property as any)?.name || "Property";
+            }
+        } catch (unitErr) {
+            console.error("[POST invites] Failed to resolve unit labels for notification:", unitErr);
+        }
+
+        // 2. Dispatch in-app notification to landlord
+        try {
+            const notifPayload = {
+                user_id: invite.landlord_id,
+                type: "application" as const,
+                title: `New Application — ${resolvedPropertyName}`,
+                message: `${applicantName} submitted a rental application for ${resolvedUnitName}. Review the dossier now.`,
+                data: {
+                    applicationId: application.id,
+                    propertyId: invite.property_id,
+                    unitId: resolvedUnitId,
+                    applicantName,
+                    applicantEmail,
+                    propertyName: resolvedPropertyName,
+                    unitName: resolvedUnitName,
+                },
+                read: false,
+            };
+
+            const { error: notifErr } = await adminClient
+                .from("notifications")
+                .insert(notifPayload as any);
+
+            if (notifErr) {
+                console.error("[POST invites] In-app notification insert error:", notifErr);
+            } else {
+                console.log(`[POST invites] In-app notification created for landlord ${invite.landlord_id}`);
+            }
+        } catch (notifEx) {
+            console.error("[POST invites] Unhandled exception creating in-app notification:", notifEx);
+        }
+
+        // 3. Dispatch email notification to landlord (with fallback resolution)
+        try {
+            let landlordEmail: string | null = null;
+            let landlordFullName: string = "Landlord";
+
+            const { data: landlordProf } = await adminClient
+                .from("profiles")
+                .select("email, full_name")
+                .eq("id", invite.landlord_id)
+                .maybeSingle();
+
+            if (landlordProf) {
+                landlordEmail = landlordProf.email?.trim() || null;
+                if (landlordProf.full_name) landlordFullName = landlordProf.full_name;
+            }
+
+            if (!landlordEmail && invite.landlord_id) {
+                const { data: authUser, error: authErr } = await adminClient.auth.admin.getUserById(invite.landlord_id);
+                if (!authErr && authUser?.user?.email) {
+                    landlordEmail = authUser.user.email.trim();
+                }
+            }
+
+            if (landlordEmail) {
+                const reqUrl = new URL(request.url);
+                const dossierUrl = `${reqUrl.origin}/landlord/applications?id=${application.id}`;
+
+                await sendNewApplicationReceivedEmail({
+                    to: landlordEmail,
+                    landlordName: landlordFullName,
+                    applicantName,
+                    applicantEmail,
+                    applicantPhone: body.applicant_phone?.trim() || null,
+                    propertyName: resolvedPropertyName,
+                    unitName: resolvedUnitName,
+                    moveInDate: body.move_in_date || null,
+                    dossierUrl,
+                });
+                console.log(`[POST invites] Dispatched new application email to landlord ${landlordEmail}`);
+            }
+        } catch (emailErr) {
+            console.error("[POST invites] Failed to send new application email to landlord:", emailErr);
+        }
 
         return NextResponse.json({
             application: {
