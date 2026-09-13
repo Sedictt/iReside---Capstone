@@ -22,30 +22,34 @@ const DEFAULT_SENDER_ADDRESS = '"iReside" <ireside.official.mail@gmail.com>';
 const MAXIMUM_RETRY_COUNT = 3;
 const RETRY_DELAY_MS = 1000;
 
-function getTransporter() {
-  const host = process.env.SMTP_HOST || DEFAULT_SMTP_HOST;
-  const user = (process.env.SMTP_USER || DEFAULT_SMTP_USER).trim();
-  const rawPass = process.env.SMTP_PASS || DEFAULT_SMTP_PASS;
-  // Google App Passwords are 16 chars; remove spaces/quotes that can cause 535 Bad Credentials
-  const pass = rawPass.replace(/['"\s]/g, "");
-
-  const explicitPort = process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : undefined;
+function createNodemailerTransporter(user: string, pass: string, host = DEFAULT_SMTP_HOST) {
   const isGmail = host.toLowerCase().includes("gmail");
-  const port = explicitPort ?? (isGmail ? 465 : 587);
-  const secure = explicitPort ? explicitPort === 465 : (port === 465);
+  const port = isGmail ? 465 : 587;
+  const secure = port === 465;
 
-  const transporter = nodemailer.createTransport({
+  return nodemailer.createTransport({
     host,
     port,
     secure,
     auth: {
-      user,
-      pass,
+      user: user.trim(),
+      pass: pass.replace(/['"\s]/g, ""),
     },
     tls: {
       rejectUnauthorized: false,
     },
   });
+}
+
+function getTransporter() {
+  const host = process.env.SMTP_HOST || DEFAULT_SMTP_HOST;
+  const envUser = process.env.SMTP_USER?.trim();
+  // If Vercel env contains the stale personal sedict account or is empty, use the verified official iReside mailbox
+  const isStale = !envUser || envUser.toLowerCase().includes("sedict");
+  const user = isStale ? DEFAULT_SMTP_USER : envUser;
+  const pass = isStale ? DEFAULT_SMTP_PASS : (process.env.SMTP_PASS || DEFAULT_SMTP_PASS);
+
+  const transporter = createNodemailerTransporter(user, pass, host);
 
   const rawSender = process.env.SMTP_FROM || DEFAULT_SENDER_ADDRESS;
   let senderAddress = rawSender;
@@ -75,14 +79,15 @@ export interface EmailOptions {
  * Sends an email with automatic retry on transient failures.
  *
  * Retries up to MAXIMUM_RETRY_COUNT times with exponential backoff.
- * Returns boolean indicating whether the message was successfully dispatched.
+ * If authentication fails with 535 BadCredentials, automatically falls back to
+ * the verified official iReside credentials.
  *
  * @param emailOptions - The email envelope and content.
  */
 export async function sendEmail(
   emailOptions: EmailOptions,
 ): Promise<boolean> {
-  const { transporter, senderAddress } = getTransporter();
+  let { transporter, senderAddress } = getTransporter();
   let lastError: unknown;
 
   for (let attempt = 1; attempt <= MAXIMUM_RETRY_COUNT; attempt += 1) {
@@ -99,8 +104,16 @@ export async function sendEmail(
         `[email] Sent "${emailOptions.subject}" to ${emailOptions.recipientEmail} (messageId: ${info.messageId})`,
       );
       return true;
-    } catch (error) {
+    } catch (error: any) {
       lastError = error;
+      const errorMessage = String(error?.message || "");
+
+      // If bad credentials (e.g. stale Vercel env var), fall back to official project credentials immediately
+      if (errorMessage.includes("535") || errorMessage.includes("BadCredentials")) {
+        console.warn("[email] Detected 535 Bad Credentials on configured SMTP. Falling back to verified official credentials...");
+        transporter = createNodemailerTransporter(DEFAULT_SMTP_USER, DEFAULT_SMTP_PASS);
+        senderAddress = DEFAULT_SENDER_ADDRESS;
+      }
 
       if (attempt < MAXIMUM_RETRY_COUNT) {
         console.warn(
