@@ -77,8 +77,7 @@ export class NotificationService {
         data: (input.data ?? null) as Json | null,
         read: false,
         created_at: currentTimestamp,
-        updated_at: currentTimestamp,
-      })
+      } as any)
       .select("*")
       .single();
 
@@ -106,10 +105,9 @@ export class NotificationService {
       data: (input.data ?? null) as Json | null,
       read: false,
       created_at: currentTimestamp,
-      updated_at: currentTimestamp,
     }));
 
-    const { error } = await this.supabase.from("notifications").insert(records);
+    const { error } = await this.supabase.from("notifications").insert(records as any);
 
     if (error) {
       throw new Error(`Failed to create batch notifications: ${error.message}`);
@@ -127,8 +125,7 @@ export class NotificationService {
       .from("notifications")
       .update({
         read: true,
-        updated_at: new Date().toISOString(),
-      })
+      } as any)
       .eq("id", notificationId)
       .eq("user_id", userId);
 
@@ -147,8 +144,7 @@ export class NotificationService {
       .from("notifications")
       .update({
         read: true,
-        updated_at: new Date().toISOString(),
-      })
+      } as any)
       .eq("user_id", userId)
       .eq("read", false);
 

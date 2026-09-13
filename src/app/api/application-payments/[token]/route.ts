@@ -400,28 +400,43 @@ export async function POST(request: Request, context: RouteContext) {
         currency: "PHP",
     }).format(totalAmount);
 
-    // In-app notification to landlord
+    // 1. In-app notification to landlord (robust insert without non-existent columns)
+    let inAppNotificationSuccess = false;
     try {
-        const notifService = new NotificationService(adminClient as any);
-        await notifService.createNotification({
-            userId: application.landlord_id,
-            type: "payment",
+        const notifPayload = {
+            user_id: application.landlord_id,
+            type: "payment" as const,
             title: `Payment Proof Submitted - ${application.unit?.property?.name ?? "Property"}`,
             message: `${application.applicant_name || "Applicant"} submitted payment proof (${formattedTotal}) for ${application.unit?.name ?? "Unit"}. Txn Ref: ${systemTransactionReference}, GCash: ${referenceNumber || "N/A"}.`,
             data: {
                 applicationId: application.id,
                 propertyId: application.unit?.property?.id,
+                unitId: application.unit?.id,
                 referenceNumber,
                 transactionReference: systemTransactionReference,
                 method,
                 totalAmount,
             },
-        });
+            read: false,
+        };
+
+        const { error: notifInsertError } = await adminClient
+            .from("notifications")
+            .insert(notifPayload as any);
+
+        if (notifInsertError) {
+            console.error("[POST application-payments] In-app notification insert error:", notifInsertError);
+        } else {
+            inAppNotificationSuccess = true;
+            console.log(`[POST application-payments] In-app notification created for landlord (${application.landlord_id})`);
+        }
     } catch (notifErr) {
-        console.warn("[POST application-payments] Landlord notification skipped:", notifErr);
+        console.error("[POST application-payments] In-app notification unhandled exception:", notifErr);
     }
 
-    // Email notification to landlord
+    // 2. Email notification to landlord (with multi-layer email resolution fallback)
+    let emailNotificationSuccess = false;
+    let resolvedLandlordEmail: string | null = null;
     try {
         const { data: landlordProf } = await adminClient
             .from("profiles")
@@ -429,14 +444,24 @@ export async function POST(request: Request, context: RouteContext) {
             .eq("id", application.landlord_id)
             .maybeSingle();
 
-        if (landlordProf?.email) {
+        resolvedLandlordEmail = landlordProf?.email?.trim() || null;
+
+        // Fallback to Supabase Auth User record if profiles.email is empty
+        if (!resolvedLandlordEmail && application.landlord_id) {
+            const { data: authUser, error: authUserErr } = await adminClient.auth.admin.getUserById(application.landlord_id);
+            if (!authUserErr && authUser?.user?.email) {
+                resolvedLandlordEmail = authUser.user.email.trim();
+            }
+        }
+
+        if (resolvedLandlordEmail) {
             const { sendEmail } = await import("@/lib/email/transport");
-            const propertyTitle = application.unit?.property?.name ?? landlordProf.business_name ?? "Property";
+            const propertyTitle = application.unit?.property?.name ?? landlordProf?.business_name ?? "Property";
             const unitTitle = application.unit?.name ?? "Unit";
             const applicantTitle = application.applicant_name ?? "Applicant";
 
-            await sendEmail({
-                recipientEmail: landlordProf.email,
+            emailNotificationSuccess = await sendEmail({
+                recipientEmail: resolvedLandlordEmail,
                 subject: `Payment Proof Submitted — ${propertyTitle} (${unitTitle})`,
                 htmlBody: `
 <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:#090a0f;color:#e5e7eb;padding:32px 16px;">
@@ -466,10 +491,28 @@ export async function POST(request: Request, context: RouteContext) {
 </div>`,
                 textBody: `Payment proof submitted by ${applicantTitle} for ${propertyTitle} (${unitTitle}).\nTotal Amount: ${formattedTotal}\nMethod: ${method}\nTxn Ref: ${systemTransactionReference}\nGCash Ref: ${referenceNumber || "N/A"}\nPlease log in to review.`,
             });
+            console.log(`[POST application-payments] Landlord payment email sent to ${resolvedLandlordEmail}: ${emailNotificationSuccess}`);
+        } else {
+            console.warn(`[POST application-payments] No email found for landlord (${application.landlord_id})`);
         }
     } catch (emailErr) {
-        console.warn("[POST application-payments] Landlord email notification skipped:", emailErr);
+        console.error("[POST application-payments] Landlord email notification failed:", emailErr);
     }
+
+    // 3. Log notification audit event for transparency
+    await logApplicationPaymentAudit(adminClient, {
+        application_id: application.id,
+        actor_role: "system",
+        event_type: "proof_submitted",
+        metadata: {
+            landlord_id: application.landlord_id,
+            landlord_email: resolvedLandlordEmail,
+            email_sent: emailNotificationSuccess,
+            in_app_notified: inAppNotificationSuccess,
+            transaction_reference: systemTransactionReference,
+            total_amount: totalAmount,
+        },
+    });
 
     const mapped = (updatedRows as unknown as (PortalPaymentRequestRow & { metadata?: any })[]).map((updated) => ({
         id: updated.id,

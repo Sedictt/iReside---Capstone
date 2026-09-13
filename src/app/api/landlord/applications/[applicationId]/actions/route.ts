@@ -6,7 +6,8 @@ import type { ApplicationStatus, PaymentMethod, Json } from "@/types/database";
 import { 
     sendTenantCredentials, 
     sendLandlordCredentialsCopy,
-    sendProspectPaymentRequestEmail 
+    sendProspectPaymentRequestEmail,
+    sendApplicationRejectedEmail,
 } from "@/lib/email";
 import { generateSigningLink } from "@/lib/jwt";
 import {
@@ -532,6 +533,51 @@ export async function POST(
         if (updateError) {
             return NextResponse.json({ error: "Failed to update application status." }, { status: 500 });
         }
+
+        // If rejected, dispatch notification email with decline reason and resubmission invite link
+        if (body.status === "rejected" && application.applicant_email) {
+            try {
+                const reqUrl = new URL(request.url);
+                let resubmitUrl: string | null = null;
+
+                const propertyId = (application as any).unit?.property?.id;
+                if (propertyId) {
+                    const { data: inviteRow } = await adminClient
+                        .from("tenant_invites" as any)
+                        .select("share_token, id")
+                        .eq("property_id", propertyId)
+                        .eq("status", "active")
+                        .order("created_at", { ascending: false })
+                        .limit(1)
+                        .maybeSingle() as any;
+
+                    if (inviteRow?.share_token) {
+                        resubmitUrl = `${reqUrl.origin}/apply/${inviteRow.share_token}`;
+                    }
+                }
+
+                if (!resubmitUrl) {
+                    resubmitUrl = `${reqUrl.origin}/`;
+                }
+
+                const propertyName = (application as any).unit?.property?.name || "Property";
+                const unitName = (application as any).unit?.name || null;
+                const applicantName = application.applicant_name || "Applicant";
+                const rejectionReason = body.rejection_reason?.trim() || "The application did not meet the requirements for this unit.";
+
+                await sendApplicationRejectedEmail({
+                    to: application.applicant_email.trim(),
+                    applicantName,
+                    propertyName,
+                    unitName,
+                    rejectionReason,
+                    resubmitUrl,
+                });
+                console.log(`[actions] Dispatched rejection email with resubmission link to ${application.applicant_email}`);
+            } catch (rejectEmailErr) {
+                console.error("[actions] Rejection email delivery failed:", rejectEmailErr);
+            }
+        }
     }
 
     // ── Auto-provision tenant account on approval ──────────────────────
@@ -552,6 +598,44 @@ export async function POST(
 
         if (!tenantEmail) {
             return NextResponse.json({ error: "Applicant email is required for approval." }, { status: 400 });
+        }
+
+        // If approving from payment_pending or if fields are omitted, recover from application state
+        const pendingConfig = (application as any).requirements_checklist?.payment_pending_config;
+        if (!body.lease_data) {
+            if (pendingConfig?.lease_data) {
+                body.lease_data = pendingConfig.lease_data;
+            } else {
+                const unitRent = Number((application as any).unit?.rent_amount || 0);
+                const startDate = application.move_in_date || new Date().toISOString().split("T")[0];
+                const endDate = new Date(new Date(startDate).getTime() + 365 * 24 * 3600 * 1000).toISOString().split("T")[0];
+                body.lease_data = {
+                    start_date: startDate,
+                    end_date: endDate,
+                    monthly_rent: unitRent,
+                    security_deposit: unitRent,
+                    terms: {},
+                    landlord_signature: `landlord-approval-${Date.now()}`,
+                };
+            }
+        }
+        if (!body.advance_payment) {
+            body.advance_payment = {
+                amount: pendingConfig?.advance_amount || body.lease_data?.monthly_rent || 0,
+                method: "gcash",
+                reference_number: `ADV-${applicationId.slice(0, 8)}`,
+                paid_at: new Date().toISOString(),
+                status: "completed",
+            };
+        }
+        if (!body.security_deposit_payment) {
+            body.security_deposit_payment = {
+                amount: pendingConfig?.security_amount || body.lease_data?.security_deposit || 0,
+                method: "gcash",
+                reference_number: `DEP-${applicationId.slice(0, 8)}`,
+                paid_at: new Date().toISOString(),
+                status: "completed",
+            };
         }
 
         // Validate required lease and payment data

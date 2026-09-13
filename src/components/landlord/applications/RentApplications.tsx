@@ -32,6 +32,13 @@ import {
  Wallet,
  Save,
  Zap,
+ DollarSign,
+ Receipt,
+ RotateCcw,
+ ShieldCheck,
+ Lock,
+ Copy,
+ Check,
 } from "lucide-react";
 import { ToolAccessBar } from "./ToolAccessBar";
 import { LeaseOfflineSigner } from "@/lib/offline/leaseOfflineSigner";
@@ -136,7 +143,13 @@ interface RentApplication {
  }>;
 }
 
-type PaymentReviewAction = "confirm" | "reject" | "needs_correction";
+type PaymentReviewAction = 
+  | "confirm" 
+  | "reject" 
+  | "needs_correction" 
+  | "return_payment" 
+  | "return_overpayment" 
+  | "request_shortfall";
 
 // ─── Status Config ────────────────────────────────────────────────────
 const STATUS_CONFIG: Record<ApplicationStatus, { label: string; color: string; bgColor: string; borderColor: string; icon: React.ElementType }> = {
@@ -354,7 +367,12 @@ export function RentApplications() {
  shareUrl: string;
  qrUrl: string;
  }>>([]);
+ const [reloadTrigger, setReloadTrigger] = useState(0);
  const reloadKey = useRef(0);
+ const refreshApplications = useCallback(() => {
+   reloadKey.current += 1;
+   setReloadTrigger((prev) => prev + 1);
+ }, []);
  const [signingLinkState, setSigningLinkState] = useState<{
  loading: boolean;
  message: string | null;
@@ -371,10 +389,21 @@ export function RentApplications() {
  const [showCountersignModal, setShowCountersignModal] = useState(false);
  const [pendingCountersignature, setPendingCountersignature] = useState<string | null>(null);
  const [countersignRedirectLoading, setCountersignRedirectLoading] = useState(false);
- const reviewingPaymentRequestId = useRef<string | null>(null);
- const bypassingPayments = useRef(false);
- const bypassReason = useRef("");
- const bypassPassword = useRef("");
+
+ const [reviewingReqId, setReviewingReqId] = useState<string | null>(null);
+ const [showBypassModal, setShowBypassModal] = useState(false);
+ const [bypassPassword, setBypassPassword] = useState("");
+ const [bypassReason, setBypassReason] = useState("");
+ const [bypassLoading, setBypassLoading] = useState(false);
+
+ const [showResolutionModal, setShowResolutionModal] = useState(false);
+ const [resolutionRequest, setResolutionRequest] = useState<any | null>(null);
+ const [resolutionAction, setResolutionAction] = useState<"return_payment" | "return_overpayment" | "request_shortfall">("return_payment");
+ const [resolutionAmount, setResolutionAmount] = useState("");
+ const [resolutionNote, setResolutionNote] = useState("");
+ const [resolutionProofUrl, setResolutionProofUrl] = useState("");
+ const [resolutionLoading, setResolutionLoading] = useState(false);
+ const [copiedTxn, setCopiedTxn] = useState<string | null>(null);
 
  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
  const documentLoading = useRef(true);
@@ -428,9 +457,11 @@ export function RentApplications() {
  useEffect(() => { if (previewUrl) documentLoading.current = true; }, [previewUrl]);
 
  useEffect(() => {
- bypassReason.current = "";
- bypassPassword.current = "";
- reviewingPaymentRequestId.current = null;
+ setBypassReason("");
+ setBypassPassword("");
+ setReviewingReqId(null);
+ setShowBypassModal(false);
+ setShowResolutionModal(false);
  }, [selectedApp?.id]);
 
  useEffect(() => {
@@ -462,14 +493,14 @@ export function RentApplications() {
  const fetchedApps = Array.isArray(payload.applications) ? payload.applications : [];
  setApplications(fetchedApps);
 
- // Handle deep linking via ?id=
+ // Keep selectedApp updated with latest data if it's currently selected or via deep link
+ setSelectedApp((prev) => {
+ if (!prev) {
  const deepLinkId = searchParams.get("id");
- if (deepLinkId) {
- const targetApp = fetchedApps.find(a => a.id === deepLinkId);
- if (targetApp) {
- setSelectedApp(targetApp);
+ return deepLinkId ? fetchedApps.find((a) => a.id === deepLinkId) ?? null : null;
  }
- }
+ return fetchedApps.find((a) => a.id === prev.id) ?? prev;
+ });
  }
  } catch (fetchError) {
  if ((fetchError as Error).name !== "AbortError" && !controller.signal.aborted) {
@@ -628,36 +659,91 @@ export function RentApplications() {
  setShowContractModal(true);
  };
 
- const reviewPreApprovalPayment = async (requestId: string, action: PaymentReviewAction) => {
+ const openResolutionModal = (req: any) => {
+ setResolutionRequest(req);
+ setResolutionAction("return_payment");
+ setResolutionAmount("");
+ setResolutionNote("");
+ setResolutionProofUrl("");
+ setShowResolutionModal(true);
+ };
+
+ const reviewPreApprovalPayment = async (
+ requestId: string,
+ action: PaymentReviewAction,
+ options?: { note?: string; amount?: number; refundProofUrl?: string }
+ ) => {
  if (!selectedApp) return;
- reviewingPaymentRequestId.current = requestId;
+ setReviewingReqId(requestId);
+ setActionError(null);
  try {
  const response = await fetch(`/api/landlord/applications/${selectedApp.id}/payment-requests/${requestId}/review`, {
  method: "POST",
  headers: { "Content-Type": "application/json" },
- body: JSON.stringify({ action }),
+ body: JSON.stringify({
+ action,
+ note: options?.note,
+ amount: options?.amount,
+ refundProofUrl: options?.refundProofUrl,
+ }),
  });
- if (!response.ok) throw new Error("Failed review");
- reloadKey.current += 1;
- } catch { setActionError("Failed to review payment request."); } finally { reviewingPaymentRequestId.current = null; }
+ const data = await response.json().catch(() => ({}));
+ if (!response.ok) throw new Error(data.error || "Failed review");
+
+ const successLabels: Record<PaymentReviewAction, string> = {
+ confirm: "Payment confirmed successfully!",
+ reject: "Payment rejected.",
+ needs_correction: "Payment flagged for correction.",
+ return_payment: "Payment returned and tenant notified.",
+ return_overpayment: "Overpayment refund recorded and tenant notified.",
+ request_shortfall: "Shortfall request emailed to applicant.",
+ };
+ toast.success(successLabels[action] || "Payment updated successfully.");
+ setShowResolutionModal(false);
+ refreshApplications();
+ } catch (err: any) {
+ setActionError(err.message || "Failed to review payment request.");
+ toast.error(err.message || "Failed to review payment request.");
+ } finally {
+ setReviewingReqId(null);
+ }
  };
 
  const runPaymentBypass = async () => {
- if (!selectedApp || !bypassPassword.current.trim() || !bypassReason.current.trim()) {
- setActionError("Password and reason required.");
+ if (!selectedApp) return;
+ if (!bypassPassword.trim()) {
+ setActionError("Password required for cash payment bypass.");
+ toast.error("Password required.");
  return;
  }
- bypassingPayments.current = true;
- try {
- const response = await fetch(`/api/landlord/applications/${selectedApp.id}/payment-bypass`, {
- method: "POST",
- headers: { "Content-Type": "application/json" },
- body: JSON.stringify({ password: bypassPassword.current, reason: bypassReason.current }),
- });
- if (!response.ok) throw new Error("Failed bypass");
- reloadKey.current += 1;
- } catch { setActionError("Failed to run bypass."); } finally { bypassingPayments.current = false; }
- };
+ if (bypassReason.trim().length < 10) {
+ setActionError("Please provide a reason of at least 10 characters.");
+ toast.error("Reason must be at least 10 characters.");
+ return;
+ }
+  setBypassLoading(true);
+  setActionError(null);
+  try {
+    const response = await fetch(`/api/landlord/applications/${selectedApp.id}/payment-bypass`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: bypassPassword, reason: bypassReason }),
+    });
+    const data = (await response.json().catch(() => ({}))) as any;
+    if (!response.ok) throw new Error(data.error || "Failed bypass");
+
+    toast.success("Cash payment bypassed! Application is ready for final approval.");
+    setShowBypassModal(false);
+    setBypassPassword("");
+    setBypassReason("");
+    refreshApplications();
+  } catch (err: any) {
+    setActionError(err.message || "Failed to run bypass.");
+    toast.error(err.message || "Failed to run bypass.");
+  } finally {
+    setBypassLoading(false);
+  }
+  };
 
  const handleGenerateSigningLink = async (applicationId: string) => {
  setSigningLinkState({ loading: true, message: null, error: null, signingUrl: null, emailSent: null, leaseCreated: null });
@@ -1076,7 +1162,268 @@ export function RentApplications() {
  );
  })()}
 
- {/* Applicant Profile */}
+ 
+          {/* ─── Move-In Payment Verification Section ────────────────────── */}
+          {(selectedApp.status === "payment_pending" || (selectedApp.preApprovalPayments && selectedApp.preApprovalPayments.length > 0)) && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between px-2">
+                <div className="flex items-center gap-2">
+                  <div className="size-2 rounded-full bg-violet-500 animate-pulse" />
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-foreground">Move-In Payment Verification</h4>
+                </div>
+                {selectedApp.status === "payment_pending" && (
+                  <button
+                    onClick={() => {
+                      setBypassPassword("");
+                      setBypassReason("");
+                      setShowBypassModal(true);
+                    }}
+                    className="flex items-center gap-1.5 rounded-xl border border-primary/20 bg-primary/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-primary hover:bg-primary/20 transition-all cursor-pointer"
+                  >
+                    <ShieldCheck className="size-3.5" />
+                    Cash Bypass
+                  </button>
+                )}
+              </div>
+
+              <div className="rounded-[2.5rem] neumorphic-extruded p-6 space-y-6">
+                {/* Overview Banner */}
+                {(() => {
+                  const payments = selectedApp.preApprovalPayments || [];
+                  const allCompleted = payments.length > 0 && payments.every((p: any) => p.status === "completed" || p.bypassed);
+                  const hasSubmittedProof = payments.some((p: any) => Boolean(p.proofUrl) && p.status !== "completed");
+                  const hasDiscrepancy = payments.some((p: any) => p.status === "rejected");
+
+                  if (allCompleted) {
+                    return (
+                      <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          <CheckCircle2 className="size-5 text-emerald-500 shrink-0" />
+                          <div>
+                            <p className="text-xs font-black text-emerald-500 uppercase tracking-wider">All Payments Verified</p>
+                            <p className="text-[11px] font-medium text-emerald-600/80">Move-in requirements satisfied. Ready for final approval and lease generation.</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => openApprovalModal(selectedApp)}
+                          className="shrink-0 rounded-xl bg-emerald-500 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-black hover:bg-emerald-400 transition-all cursor-pointer"
+                        >
+                          Approve & Sign
+                        </button>
+                      </div>
+                    );
+                  }
+
+                  if (hasSubmittedProof) {
+                    return (
+                      <div className="rounded-2xl border border-violet-500/20 bg-violet-500/10 p-4 flex items-center gap-3">
+                        <Receipt className="size-5 text-violet-500 shrink-0" />
+                        <div>
+                          <p className="text-xs font-black text-violet-500 uppercase tracking-wider">Payment Proof Submitted — Review Required</p>
+                          <p className="text-[11px] font-medium text-violet-600/80">The applicant has submitted proof of payment. Please inspect the receipt and confirm or resolve discrepancies below.</p>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  if (hasDiscrepancy) {
+                    return (
+                      <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-4 flex items-center gap-3">
+                        <AlertCircle className="size-5 text-red-500 shrink-0" />
+                        <div>
+                          <p className="text-xs font-black text-red-500 uppercase tracking-wider">Discrepancy Flagged</p>
+                          <p className="text-[11px] font-medium text-red-600/80">A payment return or shortfall was requested. Waiting for applicant update or settlement.</p>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 flex items-center gap-3">
+                      <Clock className="size-5 text-amber-500 shrink-0" />
+                      <div>
+                        <p className="text-xs font-black text-amber-500 uppercase tracking-wider">Awaiting Tenant Payment</p>
+                        <p className="text-[11px] font-medium text-amber-600/80">Payment request link has been emailed to applicant. If tenant paid cash in person, use Cash Bypass.</p>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Payment Items */}
+                {(!selectedApp.preApprovalPayments || selectedApp.preApprovalPayments.length === 0) ? (
+                  <div className="py-6 text-center text-xs font-medium text-muted-foreground">
+                    No individual payment requests registered.
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {selectedApp.preApprovalPayments.map((req) => {
+                      const isConfirmed = req.status === "completed" || req.bypassed;
+                      const isReviewing = reviewingReqId === req.id;
+                      const hasProof = Boolean(req.proofUrl);
+
+                      return (
+                        <div
+                          key={req.id}
+                          className={cn(
+                            "rounded-2xl border p-5 transition-all space-y-4",
+                            isConfirmed
+                              ? "border-emerald-500/20 bg-emerald-500/5"
+                              : hasProof
+                              ? "border-violet-500/30 bg-violet-500/5"
+                              : "border-border/50 neumorphic-inset"
+                          )}
+                        >
+                          {/* Header Row */}
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                              <div className={cn(
+                                "flex size-10 shrink-0 items-center justify-center rounded-xl font-black text-xs",
+                                isConfirmed ? "bg-emerald-500/20 text-emerald-600" : "bg-primary/10 text-primary"
+                              )}>
+                                <DollarSign className="size-5" />
+                              </div>
+                              <div>
+                                <h5 className="text-sm font-black text-foreground capitalize">
+                                  {req.requirementType === "advance_rent" ? "First Month Advance Rent" : "Security Deposit"}
+                                </h5>
+                                <p className="text-lg font-black text-foreground">{formatCurrency(req.amount)}</p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              {isConfirmed ? (
+                                <span className="flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-emerald-500">
+                                  <CheckCircle2 className="size-3" />
+                                  {req.bypassed ? "Cash Bypassed" : "Confirmed"}
+                                </span>
+                              ) : hasProof ? (
+                                <span className="flex items-center gap-1.5 rounded-xl border border-violet-500/30 bg-violet-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-violet-500">
+                                  <Clock className="size-3" />
+                                  Under Review
+                                </span>
+                              ) : (
+                                <span className="flex items-center gap-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-amber-500">
+                                  <Clock className="size-3" />
+                                  Awaiting Payment
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* References & Info */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                            {req.transactionReference && (
+                              <div className="rounded-xl neumorphic-inset p-3 flex items-center justify-between">
+                                <div>
+                                  <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground block">System Ref No.</span>
+                                  <span className="font-mono text-xs font-black text-foreground">{req.transactionReference}</span>
+                                </div>
+                                <button
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(req.transactionReference!);
+                                    setCopiedTxn(req.transactionReference!);
+                                    setTimeout(() => setCopiedTxn(null), 2000);
+                                  }}
+                                  className="rounded-lg p-1.5 text-muted-foreground hover:text-foreground hover:bg-background/40 transition-all cursor-pointer"
+                                  title="Copy System Reference"
+                                >
+                                  {copiedTxn === req.transactionReference ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
+                                </button>
+                              </div>
+                            )}
+
+                            {req.referenceNumber && (
+                              <div className="rounded-xl neumorphic-inset p-3">
+                                <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground block">GCash Ref No.</span>
+                                <span className="font-mono text-xs font-black text-foreground">{req.referenceNumber}</span>
+                              </div>
+                            )}
+
+                            {req.submittedAt && (
+                              <div className="rounded-xl neumorphic-inset p-3">
+                                <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground block">Submitted At</span>
+                                <span className="text-xs font-bold text-foreground">{formatDate(req.submittedAt)}</span>
+                              </div>
+                            )}
+
+                            {req.method && (
+                              <div className="rounded-xl neumorphic-inset p-3">
+                                <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground block">Method</span>
+                                <span className="text-xs font-bold text-foreground uppercase">{req.method}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Proof Image / Document Lightbox trigger */}
+                          {req.proofUrl ? (
+                            <div className="space-y-2">
+                              <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Proof of Payment</span>
+                              <button
+                                onClick={() => setPreviewUrl(req.proofUrl)}
+                                className="group relative flex w-full items-center justify-between rounded-2xl neumorphic-extruded p-3 hover:border-primary/40 transition-all cursor-pointer overflow-hidden text-left"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className="relative size-12 overflow-hidden rounded-xl bg-black/40 shrink-0">
+                                    {req.proofUrl.toLowerCase().endsWith(".pdf") ? (
+                                      <FileText className="size-6 text-primary m-auto mt-3" />
+                                    ) : (
+                                      <Image src={req.proofUrl} alt="Proof" fill sizes="48px" className="object-cover group-hover:scale-105 transition-transform" />
+                                    )}
+                                  </div>
+                                  <div>
+                                    <p className="text-xs font-black text-foreground group-hover:text-primary transition-colors">Receipt / Proof Document</p>
+                                    <p className="text-[10px] font-medium text-muted-foreground">Click to inspect full resolution</p>
+                                  </div>
+                                </div>
+                                <Eye className="size-4 text-primary mr-2" />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="rounded-xl bg-muted/20 p-3 text-[11px] font-medium text-muted-foreground">
+                              No proof document uploaded yet.
+                            </div>
+                          )}
+
+                          {/* Review Note / Resolution note */}
+                          {req.reviewNote && (
+                            <div className="rounded-xl border border-border/50 bg-background/40 p-3">
+                              <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground block">Resolution Note</span>
+                              <p className="text-xs font-medium text-foreground mt-0.5">{req.reviewNote}</p>
+                            </div>
+                          )}
+
+                          {/* Actions for Landlord */}
+                          {!isConfirmed && (
+                            <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/30">
+                              <button
+                                onClick={() => reviewPreApprovalPayment(req.id, "confirm")}
+                                disabled={isReviewing}
+                                className="flex-1 min-w-[140px] flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-white hover:bg-emerald-500 disabled:opacity-50 transition-all cursor-pointer"
+                              >
+                                {isReviewing ? <Loader2 className="size-3.5 animate-spin" /> : <CheckCircle2 className="size-3.5" />}
+                                Confirm Payment
+                              </button>
+
+                              <button
+                                onClick={() => openResolutionModal(req)}
+                                disabled={isReviewing}
+                                className="flex-1 min-w-[140px] flex items-center justify-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-red-500 hover:bg-red-500 hover:text-white disabled:opacity-50 transition-all cursor-pointer"
+                              >
+                                <RotateCcw className="size-3.5" />
+                                Discrepancy / Return
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Applicant Profile */}
  <div className="space-y-4">
  <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2">Tenant Profile</h4>
  <div className="rounded-[2.5rem] neumorphic-extruded p-8 space-y-8">
@@ -1342,16 +1689,26 @@ export function RentApplications() {
  </div>
 
  <div className="border-t border-white/5 neumorphic-panel p-8 backdrop-blur-xl">
- {selectedApp.status === "pending" || selectedApp.status === "reviewing" ? (
- <div className="flex gap-4">
- <button onClick={() => { setDeclineReason(""); setShowDeclineConfirm(true); }} className="flex-1 rounded-2xl border border-red-500/20 bg-red-500/5 py-4 text-xs font-black uppercase tracking-widest text-red-500 hover:bg-red-500 hover:text-white transition-all active:scale-95">
- Decline
- </button>
- <button onClick={() => openApprovalModal(selectedApp)} className="flex-[2] rounded-2xl bg-primary py-4 text-xs font-black uppercase tracking-widest text-primary-foreground shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95">
- Move to Approval
- </button>
- </div>
- ) : (
+  {selectedApp.status === "pending" || selectedApp.status === "reviewing" ? (
+  <div className="flex gap-4">
+  <button onClick={() => { setDeclineReason(""); setShowDeclineConfirm(true); }} className="flex-1 rounded-2xl border border-red-500/20 bg-red-500/5 py-4 text-xs font-black uppercase tracking-widest text-red-500 hover:bg-red-500 hover:text-white transition-all active:scale-95 cursor-pointer">
+  Decline
+  </button>
+  <button onClick={() => openApprovalModal(selectedApp)} className="flex-[2] rounded-2xl bg-primary py-4 text-xs font-black uppercase tracking-widest text-primary-foreground shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95 cursor-pointer">
+  Move to Approval
+  </button>
+  </div>
+  ) : selectedApp.status === "payment_pending" ? (
+  <div className="flex gap-4">
+  <button onClick={() => { setDeclineReason(""); setShowDeclineConfirm(true); }} className="flex-1 rounded-2xl border border-red-500/20 bg-red-500/5 py-4 text-xs font-black uppercase tracking-widest text-red-500 hover:bg-red-500 hover:text-white transition-all active:scale-95 cursor-pointer">
+  Decline
+  </button>
+  <button onClick={() => openApprovalModal(selectedApp)} className="flex-[2] rounded-2xl bg-emerald-600 py-4 text-xs font-black uppercase tracking-widest text-white shadow-emerald-600/20 hover:bg-emerald-500 transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer">
+  <CheckCircle2 className="size-4" />
+  Finalize Approval & Create Lease
+  </button>
+  </div>
+  ) : (
  <div className="flex flex-col gap-3">
  {selectedApp.status === "rejected" && (
  <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6 text-center">
@@ -1650,6 +2007,229 @@ export function RentApplications() {
  </div>
  )}
  </AnimatePresence>
+
+        {/* Cash Payment Bypass Modal */}
+        <AnimatePresence>
+          {showBypassModal && selectedApp && (
+            <div className="fixed inset-0 z-[320] flex items-center justify-center p-4">
+              <motion.button
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowBypassModal(false)}
+                className="absolute inset-0 bg-black/60 backdrop-blur-md cursor-default"
+                aria-label="Close bypass modal"
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="relative z-[330] w-full max-w-md rounded-[2.5rem] neumorphic-panel p-8 border border-border/50 space-y-6"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="size-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 shrink-0">
+                    <ShieldCheck className="size-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black text-foreground">Cash Payment Bypass</h3>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">In-Person Settlement Confirmation</p>
+                  </div>
+                </div>
+
+                <p className="text-xs font-medium text-foreground/80 leading-relaxed">
+                  Confirm that applicant <span className="font-black text-foreground">{selectedApp.applicant.name}</span> has settled advance rent and security deposit in cash. This action is permanently audited.
+                </p>
+
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Bypass Reason (Min 10 characters)</label>
+                    <textarea
+                      rows={3}
+                      placeholder="e.g., Received full cash payment in person at leasing office on Sep 13."
+                      value={bypassReason}
+                      onChange={(e) => setBypassReason(e.target.value)}
+                      className="w-full rounded-2xl neumorphic-inset p-4 text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none transition-all"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Your Account Password</label>
+                    <div className="relative">
+                      <input
+                        type="password"
+                        placeholder="Enter password to authenticate"
+                        value={bypassPassword}
+                        onChange={(e) => setBypassPassword(e.target.value)}
+                        className="w-full rounded-2xl neumorphic-inset px-4 py-3 text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+                      />
+                      <Lock className="absolute right-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+                    </div>
+                  </div>
+                </div>
+
+                {actionError && (
+                  <p className="text-[11px] font-black text-red-500 text-center">{actionError}</p>
+                )}
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowBypassModal(false)}
+                    className="flex-1 py-3.5 rounded-2xl neumorphic-extruded text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={runPaymentBypass}
+                    disabled={bypassLoading || !bypassPassword.trim() || bypassReason.trim().length < 10}
+                    className="flex-1 py-3.5 rounded-2xl bg-primary text-xs font-black uppercase tracking-widest text-primary-foreground shadow-primary/20 hover:bg-primary/90 disabled:opacity-50 transition-all cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    {bypassLoading ? <Loader2 className="size-4 animate-spin" /> : <ShieldCheck className="size-4" />}
+                    Confirm Bypass
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Payment Discrepancy & Return Modal */}
+        <AnimatePresence>
+          {showResolutionModal && resolutionRequest && selectedApp && (
+            <div className="fixed inset-0 z-[320] flex items-center justify-center p-4">
+              <motion.button
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowResolutionModal(false)}
+                className="absolute inset-0 bg-black/60 backdrop-blur-md cursor-default"
+                aria-label="Close resolution modal"
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="relative z-[330] w-full max-w-lg rounded-[2.5rem] neumorphic-panel p-8 border border-border/50 space-y-6"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="size-12 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500 shrink-0">
+                    <RotateCcw className="size-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black text-foreground">Resolve Payment Discrepancy</h3>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Return Funds or Request Balance</p>
+                  </div>
+                </div>
+
+                {/* Action Tabs */}
+                <div className="grid grid-cols-3 gap-2 rounded-2xl neumorphic-inset p-1.5">
+                  {[
+                    { id: "return_payment", label: "Return Full" },
+                    { id: "return_overpayment", label: "Return Excess" },
+                    { id: "request_shortfall", label: "Request Shortfall" },
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setResolutionAction(tab.id as any)}
+                      className={cn(
+                        "rounded-xl py-2 px-1 text-[10px] font-black uppercase tracking-wider transition-all text-center cursor-pointer",
+                        resolutionAction === tab.id
+                          ? "bg-primary text-primary-foreground shadow"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="rounded-2xl border border-border/40 bg-background/30 p-4 space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    {resolutionAction === "return_payment" && "Returns the entire payment to applicant. The tenant will be notified via email with your explanation and attached transfer proof."}
+                    {resolutionAction === "return_overpayment" && "Records excess amount refunded to tenant while keeping the required fee satisfied. Tenant will receive refund receipt via email."}
+                    {resolutionAction === "request_shortfall" && "Notifies tenant of underpayment, specifying remaining amount due to complete move-in requirements."}
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  {(resolutionAction === "return_overpayment" || resolutionAction === "request_shortfall") && (
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                        {resolutionAction === "return_overpayment" ? "Excess Refund Amount (₱)" : "Shortfall Amount Required (₱)"}
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="0.00"
+                        value={resolutionAmount}
+                        onChange={(e) => setResolutionAmount(e.target.value)}
+                        className="w-full rounded-2xl neumorphic-inset px-4 py-3 text-xs font-bold text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+                      />
+                    </div>
+                  )}
+
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                      Explanation for Tenant (Required)
+                    </label>
+                    <textarea
+                      rows={3}
+                      placeholder="Explain the reason for this adjustment or return..."
+                      value={resolutionNote}
+                      onChange={(e) => setResolutionNote(e.target.value)}
+                      className="w-full rounded-2xl neumorphic-inset p-4 text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none transition-all"
+                    />
+                  </div>
+
+                  {(resolutionAction === "return_payment" || resolutionAction === "return_overpayment") && (
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                        Proof of Return / Refund Transaction (Optional URL or Reference)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g., GCash ref # or receipt link"
+                        value={resolutionProofUrl}
+                        onChange={(e) => setResolutionProofUrl(e.target.value)}
+                        className="w-full rounded-2xl neumorphic-inset px-4 py-3 text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {actionError && (
+                  <p className="text-[11px] font-black text-red-500 text-center">{actionError}</p>
+                )}
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowResolutionModal(false)}
+                    className="flex-1 py-3.5 rounded-2xl neumorphic-extruded text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (!resolutionNote.trim()) {
+                        setActionError("Explanation note is required.");
+                        return;
+                      }
+                      reviewPreApprovalPayment(resolutionRequest.id, resolutionAction, {
+                        note: resolutionNote,
+                        amount: resolutionAmount ? Number(resolutionAmount) : undefined,
+                        refundProofUrl: resolutionProofUrl || undefined,
+                      });
+                    }}
+                    disabled={reviewingReqId === resolutionRequest.id || !resolutionNote.trim()}
+                    className="flex-1 py-3.5 rounded-2xl bg-red-600 text-xs font-black uppercase tracking-widest text-white shadow-red-600/20 hover:bg-red-500 disabled:opacity-50 transition-all cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    {reviewingReqId === resolutionRequest.id ? <Loader2 className="size-4 animate-spin" /> : <RotateCcw className="size-4" />}
+                    Submit & Notify
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
  </div>
  );
 }
