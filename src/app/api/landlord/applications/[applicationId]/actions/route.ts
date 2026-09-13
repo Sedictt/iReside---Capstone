@@ -348,6 +348,7 @@ export async function POST(
         .from("applications")
         .select(`
             id, 
+            landlord_id,
             status, 
             applicant_name, 
             applicant_email, 
@@ -459,7 +460,7 @@ export async function POST(
             .insert([
                 {
                     application_id: applicationId,
-                    landlord_id: userId,
+                    landlord_id: (application as any).landlord_id || userId,
                     requirement_type: "advance_rent",
                     amount: advanceAmount,
                     status: "pending",
@@ -471,7 +472,7 @@ export async function POST(
                 },
                 {
                     application_id: applicationId,
-                    landlord_id: userId,
+                    landlord_id: (application as any).landlord_id || userId,
                     requirement_type: "security_deposit",
                     amount: securityAmount,
                     status: "pending",
@@ -506,7 +507,7 @@ export async function POST(
             try {
                 const propertyName = (application as any).unit?.property?.name || "Property";
                 const unitName = (application as any).unit?.name || "Unit";
-                await sendProspectPaymentRequestEmail({
+                emailSentToProspect = await sendProspectPaymentRequestEmail({
                     to: applicantEmail,
                     applicantName,
                     propertyName,
@@ -516,7 +517,6 @@ export async function POST(
                     advanceAmount,
                     securityAmount,
                 });
-                emailSentToProspect = true;
             } catch (emailErr: any) {
                 console.error("[actions] Error sending payment request email:", emailErr);
                 emailSentToProspect = false;

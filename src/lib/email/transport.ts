@@ -15,28 +15,44 @@ import * as nodemailer from "nodemailer";
 // Configuration
 // ---------------------------------------------------------------------------
 
-const SMTP_HOST = process.env.SMTP_HOST;
-const SMTP_PORT = Number(process.env.SMTP_PORT ?? 587);
-const IS_SMTP_SECURE = SMTP_PORT === 465;
-const SMTP_USERNAME = process.env.SMTP_USER;
-const SMTP_PASSWORD = process.env.SMTP_PASS;
-const SENDER_ADDRESS = process.env.SMTP_FROM ?? "iReside <noreply@ireside.app>";
+const DEFAULT_SMTP_HOST = "smtp.gmail.com";
+const DEFAULT_SMTP_USER = "ireside.official.mail@gmail.com";
+const DEFAULT_SMTP_PASS = "qzbh dxhc vazj krpt";
+const DEFAULT_SENDER_ADDRESS = '"iReside" <ireside.official.mail@gmail.com>';
 const MAXIMUM_RETRY_COUNT = 3;
 const RETRY_DELAY_MS = 1000;
 
-// ---------------------------------------------------------------------------
-// Transporter
-// ---------------------------------------------------------------------------
+function getTransporter() {
+  const host = process.env.SMTP_HOST || DEFAULT_SMTP_HOST;
+  const user = process.env.SMTP_USER || DEFAULT_SMTP_USER;
+  const pass = process.env.SMTP_PASS || DEFAULT_SMTP_PASS;
 
-const transporter = nodemailer.createTransport({
-  host: SMTP_HOST,
-  port: SMTP_PORT,
-  secure: IS_SMTP_SECURE,
-  auth: {
-    user: SMTP_USERNAME,
-    pass: SMTP_PASSWORD,
-  },
-});
+  const explicitPort = process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : undefined;
+  const isGmail = host.toLowerCase().includes("gmail");
+  const port = explicitPort ?? (isGmail ? 465 : 587);
+  const secure = explicitPort ? explicitPort === 465 : (port === 465);
+
+  const transporter = nodemailer.createTransport({
+    host,
+    port,
+    secure,
+    auth: {
+      user,
+      pass,
+    },
+    tls: {
+      rejectUnauthorized: false,
+    },
+  });
+
+  const rawSender = process.env.SMTP_FROM || DEFAULT_SENDER_ADDRESS;
+  let senderAddress = rawSender;
+  if (!senderAddress.includes("<") && senderAddress.includes("@")) {
+    senderAddress = `"iReside" <${senderAddress.replace(/['"]/g, "").trim()}>`;
+  }
+
+  return { transporter, senderAddress };
+}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -57,32 +73,30 @@ export interface EmailOptions {
  * Sends an email with automatic retry on transient failures.
  *
  * Retries up to MAXIMUM_RETRY_COUNT times with exponential backoff.
- * All failures are logged but never thrown — email failures should
- * not block the caller's request flow.
+ * Returns boolean indicating whether the message was successfully dispatched.
  *
  * @param emailOptions - The email envelope and content.
  */
 export async function sendEmail(
   emailOptions: EmailOptions,
-): Promise<void> {
+): Promise<boolean> {
+  const { transporter, senderAddress } = getTransporter();
   let lastError: unknown;
 
   for (let attempt = 1; attempt <= MAXIMUM_RETRY_COUNT; attempt += 1) {
     try {
       const info = await transporter.sendMail({
-        from: SENDER_ADDRESS,
+        from: senderAddress,
         to: emailOptions.recipientEmail,
         subject: emailOptions.subject,
         html: emailOptions.htmlBody,
         text: emailOptions.textBody,
       });
 
-      if (process.env.NODE_ENV === "development") {
-        console.log(
-          `[email] Sent "${emailOptions.subject}" to ${emailOptions.recipientEmail} (messageId: ${info.messageId})`,
-        );
-      }
-      return;
+      console.log(
+        `[email] Sent "${emailOptions.subject}" to ${emailOptions.recipientEmail} (messageId: ${info.messageId})`,
+      );
+      return true;
     } catch (error) {
       lastError = error;
 
@@ -101,4 +115,5 @@ export async function sendEmail(
     `[email] All ${MAXIMUM_RETRY_COUNT} attempts failed for "${emailOptions.subject}" to ${emailOptions.recipientEmail}:`,
     lastError,
   );
+  return false;
 }

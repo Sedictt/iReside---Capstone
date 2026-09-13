@@ -529,7 +529,7 @@ Link expires on: ${expiresLabel}
 We will only finalize approval after both payments are landlord-confirmed.
 `;
 
-    await sendEmail({ recipientEmail: to, subject, htmlBody: html, textBody: text });
+    return await sendEmail({ recipientEmail: to, subject, htmlBody: html, textBody: text });
 }
 
 export async function sendRegistrationOTP({

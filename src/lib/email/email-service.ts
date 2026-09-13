@@ -245,8 +245,8 @@ export async function sendTenantOnboardingReminderEmail(
 /** Sends a payment portal link to a prospect for move-in payment verification. */
 export async function sendProspectPaymentRequestEmail(
   parameters: ProspectPaymentRequestEmailParameters,
-): Promise<void> {
-  await sendProspectPaymentRequestEmailImpl({
+): Promise<boolean> {
+  return await sendProspectPaymentRequestEmailImpl({
     to: parameters.recipientEmail,
     applicantName: parameters.applicantName,
     propertyName: parameters.propertyName,
