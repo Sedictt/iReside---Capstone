@@ -375,6 +375,9 @@ export default function LandlordDashboard() {
                         loadingUnits={loadingUnits}
                         loadingInvites={loadingInvites}
                         onOpenVacantUnits={() => setIsVacantUnitsModalOpen(true)}
+                        onOpenOverduePayments={() => setOpenPaymentModal("Overdue")}
+                        onOpenNearDuePayments={() => setOpenPaymentModal("Near Due")}
+                        onOpenInvites={() => setIsInviteModalOpen(true)}
                     />
                 </div>
 

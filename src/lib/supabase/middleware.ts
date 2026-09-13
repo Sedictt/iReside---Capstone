@@ -197,6 +197,36 @@ export async function updateSession(request: NextRequest) {
         return NextResponse.redirect(url);
     }
 
+    // If user arrived at /login with explicit logout params, never redirect them back to dashboard.
+    // Instead, proactively purge any remaining auth & role cookies from the browser.
+    if (isExplicitLogoutRequest(request)) {
+        allCookies.forEach((c) => {
+            if (
+                c.name.includes("-auth-token") ||
+                c.name.startsWith("sb-") ||
+                c.name === "supabase-auth-token" ||
+                c.name === ROLE_COOKIE_NAME ||
+                c.name.includes("session")
+            ) {
+                supabaseResponse.cookies.delete(c.name);
+                supabaseResponse.cookies.set(c.name, "", {
+                    path: "/",
+                    maxAge: 0,
+                    expires: new Date(0),
+                    sameSite: "lax",
+                });
+            }
+        });
+        supabaseResponse.cookies.delete(ROLE_COOKIE_NAME);
+        supabaseResponse.cookies.set(ROLE_COOKIE_NAME, "", {
+            path: "/",
+            maxAge: 0,
+            expires: new Date(0),
+            sameSite: "lax",
+        });
+        return supabaseResponse;
+    }
+
     // If user is already logged in, prevent them from accessing auth pages.
     if (user && (request.nextUrl.pathname.startsWith("/login") || request.nextUrl.pathname.startsWith("/signup") || request.nextUrl.pathname.startsWith("/forgot-password"))) {
         const url = request.nextUrl.clone();
@@ -273,3 +303,8 @@ export const isAllowlistedTenantWritePath = (pathname: string) =>
 
 export const isTenantApiWriteRequest = (request: NextRequest) =>
     request.nextUrl.pathname.startsWith("/api/tenant/") && ["POST", "PATCH", "PUT", "DELETE"].includes(request.method);
+
+export const isExplicitLogoutRequest = (request: NextRequest) =>
+    request.nextUrl.pathname.startsWith("/login") &&
+    (request.nextUrl.searchParams.has("logout") || request.nextUrl.searchParams.get("sync") === "logout");
+

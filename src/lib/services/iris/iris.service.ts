@@ -90,7 +90,7 @@ export class IrisService {
     let completion: OpenAI.Chat.ChatCompletion;
     try {
       completion = await this.aiClient.chat.completions.create({
-        model: "llama-3.1-8b-instant",
+        model: "groq/compound-mini",
         messages,
         temperature: 0.7,
         max_tokens: 500,
@@ -131,7 +131,7 @@ export class IrisService {
           role: "assistant",
           content: aiResponse,
           metadata: {
-            model: "llama-3.1-8b-instant",
+            model: "groq/compound-mini",
             tokens: totalTokens,
           },
         },
@@ -149,7 +149,7 @@ export class IrisService {
       response: aiResponse,
       hasDataCard,
       metadata: {
-        model: "llama-3.1-8b-instant",
+        model: "groq/compound-mini",
         tokens: totalTokens,
       },
     };

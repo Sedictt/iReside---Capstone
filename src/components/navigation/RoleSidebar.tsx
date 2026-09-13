@@ -130,10 +130,10 @@ export function RoleSidebar({
         return (
             <Tooltip
                 key={item.href}
-                content={tooltipContent}
+                content={isCollapsed ? tooltipContent : undefined}
                 side="right"
                 align="center"
-                sideOffset={14}
+                sideOffset={18}
                 showArrow
             >
                 <Link
@@ -228,7 +228,7 @@ export function RoleSidebar({
                         )}
                     </div>
                     {isCollapsed && (
-                        <Tooltip content="Expand sidebar" side="right" sideOffset={14}>
+                        <Tooltip content="Expand sidebar" side="right" sideOffset={18}>
                             <button 
                                 onClick={onToggleCollapse}
                                 className="flex size-12 items-center justify-center rounded-2xl bg-background text-primary shadow-[4px_4px_8px_rgba(163,177,198,0.3),-4px_-4px_8px_rgba(255,255,255,0.9)] dark:shadow-[5px_5px_10px_rgba(0,0,0,0.45),-5px_-5px_10px_rgba(255,255,255,0.04)] border border-white/20 dark:border-white/03 hover:scale-[1.02] transition-all active:scale-[0.98] active:shadow-[inset_3px_3px_6px_rgba(163,177,198,0.35),inset_-3px_-3px_6px_rgba(255,255,255,0.9)] dark:active:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.5),inset_-4px_-4px_8px_rgba(255,255,255,0.05)]"
@@ -344,7 +344,7 @@ export function RoleSidebar({
                         </div>
                     )}
                     
-                    <Tooltip content="Sign out of your session" side="right" sideOffset={14}>
+                    <Tooltip content={isCollapsed ? "Sign out of your session" : undefined} side="right" sideOffset={18}>
                         <button
                             type="button"
                             suppressHydrationWarning

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from "react";
 import Image from "next/image";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -266,7 +266,7 @@ function searchReducer(_state: undefined, action: SearchAction) {
     }
 }
 
-export default function TenantMessagesPage() {
+function MessagesContent() {
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
@@ -1380,10 +1380,10 @@ useEffect(() => {
     }, [searchQuery]);
 
     return (
-        <div className="flex h-full w-full gap-6 overflow-hidden bg-surface-0 p-6 text-high animate-in fade-in duration-700">
+        <div className="relative flex h-full w-full gap-0 sm:gap-6 overflow-hidden bg-surface-0 p-0 sm:p-6 text-high animate-in fade-in duration-700">
             {isGlobalFileDrag && (
                 <div className="pointer-events-none fixed inset-0 z-[70] flex items-center justify-center bg-zinc-950/35 backdrop-blur-sm dark:bg-black/60">
-                    <div className="rounded-3xl border border-primary/30 bg-card/95 px-10 py-8 text-center shadow-[0_24px_60px_-30px_rgba(15,23,42,0.28)] dark:border-primary/40 dark:bg-neutral-900/90 dark:shadow-2xl dark:shadow-primary/20">
+                    <div className="rounded-3xl neumorphic-panel px-10 py-8 text-center">
                         <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-2xl border border-primary/30 bg-primary/10">
                             <Paperclip className="size-6 text-primary" />
                         </div>
@@ -1419,9 +1419,18 @@ useEffect(() => {
                 dashboardHref="/tenant/dashboard"
             />
 
-            <div className="flex h-full min-w-0 flex-1 flex-col overflow-hidden rounded-[2.5rem] border border-border bg-surface-1 shadow-sm">
+            <div className={cn(
+                "h-full flex-col overflow-hidden neumorphic-panel transition-all duration-300",
+                "sm:flex sm:rounded-[2.5rem] sm:min-w-0 sm:flex-1",
+                (activeConversationId || isIrisActive) ? "flex w-full" : "hidden sm:flex"
+            )}>
                 {isIrisActive ? (
-                    <TenantIrisChat />
+                    <TenantIrisChat
+                        onBack={() => {
+                            setIsIrisActive(false);
+                            setActiveConversationId(null);
+                        }}
+                    />
                 ) : (
                     <>
                         <ChatHeader
@@ -1432,6 +1441,10 @@ useEffect(() => {
                             showInfoSidebar={showInfoSidebar}
                             setShowInfoSidebar={setShowInfoSidebar}
                             openReportWizard={openReportWizard}
+                            onBack={() => {
+                                setActiveConversationId(null);
+                                setIsIrisActive(false);
+                            }}
                         />
 
                         <MessageList
@@ -1464,6 +1477,7 @@ useEffect(() => {
                             isOtherUserTyping={isOtherUserTyping}
                             otherUserName={displayContact.name}
                             isLoading={isChatLoading}
+                            onOpenQuickActions={() => handleQuickAction(activeQuickActions[0]?.key || "pay-rent")}
                         />
                     </>
                 )}
@@ -1471,17 +1485,26 @@ useEffect(() => {
 
             <AnimatePresence>
                 {(showInfoSidebar || showFilesSidebar) && (
-                    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="w-80 shrink-0 overflow-hidden rounded-[2rem] border border-border bg-surface-1 shadow-sm lg:w-96">
+                    <motion.div 
+                        initial={{ opacity: 0, x: 20 }} 
+                        animate={{ opacity: 1, x: 0 }} 
+                        exit={{ opacity: 0, x: 20 }} 
+                        className={cn(
+                            "h-full shrink-0 overflow-hidden neumorphic-panel transition-all duration-300",
+                            "sm:w-80 sm:rounded-[2rem] lg:w-96",
+                            "absolute inset-y-0 right-0 z-30 w-full sm:relative sm:inset-auto"
+                        )}
+                    >
                         {showInfoSidebar ? (
                             <div className="flex h-full flex-col">
-                                <div className="flex items-center justify-between border-b border-divider p-6">
+                                <div className="flex items-center justify-between p-6">
                                     <h3 className="text-lg font-black text-high">Conversation Info</h3>
                                     <button onClick={() => setShowInfoSidebar(false)} className="rounded-lg p-2 hover:bg-surface-2 transition-colors"><X className="size-5" /></button>
                                 </div>
                                 <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar-premium">
                                     <div className="flex flex-col items-center text-center">
-                                        <div className="size-24 rounded-full border-4 border-surface-2 overflow-hidden mb-4 shadow-xl" style={{ backgroundColor: displayContact.avatarBgColor || 'var(--surface-3)' }}>
-                                            {displayContact.avatarUrl ? <Image src={displayContact.avatarUrl} alt={displayContact.name} width={96} height={96} className="object-cover" /> : <span className="text-2xl font-black text-high">{displayContact.initials}</span>}
+                                        <div className="relative size-24 rounded-full neumorphic-inset-card overflow-hidden mb-4" style={{ backgroundColor: displayContact.avatarBgColor || 'var(--surface-3)' }}>
+                                            {displayContact.avatarUrl ? <Image src={displayContact.avatarUrl} alt={displayContact.name} fill sizes="64px" className="object-cover" /> : <span className="text-2xl font-black text-high">{displayContact.initials}</span>}
                                         </div>
                                         <h4 className="text-xl font-black text-high">{displayContact.name}</h4>
                                         <div className="mt-2"><RoleBadge role={displayContact.role as BadgeRole} /></div>
@@ -1489,7 +1512,7 @@ useEffect(() => {
                                     </div>
                                     <div className="grid grid-cols-2 gap-3">
                                         {activeQuickActions.map((action, idx) => (
-                                            <button key={action.key || `qa-${idx}`} onClick={() => handleQuickAction(action.key)} className="flex flex-col items-center gap-2 rounded-2xl border border-divider bg-surface-2 p-4 transition-all hover:bg-surface-3 hover:scale-[1.02] active:scale-95 group">
+                                            <button key={action.key || `qa-${idx}`} onClick={() => handleQuickAction(action.key)} className="flex flex-col items-center gap-2 rounded-2xl neumorphic-inset-card p-4 transition-all hover:scale-[1.02] active:scale-95 group">
                                                 <div className={cn("p-2.5 rounded-xl transition-colors", action.iconContainerClassName)}><action.icon className={cn("size-5", action.iconClassName)} /></div>
                                                 <div className="text-center"><p className="text-[10px] font-black uppercase tracking-widest text-high">{action.labelTop}</p><p className="text-[10px] font-medium text-medium">{action.labelBottom}</p></div>
                                             </button>
@@ -1503,16 +1526,16 @@ useEffect(() => {
                                             </div>
                                             <div className="space-y-2">
                                                 {paymentHistoryLoading ? (
-                                                    <div className="h-20 w-full animate-pulse rounded-2xl bg-surface-2" />
+                                                    <div className="h-20 w-full animate-pulse rounded-2xl neumorphic-panel" />
                                                 ) : paymentHistory.length === 0 ? (
-                                                    <p className="text-xs text-disabled text-center py-6 bg-surface-2/50 rounded-2xl italic border border-dashed border-divider">No payments found</p>
+                                                    <p className="text-xs text-disabled text-center py-6 neumorphic-inset rounded-2xl italic">No payments found</p>
                                                 ) : (
                                                     <>
                                                         {(isPaymentHistoryExpanded ? paymentHistory : paymentHistory.slice(0, 4)).map((payment, idx) => (
                                                             <div
                                                                 key={payment.id || `payment-${payment.dateLabel || idx}-${idx}`}
                                                                 onClick={() => setShowPaymentHistoryModal(true)}
-                                                                className="flex items-center justify-between p-3 rounded-2xl border border-divider bg-surface-2/30 hover:bg-surface-2 hover:border-primary/30 transition-all cursor-pointer group"
+                                                                className="flex items-center justify-between p-3 rounded-2xl neumorphic-inset-card hover:border-primary/30 transition-all cursor-pointer group"
                                                             >
                                                                 <div className="flex items-center gap-3">
                                                                     <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/10 group-hover:scale-105 transition-transform">
@@ -1538,7 +1561,7 @@ useEffect(() => {
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => setIsPaymentHistoryExpanded(!isPaymentHistoryExpanded)}
-                                                                    className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-divider bg-surface-2/40 hover:bg-surface-2 text-[10px] font-black uppercase tracking-wider text-medium hover:text-primary transition-all active:scale-95"
+                                                                    className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl neumorphic-inset-card text-[10px] font-black uppercase tracking-wider text-medium hover:text-primary transition-all active:scale-95"
                                                                 >
                                                                     <span>{isPaymentHistoryExpanded ? "See Less" : `See More (${paymentHistory.length - 4})`}</span>
                                                                     <ChevronDown className={cn("size-3 transition-transform duration-200", isPaymentHistoryExpanded && "rotate-180")} />
@@ -1547,7 +1570,7 @@ useEffect(() => {
                                                             <button
                                                                 type="button"
                                                                 onClick={() => setShowPaymentHistoryModal(true)}
-                                                                className="flex items-center justify-center gap-1 py-2 px-3 rounded-xl border border-divider bg-surface-2/40 hover:bg-surface-2 text-[10px] font-black uppercase tracking-wider text-primary hover:bg-surface-3 transition-all active:scale-95"
+                                                                className="flex items-center justify-center gap-1 py-2 px-3 rounded-xl neumorphic-inset-card text-[10px] font-black uppercase tracking-wider text-primary hover:bg-surface-3 transition-all active:scale-95"
                                                                 title="View Full Payment Ledger"
                                                             >
                                                                 <span>Ledger</span>
@@ -1562,7 +1585,7 @@ useEffect(() => {
                                     <div className="pt-4 space-y-3">
                                         <h5 className="text-[10px] font-black uppercase tracking-widest text-disabled">Actions</h5>
                                         <div className="space-y-2">
-                                            <button onClick={() => setPendingConfirmAction("archive")} className="w-full flex items-center justify-between p-3 rounded-2xl border border-divider bg-surface-2/30 hover:bg-surface-2 transition-all group"><span className="text-xs font-black text-medium group-hover:text-high">Archive Chat</span><ChevronRight className="size-4 text-disabled" /></button>
+                                            <button onClick={() => setPendingConfirmAction("archive")} className="w-full flex items-center justify-between p-3 rounded-2xl neumorphic-inset-card transition-all group"><span className="text-xs font-black text-medium group-hover:text-high">Archive Chat</span><ChevronRight className="size-4 text-disabled" /></button>
                                             <button onClick={() => setPendingConfirmAction("block")} className="w-full flex items-center justify-between p-3 rounded-2xl border border-red-500/10 bg-red-500/5 hover:bg-red-500/10 transition-all group"><span className="text-xs font-black text-red-500">Block Contact</span><AlertTriangle className="size-4 text-red-500/50" /></button>
                                         </div>
                                     </div>
@@ -1576,7 +1599,7 @@ useEffect(() => {
                                 </div>
                                 <div className="flex-1 overflow-y-auto p-6 custom-scrollbar-premium">
                                     <div className="flex gap-2 mb-6 p-1 bg-surface-2 rounded-2xl">
-                                        {['media', 'files'].map((f) => (<button key={f} onClick={() => setFileFilter(f)} className={cn("flex-1 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", fileFilter === f ? "bg-surface-1 text-primary shadow-sm" : "text-disabled hover:text-medium")}>{f}</button>))}
+                                        {['media', 'files'].map((f) => (<button key={f} onClick={() => setFileFilter(f)} className={cn("flex-1 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", fileFilter === f ? "neumorphic-inset text-primary" : "text-disabled hover:text-medium")}>{f}</button>))}
                                     </div>
 
                                     {sharedFiles.length > 0 ? (
@@ -1588,7 +1611,7 @@ useEffect(() => {
                                                 file.isMedia && fileFilter !== 'files' ? (
                                                     <div
                                                         key={file.id || `shared-media-${file.url || idx}-${idx}`}
-                                                        className="aspect-square rounded-xl overflow-hidden border border-divider bg-surface-2 relative group cursor-pointer"
+                                                        className="aspect-square rounded-xl overflow-hidden neumorphic-panel relative group cursor-pointer"
                                                         role="button"
                                                         tabIndex={0}
                                                         onClick={() => {
@@ -1607,7 +1630,7 @@ useEffect(() => {
                                                             }
                                                         }}
                                                     >
-                                                        <Image src={file.url} width={400} height={300} className="object-cover" alt="" />
+                                                        <Image src={file.url} fill sizes="48px" className="object-cover" alt="" />
                                                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                                             <button
                                                                 onClick={(e) => { e.stopPropagation(); handleDownloadFile(file.url, file.name); }}
@@ -1618,7 +1641,7 @@ useEffect(() => {
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <div key={file.id || `shared-file-${file.url || idx}-${idx}`} className="flex items-center gap-3 p-3 rounded-2xl border border-divider bg-surface-2/30 hover:bg-surface-2 transition-all group">
+                                                    <div key={file.id || `shared-file-${file.url || idx}-${idx}`} className="flex items-center gap-3 p-3 rounded-2xl neumorphic-inset-card transition-all group">
                                                         <div className="p-2.5 rounded-xl bg-surface-2 text-medium group-hover:bg-primary/10 group-hover:text-primary transition-colors">
                                                             <FileText className="size-5" />
                                                         </div>
@@ -1637,7 +1660,7 @@ useEffect(() => {
                                             ))}
                                         </div>
                                     ) : (
-                                        <div className="flex flex-col items-center justify-center py-12 px-6 text-center bg-surface-2/30 rounded-[2rem] border border-dashed border-divider">
+                                        <div className="flex flex-col items-center justify-center py-12 px-6 text-center neumorphic-inset rounded-[2rem]">
                                             <div className="p-4 rounded-full bg-surface-2 mb-4"><Folder className="size-8 text-disabled" /></div>
                                             <p className="text-sm font-black text-medium">No files shared yet</p>
                                             <p className="text-[10px] font-medium text-disabled mt-1">Shared documents and media will appear here</p>
@@ -1818,6 +1841,18 @@ useEffect(() => {
                 )}
             </AnimatePresence>
         </div>
+    );
+}
+
+export default function TenantMessagesPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-black">
+                <div className="size-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+            </div>
+        }>
+            <MessagesContent />
+        </Suspense>
     );
 }
 

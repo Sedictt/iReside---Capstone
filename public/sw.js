@@ -5,7 +5,7 @@
  * and resilient network routing for turnkey single-tenant deployments.
  */
 
-const CACHE_VERSION = "ireside-v1.0.0";
+const CACHE_VERSION = "ireside-v1.0.1";
 const STATIC_CACHE_NAME = `ireside-static-${CACHE_VERSION}`;
 const OFFLINE_URL = "/offline";
 
@@ -13,8 +13,7 @@ const PRECACHE_ASSETS = [
   "/",
   "/offline",
   "/logos/favicon.png",
-  "/manifest.json",
-  "/hero-images/apartment-03.png"
+  "/manifest.json"
 ];
 
 self.addEventListener("install", (event) => {
@@ -68,11 +67,9 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Cache-first for static fonts and images
+  // Cache-first for static fonts and logos only
   if (
-    url.pathname.startsWith("/_next/static/") ||
     url.pathname.startsWith("/logos/") ||
-    url.pathname.startsWith("/hero-images/") ||
     url.hostname.includes("fonts.googleapis.com") ||
     url.hostname.includes("fonts.gstatic.com")
   ) {

@@ -171,9 +171,9 @@ export async function POST(request: Request) {
         Analyze this and provide the JSON response.`;
 
         const completion = await groq.chat.completions.create({
-            model: "qwen/qwen3-32b",
+            model: "groq/compound-mini",
             temperature: 0.6,
-            max_completion_tokens: 4096,
+            max_tokens: 1000,
             top_p: 0.95,
             messages: [
                 { role: "system", content: systemPrompt },

@@ -30,6 +30,9 @@ type CommandCenterProps = {
     loadingUnits?: boolean;
     loadingInvites?: boolean;
     onOpenVacantUnits?: () => void;
+    onOpenOverduePayments?: () => void;
+    onOpenNearDuePayments?: () => void;
+    onOpenInvites?: () => void;
 };
 
 type StatCard = {
@@ -67,22 +70,27 @@ export function CommandCenter({
     loadingUnits = false,
     loadingInvites = false,
     onOpenVacantUnits,
+    onOpenOverduePayments,
+    onOpenNearDuePayments,
+    onOpenInvites,
 }: CommandCenterProps) {
     const statCards: StatCard[] = [
         {
             label: "Overdue",
             value: overdueCount,
             isLoading: loadingPayments,
-            href: "/landlord/invoices?tab=invoices&status=overdue",
-            toneClass: "text-red-400",
+            href: onOpenOverduePayments ? undefined : "/landlord/invoices?tab=invoices&status=overdue",
+            onClick: onOpenOverduePayments,
+            toneClass: "text-red-400 cursor-pointer hover:border-red-500/40",
             icon: Zap
         },
         {
             label: "Near Due",
             value: nearDueCount,
             isLoading: loadingPayments,
-            href: "/landlord/invoices?tab=invoices&status=pending",
-            toneClass: "text-amber-400",
+            href: onOpenNearDuePayments ? undefined : "/landlord/invoices?tab=invoices&status=pending",
+            onClick: onOpenNearDuePayments,
+            toneClass: "text-amber-400 cursor-pointer hover:border-amber-500/40",
             icon: TrendingUp
         },
         {
@@ -98,8 +106,9 @@ export function CommandCenter({
             label: "Invites",
             value: activeInviteCount,
             isLoading: loadingInvites,
-            href: "/landlord/applications",
-            toneClass: "text-primary",
+            href: onOpenInvites ? undefined : "/landlord/applications",
+            onClick: onOpenInvites,
+            toneClass: "text-primary cursor-pointer hover:border-primary/40",
             icon: QrCode
         },
     ];
@@ -110,8 +119,9 @@ export function CommandCenter({
                 id: "overdue",
                 title: "Collect overdue rent",
                 detail: `${overdueCount} overdue payment${overdueCount === 1 ? "" : "s"} need follow-up.`,
-                href: "/landlord/invoices?tab=invoices&status=overdue",
-                cta: "Open invoices",
+                href: onOpenOverduePayments ? undefined : "/landlord/invoices?tab=invoices&status=overdue",
+                onClick: onOpenOverduePayments,
+                cta: onOpenOverduePayments ? "Review overdue" : "Open invoices",
                 urgency: "high",
             }
             : {
@@ -193,7 +203,7 @@ export function CommandCenter({
                                     type="button"
                                     onClick={stat.onClick}
                                     className={cardClass}
-                                    title={`View ${stat.label} units directory`}
+                                    title={`View ${stat.label} details`}
                                 >
                                     {content}
                                 </button>

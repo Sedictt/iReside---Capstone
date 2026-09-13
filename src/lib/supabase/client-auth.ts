@@ -87,6 +87,31 @@ export async function signOut(options: SignOutOptions = {}) {
         console.warn("Could not clear custom storage:", e);
     }
 
+    // Clear client-accessible auth cookies from document.cookie
+    try {
+        if (typeof document !== "undefined") {
+            const cookies = document.cookie.split(";");
+            for (const rawCookie of cookies) {
+                const eqPos = rawCookie.indexOf("=");
+                const name = (eqPos > -1 ? rawCookie.substring(0, eqPos) : rawCookie).trim();
+                if (
+                    name.includes("-auth-token") ||
+                    name.startsWith("sb-") ||
+                    name === "supabase-auth-token" ||
+                    name === "x-user-role" ||
+                    name.includes("session")
+                ) {
+                    document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0;`;
+                    if (window.location.hostname) {
+                        document.cookie = `${name}=; path=/; domain=${window.location.hostname}; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0;`;
+                    }
+                }
+            }
+        }
+    } catch (e) {
+        console.warn("Could not clear client cookies:", e);
+    }
+
     // Route logout through the server so middleware-visible cookies are cleared
     const timestamp = Date.now();
     window.location.replace(`/auth/logout?logout=${timestamp}`);
