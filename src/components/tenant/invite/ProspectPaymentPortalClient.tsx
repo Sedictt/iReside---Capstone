@@ -469,11 +469,11 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                         {/* Order & Requirements Breakdown */}
                         <section className="rounded-3xl border border-zinc-200/80 dark:border-white/10 bg-white/90 dark:bg-zinc-900/60 p-6 sm:p-7 backdrop-blur-xl shadow-sm dark:shadow-xl transition-colors flex-1 flex flex-col justify-between">
                             <div>
-                                <div className="flex items-center justify-between border-b border-zinc-200/70 dark:border-white/5 pb-3">
-                                    <h2 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                                <div className="flex items-center justify-between border-b border-zinc-200/70 dark:border-white/5 pb-3 gap-2">
+                                    <h2 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 whitespace-nowrap">
                                         Required Items
                                     </h2>
-                                    <span className="text-xs font-semibold text-zinc-400 dark:text-zinc-500">
+                                    <span className="text-xs font-semibold text-zinc-400 dark:text-zinc-500 whitespace-nowrap">
                                         {payload.requests.length} {payload.requests.length === 1 ? "Requirement" : "Requirements"}
                                     </span>
                                 </div>
@@ -534,17 +534,17 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                         {/* GCash Destination Card with Clickable Inline QR Code */}
                         {payload.destination && (
                             <section className="rounded-3xl border border-blue-500/20 bg-gradient-to-b from-blue-50/40 via-white/90 to-white/90 dark:from-blue-950/20 dark:via-zinc-900/60 dark:to-zinc-900/60 p-6 sm:p-7 backdrop-blur-xl shadow-sm dark:shadow-xl transition-colors flex-1 flex flex-col justify-between">
-                                <div className="flex items-center justify-between border-b border-zinc-200/70 dark:border-white/5 pb-3">
-                                    <div className="flex items-center gap-2.5">
-                                        <div className="flex size-6 items-center justify-center rounded-lg bg-blue-600 text-xs font-black text-white shadow-sm">
+                                <div className="flex items-center justify-between border-b border-zinc-200/70 dark:border-white/5 pb-3 gap-2">
+                                    <div className="flex items-center gap-2 min-w-0">
+                                        <div className="flex size-5 sm:size-6 items-center justify-center rounded-lg bg-blue-600 text-[10px] sm:text-xs font-black text-white shadow-sm shrink-0">
                                             G
                                         </div>
-                                        <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-blue-700 dark:text-blue-300">
-                                            Official GCash Destination
+                                        <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-blue-700 dark:text-blue-300 whitespace-nowrap truncate">
+                                            GCash Destination
                                         </span>
                                     </div>
-                                    <span className="text-[11px] font-bold uppercase text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2.5 py-1 rounded-full border border-blue-500/20">
-                                        Verified Account
+                                    <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold uppercase text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2.5 py-1 rounded-full border border-blue-500/20 whitespace-nowrap shrink-0">
+                                        Verified
                                     </span>
                                 </div>
 
