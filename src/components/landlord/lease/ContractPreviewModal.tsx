@@ -218,37 +218,33 @@ export function ContractPreviewModal({
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     status: isFinalApproval ? "approved" : "payment_pending",
-                    ...(isFinalApproval
-                        ? {}
-                        : {
-                              lease_data: {
-                                  start_date: leaseStart,
-                                  end_date: leaseEnd,
-                                  monthly_rent: monthlyRent,
-                                  security_deposit: securityDeposit,
-                                  terms: {
-                                      payment_policy: {
-                                          collect_payment_on_application: false,
-                                          require_landlord_confirmation_for_uploaded_proof: true,
-                                      },
-                                  },
-                                  landlord_signature: `request-payments-${Date.now()}`,
-                              },
-                              advance_payment: {
-                                  amount: advanceAmount,
-                                  method: "cash" as const,
-                                  reference_number: `ADVANCE-${Date.now()}`,
-                                  paid_at: new Date().toISOString(),
-                                  status: "pending",
-                              },
-                              security_deposit_payment: {
-                                  amount: securityDeposit,
-                                  method: "cash" as const,
-                                  reference_number: `DEPOSIT-${Date.now()}`,
-                                  paid_at: new Date().toISOString(),
-                                  status: "pending",
-                              },
-                          }),
+                    lease_data: {
+                        start_date: leaseStart,
+                        end_date: leaseEnd,
+                        monthly_rent: monthlyRent,
+                        security_deposit: securityDeposit,
+                        terms: {
+                            payment_policy: {
+                                collect_payment_on_application: false,
+                                require_landlord_confirmation_for_uploaded_proof: true,
+                            },
+                        },
+                        landlord_signature: `landlord-approval-${Date.now()}`,
+                    },
+                    advance_payment: {
+                        amount: advanceAmount,
+                        method: "cash" as const,
+                        reference_number: `ADVANCE-${Date.now()}`,
+                        paid_at: new Date().toISOString(),
+                        status: isFinalApproval ? "completed" : "pending",
+                    },
+                    security_deposit_payment: {
+                        amount: securityDeposit,
+                        method: "cash" as const,
+                        reference_number: `DEPOSIT-${Date.now()}`,
+                        paid_at: new Date().toISOString(),
+                        status: isFinalApproval ? "completed" : "pending",
+                    },
                 }),
             });
 

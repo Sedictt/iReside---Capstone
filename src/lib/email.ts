@@ -985,5 +985,219 @@ ${resetUrl}
     await sendEmail({ recipientEmail: to, subject, htmlBody: html, textBody: text });
 }
 
+export async function sendApplicationRejectedEmail({
+    to,
+    applicantName,
+    propertyName,
+    unitName,
+    rejectionReason,
+    resubmitUrl,
+}: {
+    to: string;
+    applicantName: string;
+    propertyName: string;
+    unitName?: string | null;
+    rejectionReason: string;
+    resubmitUrl?: string | null;
+}) {
+    const subject = `Application Status Update — ${propertyName}${unitName ? ` (${unitName})` : ""}`;
+    const cleanUnit = unitName ? ` (${unitName})` : "";
+
+    const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Application Status Update</title>
+</head>
+<body style="margin:0;padding:40px 16px;background-color:#090a0f;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#e5e7eb;">
+  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:520px;margin:0 auto;background-color:#141721;border:1px solid rgba(255,255,255,0.1);border-radius:16px;overflow:hidden;">
+    <tr>
+      <td style="background-color:#ef4444;padding:20px 24px;">
+        <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
+        <p style="margin:2px 0 0;color:#ffffff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:0.9;">Rental Application Status</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:28px 24px;">
+        <p style="margin:0 0 14px;font-size:15px;line-height:1.5;color:#f3f4f6;">Hi <strong>${applicantName}</strong>,</p>
+        <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#9ca3af;">
+          Thank you for your interest in leasing at <strong>${propertyName}${cleanUnit}</strong>. The property manager has reviewed your application and regrettably was unable to approve it at this time.
+        </p>
+
+        <!-- Rejection Reason Card -->
+        <div style="background-color:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:12px;padding:16px;margin-bottom:24px;">
+          <p style="margin:0 0 6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#f87171;">Reason from Landlord</p>
+          <p style="margin:0;font-size:14px;line-height:1.5;color:#ffffff;font-weight:500;">${rejectionReason}</p>
+        </div>
+
+        ${resubmitUrl ? `
+        <div style="background-color:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:20px;text-align:center;margin-bottom:24px;">
+          <p style="margin:0 0 8px;font-size:14px;font-weight:700;color:#ffffff;">Would you like to re-submit or apply again?</p>
+          <p style="margin:0 0 16px;font-size:12px;color:#9ca3af;line-height:1.5;">You may update your details or apply for another available unit using the link below.</p>
+          <a href="${resubmitUrl}" style="display:inline-block;background-color:#c4b0ff;color:#000000;font-weight:900;font-size:14px;padding:12px 24px;border-radius:10px;text-decoration:none;letter-spacing:-0.2px;">
+            Submit New Application &rarr;
+          </a>
+        </div>
+        ` : ""}
+
+        <p style="margin:0;font-size:12px;line-height:1.6;color:#6b7280;">
+          If you have questions regarding this decision, please reach out directly to the landlord or property management office.
+        </p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:16px 24px;background-color:rgba(255,255,255,0.02);border-top:1px solid rgba(255,255,255,0.06);text-align:center;">
+        <p style="margin:0;font-size:11px;color:#6b7280;">&copy; ${new Date().getFullYear()} iReside Property Management</p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+    const text = `Hi ${applicantName},
+
+Thank you for your application for ${propertyName}${cleanUnit}. The property manager has reviewed your application and was unable to approve it at this time.
+
+Reason: ${rejectionReason}
+${resubmitUrl ? `\nIf you would like to submit a new application, you may do so here: ${resubmitUrl}` : ""}
+
+— iReside Property Management`;
+
+    return sendEmail({ recipientEmail: to, subject, htmlBody: html, textBody: text });
+}
+
+export async function sendPaymentReviewResolutionEmail({
+    to,
+    applicantName,
+    propertyName,
+    unitName,
+    resolutionType,
+    transactionReference,
+    amount,
+    note,
+    proofUrl,
+    paymentPortalUrl,
+}: {
+    to: string;
+    applicantName: string;
+    propertyName: string;
+    unitName?: string | null;
+    resolutionType: "returned" | "overpayment_refunded" | "shortfall_requested";
+    transactionReference: string;
+    amount?: number | null;
+    note?: string | null;
+    proofUrl?: string | null;
+    paymentPortalUrl?: string | null;
+}) {
+    const cleanUnit = unitName ? ` (${unitName})` : "";
+    const peso = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" });
+    const formattedAmount = typeof amount === "number" ? peso.format(amount) : null;
+
+    let subject = `Payment Update — ${propertyName}${cleanUnit}`;
+    let title = "Payment Status Update";
+    let message = `An update has been issued regarding your payment for ${propertyName}${cleanUnit}.`;
+    let headerColor = "#3b82f6"; // blue default
+
+    if (resolutionType === "returned") {
+        subject = `Payment Returned — ${propertyName}${cleanUnit}`;
+        title = "Payment Proof Returned";
+        message = `Your payment of ${formattedAmount ?? "the submitted amount"} has been returned by your landlord.`;
+        headerColor = "#ef4444"; // red
+    } else if (resolutionType === "overpayment_refunded") {
+        subject = `Overpayment Refund Issued — ${propertyName}${cleanUnit}`;
+        title = "Overpayment Refund Issued";
+        message = `Your payment was verified, and an excess refund of ${formattedAmount ?? "the overpaid amount"} has been returned.`;
+        headerColor = "#10b981"; // emerald
+    } else if (resolutionType === "shortfall_requested") {
+        subject = `Remaining Balance Required — ${propertyName}${cleanUnit}`;
+        title = "Additional Payment Required";
+        message = `Your landlord verified your partial payment, but an outstanding balance of ${formattedAmount ?? "the remaining amount"} is still required.`;
+        headerColor = "#f59e0b"; // amber
+    }
+
+    const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${title}</title>
+</head>
+<body style="margin:0;padding:40px 16px;background-color:#090a0f;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#e5e7eb;">
+  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:520px;margin:0 auto;background-color:#141721;border:1px solid rgba(255,255,255,0.1);border-radius:16px;overflow:hidden;">
+    <tr>
+      <td style="background-color:${headerColor};padding:20px 24px;">
+        <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
+        <p style="margin:2px 0 0;color:#ffffff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:0.9;">Payment Reconciliation</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:28px 24px;">
+        <p style="margin:0 0 14px;font-size:15px;line-height:1.5;color:#f3f4f6;">Hi <strong>${applicantName}</strong>,</p>
+        <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#9ca3af;">${message}</p>
+
+        <!-- Transaction Details Card -->
+        <div style="background-color:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:18px;margin-bottom:20px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+            <span style="font-size:12px;color:#9ca3af;text-transform:uppercase;">System Reference</span>
+            <span style="font-size:12px;font-weight:700;color:#c4b0ff;font-family:monospace;">${transactionReference}</span>
+          </div>
+          ${formattedAmount ? `
+          <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+            <span style="font-size:12px;color:#9ca3af;text-transform:uppercase;">Amount</span>
+            <span style="font-size:14px;font-weight:900;color:#ffffff;">${formattedAmount}</span>
+          </div>
+          ` : ""}
+          ${note ? `
+          <div style="border-top:1px solid rgba(255,255,255,0.06);padding-top:10px;margin-top:10px;">
+            <span style="font-size:11px;color:#9ca3af;text-transform:uppercase;display:block;margin-bottom:4px;">Landlord Note</span>
+            <span style="font-size:13px;color:#ffffff;line-height:1.5;">${note}</span>
+          </div>
+          ` : ""}
+        </div>
+
+        ${proofUrl ? `
+        <div style="background-color:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:16px;margin-bottom:24px;text-align:center;">
+          <p style="margin:0 0 10px;font-size:13px;font-weight:700;color:#ffffff;">Attached Refund / Return Receipt</p>
+          <a href="${proofUrl}" target="_blank" style="display:inline-block;background-color:rgba(255,255,255,0.1);color:#ffffff;font-size:12px;font-weight:700;padding:10px 18px;border-radius:8px;text-decoration:none;border:1px solid rgba(255,255,255,0.15);">
+            View Receipt Proof &rarr;
+          </a>
+        </div>
+        ` : ""}
+
+        ${paymentPortalUrl ? `
+        <div style="text-align:center;margin-bottom:24px;">
+          <a href="${paymentPortalUrl}" style="display:inline-block;background-color:#c4b0ff;color:#000000;font-weight:900;font-size:14px;padding:14px 28px;border-radius:10px;text-decoration:none;">
+            Open Payment Portal &rarr;
+          </a>
+        </div>
+        ` : ""}
+
+        <p style="margin:0;font-size:12px;line-height:1.6;color:#6b7280;">
+          If you have any questions, please contact your landlord or property administrator.
+        </p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:16px 24px;background-color:rgba(255,255,255,0.02);border-top:1px solid rgba(255,255,255,0.06);text-align:center;">
+        <p style="margin:0;font-size:11px;color:#6b7280;">&copy; ${new Date().getFullYear()} iReside Property Management</p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+    const text = `Hi ${applicantName},
+
+${message}
+System Reference: ${transactionReference}
+${formattedAmount ? `Amount: ${formattedAmount}\n` : ""}${note ? `Note: ${note}\n` : ""}${proofUrl ? `Proof Receipt: ${proofUrl}\n` : ""}${paymentPortalUrl ? `Payment Portal: ${paymentPortalUrl}\n` : ""}
+— iReside Property Management`;
+
+    return sendEmail({ recipientEmail: to, subject, htmlBody: html, textBody: text });
+}
+
 
 

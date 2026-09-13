@@ -24,7 +24,14 @@ import {
   sendRegistrationOTP,
   sendLandlordRegistrationApproved,
   sendLandlordOnboardingMagicLink,
+  sendApplicationRejectedEmail,
+  sendPaymentReviewResolutionEmail,
 } from "@/lib/email";
+
+export {
+  sendApplicationRejectedEmail,
+  sendPaymentReviewResolutionEmail,
+};
 
 // ---------------------------------------------------------------------------
 // Parameter Types
