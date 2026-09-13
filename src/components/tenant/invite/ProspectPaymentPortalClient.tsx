@@ -34,6 +34,7 @@ type PaymentRequestItem = {
     status: "pending" | "processing" | "completed" | "rejected" | "expired";
     method: "gcash" | "cash" | null;
     referenceNumber: string | null;
+    transactionReference?: string | null;
     note: string | null;
     proofUrl: string | null;
     reviewNote: string | null;
@@ -62,6 +63,7 @@ type PortalPayload = {
         qrImageUrl: string | null;
     } | null;
     requests: PaymentRequestItem[];
+    transactionReference?: string | null;
     methods: Array<"gcash" | "cash">;
 };
 
@@ -118,7 +120,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
     const [showQrModal, setShowQrModal] = useState(false);
     const [showProofModal, setShowProofModal] = useState<string | null>(null);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
-    const [isEditingAfterSubmit, setIsEditingAfterSubmit] = useState(false);
+    const [copiedTxn, setCopiedTxn] = useState(false);
 
     useEffect(() => {
         let ignore = false;
@@ -200,6 +202,19 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
         setCopiedNumber(true);
         setTimeout(() => setCopiedNumber(false), 2000);
     };
+
+    const handleCopyTxn = (txnRef: string) => {
+        void navigator.clipboard.writeText(txnRef);
+        setCopiedTxn(true);
+        setTimeout(() => setCopiedTxn(false), 2000);
+    };
+
+    const systemTxnRef = useMemo(() => {
+        if (!payload) return null;
+        if (payload.transactionReference) return payload.transactionReference;
+        const itemWithRef = payload.requests.find((r) => r.transactionReference);
+        return itemWithRef?.transactionReference || null;
+    }, [payload]);
 
     // Derived states
     const totalAmount = useMemo(() => {
@@ -292,6 +307,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
 
             const result = (await response.json()) as {
                 error?: string;
+                transactionReference?: string;
                 requests?: PaymentRequestItem[];
                 request?: PaymentRequestItem;
             };
@@ -305,6 +321,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                 if (!prev) return prev;
                 return {
                     ...prev,
+                    transactionReference: result.transactionReference ?? prev.transactionReference,
                     requests: prev.requests.map((existing) => {
                         const match = updatedRequests.find((u) => u.id === existing.id);
                         return match ? { ...existing, ...match } : existing;
@@ -313,7 +330,6 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
             });
 
             setShowConfirmModal(false);
-            setIsEditingAfterSubmit(false);
             setSuccessMessage("Payment proof submitted successfully! Your landlord has been notified for review.");
         } catch (submitErr) {
             setError(submitErr instanceof Error ? submitErr.message : "Failed to submit payment proof.");
@@ -632,16 +648,41 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                 <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300 max-w-md mx-auto leading-relaxed">
                                     Your advance rent and security deposit have been verified and confirmed by your landlord.
                                 </p>
-                                <div className="mt-6 rounded-2xl border border-zinc-200/80 dark:border-white/5 bg-zinc-50 dark:bg-zinc-950/60 p-5 text-left max-w-md mx-auto text-sm text-zinc-600 dark:text-zinc-400 space-y-2">
-                                    <p><strong className="text-zinc-900 dark:text-zinc-200">Property:</strong> {payload.application.propertyName}</p>
-                                    <p><strong className="text-zinc-900 dark:text-zinc-200">Unit:</strong> {displayUnit}</p>
-                                    <p><strong className="text-zinc-900 dark:text-zinc-200">Total Confirmed:</strong> {peso.format(totalAmount)}</p>
+                                <div className="mt-6 rounded-2xl border border-zinc-200/80 dark:border-white/5 bg-zinc-50 dark:bg-zinc-950/60 p-5 text-left max-w-md mx-auto text-sm text-zinc-600 dark:text-zinc-400 space-y-2.5">
+                                    {systemTxnRef && (
+                                        <div className="flex justify-between items-center pb-2.5 border-b border-zinc-200/70 dark:border-white/5">
+                                            <span className="text-zinc-500 dark:text-zinc-400 font-medium">Transaction Ref</span>
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="font-mono font-bold text-zinc-900 dark:text-white text-xs">{systemTxnRef}</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleCopyTxn(systemTxnRef)}
+                                                    className="p-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition"
+                                                    title="Copy Transaction Reference"
+                                                >
+                                                    {copiedTxn ? <Check className="size-3 text-emerald-500" /> : <Copy className="size-3" />}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div className="flex justify-between">
+                                        <span className="text-zinc-500 dark:text-zinc-400">Property</span>
+                                        <span className="font-bold text-zinc-900 dark:text-zinc-200">{payload.application.propertyName}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-zinc-500 dark:text-zinc-400">Unit</span>
+                                        <span className="font-bold text-zinc-900 dark:text-zinc-200">{displayUnit}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-zinc-500 dark:text-zinc-400">Total Confirmed</span>
+                                        <span className="font-bold text-emerald-600 dark:text-emerald-400">{peso.format(totalAmount)}</span>
+                                    </div>
                                 </div>
                             </section>
                         )}
 
                         {/* STATE 2: UNDER LANDLORD REVIEW */}
-                        {!allCompleted && allProcessing && !isEditingAfterSubmit && (
+                        {!allCompleted && allProcessing && (
                             <section className="rounded-3xl border border-blue-500/20 bg-white/90 dark:bg-zinc-900/60 p-6 sm:p-7 backdrop-blur-xl shadow-sm dark:shadow-xl h-full flex flex-col justify-between">
                                 <div>
                                     <div className="flex items-center gap-3.5 border-b border-zinc-200/70 dark:border-white/5 pb-3.5">
@@ -656,17 +697,61 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                         </div>
                                     </div>
 
-                                    <div className="mt-5 space-y-3 rounded-2xl border border-zinc-200/80 dark:border-white/5 bg-zinc-50 dark:bg-zinc-950/60 p-4 sm:p-5 text-xs sm:text-sm">
+                                    {/* Prominent Immutable System Reference Banner */}
+                                    {systemTxnRef && (
+                                        <div className="mt-4 rounded-2xl border border-blue-500/30 bg-blue-500/10 dark:bg-blue-500/10 p-3.5 flex items-center justify-between gap-3">
+                                            <div className="min-w-0">
+                                                <span className="block text-[10px] font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300">
+                                                    System Reference No. (Immutable)
+                                                </span>
+                                                <span className="font-mono font-black text-sm sm:text-base text-blue-950 dark:text-blue-100 tracking-wide select-all truncate block">
+                                                    {systemTxnRef}
+                                                </span>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleCopyTxn(systemTxnRef)}
+                                                className="flex items-center gap-1.5 rounded-xl border border-blue-500/20 bg-white/80 dark:bg-zinc-800/80 px-3 py-1.5 text-xs font-bold text-blue-700 dark:text-blue-300 hover:bg-white dark:hover:bg-zinc-800 transition shrink-0 shadow-sm"
+                                                title="Copy System Reference"
+                                            >
+                                                {copiedTxn ? (
+                                                    <>
+                                                        <Check className="size-3.5 text-emerald-500" />
+                                                        <span>Copied</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Copy className="size-3.5" />
+                                                        <span>Copy</span>
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    <div className="mt-4 space-y-3 rounded-2xl border border-zinc-200/80 dark:border-white/5 bg-zinc-50 dark:bg-zinc-950/60 p-4 sm:p-5 text-xs sm:text-sm">
                                         <div className="flex justify-between">
                                             <span className="text-zinc-500 dark:text-zinc-400">Status</span>
                                             <span className="font-bold text-blue-600 dark:text-blue-400">Under Landlord Review</span>
                                         </div>
+                                        {systemTxnRef && (
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-zinc-500 dark:text-zinc-400">System Ref No.</span>
+                                                <span className="font-mono font-bold text-zinc-900 dark:text-white">{systemTxnRef}</span>
+                                            </div>
+                                        )}
                                         {referenceNumber && (
                                             <div className="flex justify-between">
                                                 <span className="text-zinc-500 dark:text-zinc-400">GCash Ref No.</span>
                                                 <span className="font-mono font-bold text-zinc-900 dark:text-white">{referenceNumber}</span>
                                             </div>
                                         )}
+                                        <div className="flex justify-between">
+                                            <span className="text-zinc-500 dark:text-zinc-400">Payment Method</span>
+                                            <span className="font-semibold text-zinc-900 dark:text-white capitalize">
+                                                {payload.requests[0]?.method === "gcash" ? "GCash (E-Wallet)" : "Cash (In Person)"}
+                                            </span>
+                                        </div>
                                         <div className="flex justify-between">
                                             <span className="text-zinc-500 dark:text-zinc-400">Total Submitted</span>
                                             <span className="font-bold text-zinc-900 dark:text-white">{peso.format(totalAmount)}</span>
@@ -697,24 +782,16 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                     )}
                                 </div>
 
-                                <div className="mt-5 flex items-center justify-between border-t border-zinc-200/70 dark:border-white/5 pt-3.5">
-                                    <p className="text-xs text-zinc-400 dark:text-zinc-500">
-                                        Need to update your receipt?
-                                    </p>
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsEditingAfterSubmit(true)}
-                                        className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-200 dark:border-white/10 bg-zinc-100 dark:bg-zinc-800/80 px-3.5 py-2 text-xs font-bold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition"
-                                    >
-                                        <RefreshCw className="size-3.5" />
-                                        <span>Update Submission</span>
-                                    </button>
+                                {/* Immutable Lock Notice - replaces Update Submission */}
+                                <div className="mt-5 flex items-center gap-2.5 rounded-2xl border border-zinc-200/80 dark:border-white/5 bg-zinc-50 dark:bg-zinc-950/60 p-3.5 text-xs text-zinc-600 dark:text-zinc-400">
+                                    <ShieldCheck className="size-4 text-emerald-500 shrink-0" />
+                                    <span>Payment submission is locked and permanently recorded. Your landlord has been notified to verify your proof.</span>
                                 </div>
                             </section>
                         )}
 
                         {/* STATE 3: UNIFIED PAYMENT FORM */}
-                        {!allCompleted && (!allProcessing || isEditingAfterSubmit) && (
+                        {!allCompleted && !allProcessing && (
                             <section className="rounded-3xl border border-zinc-200/80 dark:border-white/10 bg-white/90 dark:bg-zinc-900/60 p-6 sm:p-7 backdrop-blur-xl shadow-sm dark:shadow-xl transition-colors h-full flex flex-col justify-between">
                                 <div>
                                     <div className="flex items-center justify-between border-b border-zinc-200/70 dark:border-white/5 pb-3">
@@ -722,15 +799,6 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                             <h2 className="text-base sm:text-lg font-black text-zinc-900 dark:text-white">Payment Submission</h2>
                                             <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Submit transfer details for all move-in requirements</p>
                                         </div>
-                                        {isEditingAfterSubmit && (
-                                            <button
-                                                type="button"
-                                                onClick={() => setIsEditingAfterSubmit(false)}
-                                                className="text-xs text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 font-semibold"
-                                            >
-                                                Cancel
-                                            </button>
-                                        )}
                                     </div>
 
                                     <div className="mt-4 space-y-4">
@@ -954,7 +1022,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                         </div>
 
                         <p className="mt-3 text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">
-                            Please verify your submission details. Once submitted, your payment proof will be locked and routed to the landlord for verification.
+                            Please verify your submission details. Once submitted, an immutable system reference number will be generated and your payment proof will be locked for landlord review.
                         </p>
 
                         <div className="mt-4 space-y-2 rounded-2xl border border-zinc-200 dark:border-white/5 bg-zinc-50 dark:bg-zinc-950/70 p-4 text-xs">

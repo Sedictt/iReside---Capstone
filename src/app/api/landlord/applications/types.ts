@@ -76,6 +76,8 @@ export type ApplicationResponse = {
         dueAt: string | null;
         status: "pending" | "processing" | "completed" | "rejected" | "expired";
         method: "gcash" | "cash" | null;
+        referenceNumber?: string | null;
+        transactionReference?: string | null;
         submittedAt: string | null;
         reviewedAt: string | null;
         proofUrl: string | null;
