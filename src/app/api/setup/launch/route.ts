@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
 
     const { error: profileError } = await adminClient
       .from("profiles")
-      .update(profileUpdates)
+      .update(profileUpdates as any)
       .eq("id", userId);
 
     if (profileError) {
@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
           description: propertyTagline,
           type: rentalArchetype,
           address: propertyAddress,
-          map_decorations: newDecorations,
+          map_decorations: newDecorations as any,
           updated_at: timestamp,
         })
         .eq("id", existingProperty.id);
@@ -147,7 +147,7 @@ export async function POST(request: NextRequest) {
           type: rentalArchetype,
           map_decorations: {
             branding: brandingMeta,
-          },
+          } as any,
           created_at: timestamp,
           updated_at: timestamp,
         });

@@ -22,6 +22,8 @@ interface TenantUnitMapData {
         rent_amount: number;
     }>;
     isSetupComplete?: boolean;
+    isFullyPlaced?: boolean;
+    isCurrentUnitPlaced?: boolean;
     placedCount?: number;
     totalUnits?: number;
 }
