@@ -217,7 +217,7 @@ export async function POST(request: NextRequest) {
       await admin
         .from("properties")
         .update({
-          map_decorations: newDecorations,
+          map_decorations: newDecorations as any,
           updated_at: new Date().toISOString(),
         })
         .eq("landlord_id", userId);
