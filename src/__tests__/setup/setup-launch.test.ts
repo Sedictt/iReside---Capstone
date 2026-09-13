@@ -2,12 +2,12 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
 
 const mockRequireAuthenticatedUser = vi.fn();
-vi.mock("@/lib/api/auth-guard", () => ({
-  requireAuthenticatedUser: (...args: any[]) => mockRequireAuthenticatedUser(...args),
-}));
-
-const mockUpdateUserById = vi.fn().mockResolvedValue({ data: { user: {} }, error: null });
 const mockAdminFrom = vi.fn();
+const mockUpdateUserById = vi.fn();
+
+vi.mock("@/lib/api/auth-guard", () => ({
+  requireAuthenticatedUser: (...args: unknown[]) => mockRequireAuthenticatedUser(...args),
+}));
 
 vi.mock("@/lib/supabase/admin", () => ({
   createServiceRoleSupabaseClient: () => ({
@@ -20,7 +20,7 @@ vi.mock("@/lib/supabase/admin", () => ({
   }),
 }));
 
-import { POST as setupLaunchPost } from "@/app/api/setup/launch/route";
+import { POST as setupLaunchPost } from "../../app/api/setup/launch/route";
 
 describe("POST /api/setup/launch (Turnkey Setup Claiming & Locking)", () => {
   beforeEach(() => {
