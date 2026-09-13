@@ -32,10 +32,10 @@ export function ContractActions({
             )}
             {submitting
                 ? isFinalApproval
-                    ? "Finalizing…"
+                    ? "Approving…"
                     : "Requesting…"
                 : isFinalApproval
-                  ? "Finalize Approval"
+                  ? "Approve Application"
                   : "Request Payments"}
         </button>
     );

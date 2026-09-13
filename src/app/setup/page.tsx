@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect, Suspense } from "react";
 import { m as motion, AnimatePresence } from "framer-motion";
 import {
   Building2,
@@ -31,7 +31,7 @@ import {
   Contrast,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { useTheme } from "next-themes";
 import { useHighContrast } from "@/hooks/useHighContrast";
@@ -41,6 +41,7 @@ import { cn } from "@/lib/utils";
 import { useBrand } from "@/context/BrandContext";
 import { applyBrandCssVariables } from "@/lib/branding/colors";
 import { useAuth } from "@/hooks/useAuth";
+import { PageLoader } from "@/components/ui/LoadingSpinner";
 
 // HSL to HEX helper
 function hslToHex(h: number, s: number, l: number): string {
@@ -122,19 +123,44 @@ function getContrastTextColor(bgHex: string): string {
   return lum > 0.38 ? "#09090b" : "#ffffff";
 }
 
-export default function BusinessPersonalizationWizardPage() {
+function WizardContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isReconfigure = searchParams.get("reconfigure") === "true" || searchParams.get("troubleshoot") === "true";
   const { profile, loading } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
+  const brand = useBrand();
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!loading && profile && profile.role === "tenant") {
       router.replace("/tenant/dashboard");
+      return;
     }
-  }, [loading, profile, router]);
 
-  const brand = useBrand();
+    // Completion Lock: Redirect to dashboard if setup is already finalized unless in reconfigure mode
+    if (!loading && brand && brand.setupCompleted && !isReconfigure) {
+      toast.info("Setup already finalized", {
+        description: "Your property portal is already operational. You can update your brand in Settings.",
+      });
+      router.replace("/landlord/dashboard");
+    }
+  }, [loading, profile, brand, brand.setupCompleted, isReconfigure, router]);
+
+  // Pre-fill profile info from authenticated user if available
+  useEffect(() => {
+    if (profile) {
+      if (profile.full_name && profile.full_name !== "Default Admin") {
+        setAdminName(profile.full_name);
+      }
+      if (profile.email && !profile.email.includes("turnkey.local")) {
+        setAdminEmail(profile.email);
+      }
+      if (profile.phone) {
+        setAdminPhone(profile.phone);
+      }
+    }
+  }, [profile]);
 
   // Step 1: Identity, Archetype & Logo
   const [propertyName, setPropertyName] = useState(brand.propertyName || "Reyes Residences");
@@ -282,6 +308,36 @@ export default function BusinessPersonalizationWizardPage() {
   const handleLaunchPortal = async () => {
     setIsLaunching(true);
     try {
+      // 1. Call atomic setup launch API to claim credentials & save setup state
+      const res = await fetch("/api/setup/launch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          branding: {
+            propertyName,
+            propertyTagline: tagline,
+            rentalArchetype: propertyArchetype,
+            primaryColor,
+            secondaryColor,
+            logoUrl,
+            propertyAddress,
+            totalUnits,
+          },
+          admin: {
+            fullName: adminName,
+            email: adminEmail,
+            password: adminPassword !== "••••••••••••" ? adminPassword : undefined,
+            phone: adminPhone,
+          },
+        }),
+      });
+
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json.error || "Failed to launch workspace");
+      }
+
+      // 2. Update local BrandContext state with setup_completed: true
       await brand.updateBranding(
         {
           propertyName,
@@ -290,15 +346,17 @@ export default function BusinessPersonalizationWizardPage() {
           primaryColor,
           secondaryColor,
           logoUrl,
+          setupCompleted: true,
+          setupCompletedAt: new Date().toISOString(),
         },
-        true
+        false // already saved in database by /api/setup/launch
       );
       setIsLaunched(true);
       toast.success("Property Portal White-Labeled & Initialized!", {
-        description: `Branded as ${propertyName}. Master Admin configuration saved.`,
+        description: `Branded as ${propertyName}. Master Admin claimed and operational.`,
       });
     } catch (err: any) {
-      toast.error("Failed to save branding: " + (err?.message || "Unknown error"));
+      toast.error("Failed to save setup: " + (err?.message || "Unknown error"));
     } finally {
       setIsLaunching(false);
     }
@@ -1398,5 +1456,13 @@ export default function BusinessPersonalizationWizardPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function BusinessPersonalizationWizardPage() {
+  return (
+    <Suspense fallback={<PageLoader message="Loading Setup Wizard..." />}>
+      <WizardContent />
+    </Suspense>
   );
 }
