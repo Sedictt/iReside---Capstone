@@ -65,8 +65,9 @@ export async function GET() {
   const envHost = process.env.SMTP_HOST;
   const envUser = process.env.SMTP_USER;
   const envPass = process.env.SMTP_PASS;
-  const activeUser = envUser || "ireside.official.mail@gmail.com";
-  const activePass = envPass || "qzbh dxhc vazj krpt";
+  const isStale = !envUser || envUser.toLowerCase().includes("sedict");
+  const activeUser = isStale ? "ireside.official.mail@gmail.com" : envUser;
+  const activePass = isStale ? "qzbh dxhc vazj krpt" : (envPass || "qzbh dxhc vazj krpt");
 
   try {
     const nodemailer = await import("nodemailer");
