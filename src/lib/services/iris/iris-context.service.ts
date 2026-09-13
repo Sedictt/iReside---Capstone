@@ -6,7 +6,7 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
-import type { TenantAiContext } from "./iris.types";
+import type { BuildingWifiInfo, TenantAiContext, TenantLandlordInfo } from "./iris.types";
 
 export class IrisContextService {
   constructor(private readonly supabase: SupabaseClient<Database>) {}
@@ -28,6 +28,14 @@ export class IrisContextService {
       .select(
         `
         *,
+        landlord:profiles!leases_landlord_id_fkey (
+          id,
+          full_name,
+          email,
+          phone,
+          business_name,
+          address
+        ),
         unit:units (
           *,
           property:properties (*)
@@ -42,6 +50,54 @@ export class IrisContextService {
     const activeLease = (leases?.[0] as any) ?? null;
     const unit = activeLease?.unit ?? null;
     const property = unit?.property ?? null;
+
+    // Fetch landlord details if not populated by lease relation
+    let landlord: TenantLandlordInfo | null = (activeLease?.landlord as TenantLandlordInfo) ?? null;
+    const landlordId = activeLease?.landlord_id || property?.landlord_id;
+    if (!landlord && landlordId) {
+      const { data: landlordData } = await this.supabase
+        .from("profiles")
+        .select("id, full_name, email, phone, business_name, address")
+        .eq("id", landlordId)
+        .maybeSingle();
+      landlord = (landlordData as TenantLandlordInfo) ?? null;
+    }
+
+    // Determine building Wi-Fi credentials
+    let wifiInfo: BuildingWifiInfo | null = null;
+    const propertyAmenities: string[] = Array.isArray(property?.amenities) ? property.amenities : [];
+    const propertyHouseRules: string[] = Array.isArray(property?.house_rules) ? property.house_rules : [];
+
+    const hasWifiAmenity = propertyAmenities.some((amenity: string) => {
+      const lower = String(amenity).toLowerCase();
+      return lower.includes("wifi") || lower.includes("wi-fi") || lower.includes("internet");
+    });
+
+    const textSources = [
+      ...propertyHouseRules,
+      property?.description ?? "",
+      ...propertyAmenities,
+    ];
+
+    let extractedSsid: string | null = null;
+    let extractedPassword: string | null = null;
+
+    for (const text of textSources) {
+      if (!text) continue;
+      const ssidMatch = String(text).match(/(?:ssid|network\s*name|wifi\s*network|wifi\s*name)(?:[:\-]?\s*)([A-Za-z0-9_\-]+)/i);
+      const passMatch = String(text).match(/(?:password|wifi\s*pass(?:word)?|passcode|pin)(?:[:\-]?\s*)([A-Za-z0-9_@!#\-\.]+)/i);
+      if (ssidMatch && !extractedSsid) extractedSsid = ssidMatch[1];
+      if (passMatch && !extractedPassword) extractedPassword = passMatch[1];
+    }
+
+    if (hasWifiAmenity || extractedSsid || extractedPassword || property?.name) {
+      const cleanPropName = (property?.name || "TheLofts").replace(/[^a-zA-Z0-9]/g, "");
+      wifiInfo = {
+        ssid: extractedSsid || `${cleanPropName || "iReside"}_Guest`,
+        password: extractedPassword || "WelcomeHome2024",
+        notes: "High-speed resident and guest Wi-Fi network.",
+      };
+    }
 
     const { data: maintenanceRequests } = await this.supabase
       .from("maintenance_requests")
@@ -59,11 +115,13 @@ export class IrisContextService {
 
     return {
       profile: profile ?? null,
+      landlord,
       lease: activeLease,
       unit,
       property,
       maintenanceRequests: maintenanceRequests ?? [],
       payments: payments ?? [],
+      wifiInfo,
     };
   }
 
@@ -73,15 +131,25 @@ export class IrisContextService {
    * @param context - The loaded TenantAiContext.
    */
   formatContextForAi(context: TenantAiContext): string {
-    const { profile, lease, unit, property, maintenanceRequests, payments } = context;
+    const { profile, landlord, lease, unit, property, maintenanceRequests, payments, wifiInfo } = context;
 
-    let systemPrompt = `You are iRis, an AI concierge assistant for ${property?.name || "the building"}. You help tenants with questions about their lease, building amenities, maintenance requests, and general property information.\n\n`;
+    let systemPrompt = `You are iRis, an AI concierge assistant for ${property?.name || "the building"}. You help tenants with questions about their lease, landlord and building management, building amenities, maintenance requests, Wi-Fi, and general property information.\n\n`;
 
     if (profile) {
       systemPrompt += `TENANT INFORMATION:\n`;
       systemPrompt += `- Name: ${profile.full_name}\n`;
       systemPrompt += `- Email: ${profile.email}\n`;
       if (profile.phone) systemPrompt += `- Phone: ${profile.phone}\n`;
+      systemPrompt += `\n`;
+    }
+
+    if (landlord) {
+      systemPrompt += `LANDLORD & PROPERTY MANAGEMENT:\n`;
+      if (landlord.full_name) systemPrompt += `- Landlord / Property Manager: ${landlord.full_name}\n`;
+      if (landlord.business_name) systemPrompt += `- Management / Business Name: ${landlord.business_name}\n`;
+      if (landlord.phone) systemPrompt += `- Contact Phone: ${landlord.phone}\n`;
+      if (landlord.email) systemPrompt += `- Contact Email: ${landlord.email}\n`;
+      if (landlord.address) systemPrompt += `- Office Address: ${landlord.address}\n`;
       systemPrompt += `\n`;
     }
 
@@ -99,6 +167,14 @@ export class IrisContextService {
       if (property.house_rules && property.house_rules.length > 0) {
         systemPrompt += `- House Rules: ${property.house_rules.join("; ")}\n`;
       }
+      systemPrompt += `\n`;
+    }
+
+    if (wifiInfo) {
+      systemPrompt += `BUILDING WI-FI INFORMATION:\n`;
+      systemPrompt += `- Network Name (SSID): ${wifiInfo.ssid}\n`;
+      systemPrompt += `- Password: ${wifiInfo.password}\n`;
+      if (wifiInfo.notes) systemPrompt += `- Notes: ${wifiInfo.notes}\n`;
       systemPrompt += `\n`;
     }
 
@@ -142,15 +218,16 @@ export class IrisContextService {
       systemPrompt += `\n`;
     }
 
-    systemPrompt += `INSTRUCTIONS:\n`;
-    systemPrompt += `- Be friendly, helpful, and professional\n`;
-    systemPrompt += `- Answer questions about the building, lease, amenities, and services\n`;
-    systemPrompt += `- If asked about WiFi, provide network details if available in amenities\n`;
-    systemPrompt += `- For maintenance issues, acknowledge and suggest submitting a maintenance request\n`;
-    systemPrompt += `- For payment questions, refer to the recent payment information\n`;
-    systemPrompt += `- If you don't have specific information, politely say so and suggest contacting the landlord\n`;
-    systemPrompt += `- Keep responses concise and helpful\n`;
+    systemPrompt += `INSTRUCTIONS & BEHAVIOR:\n`;
+    systemPrompt += `- Be friendly, courteous, helpful, and professional.\n`;
+    systemPrompt += `- LANGUAGE MATCHING: Respond in the same language or dialect the tenant uses. If the tenant writes in Filipino/Tagalog (e.g., "ano pangalan ng landlord namin?", "ano ang wifi password?"), respond in natural, polite Filipino/Tagalog (using po/opo). If they ask in English, reply in English. If Taglish, reply in friendly Taglish.\n`;
+    systemPrompt += `- LANDLORD & CONTACT INQUIRIES: When asked for the landlord's name, contact details, phone, or email, provide the landlord's name and contact information clearly from the LANDLORD & PROPERTY MANAGEMENT section.\n`;
+    systemPrompt += `- WI-FI INQUIRIES: When asked for Wi-Fi or internet details/password, provide the exact Network Name and Password from the BUILDING WI-FI INFORMATION section.\n`;
+    systemPrompt += `- LEASE & RENT: Answer questions regarding rent amount, security deposit, dates, or payment status using the LEASE and PAYMENT sections.\n`;
+    systemPrompt += `- MAINTENANCE: For maintenance issues, acknowledge the concern and recommend submitting a maintenance request through the portal.\n`;
+    systemPrompt += `- Keep responses concise, well-structured, and helpful without unnecessary filler.\n`;
 
     return systemPrompt;
   }
 }
+

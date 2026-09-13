@@ -7,19 +7,24 @@ import {
     X,
     Send,
     MessageSquare,
-    Sparkles,
     Wifi,
     Copy,
     Maximize2,
     Brain,
     ShieldCheck,
     Info,
-    ArrowUp
+    ArrowUp,
+    Check,
+    Phone,
+    Mail,
+    Building2,
+    CreditCard
 } from "lucide-react";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { fetchIrisHistory, getCachedIrisHistory, setCachedIrisHistory, type IrisHistoryMessage } from "@/lib/iris/client";
+import type { IrisCardData } from "@/lib/services/iris";
 
 const EMPTY_ARRAY = Object.freeze([]) as unknown as any[];
 
@@ -55,6 +60,8 @@ interface Message {
     content: string;
     type?: "text" | "data_card";
     data?: any;
+    hasDataCard?: boolean;
+    card?: IrisCardData | null;
     timestamp: Date;
 }
 
@@ -85,9 +92,21 @@ export function ChatWidget({
     const [chatInitState, dispatchChatInit] = useReducer(chatInitReducer, initialChatInitState);
     const [input, setInput] = useState("");
     const [isTyping, setIsTyping] = useState(false);
+    const [copiedKey, setCopiedKey] = useState<string | null>(null);
     const messages = chatInitState.messages;
     const isChatInitializing = chatInitState.isChatInitializing;
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    const copyToClipboard = async (text: string, key: string) => {
+        if (!text) return;
+        try {
+            await navigator.clipboard.writeText(text);
+            setCopiedKey(key);
+            setTimeout(() => setCopiedKey(null), 2000);
+        } catch {
+            // suppressed
+        }
+    };
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -125,6 +144,8 @@ export function ChatWidget({
                         id: msg.id,
                         role: msg.role === "assistant" ? "iris" : "user",
                         content: msg.content,
+                        card: (msg.metadata as any)?.card ?? null,
+                        hasDataCard: Boolean((msg.metadata as any)?.card || (msg.metadata as any)?.hasDataCard),
                         timestamp: new Date(msg.created_at),
                     })),
                 });
@@ -143,6 +164,8 @@ export function ChatWidget({
                         id: msg.id,
                         role: msg.role === "assistant" ? "iris" : "user",
                         content: msg.content,
+                        card: (msg.metadata as any)?.card ?? null,
+                        hasDataCard: Boolean((msg.metadata as any)?.card || (msg.metadata as any)?.hasDataCard),
                         timestamp: new Date(msg.created_at),
                     })),
                 });
@@ -178,7 +201,7 @@ export function ChatWidget({
             id: msg.id,
             role: msg.role === "iris" ? "assistant" : "user",
             content: msg.content,
-            metadata: null,
+            metadata: msg.card ? { card: msg.card, hasDataCard: msg.hasDataCard } : null,
             created_at: msg.timestamp.toISOString(),
         }));
 
@@ -202,19 +225,19 @@ export function ChatWidget({
         })() });
     }, [firstName]);
 
-    const handleSend = async () => {
+    const handleSend = async (overrideText?: string) => {
         if (isChatInitializing) return;
-        if (!input.trim()) return;
+        const textToSend = (overrideText ?? input).trim();
+        if (!textToSend) return;
 
         const userMsg: Message = {
             id: Date.now().toString(),
             role: "user",
-            content: input,
+            content: textToSend,
             timestamp: new Date(),
         };
 
         dispatchChatInit({ type: "SET_MESSAGES", payload: [...chatInitState.messages, userMsg] });
-        const userInput = input;
         setInput("");
         setIsTyping(true);
 
@@ -226,7 +249,7 @@ export function ChatWidget({
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    message: userInput,
+                    message: textToSend,
                 }),
             });
 
@@ -240,6 +263,8 @@ export function ChatWidget({
                 id: (Date.now() + 1).toString(),
                 role: "iris",
                 content: data.response,
+                card: data.card ?? null,
+                hasDataCard: data.hasDataCard || false,
                 timestamp: new Date(),
             };
 
@@ -367,18 +392,140 @@ export function ChatWidget({
                                             </div>
                                         )}
                                         <div className={cn(
-                                            "px-4 py-3 rounded-[1.25rem] text-sm leading-relaxed shadow-sm",
-                                            msg.role === "user"
-                                                ? "bg-primary text-primary-foreground rounded-br-none shadow-primary/20"
-                                                : "bg-card text-foreground rounded-bl-none border border-border"
+                                            "flex flex-col gap-1.5",
+                                            msg.role === "user" ? "items-end" : "items-start"
                                         )}>
-                                            <p>{msg.content}</p>
-                                            <span className={cn(
-                                                "text-[9px] mt-1 block opacity-50 font-medium",
-                                                msg.role === "user" ? "text-right" : ""
+                                            <div className={cn(
+                                                "px-4 py-3 rounded-[1.25rem] text-sm leading-relaxed shadow-sm",
+                                                msg.role === "user"
+                                                    ? "bg-primary text-primary-foreground rounded-br-none shadow-primary/20"
+                                                    : "bg-card text-foreground rounded-bl-none border border-border"
                                             )}>
-                                                {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </span>
+                                                <p>{msg.content}</p>
+                                                <span className={cn(
+                                                    "text-[9px] mt-1 block opacity-50 font-medium",
+                                                    msg.role === "user" ? "text-right" : ""
+                                                )}>
+                                                    {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </span>
+                                            </div>
+
+                                            {/* Wi-Fi Card in widget */}
+                                            {((msg.card?.type === "wifi") || (msg.hasDataCard && !msg.card)) && (
+                                                <div className="w-full bg-card border border-border rounded-xl overflow-hidden shadow-sm mt-1">
+                                                    <div className="p-3 border-b border-border flex justify-between items-center">
+                                                        <div className="min-w-0 pr-2">
+                                                            <p className="text-[9px] uppercase font-black text-muted-foreground tracking-wider mb-0.5">Network Name</p>
+                                                            <p className="text-primary font-mono font-medium text-xs truncate">
+                                                                {msg.card?.type === "wifi" ? msg.card.ssid : "TheLofts_Guest"}
+                                                            </p>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => copyToClipboard(msg.card?.type === "wifi" ? msg.card.ssid : "TheLofts_Guest", `w-ssid-${msg.id}`)}
+                                                            className="p-1.5 text-muted-foreground hover:text-primary transition rounded-md hover:bg-primary/10"
+                                                            title="Copy SSID"
+                                                        >
+                                                            {copiedKey === `w-ssid-${msg.id}` ? <Check className="size-3.5 text-emerald-500" /> : <Wifi className="size-3.5" />}
+                                                        </button>
+                                                    </div>
+                                                    <div className="p-3 flex justify-between items-center hover:bg-muted/40 transition-colors">
+                                                        <div className="min-w-0 pr-2">
+                                                            <p className="text-[9px] uppercase font-black text-muted-foreground tracking-wider mb-0.5">Password</p>
+                                                            <p className="text-primary font-mono font-medium text-xs truncate">
+                                                                {msg.card?.type === "wifi" ? msg.card.password : "WelcomeHome2024"}
+                                                            </p>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => copyToClipboard(msg.card?.type === "wifi" ? msg.card.password : "WelcomeHome2024", `w-pass-${msg.id}`)}
+                                                            className="p-1.5 text-muted-foreground hover:text-primary transition rounded-md hover:bg-primary/10"
+                                                            title="Copy Password"
+                                                        >
+                                                            {copiedKey === `w-pass-${msg.id}` ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Landlord Contact Card in widget */}
+                                            {msg.card?.type === "landlord" && (
+                                                <div className="w-full bg-card border border-border rounded-xl overflow-hidden shadow-sm mt-1">
+                                                    <div className="p-3 border-b border-border flex items-center gap-2">
+                                                        <div className="size-7 rounded-md bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                                                            <Building2 className="size-3.5" />
+                                                        </div>
+                                                        <div className="min-w-0 flex-1">
+                                                            <p className="text-[9px] uppercase font-black text-muted-foreground tracking-wider">Landlord / Management</p>
+                                                            <p className="font-bold text-xs text-foreground truncate">{msg.card.name}</p>
+                                                            {msg.card.businessName && <p className="text-[10px] text-muted-foreground truncate">{msg.card.businessName}</p>}
+                                                        </div>
+                                                    </div>
+                                                    <div className="divide-y divide-border text-[11px]">
+                                                        {msg.card.phone && (
+                                                            <div className="p-2.5 flex items-center justify-between hover:bg-muted/40 transition-colors">
+                                                                <div className="flex items-center gap-2 min-w-0 pr-2">
+                                                                    <Phone className="size-3 text-muted-foreground shrink-0" />
+                                                                    <a href={`tel:${msg.card.phone}`} className="text-foreground font-mono hover:text-primary hover:underline truncate">
+                                                                        {msg.card.phone}
+                                                                    </a>
+                                                                </div>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => copyToClipboard(msg.card?.type === "landlord" && msg.card.phone ? msg.card.phone : "", `w-phone-${msg.id}`)}
+                                                                    className="p-1 text-muted-foreground hover:text-primary transition rounded hover:bg-primary/10"
+                                                                >
+                                                                    {copiedKey === `w-phone-${msg.id}` ? <Check className="size-3 text-emerald-500" /> : <Copy className="size-3" />}
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                        {msg.card.email && (
+                                                            <div className="p-2.5 flex items-center justify-between hover:bg-muted/40 transition-colors">
+                                                                <div className="flex items-center gap-2 min-w-0 pr-2">
+                                                                    <Mail className="size-3 text-muted-foreground shrink-0" />
+                                                                    <a href={`mailto:${msg.card.email}`} className="text-foreground hover:text-primary hover:underline truncate">
+                                                                        {msg.card.email}
+                                                                    </a>
+                                                                </div>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => copyToClipboard(msg.card?.type === "landlord" && msg.card.email ? msg.card.email : "", `w-email-${msg.id}`)}
+                                                                    className="p-1 text-muted-foreground hover:text-primary transition rounded hover:bg-primary/10"
+                                                                >
+                                                                    {copiedKey === `w-email-${msg.id}` ? <Check className="size-3 text-emerald-500" /> : <Copy className="size-3" />}
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Rent Status Card in widget */}
+                                            {msg.card?.type === "rent" && (
+                                                <div className="w-full bg-card border border-border rounded-xl overflow-hidden shadow-sm mt-1 p-3 text-[11px]">
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <div className="flex items-center gap-1.5 font-bold text-foreground">
+                                                            <CreditCard className="size-3.5 text-primary" />
+                                                            <span>Rent Status</span>
+                                                        </div>
+                                                        <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                                                            {msg.card.status}
+                                                        </span>
+                                                    </div>
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        <div>
+                                                            <span className="text-[9px] uppercase font-black text-muted-foreground block">Monthly Rent</span>
+                                                            <span className="font-bold text-xs text-foreground">₱{msg.card.monthlyRent.toLocaleString()}</span>
+                                                        </div>
+                                                        {msg.card.dueDate && (
+                                                            <div>
+                                                                <span className="text-[9px] uppercase font-black text-muted-foreground block">Schedule</span>
+                                                                <span className="text-[10px] text-foreground font-medium">{msg.card.dueDate}</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     </motion.div>
                                 ))}
@@ -406,13 +553,13 @@ export function ChatWidget({
 
                     {/* Quick Features */}
                     <div className="px-5 py-3 flex gap-2 overflow-x-auto no-scrollbar border-t border-border bg-card/80 backdrop-blur-sm">
-                        {["WiFi Password", "Maintenance", "Rent Status", "Amenity Hours"].map((feature) => (
+                        {["WiFi Password", "Landlord Contact", "Rent Status", "Amenity Hours", "Maintenance"].map((feature) => (
                             <button
                                 key={feature}
+                                type="button"
                                 className="whitespace-nowrap px-4 py-1.5 rounded-full text-[11px] font-black bg-background text-muted-foreground border border-border hover:border-primary hover:text-primary transition-all active:scale-95"
                                 onClick={() => {
-                                    setInput(feature);
-                                    // Optionally auto-send
+                                    handleSend(feature);
                                 }}
                             >
                                 {feature}
@@ -436,7 +583,7 @@ export function ChatWidget({
                                 />
                             </div>
                             <button
-                                onClick={handleSend}
+                                onClick={() => handleSend()}
                                 disabled={!input.trim() || isChatInitializing}
                                 className="size-11 flex items-center justify-center rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_5px_15px_rgba(109,152,56,0.3)] transition-all hover:scale-110 active:scale-90 disabled:opacity-50 disabled:scale-100"
                             >

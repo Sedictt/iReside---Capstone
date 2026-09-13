@@ -8,7 +8,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import OpenAI from "openai";
 import type { Database } from "@/types/database";
 import { IrisContextService } from "./iris-context.service";
-import type { IrisChatResponse, IrisHistoryItem } from "./iris.types";
+import type { IrisCardData, IrisChatResponse, IrisHistoryItem } from "./iris.types";
 import {
   IrisAiProviderError,
   IrisRateLimitError,
@@ -110,10 +110,61 @@ export class IrisService {
     }
 
     const lowerMessage = message.toLowerCase();
-    const hasWifiInfo =
+    const isWifiQuery =
       lowerMessage.includes("wifi") ||
+      lowerMessage.includes("wi-fi") ||
       lowerMessage.includes("internet") ||
       lowerMessage.includes("network");
+
+    const isLandlordQuery =
+      lowerMessage.includes("landlord") ||
+      lowerMessage.includes("may-ari") ||
+      lowerMessage.includes("mayari") ||
+      lowerMessage.includes("property manager") ||
+      lowerMessage.includes("pangalan ng landlord") ||
+      lowerMessage.includes("contact information") ||
+      lowerMessage.includes("contact details") ||
+      (lowerMessage.includes("contact") && (lowerMessage.includes("owner") || lowerMessage.includes("manager")));
+
+    const isRentQuery =
+      lowerMessage.includes("rent status") ||
+      lowerMessage.includes("monthly rent") ||
+      lowerMessage.includes("magkano ang upa") ||
+      lowerMessage.includes("magkano renta") ||
+      lowerMessage.includes("rent due") ||
+      lowerMessage.includes("payment status");
+
+    let card: IrisCardData | null = null;
+
+    if (isWifiQuery && tenantContext.wifiInfo) {
+      card = {
+        type: "wifi",
+        ssid: tenantContext.wifiInfo.ssid,
+        password: tenantContext.wifiInfo.password,
+        notes: tenantContext.wifiInfo.notes || undefined,
+      };
+    } else if (isLandlordQuery && tenantContext.landlord) {
+      card = {
+        type: "landlord",
+        name: tenantContext.landlord.full_name || "Building Management",
+        businessName: tenantContext.landlord.business_name ?? undefined,
+        phone: tenantContext.landlord.phone ?? undefined,
+        email: tenantContext.landlord.email ?? undefined,
+      };
+    } else if (isRentQuery && tenantContext.lease) {
+      card = {
+        type: "rent",
+        monthlyRent: Number(tenantContext.lease.monthly_rent || 0),
+        securityDeposit: tenantContext.lease.security_deposit ? Number(tenantContext.lease.security_deposit) : undefined,
+        status: tenantContext.payments[0]?.status || tenantContext.lease.status || "active",
+        dueDate: (tenantContext.lease.terms as any)?.paymentDueDay
+          ? `Day ${(tenantContext.lease.terms as any).paymentDueDay} of each month`
+          : undefined,
+        lastPaymentDate: tenantContext.payments[0]?.created_at
+          ? new Date(tenantContext.payments[0].created_at).toLocaleDateString()
+          : undefined,
+      };
+    }
 
     const totalTokens = completion.usage?.total_tokens ?? 0;
 
@@ -133,27 +184,24 @@ export class IrisService {
           metadata: {
             model: "groq/compound-mini",
             tokens: totalTokens,
+            card: card ?? null,
           },
         },
       ]);
 
-    const hasDataCard = Boolean(
-      hasWifiInfo &&
-        tenantContext.property?.amenities?.some((amenity: string) => {
-          const lowerAmenity = amenity.toLowerCase();
-          return lowerAmenity.includes("wifi") || lowerAmenity.includes("internet");
-        }),
-    );
+    const hasDataCard = Boolean(card !== null || isWifiQuery);
 
     return {
       response: aiResponse,
       hasDataCard,
+      card,
       metadata: {
         model: "groq/compound-mini",
         tokens: totalTokens,
       },
     };
   }
+
 
   /**
    * Fetch chat history for the user.

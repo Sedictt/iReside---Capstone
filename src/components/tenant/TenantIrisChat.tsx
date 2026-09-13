@@ -2,10 +2,11 @@
 
 import { useState, useRef, useEffect } from "react";
 import Image from 'next/image';
-import { ArrowUp, ArrowLeft, Wifi, Copy, ShieldCheck, Search, Folder, MoreVertical } from "lucide-react";
+import { ArrowUp, ArrowLeft, Wifi, Copy, ShieldCheck, Check, Phone, Mail, Building2, CreditCard, Search, Folder, MoreVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { fetchIrisHistory, getCachedIrisHistory, setCachedIrisHistory, type IrisHistoryMessage } from "@/lib/iris/client";
+import type { IrisCardData } from "@/lib/services/iris";
 
 interface Message {
     id: string;
@@ -13,6 +14,7 @@ interface Message {
     content: string;
     timestamp: Date;
     hasDataCard?: boolean;
+    card?: IrisCardData | null;
 }
 
 interface TenantIrisChatProps {
@@ -50,7 +52,19 @@ export function TenantIrisChat({ onBack }: TenantIrisChatProps = {}) {
     const [input, setInput] = useState("");
     const [isTyping, setIsTyping] = useState(false);
     const [isChatInitializing, setIsChatInitializing] = useState(true);
+    const [copiedKey, setCopiedKey] = useState<string | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    const copyToClipboard = async (text: string, key: string) => {
+        if (!text) return;
+        try {
+            await navigator.clipboard.writeText(text);
+            setCopiedKey(key);
+            setTimeout(() => setCopiedKey(null), 2000);
+        } catch {
+            // Clipboard API fallback or suppressed error
+        }
+    };
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -85,6 +99,8 @@ export function TenantIrisChat({ onBack }: TenantIrisChatProps = {}) {
                         role: msg.role === "assistant" ? "iris" : "user",
                         content: msg.content,
                         timestamp: new Date(msg.created_at),
+                        card: (msg.metadata as any)?.card ?? null,
+                        hasDataCard: Boolean((msg.metadata as any)?.card || (msg.metadata as any)?.hasDataCard),
                     }))
                 );
                 setIsChatInitializing(false);
@@ -102,6 +118,8 @@ export function TenantIrisChat({ onBack }: TenantIrisChatProps = {}) {
                         role: msg.role === "assistant" ? "iris" : "user",
                         content: msg.content,
                         timestamp: new Date(msg.created_at),
+                        card: (msg.metadata as any)?.card ?? null,
+                        hasDataCard: Boolean((msg.metadata as any)?.card || (msg.metadata as any)?.hasDataCard),
                     }))
                 );
                 setIsChatInitializing(false);
@@ -135,7 +153,7 @@ export function TenantIrisChat({ onBack }: TenantIrisChatProps = {}) {
             id: msg.id,
             role: msg.role === "iris" ? "assistant" : "user",
             content: msg.content,
-            metadata: null,
+            metadata: msg.card ? { card: msg.card, hasDataCard: msg.hasDataCard } : null,
             created_at: msg.timestamp.toISOString(),
         }));
 
@@ -159,19 +177,19 @@ export function TenantIrisChat({ onBack }: TenantIrisChatProps = {}) {
         });
     }, [firstName]);
 
-    const handleSend = async () => {
+    const handleSend = async (overrideText?: string) => {
         if (isChatInitializing) return;
-        if (!input.trim()) return;
+        const textToSend = (overrideText ?? input).trim();
+        if (!textToSend) return;
 
         const userMsg: Message = {
             id: Date.now().toString(),
             role: "user",
-            content: input,
+            content: textToSend,
             timestamp: new Date(),
         };
 
         setMessages(prev => [...prev, userMsg]);
-        const userInput = input;
         setInput("");
         setIsTyping(true);
 
@@ -183,7 +201,7 @@ export function TenantIrisChat({ onBack }: TenantIrisChatProps = {}) {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    message: userInput,
+                    message: textToSend,
                 }),
             });
 
@@ -199,6 +217,7 @@ export function TenantIrisChat({ onBack }: TenantIrisChatProps = {}) {
                 content: data.response,
                 timestamp: new Date(),
                 hasDataCard: data.hasDataCard || false,
+                card: data.card ?? null,
             };
 
             setMessages(prev => [...prev, irisMsg]);
@@ -319,26 +338,135 @@ export function TenantIrisChat({ onBack }: TenantIrisChatProps = {}) {
                                             <p>{msg.content}</p>
                                         </div>
 
-                                        {msg.hasDataCard && (
-                                            <div className="w-full bg-card border border-border rounded-xl overflow-hidden shadow-lg mt-1 relative group">
-                                                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                <div className="p-4 border-b border-border flex justify-between items-center relative z-10">
-                                                    <div className="flex-1">
-                                                        <p className="text-[10px] uppercase font-black text-muted-foreground tracking-wider mb-1">Network Name</p>
-                                                        <p className="text-primary font-mono font-medium text-sm md:text-base select-all">TheLofts_Guest</p>
+                                        {/* Wi-Fi Card */}
+                                        {((msg.card?.type === "wifi") || (msg.hasDataCard && !msg.card)) && (
+                                            <div className="w-full bg-card border border-border rounded-xl overflow-hidden shadow-sm mt-1 relative group">
+                                                <div className="p-3.5 border-b border-border flex justify-between items-center relative z-10">
+                                                    <div className="flex-1 min-w-0 pr-2">
+                                                        <p className="text-[10px] uppercase font-black text-muted-foreground tracking-wider mb-0.5">Network Name (SSID)</p>
+                                                        <p className="text-primary font-mono font-medium text-sm md:text-base select-all truncate">
+                                                            {msg.card?.type === "wifi" ? msg.card.ssid : "TheLofts_Guest"}
+                                                        </p>
                                                     </div>
-                                                    <button className="p-2 text-muted-foreground hover:text-primary transition rounded-lg hover:bg-primary/10">
-                                                        <Wifi className="size-5" />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => copyToClipboard(msg.card?.type === "wifi" ? msg.card.ssid : "TheLofts_Guest", `ssid-${msg.id}`)}
+                                                        className="p-2 text-muted-foreground hover:text-primary transition rounded-lg hover:bg-primary/10"
+                                                        title="Copy Network Name"
+                                                    >
+                                                        {copiedKey === `ssid-${msg.id}` ? <Check className="size-4.5 text-emerald-500" /> : <Wifi className="size-4.5" />}
                                                     </button>
                                                 </div>
-                                                <div className="p-4 flex justify-between items-center relative z-10 cursor-pointer hover:bg-muted/40 transition-colors">
-                                                    <div className="flex-1">
-                                                        <p className="text-[10px] uppercase font-black text-muted-foreground tracking-wider mb-1">Password</p>
-                                                        <p className="text-primary font-mono font-medium text-sm md:text-base select-all">WelcomeHome2024</p>
+                                                <div className="p-3.5 flex justify-between items-center relative z-10 hover:bg-muted/40 transition-colors">
+                                                    <div className="flex-1 min-w-0 pr-2">
+                                                        <p className="text-[10px] uppercase font-black text-muted-foreground tracking-wider mb-0.5">Password</p>
+                                                        <p className="text-primary font-mono font-medium text-sm md:text-base select-all truncate">
+                                                            {msg.card?.type === "wifi" ? msg.card.password : "WelcomeHome2024"}
+                                                        </p>
                                                     </div>
-                                                    <button className="p-2 text-muted-foreground hover:text-primary transition rounded-lg hover:bg-primary/10">
-                                                        <Copy className="size-5" />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => copyToClipboard(msg.card?.type === "wifi" ? msg.card.password : "WelcomeHome2024", `pass-${msg.id}`)}
+                                                        className="p-2 text-muted-foreground hover:text-primary transition rounded-lg hover:bg-primary/10"
+                                                        title="Copy Password"
+                                                    >
+                                                        {copiedKey === `pass-${msg.id}` ? <Check className="size-4.5 text-emerald-500" /> : <Copy className="size-4.5" />}
                                                     </button>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Landlord Contact Card */}
+                                        {msg.card?.type === "landlord" && (
+                                            <div className="w-full bg-card border border-border rounded-xl overflow-hidden shadow-sm mt-1 relative">
+                                                <div className="p-3.5 border-b border-border flex items-center gap-2.5">
+                                                    <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                                                        <Building2 className="size-4" />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-[10px] uppercase font-black text-muted-foreground tracking-wider">Landlord & Property Management</p>
+                                                        <p className="font-bold text-foreground text-sm truncate">{msg.card.name}</p>
+                                                        {msg.card.businessName && (
+                                                            <p className="text-xs text-muted-foreground truncate">{msg.card.businessName}</p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <div className="divide-y divide-border text-xs">
+                                                    {msg.card.phone && (
+                                                        <div className="p-3 flex items-center justify-between hover:bg-muted/40 transition-colors">
+                                                            <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                                                                <Phone className="size-3.5 text-muted-foreground shrink-0" />
+                                                                <a href={`tel:${msg.card.phone}`} className="text-foreground font-mono hover:text-primary hover:underline truncate">
+                                                                    {msg.card.phone}
+                                                                </a>
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => copyToClipboard(msg.card?.type === "landlord" && msg.card.phone ? msg.card.phone : "", `phone-${msg.id}`)}
+                                                                className="p-1.5 text-muted-foreground hover:text-primary transition rounded-md hover:bg-primary/10"
+                                                                title="Copy Phone"
+                                                            >
+                                                                {copiedKey === `phone-${msg.id}` ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                    {msg.card.email && (
+                                                        <div className="p-3 flex items-center justify-between hover:bg-muted/40 transition-colors">
+                                                            <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                                                                <Mail className="size-3.5 text-muted-foreground shrink-0" />
+                                                                <a href={`mailto:${msg.card.email}`} className="text-foreground hover:text-primary hover:underline truncate">
+                                                                    {msg.card.email}
+                                                                </a>
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => copyToClipboard(msg.card?.type === "landlord" && msg.card.email ? msg.card.email : "", `email-${msg.id}`)}
+                                                                className="p-1.5 text-muted-foreground hover:text-primary transition rounded-md hover:bg-primary/10"
+                                                                title="Copy Email"
+                                                            >
+                                                                {copiedKey === `email-${msg.id}` ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Rent Status Card */}
+                                        {msg.card?.type === "rent" && (
+                                            <div className="w-full bg-card border border-border rounded-xl overflow-hidden shadow-sm mt-1">
+                                                <div className="p-3.5 border-b border-border flex items-center justify-between">
+                                                    <div className="flex items-center gap-2">
+                                                        <CreditCard className="size-4 text-primary" />
+                                                        <span className="text-xs font-bold text-foreground">Rent & Lease Summary</span>
+                                                    </div>
+                                                    <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                                                        {msg.card.status}
+                                                    </span>
+                                                </div>
+                                                <div className="p-3.5 grid grid-cols-2 gap-3 text-xs">
+                                                    <div>
+                                                        <p className="text-[10px] uppercase font-black text-muted-foreground tracking-wider mb-0.5">Monthly Rent</p>
+                                                        <p className="text-sm font-bold text-foreground">₱{msg.card.monthlyRent.toLocaleString()}</p>
+                                                    </div>
+                                                    {msg.card.dueDate && (
+                                                        <div>
+                                                            <p className="text-[10px] uppercase font-black text-muted-foreground tracking-wider mb-0.5">Schedule</p>
+                                                            <p className="text-xs font-medium text-foreground">{msg.card.dueDate}</p>
+                                                        </div>
+                                                    )}
+                                                    {msg.card.securityDeposit !== undefined && (
+                                                        <div>
+                                                            <p className="text-[10px] uppercase font-black text-muted-foreground tracking-wider mb-0.5">Deposit</p>
+                                                            <p className="text-xs font-medium text-muted-foreground">₱{msg.card.securityDeposit.toLocaleString()}</p>
+                                                        </div>
+                                                    )}
+                                                    {msg.card.lastPaymentDate && (
+                                                        <div>
+                                                            <p className="text-[10px] uppercase font-black text-muted-foreground tracking-wider mb-0.5">Last Payment</p>
+                                                            <p className="text-xs font-medium text-muted-foreground">{msg.card.lastPaymentDate}</p>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         )}
@@ -383,12 +511,13 @@ export function TenantIrisChat({ onBack }: TenantIrisChatProps = {}) {
                 <div className="max-w-4xl w-full flex flex-col gap-3 relative">
                     {/* Feature Suggester */}
                     <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                        {["WiFi Password", "Maintenance", "Rent Status", "Amenity Hours"].map((feature) => (
+                        {["WiFi Password", "Landlord Contact", "Rent Status", "Amenity Hours", "Maintenance"].map((feature) => (
                             <button
                                 key={feature}
+                                type="button"
                                 className="whitespace-nowrap px-4 py-1.5 rounded-full text-[11px] font-black bg-background text-muted-foreground border border-border hover:border-primary hover:text-primary hover:bg-primary/5 transition-all active:scale-95"
                                 onClick={() => {
-                                    setInput(feature);
+                                    handleSend(feature);
                                 }}
                             >
                                 {feature}
@@ -414,7 +543,7 @@ export function TenantIrisChat({ onBack }: TenantIrisChatProps = {}) {
                                 rows={1}
                             />
                             <button
-                                onClick={handleSend}
+                                onClick={() => handleSend()}
                                 disabled={!input.trim() || isChatInitializing}
                                 className="size-10 shrink-0 flex items-center justify-center rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm transition-all active:scale-95 disabled:opacity-50 disabled:scale-100 disabled:hover:bg-primary"
                             >
