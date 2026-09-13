@@ -15,6 +15,8 @@ import {
 import {
     CheckCircle2,
     AlertCircle,
+    Copy,
+    Check,
 } from "lucide-react";
 
 type ContractTemplateLike = Record<string, unknown>;
@@ -156,6 +158,7 @@ export function ContractPreviewModal({
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [result, setResult] = useState<ApprovalResult | null>(null);
+    const [copiedLink, setCopiedLink] = useState(false);
 
     useEffect(() => {
         if (!isOpen || !contractData) return;
@@ -309,7 +312,7 @@ export function ContractPreviewModal({
                                 <p className="text-neutral-400 text-sm max-w-md mx-auto">
                                     {result.status === "approved"
                                         ? "Tenant approval has been finalized after payment confirmation."
-                                        : "Prospect payment portal link generated. Await landlord-confirmed submissions before final approval."}
+                                        : `Prospect payment portal link has been generated and emailed to ${contractData.applicant_email}.`}
                                 </p>
                                 {result.payment_pending_expires_at && (
                                     <p className="mt-2 text-xs text-amber-300">
@@ -317,14 +320,43 @@ export function ContractPreviewModal({
                                     </p>
                                 )}
                                 {result.payment_portal_url && (
-                                    <a
-                                        href={result.payment_portal_url}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="mt-3 inline-block text-xs underline text-blue-300"
-                                    >
-                                        View payment portal link
-                                    </a>
+                                    <div className="mt-5 space-y-2 text-left bg-white/5 border border-white/10 rounded-2xl p-4">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                                                Payment Portal Link
+                                            </span>
+                                            <a
+                                                href={result.payment_portal_url}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="text-[11px] font-bold text-primary hover:underline"
+                                            >
+                                                Open in Tab →
+                                            </a>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                readOnly
+                                                value={result.payment_portal_url}
+                                                className="flex-1 rounded-xl bg-black/40 border border-white/10 px-3 py-2 text-xs font-mono text-emerald-400 select-all focus:outline-none"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(result.payment_portal_url!);
+                                                    setCopiedLink(true);
+                                                    setTimeout(() => setCopiedLink(false), 2000);
+                                                }}
+                                                className="flex items-center gap-1.5 rounded-xl bg-white/10 hover:bg-white/20 px-3.5 py-2 text-xs font-bold text-white transition-colors cursor-pointer"
+                                            >
+                                                {copiedLink ? <Check className="size-3.5 text-emerald-400" /> : <Copy className="size-3.5" />}
+                                                <span>{copiedLink ? "Copied" : "Copy"}</span>
+                                            </button>
+                                        </div>
+                                        <p className="text-[10px] text-muted-foreground">
+                                            You can share this link directly with the applicant if they cannot check their email right now.
+                                        </p>
+                                    </div>
                                 )}
                             </div>
                             <button

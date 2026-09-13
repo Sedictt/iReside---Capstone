@@ -3,8 +3,20 @@ import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import type { ApplicationStatus, PaymentMethod, Json } from "@/types/database";
 
-import { sendTenantCredentials, sendLandlordCredentialsCopy } from "@/lib/email";
+import { 
+    sendTenantCredentials, 
+    sendLandlordCredentialsCopy,
+    sendProspectPaymentRequestEmail 
+} from "@/lib/email";
 import { generateSigningLink } from "@/lib/jwt";
+import {
+    buildPortalToken,
+    buildPortalUrl,
+    resolvePaymentPendingExpiry,
+    withPaymentPendingConfig,
+    logApplicationPaymentAudit,
+    type PaymentPendingConfig,
+} from "@/lib/application-payment-pending";
 
 type ActionBody = {
     status?: ApplicationStatus;
@@ -21,12 +33,14 @@ type ActionBody = {
         signed_document_path?: string;
     };
     advance_payment?: {
+        amount?: number;
         method: PaymentMethod;
         reference_number: string;
         paid_at: string;
         status: 'pending' | 'completed';
     };
     security_deposit_payment?: {
+        amount?: number;
         method: PaymentMethod;
         reference_number: string;
         paid_at: string;
@@ -375,14 +389,148 @@ export async function POST(
     if (body.status === "rejected" && body.rejection_reason) {
         updatePayload.rejection_reason = body.rejection_reason;
     }
-    const { error: updateError } = await supabase
-        .from("applications")
-        .update(updatePayload as any)
-        .eq("id", applicationId)
-        .eq("landlord_id", userId);
 
-    if (updateError) {
-        return NextResponse.json({ error: "Failed to update application status." }, { status: 500 });
+    let paymentPortalUrl: string | null = null;
+    let paymentPendingExpiresAt: string | null = null;
+    let emailSentToProspect: boolean | null = null;
+
+    if (body.status === "payment_pending") {
+        const applicantEmail = application.applicant_email?.trim();
+        const applicantName = application.applicant_name?.trim() || "Applicant";
+
+        const advanceAmount = Number(body.advance_payment?.amount || body.lease_data?.monthly_rent || 0);
+        const securityAmount = Number(body.security_deposit_payment?.amount || body.lease_data?.security_deposit || 0);
+
+        if (!advanceAmount || !securityAmount) {
+            return NextResponse.json(
+                { error: "Valid advance rent and security deposit amounts are required." },
+                { status: 400 }
+            );
+        }
+
+        const now = new Date();
+        const expiresAt = resolvePaymentPendingExpiry(now);
+        paymentPendingExpiresAt = expiresAt.toISOString();
+
+        const { token, hash: tokenHash } = buildPortalToken();
+
+        const config: PaymentPendingConfig = {
+            created_at: now.toISOString(),
+            lease_data: {
+                start_date: body.lease_data?.start_date || new Date().toISOString().split("T")[0],
+                end_date: body.lease_data?.end_date || new Date(Date.now() + 365 * 24 * 3600 * 1000).toISOString().split("T")[0],
+                monthly_rent: Number(body.lease_data?.monthly_rent || advanceAmount),
+                security_deposit: Number(body.lease_data?.security_deposit || securityAmount),
+                terms: body.lease_data?.terms || {},
+                landlord_signature: body.lease_data?.landlord_signature || `landlord-sig-${Date.now()}`,
+            },
+            advance_amount: advanceAmount,
+            security_amount: securityAmount,
+        };
+
+        const updatedChecklist = withPaymentPendingConfig(application.requirements_checklist, config);
+
+        updatePayload.payment_pending_started_at = now.toISOString();
+        updatePayload.payment_pending_expires_at = paymentPendingExpiresAt;
+        updatePayload.payment_portal_token_hash = tokenHash;
+        updatePayload.payment_portal_token_expires_at = paymentPendingExpiresAt;
+        updatePayload.requirements_checklist = updatedChecklist as any;
+
+        const { error: updateError } = await adminClient
+            .from("applications")
+            .update(updatePayload as any)
+            .eq("id", applicationId)
+            .eq("landlord_id", userId);
+
+        if (updateError) {
+            console.error("[actions] Failed to update application for payment_pending:", updateError);
+            return NextResponse.json({ error: "Failed to update application status." }, { status: 500 });
+        }
+
+        // Clean up any stale requests and insert new ones
+        await adminClient
+            .from("application_payment_requests" as any)
+            .delete()
+            .eq("application_id", applicationId);
+
+        const { error: insertReqErr } = await adminClient
+            .from("application_payment_requests" as any)
+            .insert([
+                {
+                    application_id: applicationId,
+                    landlord_id: userId,
+                    requirement_type: "advance_rent",
+                    amount: advanceAmount,
+                    status: "pending",
+                    due_at: paymentPendingExpiresAt,
+                    metadata: {
+                        label: "Advance Rent",
+                        created_from: "contract_preview_modal",
+                    },
+                },
+                {
+                    application_id: applicationId,
+                    landlord_id: userId,
+                    requirement_type: "security_deposit",
+                    amount: securityAmount,
+                    status: "pending",
+                    due_at: paymentPendingExpiresAt,
+                    metadata: {
+                        label: "Security Deposit",
+                        created_from: "contract_preview_modal",
+                    },
+                },
+            ]);
+
+        if (insertReqErr) {
+            console.error("[actions] Failed to insert application_payment_requests:", insertReqErr);
+        }
+
+        await logApplicationPaymentAudit(adminClient, {
+            application_id: applicationId,
+            actor_id: userId,
+            actor_role: "landlord",
+            event_type: "request_generated",
+            metadata: {
+                advance_amount: advanceAmount,
+                security_amount: securityAmount,
+                expires_at: paymentPendingExpiresAt,
+            },
+        });
+
+        const reqUrl = new URL(request.url);
+        paymentPortalUrl = buildPortalUrl(reqUrl.origin, token);
+
+        if (applicantEmail) {
+            try {
+                const propertyName = (application as any).unit?.property?.name || "Property";
+                const unitName = (application as any).unit?.name || "Unit";
+                await sendProspectPaymentRequestEmail({
+                    to: applicantEmail,
+                    applicantName,
+                    propertyName,
+                    unitName,
+                    paymentPortalUrl,
+                    expiresAt,
+                    advanceAmount,
+                    securityAmount,
+                });
+                emailSentToProspect = true;
+            } catch (emailErr: any) {
+                console.error("[actions] Error sending payment request email:", emailErr);
+                emailSentToProspect = false;
+            }
+        }
+    } else {
+        const { error: updateError } = await supabase
+            .from("applications")
+            .update(updatePayload as any)
+            .eq("id", applicationId)
+            .eq("landlord_id", userId);
+
+        if (updateError) {
+            return NextResponse.json({ error: "Failed to update application status." }, { status: 500 });
+        }
     }
 
     // ── Auto-provision tenant account on approval ──────────────────────
@@ -650,6 +798,9 @@ export async function POST(
         success: true,
         status: body.status,
         reviewedAt,
+        ...(paymentPortalUrl ? { payment_portal_url: paymentPortalUrl } : {}),
+        ...(paymentPendingExpiresAt ? { payment_pending_expires_at: paymentPendingExpiresAt } : {}),
+        ...(emailSentToProspect !== null ? { email_sent: emailSentToProspect } : {}),
         ...(leaseId ? { lease_id: leaseId } : {}),
         ...(paymentIds ? { payment_ids: paymentIds } : {}),
         ...(tenantAccountInfo ? { tenant_account: tenantAccountInfo } : {}),

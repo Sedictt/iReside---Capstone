@@ -1421,7 +1421,7 @@ export function RentApplications() {
 
  {/* ─── Modals ─────────────────────────────────────────────────── */}
  <WalkInApplicationModal isOpen={showTenantApplicationModal} onClose={() => setShowTenantApplicationModal(false)} units={scopedAvailableUnits} onSuccess={() => { reloadKey.current += 1; }} />
- <ContractPreviewModal isOpen={showContractModal} onClose={() => { setShowContractModal(false); setContractData(null); }} contractData={contractData} onSuccess={() => { reloadKey.current += 1; setShowContractModal(false); }} />
+ <ContractPreviewModal isOpen={showContractModal} onClose={() => { setShowContractModal(false); setContractData(null); }} contractData={contractData} onSuccess={(payload) => { reloadKey.current += 1; if (payload?.status === "approved") { setShowContractModal(false); } }} />
  
  <AnimatePresence>
  {previewUrl && (
