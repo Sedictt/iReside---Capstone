@@ -26,11 +26,13 @@ import {
   sendLandlordOnboardingMagicLink,
   sendApplicationRejectedEmail,
   sendPaymentReviewResolutionEmail,
+  sendNewApplicationReceivedEmail,
 } from "@/lib/email";
 
 export {
   sendApplicationRejectedEmail,
   sendPaymentReviewResolutionEmail,
+  sendNewApplicationReceivedEmail,
 };
 
 // ---------------------------------------------------------------------------

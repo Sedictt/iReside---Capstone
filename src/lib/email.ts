@@ -1199,5 +1199,116 @@ ${formattedAmount ? `Amount: ${formattedAmount}\n` : ""}${note ? `Note: ${note}\
     return sendEmail({ recipientEmail: to, subject, htmlBody: html, textBody: text });
 }
 
+export async function sendNewApplicationReceivedEmail({
+    to,
+    landlordName,
+    applicantName,
+    applicantEmail,
+    applicantPhone,
+    propertyName,
+    unitName,
+    moveInDate,
+    dossierUrl,
+}: {
+    to: string;
+    landlordName: string;
+    applicantName: string;
+    applicantEmail: string;
+    applicantPhone?: string | null;
+    propertyName: string;
+    unitName?: string | null;
+    moveInDate?: string | null;
+    dossierUrl: string;
+}) {
+    const cleanUnit = unitName ? ` (${unitName})` : "";
+    const subject = `New Application Received — ${propertyName}${cleanUnit}`;
+
+    const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Tenant Application</title>
+</head>
+<body style="margin:0;padding:40px 16px;background-color:#090a0f;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#e5e7eb;">
+  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:520px;margin:0 auto;background-color:#141721;border:1px solid rgba(255,255,255,0.1);border-radius:16px;overflow:hidden;">
+    <tr>
+      <td style="background-color:#c4b0ff;padding:24px 28px;">
+        <h1 style="margin:0;color:#000000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
+        <p style="margin:4px 0 0;color:#000000;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;opacity:0.8;">New Tenant Application</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:28px 24px;">
+        <p style="margin:0 0 14px;font-size:15px;line-height:1.5;color:#f3f4f6;">Hi <strong>${landlordName}</strong>,</p>
+        <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#9ca3af;">
+          You have received a new rental application for <strong>${propertyName}${cleanUnit}</strong>.
+        </p>
+
+        <!-- Applicant Summary Card -->
+        <div style="background-color:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:20px;margin-bottom:24px;">
+          <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr>
+              <td style="padding-bottom:10px;font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;">Applicant Name</td>
+              <td style="padding-bottom:10px;font-size:13px;font-weight:700;color:#ffffff;text-align:right;">${applicantName}</td>
+            </tr>
+            <tr>
+              <td style="padding-bottom:10px;font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;">Email</td>
+              <td style="padding-bottom:10px;font-size:13px;color:#c4b0ff;text-align:right;">${applicantEmail}</td>
+            </tr>
+            ${applicantPhone ? `
+            <tr>
+              <td style="padding-bottom:10px;font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;">Phone</td>
+              <td style="padding-bottom:10px;font-size:13px;color:#ffffff;text-align:right;">${applicantPhone}</td>
+            </tr>
+            ` : ""}
+            ${moveInDate ? `
+            <tr>
+              <td style="padding-bottom:10px;font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;">Target Move-In</td>
+              <td style="padding-bottom:10px;font-size:13px;color:#ffffff;text-align:right;">${moveInDate}</td>
+            </tr>
+            ` : ""}
+            <tr>
+              <td style="font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;">Property / Unit</td>
+              <td style="font-size:13px;font-weight:700;color:#ffffff;text-align:right;">${propertyName}${cleanUnit}</td>
+            </tr>
+          </table>
+        </div>
+
+        <div style="text-align:center;margin-bottom:24px;">
+          <a href="${dossierUrl}" style="display:inline-block;background-color:#c4b0ff;color:#000000;font-weight:900;font-size:14px;padding:14px 28px;border-radius:10px;text-decoration:none;letter-spacing:-0.2px;">
+            Review Application Dossier &rarr;
+          </a>
+        </div>
+
+        <p style="margin:0;font-size:12px;line-height:1.6;color:#6b7280;">
+          You can approve, request payment, or decline this application with feedback directly from your landlord command center.
+        </p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:16px 24px;background-color:rgba(255,255,255,0.02);border-top:1px solid rgba(255,255,255,0.06);text-align:center;">
+        <p style="margin:0;font-size:11px;color:#6b7280;">&copy; ${new Date().getFullYear()} iReside Property Management</p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+    const text = `Hi ${landlordName},
+
+You have received a new rental application for ${propertyName}${cleanUnit}.
+
+Applicant: ${applicantName}
+Email: ${applicantEmail}
+${applicantPhone ? `Phone: ${applicantPhone}\n` : ""}${moveInDate ? `Move-in Date: ${moveInDate}\n` : ""}
+Review the application dossier here: ${dossierUrl}
+
+— iReside Property Management`;
+
+    return sendEmail({ recipientEmail: to, subject, htmlBody: html, textBody: text });
+}
+
 
 
