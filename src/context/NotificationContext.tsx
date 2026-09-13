@@ -326,9 +326,12 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     }, [user, profile, selectedPropertyId, supabase]);
 
     const fetchNotifications = useCallback(async (silent = false) => {
-        if (!user) return;
+        if (!user) {
+            dispatch({ type: 'SET_LOADING', payload: false });
+            return;
+        }
 
-        if (!silent) {
+        if (!silent && state.notifications.length === 0) {
             dispatch({ type: 'SET_LOADING', payload: true });
         }
         try {
@@ -480,25 +483,29 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         }
     }, [supabase]);
 
-    // eslint-disable-next-line react-doctor/effect-needs-cleanup
+    const userId = user?.id;
+    const role = profile?.role;
+
+    // Stable Realtime subscriptions
     useEffect(() => {
-        if (!user) {
+        if (!userId) {
             dispatch({ type: 'RESET_STATE' });
-            return () => {};
+            return;
         }
 
-        void refresh();
+        void fetchNotifications(false);
+        void fetchCounts();
 
-        // Subscribe to notifications
+        // 1. Subscribe to notifications
         const notificationSubscription = supabase
-            .channel(`public:notifications:user_id=eq.${user.id}`)
+            .channel(`public:notifications:${userId}-${Date.now()}`)
             .on(
                 "postgres_changes",
                 {
                     event: "*",
                     schema: "public",
                     table: "notifications",
-                    filter: `user_id=eq.${user.id}`,
+                    filter: `user_id=eq.${userId}`,
                 },
                 (payload) => {
                     console.log("Realtime notification change:", payload);
@@ -512,28 +519,43 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
                                 playSound("notification");
                             }
                         }
+                        void fetchCounts();
                     } else if (payload.eventType === "UPDATE") {
                         const updatedNotification = payload.new as Notification;
                         dispatch({ type: 'UPDATE_NOTIFICATION', payload: updatedNotification });
+                        void fetchCounts();
                     } else if (payload.eventType === "DELETE") {
                         dispatch({ type: 'REMOVE_NOTIFICATION', payload: (payload.old as { id: string }).id });
+                        void fetchCounts();
                     }
                 }
             )
             .subscribe();
 
-        // Subscribe to applications (if landlord)
+        // 2. Subscribe to applications & payment requests (if landlord)
         let applicationSubscription: any;
-        if (profile?.role === "landlord") {
+        if (role === "landlord") {
             applicationSubscription = supabase
-                .channel(`public:applications:landlord_id=eq.${user.id}`)
+                .channel(`public:applications:${userId}-${Date.now()}`)
                 .on(
                     "postgres_changes",
                     {
                         event: "*",
                         schema: "public",
                         table: "applications",
-                        filter: `landlord_id=eq.${user.id}`,
+                        filter: `landlord_id=eq.${userId}`,
+                    },
+                    () => {
+                        void fetchCounts();
+                    }
+                )
+                .on(
+                    "postgres_changes",
+                    {
+                        event: "*",
+                        schema: "public",
+                        table: "application_payment_requests",
+                        filter: `landlord_id=eq.${userId}`,
                     },
                     () => {
                         void fetchCounts();
@@ -542,18 +564,18 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
                 .subscribe();
         }
 
-        // Subscribe to maintenance requests
+        // 3. Subscribe to maintenance requests
         const maintenanceSubscription = supabase
-            .channel(`public:maintenance:landlord_id=eq.${user.id}`)
+            .channel(`public:maintenance:${userId}-${Date.now()}`)
             .on(
                 "postgres_changes",
                 {
                     event: "*",
                     schema: "public",
                     table: "maintenance_requests",
-                    filter: profile?.role === "landlord" 
-                        ? `landlord_id=eq.${user.id}` 
-                        : `tenant_id=eq.${user.id}`,
+                    filter: role === "landlord" 
+                        ? `landlord_id=eq.${userId}` 
+                        : `tenant_id=eq.${userId}`,
                 },
                 () => {
                     void fetchCounts();
@@ -561,9 +583,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
             )
             .subscribe();
 
-        // Subscribe to messages
+        // 4. Subscribe to messages
         const messageSubscription = supabase
-            .channel(`public:messages`)
+            .channel(`public:messages:${userId}-${Date.now()}`)
             .on(
                 "postgres_changes",
                 {
@@ -572,7 +594,6 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
                     table: "messages",
                 },
                 () => {
-                    // This is a bit broad, but messages are filtered by sender_id and read_at in fetchCounts
                     void fetchCounts();
                 }
             )
@@ -584,7 +605,14 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
             void supabase.removeChannel(maintenanceSubscription);
             void supabase.removeChannel(messageSubscription);
         };
-    }, [user, profile, supabase, refresh, fetchCounts, fetchNotifications]);
+    }, [userId, role, supabase, fetchCounts, fetchNotifications]);
+
+    // Re-fetch counts when selectedPropertyId changes without tearing down subscriptions
+    useEffect(() => {
+        if (userId) {
+            void fetchCounts();
+        }
+    }, [userId, selectedPropertyId, fetchCounts]);
 
     return (
         <NotificationContext.Provider
