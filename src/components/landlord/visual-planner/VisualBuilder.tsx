@@ -56,6 +56,7 @@ import { LeasePreviewModal } from "./components/LeasePreviewModal";
 import { VisualPlannerSkeleton } from "./components/VisualPlannerSkeleton";
 import { CanvasQuickMessenger } from "./components/CanvasQuickMessenger";
 import { MapSetupWizard } from "./MapSetupWizard";
+import { TenantMapNotReady } from "@/components/tenant/TenantMapNotReady";
 import { MaintenanceRequestModal } from "@/components/landlord/maintenance/MaintenanceRequestModal";
 import type { MaintenanceRequest } from "@/components/landlord/maintenance/MaintenanceDashboard";
 import { UnitHistoryModal } from "./components/UnitHistoryModal";
@@ -275,18 +276,26 @@ const ComplaintModal = ({
 export default function VisualBuilder({
     readOnly = false,
     propertyId: externalPropertyId,
+    propertyName: externalPropertyName,
+    propertyAddress: externalPropertyAddress,
     demoMode = false,
-    showBackButton = false
+    showBackButton = false,
+    currentUnitId
 }: {
     readOnly?: boolean;
     propertyId?: string;
+    propertyName?: string;
+    propertyAddress?: string;
     demoMode?: boolean;
     showBackButton?: boolean;
+    currentUnitId?: string;
 } = {}) {
     const { back } = useRouter();
     const propertyContext = useOptionalProperty();
     const selectedPropertyId = externalPropertyId ?? propertyContext?.selectedPropertyId ?? "all";
     const selectedProperty = propertyContext?.selectedProperty;
+    const activePropertyName = externalPropertyName || selectedProperty?.name;
+    const activePropertyAddress = externalPropertyAddress || selectedProperty?.address;
     
     // Scoped storage keys to ensure each property has its own map
     const getScopedKey = (base: string) => `${base}.${selectedPropertyId}`;
@@ -545,15 +554,22 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
             return Boolean(layout) && (layout.units.length > 0 || layout.corridors.length > 0 || layout.structures.length > 0);
         });
         const currentFloorKey = activeFloorRef.current || activeFloor;
+
+        // If currentUnitId is provided (e.g. for tenant), prioritize their assigned unit's floor
+        const assignedUnit = currentUnitId ? data.units.find(u => u.id === currentUnitId) : null;
+        const assignedFloorKey = assignedUnit?.position?.floor_key;
+
         const targetFloorKey = (
-            currentFloorKey && newFloorLayouts[currentFloorKey]
-                ? currentFloorKey
-                : (storedActiveFloor && newFloorLayouts[storedActiveFloor]
-                    ? storedActiveFloor
-                    : firstPopulatedFloorKey
-                        ?? data.floorConfigs[0]?.floor_key
-                        ?? orderedFloorKeys[0]
-                        ?? "floor1")
+            readOnly && assignedFloorKey && newFloorLayouts[assignedFloorKey]
+                ? assignedFloorKey
+                : (currentFloorKey && newFloorLayouts[currentFloorKey]
+                    ? currentFloorKey
+                    : (storedActiveFloor && newFloorLayouts[storedActiveFloor]
+                        ? storedActiveFloor
+                        : firstPopulatedFloorKey
+                            ?? data.floorConfigs[0]?.floor_key
+                            ?? orderedFloorKeys[0]
+                            ?? "floor1"))
         );
         
         const targetUnits = newFloorLayouts[targetFloorKey]?.units ?? [];
@@ -581,7 +597,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         }];
         historyIndexRef.current = 0;
         setUndoAvailable(false);
-    }, [SCOPED_ACTIVE_FLOOR_KEY, activeFloor]);
+    }, [SCOPED_ACTIVE_FLOOR_KEY, activeFloor, currentUnitId, readOnly]);
 
     // ---------------------------------------------------------------
     // Load real data from DB when a property is selected (SWR Instant Cache)
@@ -3290,6 +3306,15 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         );
     }
 
+    if (readOnly && !demoMode && (!isSetupComplete || unplacedDbUnits.length > 0 || placedCount === 0)) {
+        return (
+            <TenantMapNotReady
+                propertyName={activePropertyName}
+                propertyAddress={activePropertyAddress}
+            />
+        );
+    }
+
     return (
         <div className={`${isDark ? 'bg-background-dark text-zinc-100' : 'bg-background text-zinc-800'} h-full flex flex-col overflow-hidden antialiased selection:bg-primary/30 ${readOnly ? 'pointer-events-auto' : ''}`}>
             {/* Header */}
@@ -3317,7 +3342,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                     </div>
                     <div className={`mx-2 h-6 w-px ${isDark ? 'bg-zinc-700' : 'bg-zinc-300'}`}></div>
                     <div>
-                        <h1 className={`text-sm font-black ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{propertyContext?.selectedProperty?.name || "All Properties"}</h1>
+                        <h1 className={`text-sm font-black ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{activePropertyName || "All Properties"}</h1>
                         <div className={`flex items-center gap-1 text-xs ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
                             <span className="size-1.5 rounded-full bg-green-500"></span>
                             <span>All systems operational</span>
@@ -3331,7 +3356,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                     )}
                 </div>
                 <div className="flex items-center gap-3 min-w-0">
-                    {selectedPropertyId !== "all" && unplacedDbUnits.length > 0 && (
+                    {!readOnly && selectedPropertyId !== "all" && unplacedDbUnits.length > 0 && (
                         <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 animate-pulse">
                             <span className="material-icons-round text-amber-500 text-[16px]">warning</span>
                             <span className="text-[11px] font-black text-amber-500 uppercase tracking-tighter">{unplacedDbUnits.length} Unplaced Units</span>
