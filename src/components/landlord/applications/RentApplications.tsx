@@ -492,7 +492,14 @@ export function RentApplications() {
       }
       setError(null);
       try {
-        const params = new URLSearchParams({ propertyId: selectedPropertyId });
+        const deepLinkId = searchParams.get("id");
+        const params = new URLSearchParams();
+        if (selectedPropertyId && selectedPropertyId !== "all") {
+          params.set("propertyId", selectedPropertyId);
+        }
+        if (deepLinkId) {
+          params.set("id", deepLinkId);
+        }
         const response = await fetch(`/api/landlord/applications?${params.toString()}`, {
           method: "GET",
           signal: controller.signal,
@@ -505,10 +512,11 @@ export function RentApplications() {
 
           // Keep selectedApp updated with latest data if it's currently selected or via deep link
           setSelectedApp((prev) => {
-            if (!prev) {
-              const deepLinkId = searchParams.get("id");
-              return deepLinkId ? fetchedApps.find((a) => a.id === deepLinkId) ?? null : null;
+            if (deepLinkId) {
+              const matched = fetchedApps.find((a) => a.id === deepLinkId);
+              if (matched) return matched;
             }
+            if (!prev) return null;
             return fetchedApps.find((a) => a.id === prev.id) ?? prev;
           });
         }
@@ -537,7 +545,18 @@ export function RentApplications() {
         clearTimeout(loadingTimeoutId);
       }
     };
-  }, [selectedPropertyId, reloadTrigger]);
+  }, [selectedPropertyId, reloadTrigger, searchParams]);
+
+  // Sync selectedApp with URL query parameter ?id=
+  useEffect(() => {
+    const deepLinkId = searchParams.get("id");
+    if (deepLinkId && applications.length > 0) {
+      const target = applications.find((a) => a.id === deepLinkId);
+      if (target && selectedApp?.id !== deepLinkId) {
+        setSelectedApp(target);
+      }
+    }
+  }, [searchParams, applications, selectedApp?.id]);
 
   // Realtime subscription for incoming applications and payment requests
   useEffect(() => {

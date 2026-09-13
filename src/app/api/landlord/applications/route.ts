@@ -308,6 +308,8 @@ export async function GET(request: Request) {
     let applicationRowsRaw: unknown[] | null = null;
     let applicationsError: PostgrestLikeError | null = null;
 
+    const targetAppId = searchParams.get("id") || searchParams.get("applicationId");
+
     for (let attempt = 0; attempt < 4; attempt += 1) {
         let applicationsQuery = supabase
             .from("applications")
@@ -315,7 +317,11 @@ export async function GET(request: Request) {
             .eq("landlord_id", userId);
 
         if (scopedUnitIds) {
-            applicationsQuery = applicationsQuery.in("unit_id", scopedUnitIds);
+            if (targetAppId) {
+                applicationsQuery = applicationsQuery.or(`id.eq.${targetAppId},unit_id.in.(${scopedUnitIds.join(",")})`);
+            } else {
+                applicationsQuery = applicationsQuery.in("unit_id", scopedUnitIds);
+            }
         }
 
         const { data, error } = await applicationsQuery.order("created_at", { ascending: false });
