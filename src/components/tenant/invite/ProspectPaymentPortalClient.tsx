@@ -237,12 +237,11 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
     const hasProof = Boolean(proofFile || existingProofUrl);
     const hasReference = referenceNumber.trim().length > 0;
 
-    // Requirement 2: Submit disabled unless proof of payment submitted (for GCash)
+    // Submit disabled unless proof of payment submitted (for GCash)
     const canSubmit = useMemo(() => {
         if (method === "gcash") {
             return hasProof && hasReference;
         }
-        // For cash, reference & proof are optional
         return true;
     }, [method, hasProof, hasReference]);
 
@@ -260,6 +259,14 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
             )}`;
         }
         return null;
+    }, [payload]);
+
+    // Clean unit string (guarantees no "Unit Unit 108" duplication)
+    const displayUnit = useMemo(() => {
+        const raw = payload?.application?.unitName?.trim() || "";
+        if (!raw) return "";
+        const stripped = raw.replace(/^(unit\s*)+/i, "").trim();
+        return stripped ? `Unit ${stripped}` : raw;
     }, [payload]);
 
     const executeSubmit = async () => {
@@ -382,7 +389,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                 {payload.application.propertyName}
                             </h1>
                             <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
-                                Unit {payload.application.unitName} &bull; {payload.application.applicantName}
+                                {displayUnit ? `${displayUnit} • ` : ""}{payload.application.applicantName}
                             </p>
                         </div>
                     </div>
@@ -408,33 +415,31 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
 
             <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6 relative z-10">
                 {/* Deadline reminder banner on mobile */}
-                <div className="sm:hidden mb-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-xs text-amber-800 dark:text-amber-200 flex items-center gap-2">
+                <div className="sm:hidden mb-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-800 dark:text-amber-200 flex items-center gap-2">
                     <Clock className="size-4 shrink-0 text-amber-500" />
                     <span>Payment window ends on {formatDateTime(payload.application.deadline)}</span>
                 </div>
 
                 {/* Notifications & Error Banners */}
                 {error && (
-                    <div className="mb-4 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-900 dark:text-red-200 flex items-start gap-3">
-                        <AlertCircle className="size-5 shrink-0 text-red-500 mt-0.5" />
-                        <div className="flex-1">
-                            <p className="font-bold text-red-900 dark:text-red-100">Unable to process submission</p>
-                            <p className="mt-0.5 text-xs text-red-800/90 dark:text-red-200/80">{error}</p>
+                    <div className="mb-4 rounded-2xl border border-red-500/30 bg-red-500/10 p-3.5 text-sm text-red-900 dark:text-red-200 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                            <AlertCircle className="size-4 shrink-0 text-red-500" />
+                            <p className="text-xs font-medium text-red-900 dark:text-red-200 truncate">{error}</p>
                         </div>
-                        <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700 dark:hover:text-red-300">
+                        <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700 dark:hover:text-red-300 shrink-0">
                             <X className="size-4" />
                         </button>
                     </div>
                 )}
 
                 {successMessage && (
-                    <div className="mb-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-900 dark:text-emerald-200 flex items-start gap-3">
-                        <CheckCircle2 className="size-5 shrink-0 text-emerald-500 mt-0.5" />
-                        <div className="flex-1">
-                            <p className="font-bold text-emerald-900 dark:text-emerald-100">Submission Recorded</p>
-                            <p className="mt-0.5 text-xs text-emerald-800/90 dark:text-emerald-200/80">{successMessage}</p>
+                    <div className="mb-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 text-sm text-emerald-900 dark:text-emerald-200 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                            <CheckCircle2 className="size-4 shrink-0 text-emerald-500" />
+                            <p className="text-xs font-medium text-emerald-900 dark:text-emerald-200 truncate">{successMessage}</p>
                         </div>
-                        <button onClick={() => setSuccessMessage(null)} className="text-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-300">
+                        <button onClick={() => setSuccessMessage(null)} className="text-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-300 shrink-0">
                             <X className="size-4" />
                         </button>
                     </div>
@@ -442,12 +447,12 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
 
                 {/* Rejection Notice if applicable */}
                 {hasAnyRejected && rejectionNotes.length > 0 && (
-                    <div className="mb-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-900 dark:text-amber-200">
-                        <div className="flex items-center gap-2 font-bold text-amber-900 dark:text-amber-100">
+                    <div className="mb-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-xs text-amber-900 dark:text-amber-200">
+                        <div className="flex items-center gap-2 font-bold text-amber-900 dark:text-amber-100 mb-1">
                             <AlertCircle className="size-4 text-amber-500" />
                             <span>Action Required: Landlord Requested Re-submission</span>
                         </div>
-                        <div className="mt-2 space-y-1.5 text-xs text-amber-800 dark:text-amber-200/90 pl-6">
+                        <div className="space-y-1 pl-6">
                             {rejectionNotes.map((item, idx) => (
                                 <p key={idx}>
                                     <strong className="text-amber-950 dark:text-amber-100">{item.label}:</strong> {item.note}
@@ -457,42 +462,40 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                     </div>
                 )}
 
-                {/* Main 2-Column Responsive Layout */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                    {/* LEFT COLUMN: Summary & Destination Card with QR code (5 cols) */}
-                    <div className="lg:col-span-5 space-y-5">
+                {/* Main 2-Column Responsive Layout - Symmetrical in Height */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                    {/* LEFT COLUMN: Summary & GCash Destination (5 cols, flex layout for equal height) */}
+                    <div className="lg:col-span-5 flex flex-col justify-between gap-5">
                         {/* Order & Requirements Breakdown */}
-                        <section className="rounded-3xl border border-zinc-200/80 dark:border-white/10 bg-white/90 dark:bg-zinc-900/60 p-6 backdrop-blur-xl shadow-sm dark:shadow-xl transition-colors">
-                            <div className="flex items-center justify-between border-b border-zinc-200/70 dark:border-white/5 pb-3">
-                                <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                                    Required Move-In Items
-                                </h2>
-                                <span className="text-[11px] text-zinc-400 dark:text-zinc-500">
-                                    {payload.requests.length} {payload.requests.length === 1 ? "Requirement" : "Requirements"}
-                                </span>
-                            </div>
+                        <section className="rounded-3xl border border-zinc-200/80 dark:border-white/10 bg-white/90 dark:bg-zinc-900/60 p-5 backdrop-blur-xl shadow-sm dark:shadow-xl transition-colors flex-1 flex flex-col justify-between">
+                            <div>
+                                <div className="flex items-center justify-between border-b border-zinc-200/70 dark:border-white/5 pb-2.5">
+                                    <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                                        Required Items
+                                    </h2>
+                                    <span className="text-[11px] text-zinc-400 dark:text-zinc-500">
+                                        {payload.requests.length} {payload.requests.length === 1 ? "Requirement" : "Requirements"}
+                                    </span>
+                                </div>
 
-                            <div className="mt-3 divide-y divide-zinc-100 dark:divide-white/5">
-                                {payload.requests.map((item) => {
-                                    const isItemCompleted = item.status === "completed";
-                                    const isItemProcessing = item.status === "processing";
-                                    const isItemRejected = item.status === "rejected";
+                                <div className="divide-y divide-zinc-100 dark:divide-white/5 mt-1">
+                                    {payload.requests.map((item) => {
+                                        const isItemCompleted = item.status === "completed";
+                                        const isItemProcessing = item.status === "processing";
+                                        const isItemRejected = item.status === "rejected";
 
-                                    return (
-                                        <div key={item.id} className="py-3 first:pt-1 last:pb-1">
-                                            <div className="flex items-start justify-between gap-2">
-                                                <div>
-                                                    <p className="text-sm font-bold text-zinc-900 dark:text-white">{item.label}</p>
-                                                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                                                        Due: {formatDate(item.dueAt)}
-                                                    </p>
+                                        return (
+                                            <div key={item.id} className="py-2.5 flex items-center justify-between gap-2">
+                                                <div className="flex items-center gap-1.5 min-w-0">
+                                                    <span className="text-sm font-bold text-zinc-900 dark:text-white truncate">{item.label}</span>
+                                                    <span className="text-xs text-zinc-400 shrink-0">({formatDate(item.dueAt)})</span>
                                                 </div>
-                                                <div className="text-right">
-                                                    <p className="text-sm font-bold text-zinc-900 dark:text-white">
+                                                <div className="flex items-center gap-2 shrink-0">
+                                                    <span className="text-sm font-black text-zinc-900 dark:text-white">
                                                         {peso.format(item.amount)}
-                                                    </p>
+                                                    </span>
                                                     <span
-                                                        className={`inline-block mt-0.5 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                                                        className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
                                                             isItemCompleted
                                                                 ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
                                                                 : isItemProcessing
@@ -505,95 +508,90 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                                         {isItemCompleted
                                                             ? "Confirmed"
                                                             : isItemProcessing
-                                                            ? "Under Review"
+                                                            ? "Review"
                                                             : isItemRejected
-                                                            ? "Needs Revision"
+                                                            ? "Revision"
                                                             : "Pending"}
                                                     </span>
                                                 </div>
                                             </div>
-                                        </div>
-                                    );
-                                })}
+                                        );
+                                    })}
+                                </div>
                             </div>
 
-                            {/* Total Due Callout */}
-                            <div className="mt-4 rounded-2xl border border-zinc-200/80 dark:border-white/10 bg-zinc-50/80 dark:bg-zinc-950/60 p-4 flex items-center justify-between">
-                                <div>
-                                    <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                                        Total Amount Due
-                                    </p>
-                                    <p className="text-xs text-zinc-400 dark:text-zinc-500">Includes all advance items</p>
-                                </div>
-                                <p className="text-2xl font-black text-zinc-900 dark:text-white" style={{ color: brandPrimary }}>
+                            {/* Total Due Callout (Single Line) */}
+                            <div className="mt-3 rounded-2xl border border-zinc-200/80 dark:border-white/10 bg-zinc-50/80 dark:bg-zinc-950/60 px-4 py-3 flex items-center justify-between">
+                                <span className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                                    Total Amount Due
+                                </span>
+                                <span className="text-xl font-black text-zinc-900 dark:text-white" style={{ color: brandPrimary }}>
                                     {peso.format(totalAmount)}
-                                </p>
+                                </span>
                             </div>
                         </section>
 
-                        {/* Payment Destination Card with Inline QR Code */}
+                        {/* GCash Destination Card with Clickable Inline QR Code */}
                         {payload.destination && (
-                            <section className="rounded-3xl border border-blue-500/20 bg-gradient-to-b from-blue-50/40 via-white/90 to-white/90 dark:from-blue-950/20 dark:via-zinc-900/60 dark:to-zinc-900/60 p-6 backdrop-blur-xl shadow-sm dark:shadow-xl transition-colors">
-                                <div className="flex items-center justify-between">
+                            <section className="rounded-3xl border border-blue-500/20 bg-gradient-to-b from-blue-50/40 via-white/90 to-white/90 dark:from-blue-950/20 dark:via-zinc-900/60 dark:to-zinc-900/60 p-5 backdrop-blur-xl shadow-sm dark:shadow-xl transition-colors flex-1 flex flex-col justify-between">
+                                <div className="flex items-center justify-between border-b border-zinc-200/70 dark:border-white/5 pb-2.5">
                                     <div className="flex items-center gap-2">
-                                        <div className="flex size-6 items-center justify-center rounded-lg bg-blue-600 text-[11px] font-black text-white shadow-sm">
+                                        <div className="flex size-5 items-center justify-center rounded-md bg-blue-600 text-[10px] font-black text-white shadow-sm">
                                             G
                                         </div>
                                         <span className="text-xs font-black uppercase tracking-wider text-blue-700 dark:text-blue-300">
                                             Official GCash Destination
                                         </span>
                                     </div>
-                                    <span className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2.5 py-0.5 rounded-full border border-blue-500/20">
-                                        Verified Account
+                                    <span className="text-[10px] font-bold uppercase text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20">
+                                        Verified
                                     </span>
                                 </div>
 
-                                {/* QR Code Display Right on the Card */}
-                                <div className="mt-4 flex flex-col sm:flex-row items-center gap-4 rounded-2xl bg-white dark:bg-zinc-950/60 p-4 border border-zinc-200/80 dark:border-white/5 shadow-sm">
+                                {/* QR Code & Account Info */}
+                                <div className="my-auto py-2 flex items-center gap-4">
                                     {qrCodeUrl ? (
                                         <div
                                             onClick={() => setShowQrModal(true)}
-                                            className="group relative size-32 shrink-0 overflow-hidden rounded-2xl bg-white p-2 border border-zinc-200 dark:border-white/10 shadow-sm cursor-pointer transition hover:scale-[1.03]"
+                                            className="group relative size-24 shrink-0 overflow-hidden rounded-2xl bg-white p-1.5 border border-zinc-200 dark:border-white/10 shadow-sm cursor-pointer transition hover:scale-105"
                                             title="Click to zoom QR code"
                                         >
                                             <img
                                                 src={qrCodeUrl}
-                                                alt="Landlord GCash QR Code"
+                                                alt="GCash QR Code"
                                                 className="size-full object-contain"
                                             />
                                             <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition rounded-2xl">
-                                                <span className="rounded-md bg-black/80 px-2 py-0.5 text-[10px] font-bold text-white flex items-center gap-1 shadow-sm">
-                                                    <QrCode className="size-3" /> Zoom
+                                                <span className="rounded bg-black/80 px-1.5 py-0.5 text-[9px] font-bold text-white flex items-center gap-1">
+                                                    <QrCode className="size-2.5" /> Zoom
                                                 </span>
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="size-32 shrink-0 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex flex-col items-center justify-center text-zinc-400">
-                                            <QrCode className="size-8" />
-                                            <span className="text-[10px] mt-1 font-bold">No QR code</span>
+                                        <div className="size-24 shrink-0 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex flex-col items-center justify-center text-zinc-400">
+                                            <QrCode className="size-6" />
+                                            <span className="text-[9px] mt-1 font-bold">No QR</span>
                                         </div>
                                     )}
 
-                                    {/* Account Name & Number Details */}
-                                    <div className="flex-1 w-full space-y-2 text-xs">
-                                        <div className="flex items-center justify-between border-b border-zinc-100 dark:border-white/5 pb-1.5">
-                                            <span className="text-zinc-500 dark:text-zinc-400">Account Name</span>
-                                            <span className="font-bold text-zinc-900 dark:text-white">
+                                    {/* Account Name & Number Details (Single-Line Key-Values) */}
+                                    <div className="flex-1 min-w-0 space-y-2.5 text-xs">
+                                        <div className="flex items-center justify-between gap-2 border-b border-blue-500/10 dark:border-white/5 pb-2">
+                                            <span className="text-zinc-500 dark:text-zinc-400 font-medium shrink-0">Account</span>
+                                            <span className="font-bold text-zinc-900 dark:text-white text-xs sm:text-sm truncate text-right">
                                                 {payload.destination.accountName || "Official Landlord"}
                                             </span>
                                         </div>
-                                        <div className="flex items-center justify-between border-b border-zinc-100 dark:border-white/5 pb-1.5">
-                                            <span className="text-zinc-500 dark:text-zinc-400">Mobile Number</span>
-                                            <div className="flex items-center gap-1.5">
-                                                <span className="font-mono font-bold text-zinc-900 dark:text-white tracking-wider">
-                                                    {payload.destination.accountNumber || "Not provided"}
-                                                </span>
+                                        <div className="flex items-center justify-between gap-2">
+                                            <span className="text-zinc-500 dark:text-zinc-400 font-medium shrink-0">Number</span>
+                                            <div className="flex items-center gap-1.5 font-mono font-bold text-zinc-900 dark:text-white text-xs sm:text-sm">
+                                                <span>{payload.destination.accountNumber || "Not provided"}</span>
                                                 {payload.destination.accountNumber && (
                                                     <button
                                                         type="button"
                                                         onClick={handleCopyNumber}
-                                                        className="flex size-6 items-center justify-center rounded-md bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-300 hover:bg-blue-500/20 transition"
-                                                        title="Copy mobile number"
+                                                        className="flex size-5 items-center justify-center rounded bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-300 hover:bg-blue-500/20 transition shrink-0"
+                                                        title="Copy number"
                                                     >
                                                         {copiedNumber ? (
                                                             <Check className="size-3 text-emerald-500" />
@@ -604,118 +602,97 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                                 )}
                                             </div>
                                         </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowQrModal(true)}
-                                            className="inline-flex items-center gap-1.5 text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline pt-0.5"
-                                        >
-                                            <QrCode className="size-3.5" />
-                                            <span>Scan / Expand Full QR</span>
-                                        </button>
                                     </div>
-                                </div>
-
-                                {/* Quick instructions */}
-                                <div className="mt-4 border-t border-zinc-200/70 dark:border-white/5 pt-3">
-                                    <p className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5">
-                                        Payment Instructions
-                                    </p>
-                                    <ol className="text-xs text-zinc-600 dark:text-zinc-400 space-y-1.5 pl-4 list-decimal leading-relaxed">
-                                        <li>Scan the QR code above or send the exact total of <strong className="text-zinc-900 dark:text-zinc-200">{peso.format(totalAmount)}</strong> via GCash.</li>
-                                        <li>Save or take a screenshot of your completed transaction receipt.</li>
-                                        <li>Enter the 13-digit reference number and upload the receipt below.</li>
-                                    </ol>
                                 </div>
                             </section>
                         )}
                     </div>
 
-                    {/* RIGHT COLUMN: Unified Form / Under Review Receipt (7 cols) */}
-                    <div className="lg:col-span-7">
+                    {/* RIGHT COLUMN: Unified Payment Form / Under Review Receipt (7 cols) */}
+                    <div className="lg:col-span-7 flex flex-col justify-between">
                         {/* STATE 1: ALL COMPLETED */}
                         {allCompleted && (
-                            <section className="rounded-3xl border border-emerald-500/20 bg-white/90 dark:bg-zinc-900/60 p-8 backdrop-blur-xl shadow-sm dark:shadow-xl text-center">
-                                <div className="mx-auto flex size-16 items-center justify-center rounded-3xl bg-emerald-500/10 text-emerald-500">
-                                    <CheckCircle2 className="size-9" />
+                            <section className="rounded-3xl border border-emerald-500/20 bg-white/90 dark:bg-zinc-900/60 p-6 backdrop-blur-xl shadow-sm dark:shadow-xl text-center h-full flex flex-col justify-center">
+                                <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-500">
+                                    <CheckCircle2 className="size-8" />
                                 </div>
-                                <h2 className="mt-4 text-xl font-bold text-zinc-900 dark:text-white">All Payments Confirmed!</h2>
-                                <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300 max-w-md mx-auto leading-relaxed">
+                                <h2 className="mt-3 text-lg font-bold text-zinc-900 dark:text-white">All Payments Confirmed!</h2>
+                                <p className="mt-1.5 text-xs text-zinc-600 dark:text-zinc-300 max-w-md mx-auto leading-relaxed">
                                     Your advance rent and security deposit have been verified and confirmed by your landlord.
                                 </p>
-                                <div className="mt-6 rounded-2xl border border-zinc-200/80 dark:border-white/5 bg-zinc-50 dark:bg-zinc-950/60 p-5 text-left max-w-md mx-auto text-xs text-zinc-600 dark:text-zinc-400 space-y-2">
+                                <div className="mt-4 rounded-2xl border border-zinc-200/80 dark:border-white/5 bg-zinc-50 dark:bg-zinc-950/60 p-4 text-left max-w-md mx-auto text-xs text-zinc-600 dark:text-zinc-400 space-y-1.5">
                                     <p><strong className="text-zinc-900 dark:text-zinc-200">Property:</strong> {payload.application.propertyName}</p>
-                                    <p><strong className="text-zinc-900 dark:text-zinc-200">Unit:</strong> {payload.application.unitName}</p>
+                                    <p><strong className="text-zinc-900 dark:text-zinc-200">Unit:</strong> {displayUnit}</p>
                                     <p><strong className="text-zinc-900 dark:text-zinc-200">Total Confirmed:</strong> {peso.format(totalAmount)}</p>
                                 </div>
-                                <p className="mt-6 text-xs text-zinc-400 dark:text-zinc-500">
-                                    You can proceed with move-in coordination. You will also receive an email with contract and arrival instructions.
-                                </p>
                             </section>
                         )}
 
                         {/* STATE 2: UNDER LANDLORD REVIEW */}
                         {!allCompleted && allProcessing && !isEditingAfterSubmit && (
-                            <section className="rounded-3xl border border-blue-500/20 bg-white/90 dark:bg-zinc-900/60 p-7 backdrop-blur-xl shadow-sm dark:shadow-xl">
-                                <div className="flex items-center gap-3.5">
-                                    <div className="flex size-12 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
-                                        <Clock className="size-6" />
+                            <section className="rounded-3xl border border-blue-500/20 bg-white/90 dark:bg-zinc-900/60 p-6 backdrop-blur-xl shadow-sm dark:shadow-xl h-full flex flex-col justify-between">
+                                <div>
+                                    <div className="flex items-center gap-3 border-b border-zinc-200/70 dark:border-white/5 pb-3">
+                                        <div className="flex size-10 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                                            <Clock className="size-5" />
+                                        </div>
+                                        <div>
+                                            <h2 className="text-base font-bold text-zinc-900 dark:text-white">Payment Under Review</h2>
+                                            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                                                Proof of payment is awaiting landlord verification.
+                                            </p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h2 className="text-lg font-bold text-zinc-900 dark:text-white">Payment Under Review</h2>
-                                        <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                                            Your proof of payment has been submitted and is awaiting landlord verification.
-                                        </p>
-                                    </div>
-                                </div>
 
-                                <div className="mt-6 space-y-3 rounded-2xl border border-zinc-200/80 dark:border-white/5 bg-zinc-50 dark:bg-zinc-950/60 p-4 text-xs">
-                                    <div className="flex justify-between">
-                                        <span className="text-zinc-500 dark:text-zinc-400">Status</span>
-                                        <span className="font-bold text-blue-600 dark:text-blue-400">Under Landlord Review</span>
-                                    </div>
-                                    {referenceNumber && (
+                                    <div className="mt-4 space-y-2.5 rounded-2xl border border-zinc-200/80 dark:border-white/5 bg-zinc-50 dark:bg-zinc-950/60 p-4 text-xs">
                                         <div className="flex justify-between">
-                                            <span className="text-zinc-500 dark:text-zinc-400">GCash Reference No.</span>
-                                            <span className="font-mono font-bold text-zinc-900 dark:text-white">{referenceNumber}</span>
+                                            <span className="text-zinc-500 dark:text-zinc-400">Status</span>
+                                            <span className="font-bold text-blue-600 dark:text-blue-400">Under Landlord Review</span>
+                                        </div>
+                                        {referenceNumber && (
+                                            <div className="flex justify-between">
+                                                <span className="text-zinc-500 dark:text-zinc-400">GCash Ref No.</span>
+                                                <span className="font-mono font-bold text-zinc-900 dark:text-white">{referenceNumber}</span>
+                                            </div>
+                                        )}
+                                        <div className="flex justify-between">
+                                            <span className="text-zinc-500 dark:text-zinc-400">Total Submitted</span>
+                                            <span className="font-bold text-zinc-900 dark:text-white">{peso.format(totalAmount)}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-zinc-500 dark:text-zinc-400">Submitted At</span>
+                                            <span className="text-zinc-700 dark:text-zinc-300">
+                                                {formatDateTime(payload.requests[0]?.submittedAt)}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {existingProofUrl && (
+                                        <div className="mt-3 flex items-center justify-between rounded-2xl border border-zinc-200/80 dark:border-white/5 bg-zinc-50 dark:bg-zinc-900 px-4 py-2.5">
+                                            <div className="flex items-center gap-2">
+                                                <FileCheck className="size-4 text-blue-600 dark:text-blue-400" />
+                                                <span className="text-xs text-zinc-700 dark:text-zinc-300 font-medium">Payment receipt attached</span>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowProofModal(existingProofUrl)}
+                                                className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline transition"
+                                            >
+                                                <span>View Receipt</span>
+                                                <ExternalLink className="size-3" />
+                                            </button>
                                         </div>
                                     )}
-                                    <div className="flex justify-between">
-                                        <span className="text-zinc-500 dark:text-zinc-400">Total Submitted</span>
-                                        <span className="font-bold text-zinc-900 dark:text-white">{peso.format(totalAmount)}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-zinc-500 dark:text-zinc-400">Submitted At</span>
-                                        <span className="text-zinc-700 dark:text-zinc-300">
-                                            {formatDateTime(payload.requests[0]?.submittedAt)}
-                                        </span>
-                                    </div>
                                 </div>
 
-                                {existingProofUrl && (
-                                    <div className="mt-4 flex items-center justify-between rounded-2xl border border-zinc-200/80 dark:border-white/5 bg-zinc-50 dark:bg-zinc-900 px-4 py-3">
-                                        <div className="flex items-center gap-2">
-                                            <FileCheck className="size-4 text-blue-600 dark:text-blue-400" />
-                                            <span className="text-xs text-zinc-700 dark:text-zinc-300 font-medium">Payment receipt attached</span>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowProofModal(existingProofUrl)}
-                                            className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline transition"
-                                        >
-                                            <span>View Receipt</span>
-                                            <ExternalLink className="size-3" />
-                                        </button>
-                                    </div>
-                                )}
-
-                                <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-zinc-200/70 dark:border-white/5 pt-4">
+                                <div className="mt-4 flex items-center justify-between border-t border-zinc-200/70 dark:border-white/5 pt-3">
                                     <p className="text-[11px] text-zinc-400 dark:text-zinc-500">
-                                        Need to fix or update your receipt?
+                                        Need to update your receipt?
                                     </p>
                                     <button
                                         type="button"
                                         onClick={() => setIsEditingAfterSubmit(true)}
-                                        className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-200 dark:border-white/10 bg-zinc-100 dark:bg-zinc-800/80 px-3.5 py-2 text-xs font-bold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition"
+                                        className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-200 dark:border-white/10 bg-zinc-100 dark:bg-zinc-800/80 px-3 py-1.5 text-xs font-bold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition"
                                     >
                                         <RefreshCw className="size-3" />
                                         <span>Update Submission</span>
@@ -726,36 +703,28 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
 
                         {/* STATE 3: UNIFIED PAYMENT FORM */}
                         {!allCompleted && (!allProcessing || isEditingAfterSubmit) && (
-                            <section className="rounded-3xl border border-zinc-200/80 dark:border-white/10 bg-white/90 dark:bg-zinc-900/60 p-6 sm:p-7 backdrop-blur-xl shadow-sm dark:shadow-xl transition-colors">
-                                <div className="flex items-center justify-between border-b border-zinc-200/70 dark:border-white/5 pb-4">
-                                    <div>
-                                        <h2 className="text-base font-black text-zinc-900 dark:text-white">Payment Submission</h2>
-                                        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-                                            Submit verified transfer details for all move-in requirements.
-                                        </p>
+                            <section className="rounded-3xl border border-zinc-200/80 dark:border-white/10 bg-white/90 dark:bg-zinc-900/60 p-5 sm:p-6 backdrop-blur-xl shadow-sm dark:shadow-xl transition-colors h-full flex flex-col justify-between">
+                                <div>
+                                    <div className="flex items-center justify-between border-b border-zinc-200/70 dark:border-white/5 pb-2.5">
+                                        <h2 className="text-sm font-black text-zinc-900 dark:text-white">Payment Submission</h2>
+                                        {isEditingAfterSubmit && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsEditingAfterSubmit(false)}
+                                                className="text-xs text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 font-semibold"
+                                            >
+                                                Cancel
+                                            </button>
+                                        )}
                                     </div>
-                                    {isEditingAfterSubmit && (
-                                        <button
-                                            type="button"
-                                            onClick={() => setIsEditingAfterSubmit(false)}
-                                            className="text-xs text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 font-semibold"
-                                        >
-                                            Cancel
-                                        </button>
-                                    )}
-                                </div>
 
-                                <div className="mt-5 space-y-4">
-                                    {/* Payment Method Selector */}
-                                    <div>
-                                        <label className="block text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2">
-                                            Payment Method
-                                        </label>
+                                    <div className="mt-3.5 space-y-3">
+                                        {/* Payment Method Selector */}
                                         <div className="grid grid-cols-2 gap-2">
                                             <button
                                                 type="button"
                                                 onClick={() => setMethod("gcash")}
-                                                className={`flex items-center justify-center gap-2 rounded-2xl py-3 px-3 text-xs font-bold transition ${
+                                                className={`flex items-center justify-center gap-2 rounded-2xl py-2 px-3 text-xs font-bold transition ${
                                                     method === "gcash"
                                                         ? "bg-blue-600 text-white shadow-md shadow-blue-600/20 border border-blue-500"
                                                         : "bg-zinc-100 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-400 border border-zinc-200/80 dark:border-white/5 hover:bg-zinc-200/70 dark:hover:bg-zinc-800"
@@ -770,7 +739,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                             <button
                                                 type="button"
                                                 onClick={() => setMethod("cash")}
-                                                className={`flex items-center justify-center gap-2 rounded-2xl py-3 px-3 text-xs font-bold transition ${
+                                                className={`flex items-center justify-center gap-2 rounded-2xl py-2 px-3 text-xs font-bold transition ${
                                                     method === "cash"
                                                         ? "bg-zinc-800 text-white shadow-md border border-zinc-700 dark:bg-zinc-700"
                                                         : "bg-zinc-100 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-400 border border-zinc-200/80 dark:border-white/5 hover:bg-zinc-200/70 dark:hover:bg-zinc-800"
@@ -780,191 +749,167 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                                 <span>Cash (In Person)</span>
                                             </button>
                                         </div>
-                                    </div>
 
-                                    {/* Reference Number Field */}
-                                    <div>
-                                        <div className="flex items-center justify-between mb-1.5">
-                                            <label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                                        {/* Reference Number Field */}
+                                        <div>
+                                            <label className="block text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1">
                                                 {method === "gcash" ? "13-Digit GCash Reference Number *" : "Reference Number (Optional)"}
                                             </label>
-                                            {method === "gcash" && (
-                                                <span className="text-[10px] text-zinc-400 dark:text-zinc-500">From GCash receipt</span>
-                                            )}
+                                            <div className="relative">
+                                                <input
+                                                    type="text"
+                                                    value={referenceNumber}
+                                                    onChange={(e) => setReferenceNumber(e.target.value)}
+                                                    placeholder={method === "gcash" ? "e.g. 1002 9384 1029 1" : "Optional cash memo or receipt number"}
+                                                    className="w-full rounded-2xl border border-zinc-300 dark:border-white/10 bg-zinc-50 dark:bg-zinc-950/70 px-3.5 py-2 text-xs font-semibold text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition"
+                                                />
+                                                {referenceNumber.trim().length > 0 && (
+                                                    <Check className="absolute right-3 top-2.5 size-3.5 text-emerald-500" />
+                                                )}
+                                            </div>
                                         </div>
-                                        <div className="relative">
-                                            <input
-                                                type="text"
-                                                value={referenceNumber}
-                                                onChange={(e) => setReferenceNumber(e.target.value)}
-                                                placeholder={method === "gcash" ? "e.g. 1002 9384 1029 1" : "Optional cash memo or receipt number"}
-                                                className="w-full rounded-2xl border border-zinc-300 dark:border-white/10 bg-zinc-50 dark:bg-zinc-950/70 px-4 py-3 text-sm font-semibold text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition"
-                                            />
-                                            {referenceNumber.trim().length > 0 && (
-                                                <Check className="absolute right-3.5 top-3.5 size-4 text-emerald-500" />
-                                            )}
-                                        </div>
-                                    </div>
 
-                                    {/* File Upload Dropzone */}
-                                    <div>
-                                        <div className="flex items-center justify-between mb-1.5">
-                                            <label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                                        {/* File Upload Dropzone (Single-Line Compact) */}
+                                        <div>
+                                            <label className="block text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1">
                                                 Proof of Payment Receipt {method === "gcash" ? "*" : "(Optional)"}
                                             </label>
-                                            <span className="text-[10px] text-zinc-400 dark:text-zinc-500">PNG, JPG, PDF up to 10MB</span>
-                                        </div>
 
-                                        <input
-                                            ref={fileInputRef}
-                                            type="file"
-                                            accept="image/jpeg,image/png,image/webp,application/pdf"
-                                            onChange={(e) => handleFileSelected(e.target.files?.[0] ?? null)}
-                                            className="hidden"
-                                        />
+                                            <input
+                                                ref={fileInputRef}
+                                                type="file"
+                                                accept="image/jpeg,image/png,image/webp,application/pdf"
+                                                onChange={(e) => handleFileSelected(e.target.files?.[0] ?? null)}
+                                                className="hidden"
+                                            />
 
-                                        {/* Dropzone Container */}
-                                        {!proofFile && !existingProofUrl ? (
-                                            <div
-                                                onDragOver={(e) => {
-                                                    e.preventDefault();
-                                                    setIsDragging(true);
-                                                }}
-                                                onDragLeave={() => setIsDragging(false)}
-                                                onDrop={(e) => {
-                                                    e.preventDefault();
-                                                    setIsDragging(false);
-                                                    handleFileSelected(e.dataTransfer.files?.[0] ?? null);
-                                                }}
-                                                onClick={() => fileInputRef.current?.click()}
-                                                className={`group flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-6 text-center cursor-pointer transition ${
-                                                    isDragging
-                                                        ? "border-blue-500 bg-blue-500/10"
-                                                        : "border-zinc-300 dark:border-white/10 bg-zinc-50/60 dark:bg-zinc-950/50 hover:border-zinc-400 dark:hover:border-white/20 hover:bg-zinc-100/60 dark:hover:bg-zinc-950/80"
-                                                }`}
-                                            >
-                                                <div className="flex size-11 items-center justify-center rounded-2xl bg-zinc-200/70 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white transition">
-                                                    <UploadCloud className="size-5" />
+                                            {!proofFile && !existingProofUrl ? (
+                                                <div
+                                                    onDragOver={(e) => {
+                                                        e.preventDefault();
+                                                        setIsDragging(true);
+                                                    }}
+                                                    onDragLeave={() => setIsDragging(false)}
+                                                    onDrop={(e) => {
+                                                        e.preventDefault();
+                                                        setIsDragging(false);
+                                                        handleFileSelected(e.dataTransfer.files?.[0] ?? null);
+                                                    }}
+                                                    onClick={() => fileInputRef.current?.click()}
+                                                    className={`group flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-4 py-3 text-center cursor-pointer transition ${
+                                                        isDragging
+                                                            ? "border-blue-500 bg-blue-500/10"
+                                                            : "border-zinc-300 dark:border-white/10 bg-zinc-50/60 dark:bg-zinc-950/50 hover:border-zinc-400 dark:hover:border-white/20 hover:bg-zinc-100/60 dark:hover:bg-zinc-950/80"
+                                                    }`}
+                                                >
+                                                    <UploadCloud className="size-4 text-zinc-500 group-hover:text-zinc-800 dark:group-hover:text-white transition" />
+                                                    <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300">
+                                                        Click or drop receipt (PNG, JPG, PDF up to 10MB)
+                                                    </span>
                                                 </div>
-                                                <p className="mt-2.5 text-xs font-bold text-zinc-700 dark:text-zinc-300">
-                                                    Click to browse or drag &amp; drop receipt
-                                                </p>
-                                                <p className="mt-1 text-[11px] text-zinc-400 dark:text-zinc-500">
-                                                    Attach screenshot from GCash showing transaction reference and amount
-                                                </p>
-                                            </div>
-                                        ) : (
-                                            /* Active file preview card */
-                                            <div className="rounded-2xl border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-zinc-950/70 p-3.5 flex items-center justify-between gap-3">
-                                                <div className="flex items-center gap-3 min-w-0">
-                                                    {proofPreviewUrl ? (
-                                                        <img
-                                                            src={proofPreviewUrl}
-                                                            alt="Proof preview"
-                                                            className="size-12 rounded-xl object-cover border border-zinc-200 dark:border-white/10 shrink-0 cursor-pointer shadow-sm"
-                                                            onClick={() => setShowProofModal(proofPreviewUrl)}
-                                                        />
-                                                    ) : (
-                                                        <div className="flex size-12 items-center justify-center rounded-xl bg-zinc-200 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 shrink-0 border border-zinc-300 dark:border-white/5">
-                                                            <FileText className="size-6" />
+                                            ) : (
+                                                /* Active file preview card */
+                                                <div className="rounded-2xl border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-zinc-950/70 p-2.5 flex items-center justify-between gap-2.5">
+                                                    <div className="flex items-center gap-2.5 min-w-0">
+                                                        {proofPreviewUrl ? (
+                                                            <img
+                                                                src={proofPreviewUrl}
+                                                                alt="Proof preview"
+                                                                className="size-9 rounded-lg object-cover border border-zinc-200 dark:border-white/10 shrink-0 cursor-pointer shadow-sm"
+                                                                onClick={() => setShowProofModal(proofPreviewUrl)}
+                                                            />
+                                                        ) : (
+                                                            <div className="flex size-9 items-center justify-center rounded-lg bg-zinc-200 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 shrink-0">
+                                                                <FileText className="size-4" />
+                                                            </div>
+                                                        )}
+                                                        <div className="min-w-0">
+                                                            <p className="text-xs font-bold text-zinc-900 dark:text-white truncate">
+                                                                {proofFile ? proofFile.name : "Current Attached Proof"}
+                                                            </p>
+                                                            <p className="text-[10px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-medium">
+                                                                <CheckCircle2 className="size-2.5" />
+                                                                <span>{proofFile ? `${(proofFile.size / 1024).toFixed(0)} KB ready` : "Uploaded"}</span>
+                                                            </p>
                                                         </div>
-                                                    )}
-                                                    <div className="min-w-0">
-                                                        <p className="text-xs font-bold text-zinc-900 dark:text-white truncate">
-                                                            {proofFile ? proofFile.name : "Current Attached Proof"}
-                                                        </p>
-                                                        <p className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1 mt-0.5 font-medium">
-                                                            <CheckCircle2 className="size-3" />
-                                                            <span>
-                                                                {proofFile
-                                                                    ? `${(proofFile.size / 1024).toFixed(0)} KB • Ready to submit`
-                                                                    : "Existing file uploaded"}
-                                                            </span>
-                                                        </p>
+                                                    </div>
+
+                                                    <div className="flex items-center gap-1 shrink-0">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => fileInputRef.current?.click()}
+                                                            className="rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-2.5 py-1 text-[11px] font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 transition shadow-sm"
+                                                        >
+                                                            Replace
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setProofFile(null);
+                                                                if (fileInputRef.current) fileInputRef.current.value = "";
+                                                            }}
+                                                            className="flex size-6 items-center justify-center rounded-lg bg-zinc-200 dark:bg-zinc-800 text-zinc-500 hover:text-red-500 transition"
+                                                            title="Remove file"
+                                                        >
+                                                            <X className="size-3" />
+                                                        </button>
                                                     </div>
                                                 </div>
-
-                                                <div className="flex items-center gap-1.5 shrink-0">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => fileInputRef.current?.click()}
-                                                        className="rounded-xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 py-1.5 text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition shadow-sm"
-                                                    >
-                                                        Replace
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setProofFile(null);
-                                                            if (fileInputRef.current) fileInputRef.current.value = "";
-                                                        }}
-                                                        className="flex size-8 items-center justify-center rounded-xl bg-zinc-200 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-red-500 transition"
-                                                        title="Remove file"
-                                                    >
-                                                        <X className="size-4" />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Optional Transfer Note */}
-                                    <div>
-                                        <label className="block text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5">
-                                            Transfer Note (Optional)
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={note}
-                                            onChange={(e) => setNote(e.target.value)}
-                                            placeholder={
-                                                method === "cash"
-                                                    ? "e.g. Will pay upon key turnover on Saturday"
-                                                    : "Any message or context for the landlord"
-                                            }
-                                            className="w-full rounded-2xl border border-zinc-300 dark:border-white/10 bg-zinc-50 dark:bg-zinc-950/70 px-4 py-2.5 text-xs text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition"
-                                        />
-                                    </div>
-
-                                    {/* Unified Single Submit Button */}
-                                    <div className="pt-2">
-                                        <button
-                                            type="button"
-                                            disabled={!canSubmit || isSubmitting}
-                                            onClick={() => setShowConfirmModal(true)}
-                                            className="w-full relative flex items-center justify-center gap-2 rounded-2xl py-3.5 px-5 font-bold text-sm tracking-wide transition shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 hover:scale-[1.01] active:scale-[0.99]"
-                                            style={{
-                                                backgroundColor: brandPrimary,
-                                                color: contrastColor,
-                                            }}
-                                        >
-                                            {isSubmitting ? (
-                                                <>
-                                                    <Loader2 className="size-4 animate-spin" />
-                                                    <span>Submitting Payment Proof...</span>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <CheckCircle2 className="size-4" />
-                                                    <span>
-                                                        Submit Payment Proof ({peso.format(totalAmount)})
-                                                    </span>
-                                                    <ArrowRight className="size-4 opacity-70" />
-                                                </>
                                             )}
-                                        </button>
+                                        </div>
 
-                                        {/* Status guidance note under button */}
-                                        {!canSubmit && method === "gcash" && (
-                                            <p className="mt-2 text-center text-[11px] text-zinc-500 dark:text-zinc-400">
-                                                {!hasProof && !hasReference
-                                                    ? "Please upload your GCash receipt and enter the reference number to proceed."
-                                                    : !hasProof
-                                                    ? "Please upload your payment receipt to enable submission."
-                                                    : "Please enter the 13-digit GCash reference number to enable submission."}
-                                            </p>
-                                        )}
+                                        {/* Optional Transfer Note */}
+                                        <div>
+                                            <label className="block text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1">
+                                                Transfer Note (Optional)
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={note}
+                                                onChange={(e) => setNote(e.target.value)}
+                                                placeholder={
+                                                    method === "cash"
+                                                        ? "e.g. Will pay upon key turnover on Saturday"
+                                                        : "Any message or context for the landlord"
+                                                }
+                                                className="w-full rounded-2xl border border-zinc-300 dark:border-white/10 bg-zinc-50 dark:bg-zinc-950/70 px-3.5 py-2 text-xs text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition"
+                                            />
+                                        </div>
                                     </div>
+                                </div>
+
+                                {/* Unified Single Submit Button */}
+                                <div className="pt-3">
+                                    <button
+                                        type="button"
+                                        disabled={!canSubmit || isSubmitting}
+                                        onClick={() => setShowConfirmModal(true)}
+                                        className="w-full relative flex items-center justify-center gap-2 rounded-2xl py-3 px-4 font-bold text-xs tracking-wide transition shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 hover:scale-[1.01] active:scale-[0.99]"
+                                        style={{
+                                            backgroundColor: brandPrimary,
+                                            color: contrastColor,
+                                        }}
+                                    >
+                                        {isSubmitting ? (
+                                            <>
+                                                <Loader2 className="size-3.5 animate-spin" />
+                                                <span>Submitting Payment Proof...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <CheckCircle2 className="size-4" />
+                                                <span>Submit Payment Proof ({peso.format(totalAmount)})</span>
+                                                <ArrowRight className="size-3.5 opacity-70" />
+                                            </>
+                                        )}
+                                    </button>
+
+                                    {/* Status guidance note under button */}
+                                    {!canSubmit && method === "gcash" && (
+                                        <p className="mt-1.5 text-center text-[11px] text-zinc-500 dark:text-zinc-400">
+                                            Please upload your GCash receipt and enter the reference number to proceed.
+                                        </p>
+                                    )}
                                 </div>
                             </section>
                         )}
@@ -994,7 +939,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                             <div className="flex justify-between">
                                 <span className="text-zinc-500 dark:text-zinc-400">Property &amp; Unit</span>
                                 <span className="font-bold text-zinc-900 dark:text-white">
-                                    {payload.application.propertyName} ({payload.application.unitName})
+                                    {payload.application.propertyName} ({displayUnit})
                                 </span>
                             </div>
                             <div className="flex justify-between">
@@ -1024,7 +969,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                 type="button"
                                 disabled={isSubmitting}
                                 onClick={() => setShowConfirmModal(false)}
-                                className="rounded-xl border border-zinc-200 dark:border-white/10 bg-zinc-100 dark:bg-zinc-800 px-4 py-2.5 text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition"
+                                className="rounded-xl border border-zinc-200 dark:border-white/10 bg-zinc-100 dark:bg-zinc-800 px-4 py-2 text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition"
                             >
                                 Review Again
                             </button>
@@ -1032,7 +977,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                 type="button"
                                 disabled={isSubmitting}
                                 onClick={() => void executeSubmit()}
-                                className="inline-flex items-center gap-1.5 rounded-xl px-5 py-2.5 text-xs font-bold transition shadow-md disabled:opacity-50"
+                                className="inline-flex items-center gap-1.5 rounded-xl px-5 py-2 text-xs font-bold transition shadow-md disabled:opacity-50"
                                 style={{
                                     backgroundColor: brandPrimary,
                                     color: contrastColor,
