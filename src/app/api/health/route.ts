@@ -1,0 +1,75 @@
+import { NextResponse } from "next/server";
+import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
+
+export const dynamic = "force-dynamic";
+
+/**
+ * GET /api/health
+ * Public health check & deployment validation endpoint.
+ * Evaluates API readiness, database connectivity, and required environment configurations.
+ */
+export async function GET() {
+  const timestamp = new Date().toISOString();
+  const checks: Record<string, { status: "pass" | "fail"; latencyMs?: number; message?: string }> = {};
+
+  // 1. Environment Variables Check
+  const requiredEnvVars = [
+    "NEXT_PUBLIC_SUPABASE_URL",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+    "SUPABASE_SERVICE_ROLE_KEY",
+  ];
+
+  const missingEnvVars = requiredEnvVars.filter((key) => !process.env[key]);
+  if (missingEnvVars.length === 0) {
+    checks.environment = { status: "pass" };
+  } else {
+    checks.environment = {
+      status: "fail",
+      message: `Missing required environment variables: ${missingEnvVars.join(", ")}`,
+    };
+  }
+
+  // 2. Database Connectivity Check
+  const startTime = Date.now();
+  try {
+    const adminClient = createServiceRoleSupabaseClient();
+    const { count, error } = await adminClient
+      .from("profiles")
+      .select("*", { count: "exact", head: true });
+
+    const latencyMs = Date.now() - startTime;
+
+    if (error) {
+      checks.database = {
+        status: "fail",
+        latencyMs,
+        message: `PostgreSQL connection error: ${error.message}`,
+      };
+    } else {
+      checks.database = {
+        status: "pass",
+        latencyMs,
+        message: `Connected successfully (${count ?? 0} profiles indexed)`,
+      };
+    }
+  } catch (err: any) {
+    checks.database = {
+      status: "fail",
+      latencyMs: Date.now() - startTime,
+      message: err?.message || "Failed to initialize database client",
+    };
+  }
+
+  const isHealthy = Object.values(checks).every((c) => c.status === "pass");
+
+  return NextResponse.json(
+    {
+      status: isHealthy ? "healthy" : "unhealthy",
+      timestamp,
+      version: process.env.npm_package_version || "0.1.0",
+      nodeEnv: process.env.NODE_ENV || "development",
+      checks,
+    },
+    { status: isHealthy ? 200 : 503 }
+  );
+}

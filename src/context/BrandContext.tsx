@@ -13,6 +13,8 @@ export interface BrandConfig {
   secondaryColor: string;
   logoUrl: string | null;
   bannerUrl: string | null;
+  setupCompleted?: boolean;
+  setupCompletedAt?: string | null;
 }
 
 export interface BrandContextValue extends BrandConfig {
@@ -32,6 +34,8 @@ export const DEFAULT_BRANDING: BrandConfig = {
   secondaryColor: "#8b5cf6",
   logoUrl: null,
   bannerUrl: null,
+  setupCompleted: false,
+  setupCompletedAt: null,
 };
 
 const BrandContext = createContext<BrandContextValue | null>(null);
@@ -59,6 +63,8 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
       const savedSecondary = localStorage.getItem("ireside_brand_secondary");
       const savedLogo = localStorage.getItem("ireside_property_logo");
       const savedBanner = localStorage.getItem("ireside_landlord_custom_banner_url");
+      const savedSetupCompleted = localStorage.getItem("ireside_setup_completed") === "true";
+      const savedSetupCompletedAt = localStorage.getItem("ireside_setup_completed_at");
 
       if (savedName || savedPrimary) {
         return {
@@ -69,6 +75,8 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
           secondaryColor: savedSecondary || DEFAULT_BRANDING.secondaryColor,
           logoUrl: savedLogo || null,
           bannerUrl: savedBanner || null,
+          setupCompleted: savedSetupCompleted,
+          setupCompletedAt: savedSetupCompletedAt || null,
         };
       }
     } catch (err) {
@@ -96,6 +104,13 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
           localStorage.setItem("ireside_brand_secondary", data.secondaryColor);
           if (data.logoUrl) localStorage.setItem("ireside_property_logo", data.logoUrl);
           if (data.bannerUrl) localStorage.setItem("ireside_landlord_custom_banner_url", data.bannerUrl);
+          if (data.setupCompleted) {
+            localStorage.setItem("ireside_setup_completed", "true");
+            if (data.setupCompletedAt) localStorage.setItem("ireside_setup_completed_at", data.setupCompletedAt);
+          } else {
+            localStorage.removeItem("ireside_setup_completed");
+            localStorage.removeItem("ireside_setup_completed_at");
+          }
 
           window.dispatchEvent(new CustomEvent("property-branding-updated", { detail: data }));
           return;
@@ -231,6 +246,13 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
           localStorage.setItem("ireside_landlord_custom_banner_url", merged.bannerUrl);
         } else {
           localStorage.removeItem("ireside_landlord_custom_banner_url");
+        }
+        if (merged.setupCompleted) {
+          localStorage.setItem("ireside_setup_completed", "true");
+          if (merged.setupCompletedAt) localStorage.setItem("ireside_setup_completed_at", merged.setupCompletedAt);
+        } else {
+          localStorage.removeItem("ireside_setup_completed");
+          localStorage.removeItem("ireside_setup_completed_at");
         }
         window.dispatchEvent(new CustomEvent("property-branding-updated", { detail: merged }));
       }

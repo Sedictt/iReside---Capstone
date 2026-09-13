@@ -10,11 +10,11 @@ export function ContractHeader({ isFinalApproval, onClose }: ContractHeaderProps
         <div className="sticky top-0 z-20 bg-[#111] border-b border-white/5 p-6 flex items-center justify-between">
             <div>
                 <h2 className="text-xl font-black text-white">
-                    {isFinalApproval ? "Finalize Approval" : "Request Payments"}
+                    {isFinalApproval ? "Approve Application" : "Request Payments"}
                 </h2>
                 <p className="text-xs text-neutral-400">
                     {isFinalApproval
-                        ? "Complete approval after both payment requests are confirmed."
+                        ? "Confirm tenant approval and generate the digital lease contract."
                         : "Move application to payment-pending and send secure portal link."}
                 </p>
             </div>

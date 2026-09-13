@@ -31,7 +31,7 @@ import {
  Pencil,
  Wallet,
  Save,
- Sparkles,
+ Zap,
 } from "lucide-react";
 import { ToolAccessBar } from "./ToolAccessBar";
 import { LeaseOfflineSigner } from "@/lib/offline/leaseOfflineSigner";
@@ -999,7 +999,7 @@ export function RentApplications() {
  {updatingStatusId === selectedApp.id ? (
  <Loader2 className="size-4 animate-spin" />
  ) : (
- <Sparkles className="size-4" />
+ <Zap className="size-4" />
  )}
  Quick Approve
  </button>
@@ -1008,7 +1008,7 @@ export function RentApplications() {
  className="flex items-center gap-2 rounded-xl bg-primary/10 px-5 py-2.5 text-xs font-black uppercase tracking-widest text-primary transition-all hover:bg-primary/20 cursor-pointer"
  >
  <Wallet className="size-4" />
- {selectedApp.status === "payment_pending" ? "Finalize" : "Request Payment"}
+ {selectedApp.status === "payment_pending" ? "Approve Application" : "Request Payment"}
  </button>
  </div>
  <p className="mt-3 text-[10px] font-medium text-muted-foreground">

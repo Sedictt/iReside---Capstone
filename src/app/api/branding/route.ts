@@ -126,19 +126,24 @@ export async function GET(request: NextRequest) {
 
     const brandingPayload: BrandConfig = {
       propertyName:
-        property?.name || landlordProfile?.business_name || customTheme?.propertyName || DEFAULT_BRANDING.propertyName,
+        landlordProfile?.business_name ||
+        customTheme?.propertyName ||
+        property?.name ||
+        DEFAULT_BRANDING.propertyName,
       propertyTagline:
-        property?.description ||
         customTheme?.propertyTagline ||
+        property?.description ||
         DEFAULT_BRANDING.propertyTagline,
       rentalArchetype:
-        (property?.type as BrandConfig["rentalArchetype"]) ||
         customTheme?.rentalArchetype ||
+        (property?.type as BrandConfig["rentalArchetype"]) ||
         DEFAULT_BRANDING.rentalArchetype,
       primaryColor: customTheme?.primaryColor || DEFAULT_BRANDING.primaryColor,
       secondaryColor: customTheme?.secondaryColor || DEFAULT_BRANDING.secondaryColor,
       logoUrl: customTheme?.logoUrl || (property?.images?.[0] ? property.images[0] : null),
       bannerUrl: customTheme?.bannerUrl || (property?.images?.[0] ? property.images[0] : null),
+      setupCompleted: (customTheme as any)?.setup_completed ?? (customTheme as any)?.setupCompleted ?? false,
+      setupCompletedAt: (customTheme as any)?.setup_completed_at ?? (customTheme as any)?.setupCompletedAt ?? null,
     };
 
     return NextResponse.json(brandingPayload);
@@ -188,14 +193,17 @@ export async function POST(request: NextRequest) {
 
     const currentDecorations =
       (existingProperty?.map_decorations as Record<string, unknown>) || {};
-    const currentBranding = currentDecorations.branding as Partial<BrandConfig> | undefined;
-    const updatedBrandingMeta: Partial<BrandConfig> = {
+    const currentBranding = currentDecorations.branding as (Partial<BrandConfig> & Record<string, unknown>) | undefined;
+    const updatedBrandingMeta: Record<string, unknown> = {
+      propertyName: body.propertyName || DEFAULT_BRANDING.propertyName,
       primaryColor: body.primaryColor || DEFAULT_BRANDING.primaryColor,
       secondaryColor: body.secondaryColor || DEFAULT_BRANDING.secondaryColor,
       propertyTagline: body.propertyTagline || DEFAULT_BRANDING.propertyTagline,
       rentalArchetype: body.rentalArchetype || DEFAULT_BRANDING.rentalArchetype,
       logoUrl: body.logoUrl || null,
       bannerUrl: body.bannerUrl || null,
+      setup_completed: body.setupCompleted !== undefined ? body.setupCompleted : currentBranding?.setup_completed ?? false,
+      setup_completed_at: body.setupCompletedAt !== undefined ? body.setupCompletedAt : currentBranding?.setup_completed_at ?? null,
     };
 
     const newDecorations = {
@@ -203,14 +211,12 @@ export async function POST(request: NextRequest) {
       branding: updatedBrandingMeta,
     };
 
-    // 2. Update all properties owned by this landlord with the branding tokens
+    // 2. Update properties owned by this landlord with the branding tokens in map_decorations
+    // Do NOT overwrite distinct property names or descriptions across the landlord's entire portfolio
     if (existingProperty) {
       await admin
         .from("properties")
         .update({
-          name: body.propertyName || undefined,
-          description: body.propertyTagline || undefined,
-          type: body.rentalArchetype || undefined,
           map_decorations: newDecorations,
           updated_at: new Date().toISOString(),
         })

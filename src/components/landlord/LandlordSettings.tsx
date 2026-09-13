@@ -2248,6 +2248,24 @@ export function LandlordSettings() {
                                     ))}
                                 </div>
                             </GlassCard>
+
+                            <GlassCard 
+                                title="Turnkey Workspace Personalization Wizard" 
+                                description="Need to re-evaluate your property archetype, dynamic HSL color harmonies, or setup flow?"
+                                headerExtra={
+                                    <Link
+                                        href="/setup?reconfigure=true"
+                                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl neumorphic-panel text-xs font-black uppercase tracking-wider text-foreground hover:text-primary transition-all active:scale-95 shadow-xs"
+                                    >
+                                        <SlidersHorizontal className="size-3.5 text-primary" />
+                                        <span>Re-run Setup Wizard</span>
+                                    </Link>
+                                }
+                            >
+                                <div className="p-2 text-xs text-muted-foreground leading-relaxed">
+                                    The 4-step personalization wizard guides you through archetype classification, WCAG contrast verification, and master administrator claiming. Running it in reconfiguration mode updates your branding and operational settings without affecting active leases or units.
+                                </div>
+                            </GlassCard>
                         </div>
                     );
 
