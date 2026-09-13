@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { X, CreditCard, Search, CheckCircle2, Sparkles, ChevronRight, AlertTriangle } from "lucide-react";
+import { X, CreditCard, Search, CheckCircle2, ChevronRight, AlertTriangle } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, m as motion } from "framer-motion";

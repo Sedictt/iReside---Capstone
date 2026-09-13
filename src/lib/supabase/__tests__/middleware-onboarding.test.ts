@@ -4,15 +4,19 @@ import {
     isAllowlistedTenantRoute,
     isAllowlistedTenantWritePath,
     isTenantApiWriteRequest,
+    isExplicitLogoutRequest,
 } from "../middleware";
 
-const mockRequest = (pathname: string, method: string): NextRequest =>
-    ({
+const mockRequest = (pathname: string, method: string, searchParams?: Record<string, string>): NextRequest => {
+    const params = new URLSearchParams(searchParams || {});
+    return {
         method,
         nextUrl: {
             pathname,
+            searchParams: params,
         },
-    }) as unknown as NextRequest;
+    } as unknown as NextRequest;
+};
 
 describe("tenant onboarding middleware guards", () => {
     it("detects tenant write API requests", () => {
@@ -41,3 +45,23 @@ describe("tenant onboarding middleware guards", () => {
         expect(isAllowlistedTenantRoute("/tenant/tour")).toBe(false);
     });
 });
+
+describe("middleware explicit logout handling", () => {
+    it("identifies explicit logout requests with logout query parameter", () => {
+        expect(isExplicitLogoutRequest(mockRequest("/login", "GET", { logout: "1726000000" }))).toBe(true);
+    });
+
+    it("identifies explicit sync logout requests", () => {
+        expect(isExplicitLogoutRequest(mockRequest("/login", "GET", { sync: "logout" }))).toBe(true);
+    });
+
+    it("does not treat ordinary login navigation as explicit logout", () => {
+        expect(isExplicitLogoutRequest(mockRequest("/login", "GET"))).toBe(false);
+        expect(isExplicitLogoutRequest(mockRequest("/login", "GET", { redirect: "/tenant/dashboard" }))).toBe(false);
+    });
+
+    it("does not treat other routes as explicit logout", () => {
+        expect(isExplicitLogoutRequest(mockRequest("/tenant/dashboard", "GET", { logout: "true" }))).toBe(false);
+    });
+});
+

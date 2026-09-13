@@ -4202,6 +4202,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                 unit={tooltipUnit} 
                                                 onClose={() => setTooltipUnit(null)} 
                                                 isDark={isDark}
+                                                zoom={scale}
                                                 onAction={(action: "transfer" | "complain") => {
                                                     if (action === "transfer") {
                                                         setTransferModalUnit(tooltipUnit);

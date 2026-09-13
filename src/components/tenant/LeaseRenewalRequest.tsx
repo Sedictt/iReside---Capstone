@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { RefreshCw, Calendar, X, CheckCircle2, ArrowRight, ShieldCheck, Clock, Info } from "lucide-react";
+import { RefreshCw, Calendar, X, CheckCircle2, ArrowRight, ShieldCheck, Clock, Info, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -28,9 +28,9 @@ interface LeaseRenewalRequestProps {
 
 // Default term options when not provided by renewalSettings
 const DEFAULT_RENEWAL_TERMS = [
-    { months: 6, label: "Short Term", price_label: "Market Rate" },
-    { months: 12, label: "Annual Standard", price_label: "Policy Rate", is_popular: true },
-    { months: 24, label: "Long Term Duo", price_label: "Policy Rate" }
+    { months: 6, label: "6 Months Extension", price_label: "Standard Rent" },
+    { months: 12, label: "1 Year Extension", price_label: "Standard Rent" },
+    { months: 24, label: "2 Years Extension", price_label: "Standard Rent" }
 ];
 
 export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining, leaseId, autoOpen = false, renewalSettings }: LeaseRenewalRequestProps) {
@@ -253,39 +253,48 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                         <p className="text-sm text-muted-foreground">Choose your preferred extension period.</p>
                                     </div>
 
-<div className="grid grid-cols-1 gap-3">
-                                        {(renewalSettings?.renewal_terms?.length ? renewalSettings.renewal_terms : DEFAULT_RENEWAL_TERMS).map((opt) => (
-                                            <button
-                                                key={opt.months}
-                                                onClick={() => setSelectedTerm(opt.months)}
-                                                className={cn(
-                                                    "p-5 rounded-2xl text-left transition-all flex items-center justify-between group neumorphic-extruded",
-                                                    selectedTerm === opt.months 
-                                                        ? "ring-2 ring-primary/50 text-primary" 
-                                                        : ""
-                                                )}
-                                            >
-                                                <div className="flex items-center gap-4">
-                                                    <div className={cn(
-                                                        "size-10 rounded-xl flex items-center justify-center transition-colors",
-                                                        selectedTerm === opt.months ? "neumorphic-primary" : "neumorphic-inset-card text-muted-foreground"
-                                                    )}>
-                                                        <Calendar className="size-5" />
+                                    <div className="grid grid-cols-1 gap-3">
+                                        {(renewalSettings?.renewal_terms?.length ? renewalSettings.renewal_terms : DEFAULT_RENEWAL_TERMS).map((opt) => {
+                                            const isSelected = selectedTerm === opt.months;
+                                            return (
+                                                <button
+                                                    key={opt.months}
+                                                    type="button"
+                                                    onClick={() => setSelectedTerm(opt.months)}
+                                                    className={cn(
+                                                        "p-5 rounded-2xl text-left transition-all flex items-center justify-between group neumorphic-extruded cursor-pointer",
+                                                        isSelected 
+                                                            ? "ring-2 ring-primary text-primary" 
+                                                            : "hover:border-primary/30"
+                                                    )}
+                                                >
+                                                    <div className="flex items-center gap-4">
+                                                        <div className={cn(
+                                                            "size-10 rounded-xl flex items-center justify-center transition-colors",
+                                                            isSelected ? "neumorphic-primary" : "neumorphic-inset-card text-muted-foreground"
+                                                        )}>
+                                                            <Calendar className="size-5" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-sm font-black text-foreground">{opt.months} Months</p>
+                                                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{opt.label}</p>
+                                                        </div>
                                                     </div>
-                                                    <div>
-                                                        <p className="text-sm font-black text-foreground">{opt.months} Months</p>
-                                                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{opt.label}</p>
+                                                    <div className="flex items-center gap-3">
+                                                        <span className={cn(
+                                                            "text-[10px] font-black uppercase tracking-widest",
+                                                            isSelected ? "text-primary" : "text-muted-foreground"
+                                                        )}>{opt.price_label}</span>
+                                                        <div className={cn(
+                                                            "size-6 rounded-full flex items-center justify-center transition-all",
+                                                            isSelected ? "neumorphic-primary text-primary-foreground" : "neumorphic-inset-card text-transparent"
+                                                        )}>
+                                                            <CheckCircle2 className={cn("size-3.5", isSelected ? "opacity-100" : "opacity-0")} />
+                                                        </div>
                                                     </div>
-                                                </div>
-                                                <div className="text-right">
-                                                    <p className={cn(
-                                                        "text-[10px] font-black uppercase tracking-widest",
-                                                        selectedTerm === opt.months ? "text-primary" : "text-muted-foreground"
-                                                    )}>{opt.price_label}</p>
-                                                    {opt.is_popular && <span className="text-[8px] font-black text-white bg-primary px-2 py-0.5 rounded-full uppercase tracking-tighter">Popular</span>}
-                                                </div>
-                                            </button>
-                                        ))}
+                                                </button>
+                                            );
+                                        })}
                                     </div>
 
                                     <div className="flex items-start gap-3 p-4 rounded-xl neumorphic-inset">
@@ -303,26 +312,40 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                             <div className="p-6 flex gap-3">
                                 {step === "disclosure" ? (
                                     <button
+                                        type="button"
                                         onClick={() => setStep("request")}
                                         disabled={!acknowledged}
-                                        className="w-full py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all flex items-center justify-center gap-2 disabled:opacity-50 neumorphic-primary"
+                                        className="w-full py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all flex items-center justify-center gap-2 disabled:opacity-50 neumorphic-primary cursor-pointer active:scale-[0.98]"
                                     >
-                                        Accept & Proceed <ArrowRight className="size-4" />
+                                        <span>Accept & Proceed</span>
+                                        <ArrowRight className="size-4" />
                                     </button>
                                 ) : (
                                     <>
                                         <button
+                                            type="button"
                                             onClick={() => setStep("disclosure")}
-                                            className="px-6 py-4 rounded-2xl text-muted-foreground font-black uppercase tracking-widest text-[10px] transition-all flex-1 neumorphic-extruded"
+                                            className="px-6 py-4 rounded-2xl text-muted-foreground font-black uppercase tracking-widest text-[10px] transition-all flex-1 flex items-center justify-center gap-2 hover:text-foreground cursor-pointer neumorphic-extruded active:scale-[0.98]"
                                         >
                                             Back
                                         </button>
                                         <button
+                                            type="button"
                                             onClick={handleSubmit}
                                             disabled={submitting}
-                                            className="px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all flex-[2] items-center justify-center gap-2 disabled:opacity-50 neumorphic-primary"
+                                            className="px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all flex-[2] flex items-center justify-center gap-2 disabled:opacity-50 neumorphic-primary cursor-pointer active:scale-[0.98]"
                                         >
-                                            {submitting ? "Submitting..." : "Submit Request"} <ArrowRight className="size-4" />
+                                            {submitting ? (
+                                                <>
+                                                    <Loader2 className="size-4 animate-spin" />
+                                                    <span>Submitting...</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <span>Submit Request</span>
+                                                    <ArrowRight className="size-4" />
+                                                </>
+                                            )}
                                         </button>
                                     </>
                                 )}
