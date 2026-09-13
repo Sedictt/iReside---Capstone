@@ -469,7 +469,7 @@ export async function sendProspectPaymentRequestEmail({
     advanceAmount: number;
     securityAmount: number;
 }) {
-    const subject = "Action Required: Submit move-in payment details";
+    const subject = `Action Required: Submit Move-in Payment (${propertyName} - ${unitName})`;
     const expiresLabel = expiresAt.toLocaleString("en-US", {
         year: "numeric",
         month: "long",
@@ -499,11 +499,15 @@ export async function sendProspectPaymentRequestEmail({
         <p style="margin:0 0 6px;color:#fff;font-size:14px;">Advance Rent: <strong>PHP ${advanceAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></p>
         <p style="margin:0;color:#fff;font-size:14px;">Security Deposit: <strong>PHP ${securityAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></p>
       </div>
-      <div style="text-align:center;margin-bottom:20px;">
+      <div style="text-align:center;margin-bottom:16px;">
         <a href="${paymentPortalUrl}" style="display:inline-block;background:#c4b0ff;color:#000;font-weight:900;font-size:15px;padding:14px 28px;border-radius:10px;text-decoration:none;">
           Open Payment Portal
         </a>
       </div>
+      <p style="margin:0 0 20px;color:#a3a3a3;font-size:12px;word-break:break-all;text-align:center;">
+        Or click or copy this direct link:<br />
+        <a href="${paymentPortalUrl}" style="color:#c4b0ff;text-decoration:underline;">${paymentPortalUrl}</a>
+      </p>
       <p style="margin:0 0 10px;color:#737373;font-size:12px;">This secure link expires on <strong style="color:#fff;">${expiresLabel}</strong>.</p>
       <p style="margin:0;color:#525252;font-size:12px;line-height:1.6;">
         We will only finalize approval after both required payments are landlord-confirmed.

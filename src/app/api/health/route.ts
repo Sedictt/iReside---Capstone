@@ -60,6 +60,34 @@ export async function GET() {
     };
   }
 
+  // 3. SMTP Connectivity Check
+  const smtpStart = Date.now();
+  try {
+    const nodemailer = await import("nodemailer");
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.SMTP_USER || "ireside.official.mail@gmail.com",
+        pass: process.env.SMTP_PASS || "qzbh dxhc vazj krpt",
+      },
+      tls: { rejectUnauthorized: false },
+    });
+    await transporter.verify();
+    checks.smtp = {
+      status: "pass",
+      latencyMs: Date.now() - smtpStart,
+      message: "SMTP verified with smtp.gmail.com:465",
+    };
+  } catch (smtpErr: any) {
+    checks.smtp = {
+      status: "fail",
+      latencyMs: Date.now() - smtpStart,
+      message: smtpErr?.message || "Failed to verify SMTP",
+    };
+  }
+
   const isHealthy = Object.values(checks).every((c) => c.status === "pass");
 
   return NextResponse.json(
