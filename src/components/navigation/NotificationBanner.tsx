@@ -153,6 +153,16 @@ export function NotificationBanner() {
             return;
         }
 
+        if (data.href) {
+            router.push(data.href);
+            return;
+        }
+
+        if (data.applicationId) {
+            router.push(`/landlord/applications?id=${data.applicationId}`);
+            return;
+        }
+
         if (isLandlord) {
             switch (type) {
                 case "payment":
