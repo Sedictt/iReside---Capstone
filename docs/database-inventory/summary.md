@@ -1,6 +1,6 @@
 # Database Inventory Summary
 
-Generated: 2026-08-09T10:23:39.148Z
+Generated: 2026-09-13T04:28:51.397Z
 Schema source: `source-of-truth-db.sql`
 Migration overlay: `supabase/migrations`
 
@@ -10,9 +10,9 @@ Migration overlay: `supabase/migrations`
 - Schema views: 1
 - Schema functions: 12
 - Schema triggers: 24
-- Tables referenced from code/tests: 60
+- Tables referenced from code/tests: 63
 - RPC functions referenced from code/tests: 3
-- Missing in schema: 2
+- Missing in schema: 5
 - RPC functions missing in schema: 1
 - Unreferenced in code/tests: 1
 - Functions not referenced by code RPC or triggers: 2
@@ -36,8 +36,11 @@ Migration overlay: `supabase/migrations`
 
 ## Referenced Tables Missing From Schema
 
+- `${payload}:${signature}`
 - `community_reports`
 - `community_saved_posts`
+- `sessions`
+- `user_audit_logs`
 
 ## Referenced RPC Functions Missing From Schema
 
@@ -68,20 +71,20 @@ Migration overlay: `supabase/migrations`
 
 ## Most Referenced Tables
 
-- `profiles`: 94 references across 63 files
-- `leases`: 83 references across 46 files
-- `properties`: 71 references across 32 files
-- `payments`: 56 references across 23 files
-- `units`: 53 references across 30 files
+- `profiles`: 110 references across 72 files
+- `properties`: 91 references across 40 files
+- `leases`: 90 references across 52 files
+- `units`: 65 references across 37 files
+- `payments`: 60 references across 26 files
 - `applications`: 46 references across 23 files
-- `notifications`: 32 references across 21 files
+- `notifications`: 35 references across 24 files
 - `community_posts`: 27 references across 5 files
 - `landlord_applications`: 26 references across 13 files
+- `messages`: 23 references across 11 files
 - `move_out_requests`: 23 references across 13 files
-- `messages`: 20 references across 10 files
-- `conversation_participants`: 16 references across 7 files
-- `maintenance_requests`: 16 references across 9 files
-- `property_floor_configs`: 16 references across 4 files
+- `property_floor_configs`: 20 references across 6 files
+- `maintenance_requests`: 18 references across 11 files
+- `conversation_participants`: 17 references across 8 files
 - `renewal_requests`: 15 references across 6 files
 
 ## Tables With Structural Risk Signals
@@ -135,11 +138,13 @@ Migration overlay: `supabase/migrations`
 
 ## Referenced Storage Buckets
 
+- `brand-logos`: 1 files
 - `business-permits`: 1 files
 - `community-images`: 1 files
 - `landlord-documents`: 1 files
 - `maintenance-images`: 1 files
+- `message-files`: 1 files
 - `profile-avatars`: 1 files
 - `profile-covers`: 1 files
-- `property-images`: 2 files
+- `property-images`: 3 files
 - `tenant-invite-documents`: 2 files

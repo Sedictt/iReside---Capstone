@@ -30,94 +30,404 @@ To test the system exactly as property managers, prospective applicants, and act
 
 ```mermaid
 flowchart TD
-    subgraph Day0 ["Phase 1: Day 0 - Property Bootstrap & Spatial Canvas"]
-        A["1. Personalization Wizard (/setup)"] --> B["2. Master Settings, GCash & 2FA (/landlord/settings)"]
-        B --> C["3. Spatial Floor Planner & Unit Inventory (/landlord/unit-map)"]
-        C --> D["4. Environment Policies, Tariffs & House Rules"]
+    subgraph Infra ["Phase -1: Infrastructure Provisioning & Cloud APIs"]
+        I0["0. Cloud DB Setup & Schema Migration (source-of-truth-db.sql)"] --> I1["1. Cloud APIs & Env Setup (.env.local)"]
+        I1 --> I2["2. DB Inventory & Schema Audit (npm run db:inventory)"]
+        I2 --> I3["3. Turnkey Seed Provisioning (npm run seed:turnkey-admin)"]
+        I3 --> I4["4. Commissioning Health Ping (GET /api/health)"]
     end
 
-    subgraph Intake ["Phase 2: Prospective Resident Acquisition (3 Channels)"]
-        E1["Channel A: Physical Lobby Flyer QR (/landlord/flyer)"]
-        E2["Channel B: Face-to-Face Walk-In Entry (+ Walk-In Modal)"]
-        E3["Channel C: Direct Unit Invite Token (/apply/[token])"]
-        E1 & E2 & E3 --> F["5. Application Review, Document Inspection & Payment Request"]
+    subgraph Provisioning ["Phase 0: Clean-Slate Account Provisioning (Zero DB Hacks)"]
+        I4 --> P0["5. Test Landlord Account Creator (scripts/create-test-account.ts)"] --> A
+    end
+
+    subgraph Day0 ["Phase 1: Day 0 - Property Bootstrap & Spatial Canvas"]
+        A["6. Personalization Wizard (/setup)"] --> B["7. Master Settings, GCash & 2FA (/landlord/settings)"]
+        B --> C["8. Spatial Floor Planner & Unit Inventory (/landlord/unit-map)"]
+        C --> D["9. Environment Policies, Tariffs & House Rules"]
+    end
+
+    subgraph Intake ["Phase 2: Prospective Resident Acquisition (Multi-Path Entry)"]
+        E1["Path A: Unit Invite Token (/apply/[token])"]
+        E2["Path B: Face-to-Face Walk-In Modal (+ Walk-In Entry)"]
+        E3["Path C: Physical Lobby Flyer QR (/landlord/flyer)"]
+        E4["Path D: Direct Manual Lease Provisioning (/landlord/leases)"]
+        E1 & E2 & E3 & E4 --> F["10. Application Review, Document Inspection & Payment Request"]
     end
 
     subgraph Lease ["Phase 3: Digital Contracting & Resident Onboarding"]
-        F --> G["6. Digital Lease Creation & Dual-Mode E-Signing"]
-        G --> H["7. Landlord Countersignature & SHA-256 Sealing"]
-        H --> I["8. First-Launch Guided Product Tours (Landlord & Tenant)"]
+        F --> G["11. Digital Lease Creation & Dual-Mode E-Signing"]
+        G --> H["12. Landlord Countersignature & SHA-256 Sealing"]
+        H --> I["13. First-Launch Guided Product Tours (Landlord & Tenant)"]
     end
 
     subgraph Operations ["Phase 4: Steady-State Monthly Operations"]
-        I --> J["9. Corridor Submeter Utility Readings & Batch Invoicing"]
-        J --> K["10. Tenant GCash Rent Payment & Proof Upload"]
-        K --> L["11. Landlord Verification Drawer & Immutable Official Receipt"]
-        L --> M["12. Maintenance Triage, Dispatch & Auto-Expense Integration"]
-        M --> N["13. Direct Messaging, Room Filters & Bill Attachments"]
-        N --> O["14. Community Bulletin, Interactive Polls & Amenities Booking"]
+        I --> J["14. Corridor Submeter Utility Readings & Batch Invoicing"]
+        J --> K["15. Tenant GCash Rent Payment & Proof Upload"]
+        K --> L["16. Landlord Verification Drawer & Immutable Official Receipt"]
+        L --> M["17. Maintenance Triage, Dispatch & Auto-Expense Integration"]
+        M --> N["18. Direct Messaging, Room Filters & Bill Attachments"]
+        N --> O["19. Community Bulletin, Interactive Polls & Amenities Booking"]
     end
 
     subgraph Lifecycle ["Phase 5: Mid-Lease & Termination Lifecycle"]
-        O --> P["15. Unit Transfer Requests (/tenant/lease)"]
-        P --> Q["16. 90-Day Automated Renewal Addendum (/landlord/leases)"]
-        Q --> R["17. 30-Day Move-Out, Damage Inspection & Deposit Math Settlement"]
+        O --> P["20. Unit Transfer Requests (/tenant/lease)"]
+        P --> Q["21. 90-Day Automated Renewal Addendum (/landlord/leases)"]
+        Q --> R["22. 30-Day Move-Out, Damage Inspection & Deposit Math Settlement"]
     end
 
     subgraph HandoverHub ["Phase 6: Desktop App & Zero-IT Handover"]
-        R --> S["18. Native Windows Desktop Client & Integrated Documentation (/download, /landlord/docs)"]
+        R --> S["23. Native Windows Desktop Client & Integrated Documentation (/download, /landlord/docs)"]
     end
 
-    Day0 --> Intake --> Lease --> Operations --> Lifecycle --> HandoverHub
+    Infra --> Provisioning --> Day0 --> Intake --> Lease --> Operations --> Lifecycle --> HandoverHub
 ```
+
+---
+
+## ☁️ SCENARIO -1: Infrastructure Provisioning, Cloud APIs & Deployment Simulation
+
+### 🎭 Context & Commissioning Philosophy
+Before an evaluator, landlord, or tenant can touch the application, the sovereign cloud infrastructure must be provisioned. Unlike shared multi-tenant SaaS where an organization is just a row in a table, iReside's **Turnkey Architecture** models a dedicated private property deployment:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                       Sovereign Cloud Deployment Architecture               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  Hosting: Vercel Serverless Platform (Next.js 16 App Router)                │
+│  Database: Supabase Managed PostgreSQL 15 (PgBouncer Pooler, Port 6543)     │
+│  Object Storage: Supabase S3 CDN (property-images, billing, leases)         │
+│  Mail Delivery: Resend API / Gmail SMTP (2FA OTPs & Magic Intake Tokens)    │
+│  Bot Shield: Cloudflare Turnstile Interactive Challenge                     │
+│  AI Engine: OpenAI GPT-4o Mini (IRIS Resident Assistant & OCR)              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 🔹 Flow -1.1: Cloud Database Provisioning & Schema Initialization
+* **Source Artifact:** `source-of-truth-db.sql`
+* **Actors:** Deployment Consultant / Commissioning Engineer
+* **Target Engine:** Supabase Managed PostgreSQL 15
+
+#### Step-by-Step Actions
+1. **Create Supabase Cloud Project:**
+   - Navigate to [https://supabase.com/dashboard](https://supabase.com/dashboard).
+   - Click **"New Project"**, name it `ireside-property-prod`, set the database password, and select AWS Region (`ap-southeast-1` Singapore for Philippine low-latency).
+2. **Execute Database Schema & Policies:**
+   - In Supabase Dashboard, open **SQL Editor**.
+   - Load `source-of-truth-db.sql` (374 KB master schema).
+   - Click **Run**.
+   - 👉 **Verification Check:** The schema creates **58 tables**, **12 stored functions**, **24 database triggers**, and applies strict Row-Level Security (RLS) across all public tables.
+3. **Configure Storage Buckets & Access Policies:**
+   - Verify creation of private and public storage buckets in Supabase Storage:
+     - `property-images` (Public read): Unit photos, floorplans, and cover banners.
+     - `brand-logos` (Public read): Dynamic property badges and SVG logos.
+     - `billing` (Private RLS): GCash payment receipts and landlord official receipts.
+     - `leases` (Private RLS): Executed PDF contracts and digital signature audit trails.
+     - `maintenance` (Private RLS): Tenant repair photos and completion receipts.
+
+---
+
+### 🔹 Flow -1.2: Environment Configuration & Cloud API Integration
+* **File:** `.env.local`
+* **Actors:** System Administrator / Deployment Consultant
+
+#### Step-by-Step Actions
+1. Create or verify `.env.local` in the project root:
+   ```env
+   # Core Supabase Infrastructure
+   NEXT_PUBLIC_SUPABASE_URL=https://xxxxxxxx.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOi...
+   SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOi...
+
+   # Application Base URL
+   NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+   # Transactional Email Services (2FA OTPs, Magic Links & Invoices)
+   RESEND_API_KEY=re_xxxxxxxxxxxx
+   SMTP_HOST=smtp.gmail.com
+   SMTP_PORT=587
+   SMTP_USER=notifications@property.ph
+   SMTP_PASSWORD=xxxx-xxxx-xxxx-xxxx
+
+   # Cloudflare Turnstile Bot Defense
+   NEXT_PUBLIC_TURNSTILE_SITE_KEY=0x4AAAAAA...
+   TURNSTILE_SECRET_KEY=0x4AAAAAA...
+
+   # OpenAI Assistant & OCR Intelligence
+   OPENAI_API_KEY=sk-proj-xxxxxxxxxxxx
+
+   # Turnkey Desktop Client Packaging Secret
+   DESKTOP_RELEASE_SECRET=ireside-turnkey-desktop-secret-2026
+   ```
+
+2. 👉 **Verification Check:**
+   Run the environment validation sanity check:
+   ```bash
+   node -e "const keys = ['NEXT_PUBLIC_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_ANON_KEY', 'SUPABASE_SERVICE_ROLE_KEY']; const missing = keys.filter(k => !process.env[k]); if (missing.length) console.error('Missing:', missing); else console.log('✓ All core env vars present');"
+   ```
+
+---
+
+### 🔹 Flow -1.3: Automated Database Inventory & Schema Integrity Audit
+* **Command:** `npm run db:inventory`
+* **Script:** `scripts/database-inventory.mjs`
+* **Output Report:** `docs/database-inventory/summary.md`
+
+#### Step-by-Step Actions
+1. Execute the inventory scanner:
+   ```bash
+   npm run db:inventory
+   ```
+2. **Console Output Verification:**
+   ```text
+   > ireside@0.1.0 db:inventory
+   > node scripts/database-inventory.mjs
+
+   Wrote docs\database-inventory\inventory.json
+   Wrote docs\database-inventory\summary.md
+   ```
+3. 👉 **Verification Check:**
+   - Open `docs/database-inventory/summary.md`.
+   - Confirm:
+     - **Schema tables:** 58
+     - **Schema functions:** 12
+     - **Schema triggers:** 24
+     - Zero unreferenced tables or syntax regressions.
+
+---
+
+### 🔹 Flow -1.4: Turnkey Master Seed Account Initialization
+* **Command:** `npm run seed:turnkey-admin`
+* **Script:** `scripts/create-test-account.ts`
+
+#### Step-by-Step Actions
+1. Run the turnkey seed script:
+   ```bash
+   npm run seed:turnkey-admin
+   ```
+2. **Console Output Verification:**
+   ```text
+   =======================================================
+   🛠️   iReside Test Account Provisioning Utility
+   =======================================================
+   Role:      LANDLORD
+   Email:     admin@turnkey.local
+   Password:  TurnkeyAdmin2026!
+   Full Name: Default Admin
+   Phone:     0917-888-1234
+   -------------------------------------------------------
+   Creating fresh auth user in Supabase...
+   Syncing profile record in public.profiles...
+   ✓ Account provisioned successfully!
+   =======================================================
+   ```
+3. 👉 **Verification Check:**
+   - The user exists in `auth.users` with confirmed email.
+   - The user has **0 associated properties** in `properties`—ensuring the first login triggers the `/setup` wizard.
+
+---
+
+### 🔹 Flow -1.5: Production Build & Automated Health Commissioning Check
+* **Endpoint:** `GET /api/health`
+* **Component:** `src/app/api/health/route.ts`
+
+#### Step-by-Step Actions
+1. Start the web server or verify runtime:
+   ```bash
+   npm run dev # or npm run build && npm run start
+   ```
+2. Ping the deployment health check endpoint:
+   ```powershell
+   Invoke-RestMethod -Uri http://localhost:3000/api/health | ConvertTo-Json -Depth 5
+   ```
+3. 👉 **Verification Check:**
+   The server responds with HTTP 200 OK:
+   ```json
+   {
+     "status": "healthy",
+     "timestamp": "2026-09-13T04:30:23.231Z",
+     "version": "0.1.0",
+     "nodeEnv": "development",
+     "checks": {
+       "environment": {
+         "status": "pass"
+       },
+       "database": {
+         "status": "pass",
+         "latencyMs": 566,
+         "message": "Connected successfully (40 profiles indexed)"
+       }
+     }
+   }
+   ```
+   - **Environment:** `pass` (All required Supabase URL and keys are loaded).
+   - **Database:** `pass` (Live connection to cloud PostgreSQL successful, latency under 1000ms).
+   - The instance is certified ready for Phase 0 clean-slate testing and landlord personalization.
+
+---
+
+### ⚠️ Edge Cases & Failure Recovery in Scenario -1
+* **Test E-1.1 (Missing Environment Variables):** Omit `SUPABASE_SERVICE_ROLE_KEY` from `.env.local`.
+  - *Expected Result:* `GET /api/health` returns HTTP 503 with `"status": "unhealthy"` and flags `Missing required environment variables: SUPABASE_SERVICE_ROLE_KEY`.
+* **Test E-1.2 (PostgreSQL Connection Pool Exhaustion):** Simulate heavy connection spikes against PgBouncer.
+  - *Expected Result:* Supabase Client auto-retries via Exponential Backoff with jitter; health endpoint reports latency degradation before graceful reconnect.
+* **Test E-1.3 (Storage Bucket RLS Denied):** Uploading a unit image when bucket policies are misconfigured.
+  - *Expected Result:* Client receives standard RLS exception and prompts administrator to review storage bucket permissions in Supabase dashboard.
+* **Test E-1.4 (SMTP App Password Expiration):** Google account password changes while using Gmail SMTP.
+  - *Expected Result:* 2FA and notification services fail with `AuthError: Invalid credentials`. The fallback in-app notification center continues delivering in-portal alerts without blocking critical operations.
+
+---
+
+## 🛠️ SCENARIO 0: Clean-Slate Account Provisioning (No Database Seeding Shortcuts)
+
+### 🎭 Context & Philosophy
+In quality assurance and system evaluation, **direct-to-database SQL seed scripts conceal critical architectural bugs**. Dumping pre-seeded properties, mock leases, and artificial tenant records directly into PostgreSQL bypasses:
+1. **Supabase Auth Triggers (`on_auth_user_created`):** Real user authentication metadata, encryption handshakes, and profile synchronization.
+2. **Session Role Interception:** Turnkey root routing (`/`) detecting uninitialized landlords and guiding them to `/setup`.
+3. **Cryptographic Signing Handshakes:** Digital lease token generation, audit logs (`lease_signing_audit`), and tamper-evident hashes.
+4. **Intake Token State Tracking:** Token consumption limits, expiration timestamps, and single-use lock events in `tenant_intake_invites`.
+
+To test iReside under authentic conditions, **begin with freshly provisioned credentials with zero pre-existing database records**.
+
+---
+
+### 🔹 Flow 0.1: Default Turnkey Seed Account & Handover Mode
+* **Command:** `npm run seed:turnkey-admin`
+* **Actors:** Deployment Consultant / QA Evaluator
+* **Concept:** In the Turnkey architecture, the database is pre-seeded with a default administrator account. During the initial handover session, the property owner logs in with these temporary credentials and formally claims the account by personalizing their email, name, and password during `/setup`.
+
+#### Step-by-Step Actions
+1. Open terminal in the project root:
+   ```bash
+   npm run seed:turnkey-admin
+   ```
+2. **Console Output Verification:**
+   ```text
+   =======================================================
+   🛠️   iReside Test Account Provisioning Utility
+   =======================================================
+   Role:      LANDLORD
+   Email:     admin@turnkey.local
+   Password:  TurnkeyAdmin2026!
+   Full Name: Default Admin
+   Phone:     0917-888-1234
+   -------------------------------------------------------
+   Creating fresh auth user in Supabase...
+   Syncing profile record in public.profiles...
+   ✓ Account provisioned successfully!
+   =======================================================
+   📋  Login Credentials:
+       URL:      http://localhost:3000/login
+       Email:    admin@turnkey.local
+       Password: TurnkeyAdmin2026!
+   =======================================================
+   ```
+
+3. **Alternative: Custom Test Account Provisioning:**
+   ```bash
+   npm run create:landlord
+   # Or with custom arguments:
+   npx tsx scripts/create-test-account.ts --role landlord --email test.landlord@ireside.ph --password Password123! --name "Juan Valenzuela"
+   ```
+
+---
+
+### 🔹 Flow 0.2: First-Time Login & Automated Redirection Guard
+* **URL:** `http://localhost:3000/login`
+* **Actors:** Landlord (Roberto Reyes / Juan Valenzuela)
+* **Components:** `src/app/login/page.tsx`, `src/lib/supabase/middleware.ts`
+
+#### Step-by-Step Actions
+1. Open a clean browser window at:
+   `http://localhost:3000/login`
+2. Enter the turnkey default credentials:
+   - **Email:** `admin@turnkey.local`
+   - **Password:** `TurnkeyAdmin2026!`
+3. Click **"Sign In to Portal"**.
+4. 👉 **Verification Check:**
+   - Because the turnkey property has not completed initialization yet, the root route and middleware detect the clean-slate state and **automatically redirect the user to the Business Personalization Wizard (`http://localhost:3000/setup`)**.
+   - Unauthenticated visitors or tenants attempting to access `/setup` are immediately blocked.
 
 ---
 
 ## 🎨 SCENARIO 1: First-Time Property Deployment & Master Branding Setup
 
 ### 🎭 Context & Persona
-**Persona:** Juan Valenzuela, owner of the newly built 2-story student and professional dormitory *"Valenzuela Grand Residences"* in Valenzuela City. Juan wants his property to look branded, trustworthy, and professional from Day 1.
+**Persona:** Roberto Reyes, new owner of *"Reyes Residences"* in Valenzuela City. Roberto is logging in for the very first time using the default turnkey account to customize his property branding, claim his master administrative credentials, and lock down the workspace.
 
 ---
 
-### 🔹 Flow 1.1: Business Personalization Wizard (`/setup`)
+### 🔹 Flow 1.1: Business Personalization & Account Claiming Wizard (`/setup`)
 * **URL:** `http://localhost:3000/setup`
-* **Actors:** Landlord (Juan)
-* **Components:** `src/app/setup/page.tsx`, `useBrand()`
+* **Actors:** Landlord (Roberto Reyes)
+* **Components:** `src/app/setup/page.tsx`, `useBrand()`, `POST /api/setup/launch`
+* **Database Mutations:** `properties`, `profiles`, `auth.users`
 
 #### Step-by-Step Actions
 1. **Step 1: Property Identity & Monogram Generation**
-   - Enter **Property Name:** `Valenzuela Grand Residences`
-   - Enter **Property Tagline:** `Premier Student & Executive Residences`
-   - Select **Property Type:** Click `Student Dormitory` (or `Apartment Complex`).
-   - 👉 **Verification Check:** Look at the live resident portal preview frame on the right side of the screen. Notice it immediately reflects the title, tagline, and dynamically calculates a 2-letter monogram badge (`VG`) or displays uploaded logo.
+   - Enter **Property Name:** `Reyes Residences`
+   - Enter **Property Address:** `123 McArthur Highway, Karuhatan, Valenzuela City`
+   - Enter **Property Tagline:** `Premier Student & Executive Living in Valenzuela`
+   - Select **Property Type:** Click `Student Dormitory` (or `Apartment Complex` / `Boarding House`).
+   - Enter **Total Units:** `16`
+   - 👉 **Verification Check:** Look at the live resident portal preview frame on the right side of the screen. Notice it immediately reflects the title, tagline, and dynamically calculates a 2-letter monogram badge (`RR`) or displays uploaded logo.
    - Click **"Next: Theme & Palette"**.
 
 2. **Step 2: Color Studio, Accessibility & Contrast Check**
-   - Click preset theme cards: `Emerald Oasis`, `Electric Indigo`, `Ruby Crimson`, `Amber Sunset`.
-   - Drag the custom color slider to pick an exact brand tone (e.g., Hue: `160°`, Saturation: `84%`, Lightness: `39%`).
+   - Click preset theme cards: `Electric Indigo`, `Emerald Oasis`, `Ruby Crimson`, `Amber Sunset`.
+   - Drag the custom color slider to pick an exact brand tone (e.g., Hue: `264°`, Saturation: `90%`, Lightness: `62%`).
    - 👉 **Verification Check:** The system evaluates luminance and displays the **Contrast Ratio Badge** (`High Contrast Pass: 7.4:1 - WCAG AAA`).
    - Toggle **Dark Mode / Light Mode** preview switch to verify how cards adapt.
    - Click **"Next: Master Admin"**.
 
-3. **Step 3: Master Admin Profile Review**
-   - Review Full Name: `Juan Valenzuela`, Email: `landlord.valenzuela@ireside.ph`, Phone: `0917-888-1234`.
+3. **Step 3: Master Admin Account Claiming**
+   - Enter **Full Name:** `Roberto Reyes`
+   - Enter **Personal Email:** `roberto.reyes@gmail.com`
+   - Enter **Phone:** `0917-882-9912`
+   - Enter **Permanent Password:** `ReyesResidences2026!`
+   - Enter **Confirm Password:** `ReyesResidences2026!`
+   - 👉 **Verification Check:** Entering personal credentials claims the account from the temporary `admin@turnkey.local` defaults.
    - Click **"Next: Review & Launch"**.
 
-4. **Step 4: Summary & Launch Portal**
+4. **Step 4: Summary, Atomic Claiming & System Launch**
    - Review configured parameters on the confirmation card.
    - Click **"Save & Launch Property Portal"**.
-   - 👉 **Verification Check:** The system saves branding to `properties.branding`, injects dynamic CSS variables (`--primary`, `--brand-header`), and transitions the user into the **Landlord Dashboard** (`/landlord/dashboard`).
+   - 👉 **Verification Check:** The atomic endpoint `POST /api/setup/launch`:
+     1. Updates Supabase Auth credentials (`auth.users`) with the landlord's personal email and password.
+     2. Updates `public.profiles` (`full_name`, `phone`, `business_name`).
+     3. Creates/updates the primary property in `properties` with `map_decorations.branding` containing `setup_completed: true` and `setup_completed_at` timestamp.
+     4. Transitions the landlord smoothly into `/landlord/dashboard`.
 
 ---
 
-### 🔹 Flow 1.2: Master Settings, GCash Receiving Account & 2FA (`/landlord/settings`)
+### 🔹 Flow 1.2: Setup Completion Lock & Reconfiguration Mode
+* **URL:** `http://localhost:3000/setup` vs `http://localhost:3000/setup?reconfigure=true`
+* **Components:** `src/app/setup/page.tsx`, `LandlordSettings.tsx`
+
+#### Step-by-Step Actions
+1. **Completion Lock Verification:**
+   - While logged in as the landlord, type `http://localhost:3000/setup` directly in the browser address bar.
+   - 👉 **Verification Check:** The completion guard intercepts the navigation, detects `brand.setupCompleted === true`, displays a toast notification (*"Setup already finalized. Your property portal is operational. You can update your brand in Settings."*), and immediately redirects back to `/landlord/dashboard`.
+   - This prevents unauthorized visitors or accidental tampering from resetting property identity.
+
+2. **Reconfiguration & Troubleshooting Escape Hatch:**
+   - In `/landlord/settings` under **Personalization**, scroll to the card: **"Turnkey Workspace Personalization Wizard"**.
+   - Click **"Re-run Setup Wizard"** (or visit `http://localhost:3000/setup?reconfigure=true`).
+   - 👉 **Verification Check:** The setup wizard opens cleanly in reconfiguration mode, pre-populated with existing brand tokens, allowing safe tuning of colors or archetypes without wiping existing property units or tenant data.
+
+---
+
+### 🔹 Flow 1.3: Master Settings, GCash Receiving Account & 2FA (`/landlord/settings`)
 * **URL:** `http://localhost:3000/landlord/settings`
 * **Actors:** Landlord
+* **Components:** `LandlordSettings.tsx`
+* **Database Mutations:** `landlord_payment_destinations`, `profiles`
 
 #### Step-by-Step Actions
 1. **Tab 1: Business Profile & Permits**
-   - Verify Business Name and Support Contact Phone (`0917-888-1234`).
+   - Verify Business Name: `Reyes Residences` and Support Phone: `0917-882-9912`.
    - Set Office Hours: `Monday - Saturday, 8:00 AM - 6:00 PM`.
    - Upload Business Permit PDF / Image (`permit_2026.pdf`).
    - 👉 **Verification Check:** Business Permit card indicates upload success with preview icon and timestamp.
@@ -128,8 +438,8 @@ flowchart TD
    - Change Dashboard Banner Preset to `Modern Glass Architectural Building`.
 
 3. **Tab 3: Finance & GCash Receiving Destination**
-   - GCash Registered Name: `Juan Valenzuela`
-   - GCash Mobile Number: `0917-888-1234`
+   - GCash Registered Name: `Roberto Reyes`
+   - GCash Mobile Number: `0917-882-9912`
    - Upload **GCash Receiving QR Code** image (`gcash_qr.png`).
    - Click **"Save Payment Settings"**.
    - 👉 **Verification Check:** A green toast confirms payment destination update (`landlord_payment_destinations` table).
@@ -149,51 +459,60 @@ flowchart TD
   - *Expected Result:* The upload component rejects the file with an inline red validation error: *"Only JPEG, PNG, and WebP images under 5MB are supported."*
 * **Test E1.3 (Low Contrast Warning):** In Color Studio, enter an illegible pale yellow (`#FFFF88`) on white background.
   - *Expected Result:* The WCAG badge turns amber/red: *"Low Contrast Warning: 1.3:1 - Fails WCAG AA. Text may be hard to read."*
+* **Test E1.4 (Setup Lockout Tampering):** Attempt to bypass the setup lock by visiting `/setup` directly from another tab after completing launch.
+  - *Expected Result:* The route guard blocks access and redirects to `/landlord/dashboard`. Only authorized landlords with `?reconfigure=true` can access the wizard.
 
 ---
 
 ## 🏢 SCENARIO 2: Spatial Floor Planner, Inventory Setup & House Policies
 
 ### 🎭 Context & Persona
-Juan is setting up the physical layout of his 2-floor property: Floor 1 (Units 101, 102) and Floor 2 (Units 201, 202).
+Juan is setting up the physical layout and unit inventory of his 2-floor property: Floor 1 (Units 101, 102) and Floor 2 (Units 201, 202).
 
 ---
 
-### 🔹 Flow 2.1: Spatial Floor Planner & Unit Grid Builder (`/landlord/unit-map`)
+### 🔹 Flow 2.1: Spatial Floor Planner & Map Setup Wizard (`/landlord/unit-map`)
 * **URL:** `http://localhost:3000/landlord/unit-map`
 * **Actors:** Landlord
-* **Components:** `VisualBuilder.tsx`, `@dnd-kit/core`
+* **Components:** `VisualBuilder.tsx`, `MapSetupWizard.tsx`, `@dnd-kit/core`
 * **Database Mutations:** `property_floor_configs`, `units`, `unit_map_positions`
 
 #### Step-by-Step Actions
-1. **Configure Building Levels:**
-   - On `/landlord/unit-map`, click **"Add Floor"** ➔ Set Name: `Ground Floor (Floor 1)`.
-   - Click **"Add Floor"** ➔ Set Name: `Second Floor (Floor 2)`.
-   - Records are persisted to `property_floor_configs`.
+1. **First-Time Entry on Empty Property:**
+   - Because 0 units exist yet, `VisualBuilder` automatically launches the **Map Setup Wizard (`MapSetupWizard.tsx`)**.
+   - Click **"Start Building Setup"**.
 
-2. **Add & Position Units on Canvas:**
-   - Select `Ground Floor (Floor 1)`.
-   - Drag **Unit Card** onto canvas to create **Unit 101**.
-   - Drag another card to create **Unit 102**.
-   - Switch to `Second Floor (Floor 2)` tab, add **Unit 201** and **Unit 202**.
+2. **Configure Building Levels:**
+   - Click **"Add Floor"** ➔ Set Display Name: `Ground Floor` (Key: `floor1`, Sort Order: 1).
+   - Click **"Add Floor"** ➔ Set Display Name: `Second Floor` (Key: `floor2`, Sort Order: 2).
+   - Click **"Confirm Floors"**. Records are saved to `property_floor_configs`.
 
-3. **Configure Unit Specifications (Unit 101 Drawer):**
-   - Click on **Unit 101** card:
+3. **Add & Position Units on Canvas:**
+   - Select `Ground Floor (floor1)`:
+     - Drag a **Unit Block** onto the canvas grid ➔ Enter Unit Name: `Unit 101`.
+     - Drag another **Unit Block** onto the canvas ➔ Enter Unit Name: `Unit 102`.
+   - Select `Second Floor (floor2)`:
+     - Drag two Unit Blocks to create **Unit 201** and **Unit 202**.
+
+4. **Configure Unit Specifications (Unit 101 Drawer):**
+   - Click on the **Unit 101** block on the canvas to open the Unit Properties Drawer:
      - Monthly Base Rent: `₱8,500.00`
-     - Bedrooms: `1`, Bathrooms: `1`, Max Occupants: `2`
+     - Bedrooms: `1`, Bathrooms: `1`, Floor Area: `24 sqft`, Max Occupants: `2`
      - Amenities: Check `Air Conditioning`, `Private Bathroom`, `Free Wi-Fi`, `Submetered Utilities`
-     - Unit Status: `vacant`
-   - Click **"Save Unit Specs"**.
-   - 👉 **Verification Check:** Unit 101 card displays an emerald **"Vacant / Ready for Move-In"** status badge. Coordinates save to `unit_map_positions`.
+     - Initial Status: `vacant`
+   - Repeat for Units 102, 201, and 202.
+   - Click **"Save Unit Specifications"**.
+   - 👉 **Verification Check:** All 4 unit cards display an emerald **"Vacant / Ready for Move-In"** badge. Coordinates save to `unit_map_positions`.
 
-4. **Add Corridors & Spatial Partitions:**
+5. **Add Corridors & Spatial Partitions:**
    - Drag horizontal corridor divider between units.
    - Click **"Save Map Layout"**. Realtime channel `property-unit-map` broadcasts update.
+   - 👉 **Verification Check:** The top HUD badge updates to show `4 Total Units • 0 Unplaced Units`. The unit map is now considered **100% Fully Placed** (`isFullyPlaced = true`).
 
 ---
 
-### 🔹 Flow 2.2: Submeter Tariffs & House Policies (`/landlord/properties/[id]/environment`)
-* **URL:** `/landlord/properties` ➔ Click Property ➔ **"Environment & Policies"**
+### 🔹 Flow 2.2: Submeter Tariffs & House Policies (`/landlord/settings` / `/landlord/utility-billing`)
+* **URL:** `http://localhost:3000/landlord/settings`
 * **Actors:** Landlord
 * **Database Mutations:** `property_environment_policies`, `utility_configs`
 
@@ -217,101 +536,223 @@ Juan is setting up the physical layout of his 2-floor property: Floor 1 (Units 1
   - *Expected Result:* The system blocks deletion with a modal: *"Cannot delete Unit 101. An active lease is currently linked to this unit. Terminate or transfer the lease first."* Foreign key constraint protects relational integrity.
 * **Test E2.2 (Negative / Zero Utility Rate):** Try entering `-10.00` as the electricity tariff.
   - *Expected Result:* Validation blocks submission: *"Tariff rate must be greater than ₱0.00"*.
+* **Test E2.3 (Unplaced Units Tenant Guard):** Create a 5th unit (`Unit 301`) in the database or inventory without placing it on the spatial blueprint canvas.
+  - *Expected Result:* In the Landlord HUD, an amber pulsing badge warns *"1 Unplaced Unit"*. If a resident attempts to access `/tenant/unit-map`, the system intercepts them with the **TenantMapNotReady ("Interactive Map Coming Soon")** screen, protecting them from viewing an incomplete canvas.
 
 ---
 
-## 📢 SCENARIO 3: Prospective Resident Acquisition (All 3 Channels)
+## 📢 SCENARIO 3: Multi-Path Prospective Resident Acquisition & Application
 
-We test the three distinct ways a resident enters the iReside private ecosystem:
-1. **Channel A:** Physical Lobby Poster & QR Scan (Self-Service Discovery)
-2. **Channel B:** Walk-In Face-to-Face Intake (Landlord-Assisted)
-3. **Channel C:** Direct Digital Invite Link (Targeted Unit Reservation)
+In real-world operations, prospective tenants discover and apply to residential properties through **multiple distinct pathways**. iReside provides dedicated intake flows tailored to each scenario:
+1. **Path A (Digital Magic Link / Unit-Locked Invite Token):** High-intent applicants receiving a direct private link for a specific unit reservation.
+2. **Path B (Face-to-Face Walk-In Application):** On-site lobby intake where an applicant visits the property in person, and the landlord assists with registration and takes photos of IDs on the spot.
+3. **Path C (Physical Lobby Flyer & QR Code Intake):** Passerby discovery via print-ready 300 DPI posters posted on building exterior gates and community bulletin boards.
+4. **Path D (Direct Manual Lease & Resident Provisioning):** Rapid contracting for pre-screened tenants or existing offline contracts.
+5. **Path E (Application Review, Lightbox Verification & Upfront Settlement):** Landlord screening, document authentication, and GCash advance deposit collection.
+6. **Path F (Resident Credential Activation, First Login & Product Tour):** Seamless resident onboarding, authentication, and guided tour.
 
 ---
 
-### 🔹 Flow 3.1: Channel A — Lobby Flyer Studio & QR Poster (`/landlord/flyer`)
-* **URL:** `http://localhost:3000/landlord/flyer`
-* **Actors:** Landlord (Window 1) ➔ Prospective Applicant "Maria Santos" (Window 2)
-* **Components:** `LobbyFlyerModal.tsx`
+### 🔹 Flow 3.1: Path A — Magic Link / Unit-Locked Invite Token (`/apply/[token]`)
+* **URL:** `http://localhost:3000/landlord/applications` ➔ `http://localhost:3000/apply/[token]`
+* **Actors:** Landlord (Window 1) ➔ Prospective Tenant "Maria Santos" (Window 2)
+* **Components:** `TenantInviteManager.tsx`, `src/app/apply/[token]/page.tsx`
+* **Database Mutations:** `tenant_intake_invites`, `rental_applications`
 
 #### Step-by-Step Actions
-1. **Landlord Generates Print-Ready Poster *(Window 1)*:**
-   - Go to `/landlord/flyer`.
-   - The flyer studio inherits property branding (*"Valenzuela Grand Residences"*), brand color, and monogram.
-   - Customize headline: *"Modern Student & Professional Units Available Now!"*.
-   - The modal surfaces two QR codes:
-     - **QR 1 (Resident Information):** Encodes `http://localhost:3000/signup/tenant`.
-     - **QR 2 (App Download Hub):** Encodes `http://localhost:3000/download`.
-   - Click **"Export Print-Ready Poster (300 DPI PNG)"** to download poster.
+1. **Landlord Generates Unit-Locked Invite *(Window 1)*:**
+   - In `/landlord/applications` (or by clicking Unit 101 on `/landlord/unit-map`), click **"Invite Tenant"**.
+   - The **Tenant Invite Manager** modal opens.
+   - Select Target Unit: `Unit 101 (Ground Floor - ₱8,500/mo)`.
+   - Max Uses: Set to `1 (Single-Use Locked)`.
+   - Token Expiration: Select `7 Days`.
+   - Required Attachments: Check `Government ID` and `Proof of Income / Student Enrollment`.
+   - Click **"Generate Private Link & QR"**.
+   - Copy Invite Link: `http://localhost:3000/apply/<token>`.
 
-2. **Applicant Scans QR Code *(Window 2)*:**
-   - Prospective resident Maria opens `http://localhost:3000/signup/tenant`.
-   - The page explains the private invite-only community philosophy.
-   - Maria clicks **"Access Resident Portal"** or enters property intake code ➔ Routes to `/apply`.
+2. **Applicant Opens Magic Link *(Window 2 - Incognito)*:**
+   - Open the copied URL in Window 2.
+   - The application header displays the verified property lock:
+     *"Locked to Unit 101 • Valenzuela Grand Residences (₱8,500/mo)"*.
 
-3. **Applicant Submits Rental Application:**
-   - Follows intake token link: `http://localhost:3000/apply/[token]`.
-   - **Personal Details:** Maria Santos, `maria.santos@student.feu.edu.ph`, `0919-555-6789`.
-   - **Target Unit:** Unit 101 (₱8,500/mo).
-   - **Emergency Contact:** Roberto Santos (Father) - `0919-111-2222`.
-   - **Occupation / School:** FEU Diliman - Medical Technology Student (₱25,000/mo family support).
-   - **Document Attachments:** Uploads Government ID (`student_id_maria.png`) and Proof of Enrollment (`proof_enrollment.pdf`).
-   - Click **"Submit Rental Application"**.
-   - 👉 **Verification Check:** Maria receives an application submitted confirmation card: *"Application Submitted • Status: Pending Review"*. An `applications` row is inserted with `application_source: 'invite_link'` and `applicant_id: null`.
+3. **Applicant Completes 4-Step Application Wizard:**
+   - **Step 1: Personal Information:**
+     - Full Name: `Maria Santos`
+     - Email: `maria.santos@student.feu.edu.ph`
+     - Mobile Phone: `0919-555-6789`
+     - Birthdate: `2003-08-15` | Gender: `Female`
+   - **Step 2: Identity & Verification Documents:**
+     - Upload Government / Student ID: Attach `student_id_maria.png`.
+     - Upload Proof of Enrollment / Income: Attach `proof_enrollment.pdf`.
+   - **Step 3: Emergency Contact:**
+     - Contact Name: `Roberto Santos` (Father)
+     - Contact Phone: `0919-111-2222`
+     - Relationship: `Parent / Guardian`
+   - **Step 4: Unit Review & Submission:**
+     - Review target move-in date: Next Monday.
+     - Review house rules agreement checkbox: *"I agree to observe property quiet hours and house policies."*
+     - Click **"Submit Rental Application"**.
+
+4. **👉 Verification Check:**
+   - Maria receives an on-screen confirmation card: *"Application Submitted • Status: Pending Review"*.
+   - In PostgreSQL, a new row is inserted into `rental_applications` with `status = 'pending'`, `unit_id = <Unit 101 ID>`, and `application_source = 'invite_link'`.
+   - The invite token in `tenant_intake_invites` increments `use_count = 1` and marks status `consumed`.
 
 ---
 
-### 🔹 Flow 3.2: Channel B — Walk-In In-Person Application (`WalkInApplicationModal.tsx`)
-* **Actors:** Landlord (Window 1) and Walk-in Applicant "Carlos Mendoza" sitting in front of the landlord.
+### 🔹 Flow 3.2: Path B — Face-to-Face Walk-In Application (`WalkInApplicationModal.tsx`)
+* **URL:** `http://localhost:3000/landlord/dashboard` or `http://localhost:3000/landlord/applications`
+* **Actors:** Landlord (Window 1) and Walk-in Applicant "Carlos Mendoza" in the property lobby
 * **Components:** `WalkInApplicationModal.tsx`
+* **Database Mutations:** `rental_applications`, `properties`
 
 #### Step-by-Step Actions
 1. **Landlord Opens Walk-In Wizard *(Window 1)*:**
-   - On the Landlord Dashboard, click **"+ Walk-In Application"** in the top action header.
+   - On the Landlord Dashboard or Applications page, click **"+ Walk-In Application"** in the top action header.
    - The **Walk-In Application Wizard** modal opens.
 
 2. **Applicant Identity & Unit Selection:**
    - Full Name: `Carlos Mendoza`
    - Email Address: `carlos.mendoza@bpo.com.ph`
    - Phone Number: `0920-444-5555`
-   - Unit Selection: Select **"Unit 102 (₱8,500/mo)"** (occupied units are disabled).
-   - Emergency Contact: `Elena Mendoza (Mother) - 0920-333-2222`.
+   - Unit Selection Dropdown: Select **"Unit 102 (Ground Floor - ₱8,500/mo)"** (occupied units are automatically disabled).
+   - Intended Move-in Date: 1st of next month.
+   - Intended Lease Duration: `12 Months`.
 
-3. **Checklist & Verification:**
-   - Ticks physical documents Carlos presents:
+3. **On-Site Document Verification Checklist:**
+   - Landlord inspects Carlos's physical documents and checks:
      - [x] Government Issued ID (Driver's License)
-     - [x] Company COE / Payslip
-     - [ ] NBI Clearance *(Marked as Pending/Deferred)*
+     - [x] Proof of Income / Employment COE
+     - [ ] Police / NBI Clearance *(Marked as Pending/Deferred)*
+   - Attach scanned ID image or photo taken with phone.
 
-4. **Initial Deposit Collection:**
-   - Select: **"Record Initial Reservation Fee / Advance Rent (Cash Received On-Site)"**.
-   - Amount Received: `₱8,500.00` | Method: `Cash`.
+4. **Initial On-Site Reservation Fee / Advance Rent (Optional):**
+   - Check: **"Record Initial Reservation Fee / Advance Rent (Cash Received On-Site)"**.
+   - Amount Received: `₱8,500.00` | Payment Method: `Cash`.
    - Click **"Submit & Issue In-Person Application"**.
-   - 👉 **Verification Check:** Application is created with `status: 'approved'` and `application_source: 'walk_in_application'`.
+
+5. **👉 Verification Check:**
+   - Application is created in `rental_applications` with `status: 'approved'` and `application_source: 'walk_in_application'`.
+   - Because Carlos applied in person and paid the reservation fee, the landlord can immediately transition into **Draft Lease Agreement**.
 
 ---
 
-### 🔹 Flow 3.3: Channel C — Direct Private Unit Invite Link (`TenantInviteManager.tsx`)
-* **Actors:** Landlord (Window 1) ➔ Prospective Resident "Alyssa Cruz" (Window 2)
-* **Components:** `TenantInviteManager.tsx`
-* **Database Mutations:** `tenant_intake_invites`, `tenant_intake_invite_events`
+### 🔹 Flow 3.3: Path C — Physical Lobby Flyer & QR Code Intake (`/landlord/flyer`)
+* **URL:** `http://localhost:3000/landlord/flyer`
+* **Actors:** Landlord (Window 1) ➔ Prospective Resident "Alyssa Cruz" scanning QR on phone (Window 2)
+* **Components:** `LobbyFlyerModal.tsx`, `src/app/signup/tenant/page.tsx`
 
 #### Step-by-Step Actions
-1. **Landlord Generates Unit-Locked Invite *(Window 1)*:**
-   - Go to `/landlord/applications` ➔ Click **"Tenant Invite Manager"**.
-   - Click **"Create Private Invite"**.
-   - Target Unit: Select `Unit 201`.
-   - Max Uses: `1 (Single-Use Locked)`.
-   - Expiration: `7 Days`.
-   - Mandatory Documents: Government ID, Proof of Income.
-   - Click **"Generate Link & QR"**.
-   - Copy Link: `http://localhost:3000/apply/[token]`.
+1. **Landlord Generates Print-Ready Poster *(Window 1)*:**
+   - Go to `/landlord/flyer`.
+   - The flyer studio automatically loads the property branding (*"Valenzuela Grand Residences"*), brand color, and monogram badge.
+   - Customize Headline: *"Modern Student & Professional Units Available Now!"*.
+   - Customize Highlights: *"Fast Wi-Fi • Submetered Utilities • 24/7 Security CCTV"*.
+   - The flyer displays high-density QR codes:
+     - **QR Code 1 (Resident Intake Gateway):** Encodes `http://localhost:3000/signup/tenant`.
+     - **QR Code 2 (Mobile App Download):** Encodes `http://localhost:3000/download`.
+   - Click **"Export Print-Ready Poster (300 DPI PNG)"** to download.
 
-2. **Applicant Submits via Token Link *(Window 2)*:**
-   - Alyssa opens the token link in Window 2.
-   - Card displays lock banner: *"Locked to Unit 201 • Valenzuela Grand Residences"*.
-   - Fills in personal details, attaches Government ID, and submits.
-   - Invite status updates to `consumed` (`use_count = 1`).
+2. **Applicant Scans QR Code *(Window 2)*:**
+   - Alyssa scans the poster QR code on her phone (or opens `http://localhost:3000/signup/tenant` in Window 2).
+   - The page explains the private residential community and presents the **Intake Gateway**:
+     - Alyssa enters her contact information and selects desired unit type (e.g., `Studio / 1-Bedroom`).
+     - System routes her to the application form with property pre-selected.
+   - Alyssa fills in her employment details, attaches Government ID, and submits.
+
+3. **👉 Verification Check:**
+   - An `applications` row is created with `application_source = 'flyer_qr'`.
+   - An alert appears in the Landlord Notification Banner: *"New Application Received via Lobby Flyer: Alyssa Cruz"*.
+
+---
+
+### 🔹 Flow 3.4: Path D — Direct Manual Lease & Resident Provisioning (`/landlord/leases`)
+* **URL:** `http://localhost:3000/landlord/leases`
+* **Actors:** Landlord (Window 1)
+* **Components:** `src/app/landlord/leases/page.tsx`, `adminClient.auth.admin.createUser`
+
+#### Step-by-Step Actions
+1. **Bypassing the Application Queue for Known / Pre-Screened Tenants:**
+   - When a tenant has already signed an offline contract or is an existing resident moving into a newly digitized property:
+   - In `/landlord/leases`, click **"+ Create New Lease"**.
+   - Select Unit: `Unit 201`.
+   - Enter Tenant Full Name: `David Lim`.
+   - Enter Tenant Email: `david.lim@techcorp.io`.
+   - Enter Monthly Rent: `₱9,000.00`, Security Deposit: `₱18,000.00`.
+   - Set Lease Term: `July 1, 2026` to `June 30, 2027`.
+   - Click **"Generate Lease & Provision Resident Account"**.
+
+2. **👉 Verification Check:**
+   - System auto-provisions Supabase Auth tenant user (`adminClient.auth.admin.createUser`) with role `tenant`.
+   - Creates row in `leases` with status `pending_tenant_signature`.
+   - System sends welcome credentials email or displays one-time login credentials to the landlord to hand over to David.
+
+---
+
+### 🔹 Flow 3.5: Path E — Application Screening, Lightbox Verification & Upfront Settlement (`/landlord/applications`)
+* **URL:** `http://localhost:3000/landlord/applications`
+* **Actors:** Landlord (Window 1) ➔ Applicant Maria Santos (Window 2)
+* **Components:** `RentApplications.tsx`, `DocumentLightbox.tsx`
+
+#### Step-by-Step Actions
+1. **Landlord Opens Review Queue *(Window 1)*:**
+   - Go to `/landlord/applications`.
+   - Click on **Maria Santos** application card (`Unit 101`).
+
+2. **Document Lightbox Inspection:**
+   - Click **"View ID Document"** ➔ Inspect student ID in high-res modal.
+   - Click **"View Income Proof"** ➔ Inspect enrollment certificate.
+   - Mark documents as **"Verified"**.
+
+3. **Decision Options:**
+   - **Option A (Quick-Approve):** Instantly approve applicant, provision account, and draft lease.
+   - **Option B (Request Upfront Payment):** Request 1-Month Advance Rent (`₱8,500`) + 2-Month Security Deposit (`₱17,000`) via GCash before finalizing contract.
+     - Click **"Request Upfront Settlement"**.
+     - Generates tokenized payment link: `http://localhost:3000/apply/payments/<token>`.
+   - **Option C (Reject):** Provide rejection reason (*"Unit requires minimum 18-month commitment"*).
+
+4. **Applicant Settles Upfront Deposit *(Window 2)*:**
+   - Maria opens payment link:
+     - Sees itemized total: `₱25,500.00`.
+     - Sees landlord's verified GCash QR code and mobile number (`0917-888-1234 - Juan Valenzuela`).
+     - Uploads GCash payment receipt screenshot (`gcash_receipt_maria.png`) and enters Reference No: `100234567890`.
+     - Clicks **"Submit Payment Proof"**.
+
+5. **Landlord Approves Payment & Issues Official Receipt *(Window 1)*:**
+   - Landlord inspects payment screenshot in `/landlord/invoices` or `/landlord/applications`.
+   - Clicks **"Confirm Payment & Issue Official Receipt (OR-2026-0001)"**.
+   - System updates application status to `approved`.
+
+---
+
+### 🔹 Flow 3.6: Path F — Resident Credential Activation, First Login & Product Tour
+* **URL:** `http://localhost:3000/login`
+* **Actors:** Tenant Maria Santos (Window 2)
+* **Components:** `src/app/login/page.tsx`, `TenantProductTourOverlay.tsx`, `TenantMapNotReady.tsx`
+
+#### Step-by-Step Actions
+1. **Resident Logs In *(Window 2)*:**
+   - Open `http://localhost:3000/login`.
+   - Enter credentials (provided via approval email or SMS):
+     - **Email:** `maria.santos@student.feu.edu.ph`
+     - **Password:** `Password123!`
+   - Click **"Sign In to Portal"**.
+
+2. **Guided Product Tour Walkthrough:**
+   - On first entry to `/tenant/dashboard`, the **Tenant Product Tour Overlay (`TenantProductTourOverlay.tsx`)** triggers automatically:
+     - **Stop 1 (Dashboard Overview):** Explains room assignment badge (`Unit 101`) and rent due countdown timer.
+     - **Stop 2 (Digital Payments):** Highlights the quick GCash payment trigger and downloadable Official Receipts.
+     - **Stop 3 (Maintenance Center):** Explains how to snap and submit repair tickets with photos.
+     - **Stop 4 (Community Hub & iRis AI):** Highlights building notices and 24/7 AI resident assistant.
+   - Maria clicks **"Finish Tour"**. Tour completion is saved to `user_metadata.tour_completed`.
+
+3. **Verify Unit Map Access Guard:**
+   - In the tenant sidebar, click **"Unit Map"** (`/tenant/unit-map`).
+   - 👉 **Verification Check:**
+     - If the landlord has any unplaced units on the property layout, the tenant is safely intercepted by the **TenantMapNotReady ("Interactive Map Coming Soon")** screen.
+     - Displays property name, address, assigned unit (`Unit 101`), and status `Pending Landlord Setup`.
+     - Prevents tenant from viewing raw, unconfigured drafting canvas.
+     - Once the landlord marks all units placed, clicking **"Check for Updates"** seamlessly unlocks the interactive 2D spatial canvas.
 
 ---
 
@@ -322,6 +763,12 @@ We test the three distinct ways a resident enters the iReside private ecosystem:
   - *Expected Result:* The gate blocks access: *"This invite token has already been claimed and reached its maximum usage limit."*
 * **Test E3.3 (Invalid Mobile Number Format):** In the application form, enter phone `12345`.
   - *Expected Result:* Inline validation flags error: *"Phone must be 10 or 11 digits (Philippine mobile format)."*
+* **Test E3.4 (Walk-In Double Booking Guard):** In the Walk-In modal, attempt to select a unit that is currently marked as `occupied`.
+  - *Expected Result:* Occupied units are greyed out with a locked padlock icon and cannot be selected.
+* **Test E3.5 (Unverified Upfront Payment Exploitation):** Attempt to submit an application approval without confirming the upfront deposit receipt.
+  - *Expected Result:* System warns: *"Upfront payment is still pending verification. Are you sure you want to approve without verified deposit?"*
+* **Test E3.6 (Button Label Text Wrapping):** View the `TenantMapNotReady` screen on various viewport sizes.
+  - *Expected Result:* Buttons "Dashboard" and "Contact Landlord" must maintain single-line text formatting without multi-line wrapping.
 
 ---
 

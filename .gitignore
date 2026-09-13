@@ -137,5 +137,5 @@ desktop/dist/
 desktop/electron-builder.json
 public/downloads/*.exe
 
-
-
+# Scratch
+scratch/
