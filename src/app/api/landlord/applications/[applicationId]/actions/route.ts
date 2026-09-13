@@ -354,6 +354,7 @@ export async function POST(
             applicant_phone,
             unit_id,
             move_in_date,
+            requirements_checklist,
             unit:units (
                 id,
                 name,
@@ -428,7 +429,7 @@ export async function POST(
             security_amount: securityAmount,
         };
 
-        const updatedChecklist = withPaymentPendingConfig(application.requirements_checklist, config);
+        const updatedChecklist = withPaymentPendingConfig((application as any).requirements_checklist, config);
 
         updatePayload.payment_pending_started_at = now.toISOString();
         updatePayload.payment_pending_expires_at = paymentPendingExpiresAt;
