@@ -572,7 +572,6 @@ export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActi
 
     const getNotificationHref = (notification: any) => {
         const data = notification.data || {};
-        const id = data.paymentId || data.applicationId || data.maintenanceId || data.conversationId || data.leaseId || data.id || notification.id;
         const type = notification.type;
 
         if (data.signingUrl) {
@@ -591,6 +590,14 @@ export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActi
         ) {
             return "/landlord/settings?category=Security";
         }
+
+        // Applicant dossier / application-related notifications:
+        // Any notification carrying an applicationId MUST navigate to the applicant dossier!
+        if (data.applicationId) {
+            return `/landlord/applications?id=${data.applicationId}`;
+        }
+
+        const id = data.paymentId || data.invoiceId || data.maintenanceId || data.conversationId || data.leaseId || data.id || notification.id;
 
         switch (type) {
             case "payment":

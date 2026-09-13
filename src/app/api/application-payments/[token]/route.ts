@@ -405,7 +405,7 @@ export async function POST(request: Request, context: RouteContext) {
     try {
         const notifPayload = {
             user_id: application.landlord_id,
-            type: "payment" as const,
+            type: "application" as const,
             title: `Payment Proof Submitted - ${application.unit?.property?.name ?? "Property"}`,
             message: `${application.applicant_name || "Applicant"} submitted payment proof (${formattedTotal}) for ${application.unit?.name ?? "Unit"}. Txn Ref: ${systemTransactionReference}, GCash: ${referenceNumber || "N/A"}.`,
             data: {
@@ -416,6 +416,7 @@ export async function POST(request: Request, context: RouteContext) {
                 transactionReference: systemTransactionReference,
                 method,
                 totalAmount,
+                href: `/landlord/applications?id=${application.id}`,
             },
             read: false,
         };
