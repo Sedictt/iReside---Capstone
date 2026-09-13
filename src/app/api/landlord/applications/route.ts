@@ -81,6 +81,8 @@ type ApplicationResponse = {
         dueAt: string | null;
         status: "pending" | "processing" | "completed" | "rejected" | "expired";
         method: "gcash" | "cash" | null;
+        referenceNumber?: string | null;
+        transactionReference?: string | null;
         submittedAt: string | null;
         reviewedAt: string | null;
         proofUrl: string | null;
@@ -190,6 +192,8 @@ type PaymentRequestRow = {
     due_at: string | null;
     status: "pending" | "processing" | "completed" | "rejected" | "expired";
     method: "gcash" | "cash" | null;
+    reference_number?: string | null;
+    metadata?: Record<string, any> | null;
     submitted_at: string | null;
     reviewed_at: string | null;
     payment_proof_url: string | null;
@@ -494,7 +498,7 @@ export async function GET(request: Request) {
         ? supabase
               .from("application_payment_requests" as any)
               .select(
-                  "id, application_id, requirement_type, amount, due_at, status, method, submitted_at, reviewed_at, payment_proof_url, review_note, bypassed"
+                  "id, application_id, requirement_type, amount, due_at, status, method, reference_number, metadata, submitted_at, reviewed_at, payment_proof_url, review_note, bypassed"
               )
         : null;
     const { data: paymentRequestRowsRaw } = reqQuery
@@ -514,6 +518,8 @@ export async function GET(request: Request) {
             dueAt: row.due_at,
             status: row.status,
             method: row.method,
+            referenceNumber: row.reference_number ?? null,
+            transactionReference: (row.metadata?.system_reference_number || row.metadata?.transaction_reference || null) as string | null,
             submittedAt: row.submitted_at,
             reviewedAt: row.reviewed_at,
             proofUrl: row.payment_proof_url,

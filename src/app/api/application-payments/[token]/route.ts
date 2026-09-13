@@ -208,7 +208,7 @@ async function fetchPortalPayload(adminClient: ReturnType<typeof createAdminClie
                   qrImageUrl: destination.qr_image_url ?? null,
               }
             : null,
-        requests: ((requests ?? []) as unknown as PortalPaymentRequestRow[]).map((request) => ({
+        requests: ((requests ?? []) as unknown as (PortalPaymentRequestRow & { metadata?: any })[]).map((request) => ({
             id: request.id,
             requirementType: request.requirement_type,
             label: toRequirementLabel(request.requirement_type),
@@ -217,6 +217,7 @@ async function fetchPortalPayload(adminClient: ReturnType<typeof createAdminClie
             status: request.status,
             method: request.method,
             referenceNumber: request.reference_number,
+            transactionReference: (request.metadata?.system_reference_number || request.metadata?.transaction_reference || null) as string | null,
             note: request.payment_note,
             proofUrl: request.payment_proof_url,
             reviewNote: request.review_note,
@@ -224,6 +225,10 @@ async function fetchPortalPayload(adminClient: ReturnType<typeof createAdminClie
             submittedAt: request.submitted_at,
             reviewedAt: request.reviewed_at,
         })),
+        transactionReference: (((requests ?? []) as any[])
+            .find((r) => r.metadata?.system_reference_number || r.metadata?.transaction_reference)?.metadata?.system_reference_number
+            || ((requests ?? []) as any[]).find((r) => r.metadata?.transaction_reference)?.metadata?.transaction_reference
+            || null) as string | null,
         methods: ["gcash", "cash"] satisfies PaymentMethodInput[],
     };
 }
@@ -330,6 +335,15 @@ export async function POST(request: Request, context: RouteContext) {
     const nowIso = new Date().toISOString();
     const targetIds = targetRows.map((r) => r.id);
 
+    // Look for existing immutable transaction reference on existing rows
+    const existingTxn = targetRows.find(
+        (r) => (r as any).metadata?.system_reference_number || (r as any).metadata?.transaction_reference
+    );
+    const systemTransactionReference =
+        (existingTxn as any)?.metadata?.system_reference_number ||
+        (existingTxn as any)?.metadata?.transaction_reference ||
+        `IR-TXN-${nowIso.slice(0, 10).replace(/-/g, "")}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+
     const { data: updatedRows, error: updateError } = (await adminClient
         .from("application_payment_requests" as any)
         .update({
@@ -345,6 +359,11 @@ export async function POST(request: Request, context: RouteContext) {
             review_note: null,
             bypassed: false,
             metadata: {
+                ...((targetRows[0] as any)?.metadata && typeof (targetRows[0] as any).metadata === "object"
+                    ? (targetRows[0] as any).metadata
+                    : {}),
+                system_reference_number: systemTransactionReference,
+                transaction_reference: systemTransactionReference,
                 submitted_via: "prospect_portal",
                 batch_submission: isUnified,
             },
@@ -367,6 +386,8 @@ export async function POST(request: Request, context: RouteContext) {
             metadata: {
                 method,
                 reference_number: referenceNumber,
+                transaction_reference: systemTransactionReference,
+                system_reference_number: systemTransactionReference,
                 has_proof: Boolean(uploadResult?.publicUrl || req.payment_proof_url),
                 batch: isUnified,
             },
@@ -386,11 +407,12 @@ export async function POST(request: Request, context: RouteContext) {
             userId: application.landlord_id,
             type: "payment",
             title: `Payment Proof Submitted - ${application.unit?.property?.name ?? "Property"}`,
-            message: `${application.applicant_name || "Applicant"} submitted payment proof (${formattedTotal}) for ${application.unit?.name ?? "Unit"}. Reference: ${referenceNumber || "N/A"}.`,
+            message: `${application.applicant_name || "Applicant"} submitted payment proof (${formattedTotal}) for ${application.unit?.name ?? "Unit"}. Txn Ref: ${systemTransactionReference}, GCash: ${referenceNumber || "N/A"}.`,
             data: {
                 applicationId: application.id,
                 propertyId: application.unit?.property?.id,
                 referenceNumber,
+                transactionReference: systemTransactionReference,
                 method,
                 totalAmount,
             },
@@ -432,8 +454,8 @@ export async function POST(request: Request, context: RouteContext) {
         <p style="margin:0 0 8px;font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">Total Amount</p>
         <p style="margin:0 0 14px;font-size:22px;font-weight:900;color:#c4b0ff;">${formattedTotal}</p>
         <div style="display:flex;justify-content:space-between;border-top:1px solid rgba(255,255,255,0.06);padding-top:10px;">
-          <span style="font-size:13px;color:#94a3b8;">Method: <strong style="color:#fff;">${method === "gcash" ? "GCash" : "Cash (In-Person)"}</strong></span>
-          ${referenceNumber ? `<span style="font-size:13px;color:#94a3b8;">Ref: <strong style="color:#fff;">${referenceNumber}</strong></span>` : ""}
+          <span style="font-size:13px;color:#94a3b8;">Txn Ref: <strong style="color:#c4b0ff;font-family:monospace;">${systemTransactionReference}</strong></span>
+          ${referenceNumber ? `<span style="font-size:13px;color:#94a3b8;">GCash Ref: <strong style="color:#fff;font-family:monospace;">${referenceNumber}</strong></span>` : ""}
         </div>
       </div>
       <p style="margin:0;color:#64748b;font-size:12px;line-height:1.5;">
@@ -442,14 +464,14 @@ export async function POST(request: Request, context: RouteContext) {
     </div>
   </div>
 </div>`,
-                textBody: `Payment proof submitted by ${applicantTitle} for ${propertyTitle} (${unitTitle}).\nTotal Amount: ${formattedTotal}\nMethod: ${method}\nReference: ${referenceNumber || "N/A"}\nPlease log in to review.`,
+                textBody: `Payment proof submitted by ${applicantTitle} for ${propertyTitle} (${unitTitle}).\nTotal Amount: ${formattedTotal}\nMethod: ${method}\nTxn Ref: ${systemTransactionReference}\nGCash Ref: ${referenceNumber || "N/A"}\nPlease log in to review.`,
             });
         }
     } catch (emailErr) {
         console.warn("[POST application-payments] Landlord email notification skipped:", emailErr);
     }
 
-    const mapped = (updatedRows as unknown as PortalPaymentRequestRow[]).map((updated) => ({
+    const mapped = (updatedRows as unknown as (PortalPaymentRequestRow & { metadata?: any })[]).map((updated) => ({
         id: updated.id,
         requirementType: updated.requirement_type,
         label: toRequirementLabel(updated.requirement_type),
@@ -458,6 +480,7 @@ export async function POST(request: Request, context: RouteContext) {
         status: updated.status,
         method: updated.method,
         referenceNumber: updated.reference_number,
+        transactionReference: updated.metadata?.system_reference_number ?? updated.metadata?.transaction_reference ?? systemTransactionReference,
         note: updated.payment_note,
         proofUrl: updated.payment_proof_url,
         reviewNote: updated.review_note,
@@ -468,6 +491,7 @@ export async function POST(request: Request, context: RouteContext) {
 
     return NextResponse.json({
         success: true,
+        transactionReference: systemTransactionReference,
         request: mapped[0],
         requests: mapped,
     });
