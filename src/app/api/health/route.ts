@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
  */
 export async function GET() {
   const timestamp = new Date().toISOString();
-  const checks: Record<string, { status: "pass" | "fail"; latencyMs?: number; message?: string }> = {};
+  const checks: Record<string, { status: "pass" | "fail"; latencyMs?: number; message?: string; debug?: any }> = {};
 
   // 1. Environment Variables Check
   const requiredEnvVars = [
@@ -62,15 +62,21 @@ export async function GET() {
 
   // 3. SMTP Connectivity Check
   const smtpStart = Date.now();
+  const envHost = process.env.SMTP_HOST;
+  const envUser = process.env.SMTP_USER;
+  const envPass = process.env.SMTP_PASS;
+  const activeUser = envUser || "ireside.official.mail@gmail.com";
+  const activePass = envPass || "qzbh dxhc vazj krpt";
+
   try {
     const nodemailer = await import("nodemailer");
     const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || "smtp.gmail.com",
+      host: envHost || "smtp.gmail.com",
       port: 465,
       secure: true,
       auth: {
-        user: process.env.SMTP_USER || "ireside.official.mail@gmail.com",
-        pass: process.env.SMTP_PASS || "qzbh dxhc vazj krpt",
+        user: activeUser.trim(),
+        pass: activePass.replace(/\s+/g, ""),
       },
       tls: { rejectUnauthorized: false },
     });
@@ -85,6 +91,14 @@ export async function GET() {
       status: "fail",
       latencyMs: Date.now() - smtpStart,
       message: smtpErr?.message || "Failed to verify SMTP",
+      debug: {
+        fromEnvUser: !!envUser,
+        user: activeUser.slice(0, 7) + "...",
+        fromEnvPass: !!envPass,
+        passLength: activePass.length,
+        passCleanedLength: activePass.replace(/\s+/g, "").length,
+        passSample: activePass.slice(0, 2) + "..." + activePass.slice(-2),
+      }
     };
   }
 

@@ -24,8 +24,10 @@ const RETRY_DELAY_MS = 1000;
 
 function getTransporter() {
   const host = process.env.SMTP_HOST || DEFAULT_SMTP_HOST;
-  const user = process.env.SMTP_USER || DEFAULT_SMTP_USER;
-  const pass = process.env.SMTP_PASS || DEFAULT_SMTP_PASS;
+  const user = (process.env.SMTP_USER || DEFAULT_SMTP_USER).trim();
+  const rawPass = process.env.SMTP_PASS || DEFAULT_SMTP_PASS;
+  // Google App Passwords are 16 chars; remove spaces/quotes that can cause 535 Bad Credentials
+  const pass = rawPass.replace(/['"\s]/g, "");
 
   const explicitPort = process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : undefined;
   const isGmail = host.toLowerCase().includes("gmail");
