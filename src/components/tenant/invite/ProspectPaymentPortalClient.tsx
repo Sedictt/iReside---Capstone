@@ -23,6 +23,7 @@ import {
     X,
 } from "lucide-react";
 import { applyBrandCssVariables, getContrastTextColor, getMonogramInitials } from "@/lib/branding/colors";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 type PaymentRequestItem = {
     id: string;
@@ -248,6 +249,19 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
     const brandPrimary = payload?.branding?.primaryColor || "#c4b0ff";
     const contrastColor = getContrastTextColor(brandPrimary);
 
+    // Resolves landlord's custom uploaded QR code, or autogenerates a scannable QR code for the GCash number
+    const qrCodeUrl = useMemo(() => {
+        if (payload?.destination?.qrImageUrl) {
+            return payload.destination.qrImageUrl;
+        }
+        if (payload?.destination?.accountNumber) {
+            return `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(
+                payload.destination.accountNumber
+            )}`;
+        }
+        return null;
+    }, [payload]);
+
     const executeSubmit = async () => {
         if (!payload) return;
         setIsSubmitting(true);
@@ -304,7 +318,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#090b10] text-white flex flex-col items-center justify-center p-6">
+            <div className="min-h-screen bg-zinc-50 dark:bg-[#090b10] text-zinc-900 dark:text-white flex flex-col items-center justify-center p-6 transition-colors">
                 <Loader2 className="size-10 animate-spin text-zinc-400" />
                 <p className="mt-4 text-xs font-semibold uppercase tracking-widest text-zinc-500">
                     Loading Secure Payment Portal...
@@ -315,16 +329,16 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
 
     if (error && !payload) {
         return (
-            <div className="min-h-screen bg-[#090b10] text-white flex items-center justify-center p-6">
-                <div className="max-w-md w-full rounded-2xl border border-red-500/20 bg-zinc-900/80 p-8 text-center backdrop-blur-xl shadow-2xl">
-                    <div className="mx-auto flex size-12 items-center justify-center rounded-xl bg-red-500/10 text-red-400">
+            <div className="min-h-screen bg-zinc-50 dark:bg-[#090b10] text-zinc-900 dark:text-white flex items-center justify-center p-6 transition-colors">
+                <div className="max-w-md w-full rounded-3xl border border-red-500/20 bg-white dark:bg-zinc-900/80 p-8 text-center backdrop-blur-xl shadow-2xl">
+                    <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-red-500/10 text-red-500">
                         <ShieldAlert className="size-6" />
                     </div>
                     <h1 className="mt-4 text-xl font-bold tracking-tight">Payment Portal Unavailable</h1>
-                    <p className="mt-2 text-sm text-zinc-400 leading-relaxed">
+                    <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
                         {error || "This payment link is invalid, expired, or has already been fulfilled."}
                     </p>
-                    <p className="mt-4 text-xs text-zinc-600">
+                    <p className="mt-4 text-xs text-zinc-400 dark:text-zinc-600">
                         Please reach out directly to the property manager or landlord to receive an updated link.
                     </p>
                 </div>
@@ -336,78 +350,91 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
 
     return (
         <div
-            className="min-h-screen bg-[#090b10] text-zinc-100 antialiased selection:bg-white/20 selection:text-white"
+            className="min-h-screen bg-zinc-50 dark:bg-[#090b10] text-zinc-900 dark:text-zinc-100 antialiased transition-colors duration-200 selection:bg-primary/20"
             style={{
                 ["--primary" as string]: brandPrimary,
                 ["--primary-foreground" as string]: contrastColor,
             }}
         >
-            {/* Top compact brand header */}
-            <header className="border-b border-white/10 bg-zinc-950/60 backdrop-blur-md sticky top-0 z-30">
-                <div className="mx-auto max-w-5xl px-4 py-3 sm:px-6 flex items-center justify-between gap-3">
+            {/* Ambient Background Glows */}
+            <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+                <div className="absolute top-[-5%] right-[-5%] w-[450px] h-[450px] bg-primary/10 dark:bg-primary/5 blur-[120px] rounded-full" />
+                <div className="absolute bottom-[-5%] left-[-5%] w-[450px] h-[450px] bg-blue-500/10 dark:bg-blue-500/5 blur-[120px] rounded-full" />
+            </div>
+
+            {/* Top Brand Header */}
+            <header className="border-b border-zinc-200/80 dark:border-white/10 bg-white/80 dark:bg-zinc-950/70 backdrop-blur-md sticky top-0 z-30 transition-colors">
+                <div className="mx-auto max-w-5xl px-4 py-3 sm:px-6 flex items-center justify-between gap-3 relative z-10">
                     <div className="flex items-center gap-3 min-w-0">
                         {payload.branding?.logoUrl ? (
                             <img
                                 src={payload.branding.logoUrl}
                                 alt={payload.branding.propertyName}
-                                className="size-8 rounded-lg object-cover border border-white/10"
+                                className="size-9 rounded-xl object-cover border border-zinc-200 dark:border-white/10 shadow-sm"
                             />
                         ) : (
-                            <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-xs font-black text-white border border-white/10">
+                            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-800 text-xs font-black text-zinc-900 dark:text-white border border-zinc-200 dark:border-white/10 shadow-sm">
                                 {getMonogramInitials(payload.application.propertyName)}
                             </div>
                         )}
                         <div className="min-w-0">
-                            <h1 className="text-sm sm:text-base font-bold text-white truncate">
+                            <h1 className="text-sm sm:text-base font-black text-zinc-900 dark:text-white truncate">
                                 {payload.application.propertyName}
                             </h1>
-                            <p className="text-xs text-zinc-400 truncate">
+                            <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
                                 Unit {payload.application.unitName} &bull; {payload.application.applicantName}
                             </p>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                        <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-zinc-900/80 px-3 py-1 text-xs font-medium text-zinc-300">
-                            <Clock className="size-3 text-amber-400" />
+                    <div className="flex items-center gap-2.5">
+                        <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-zinc-200 dark:border-white/10 bg-zinc-100/80 dark:bg-zinc-900/80 px-3 py-1 text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                            <Clock className="size-3 text-amber-500 dark:text-amber-400" />
                             <span>Due {formatDateTime(payload.application.deadline)}</span>
                         </span>
-                        <div className="flex size-8 items-center justify-center rounded-lg border border-white/10 bg-zinc-900 text-zinc-400" title="Protected Portal">
-                            <ShieldCheck className="size-4 text-emerald-400" />
+
+                        {/* Theme Toggle (Light / Dark) */}
+                        <ThemeToggle className="size-9 rounded-xl border-zinc-200 dark:border-white/10 bg-zinc-100/80 dark:bg-zinc-900/80 shadow-sm" />
+
+                        <div
+                            className="flex size-9 items-center justify-center rounded-xl border border-zinc-200 dark:border-white/10 bg-zinc-100/80 dark:bg-zinc-900 text-zinc-500 dark:text-zinc-400 shadow-sm"
+                            title="Protected Checkout"
+                        >
+                            <ShieldCheck className="size-4 text-emerald-500" />
                         </div>
                     </div>
                 </div>
             </header>
 
-            <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
+            <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6 relative z-10">
                 {/* Deadline reminder banner on mobile */}
-                <div className="sm:hidden mb-4 rounded-xl border border-amber-500/20 bg-amber-500/10 p-3 text-xs text-amber-200 flex items-center gap-2">
-                    <Clock className="size-4 shrink-0 text-amber-400" />
+                <div className="sm:hidden mb-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-xs text-amber-800 dark:text-amber-200 flex items-center gap-2">
+                    <Clock className="size-4 shrink-0 text-amber-500" />
                     <span>Payment window ends on {formatDateTime(payload.application.deadline)}</span>
                 </div>
 
                 {/* Notifications & Error Banners */}
                 {error && (
-                    <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200 flex items-start gap-3">
-                        <AlertCircle className="size-5 shrink-0 text-red-400 mt-0.5" />
+                    <div className="mb-4 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-900 dark:text-red-200 flex items-start gap-3">
+                        <AlertCircle className="size-5 shrink-0 text-red-500 mt-0.5" />
                         <div className="flex-1">
-                            <p className="font-semibold text-red-100">Unable to process submission</p>
-                            <p className="mt-0.5 text-xs text-red-200/80">{error}</p>
+                            <p className="font-bold text-red-900 dark:text-red-100">Unable to process submission</p>
+                            <p className="mt-0.5 text-xs text-red-800/90 dark:text-red-200/80">{error}</p>
                         </div>
-                        <button onClick={() => setError(null)} className="text-red-400 hover:text-red-300">
+                        <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700 dark:hover:text-red-300">
                             <X className="size-4" />
                         </button>
                     </div>
                 )}
 
                 {successMessage && (
-                    <div className="mb-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-200 flex items-start gap-3">
-                        <CheckCircle2 className="size-5 shrink-0 text-emerald-400 mt-0.5" />
+                    <div className="mb-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-900 dark:text-emerald-200 flex items-start gap-3">
+                        <CheckCircle2 className="size-5 shrink-0 text-emerald-500 mt-0.5" />
                         <div className="flex-1">
-                            <p className="font-semibold text-emerald-100">Submission Recorded</p>
-                            <p className="mt-0.5 text-xs text-emerald-200/80">{successMessage}</p>
+                            <p className="font-bold text-emerald-900 dark:text-emerald-100">Submission Recorded</p>
+                            <p className="mt-0.5 text-xs text-emerald-800/90 dark:text-emerald-200/80">{successMessage}</p>
                         </div>
-                        <button onClick={() => setSuccessMessage(null)} className="text-emerald-400 hover:text-emerald-300">
+                        <button onClick={() => setSuccessMessage(null)} className="text-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-300">
                             <X className="size-4" />
                         </button>
                     </div>
@@ -415,15 +442,15 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
 
                 {/* Rejection Notice if applicable */}
                 {hasAnyRejected && rejectionNotes.length > 0 && (
-                    <div className="mb-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-200">
-                        <div className="flex items-center gap-2 font-bold text-amber-100">
-                            <AlertCircle className="size-4 text-amber-400" />
+                    <div className="mb-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-900 dark:text-amber-200">
+                        <div className="flex items-center gap-2 font-bold text-amber-900 dark:text-amber-100">
+                            <AlertCircle className="size-4 text-amber-500" />
                             <span>Action Required: Landlord Requested Re-submission</span>
                         </div>
-                        <div className="mt-2 space-y-1.5 text-xs text-amber-200/90 pl-6">
+                        <div className="mt-2 space-y-1.5 text-xs text-amber-800 dark:text-amber-200/90 pl-6">
                             {rejectionNotes.map((item, idx) => (
                                 <p key={idx}>
-                                    <strong className="text-amber-100">{item.label}:</strong> {item.note}
+                                    <strong className="text-amber-950 dark:text-amber-100">{item.label}:</strong> {item.note}
                                 </p>
                             ))}
                         </div>
@@ -432,20 +459,20 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
 
                 {/* Main 2-Column Responsive Layout */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                    {/* LEFT COLUMN: Summary & Destination Card (5 cols) */}
-                    <div className="lg:col-span-5 space-y-4">
+                    {/* LEFT COLUMN: Summary & Destination Card with QR code (5 cols) */}
+                    <div className="lg:col-span-5 space-y-5">
                         {/* Order & Requirements Breakdown */}
-                        <section className="rounded-2xl border border-white/10 bg-zinc-900/60 p-5 backdrop-blur-xl shadow-lg">
-                            <div className="flex items-center justify-between border-b border-white/5 pb-3">
-                                <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+                        <section className="rounded-3xl border border-zinc-200/80 dark:border-white/10 bg-white/90 dark:bg-zinc-900/60 p-6 backdrop-blur-xl shadow-sm dark:shadow-xl transition-colors">
+                            <div className="flex items-center justify-between border-b border-zinc-200/70 dark:border-white/5 pb-3">
+                                <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                                     Required Move-In Items
                                 </h2>
-                                <span className="text-[11px] text-zinc-500">
+                                <span className="text-[11px] text-zinc-400 dark:text-zinc-500">
                                     {payload.requests.length} {payload.requests.length === 1 ? "Requirement" : "Requirements"}
                                 </span>
                             </div>
 
-                            <div className="mt-3 divide-y divide-white/5">
+                            <div className="mt-3 divide-y divide-zinc-100 dark:divide-white/5">
                                 {payload.requests.map((item) => {
                                     const isItemCompleted = item.status === "completed";
                                     const isItemProcessing = item.status === "processing";
@@ -455,24 +482,24 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                         <div key={item.id} className="py-3 first:pt-1 last:pb-1">
                                             <div className="flex items-start justify-between gap-2">
                                                 <div>
-                                                    <p className="text-sm font-semibold text-white">{item.label}</p>
-                                                    <p className="text-xs text-zinc-400">
+                                                    <p className="text-sm font-bold text-zinc-900 dark:text-white">{item.label}</p>
+                                                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
                                                         Due: {formatDate(item.dueAt)}
                                                     </p>
                                                 </div>
                                                 <div className="text-right">
-                                                    <p className="text-sm font-bold text-white">
+                                                    <p className="text-sm font-bold text-zinc-900 dark:text-white">
                                                         {peso.format(item.amount)}
                                                     </p>
                                                     <span
-                                                        className={`inline-block mt-0.5 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                                                        className={`inline-block mt-0.5 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
                                                             isItemCompleted
-                                                                ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                                                                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
                                                                 : isItemProcessing
-                                                                ? "bg-blue-500/10 text-blue-400 border border-blue-500/20"
+                                                                ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20"
                                                                 : isItemRejected
-                                                                ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-                                                                : "bg-zinc-800 text-zinc-400 border border-white/5"
+                                                                ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
+                                                                : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-white/5"
                                                         }`}
                                                     >
                                                         {isItemCompleted
@@ -491,83 +518,111 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                             </div>
 
                             {/* Total Due Callout */}
-                            <div className="mt-4 rounded-xl border border-white/10 bg-zinc-950/60 p-3.5 flex items-center justify-between">
+                            <div className="mt-4 rounded-2xl border border-zinc-200/80 dark:border-white/10 bg-zinc-50/80 dark:bg-zinc-950/60 p-4 flex items-center justify-between">
                                 <div>
-                                    <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+                                    <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                                         Total Amount Due
                                     </p>
-                                    <p className="text-xs text-zinc-500">Includes all advance items</p>
+                                    <p className="text-xs text-zinc-400 dark:text-zinc-500">Includes all advance items</p>
                                 </div>
-                                <p className="text-xl font-black text-white" style={{ color: brandPrimary }}>
+                                <p className="text-2xl font-black text-zinc-900 dark:text-white" style={{ color: brandPrimary }}>
                                     {peso.format(totalAmount)}
                                 </p>
                             </div>
                         </section>
 
-                        {/* Payment Destination (GCash Account) */}
+                        {/* Payment Destination Card with Inline QR Code */}
                         {payload.destination && (
-                            <section className="rounded-2xl border border-blue-500/20 bg-gradient-to-b from-blue-950/20 to-zinc-900/60 p-5 backdrop-blur-xl shadow-lg">
+                            <section className="rounded-3xl border border-blue-500/20 bg-gradient-to-b from-blue-50/40 via-white/90 to-white/90 dark:from-blue-950/20 dark:via-zinc-900/60 dark:to-zinc-900/60 p-6 backdrop-blur-xl shadow-sm dark:shadow-xl transition-colors">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
-                                        <div className="flex size-6 items-center justify-center rounded-md bg-blue-500 text-[11px] font-black text-white">
+                                        <div className="flex size-6 items-center justify-center rounded-lg bg-blue-600 text-[11px] font-black text-white shadow-sm">
                                             G
                                         </div>
-                                        <span className="text-xs font-bold uppercase tracking-wider text-blue-300">
-                                            GCash Destination
+                                        <span className="text-xs font-black uppercase tracking-wider text-blue-700 dark:text-blue-300">
+                                            Official GCash Destination
                                         </span>
                                     </div>
-                                    {payload.destination.qrImageUrl && (
+                                    <span className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2.5 py-0.5 rounded-full border border-blue-500/20">
+                                        Verified Account
+                                    </span>
+                                </div>
+
+                                {/* QR Code Display Right on the Card */}
+                                <div className="mt-4 flex flex-col sm:flex-row items-center gap-4 rounded-2xl bg-white dark:bg-zinc-950/60 p-4 border border-zinc-200/80 dark:border-white/5 shadow-sm">
+                                    {qrCodeUrl ? (
+                                        <div
+                                            onClick={() => setShowQrModal(true)}
+                                            className="group relative size-32 shrink-0 overflow-hidden rounded-2xl bg-white p-2 border border-zinc-200 dark:border-white/10 shadow-sm cursor-pointer transition hover:scale-[1.03]"
+                                            title="Click to zoom QR code"
+                                        >
+                                            <img
+                                                src={qrCodeUrl}
+                                                alt="Landlord GCash QR Code"
+                                                className="size-full object-contain"
+                                            />
+                                            <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition rounded-2xl">
+                                                <span className="rounded-md bg-black/80 px-2 py-0.5 text-[10px] font-bold text-white flex items-center gap-1 shadow-sm">
+                                                    <QrCode className="size-3" /> Zoom
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="size-32 shrink-0 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex flex-col items-center justify-center text-zinc-400">
+                                            <QrCode className="size-8" />
+                                            <span className="text-[10px] mt-1 font-bold">No QR code</span>
+                                        </div>
+                                    )}
+
+                                    {/* Account Name & Number Details */}
+                                    <div className="flex-1 w-full space-y-2 text-xs">
+                                        <div className="flex items-center justify-between border-b border-zinc-100 dark:border-white/5 pb-1.5">
+                                            <span className="text-zinc-500 dark:text-zinc-400">Account Name</span>
+                                            <span className="font-bold text-zinc-900 dark:text-white">
+                                                {payload.destination.accountName || "Official Landlord"}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center justify-between border-b border-zinc-100 dark:border-white/5 pb-1.5">
+                                            <span className="text-zinc-500 dark:text-zinc-400">Mobile Number</span>
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="font-mono font-bold text-zinc-900 dark:text-white tracking-wider">
+                                                    {payload.destination.accountNumber || "Not provided"}
+                                                </span>
+                                                {payload.destination.accountNumber && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleCopyNumber}
+                                                        className="flex size-6 items-center justify-center rounded-md bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-300 hover:bg-blue-500/20 transition"
+                                                        title="Copy mobile number"
+                                                    >
+                                                        {copiedNumber ? (
+                                                            <Check className="size-3 text-emerald-500" />
+                                                        ) : (
+                                                            <Copy className="size-3" />
+                                                        )}
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
                                         <button
                                             type="button"
                                             onClick={() => setShowQrModal(true)}
-                                            className="inline-flex items-center gap-1 text-xs font-semibold text-blue-400 hover:text-blue-300 transition"
+                                            className="inline-flex items-center gap-1.5 text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline pt-0.5"
                                         >
                                             <QrCode className="size-3.5" />
-                                            <span>Scan QR</span>
+                                            <span>Scan / Expand Full QR</span>
                                         </button>
-                                    )}
-                                </div>
-
-                                <div className="mt-3.5 space-y-2 text-sm">
-                                    <div className="flex items-center justify-between rounded-lg bg-black/30 px-3 py-2 border border-white/5">
-                                        <span className="text-xs text-zinc-400">Account Name</span>
-                                        <span className="font-semibold text-white">
-                                            {payload.destination.accountName || "Official Landlord"}
-                                        </span>
-                                    </div>
-
-                                    <div className="flex items-center justify-between rounded-lg bg-black/30 px-3 py-2 border border-white/5">
-                                        <span className="text-xs text-zinc-400">Mobile Number</span>
-                                        <div className="flex items-center gap-2">
-                                            <span className="font-mono font-bold text-white tracking-wider">
-                                                {payload.destination.accountNumber || "Not provided"}
-                                            </span>
-                                            {payload.destination.accountNumber && (
-                                                <button
-                                                    type="button"
-                                                    onClick={handleCopyNumber}
-                                                    className="flex size-7 items-center justify-center rounded-md bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 transition"
-                                                    title="Copy phone number"
-                                                >
-                                                    {copiedNumber ? (
-                                                        <Check className="size-3.5 text-emerald-400" />
-                                                    ) : (
-                                                        <Copy className="size-3.5" />
-                                                    )}
-                                                </button>
-                                            )}
-                                        </div>
                                     </div>
                                 </div>
 
                                 {/* Quick instructions */}
-                                <div className="mt-4 border-t border-white/5 pt-3">
-                                    <p className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">
+                                <div className="mt-4 border-t border-zinc-200/70 dark:border-white/5 pt-3">
+                                    <p className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5">
                                         Payment Instructions
                                     </p>
-                                    <ol className="text-xs text-zinc-400 space-y-1 pl-4 list-decimal leading-relaxed">
-                                        <li>Transfer the exact total of <strong className="text-zinc-200">{peso.format(totalAmount)}</strong> via GCash.</li>
-                                        <li>Save or take a screenshot of the completed transaction receipt.</li>
+                                    <ol className="text-xs text-zinc-600 dark:text-zinc-400 space-y-1.5 pl-4 list-decimal leading-relaxed">
+                                        <li>Scan the QR code above or send the exact total of <strong className="text-zinc-900 dark:text-zinc-200">{peso.format(totalAmount)}</strong> via GCash.</li>
+                                        <li>Save or take a screenshot of your completed transaction receipt.</li>
                                         <li>Enter the 13-digit reference number and upload the receipt below.</li>
                                     </ol>
                                 </div>
@@ -579,73 +634,73 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                     <div className="lg:col-span-7">
                         {/* STATE 1: ALL COMPLETED */}
                         {allCompleted && (
-                            <section className="rounded-2xl border border-emerald-500/20 bg-zinc-900/60 p-6 backdrop-blur-xl shadow-lg text-center">
-                                <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-400">
-                                    <CheckCircle2 className="size-8" />
+                            <section className="rounded-3xl border border-emerald-500/20 bg-white/90 dark:bg-zinc-900/60 p-8 backdrop-blur-xl shadow-sm dark:shadow-xl text-center">
+                                <div className="mx-auto flex size-16 items-center justify-center rounded-3xl bg-emerald-500/10 text-emerald-500">
+                                    <CheckCircle2 className="size-9" />
                                 </div>
-                                <h2 className="mt-4 text-xl font-bold text-white">All Payments Confirmed!</h2>
-                                <p className="mt-2 text-sm text-zinc-300 max-w-md mx-auto leading-relaxed">
-                                    Your advance rent and security deposit have been successfully verified and confirmed by your landlord.
+                                <h2 className="mt-4 text-xl font-bold text-zinc-900 dark:text-white">All Payments Confirmed!</h2>
+                                <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300 max-w-md mx-auto leading-relaxed">
+                                    Your advance rent and security deposit have been verified and confirmed by your landlord.
                                 </p>
-                                <div className="mt-6 rounded-xl border border-white/5 bg-zinc-950/60 p-4 text-left max-w-md mx-auto text-xs text-zinc-400 space-y-1.5">
-                                    <p><strong className="text-zinc-200">Property:</strong> {payload.application.propertyName}</p>
-                                    <p><strong className="text-zinc-200">Unit:</strong> {payload.application.unitName}</p>
-                                    <p><strong className="text-zinc-200">Total Confirmed:</strong> {peso.format(totalAmount)}</p>
+                                <div className="mt-6 rounded-2xl border border-zinc-200/80 dark:border-white/5 bg-zinc-50 dark:bg-zinc-950/60 p-5 text-left max-w-md mx-auto text-xs text-zinc-600 dark:text-zinc-400 space-y-2">
+                                    <p><strong className="text-zinc-900 dark:text-zinc-200">Property:</strong> {payload.application.propertyName}</p>
+                                    <p><strong className="text-zinc-900 dark:text-zinc-200">Unit:</strong> {payload.application.unitName}</p>
+                                    <p><strong className="text-zinc-900 dark:text-zinc-200">Total Confirmed:</strong> {peso.format(totalAmount)}</p>
                                 </div>
-                                <p className="mt-6 text-xs text-zinc-500">
+                                <p className="mt-6 text-xs text-zinc-400 dark:text-zinc-500">
                                     You can proceed with move-in coordination. You will also receive an email with contract and arrival instructions.
                                 </p>
                             </section>
                         )}
 
-                        {/* STATE 2: UNDER LANDLORD REVIEW (all processing and not actively editing) */}
+                        {/* STATE 2: UNDER LANDLORD REVIEW */}
                         {!allCompleted && allProcessing && !isEditingAfterSubmit && (
-                            <section className="rounded-2xl border border-blue-500/20 bg-zinc-900/60 p-6 backdrop-blur-xl shadow-lg">
-                                <div className="flex items-center gap-3">
-                                    <div className="flex size-10 items-center justify-center rounded-xl bg-blue-500/10 text-blue-400">
-                                        <Clock className="size-5" />
+                            <section className="rounded-3xl border border-blue-500/20 bg-white/90 dark:bg-zinc-900/60 p-7 backdrop-blur-xl shadow-sm dark:shadow-xl">
+                                <div className="flex items-center gap-3.5">
+                                    <div className="flex size-12 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                                        <Clock className="size-6" />
                                     </div>
                                     <div>
-                                        <h2 className="text-lg font-bold text-white">Payment Under Review</h2>
-                                        <p className="text-xs text-zinc-400">
+                                        <h2 className="text-lg font-bold text-zinc-900 dark:text-white">Payment Under Review</h2>
+                                        <p className="text-xs text-zinc-500 dark:text-zinc-400">
                                             Your proof of payment has been submitted and is awaiting landlord verification.
                                         </p>
                                     </div>
                                 </div>
 
-                                <div className="mt-5 space-y-3 rounded-xl border border-white/5 bg-zinc-950/60 p-4 text-xs">
+                                <div className="mt-6 space-y-3 rounded-2xl border border-zinc-200/80 dark:border-white/5 bg-zinc-50 dark:bg-zinc-950/60 p-4 text-xs">
                                     <div className="flex justify-between">
-                                        <span className="text-zinc-400">Status</span>
-                                        <span className="font-semibold text-blue-400">Under Landlord Review</span>
+                                        <span className="text-zinc-500 dark:text-zinc-400">Status</span>
+                                        <span className="font-bold text-blue-600 dark:text-blue-400">Under Landlord Review</span>
                                     </div>
                                     {referenceNumber && (
                                         <div className="flex justify-between">
-                                            <span className="text-zinc-400">GCash Reference No.</span>
-                                            <span className="font-mono font-bold text-white">{referenceNumber}</span>
+                                            <span className="text-zinc-500 dark:text-zinc-400">GCash Reference No.</span>
+                                            <span className="font-mono font-bold text-zinc-900 dark:text-white">{referenceNumber}</span>
                                         </div>
                                     )}
                                     <div className="flex justify-between">
-                                        <span className="text-zinc-400">Total Submitted</span>
-                                        <span className="font-bold text-white">{peso.format(totalAmount)}</span>
+                                        <span className="text-zinc-500 dark:text-zinc-400">Total Submitted</span>
+                                        <span className="font-bold text-zinc-900 dark:text-white">{peso.format(totalAmount)}</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-zinc-400">Submitted At</span>
-                                        <span className="text-zinc-300">
+                                        <span className="text-zinc-500 dark:text-zinc-400">Submitted At</span>
+                                        <span className="text-zinc-700 dark:text-zinc-300">
                                             {formatDateTime(payload.requests[0]?.submittedAt)}
                                         </span>
                                     </div>
                                 </div>
 
                                 {existingProofUrl && (
-                                    <div className="mt-4 flex items-center justify-between rounded-xl border border-white/5 bg-zinc-900 px-4 py-3">
+                                    <div className="mt-4 flex items-center justify-between rounded-2xl border border-zinc-200/80 dark:border-white/5 bg-zinc-50 dark:bg-zinc-900 px-4 py-3">
                                         <div className="flex items-center gap-2">
-                                            <FileCheck className="size-4 text-blue-400" />
-                                            <span className="text-xs text-zinc-300">Payment receipt attached</span>
+                                            <FileCheck className="size-4 text-blue-600 dark:text-blue-400" />
+                                            <span className="text-xs text-zinc-700 dark:text-zinc-300 font-medium">Payment receipt attached</span>
                                         </div>
                                         <button
                                             type="button"
                                             onClick={() => setShowProofModal(existingProofUrl)}
-                                            className="inline-flex items-center gap-1 text-xs font-semibold text-blue-400 hover:text-blue-300 transition"
+                                            className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline transition"
                                         >
                                             <span>View Receipt</span>
                                             <ExternalLink className="size-3" />
@@ -653,14 +708,14 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                     </div>
                                 )}
 
-                                <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-white/5 pt-4">
-                                    <p className="text-[11px] text-zinc-500">
+                                <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-zinc-200/70 dark:border-white/5 pt-4">
+                                    <p className="text-[11px] text-zinc-400 dark:text-zinc-500">
                                         Need to fix or update your receipt?
                                     </p>
                                     <button
                                         type="button"
                                         onClick={() => setIsEditingAfterSubmit(true)}
-                                        className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-zinc-800/80 px-3 py-2 text-xs font-semibold text-zinc-200 hover:bg-zinc-700 transition"
+                                        className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-200 dark:border-white/10 bg-zinc-100 dark:bg-zinc-800/80 px-3.5 py-2 text-xs font-bold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition"
                                     >
                                         <RefreshCw className="size-3" />
                                         <span>Update Submission</span>
@@ -669,13 +724,13 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                             </section>
                         )}
 
-                        {/* STATE 3: UNIFIED PAYMENT FORM (pending, rejected, or editing) */}
+                        {/* STATE 3: UNIFIED PAYMENT FORM */}
                         {!allCompleted && (!allProcessing || isEditingAfterSubmit) && (
-                            <section className="rounded-2xl border border-white/10 bg-zinc-900/60 p-5 sm:p-6 backdrop-blur-xl shadow-lg">
-                                <div className="flex items-center justify-between border-b border-white/5 pb-4">
+                            <section className="rounded-3xl border border-zinc-200/80 dark:border-white/10 bg-white/90 dark:bg-zinc-900/60 p-6 sm:p-7 backdrop-blur-xl shadow-sm dark:shadow-xl transition-colors">
+                                <div className="flex items-center justify-between border-b border-zinc-200/70 dark:border-white/5 pb-4">
                                     <div>
-                                        <h2 className="text-base font-bold text-white">Payment Submission</h2>
-                                        <p className="text-xs text-zinc-400 mt-0.5">
+                                        <h2 className="text-base font-black text-zinc-900 dark:text-white">Payment Submission</h2>
+                                        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
                                             Submit verified transfer details for all move-in requirements.
                                         </p>
                                     </div>
@@ -683,7 +738,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                         <button
                                             type="button"
                                             onClick={() => setIsEditingAfterSubmit(false)}
-                                            className="text-xs text-zinc-400 hover:text-zinc-200"
+                                            className="text-xs text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 font-semibold"
                                         >
                                             Cancel
                                         </button>
@@ -693,17 +748,17 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                 <div className="mt-5 space-y-4">
                                     {/* Payment Method Selector */}
                                     <div>
-                                        <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-2">
+                                        <label className="block text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2">
                                             Payment Method
                                         </label>
                                         <div className="grid grid-cols-2 gap-2">
                                             <button
                                                 type="button"
                                                 onClick={() => setMethod("gcash")}
-                                                className={`flex items-center justify-center gap-2 rounded-xl py-2.5 px-3 text-xs font-bold transition ${
+                                                className={`flex items-center justify-center gap-2 rounded-2xl py-3 px-3 text-xs font-bold transition ${
                                                     method === "gcash"
-                                                        ? "bg-blue-600 text-white shadow-md shadow-blue-600/20 border border-blue-400/40"
-                                                        : "bg-zinc-800/60 text-zinc-400 border border-white/5 hover:bg-zinc-800"
+                                                        ? "bg-blue-600 text-white shadow-md shadow-blue-600/20 border border-blue-500"
+                                                        : "bg-zinc-100 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-400 border border-zinc-200/80 dark:border-white/5 hover:bg-zinc-200/70 dark:hover:bg-zinc-800"
                                                 }`}
                                             >
                                                 <span className="flex size-4 items-center justify-center rounded-full bg-white text-[9px] font-black text-blue-600">
@@ -715,10 +770,10 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                             <button
                                                 type="button"
                                                 onClick={() => setMethod("cash")}
-                                                className={`flex items-center justify-center gap-2 rounded-xl py-2.5 px-3 text-xs font-bold transition ${
+                                                className={`flex items-center justify-center gap-2 rounded-2xl py-3 px-3 text-xs font-bold transition ${
                                                     method === "cash"
-                                                        ? "bg-zinc-700 text-white shadow-md border border-white/20"
-                                                        : "bg-zinc-800/60 text-zinc-400 border border-white/5 hover:bg-zinc-800"
+                                                        ? "bg-zinc-800 text-white shadow-md border border-zinc-700 dark:bg-zinc-700"
+                                                        : "bg-zinc-100 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-400 border border-zinc-200/80 dark:border-white/5 hover:bg-zinc-200/70 dark:hover:bg-zinc-800"
                                                 }`}
                                             >
                                                 <CreditCard className="size-3.5" />
@@ -730,11 +785,11 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                     {/* Reference Number Field */}
                                     <div>
                                         <div className="flex items-center justify-between mb-1.5">
-                                            <label className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                                            <label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                                                 {method === "gcash" ? "13-Digit GCash Reference Number *" : "Reference Number (Optional)"}
                                             </label>
                                             {method === "gcash" && (
-                                                <span className="text-[10px] text-zinc-500">From GCash SMS / App receipt</span>
+                                                <span className="text-[10px] text-zinc-400 dark:text-zinc-500">From GCash receipt</span>
                                             )}
                                         </div>
                                         <div className="relative">
@@ -743,21 +798,21 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                                 value={referenceNumber}
                                                 onChange={(e) => setReferenceNumber(e.target.value)}
                                                 placeholder={method === "gcash" ? "e.g. 1002 9384 1029 1" : "Optional cash memo or receipt number"}
-                                                className="w-full rounded-xl border border-white/10 bg-zinc-950/70 px-3.5 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition"
+                                                className="w-full rounded-2xl border border-zinc-300 dark:border-white/10 bg-zinc-50 dark:bg-zinc-950/70 px-4 py-3 text-sm font-semibold text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition"
                                             />
                                             {referenceNumber.trim().length > 0 && (
-                                                <Check className="absolute right-3.5 top-3 size-4 text-emerald-400" />
+                                                <Check className="absolute right-3.5 top-3.5 size-4 text-emerald-500" />
                                             )}
                                         </div>
                                     </div>
 
-                                    {/* File Upload Dropzone (Requirement 2 & 4) */}
+                                    {/* File Upload Dropzone */}
                                     <div>
                                         <div className="flex items-center justify-between mb-1.5">
-                                            <label className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                                            <label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                                                 Proof of Payment Receipt {method === "gcash" ? "*" : "(Optional)"}
                                             </label>
-                                            <span className="text-[10px] text-zinc-500">PNG, JPG, PDF up to 10MB</span>
+                                            <span className="text-[10px] text-zinc-400 dark:text-zinc-500">PNG, JPG, PDF up to 10MB</span>
                                         </div>
 
                                         <input
@@ -782,43 +837,43 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                                     handleFileSelected(e.dataTransfer.files?.[0] ?? null);
                                                 }}
                                                 onClick={() => fileInputRef.current?.click()}
-                                                className={`group flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-6 text-center cursor-pointer transition ${
+                                                className={`group flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-6 text-center cursor-pointer transition ${
                                                     isDragging
                                                         ? "border-blue-500 bg-blue-500/10"
-                                                        : "border-white/10 bg-zinc-950/50 hover:border-white/20 hover:bg-zinc-950/80"
+                                                        : "border-zinc-300 dark:border-white/10 bg-zinc-50/60 dark:bg-zinc-950/50 hover:border-zinc-400 dark:hover:border-white/20 hover:bg-zinc-100/60 dark:hover:bg-zinc-950/80"
                                                 }`}
                                             >
-                                                <div className="flex size-10 items-center justify-center rounded-xl bg-zinc-800 text-zinc-400 group-hover:text-white transition">
+                                                <div className="flex size-11 items-center justify-center rounded-2xl bg-zinc-200/70 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white transition">
                                                     <UploadCloud className="size-5" />
                                                 </div>
-                                                <p className="mt-2.5 text-xs font-semibold text-zinc-300">
+                                                <p className="mt-2.5 text-xs font-bold text-zinc-700 dark:text-zinc-300">
                                                     Click to browse or drag &amp; drop receipt
                                                 </p>
-                                                <p className="mt-1 text-[11px] text-zinc-500">
+                                                <p className="mt-1 text-[11px] text-zinc-400 dark:text-zinc-500">
                                                     Attach screenshot from GCash showing transaction reference and amount
                                                 </p>
                                             </div>
                                         ) : (
                                             /* Active file preview card */
-                                            <div className="rounded-xl border border-white/10 bg-zinc-950/70 p-3 flex items-center justify-between gap-3">
+                                            <div className="rounded-2xl border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-zinc-950/70 p-3.5 flex items-center justify-between gap-3">
                                                 <div className="flex items-center gap-3 min-w-0">
                                                     {proofPreviewUrl ? (
                                                         <img
                                                             src={proofPreviewUrl}
                                                             alt="Proof preview"
-                                                            className="size-12 rounded-lg object-cover border border-white/10 shrink-0 cursor-pointer"
+                                                            className="size-12 rounded-xl object-cover border border-zinc-200 dark:border-white/10 shrink-0 cursor-pointer shadow-sm"
                                                             onClick={() => setShowProofModal(proofPreviewUrl)}
                                                         />
                                                     ) : (
-                                                        <div className="flex size-12 items-center justify-center rounded-lg bg-zinc-800 text-zinc-400 shrink-0 border border-white/5">
+                                                        <div className="flex size-12 items-center justify-center rounded-xl bg-zinc-200 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 shrink-0 border border-zinc-300 dark:border-white/5">
                                                             <FileText className="size-6" />
                                                         </div>
                                                     )}
                                                     <div className="min-w-0">
-                                                        <p className="text-xs font-semibold text-white truncate">
+                                                        <p className="text-xs font-bold text-zinc-900 dark:text-white truncate">
                                                             {proofFile ? proofFile.name : "Current Attached Proof"}
                                                         </p>
-                                                        <p className="text-[11px] text-emerald-400 flex items-center gap-1 mt-0.5">
+                                                        <p className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1 mt-0.5 font-medium">
                                                             <CheckCircle2 className="size-3" />
                                                             <span>
                                                                 {proofFile
@@ -833,7 +888,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                                     <button
                                                         type="button"
                                                         onClick={() => fileInputRef.current?.click()}
-                                                        className="rounded-lg border border-white/10 bg-zinc-800 px-2.5 py-1.5 text-xs font-medium text-zinc-300 hover:bg-zinc-700 transition"
+                                                        className="rounded-xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 py-1.5 text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition shadow-sm"
                                                     >
                                                         Replace
                                                     </button>
@@ -843,10 +898,10 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                                             setProofFile(null);
                                                             if (fileInputRef.current) fileInputRef.current.value = "";
                                                         }}
-                                                        className="flex size-7 items-center justify-center rounded-lg bg-zinc-800 text-zinc-400 hover:text-red-400 transition"
+                                                        className="flex size-8 items-center justify-center rounded-xl bg-zinc-200 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-red-500 transition"
                                                         title="Remove file"
                                                     >
-                                                        <X className="size-3.5" />
+                                                        <X className="size-4" />
                                                     </button>
                                                 </div>
                                             </div>
@@ -855,7 +910,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
 
                                     {/* Optional Transfer Note */}
                                     <div>
-                                        <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">
+                                        <label className="block text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5">
                                             Transfer Note (Optional)
                                         </label>
                                         <input
@@ -867,17 +922,17 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                                     ? "e.g. Will pay upon key turnover on Saturday"
                                                     : "Any message or context for the landlord"
                                             }
-                                            className="w-full rounded-xl border border-white/10 bg-zinc-950/70 px-3.5 py-2.5 text-xs text-white placeholder:text-zinc-600 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition"
+                                            className="w-full rounded-2xl border border-zinc-300 dark:border-white/10 bg-zinc-50 dark:bg-zinc-950/70 px-4 py-2.5 text-xs text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition"
                                         />
                                     </div>
 
-                                    {/* Unified Single Submit Button (Requirements 2 & 3 & 5) */}
+                                    {/* Unified Single Submit Button */}
                                     <div className="pt-2">
                                         <button
                                             type="button"
                                             disabled={!canSubmit || isSubmitting}
                                             onClick={() => setShowConfirmModal(true)}
-                                            className="w-full relative flex items-center justify-center gap-2 rounded-xl py-3 px-4 font-bold text-sm tracking-wide transition shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 hover:scale-[1.01] active:scale-[0.99]"
+                                            className="w-full relative flex items-center justify-center gap-2 rounded-2xl py-3.5 px-5 font-bold text-sm tracking-wide transition shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 hover:scale-[1.01] active:scale-[0.99]"
                                             style={{
                                                 backgroundColor: brandPrimary,
                                                 color: contrastColor,
@@ -899,9 +954,9 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                             )}
                                         </button>
 
-                                        {/* Helpful status note under button */}
+                                        {/* Status guidance note under button */}
                                         {!canSubmit && method === "gcash" && (
-                                            <p className="mt-2 text-center text-[11px] text-zinc-500">
+                                            <p className="mt-2 text-center text-[11px] text-zinc-500 dark:text-zinc-400">
                                                 {!hasProof && !hasReference
                                                     ? "Please upload your GCash receipt and enter the reference number to proceed."
                                                     : !hasProof
@@ -919,46 +974,46 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
 
             {/* CONFIRMATION MODAL BEFORE FINAL SUBMISSION */}
             {showConfirmModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-150">
-                    <div className="max-w-md w-full rounded-2xl border border-white/10 bg-zinc-900 p-6 shadow-2xl">
-                        <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                            <h3 className="text-base font-bold text-white">Confirm Payment Submission</h3>
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 animate-in fade-in duration-150">
+                    <div className="max-w-md w-full rounded-3xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900 p-6 shadow-2xl">
+                        <div className="flex items-center justify-between border-b border-zinc-200 dark:border-white/10 pb-3">
+                            <h3 className="text-base font-bold text-zinc-900 dark:text-white">Confirm Payment Submission</h3>
                             <button
                                 onClick={() => setShowConfirmModal(false)}
-                                className="text-zinc-400 hover:text-white"
+                                className="text-zinc-400 hover:text-zinc-600 dark:hover:text-white"
                             >
                                 <X className="size-4" />
                             </button>
                         </div>
 
-                        <p className="mt-3 text-xs text-zinc-300 leading-relaxed">
+                        <p className="mt-3 text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">
                             Please verify your submission details. Once submitted, your payment proof will be locked and routed to the landlord for verification.
                         </p>
 
-                        <div className="mt-4 space-y-2 rounded-xl border border-white/5 bg-zinc-950/70 p-3.5 text-xs">
+                        <div className="mt-4 space-y-2 rounded-2xl border border-zinc-200 dark:border-white/5 bg-zinc-50 dark:bg-zinc-950/70 p-4 text-xs">
                             <div className="flex justify-between">
-                                <span className="text-zinc-400">Property &amp; Unit</span>
-                                <span className="font-semibold text-white">
+                                <span className="text-zinc-500 dark:text-zinc-400">Property &amp; Unit</span>
+                                <span className="font-bold text-zinc-900 dark:text-white">
                                     {payload.application.propertyName} ({payload.application.unitName})
                                 </span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-zinc-400">Total Amount</span>
-                                <span className="font-bold text-emerald-400">{peso.format(totalAmount)}</span>
+                                <span className="text-zinc-500 dark:text-zinc-400">Total Amount</span>
+                                <span className="font-bold text-emerald-600 dark:text-emerald-400">{peso.format(totalAmount)}</span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-zinc-400">Payment Method</span>
-                                <span className="text-white capitalize">{method}</span>
+                                <span className="text-zinc-500 dark:text-zinc-400">Payment Method</span>
+                                <span className="font-bold text-zinc-900 dark:text-white capitalize">{method}</span>
                             </div>
                             {referenceNumber && (
                                 <div className="flex justify-between">
-                                    <span className="text-zinc-400">Reference Number</span>
-                                    <span className="font-mono font-bold text-white">{referenceNumber}</span>
+                                    <span className="text-zinc-500 dark:text-zinc-400">Reference Number</span>
+                                    <span className="font-mono font-bold text-zinc-900 dark:text-white">{referenceNumber}</span>
                                 </div>
                             )}
                             <div className="flex justify-between">
-                                <span className="text-zinc-400">Attached Proof</span>
-                                <span className="text-zinc-200 truncate max-w-[200px]">
+                                <span className="text-zinc-500 dark:text-zinc-400">Attached Proof</span>
+                                <span className="text-zinc-700 dark:text-zinc-200 font-medium truncate max-w-[200px]">
                                     {proofFile?.name || "Attached receipt"}
                                 </span>
                             </div>
@@ -969,7 +1024,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                 type="button"
                                 disabled={isSubmitting}
                                 onClick={() => setShowConfirmModal(false)}
-                                className="rounded-xl border border-white/10 bg-zinc-800 px-4 py-2 text-xs font-semibold text-zinc-300 hover:bg-zinc-700 transition"
+                                className="rounded-xl border border-zinc-200 dark:border-white/10 bg-zinc-100 dark:bg-zinc-800 px-4 py-2.5 text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition"
                             >
                                 Review Again
                             </button>
@@ -977,7 +1032,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                 type="button"
                                 disabled={isSubmitting}
                                 onClick={() => void executeSubmit()}
-                                className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition shadow-md disabled:opacity-50"
+                                className="inline-flex items-center gap-1.5 rounded-xl px-5 py-2.5 text-xs font-bold transition shadow-md disabled:opacity-50"
                                 style={{
                                     backgroundColor: brandPrimary,
                                     color: contrastColor,
@@ -991,47 +1046,47 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                 </div>
             )}
 
-            {/* QR CODE MODAL */}
-            {showQrModal && payload.destination?.qrImageUrl && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-                    <div className="max-w-sm w-full rounded-2xl border border-white/10 bg-zinc-900 p-5 shadow-2xl text-center">
-                        <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                            <h3 className="text-sm font-bold text-white">GCash Official QR Code</h3>
+            {/* QR CODE MODAL (HIGH RES) */}
+            {showQrModal && qrCodeUrl && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4">
+                    <div className="max-w-sm w-full rounded-3xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900 p-6 shadow-2xl text-center">
+                        <div className="flex items-center justify-between border-b border-zinc-200 dark:border-white/10 pb-3">
+                            <h3 className="text-sm font-bold text-zinc-900 dark:text-white">GCash Official QR Code</h3>
                             <button
                                 onClick={() => setShowQrModal(false)}
-                                className="text-zinc-400 hover:text-white"
+                                className="text-zinc-400 hover:text-zinc-600 dark:hover:text-white"
                             >
                                 <X className="size-4" />
                             </button>
                         </div>
 
-                        <div className="mt-4 rounded-xl bg-white p-3 inline-block shadow-inner">
+                        <div className="mt-4 rounded-2xl bg-white p-4 inline-block shadow-md border border-zinc-200/80">
                             <img
-                                src={payload.destination.qrImageUrl}
+                                src={qrCodeUrl}
                                 alt="GCash QR Code"
-                                className="size-56 object-contain"
+                                className="size-60 object-contain"
                             />
                         </div>
 
-                        <div className="mt-3 text-xs text-zinc-400">
-                            <p className="font-semibold text-white">{payload.destination.accountName}</p>
-                            <p className="font-mono mt-0.5">{payload.destination.accountNumber}</p>
+                        <div className="mt-3 text-xs text-zinc-500 dark:text-zinc-400">
+                            <p className="font-bold text-zinc-900 dark:text-white">{payload.destination?.accountName || "Landlord GCash"}</p>
+                            <p className="font-mono mt-0.5">{payload.destination?.accountNumber}</p>
                         </div>
 
                         <div className="mt-5 flex gap-2">
                             <a
-                                href={payload.destination.qrImageUrl}
+                                href={qrCodeUrl}
                                 download="gcash-qr.png"
                                 target="_blank"
                                 rel="noreferrer"
-                                className="flex-1 rounded-xl border border-white/10 bg-zinc-800 py-2 text-xs font-semibold text-zinc-200 hover:bg-zinc-700 transition"
+                                className="flex-1 rounded-xl border border-zinc-200 dark:border-white/10 bg-zinc-100 dark:bg-zinc-800 py-2.5 text-xs font-bold text-zinc-700 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition"
                             >
                                 Open Full Size
                             </a>
                             <button
                                 type="button"
                                 onClick={() => setShowQrModal(false)}
-                                className="flex-1 rounded-xl bg-blue-600 py-2 text-xs font-semibold text-white hover:bg-blue-500 transition"
+                                className="flex-1 rounded-xl bg-blue-600 py-2.5 text-xs font-bold text-white hover:bg-blue-500 transition shadow-md"
                             >
                                 Done
                             </button>
@@ -1042,29 +1097,29 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
 
             {/* PROOF VIEWER MODAL */}
             {showProofModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
-                    <div className="max-w-lg w-full rounded-2xl border border-white/10 bg-zinc-900 p-4 shadow-2xl">
-                        <div className="flex items-center justify-between pb-3 border-b border-white/10">
-                            <span className="text-xs font-bold text-white">Submitted Payment Receipt</span>
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+                    <div className="max-w-lg w-full rounded-3xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900 p-5 shadow-2xl">
+                        <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-white/10">
+                            <span className="text-xs font-bold text-zinc-900 dark:text-white">Submitted Payment Receipt</span>
                             <button
                                 onClick={() => setShowProofModal(null)}
-                                className="text-zinc-400 hover:text-white"
+                                className="text-zinc-400 hover:text-zinc-600 dark:hover:text-white"
                             >
                                 <X className="size-4" />
                             </button>
                         </div>
-                        <div className="mt-3 max-h-[70vh] overflow-auto rounded-xl bg-black/40 flex items-center justify-center p-2">
+                        <div className="mt-3 max-h-[70vh] overflow-auto rounded-2xl bg-zinc-100 dark:bg-black/40 flex items-center justify-center p-2">
                             <img
                                 src={showProofModal}
                                 alt="Payment proof"
-                                className="max-h-[65vh] w-auto rounded-lg object-contain"
+                                className="max-h-[65vh] w-auto rounded-xl object-contain shadow-sm"
                             />
                         </div>
-                        <div className="mt-3 text-right">
+                        <div className="mt-4 text-right">
                             <button
                                 type="button"
                                 onClick={() => setShowProofModal(null)}
-                                className="rounded-xl bg-zinc-800 px-4 py-1.5 text-xs font-semibold text-zinc-200 hover:bg-zinc-700 transition"
+                                className="rounded-xl bg-zinc-100 dark:bg-zinc-800 px-4 py-2 text-xs font-bold text-zinc-700 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition"
                             >
                                 Close
                             </button>
