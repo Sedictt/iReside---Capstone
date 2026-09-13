@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-09T10:23:39.148Z",
+  "generatedAt": "2026-09-13T04:28:51.397Z",
   "schema": "source-of-truth-db.sql",
   "migrations": "supabase/migrations",
   "tableCount": 58,
@@ -248,7 +248,7 @@
       "functionName": "update_updated_at"
     }
   ],
-  "referencedTableCount": 60,
+  "referencedTableCount": 63,
   "referencedFunctionCount": 3,
   "lintWarnings": {
     "auth_rls_initplan": 154,
@@ -536,8 +536,11 @@
     ]
   },
   "missingInSchema": [
+    "${payload}:${signature}",
     "community_reports",
-    "community_saved_posts"
+    "community_saved_posts",
+    "sessions",
+    "user_audit_logs"
   ],
   "rpcMissingInSchema": [
     "increment_post_view_count"
@@ -565,6 +568,10 @@
     ]
   },
   "storageBucketsReferenced": {
+    "brand-logos": [
+      "src/app/api/branding/logo/route.ts",
+      "src/app/api/branding/logo/route.ts"
+    ],
     "business-permits": [
       "src/app/api/profile/permit/route.ts",
       "src/app/api/profile/permit/route.ts"
@@ -585,6 +592,9 @@
       "src/app/api/tenant/maintenance/media/route.ts",
       "src/app/api/tenant/maintenance/media/route.ts"
     ],
+    "message-files": [
+      "src/app/api/landlord/unit-messages/route.ts"
+    ],
     "profile-avatars": [
       "src/app/api/profile/avatar/route.ts",
       "src/app/api/profile/avatar/route.ts"
@@ -594,6 +604,8 @@
       "src/app/api/profile/cover/route.ts"
     ],
     "property-images": [
+      "src/app/api/landlord/flyer-template/upload-bg/route.ts",
+      "src/app/api/landlord/flyer-template/upload-bg/route.ts",
       "src/app/api/landlord/properties/media/route.ts",
       "src/app/api/landlord/properties/media/route.ts",
       "src/components/landlord/AddAmenityModal.tsx",
@@ -1782,21 +1794,21 @@
           "name": "Application participants can view applications",
           "table": "applications",
           "command": "SELECT",
-          "definition": "CREATE POLICY \"Application participants can view applications\"\nON public.applications\nFOR SELECT\nTO authenticated\nUSING (\n    applicant_id = (select auth.uid())\n    OR landlord_id = (select auth.uid())\n);",
+          "definition": "CREATE POLICY \"Application participants can view applications\"\r\nON public.applications\r\nFOR SELECT\r\nTO authenticated\r\nUSING (\r\n    applicant_id = (select auth.uid())\r\n    OR landlord_id = (select auth.uid())\r\n);",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Application participants can update applications",
           "table": "applications",
           "command": "UPDATE",
-          "definition": "CREATE POLICY \"Application participants can update applications\"\nON public.applications\nFOR UPDATE\nTO authenticated\nUSING (\n    applicant_id = (select auth.uid())\n    OR landlord_id = (select auth.uid())\n)\nWITH CHECK (\n    applicant_id = (select auth.uid())\n    OR landlord_id = (select auth.uid())\n);",
+          "definition": "CREATE POLICY \"Application participants can update applications\"\r\nON public.applications\r\nFOR UPDATE\r\nTO authenticated\r\nUSING (\r\n    applicant_id = (select auth.uid())\r\n    OR landlord_id = (select auth.uid())\r\n)\r\nWITH CHECK (\r\n    applicant_id = (select auth.uid())\r\n    OR landlord_id = (select auth.uid())\r\n);",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Application owners can create applications",
           "table": "applications",
           "command": "INSERT",
-          "definition": "CREATE POLICY \"Application owners can create applications\"\nON public.applications\nFOR INSERT\nTO authenticated\nWITH CHECK (\n    applicant_id = (select auth.uid())\n    OR (\n        created_by = (select auth.uid())\n        AND EXISTS (\n            SELECT 1\n            FROM public.units u\n            JOIN public.properties p ON p.id = u.property_id\n            WHERE u.id = applications.unit_id\n              AND p.landlord_id = (select auth.uid())\n        )\n    )\n);",
+          "definition": "CREATE POLICY \"Application owners can create applications\"\r\nON public.applications\r\nFOR INSERT\r\nTO authenticated\r\nWITH CHECK (\r\n    applicant_id = (select auth.uid())\r\n    OR (\r\n        created_by = (select auth.uid())\r\n        AND EXISTS (\r\n            SELECT 1\r\n            FROM public.units u\r\n            JOIN public.properties p ON p.id = u.property_id\r\n            WHERE u.id = applications.unit_id\r\n              AND p.landlord_id = (select auth.uid())\r\n        )\r\n    )\r\n);",
           "unwrappedAuthCalls": false
         }
       ],
@@ -1932,7 +1944,7 @@
           "name": "Community album stakeholders can access albums",
           "table": "community_albums",
           "command": "ALL",
-          "definition": "CREATE POLICY \"Community album stakeholders can access albums\"\nON public.community_albums\nTO authenticated\nUSING (\n    EXISTS (\n        SELECT 1\n        FROM public.community_posts\n        WHERE community_posts.id = community_albums.post_id\n          AND community_posts.is_approved = true\n          AND community_posts.status = 'published'::public.post_status_enum\n    )\n    OR EXISTS (\n        SELECT 1\n        FROM public.properties\n        WHERE properties.id = community_albums.property_id\n          AND properties.landlord_id = (select auth.uid())\n    )\n    OR EXISTS (\n        SELECT 1\n        FROM public.community_posts\n        WHERE community_posts.id = community_albums.post_id\n          AND community_posts.author_id = (select auth.uid())\n    )\n)\nWITH CHECK (\n    EXISTS (\n        SELECT 1\n        FROM public.properties\n        WHERE properties.id = community_albums.property_id\n          AND properties.landlord_id = (select auth.uid())\n    )\n    OR EXISTS (\n        SELECT 1\n        FROM public.community_posts\n        WHERE community_posts.id = community_albums.post_id\n          AND community_posts.author_id = (select auth.uid())\n    )\n);",
+          "definition": "CREATE POLICY \"Community album stakeholders can access albums\"\r\nON public.community_albums\r\nTO authenticated\r\nUSING (\r\n    EXISTS (\r\n        SELECT 1\r\n        FROM public.community_posts\r\n        WHERE community_posts.id = community_albums.post_id\r\n          AND community_posts.is_approved = true\r\n          AND community_posts.status = 'published'::public.post_status_enum\r\n    )\r\n    OR EXISTS (\r\n        SELECT 1\r\n        FROM public.properties\r\n        WHERE properties.id = community_albums.property_id\r\n          AND properties.landlord_id = (select auth.uid())\r\n    )\r\n    OR EXISTS (\r\n        SELECT 1\r\n        FROM public.community_posts\r\n        WHERE community_posts.id = community_albums.post_id\r\n          AND community_posts.author_id = (select auth.uid())\r\n    )\r\n)\r\nWITH CHECK (\r\n    EXISTS (\r\n        SELECT 1\r\n        FROM public.properties\r\n        WHERE properties.id = community_albums.property_id\r\n          AND properties.landlord_id = (select auth.uid())\r\n    )\r\n    OR EXISTS (\r\n        SELECT 1\r\n        FROM public.community_posts\r\n        WHERE community_posts.id = community_albums.post_id\r\n          AND community_posts.author_id = (select auth.uid())\r\n    )\r\n);",
           "unwrappedAuthCalls": false
         }
       ],
@@ -2173,7 +2185,7 @@
           "name": "Community photo stakeholders can access photos",
           "table": "community_photos",
           "command": "ALL",
-          "definition": "CREATE POLICY \"Community photo stakeholders can access photos\"\nON public.community_photos\nTO authenticated\nUSING (\n    EXISTS (\n        SELECT 1\n        FROM public.community_albums\n        JOIN public.community_posts ON community_posts.id = community_albums.post_id\n        WHERE community_albums.id = community_photos.album_id\n          AND community_posts.is_approved = true\n          AND community_posts.status = 'published'::public.post_status_enum\n    )\n    OR EXISTS (\n        SELECT 1\n        FROM public.community_albums\n        JOIN public.properties ON properties.id = community_albums.property_id\n        WHERE community_albums.id = community_photos.album_id\n          AND properties.landlord_id = (select auth.uid())\n    )\n    OR uploaded_by = (select auth.uid())\n)\nWITH CHECK (\n    uploaded_by = (select auth.uid())\n    OR EXISTS (\n        SELECT 1\n        FROM public.community_albums\n        JOIN public.properties ON properties.id = community_albums.property_id\n        WHERE community_albums.id = community_photos.album_id\n          AND properties.landlord_id = (select auth.uid())\n    )\n);",
+          "definition": "CREATE POLICY \"Community photo stakeholders can access photos\"\r\nON public.community_photos\r\nTO authenticated\r\nUSING (\r\n    EXISTS (\r\n        SELECT 1\r\n        FROM public.community_albums\r\n        JOIN public.community_posts ON community_posts.id = community_albums.post_id\r\n        WHERE community_albums.id = community_photos.album_id\r\n          AND community_posts.is_approved = true\r\n          AND community_posts.status = 'published'::public.post_status_enum\r\n    )\r\n    OR EXISTS (\r\n        SELECT 1\r\n        FROM public.community_albums\r\n        JOIN public.properties ON properties.id = community_albums.property_id\r\n        WHERE community_albums.id = community_photos.album_id\r\n          AND properties.landlord_id = (select auth.uid())\r\n    )\r\n    OR uploaded_by = (select auth.uid())\r\n)\r\nWITH CHECK (\r\n    uploaded_by = (select auth.uid())\r\n    OR EXISTS (\r\n        SELECT 1\r\n        FROM public.community_albums\r\n        JOIN public.properties ON properties.id = community_albums.property_id\r\n        WHERE community_albums.id = community_photos.album_id\r\n          AND properties.landlord_id = (select auth.uid())\r\n    )\r\n);",
           "unwrappedAuthCalls": false
         }
       ],
@@ -2480,28 +2492,28 @@
           "name": "Community post stakeholders can view posts",
           "table": "community_posts",
           "command": "SELECT",
-          "definition": "CREATE POLICY \"Community post stakeholders can view posts\"\nON public.community_posts\nFOR SELECT\nTO authenticated\nUSING (\n    (\n        is_approved = true\n        AND status = 'published'::public.post_status_enum\n        AND (\n            (((select auth.jwt()) -> 'user_metadata'::text) ->> 'role'::text) = 'admin'\n            OR EXISTS (\n                SELECT 1\n                FROM public.properties\n                WHERE properties.id = community_posts.property_id\n                  AND properties.landlord_id = (select auth.uid())\n            )\n            OR EXISTS (\n                SELECT 1\n                FROM public.leases\n                JOIN public.units ON units.id = leases.unit_id\n                WHERE units.property_id = community_posts.property_id\n                  AND leases.tenant_id = (select auth.uid())\n                  AND leases.status = 'active'::public.lease_status\n            )\n        )\n    )\n    OR (\n        author_role = 'tenant'::public.user_role\n        AND is_approved = false\n        AND (\n            author_id = (select auth.uid())\n            OR (((select auth.jwt()) -> 'user_metadata'::text) ->> 'role'::text) = 'admin'\n            OR EXISTS (\n                SELECT 1\n                FROM public.properties\n                WHERE properties.id = community_posts.property_id\n                  AND properties.landlord_id = (select auth.uid())\n            )\n        )\n    )\n);",
+          "definition": "CREATE POLICY \"Community post stakeholders can view posts\"\r\nON public.community_posts\r\nFOR SELECT\r\nTO authenticated\r\nUSING (\r\n    (\r\n        is_approved = true\r\n        AND status = 'published'::public.post_status_enum\r\n        AND (\r\n            (((select auth.jwt()) -> 'user_metadata'::text) ->> 'role'::text) = 'admin'\r\n            OR EXISTS (\r\n                SELECT 1\r\n                FROM public.properties\r\n                WHERE properties.id = community_posts.property_id\r\n                  AND properties.landlord_id = (select auth.uid())\r\n            )\r\n            OR EXISTS (\r\n                SELECT 1\r\n                FROM public.leases\r\n                JOIN public.units ON units.id = leases.unit_id\r\n                WHERE units.property_id = community_posts.property_id\r\n                  AND leases.tenant_id = (select auth.uid())\r\n                  AND leases.status = 'active'::public.lease_status\r\n            )\r\n        )\r\n    )\r\n    OR (\r\n        author_role = 'tenant'::public.user_role\r\n        AND is_approved = false\r\n        AND (\r\n            author_id = (select auth.uid())\r\n            OR (((select auth.jwt()) -> 'user_metadata'::text) ->> 'role'::text) = 'admin'\r\n            OR EXISTS (\r\n                SELECT 1\r\n                FROM public.properties\r\n                WHERE properties.id = community_posts.property_id\r\n                  AND properties.landlord_id = (select auth.uid())\r\n            )\r\n        )\r\n    )\r\n);",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Community members can create posts",
           "table": "community_posts",
           "command": "INSERT",
-          "definition": "CREATE POLICY \"Community members can create posts\"\nON public.community_posts\nFOR INSERT\nTO authenticated\nWITH CHECK (\n    (select auth.role()) = 'authenticated'\n    AND author_id = (select auth.uid())\n    AND (\n        (\n            author_role = 'landlord'::public.user_role\n            AND is_approved = true\n            AND type = ANY (\n                ARRAY[\n                    'announcement'::public.post_type_enum,\n                    'discussion'::public.post_type_enum,\n                    'poll'::public.post_type_enum,\n                    'photo_album'::public.post_type_enum\n                ]\n            )\n            AND (\n                (((select auth.jwt()) -> 'user_metadata'::text) ->> 'role'::text) = 'admin'\n                OR EXISTS (\n                    SELECT 1\n                    FROM public.properties\n                    WHERE properties.id = community_posts.property_id\n                      AND properties.landlord_id = (select auth.uid())\n                )\n            )\n        )\n        OR (\n            author_role = 'tenant'::public.user_role\n            AND type = 'discussion'::public.post_type_enum\n            AND EXISTS (\n                SELECT 1\n                FROM public.leases\n                JOIN public.units ON units.id = leases.unit_id\n                WHERE units.property_id = community_posts.property_id\n                  AND leases.tenant_id = (select auth.uid())\n                  AND leases.status = 'active'::public.lease_status\n            )\n        )\n    )\n);",
+          "definition": "CREATE POLICY \"Community members can create posts\"\r\nON public.community_posts\r\nFOR INSERT\r\nTO authenticated\r\nWITH CHECK (\r\n    (select auth.role()) = 'authenticated'\r\n    AND author_id = (select auth.uid())\r\n    AND (\r\n        (\r\n            author_role = 'landlord'::public.user_role\r\n            AND is_approved = true\r\n            AND type = ANY (\r\n                ARRAY[\r\n                    'announcement'::public.post_type_enum,\r\n                    'discussion'::public.post_type_enum,\r\n                    'poll'::public.post_type_enum,\r\n                    'photo_album'::public.post_type_enum\r\n                ]\r\n            )\r\n            AND (\r\n                (((select auth.jwt()) -> 'user_metadata'::text) ->> 'role'::text) = 'admin'\r\n                OR EXISTS (\r\n                    SELECT 1\r\n                    FROM public.properties\r\n                    WHERE properties.id = community_posts.property_id\r\n                      AND properties.landlord_id = (select auth.uid())\r\n                )\r\n            )\r\n        )\r\n        OR (\r\n            author_role = 'tenant'::public.user_role\r\n            AND type = 'discussion'::public.post_type_enum\r\n            AND EXISTS (\r\n                SELECT 1\r\n                FROM public.leases\r\n                JOIN public.units ON units.id = leases.unit_id\r\n                WHERE units.property_id = community_posts.property_id\r\n                  AND leases.tenant_id = (select auth.uid())\r\n                  AND leases.status = 'active'::public.lease_status\r\n            )\r\n        )\r\n    )\r\n);",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Community post stakeholders can update posts",
           "table": "community_posts",
           "command": "UPDATE",
-          "definition": "CREATE POLICY \"Community post stakeholders can update posts\"\nON public.community_posts\nFOR UPDATE\nTO authenticated\nUSING (\n    author_id = (select auth.uid())\n    OR (\n        author_role = 'tenant'::public.user_role\n        AND (\n            (((select auth.jwt()) -> 'user_metadata'::text) ->> 'role'::text) = 'admin'\n            OR EXISTS (\n                SELECT 1\n                FROM public.properties\n                WHERE properties.id = community_posts.property_id\n                  AND properties.landlord_id = (select auth.uid())\n            )\n        )\n    )\n)\nWITH CHECK (\n    (\n        author_id = (select auth.uid())\n        AND (\n            (author_role <> 'landlord'::public.user_role OR is_approved = true)\n            AND (author_role <> 'tenant'::public.user_role OR is_approved = false)\n        )\n    )\n    OR (\n        author_role = 'tenant'::public.user_role\n        AND (\n            (((select auth.jwt()) -> 'user_metadata'::text) ->> 'role'::text) = 'admin'\n            OR EXISTS (\n                SELECT 1\n                FROM public.properties\n                WHERE properties.id = community_posts.property_id\n                  AND properties.landlord_id = (select auth.uid())\n            )\n        )\n    )\n);",
+          "definition": "CREATE POLICY \"Community post stakeholders can update posts\"\r\nON public.community_posts\r\nFOR UPDATE\r\nTO authenticated\r\nUSING (\r\n    author_id = (select auth.uid())\r\n    OR (\r\n        author_role = 'tenant'::public.user_role\r\n        AND (\r\n            (((select auth.jwt()) -> 'user_metadata'::text) ->> 'role'::text) = 'admin'\r\n            OR EXISTS (\r\n                SELECT 1\r\n                FROM public.properties\r\n                WHERE properties.id = community_posts.property_id\r\n                  AND properties.landlord_id = (select auth.uid())\r\n            )\r\n        )\r\n    )\r\n)\r\nWITH CHECK (\r\n    (\r\n        author_id = (select auth.uid())\r\n        AND (\r\n            (author_role <> 'landlord'::public.user_role OR is_approved = true)\r\n            AND (author_role <> 'tenant'::public.user_role OR is_approved = false)\r\n        )\r\n    )\r\n    OR (\r\n        author_role = 'tenant'::public.user_role\r\n        AND (\r\n            (((select auth.jwt()) -> 'user_metadata'::text) ->> 'role'::text) = 'admin'\r\n            OR EXISTS (\r\n                SELECT 1\r\n                FROM public.properties\r\n                WHERE properties.id = community_posts.property_id\r\n                  AND properties.landlord_id = (select auth.uid())\r\n            )\r\n        )\r\n    )\r\n);",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Community post authors can delete posts",
           "table": "community_posts",
           "command": "DELETE",
-          "definition": "CREATE POLICY \"Community post authors can delete posts\"\nON public.community_posts\nFOR DELETE\nTO authenticated\nUSING (author_id = (select auth.uid()));",
+          "definition": "CREATE POLICY \"Community post authors can delete posts\"\r\nON public.community_posts\r\nFOR DELETE\r\nTO authenticated\r\nUSING (author_id = (select auth.uid()));",
           "unwrappedAuthCalls": false
         }
       ],
@@ -2991,13 +3003,14 @@
           "name": "Conversation participants can view participant records",
           "table": "conversation_participants",
           "command": "SELECT",
-          "definition": "CREATE POLICY \"Conversation participants can view participant records\"\nON public.conversation_participants\nFOR SELECT\nTO authenticated\nUSING (\n    user_id = (select auth.uid())\n    OR EXISTS (\n        SELECT 1\n        FROM public.conversation_participants cp\n        WHERE cp.conversation_id = conversation_participants.conversation_id\n          AND cp.user_id = (select auth.uid())\n    )\n);",
+          "definition": "CREATE POLICY \"Conversation participants can view participant records\"\r\nON public.conversation_participants\r\nFOR SELECT\r\nTO authenticated\r\nUSING (\r\n    user_id = (select auth.uid())\r\n    OR EXISTS (\r\n        SELECT 1\r\n        FROM public.conversation_participants cp\r\n        WHERE cp.conversation_id = conversation_participants.conversation_id\r\n          AND cp.user_id = (select auth.uid())\r\n    )\r\n);",
           "unwrappedAuthCalls": false
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 16,
+      "codeReferenceCount": 17,
       "codeReferenceFiles": [
+        "src/app/api/landlord/unit-messages/route.ts",
         "src/app/api/messages/conversations/[conversationId]/payments/route.ts",
         "src/app/api/messages/conversations/route.ts",
         "src/app/api/messages/users/[targetUserId]/reports/route.ts",
@@ -3064,8 +3077,9 @@
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 6,
+      "codeReferenceCount": 7,
       "codeReferenceFiles": [
+        "src/app/api/landlord/unit-messages/route.ts",
         "src/app/api/messages/conversations/route.ts",
         "src/lib/billing/workflow.ts",
         "src/lib/messages/engine.ts",
@@ -3212,8 +3226,9 @@
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 4,
+      "codeReferenceCount": 5,
       "codeReferenceFiles": [
+        "src/app/api/landlord/units/[id]/history/route.ts",
         "src/lib/services/payment/expense.service.ts"
       ],
       "functionReferences": [],
@@ -3659,21 +3674,21 @@
           "name": "Landlord application owners and admins can view applications",
           "table": "landlord_applications",
           "command": "SELECT",
-          "definition": "CREATE POLICY \"Landlord application owners and admins can view applications\"\nON public.landlord_applications\nFOR SELECT\nTO authenticated\nUSING (\n    profile_id = (select auth.uid())\n    OR EXISTS (\n        SELECT 1\n        FROM public.profiles p\n        WHERE p.id = (select auth.uid())\n          AND p.role = 'admin'::public.user_role\n    )\n);",
+          "definition": "CREATE POLICY \"Landlord application owners and admins can view applications\"\r\nON public.landlord_applications\r\nFOR SELECT\r\nTO authenticated\r\nUSING (\r\n    profile_id = (select auth.uid())\r\n    OR EXISTS (\r\n        SELECT 1\r\n        FROM public.profiles p\r\n        WHERE p.id = (select auth.uid())\r\n          AND p.role = 'admin'::public.user_role\r\n    )\r\n);",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Admins can update landlord applications",
           "table": "landlord_applications",
           "command": "UPDATE",
-          "definition": "CREATE POLICY \"Admins can update landlord applications\"\nON public.landlord_applications\nFOR UPDATE\nTO authenticated\nUSING (\n    EXISTS (\n        SELECT 1\n        FROM public.profiles p\n        WHERE p.id = (select auth.uid())\n          AND p.role = 'admin'::public.user_role\n    )\n)\nWITH CHECK (\n    EXISTS (\n        SELECT 1\n        FROM public.profiles p\n        WHERE p.id = (select auth.uid())\n          AND p.role = 'admin'::public.user_role\n    )\n);",
+          "definition": "CREATE POLICY \"Admins can update landlord applications\"\r\nON public.landlord_applications\r\nFOR UPDATE\r\nTO authenticated\r\nUSING (\r\n    EXISTS (\r\n        SELECT 1\r\n        FROM public.profiles p\r\n        WHERE p.id = (select auth.uid())\r\n          AND p.role = 'admin'::public.user_role\r\n    )\r\n)\r\nWITH CHECK (\r\n    EXISTS (\r\n        SELECT 1\r\n        FROM public.profiles p\r\n        WHERE p.id = (select auth.uid())\r\n          AND p.role = 'admin'::public.user_role\r\n    )\r\n);",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Users can create their own landlord applications",
           "table": "landlord_applications",
           "command": "INSERT",
-          "definition": "CREATE POLICY \"Users can create their own landlord applications\"\nON public.landlord_applications\nFOR INSERT\nTO authenticated\nWITH CHECK (profile_id = (select auth.uid()));",
+          "definition": "CREATE POLICY \"Users can create their own landlord applications\"\r\nON public.landlord_applications\r\nFOR INSERT\r\nTO authenticated\r\nWITH CHECK (profile_id = (select auth.uid()));",
           "unwrappedAuthCalls": false
         }
       ],
@@ -3778,33 +3793,33 @@
           "name": "Owners and admins can view landlord business profiles",
           "table": "landlord_business_profiles",
           "command": "SELECT",
-          "definition": "CREATE POLICY \"Owners and admins can view landlord business profiles\"\nON public.landlord_business_profiles\nFOR SELECT\nTO authenticated\nUSING (\n    profile_id = (select auth.uid())\n    OR (((select auth.jwt()) -> 'user_metadata'::text) ->> 'role'::text) = 'admin'\n);",
+          "definition": "CREATE POLICY \"Owners and admins can view landlord business profiles\"\r\nON public.landlord_business_profiles\r\nFOR SELECT\r\nTO authenticated\r\nUSING (\r\n    profile_id = (select auth.uid())\r\n    OR (((select auth.jwt()) -> 'user_metadata'::text) ->> 'role'::text) = 'admin'\r\n);",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Users can update own landlord business profile",
           "table": "landlord_business_profiles",
           "command": "UPDATE",
-          "definition": "CREATE POLICY \"Users can update own landlord business profile\"\nON public.landlord_business_profiles\nFOR UPDATE\nTO authenticated\nUSING (profile_id = (select auth.uid()))\nWITH CHECK (profile_id = (select auth.uid()));",
+          "definition": "CREATE POLICY \"Users can update own landlord business profile\"\r\nON public.landlord_business_profiles\r\nFOR UPDATE\r\nTO authenticated\r\nUSING (profile_id = (select auth.uid()))\r\nWITH CHECK (profile_id = (select auth.uid()));",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Users can insert own landlord business profile",
           "table": "landlord_business_profiles",
           "command": "INSERT",
-          "definition": "CREATE POLICY \"Users can insert own landlord business profile\"\nON public.landlord_business_profiles\nFOR INSERT\nTO authenticated\nWITH CHECK (profile_id = (select auth.uid()));",
+          "definition": "CREATE POLICY \"Users can insert own landlord business profile\"\r\nON public.landlord_business_profiles\r\nFOR INSERT\r\nTO authenticated\r\nWITH CHECK (profile_id = (select auth.uid()));",
           "unwrappedAuthCalls": false
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 8,
+      "codeReferenceCount": 9,
       "codeReferenceFiles": [
         "src/app/api/auth/landlord-register/route.ts",
         "src/app/api/landlord/documents/route.ts",
         "src/app/api/landlord/onboarding/[token]/route.ts",
+        "src/app/api/landlord/profile/route.ts",
         "src/app/api/profile/permit/route.ts",
         "src/app/landlord/profile/page.tsx",
-        "src/components/landlord/LandlordSettings.tsx",
         "src/context/AuthContext.tsx"
       ],
       "functionReferences": [],
@@ -4088,28 +4103,28 @@
           "name": "Payment destination participants can view destinations",
           "table": "landlord_payment_destinations",
           "command": "SELECT",
-          "definition": "CREATE POLICY \"Payment destination participants can view destinations\"\nON public.landlord_payment_destinations\nFOR SELECT\nTO authenticated\nUSING (\n    landlord_id = (select auth.uid())\n    OR EXISTS (\n        SELECT 1\n        FROM public.leases\n        WHERE leases.landlord_id = landlord_payment_destinations.landlord_id\n          AND leases.tenant_id = (select auth.uid())\n    )\n);",
+          "definition": "CREATE POLICY \"Payment destination participants can view destinations\"\r\nON public.landlord_payment_destinations\r\nFOR SELECT\r\nTO authenticated\r\nUSING (\r\n    landlord_id = (select auth.uid())\r\n    OR EXISTS (\r\n        SELECT 1\r\n        FROM public.leases\r\n        WHERE leases.landlord_id = landlord_payment_destinations.landlord_id\r\n          AND leases.tenant_id = (select auth.uid())\r\n    )\r\n);",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Landlords can insert own payment destinations",
           "table": "landlord_payment_destinations",
           "command": "INSERT",
-          "definition": "CREATE POLICY \"Landlords can insert own payment destinations\"\nON public.landlord_payment_destinations\nFOR INSERT\nTO authenticated\nWITH CHECK (landlord_id = (select auth.uid()));",
+          "definition": "CREATE POLICY \"Landlords can insert own payment destinations\"\r\nON public.landlord_payment_destinations\r\nFOR INSERT\r\nTO authenticated\r\nWITH CHECK (landlord_id = (select auth.uid()));",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Landlords can update own payment destinations",
           "table": "landlord_payment_destinations",
           "command": "UPDATE",
-          "definition": "CREATE POLICY \"Landlords can update own payment destinations\"\nON public.landlord_payment_destinations\nFOR UPDATE\nTO authenticated\nUSING (landlord_id = (select auth.uid()))\nWITH CHECK (landlord_id = (select auth.uid()));",
+          "definition": "CREATE POLICY \"Landlords can update own payment destinations\"\r\nON public.landlord_payment_destinations\r\nFOR UPDATE\r\nTO authenticated\r\nUSING (landlord_id = (select auth.uid()))\r\nWITH CHECK (landlord_id = (select auth.uid()));",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Landlords can delete own payment destinations",
           "table": "landlord_payment_destinations",
           "command": "DELETE",
-          "definition": "CREATE POLICY \"Landlords can delete own payment destinations\"\nON public.landlord_payment_destinations\nFOR DELETE\nTO authenticated\nUSING (landlord_id = (select auth.uid()));",
+          "definition": "CREATE POLICY \"Landlords can delete own payment destinations\"\r\nON public.landlord_payment_destinations\r\nFOR DELETE\r\nTO authenticated\r\nUSING (landlord_id = (select auth.uid()));",
           "unwrappedAuthCalls": false
         }
       ],
@@ -4581,21 +4596,21 @@
           "name": "Review participants can view reviews",
           "table": "landlord_reviews",
           "command": "SELECT",
-          "definition": "CREATE POLICY \"Review participants can view reviews\"\nON public.landlord_reviews\nFOR SELECT\nTO authenticated\nUSING (\n    landlord_id = (select auth.uid())\n    OR tenant_id = (select auth.uid())\n);",
+          "definition": "CREATE POLICY \"Review participants can view reviews\"\r\nON public.landlord_reviews\r\nFOR SELECT\r\nTO authenticated\r\nUSING (\r\n    landlord_id = (select auth.uid())\r\n    OR tenant_id = (select auth.uid())\r\n);",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Tenants can create lease-based landlord reviews",
           "table": "landlord_reviews",
           "command": "INSERT",
-          "definition": "CREATE POLICY \"Tenants can create lease-based landlord reviews\"\nON public.landlord_reviews\nFOR INSERT\nTO authenticated\nWITH CHECK (\n    tenant_id = (select auth.uid())\n    AND EXISTS (\n        SELECT 1\n        FROM public.leases\n        WHERE leases.id = landlord_reviews.lease_id\n          AND leases.tenant_id = (select auth.uid())\n          AND leases.landlord_id = landlord_reviews.landlord_id\n    )\n);",
+          "definition": "CREATE POLICY \"Tenants can create lease-based landlord reviews\"\r\nON public.landlord_reviews\r\nFOR INSERT\r\nTO authenticated\r\nWITH CHECK (\r\n    tenant_id = (select auth.uid())\r\n    AND EXISTS (\r\n        SELECT 1\r\n        FROM public.leases\r\n        WHERE leases.id = landlord_reviews.lease_id\r\n          AND leases.tenant_id = (select auth.uid())\r\n          AND leases.landlord_id = landlord_reviews.landlord_id\r\n    )\r\n);",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Tenants can update own reviews",
           "table": "landlord_reviews",
           "command": "UPDATE",
-          "definition": "CREATE POLICY \"Tenants can update own reviews\"\nON public.landlord_reviews\nFOR UPDATE\nTO authenticated\nUSING (tenant_id = (select auth.uid()))\nWITH CHECK (tenant_id = (select auth.uid()));",
+          "definition": "CREATE POLICY \"Tenants can update own reviews\"\r\nON public.landlord_reviews\r\nFOR UPDATE\r\nTO authenticated\r\nUSING (tenant_id = (select auth.uid()))\r\nWITH CHECK (tenant_id = (select auth.uid()));",
           "unwrappedAuthCalls": false
         }
       ],
@@ -5140,28 +5155,29 @@
           "name": "Lease participants can view leases",
           "table": "leases",
           "command": "SELECT",
-          "definition": "CREATE POLICY \"Lease participants can view leases\"\nON public.leases\nFOR SELECT\nTO authenticated\nUSING (\n    landlord_id = (select auth.uid())\n    OR tenant_id = (select auth.uid())\n);",
+          "definition": "CREATE POLICY \"Lease participants can view leases\"\r\nON public.leases\r\nFOR SELECT\r\nTO authenticated\r\nUSING (\r\n    landlord_id = (select auth.uid())\r\n    OR tenant_id = (select auth.uid())\r\n);",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Lease participants can update leases",
           "table": "leases",
           "command": "UPDATE",
-          "definition": "CREATE POLICY \"Lease participants can update leases\"\nON public.leases\nFOR UPDATE\nTO authenticated\nUSING (\n    landlord_id = (select auth.uid())\n    OR tenant_id = (select auth.uid())\n)\nWITH CHECK (\n    landlord_id = (select auth.uid())\n    OR tenant_id = (select auth.uid())\n);",
+          "definition": "CREATE POLICY \"Lease participants can update leases\"\r\nON public.leases\r\nFOR UPDATE\r\nTO authenticated\r\nUSING (\r\n    landlord_id = (select auth.uid())\r\n    OR tenant_id = (select auth.uid())\r\n)\r\nWITH CHECK (\r\n    landlord_id = (select auth.uid())\r\n    OR tenant_id = (select auth.uid())\r\n);",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Landlords can create leases",
           "table": "leases",
           "command": "INSERT",
-          "definition": "CREATE POLICY \"Landlords can create leases\"\nON public.leases\nFOR INSERT\nTO authenticated\nWITH CHECK (landlord_id = (select auth.uid()));",
+          "definition": "CREATE POLICY \"Landlords can create leases\"\r\nON public.leases\r\nFOR INSERT\r\nTO authenticated\r\nWITH CHECK (landlord_id = (select auth.uid()));",
           "unwrappedAuthCalls": false
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 83,
+      "codeReferenceCount": 90,
       "codeReferenceFiles": [
         "src/app/api/admin/stats/route.ts",
+        "src/app/api/branding/route.ts",
         "src/app/api/landlord/analytics/overview/route.ts",
         "src/app/api/landlord/applications/[applicationId]/actions/__tests__/route.test.ts",
         "src/app/api/landlord/applications/[applicationId]/actions/route.ts",
@@ -5171,8 +5187,11 @@
         "src/app/api/landlord/applications/route.ts",
         "src/app/api/landlord/calendar/events/route.ts",
         "src/app/api/landlord/documents/route.ts",
+        "src/app/api/landlord/export/route.ts",
+        "src/app/api/landlord/invoices/route.ts",
         "src/app/api/landlord/lease/finalize/route.ts",
         "src/app/api/landlord/leases/[leaseId]/sign/route.ts",
+        "src/app/api/landlord/leases/[leaseId]/signing-link/route.ts",
         "src/app/api/landlord/move-out-requests/[id]/approve/route.ts",
         "src/app/api/landlord/move-out-requests/[id]/complete/route.ts",
         "src/app/api/landlord/move-out/[id]/approve/route.ts",
@@ -5186,6 +5205,8 @@
         "src/app/api/landlord/tenants/manual/route.ts",
         "src/app/api/landlord/tenants/route.ts",
         "src/app/api/landlord/unit-map/route.ts",
+        "src/app/api/landlord/unit-messages/route.ts",
+        "src/app/api/landlord/units/[id]/history/route.ts",
         "src/app/api/tenant/dashboard/route.ts",
         "src/app/api/tenant/lease/[id]/renew/route.ts",
         "src/app/api/tenant/lease/move-out/route.ts",
@@ -5519,32 +5540,34 @@
           "name": "Maintenance participants can view requests",
           "table": "maintenance_requests",
           "command": "SELECT",
-          "definition": "CREATE POLICY \"Maintenance participants can view requests\"\nON public.maintenance_requests\nFOR SELECT\nTO authenticated\nUSING (\n    landlord_id = (select auth.uid())\n    OR tenant_id = (select auth.uid())\n);",
+          "definition": "CREATE POLICY \"Maintenance participants can view requests\"\r\nON public.maintenance_requests\r\nFOR SELECT\r\nTO authenticated\r\nUSING (\r\n    landlord_id = (select auth.uid())\r\n    OR tenant_id = (select auth.uid())\r\n);",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Maintenance participants can update requests",
           "table": "maintenance_requests",
           "command": "UPDATE",
-          "definition": "CREATE POLICY \"Maintenance participants can update requests\"\nON public.maintenance_requests\nFOR UPDATE\nTO authenticated\nUSING (\n    landlord_id = (select auth.uid())\n    OR tenant_id = (select auth.uid())\n)\nWITH CHECK (\n    landlord_id = (select auth.uid())\n    OR tenant_id = (select auth.uid())\n);",
+          "definition": "CREATE POLICY \"Maintenance participants can update requests\"\r\nON public.maintenance_requests\r\nFOR UPDATE\r\nTO authenticated\r\nUSING (\r\n    landlord_id = (select auth.uid())\r\n    OR tenant_id = (select auth.uid())\r\n)\r\nWITH CHECK (\r\n    landlord_id = (select auth.uid())\r\n    OR tenant_id = (select auth.uid())\r\n);",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Tenants can create maintenance requests",
           "table": "maintenance_requests",
           "command": "INSERT",
-          "definition": "CREATE POLICY \"Tenants can create maintenance requests\"\nON public.maintenance_requests\nFOR INSERT\nTO authenticated\nWITH CHECK (tenant_id = (select auth.uid()));",
+          "definition": "CREATE POLICY \"Tenants can create maintenance requests\"\r\nON public.maintenance_requests\r\nFOR INSERT\r\nTO authenticated\r\nWITH CHECK (tenant_id = (select auth.uid()));",
           "unwrappedAuthCalls": false
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 16,
+      "codeReferenceCount": 18,
       "codeReferenceFiles": [
         "src/app/api/landlord/analytics/overview/route.ts",
         "src/app/api/landlord/calendar/events/route.ts",
         "src/app/api/landlord/properties/overview/route.ts",
+        "src/app/api/landlord/search/route.ts",
         "src/app/api/landlord/tenants/[id]/activity/route.ts",
         "src/app/api/landlord/unit-map/route.ts",
+        "src/app/api/landlord/units/[id]/history/route.ts",
         "src/context/NotificationContext.tsx",
         "src/lib/services/iris/iris-context.service.ts",
         "src/lib/services/maintenance/maintenance.service.ts",
@@ -6142,30 +6165,31 @@
           "name": "Conversation participants can view messages",
           "table": "messages",
           "command": "SELECT",
-          "definition": "CREATE POLICY \"Conversation participants can view messages\"\nON public.messages\nFOR SELECT\nTO authenticated\nUSING (\n    EXISTS (\n        SELECT 1\n        FROM public.conversation_participants\n        WHERE conversation_participants.conversation_id = messages.conversation_id\n          AND conversation_participants.user_id = (select auth.uid())\n    )\n);",
+          "definition": "CREATE POLICY \"Conversation participants can view messages\"\r\nON public.messages\r\nFOR SELECT\r\nTO authenticated\r\nUSING (\r\n    EXISTS (\r\n        SELECT 1\r\n        FROM public.conversation_participants\r\n        WHERE conversation_participants.conversation_id = messages.conversation_id\r\n          AND conversation_participants.user_id = (select auth.uid())\r\n    )\r\n);",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Participants can send messages",
           "table": "messages",
           "command": "INSERT",
-          "definition": "CREATE POLICY \"Participants can send messages\"\nON public.messages\nFOR INSERT\nTO authenticated\nWITH CHECK (\n    sender_id = (select auth.uid())\n    AND EXISTS (\n        SELECT 1\n        FROM public.conversation_participants\n        WHERE conversation_participants.conversation_id = messages.conversation_id\n          AND conversation_participants.user_id = (select auth.uid())\n    )\n);",
+          "definition": "CREATE POLICY \"Participants can send messages\"\r\nON public.messages\r\nFOR INSERT\r\nTO authenticated\r\nWITH CHECK (\r\n    sender_id = (select auth.uid())\r\n    AND EXISTS (\r\n        SELECT 1\r\n        FROM public.conversation_participants\r\n        WHERE conversation_participants.conversation_id = messages.conversation_id\r\n          AND conversation_participants.user_id = (select auth.uid())\r\n    )\r\n);",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Conversation participants can update messages",
           "table": "messages",
           "command": "UPDATE",
-          "definition": "CREATE POLICY \"Conversation participants can update messages\"\nON public.messages\nFOR UPDATE\nTO authenticated\nUSING (\n    EXISTS (\n        SELECT 1\n        FROM public.conversation_participants\n        WHERE conversation_participants.conversation_id = messages.conversation_id\n          AND conversation_participants.user_id = (select auth.uid())\n    )\n);",
+          "definition": "CREATE POLICY \"Conversation participants can update messages\"\r\nON public.messages\r\nFOR UPDATE\r\nTO authenticated\r\nUSING (\r\n    EXISTS (\r\n        SELECT 1\r\n        FROM public.conversation_participants\r\n        WHERE conversation_participants.conversation_id = messages.conversation_id\r\n          AND conversation_participants.user_id = (select auth.uid())\r\n    )\r\n);",
           "unwrappedAuthCalls": false
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 20,
+      "codeReferenceCount": 23,
       "codeReferenceFiles": [
         "src/app/api/admin/chat-moderation/reports/route.ts",
         "src/app/api/landlord/invoices/[id]/mark-refunded/route.ts",
         "src/app/api/landlord/invoices/[id]/review/route.ts",
+        "src/app/api/landlord/unit-messages/route.ts",
         "src/app/api/messages/conversations/[conversationId]/files/route.ts",
         "src/app/api/messages/conversations/[conversationId]/route.ts",
         "src/app/api/messages/users/[targetUserId]/reports/route.ts",
@@ -6419,21 +6443,21 @@
           "name": "Move-out participants can view requests",
           "table": "move_out_requests",
           "command": "SELECT",
-          "definition": "CREATE POLICY \"Move-out participants can view requests\"\nON public.move_out_requests\nFOR SELECT\nTO authenticated\nUSING (\n    landlord_id = (select auth.uid())\n    OR tenant_id = (select auth.uid())\n);",
+          "definition": "CREATE POLICY \"Move-out participants can view requests\"\r\nON public.move_out_requests\r\nFOR SELECT\r\nTO authenticated\r\nUSING (\r\n    landlord_id = (select auth.uid())\r\n    OR tenant_id = (select auth.uid())\r\n);",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Move-out participants can update requests",
           "table": "move_out_requests",
           "command": "UPDATE",
-          "definition": "CREATE POLICY \"Move-out participants can update requests\"\nON public.move_out_requests\nFOR UPDATE\nTO authenticated\nUSING (\n    landlord_id = (select auth.uid())\n    OR tenant_id = (select auth.uid())\n)\nWITH CHECK (\n    landlord_id = (select auth.uid())\n    OR tenant_id = (select auth.uid())\n);",
+          "definition": "CREATE POLICY \"Move-out participants can update requests\"\r\nON public.move_out_requests\r\nFOR UPDATE\r\nTO authenticated\r\nUSING (\r\n    landlord_id = (select auth.uid())\r\n    OR tenant_id = (select auth.uid())\r\n)\r\nWITH CHECK (\r\n    landlord_id = (select auth.uid())\r\n    OR tenant_id = (select auth.uid())\r\n);",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Tenants can create move-out requests",
           "table": "move_out_requests",
           "command": "INSERT",
-          "definition": "CREATE POLICY \"Tenants can create move-out requests\"\nON public.move_out_requests\nFOR INSERT\nTO authenticated\nWITH CHECK (tenant_id = (select auth.uid()));",
+          "definition": "CREATE POLICY \"Tenants can create move-out requests\"\r\nON public.move_out_requests\r\nFOR INSERT\r\nTO authenticated\r\nWITH CHECK (tenant_id = (select auth.uid()));",
           "unwrappedAuthCalls": false
         }
       ],
@@ -6588,8 +6612,10 @@
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 32,
+      "codeReferenceCount": 35,
       "codeReferenceFiles": [
+        "src/app/api/auth/reset-password/route.ts",
+        "src/app/api/landlord/invoices/route.ts",
         "src/app/api/landlord/leases/[leaseId]/sign/route.ts",
         "src/app/api/landlord/move-out-requests/[id]/approve/route.ts",
         "src/app/api/landlord/move-out-requests/[id]/complete/route.ts",
@@ -6607,6 +6633,7 @@
         "src/app/api/tenant/lease/move-out/route.ts",
         "src/app/api/tenant/leases/[leaseId]/sign/route.ts",
         "src/app/api/tenant/unit-map/route.ts",
+        "src/components/landlord/LandlordSettings.tsx",
         "src/context/NotificationContext.tsx",
         "src/lib/__tests__/lease-renewal.integration.test.ts",
         "src/lib/billing/workflow.ts",
@@ -6767,9 +6794,10 @@
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 7,
+      "codeReferenceCount": 8,
       "codeReferenceFiles": [
         "src/app/api/landlord/applications/[applicationId]/actions/route.ts",
+        "src/app/api/landlord/invoices/route.ts",
         "src/lib/billing/server.ts",
         "src/lib/services/payment/payment.service.ts"
       ],
@@ -6959,14 +6987,14 @@
           "name": "Payment receipt participants can view receipts",
           "table": "payment_receipts",
           "command": "SELECT",
-          "definition": "CREATE POLICY \"Payment receipt participants can view receipts\"\nON public.payment_receipts\nFOR SELECT\nTO authenticated\nUSING (\n    landlord_id = (select auth.uid())\n    OR tenant_id = (select auth.uid())\n);",
+          "definition": "CREATE POLICY \"Payment receipt participants can view receipts\"\r\nON public.payment_receipts\r\nFOR SELECT\r\nTO authenticated\r\nUSING (\r\n    landlord_id = (select auth.uid())\r\n    OR tenant_id = (select auth.uid())\r\n);",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Landlords can insert own payment receipts",
           "table": "payment_receipts",
           "command": "INSERT",
-          "definition": "CREATE POLICY \"Landlords can insert own payment receipts\"\nON public.payment_receipts\nFOR INSERT\nTO authenticated\nWITH CHECK (landlord_id = (select auth.uid()));",
+          "definition": "CREATE POLICY \"Landlords can insert own payment receipts\"\r\nON public.payment_receipts\r\nFOR INSERT\r\nTO authenticated\r\nWITH CHECK (landlord_id = (select auth.uid()));",
           "unwrappedAuthCalls": false
         }
       ],
@@ -7126,8 +7154,9 @@
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 3,
+      "codeReferenceCount": 4,
       "codeReferenceFiles": [
+        "src/app/api/audit-logs/route.ts",
         "src/app/api/landlord/invoices/[id]/review/route.ts",
         "src/lib/billing/workflow.ts"
       ],
@@ -7585,34 +7614,37 @@
           "name": "Payment participants can view payments",
           "table": "payments",
           "command": "SELECT",
-          "definition": "CREATE POLICY \"Payment participants can view payments\"\nON public.payments\nFOR SELECT\nTO authenticated\nUSING (\n    landlord_id = (select auth.uid())\n    OR tenant_id = (select auth.uid())\n);",
+          "definition": "CREATE POLICY \"Payment participants can view payments\"\r\nON public.payments\r\nFOR SELECT\r\nTO authenticated\r\nUSING (\r\n    landlord_id = (select auth.uid())\r\n    OR tenant_id = (select auth.uid())\r\n);",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Payment participants can update payments",
           "table": "payments",
           "command": "UPDATE",
-          "definition": "CREATE POLICY \"Payment participants can update payments\"\nON public.payments\nFOR UPDATE\nTO authenticated\nUSING (\n    landlord_id = (select auth.uid())\n    OR tenant_id = (select auth.uid())\n)\nWITH CHECK (\n    landlord_id = (select auth.uid())\n    OR tenant_id = (select auth.uid())\n);",
+          "definition": "CREATE POLICY \"Payment participants can update payments\"\r\nON public.payments\r\nFOR UPDATE\r\nTO authenticated\r\nUSING (\r\n    landlord_id = (select auth.uid())\r\n    OR tenant_id = (select auth.uid())\r\n)\r\nWITH CHECK (\r\n    landlord_id = (select auth.uid())\r\n    OR tenant_id = (select auth.uid())\r\n);",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Payment participants can create payments",
           "table": "payments",
           "command": "INSERT",
-          "definition": "CREATE POLICY \"Payment participants can create payments\"\nON public.payments\nFOR INSERT\nTO authenticated\nWITH CHECK (\n    landlord_id = (select auth.uid())\n    OR tenant_id = (select auth.uid())\n);",
+          "definition": "CREATE POLICY \"Payment participants can create payments\"\r\nON public.payments\r\nFOR INSERT\r\nTO authenticated\r\nWITH CHECK (\r\n    landlord_id = (select auth.uid())\r\n    OR tenant_id = (select auth.uid())\r\n);",
           "unwrappedAuthCalls": false
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 56,
+      "codeReferenceCount": 60,
       "codeReferenceFiles": [
+        "src/app/api/audit-logs/route.ts",
         "src/app/api/landlord/analytics/overview/route.ts",
         "src/app/api/landlord/applications/[applicationId]/actions/route.ts",
         "src/app/api/landlord/calendar/events/route.ts",
         "src/app/api/landlord/invoices/[id]/mark-refunded/route.ts",
         "src/app/api/landlord/invoices/[id]/reminder/route.ts",
         "src/app/api/landlord/invoices/[id]/review/route.ts",
+        "src/app/api/landlord/invoices/route.ts",
         "src/app/api/landlord/move-out/[id]/inspection/route.ts",
+        "src/app/api/landlord/payments/collect/route.ts",
         "src/app/api/landlord/payments/overview/route.ts",
         "src/app/api/landlord/properties/overview/route.ts",
         "src/app/api/landlord/tenants/[id]/activity/route.ts",
@@ -7739,14 +7771,14 @@
           "name": "Authors can view post stats",
           "table": "post_views",
           "command": "SELECT",
-          "definition": "CREATE POLICY \"Authors can view post stats\"\nON public.post_views\nFOR SELECT\nUSING (\n    EXISTS (\n        SELECT 1\n        FROM public.community_posts\n        WHERE community_posts.id = post_views.post_id\n          AND community_posts.author_id = (select auth.uid())\n    )\n);",
+          "definition": "CREATE POLICY \"Authors can view post stats\"\r\nON public.post_views\r\nFOR SELECT\r\nUSING (\r\n    EXISTS (\r\n        SELECT 1\r\n        FROM public.community_posts\r\n        WHERE community_posts.id = post_views.post_id\r\n          AND community_posts.author_id = (select auth.uid())\r\n    )\r\n);",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Post views insert allowed",
           "table": "post_views",
           "command": "INSERT",
-          "definition": "CREATE POLICY \"Post views insert allowed\"\nON public.post_views\nFOR INSERT\nWITH CHECK ((select auth.role()) = 'authenticated');",
+          "definition": "CREATE POLICY \"Post views insert allowed\"\r\nON public.post_views\r\nFOR INSERT\r\nWITH CHECK ((select auth.role()) = 'authenticated');",
           "unwrappedAuthCalls": false
         }
       ],
@@ -7819,32 +7851,32 @@
           "name": "Owners and admins can view private profiles",
           "table": "profile_private",
           "command": "SELECT",
-          "definition": "CREATE POLICY \"Owners and admins can view private profiles\"\nON public.profile_private\nFOR SELECT\nTO authenticated\nUSING (\n    profile_id = (select auth.uid())\n    OR (((select auth.jwt()) -> 'user_metadata'::text) ->> 'role'::text) = 'admin'\n);",
+          "definition": "CREATE POLICY \"Owners and admins can view private profiles\"\r\nON public.profile_private\r\nFOR SELECT\r\nTO authenticated\r\nUSING (\r\n    profile_id = (select auth.uid())\r\n    OR (((select auth.jwt()) -> 'user_metadata'::text) ->> 'role'::text) = 'admin'\r\n);",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Users can update own private profile",
           "table": "profile_private",
           "command": "UPDATE",
-          "definition": "CREATE POLICY \"Users can update own private profile\"\nON public.profile_private\nFOR UPDATE\nTO authenticated\nUSING (profile_id = (select auth.uid()))\nWITH CHECK (profile_id = (select auth.uid()));",
+          "definition": "CREATE POLICY \"Users can update own private profile\"\r\nON public.profile_private\r\nFOR UPDATE\r\nTO authenticated\r\nUSING (profile_id = (select auth.uid()))\r\nWITH CHECK (profile_id = (select auth.uid()));",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Users can insert own private profile",
           "table": "profile_private",
           "command": "INSERT",
-          "definition": "CREATE POLICY \"Users can insert own private profile\"\nON public.profile_private\nFOR INSERT\nTO authenticated\nWITH CHECK (profile_id = (select auth.uid()));",
+          "definition": "CREATE POLICY \"Users can insert own private profile\"\r\nON public.profile_private\r\nFOR INSERT\r\nTO authenticated\r\nWITH CHECK (profile_id = (select auth.uid()));",
           "unwrappedAuthCalls": false
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 7,
+      "codeReferenceCount": 8,
       "codeReferenceFiles": [
         "src/app/api/auth/landlord-register/route.ts",
         "src/app/api/landlord/onboarding/[token]/route.ts",
+        "src/app/api/landlord/profile/route.ts",
         "src/app/api/landlord/tenants/[id]/profile/route.ts",
         "src/app/api/tenant/profile/route.ts",
-        "src/components/landlord/LandlordSettings.tsx",
         "src/components/tenant/TenantSettings.tsx",
         "src/context/AuthContext.tsx"
       ],
@@ -8114,19 +8146,19 @@
           "name": "Authenticated users can view profiles",
           "table": "profiles",
           "command": "SELECT",
-          "definition": "CREATE POLICY \"Authenticated users can view profiles\"\nON public.profiles\nFOR SELECT\nTO authenticated\nUSING (true);",
+          "definition": "CREATE POLICY \"Authenticated users can view profiles\"\r\nON public.profiles\r\nFOR SELECT\r\nTO authenticated\r\nUSING (true);",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Users can update own profile",
           "table": "profiles",
           "command": "UPDATE",
-          "definition": "CREATE POLICY \"Users can update own profile\"\nON public.profiles\nFOR UPDATE\nTO authenticated\nUSING (id = (select auth.uid()))\nWITH CHECK (id = (select auth.uid()));",
+          "definition": "CREATE POLICY \"Users can update own profile\"\r\nON public.profiles\r\nFOR UPDATE\r\nTO authenticated\r\nUSING (id = (select auth.uid()))\r\nWITH CHECK (id = (select auth.uid()));",
           "unwrappedAuthCalls": false
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 94,
+      "codeReferenceCount": 110,
       "codeReferenceFiles": [
         "src/app/admin/registrations/sync_permit_card.ts",
         "src/app/api/admin/chat-moderation/reports/[reportId]/route.ts",
@@ -8139,7 +8171,12 @@
         "src/app/api/admin/registrations/route.ts",
         "src/app/api/admin/stats/route.ts",
         "src/app/api/admin/users/[id]/route.ts",
+        "src/app/api/auth/forgot-password/route.ts",
         "src/app/api/auth/landlord-register/route.ts",
+        "src/app/api/auth/otp/send/route.ts",
+        "src/app/api/auth/otp/verify/route.ts",
+        "src/app/api/auth/reset-password/route.ts",
+        "src/app/api/branding/route.ts",
         "src/app/api/cron/monthly-invoices/route.ts",
         "src/app/api/landlord/2fa/route.ts",
         "src/app/api/landlord/applications/[applicationId]/actions/route.ts",
@@ -8155,13 +8192,16 @@
         "src/app/api/landlord/move-out/__tests__/landlord-move-out.test.ts",
         "src/app/api/landlord/onboarding/[token]/route.ts",
         "src/app/api/landlord/payments/overview/route.ts",
+        "src/app/api/landlord/profile/route.ts",
         "src/app/api/landlord/tenants/[id]/profile/route.ts",
         "src/app/api/landlord/tenants/manual/route.ts",
         "src/app/api/landlord/tenants/route.ts",
         "src/app/api/landlord/tour/route.ts",
+        "src/app/api/landlord/unit-messages/route.ts",
         "src/app/api/messages/users/route.ts",
         "src/app/api/profile/avatar/route.ts",
         "src/app/api/profile/cover/route.ts",
+        "src/app/api/setup/launch/route.ts",
         "src/app/api/tenant/dashboard/route.ts",
         "src/app/api/tenant/leases/[leaseId]/sign/route.ts",
         "src/app/api/tenant/payments/[id]/refund-info/route.ts",
@@ -8169,6 +8209,7 @@
         "src/app/api/tenant/tour/helpers.ts",
         "src/app/api/tenant/tour/route.ts",
         "src/app/auth/callback/route.ts",
+        "src/app/auth/reset-password/page.tsx",
         "src/app/landlord/profile/page.tsx",
         "src/app/login/page.tsx",
         "src/app/tenant/profile/page.tsx",
@@ -8483,27 +8524,35 @@
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 71,
+      "codeReferenceCount": 91,
       "codeReferenceFiles": [
         "src/app/api/admin/stats/route.ts",
+        "src/app/api/branding/route.ts",
         "src/app/api/invites/[token]/route.ts",
+        "src/app/api/invites/resolve/route.ts",
         "src/app/api/landlord/analytics/overview/route.ts",
         "src/app/api/landlord/applications/route.ts",
         "src/app/api/landlord/applications/tenant-application/route.ts",
         "src/app/api/landlord/applications/walk-in/route.ts",
         "src/app/api/landlord/documents/route.ts",
+        "src/app/api/landlord/export/route.ts",
+        "src/app/api/landlord/flyer-template/route.ts",
         "src/app/api/landlord/inquiries/recent/route.ts",
         "src/app/api/landlord/invites/route.ts",
         "src/app/api/landlord/onboarding/[token]/route.ts",
         "src/app/api/landlord/payments/overview/route.ts",
         "src/app/api/landlord/properties/[id]/renewal-settings/route.ts",
+        "src/app/api/landlord/properties/[id]/route.ts",
         "src/app/api/landlord/properties/media/route.ts",
         "src/app/api/landlord/properties/overview/route.ts",
+        "src/app/api/landlord/properties/route.ts",
         "src/app/api/landlord/search/route.ts",
         "src/app/api/landlord/tenants/route.ts",
+        "src/app/api/landlord/unit-map/batch-rename/route.ts",
         "src/app/api/landlord/unit-map/floor-configs/route.ts",
         "src/app/api/landlord/unit-map/route.ts",
         "src/app/api/landlord/unit-map/units/[unitId]/floor/route.ts",
+        "src/app/api/setup/launch/route.ts",
         "src/app/landlord/profile/page.tsx",
         "src/app/landlord/properties/[id]/environment/page.tsx",
         "src/app/landlord/properties/new/page.tsx",
@@ -8727,33 +8776,34 @@
           "name": "Environment policy stakeholders can select policies",
           "table": "property_environment_policies",
           "command": "SELECT",
-          "definition": "CREATE POLICY \"Environment policy stakeholders can select policies\"\nON public.property_environment_policies\nFOR SELECT\nTO authenticated\nUSING (\n    EXISTS (\n        SELECT 1\n        FROM public.properties p\n        WHERE p.id = property_environment_policies.property_id\n          AND p.landlord_id = (select auth.uid())\n    )\n    OR EXISTS (\n        SELECT 1\n        FROM public.leases l\n        JOIN public.units u ON u.id = l.unit_id\n        WHERE u.property_id = property_environment_policies.property_id\n          AND l.tenant_id = (select auth.uid())\n          AND l.status = 'active'::public.lease_status\n    )\n);",
+          "definition": "CREATE POLICY \"Environment policy stakeholders can select policies\"\r\nON public.property_environment_policies\r\nFOR SELECT\r\nTO authenticated\r\nUSING (\r\n    EXISTS (\r\n        SELECT 1\r\n        FROM public.properties p\r\n        WHERE p.id = property_environment_policies.property_id\r\n          AND p.landlord_id = (select auth.uid())\r\n    )\r\n    OR EXISTS (\r\n        SELECT 1\r\n        FROM public.leases l\r\n        JOIN public.units u ON u.id = l.unit_id\r\n        WHERE u.property_id = property_environment_policies.property_id\r\n          AND l.tenant_id = (select auth.uid())\r\n          AND l.status = 'active'::public.lease_status\r\n    )\r\n);",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Landlords can insert their own property policies",
           "table": "property_environment_policies",
           "command": "INSERT",
-          "definition": "CREATE POLICY \"Landlords can insert their own property policies\"\nON public.property_environment_policies\nFOR INSERT\nTO authenticated\nWITH CHECK (\n    EXISTS (\n        SELECT 1\n        FROM public.properties p\n        WHERE p.id = property_environment_policies.property_id\n          AND p.landlord_id = (select auth.uid())\n    )\n);",
+          "definition": "CREATE POLICY \"Landlords can insert their own property policies\"\r\nON public.property_environment_policies\r\nFOR INSERT\r\nTO authenticated\r\nWITH CHECK (\r\n    EXISTS (\r\n        SELECT 1\r\n        FROM public.properties p\r\n        WHERE p.id = property_environment_policies.property_id\r\n          AND p.landlord_id = (select auth.uid())\r\n    )\r\n);",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Landlords can update their own property policies",
           "table": "property_environment_policies",
           "command": "UPDATE",
-          "definition": "CREATE POLICY \"Landlords can update their own property policies\"\nON public.property_environment_policies\nFOR UPDATE\nTO authenticated\nUSING (\n    EXISTS (\n        SELECT 1\n        FROM public.properties p\n        WHERE p.id = property_environment_policies.property_id\n          AND p.landlord_id = (select auth.uid())\n    )\n)\nWITH CHECK (\n    EXISTS (\n        SELECT 1\n        FROM public.properties p\n        WHERE p.id = property_environment_policies.property_id\n          AND p.landlord_id = (select auth.uid())\n    )\n);",
+          "definition": "CREATE POLICY \"Landlords can update their own property policies\"\r\nON public.property_environment_policies\r\nFOR UPDATE\r\nTO authenticated\r\nUSING (\r\n    EXISTS (\r\n        SELECT 1\r\n        FROM public.properties p\r\n        WHERE p.id = property_environment_policies.property_id\r\n          AND p.landlord_id = (select auth.uid())\r\n    )\r\n)\r\nWITH CHECK (\r\n    EXISTS (\r\n        SELECT 1\r\n        FROM public.properties p\r\n        WHERE p.id = property_environment_policies.property_id\r\n          AND p.landlord_id = (select auth.uid())\r\n    )\r\n);",
           "unwrappedAuthCalls": false
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 8,
+      "codeReferenceCount": 9,
       "codeReferenceFiles": [
         "src/app/api/landlord/applications/walk-in/route.ts",
         "src/app/api/landlord/lease/finalize/route.ts",
         "src/app/api/landlord/onboarding/[token]/route.ts",
+        "src/app/api/landlord/properties/[id]/route.ts",
         "src/app/api/landlord/properties/overview/route.ts",
+        "src/app/api/landlord/properties/route.ts",
         "src/app/landlord/properties/[id]/environment/page.tsx",
-        "src/app/landlord/properties/new/page.tsx",
         "src/lib/services/property/property.service.ts"
       ],
       "functionReferences": [],
@@ -8885,9 +8935,11 @@
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 16,
+      "codeReferenceCount": 20,
       "codeReferenceFiles": [
         "src/app/api/landlord/onboarding/[token]/route.ts",
+        "src/app/api/landlord/properties/[id]/route.ts",
+        "src/app/api/landlord/properties/route.ts",
         "src/app/api/landlord/unit-map/floor-configs/route.ts",
         "src/app/api/landlord/unit-map/route.ts",
         "src/app/api/tenant/unit-map/route.ts"
@@ -9105,35 +9157,35 @@
           "name": "Landlords can view renewal requests for their properties",
           "table": "renewal_requests",
           "command": "SELECT",
-          "definition": "CREATE POLICY \"Landlords can view renewal requests for their properties\"\nON public.renewal_requests\nFOR SELECT\nTO authenticated\nUSING (landlord_id = (select auth.uid()));",
+          "definition": "CREATE POLICY \"Landlords can view renewal requests for their properties\"\r\nON public.renewal_requests\r\nFOR SELECT\r\nTO authenticated\r\nUSING (landlord_id = (select auth.uid()));",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Landlords can update renewal requests for their properties",
           "table": "renewal_requests",
           "command": "UPDATE",
-          "definition": "CREATE POLICY \"Landlords can update renewal requests for their properties\"\nON public.renewal_requests\nFOR UPDATE\nTO authenticated\nUSING (landlord_id = (select auth.uid()))\nWITH CHECK (landlord_id = (select auth.uid()));",
+          "definition": "CREATE POLICY \"Landlords can update renewal requests for their properties\"\r\nON public.renewal_requests\r\nFOR UPDATE\r\nTO authenticated\r\nUSING (landlord_id = (select auth.uid()))\r\nWITH CHECK (landlord_id = (select auth.uid()));",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Landlords can insert renewal requests",
           "table": "renewal_requests",
           "command": "INSERT",
-          "definition": "CREATE POLICY \"Landlords can insert renewal requests\"\nON public.renewal_requests\nFOR INSERT\nTO authenticated\nWITH CHECK (landlord_id = (select auth.uid()));",
+          "definition": "CREATE POLICY \"Landlords can insert renewal requests\"\r\nON public.renewal_requests\r\nFOR INSERT\r\nTO authenticated\r\nWITH CHECK (landlord_id = (select auth.uid()));",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Tenants can view own renewal requests",
           "table": "renewal_requests",
           "command": "SELECT",
-          "definition": "CREATE POLICY \"Tenants can view own renewal requests\"\nON public.renewal_requests\nFOR SELECT\nTO authenticated\nUSING (tenant_id = (select auth.uid()));",
+          "definition": "CREATE POLICY \"Tenants can view own renewal requests\"\r\nON public.renewal_requests\r\nFOR SELECT\r\nTO authenticated\r\nUSING (tenant_id = (select auth.uid()));",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Tenants can insert own renewal requests",
           "table": "renewal_requests",
           "command": "INSERT",
-          "definition": "CREATE POLICY \"Tenants can insert own renewal requests\"\nON public.renewal_requests\nFOR INSERT\nTO authenticated\nWITH CHECK (tenant_id = (select auth.uid()));",
+          "definition": "CREATE POLICY \"Tenants can insert own renewal requests\"\r\nON public.renewal_requests\r\nFOR INSERT\r\nTO authenticated\r\nWITH CHECK (tenant_id = (select auth.uid()));",
           "unwrappedAuthCalls": false
         }
       ],
@@ -9341,7 +9393,7 @@
           "name": "Landlords can view invite events for their invites",
           "table": "tenant_intake_invite_events",
           "command": "SELECT",
-          "definition": "CREATE POLICY \"Landlords can view invite events for their invites\"\nON public.tenant_intake_invite_events\nFOR SELECT\nTO authenticated\nUSING (\n    EXISTS (\n        SELECT 1 FROM public.tenant_intake_invites\n        WHERE tenant_intake_invites.id = tenant_intake_invite_events.invite_id\n          AND tenant_intake_invites.landlord_id = (select auth.uid())\n    )\n);",
+          "definition": "CREATE POLICY \"Landlords can view invite events for their invites\"\r\nON public.tenant_intake_invite_events\r\nFOR SELECT\r\nTO authenticated\r\nUSING (\r\n    EXISTS (\r\n        SELECT 1 FROM public.tenant_intake_invites\r\n        WHERE tenant_intake_invites.id = tenant_intake_invite_events.invite_id\r\n          AND tenant_intake_invites.landlord_id = (select auth.uid())\r\n    )\r\n);",
           "unwrappedAuthCalls": false
         }
       ],
@@ -9573,36 +9625,37 @@
           "name": "Landlords can view own invites",
           "table": "tenant_intake_invites",
           "command": "SELECT",
-          "definition": "CREATE POLICY \"Landlords can view own invites\"\nON public.tenant_intake_invites\nFOR SELECT\nTO authenticated\nUSING (landlord_id = (select auth.uid()));",
+          "definition": "CREATE POLICY \"Landlords can view own invites\"\r\nON public.tenant_intake_invites\r\nFOR SELECT\r\nTO authenticated\r\nUSING (landlord_id = (select auth.uid()));",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Landlords can insert own invites",
           "table": "tenant_intake_invites",
           "command": "INSERT",
-          "definition": "CREATE POLICY \"Landlords can insert own invites\"\nON public.tenant_intake_invites\nFOR INSERT\nTO authenticated\nWITH CHECK (landlord_id = (select auth.uid()));",
+          "definition": "CREATE POLICY \"Landlords can insert own invites\"\r\nON public.tenant_intake_invites\r\nFOR INSERT\r\nTO authenticated\r\nWITH CHECK (landlord_id = (select auth.uid()));",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Landlords can update own invites",
           "table": "tenant_intake_invites",
           "command": "UPDATE",
-          "definition": "CREATE POLICY \"Landlords can update own invites\"\nON public.tenant_intake_invites\nFOR UPDATE\nTO authenticated\nUSING (landlord_id = (select auth.uid()))\nWITH CHECK (landlord_id = (select auth.uid()));",
+          "definition": "CREATE POLICY \"Landlords can update own invites\"\r\nON public.tenant_intake_invites\r\nFOR UPDATE\r\nTO authenticated\r\nUSING (landlord_id = (select auth.uid()))\r\nWITH CHECK (landlord_id = (select auth.uid()));",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Tenants can view invites assigned to them",
           "table": "tenant_intake_invites",
           "command": "SELECT",
-          "definition": "CREATE POLICY \"Tenants can view invites assigned to them\"\nON public.tenant_intake_invites\nFOR SELECT\nTO authenticated\nUSING (tenant_id = (select auth.uid()));",
+          "definition": "CREATE POLICY \"Tenants can view invites assigned to them\"\r\nON public.tenant_intake_invites\r\nFOR SELECT\r\nTO authenticated\r\nUSING (tenant_id = (select auth.uid()));",
           "unwrappedAuthCalls": false
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 8,
+      "codeReferenceCount": 11,
       "codeReferenceFiles": [
         "src/app/api/invites/[token]/documents/route.ts",
         "src/app/api/invites/[token]/route.ts",
+        "src/app/api/invites/resolve/route.ts",
         "src/app/api/landlord/invites/[id]/route.ts",
         "src/app/api/landlord/invites/route.ts"
       ],
@@ -9730,14 +9783,14 @@
           "name": "Tenant tour event stakeholders can view events",
           "table": "tenant_product_tour_events",
           "command": "SELECT",
-          "definition": "CREATE POLICY \"Tenant tour event stakeholders can view events\"\nON public.tenant_product_tour_events\nFOR SELECT\nTO authenticated\nUSING (\n    tenant_id = (select auth.uid())\n    OR (((select auth.jwt()) -> 'user_metadata'::text) ->> 'role'::text) = 'admin'\n    OR EXISTS (\n        SELECT 1\n        FROM public.leases\n        WHERE leases.tenant_id = tenant_product_tour_events.tenant_id\n          AND leases.landlord_id = (select auth.uid())\n    )\n);",
+          "definition": "CREATE POLICY \"Tenant tour event stakeholders can view events\"\r\nON public.tenant_product_tour_events\r\nFOR SELECT\r\nTO authenticated\r\nUSING (\r\n    tenant_id = (select auth.uid())\r\n    OR (((select auth.jwt()) -> 'user_metadata'::text) ->> 'role'::text) = 'admin'\r\n    OR EXISTS (\r\n        SELECT 1\r\n        FROM public.leases\r\n        WHERE leases.tenant_id = tenant_product_tour_events.tenant_id\r\n          AND leases.landlord_id = (select auth.uid())\r\n    )\r\n);",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Tenants can insert own product tour events",
           "table": "tenant_product_tour_events",
           "command": "INSERT",
-          "definition": "CREATE POLICY \"Tenants can insert own product tour events\"\nON public.tenant_product_tour_events\nFOR INSERT\nTO authenticated\nWITH CHECK (tenant_id = (select auth.uid()));",
+          "definition": "CREATE POLICY \"Tenants can insert own product tour events\"\r\nON public.tenant_product_tour_events\r\nFOR INSERT\r\nTO authenticated\r\nWITH CHECK (tenant_id = (select auth.uid()));",
           "unwrappedAuthCalls": false
         }
       ],
@@ -9915,21 +9968,21 @@
           "name": "Tenant tour state stakeholders can view states",
           "table": "tenant_product_tour_states",
           "command": "SELECT",
-          "definition": "CREATE POLICY \"Tenant tour state stakeholders can view states\"\nON public.tenant_product_tour_states\nFOR SELECT\nTO authenticated\nUSING (\n    tenant_id = (select auth.uid())\n    OR (((select auth.jwt()) -> 'user_metadata'::text) ->> 'role'::text) = 'admin'\n    OR EXISTS (\n        SELECT 1\n        FROM public.leases\n        WHERE leases.tenant_id = tenant_product_tour_states.tenant_id\n          AND leases.landlord_id = (select auth.uid())\n    )\n);",
+          "definition": "CREATE POLICY \"Tenant tour state stakeholders can view states\"\r\nON public.tenant_product_tour_states\r\nFOR SELECT\r\nTO authenticated\r\nUSING (\r\n    tenant_id = (select auth.uid())\r\n    OR (((select auth.jwt()) -> 'user_metadata'::text) ->> 'role'::text) = 'admin'\r\n    OR EXISTS (\r\n        SELECT 1\r\n        FROM public.leases\r\n        WHERE leases.tenant_id = tenant_product_tour_states.tenant_id\r\n          AND leases.landlord_id = (select auth.uid())\r\n    )\r\n);",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Tenants can create own product tour state",
           "table": "tenant_product_tour_states",
           "command": "INSERT",
-          "definition": "CREATE POLICY \"Tenants can create own product tour state\"\nON public.tenant_product_tour_states\nFOR INSERT\nTO authenticated\nWITH CHECK (tenant_id = (select auth.uid()));",
+          "definition": "CREATE POLICY \"Tenants can create own product tour state\"\r\nON public.tenant_product_tour_states\r\nFOR INSERT\r\nTO authenticated\r\nWITH CHECK (tenant_id = (select auth.uid()));",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Tenants can update own product tour state",
           "table": "tenant_product_tour_states",
           "command": "UPDATE",
-          "definition": "CREATE POLICY \"Tenants can update own product tour state\"\nON public.tenant_product_tour_states\nFOR UPDATE\nTO authenticated\nUSING (tenant_id = (select auth.uid()))\nWITH CHECK (tenant_id = (select auth.uid()));",
+          "definition": "CREATE POLICY \"Tenants can update own product tour state\"\r\nON public.tenant_product_tour_states\r\nFOR UPDATE\r\nTO authenticated\r\nUSING (tenant_id = (select auth.uid()))\r\nWITH CHECK (tenant_id = (select auth.uid()));",
           "unwrappedAuthCalls": false
         }
       ],
@@ -10079,21 +10132,21 @@
           "name": "Environment override stakeholders can select overrides",
           "table": "unit_environment_overrides",
           "command": "SELECT",
-          "definition": "CREATE POLICY \"Environment override stakeholders can select overrides\"\nON public.unit_environment_overrides\nFOR SELECT\nTO authenticated\nUSING (\n    EXISTS (\n        SELECT 1\n        FROM public.units u\n        JOIN public.properties p ON p.id = u.property_id\n        WHERE u.id = unit_environment_overrides.unit_id\n          AND p.landlord_id = (select auth.uid())\n    )\n    OR EXISTS (\n        SELECT 1\n        FROM public.leases l\n        WHERE l.unit_id = unit_environment_overrides.unit_id\n          AND l.tenant_id = (select auth.uid())\n          AND l.status = 'active'::public.lease_status\n    )\n);",
+          "definition": "CREATE POLICY \"Environment override stakeholders can select overrides\"\r\nON public.unit_environment_overrides\r\nFOR SELECT\r\nTO authenticated\r\nUSING (\r\n    EXISTS (\r\n        SELECT 1\r\n        FROM public.units u\r\n        JOIN public.properties p ON p.id = u.property_id\r\n        WHERE u.id = unit_environment_overrides.unit_id\r\n          AND p.landlord_id = (select auth.uid())\r\n    )\r\n    OR EXISTS (\r\n        SELECT 1\r\n        FROM public.leases l\r\n        WHERE l.unit_id = unit_environment_overrides.unit_id\r\n          AND l.tenant_id = (select auth.uid())\r\n          AND l.status = 'active'::public.lease_status\r\n    )\r\n);",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Landlords can insert their own unit overrides",
           "table": "unit_environment_overrides",
           "command": "INSERT",
-          "definition": "CREATE POLICY \"Landlords can insert their own unit overrides\"\nON public.unit_environment_overrides\nFOR INSERT\nTO authenticated\nWITH CHECK (\n    EXISTS (\n        SELECT 1\n        FROM public.units u\n        JOIN public.properties p ON p.id = u.property_id\n        WHERE u.id = unit_environment_overrides.unit_id\n          AND p.landlord_id = (select auth.uid())\n    )\n);",
+          "definition": "CREATE POLICY \"Landlords can insert their own unit overrides\"\r\nON public.unit_environment_overrides\r\nFOR INSERT\r\nTO authenticated\r\nWITH CHECK (\r\n    EXISTS (\r\n        SELECT 1\r\n        FROM public.units u\r\n        JOIN public.properties p ON p.id = u.property_id\r\n        WHERE u.id = unit_environment_overrides.unit_id\r\n          AND p.landlord_id = (select auth.uid())\r\n    )\r\n);",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Landlords can update their own unit overrides",
           "table": "unit_environment_overrides",
           "command": "UPDATE",
-          "definition": "CREATE POLICY \"Landlords can update their own unit overrides\"\nON public.unit_environment_overrides\nFOR UPDATE\nTO authenticated\nUSING (\n    EXISTS (\n        SELECT 1\n        FROM public.units u\n        JOIN public.properties p ON p.id = u.property_id\n        WHERE u.id = unit_environment_overrides.unit_id\n          AND p.landlord_id = (select auth.uid())\n    )\n)\nWITH CHECK (\n    EXISTS (\n        SELECT 1\n        FROM public.units u\n        JOIN public.properties p ON p.id = u.property_id\n        WHERE u.id = unit_environment_overrides.unit_id\n          AND p.landlord_id = (select auth.uid())\n    )\n);",
+          "definition": "CREATE POLICY \"Landlords can update their own unit overrides\"\r\nON public.unit_environment_overrides\r\nFOR UPDATE\r\nTO authenticated\r\nUSING (\r\n    EXISTS (\r\n        SELECT 1\r\n        FROM public.units u\r\n        JOIN public.properties p ON p.id = u.property_id\r\n        WHERE u.id = unit_environment_overrides.unit_id\r\n          AND p.landlord_id = (select auth.uid())\r\n    )\r\n)\r\nWITH CHECK (\r\n    EXISTS (\r\n        SELECT 1\r\n        FROM public.units u\r\n        JOIN public.properties p ON p.id = u.property_id\r\n        WHERE u.id = unit_environment_overrides.unit_id\r\n          AND p.landlord_id = (select auth.uid())\r\n    )\r\n);",
           "unwrappedAuthCalls": false
         }
       ],
@@ -10422,21 +10475,21 @@
           "name": "Transfer request participants can view requests",
           "table": "unit_transfer_requests",
           "command": "SELECT",
-          "definition": "CREATE POLICY \"Transfer request participants can view requests\"\nON public.unit_transfer_requests\nFOR SELECT\nTO authenticated\nUSING (\n    landlord_id = (select auth.uid())\n    OR tenant_id = (select auth.uid())\n);",
+          "definition": "CREATE POLICY \"Transfer request participants can view requests\"\r\nON public.unit_transfer_requests\r\nFOR SELECT\r\nTO authenticated\r\nUSING (\r\n    landlord_id = (select auth.uid())\r\n    OR tenant_id = (select auth.uid())\r\n);",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Landlords can update transfer requests",
           "table": "unit_transfer_requests",
           "command": "UPDATE",
-          "definition": "CREATE POLICY \"Landlords can update transfer requests\"\nON public.unit_transfer_requests\nFOR UPDATE\nTO authenticated\nUSING (landlord_id = (select auth.uid()))\nWITH CHECK (landlord_id = (select auth.uid()));",
+          "definition": "CREATE POLICY \"Landlords can update transfer requests\"\r\nON public.unit_transfer_requests\r\nFOR UPDATE\r\nTO authenticated\r\nUSING (landlord_id = (select auth.uid()))\r\nWITH CHECK (landlord_id = (select auth.uid()));",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Tenants can create transfer requests",
           "table": "unit_transfer_requests",
           "command": "INSERT",
-          "definition": "CREATE POLICY \"Tenants can create transfer requests\"\nON public.unit_transfer_requests\nFOR INSERT\nTO authenticated\nWITH CHECK (\n    tenant_id = (select auth.uid())\n    AND EXISTS (\n        SELECT 1\n        FROM public.leases l\n        JOIN public.units current_u ON current_u.id = l.unit_id\n        JOIN public.units requested_u ON requested_u.id = unit_transfer_requests.requested_unit_id\n        WHERE l.id = unit_transfer_requests.lease_id\n          AND l.tenant_id = (select auth.uid())\n          AND l.landlord_id = unit_transfer_requests.landlord_id\n          AND l.status = 'active'::public.lease_status\n          AND current_u.id = unit_transfer_requests.current_unit_id\n          AND current_u.property_id = requested_u.property_id\n    )\n);",
+          "definition": "CREATE POLICY \"Tenants can create transfer requests\"\r\nON public.unit_transfer_requests\r\nFOR INSERT\r\nTO authenticated\r\nWITH CHECK (\r\n    tenant_id = (select auth.uid())\r\n    AND EXISTS (\r\n        SELECT 1\r\n        FROM public.leases l\r\n        JOIN public.units current_u ON current_u.id = l.unit_id\r\n        JOIN public.units requested_u ON requested_u.id = unit_transfer_requests.requested_unit_id\r\n        WHERE l.id = unit_transfer_requests.lease_id\r\n          AND l.tenant_id = (select auth.uid())\r\n          AND l.landlord_id = unit_transfer_requests.landlord_id\r\n          AND l.status = 'active'::public.lease_status\r\n          AND current_u.id = unit_transfer_requests.current_unit_id\r\n          AND current_u.property_id = requested_u.property_id\r\n    )\r\n);",
           "unwrappedAuthCalls": false
         }
       ],
@@ -10610,13 +10663,15 @@
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 53,
+      "codeReferenceCount": 65,
       "codeReferenceFiles": [
         "src/app/api/invites/[token]/route.ts",
+        "src/app/api/invites/resolve/route.ts",
         "src/app/api/landlord/analytics/overview/route.ts",
         "src/app/api/landlord/applications/route.ts",
         "src/app/api/landlord/applications/tenant-application/route.ts",
         "src/app/api/landlord/applications/walk-in/route.ts",
+        "src/app/api/landlord/export/route.ts",
         "src/app/api/landlord/inquiries/recent/route.ts",
         "src/app/api/landlord/invites/route.ts",
         "src/app/api/landlord/lease/finalize/route.ts",
@@ -10624,12 +10679,17 @@
         "src/app/api/landlord/move-out/[id]/complete/route.ts",
         "src/app/api/landlord/onboarding/[token]/route.ts",
         "src/app/api/landlord/payments/overview/route.ts",
+        "src/app/api/landlord/properties/[id]/route.ts",
         "src/app/api/landlord/properties/overview/route.ts",
+        "src/app/api/landlord/properties/route.ts",
+        "src/app/api/landlord/search/route.ts",
         "src/app/api/landlord/tenants/manual/route.ts",
         "src/app/api/landlord/tenants/route.ts",
+        "src/app/api/landlord/unit-map/batch-rename/route.ts",
         "src/app/api/landlord/unit-map/floor-configs/route.ts",
         "src/app/api/landlord/unit-map/route.ts",
         "src/app/api/landlord/unit-map/units/[unitId]/floor/route.ts",
+        "src/app/api/landlord/units/[id]/history/route.ts",
         "src/app/api/landlord/units/[id]/status/route.ts",
         "src/app/api/tenant/unit-map/route.ts",
         "src/app/landlord/profile/page.tsx",
@@ -10735,12 +10795,16 @@
       },
       "policies": [],
       "rlsEnabled": true,
-      "codeReferenceCount": 6,
+      "codeReferenceCount": 10,
       "codeReferenceFiles": [
+        "src/app/api/auth/otp/send/route.ts",
+        "src/app/api/auth/otp/verify/route.ts",
+        "src/app/api/auth/reset-password/route.ts",
         "src/app/api/landlord/2fa/callback/route.ts",
         "src/app/api/landlord/2fa/route.ts",
         "src/app/api/landlord/applications/[applicationId]/resend-credentials/route.ts",
-        "src/app/api/tenant/profile/route.ts"
+        "src/app/api/tenant/profile/route.ts",
+        "src/components/landlord/LandlordSettings.tsx"
       ],
       "functionReferences": [],
       "riskSignals": [
@@ -10924,33 +10988,33 @@
           "name": "Utility config stakeholders can view configs",
           "table": "utility_configs",
           "command": "SELECT",
-          "definition": "CREATE POLICY \"Utility config stakeholders can view configs\"\nON public.utility_configs\nFOR SELECT\nTO authenticated\nUSING (\n    landlord_id = (select auth.uid())\n    OR EXISTS (\n        SELECT 1\n        FROM public.leases\n        JOIN public.units ON units.id = leases.unit_id\n        WHERE leases.tenant_id = (select auth.uid())\n          AND units.property_id = utility_configs.property_id\n          AND (utility_configs.unit_id IS NULL OR utility_configs.unit_id = leases.unit_id)\n    )\n);",
+          "definition": "CREATE POLICY \"Utility config stakeholders can view configs\"\r\nON public.utility_configs\r\nFOR SELECT\r\nTO authenticated\r\nUSING (\r\n    landlord_id = (select auth.uid())\r\n    OR EXISTS (\r\n        SELECT 1\r\n        FROM public.leases\r\n        JOIN public.units ON units.id = leases.unit_id\r\n        WHERE leases.tenant_id = (select auth.uid())\r\n          AND units.property_id = utility_configs.property_id\r\n          AND (utility_configs.unit_id IS NULL OR utility_configs.unit_id = leases.unit_id)\r\n    )\r\n);",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Landlords can insert own utility configs",
           "table": "utility_configs",
           "command": "INSERT",
-          "definition": "CREATE POLICY \"Landlords can insert own utility configs\"\nON public.utility_configs\nFOR INSERT\nTO authenticated\nWITH CHECK (landlord_id = (select auth.uid()));",
+          "definition": "CREATE POLICY \"Landlords can insert own utility configs\"\r\nON public.utility_configs\r\nFOR INSERT\r\nTO authenticated\r\nWITH CHECK (landlord_id = (select auth.uid()));",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Landlords can update own utility configs",
           "table": "utility_configs",
           "command": "UPDATE",
-          "definition": "CREATE POLICY \"Landlords can update own utility configs\"\nON public.utility_configs\nFOR UPDATE\nTO authenticated\nUSING (landlord_id = (select auth.uid()))\nWITH CHECK (landlord_id = (select auth.uid()));",
+          "definition": "CREATE POLICY \"Landlords can update own utility configs\"\r\nON public.utility_configs\r\nFOR UPDATE\r\nTO authenticated\r\nUSING (landlord_id = (select auth.uid()))\r\nWITH CHECK (landlord_id = (select auth.uid()));",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Landlords can delete own utility configs",
           "table": "utility_configs",
           "command": "DELETE",
-          "definition": "CREATE POLICY \"Landlords can delete own utility configs\"\nON public.utility_configs\nFOR DELETE\nTO authenticated\nUSING (landlord_id = (select auth.uid()));",
+          "definition": "CREATE POLICY \"Landlords can delete own utility configs\"\r\nON public.utility_configs\r\nFOR DELETE\r\nTO authenticated\r\nUSING (landlord_id = (select auth.uid()));",
           "unwrappedAuthCalls": false
         }
       ],
       "rlsEnabled": true,
-      "codeReferenceCount": 6,
+      "codeReferenceCount": 9,
       "codeReferenceFiles": [
         "src/app/api/landlord/payment-settings/route.ts",
         "src/lib/billing/server.ts",
@@ -11219,28 +11283,28 @@
           "name": "Utility reading stakeholders can view readings",
           "table": "utility_readings",
           "command": "SELECT",
-          "definition": "CREATE POLICY \"Utility reading stakeholders can view readings\"\nON public.utility_readings\nFOR SELECT\nTO authenticated\nUSING (\n    landlord_id = (select auth.uid())\n    OR EXISTS (\n        SELECT 1\n        FROM public.leases\n        WHERE leases.id = utility_readings.lease_id\n          AND leases.tenant_id = (select auth.uid())\n    )\n);",
+          "definition": "CREATE POLICY \"Utility reading stakeholders can view readings\"\r\nON public.utility_readings\r\nFOR SELECT\r\nTO authenticated\r\nUSING (\r\n    landlord_id = (select auth.uid())\r\n    OR EXISTS (\r\n        SELECT 1\r\n        FROM public.leases\r\n        WHERE leases.id = utility_readings.lease_id\r\n          AND leases.tenant_id = (select auth.uid())\r\n    )\r\n);",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Landlords can insert own utility readings",
           "table": "utility_readings",
           "command": "INSERT",
-          "definition": "CREATE POLICY \"Landlords can insert own utility readings\"\nON public.utility_readings\nFOR INSERT\nTO authenticated\nWITH CHECK (landlord_id = (select auth.uid()));",
+          "definition": "CREATE POLICY \"Landlords can insert own utility readings\"\r\nON public.utility_readings\r\nFOR INSERT\r\nTO authenticated\r\nWITH CHECK (landlord_id = (select auth.uid()));",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Landlords can update own utility readings",
           "table": "utility_readings",
           "command": "UPDATE",
-          "definition": "CREATE POLICY \"Landlords can update own utility readings\"\nON public.utility_readings\nFOR UPDATE\nTO authenticated\nUSING (landlord_id = (select auth.uid()))\nWITH CHECK (landlord_id = (select auth.uid()));",
+          "definition": "CREATE POLICY \"Landlords can update own utility readings\"\r\nON public.utility_readings\r\nFOR UPDATE\r\nTO authenticated\r\nUSING (landlord_id = (select auth.uid()))\r\nWITH CHECK (landlord_id = (select auth.uid()));",
           "unwrappedAuthCalls": false
         },
         {
           "name": "Landlords can delete own utility readings",
           "table": "utility_readings",
           "command": "DELETE",
-          "definition": "CREATE POLICY \"Landlords can delete own utility readings\"\nON public.utility_readings\nFOR DELETE\nTO authenticated\nUSING (landlord_id = (select auth.uid()));",
+          "definition": "CREATE POLICY \"Landlords can delete own utility readings\"\r\nON public.utility_readings\r\nFOR DELETE\r\nTO authenticated\r\nUSING (landlord_id = (select auth.uid()));",
           "unwrappedAuthCalls": false
         }
       ],

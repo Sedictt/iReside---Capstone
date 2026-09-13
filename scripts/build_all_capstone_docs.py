@@ -570,5 +570,15 @@ def main():
     except Exception as e:
         print(f"Copy failed: {e}")
 
+    # End-to-End Operations and Bug Hunting Guide
+    e2e_md = os.path.join(docs_dir, 'END_TO_END_OPERATIONS_AND_BUG_HUNTING_GUIDE.md')
+    e2e_docx = os.path.join(docs_dir, 'END_TO_END_OPERATIONS_AND_BUG_HUNTING_GUIDE.docx')
+    saved_e2e = compile_markdown_to_docx(e2e_md, e2e_docx, "End-to-End Operations & Bug-Hunting Protocol", "Operations & Bug-Hunting Guide")
+    try:
+        shutil.copy2(saved_e2e, os.path.join(dl_dir, 'END_TO_END_OPERATIONS_AND_BUG_HUNTING_GUIDE.docx'))
+        print(f"Copied to Downloads: {os.path.join(dl_dir, 'END_TO_END_OPERATIONS_AND_BUG_HUNTING_GUIDE.docx')}")
+    except Exception as e:
+        print(f"Copy failed: {e}")
+
 if __name__ == '__main__':
     main()
