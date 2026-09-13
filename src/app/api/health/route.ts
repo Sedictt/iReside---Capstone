@@ -62,45 +62,43 @@ export async function GET() {
 
   // 3. SMTP Connectivity Check
   const smtpStart = Date.now();
-  const envHost = process.env.SMTP_HOST;
-  const envUser = process.env.SMTP_USER;
-  const envPass = process.env.SMTP_PASS;
-  const isStale = !envUser || envUser.toLowerCase().includes("sedict");
-  const activeUser = isStale ? "ireside.official.mail@gmail.com" : envUser;
-  const activePass = isStale ? "qzbh dxhc vazj krpt" : (envPass || "qzbh dxhc vazj krpt");
+  const envHost = process.env.SMTP_HOST || "smtp.gmail.com";
+  const envUser = process.env.SMTP_USER?.trim();
+  const envPass = process.env.SMTP_PASS?.trim();
 
-  try {
-    const nodemailer = await import("nodemailer");
-    const transporter = nodemailer.createTransport({
-      host: envHost || "smtp.gmail.com",
-      port: 465,
-      secure: true,
-      auth: {
-        user: activeUser.trim(),
-        pass: activePass.replace(/\s+/g, ""),
-      },
-      tls: { rejectUnauthorized: false },
-    });
-    await transporter.verify();
-    checks.smtp = {
-      status: "pass",
-      latencyMs: Date.now() - smtpStart,
-      message: "SMTP verified with smtp.gmail.com:465",
-    };
-  } catch (smtpErr: any) {
+  if (!envUser || !envPass) {
     checks.smtp = {
       status: "fail",
-      latencyMs: Date.now() - smtpStart,
-      message: smtpErr?.message || "Failed to verify SMTP",
-      debug: {
-        fromEnvUser: !!envUser,
-        user: activeUser.slice(0, 7) + "...",
-        fromEnvPass: !!envPass,
-        passLength: activePass.length,
-        passCleanedLength: activePass.replace(/\s+/g, "").length,
-        passSample: activePass.slice(0, 2) + "..." + activePass.slice(-2),
-      }
+      message: "SMTP_USER or SMTP_PASS environment variable is missing",
     };
+  } else {
+    try {
+      const nodemailer = await import("nodemailer");
+      const isGmail = envHost.toLowerCase().includes("gmail");
+      const port = isGmail ? 465 : 587;
+      const transporter = nodemailer.createTransport({
+        host: envHost,
+        port,
+        secure: port === 465,
+        auth: {
+          user: envUser,
+          pass: envPass.replace(/['"\s]/g, ""),
+        },
+        tls: { rejectUnauthorized: false },
+      });
+      await transporter.verify();
+      checks.smtp = {
+        status: "pass",
+        latencyMs: Date.now() - smtpStart,
+        message: `SMTP connection verified successfully (${envHost}:${port})`,
+      };
+    } catch (smtpErr: any) {
+      checks.smtp = {
+        status: "fail",
+        latencyMs: Date.now() - smtpStart,
+        message: smtpErr?.message || "Failed to verify SMTP connection",
+      };
+    }
   }
 
   const isHealthy = Object.values(checks).every((c) => c.status === "pass");
