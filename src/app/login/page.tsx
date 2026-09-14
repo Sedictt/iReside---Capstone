@@ -65,8 +65,15 @@ function LoginContent() {
                 role = profile?.role;
             }
 
-            const target = role === "tenant" ? "/tenant/dashboard" : "/landlord/dashboard";
-            router.push(redirectUrl || target);
+            const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+            let defaultTarget: string;
+            if (isMobile) {
+                defaultTarget = role === "tenant" ? "/mobile/tenant/home" : "/mobile/landlord/overview";
+            } else {
+                defaultTarget = role === "tenant" ? "/tenant/dashboard" : "/landlord/dashboard";
+            }
+
+            router.push(redirectUrl || defaultTarget);
         } catch (err) {
             console.error('[Login] Unexpected error:', err);
             setError(err instanceof Error ? err.message : "An unexpected error occurred. Please try again.");
@@ -79,10 +86,15 @@ function LoginContent() {
         setLoading(true);
         setError(null);
         const supabase = createClient();
+        const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+        const defaultMobileNext = isMobile ? '/mobile' : '';
+        const effectiveNext = redirectUrl || defaultMobileNext;
+        const nextParam = effectiveNext ? `?next=${encodeURIComponent(effectiveNext)}` : '';
+
         const { error } = await supabase.auth.signInWithOAuth({
             provider: "google",
             options: {
-                redirectTo: `${window.location.origin}/auth/callback${redirectUrl ? `?next=${redirectUrl}` : ''}`,
+                redirectTo: `${window.location.origin}/auth/callback${nextParam}`,
             },
         });
         if (error) {
