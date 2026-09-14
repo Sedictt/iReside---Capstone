@@ -148,7 +148,13 @@ export async function GET(request: Request) {
       query = query.eq("lease_id", leaseId);
     }
     if (month && /^\d{4}-\d{2}$/.test(month)) {
-      query = query.gte("billing_period_start", `${month}-01`).lte("billing_period_start", `${month}-31`);
+      const [yearStr, monthStr] = month.split("-");
+      const y = parseInt(yearStr, 10);
+      const m = parseInt(monthStr, 10);
+      const lastDay = new Date(y, m, 0).getDate();
+      query = query
+        .gte("billing_period_start", `${month}-01`)
+        .lte("billing_period_start", `${month}-${String(lastDay).padStart(2, "0")}`);
     }
 
     const { data, error } = await query.order("created_at", { ascending: false });
