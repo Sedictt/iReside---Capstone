@@ -106,56 +106,111 @@ export class BillingService {
       throw new Error(`Failed to fetch utility configs: ${configError.message}`);
     }
 
-    const config =
+    let config =
       (configs ?? []).find((item) => item.unit_id === lease.unit_id) ??
       (configs ?? []).find((item) => item.unit_id === null);
 
     if (!config) {
-      throw new PaymentValidationError(
-        `No active utility configuration found for utility type: ${payload.utilityType}`,
-      );
+      // Auto-provision a default utility config for the property so reading logging is never blocked
+      const { data: newConfig } = await this.supabase
+        .from("utility_configs")
+        .insert({
+          landlord_id: landlordId,
+          property_id: unit.property_id,
+          unit_id: null,
+          utility_type: payload.utilityType,
+          billing_mode: "tenant_paid",
+          rate_per_unit: 0,
+          unit_label: payload.utilityType === "electricity" ? "kWh" : "m³",
+          is_active: true,
+        })
+        .select()
+        .single();
+
+      if (newConfig) {
+        config = newConfig;
+      }
     }
+
+    const billingMode: UtilityBillingMode = config?.billing_mode ?? "tenant_paid";
+    const billedRate = Number(config?.rate_per_unit ?? 0);
 
     // 4. Calculate usage & charge
     const usage = computeUsage(payload.previousReading, payload.currentReading);
     const computedCharge = computeUtilityCharge({
-      mode: config.billing_mode,
-      ratePerUnit: Number(config.rate_per_unit ?? 0),
+      mode: billingMode,
+      ratePerUnit: billedRate,
       usage,
     });
 
     const currentTimestamp = new Date().toISOString();
 
-    // 5. Insert reading record
-    const { data: createdReading, error: insertError } = await this.supabase
+    // 5. Check if reading already exists for this unit + utility_type + period (to prevent unique constraint error)
+    const { data: existingReading } = await this.supabase
       .from("utility_readings")
-      .insert({
-        landlord_id: landlordId,
-        lease_id: payload.leaseId,
-        property_id: unit.property_id,
-        unit_id: lease.unit_id,
-        utility_type: payload.utilityType,
-        billing_mode: config.billing_mode,
-        billing_period_start: payload.billingPeriodStart,
-        billing_period_end: payload.billingPeriodEnd,
-        previous_reading: payload.previousReading,
-        current_reading: payload.currentReading,
-        usage,
-        billed_rate: Number(config.rate_per_unit ?? 0),
-        computed_charge: computedCharge,
-        note: payload.note ?? null,
-        proof_image_path: payload.proofImagePath ?? null,
-        proof_image_url: payload.proofImageUrl ?? null,
-        status: "pending",
-        entered_at: currentTimestamp,
-        created_at: currentTimestamp,
-        updated_at: currentTimestamp,
-      })
-      .select()
-      .single();
+      .select("id, payment_id")
+      .eq("unit_id", lease.unit_id)
+      .eq("utility_type", payload.utilityType)
+      .eq("billing_period_start", payload.billingPeriodStart)
+      .eq("billing_period_end", payload.billingPeriodEnd)
+      .maybeSingle();
 
-    if (insertError || !createdReading) {
-      throw new Error(`Failed to record utility reading: ${insertError?.message}`);
+    let createdReading;
+    if (existingReading) {
+      const { data: updatedReading, error: updateError } = await this.supabase
+        .from("utility_readings")
+        .update({
+          lease_id: payload.leaseId,
+          previous_reading: payload.previousReading,
+          current_reading: payload.currentReading,
+          usage,
+          billed_rate: billedRate,
+          computed_charge: computedCharge,
+          note: payload.note ?? null,
+          proof_image_path: payload.proofImagePath ?? null,
+          proof_image_url: payload.proofImageUrl ?? null,
+          updated_at: currentTimestamp,
+        })
+        .eq("id", existingReading.id)
+        .select()
+        .single();
+
+      if (updateError) {
+        throw new Error(`Failed to update utility reading: ${updateError.message}`);
+      }
+      createdReading = updatedReading;
+    } else {
+      const { data: insertedReading, error: insertError } = await this.supabase
+        .from("utility_readings")
+        .insert({
+          landlord_id: landlordId,
+          lease_id: payload.leaseId,
+          property_id: unit.property_id,
+          unit_id: lease.unit_id,
+          utility_type: payload.utilityType,
+          billing_mode: billingMode,
+          billing_period_start: payload.billingPeriodStart,
+          billing_period_end: payload.billingPeriodEnd,
+          previous_reading: payload.previousReading,
+          current_reading: payload.currentReading,
+          usage,
+          billed_rate: billedRate,
+          computed_charge: computedCharge,
+          note: payload.note ?? null,
+          proof_image_path: payload.proofImagePath ?? null,
+          proof_image_url: payload.proofImageUrl ?? null,
+          status: "pending",
+          entered_at: currentTimestamp,
+          created_at: currentTimestamp,
+          updated_at: currentTimestamp,
+        })
+        .select()
+        .single();
+
+      if (insertError || !insertedReading) {
+        throw new Error(`Failed to record utility reading: ${insertError?.message}`);
+      }
+      createdReading = insertedReading;
     }
 
     return createdReading;

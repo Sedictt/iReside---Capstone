@@ -454,7 +454,10 @@ export function UtilityBillingDashboard() {
 				})
 			});
 
-			if (!res.ok) throw new Error("Save failed");
+			if (!res.ok) {
+				const errJson = await res.json().catch(() => ({}));
+				throw new Error(errJson.error || `Save failed with status ${res.status}`);
+			}
 			const json = await res.json();
 			
 			if (postInvoices) {
@@ -463,26 +466,39 @@ export function UtilityBillingDashboard() {
 				const updated = invoiceResult?.updated ?? 0;
 				toast.success(`Saved readings and issued/updated ${created + updated} monthly invoices for tenants!`);
 			} else {
-				toast.success(`Successfully saved ${toSave.length} submeter readings`);
+				toast.success(`Successfully saved ${toSave.length} submeter readings as draft`);
 			}
 
-			fetchData();
-			fetchPendingInvoices();
-		} catch (err) {
-			console.warn("[UtilityBilling] Online save failed, enqueuing offline:", err);
-			mutationQueue.enqueue(
-				"SAVE_SUBMETER_READINGS",
-				"/api/landlord/utility-readings",
-				"POST",
-				{ readings: toSave, postInvoices, month: selectedMonth },
-				`Recorded ${toSave.length} sub-meter readings offline`
-			);
+			// Optimistically mark recorded in local state
 			setDrafts(prev => prev.map(d => ({
 				...d,
 				water: { ...d.water, exists: d.water.current !== "" ? true : d.water.exists },
 				electricity: { ...d.electricity, exists: d.electricity.current !== "" ? true : d.electricity.exists },
 			})));
-			toast.success(`Saved ${toSave.length} readings offline! Will sync upon reconnection.`);
+
+			await fetchData();
+			await fetchPendingInvoices();
+		} catch (err: any) {
+			const isNetworkOffline = typeof navigator !== "undefined" && !navigator.onLine;
+			if (isNetworkOffline) {
+				console.warn("[UtilityBilling] Network offline, enqueuing locally:", err);
+				mutationQueue.enqueue(
+					"SAVE_SUBMETER_READINGS",
+					"/api/landlord/utility-readings",
+					"POST",
+					{ readings: toSave, postInvoices, month: selectedMonth },
+					`Recorded ${toSave.length} sub-meter readings offline`
+				);
+				setDrafts(prev => prev.map(d => ({
+					...d,
+					water: { ...d.water, exists: d.water.current !== "" ? true : d.water.exists },
+					electricity: { ...d.electricity, exists: d.electricity.current !== "" ? true : d.electricity.exists },
+				})));
+				toast.success(`Saved ${toSave.length} readings offline! Will sync upon reconnection.`);
+			} else {
+				console.error("[UtilityBilling] Save error:", err);
+				toast.error(err.message || "Failed to save submeter readings");
+			}
 		} finally {
 			setSaving(false);
 		}
@@ -537,13 +553,17 @@ export function UtilityBillingDashboard() {
 					month: selectedMonth
 				})
 			});
-			if (!res.ok) throw new Error();
+			if (!res.ok) {
+				const errJson = await res.json().catch(() => ({}));
+				throw new Error(errJson.error || `Save failed with status ${res.status}`);
+			}
 			toast.success(`Saved and billed readings for ${draft.unitName}`);
-			fetchData();
-			fetchPendingInvoices();
+			await fetchData();
+			await fetchPendingInvoices();
 			setSelectedLeaseId(null);
-		} catch (e) {
-			toast.error("Failed to save unit reading");
+		} catch (e: any) {
+			console.error("[UtilityBilling] Single unit save error:", e);
+			toast.error(e.message || "Failed to save unit reading");
 		} finally {
 			setSaving(false);
 		}
