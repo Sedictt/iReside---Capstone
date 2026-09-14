@@ -4,6 +4,8 @@ import { getInvoiceDetailForActor } from "@/lib/billing/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 
+export const dynamic = "force-dynamic";
+
 type RouteContext = {
   params: Promise<{ id: string }>;
 };
@@ -12,14 +14,16 @@ export async function GET(request: Request, context: RouteContext) {
   const { id } = await context.params;
   const authContext = await requireAuthenticatedUser(request);
   if (!("userId" in authContext)) return authContext as Response;
-  const { userId, supabase } = authContext;
+  const { userId } = authContext;
   const adminClient = createServiceRoleSupabaseClient();
 
   try {
-    // Parallelize: expireInPersonIntents and getInvoiceDetailForActor are independent
+    // Parallelize: expireInPersonIntents and getInvoiceDetailForActor are independent.
+    // Using adminClient avoids restrictive RLS joining issues on landlord/unit/property tables,
+    // while explicitly enforcing tenant isolation through actor.tenantId.
     const [_, invoice] = await Promise.all([
       expireInPersonIntents(adminClient, userId, { tenantId: userId, paymentId: id }),
-      getInvoiceDetailForActor(supabase, id, { tenantId: userId }),
+      getInvoiceDetailForActor(adminClient, id, { tenantId: userId }),
     ]);
 
     if (!invoice) {
