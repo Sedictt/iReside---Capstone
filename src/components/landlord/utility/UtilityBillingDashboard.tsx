@@ -669,27 +669,28 @@ export function UtilityBillingDashboard() {
 			{/* Page Header */}
 			<div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
 				<div className="space-y-1">
-					<div className="flex items-center gap-2">
-						<span className="flex h-6 items-center rounded-full neumorphic-inset px-3 text-[10px] font-black uppercase tracking-[0.2em] text-primary">
-							Utilities Command
+					<div className="flex items-center gap-2.5">
+						<span className="inline-flex items-center gap-1.5 rounded-lg border border-primary/25 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
+							<Zap className="size-3" />
+							Billing Cycle
 						</span>
-						<span className="text-[11px] font-medium text-muted-foreground">Cycle {selectedMonth}</span>
+						<span className="text-xs font-medium text-muted-foreground">{selectedMonth}</span>
 					</div>
-					<h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">
+					<h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
 						Utility & Submeter Billing
 					</h1>
-					<p className="text-sm font-medium text-neutral-400 max-w-2xl">
-						Record room meters, automatically calculate tenant consumption, and issue itemized monthly invoices in one smooth flow.
+					<p className="text-xs sm:text-sm text-muted-foreground max-w-2xl">
+						Record room submeters, calculate tenant consumption, and issue itemized monthly invoices in one workflow.
 					</p>
 				</div>
 
-				<div className="flex flex-wrap items-center gap-3">
+				<div className="flex flex-wrap items-center gap-2.5">
 					{activeTab === "readings" && (
 						<>
 							<button 
 								onClick={() => handleSaveReadings(false)}
 								disabled={saving}
-								className="flex h-11 items-center gap-2 rounded-2xl border border-border/80 bg-card px-5 text-xs font-bold text-foreground transition-all hover:bg-muted active:scale-95 disabled:opacity-50 cursor-pointer shadow-sm"
+								className="inline-flex h-10 items-center gap-2 rounded-xl border border-border bg-card/60 px-4 text-xs font-semibold text-foreground transition-all hover:bg-muted active:scale-95 disabled:opacity-50 cursor-pointer shadow-sm"
 								title="Save submeter readings without issuing invoices yet"
 							>
 								<Save className="size-3.5 text-muted-foreground" />
@@ -699,10 +700,10 @@ export function UtilityBillingDashboard() {
 							<button 
 								onClick={() => handleSaveReadings(true)}
 								disabled={saving}
-								className="flex h-11 items-center gap-2 rounded-2xl bg-primary px-6 text-xs font-black uppercase tracking-wider text-primary-foreground shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-50 cursor-pointer"
+								className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-5 text-xs font-bold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-50 cursor-pointer"
 								title="Save readings and immediately post itemized invoices to tenants"
 							>
-								{saving ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+								{saving ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
 								<span>Post & Bill Invoices</span>
 							</button>
 						</>
@@ -711,9 +712,9 @@ export function UtilityBillingDashboard() {
 			</div>
 
 			{/* Unified Command Bar */}
-			<div className="flex flex-col items-center justify-between gap-4 border border-white/5 neumorphic-panel p-3 md:p-4 rounded-3xl backdrop-blur-xl xl:flex-row">
+			<div className="flex flex-col gap-3 rounded-2xl border border-border/60 bg-card/40 p-2.5 backdrop-blur-md lg:flex-row lg:items-center lg:justify-between">
 				{/* Segmented Pill Tabs */}
-				<div className="flex items-center gap-1 rounded-2xl neumorphic-extruded p-1 w-full sm:w-auto overflow-x-auto">
+				<div className="flex items-center gap-1 overflow-x-auto scrollbar-none p-1 rounded-xl bg-muted/40 border border-border/50">
 					{[
 						{ 
 							id: "readings", 
@@ -743,21 +744,21 @@ export function UtilityBillingDashboard() {
 							key={tab.id}
 							onClick={() => setActiveTab(tab.id as any)}
 							className={cn(
-								"flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all whitespace-nowrap cursor-pointer",
+								"flex shrink-0 items-center gap-2 rounded-lg px-3.5 py-2 text-xs transition-all whitespace-nowrap cursor-pointer",
 								activeTab === tab.id
-									? "neumorphic-panel text-foreground ring-1 ring-border shadow-sm font-black"
-									: "text-neutral-400 hover:neumorphic-inset hover:text-foreground"
+									? "bg-card text-foreground font-semibold shadow-sm border border-border/70"
+									: "text-muted-foreground hover:text-foreground hover:bg-card/40 font-medium"
 							)}
 						>
-							<tab.icon className={cn("size-3.5", activeTab === tab.id ? "text-primary" : "text-neutral-400")} />
+							<tab.icon className={cn("size-3.5", activeTab === tab.id ? "text-primary" : "text-muted-foreground")} />
 							<span>{tab.label}</span>
 							{tab.badge && (
 								<span className={cn(
-									"px-2 py-0.5 rounded-full text-[10px] font-mono font-bold",
+									"px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold",
 									tab.badgeAlert 
-										? "bg-amber-500 text-zinc-950 font-black animate-pulse" 
+										? "bg-amber-500 text-zinc-950 font-bold animate-pulse" 
 										: activeTab === tab.id 
-											? "bg-primary/20 text-primary" 
+											? "bg-primary/15 text-primary" 
 											: "bg-muted text-muted-foreground"
 								)}>
 									{tab.badge}
@@ -767,21 +768,21 @@ export function UtilityBillingDashboard() {
 					))}
 				</div>
 
-				{/* Search & Cycle Info */}
-				<div className="flex w-full items-center gap-3 xl:w-auto">
+				{/* Search & Cycle Filter */}
+				<div className="flex items-center gap-2.5 w-full lg:w-auto">
 					{activeTab === "readings" && (
-						<div className="relative flex-1 xl:w-72">
-							<Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-neutral-400" />
+						<div className="relative flex-1 sm:w-64 lg:w-60">
+							<Search className="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
 							<input 
-								placeholder="Search units or rooms..." 
+								placeholder="Search unit or room..." 
 								value={searchQuery}
 								onChange={(e) => setSearchQuery(e.target.value)}
-								className="h-11 w-full rounded-2xl neumorphic-extruded pl-10 pr-4 text-xs font-medium text-foreground focus:border-primary/50 focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all placeholder:text-neutral-500"
+								className="h-9 w-full rounded-xl border border-border/70 bg-card/60 pl-9 pr-3 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/15 transition-all"
 							/>
 						</div>
 					)}
 
-					<div className="flex h-11 items-center gap-2 rounded-2xl neumorphic-extruded px-4 text-xs font-bold text-foreground shrink-0" title="Selected Billing Cycle Month">
+					<div className="flex h-9 items-center gap-2 rounded-xl border border-border/70 bg-card/60 px-3 text-xs font-medium text-foreground shrink-0 focus-within:border-primary/60 focus-within:ring-2 focus-within:ring-primary/15 transition-all" title="Selected Billing Cycle Month">
 						<Calendar className="size-3.5 text-primary shrink-0" />
 						<input 
 							type="month"
@@ -791,7 +792,7 @@ export function UtilityBillingDashboard() {
 									setSelectedMonth(e.target.value);
 								}
 							}}
-							className="bg-transparent text-[11px] font-bold uppercase tracking-wider text-foreground outline-none cursor-pointer"
+							className="bg-transparent text-xs font-semibold text-foreground outline-none cursor-pointer"
 							aria-label="Select billing cycle month"
 						/>
 					</div>
@@ -809,14 +810,14 @@ export function UtilityBillingDashboard() {
 						className="space-y-6"
 					>
 						{/* Progress & Live Consumption Dashboard */}
-						<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-							<div className="rounded-2xl neumorphic-panel p-4 flex flex-col justify-between">
-								<span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Units Logged</span>
-								<div className="mt-2 flex items-baseline gap-2">
-									<span className="text-2xl font-black text-foreground">{readingsSummary.recordedCount}</span>
-									<span className="text-xs font-bold text-muted-foreground">/ {readingsSummary.totalUnits} Units</span>
+						<div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+							<div className="rounded-2xl border border-border/60 bg-card/40 p-4 backdrop-blur-sm flex flex-col justify-between">
+								<span className="text-[11px] font-semibold text-muted-foreground">Units Logged</span>
+								<div className="mt-2 flex items-baseline gap-1.5">
+									<span className="text-2xl font-bold font-mono text-foreground">{readingsSummary.recordedCount}</span>
+									<span className="text-xs font-medium text-muted-foreground">/ {readingsSummary.totalUnits} Units</span>
 								</div>
-								<div className="mt-3 h-1.5 w-full bg-muted/40 rounded-full overflow-hidden">
+								<div className="mt-3 h-1.5 w-full bg-muted rounded-full overflow-hidden">
 									<div 
 										className="h-full bg-primary rounded-full transition-all duration-500"
 										style={{ width: `${readingsSummary.totalUnits > 0 ? (readingsSummary.recordedCount / readingsSummary.totalUnits) * 100 : 0}%` }}
@@ -824,54 +825,54 @@ export function UtilityBillingDashboard() {
 								</div>
 							</div>
 
-							<div className="rounded-2xl neumorphic-panel p-4 flex flex-col justify-between">
-								<span className="text-[10px] font-black uppercase tracking-wider text-amber-500 flex items-center gap-1.5">
-									<Zap className="size-3" /> Electricity Recorded
+							<div className="rounded-2xl border border-border/60 bg-card/40 p-4 backdrop-blur-sm flex flex-col justify-between">
+								<span className="text-[11px] font-semibold text-amber-500 flex items-center gap-1.5">
+									<Zap className="size-3.5" /> Electricity Recorded
 								</span>
 								<div className="mt-2 flex items-baseline gap-1.5">
-									<span className="text-2xl font-black text-foreground">{readingsSummary.totalElecKwh.toFixed(1)}</span>
-									<span className="text-xs font-bold text-muted-foreground">kWh</span>
+									<span className="text-2xl font-bold font-mono text-foreground">{readingsSummary.totalElecKwh.toFixed(1)}</span>
+									<span className="text-xs font-semibold text-muted-foreground">kWh</span>
 								</div>
-								<span className="text-[10px] text-muted-foreground mt-2">Active cycle total</span>
+								<span className="text-[10px] text-muted-foreground mt-2">Active cycle usage</span>
 							</div>
 
-							<div className="rounded-2xl neumorphic-panel p-4 flex flex-col justify-between">
-								<span className="text-[10px] font-black uppercase tracking-wider text-sky-500 flex items-center gap-1.5">
-									<Droplets className="size-3" /> Water Recorded
+							<div className="rounded-2xl border border-border/60 bg-card/40 p-4 backdrop-blur-sm flex flex-col justify-between">
+								<span className="text-[11px] font-semibold text-sky-400 flex items-center gap-1.5">
+									<Droplets className="size-3.5" /> Water Recorded
 								</span>
 								<div className="mt-2 flex items-baseline gap-1.5">
-									<span className="text-2xl font-black text-foreground">{readingsSummary.totalWaterM3.toFixed(1)}</span>
-									<span className="text-xs font-bold text-muted-foreground">m³</span>
+									<span className="text-2xl font-bold font-mono text-foreground">{readingsSummary.totalWaterM3.toFixed(1)}</span>
+									<span className="text-xs font-semibold text-muted-foreground">m³</span>
 								</div>
-								<span className="text-[10px] text-muted-foreground mt-2">Active cycle total</span>
+								<span className="text-[10px] text-muted-foreground mt-2">Active cycle usage</span>
 							</div>
 
-							<div className="rounded-2xl neumorphic-panel p-4 flex flex-col justify-between">
-								<span className="text-[10px] font-black uppercase tracking-wider text-emerald-500 flex items-center gap-1.5">
-									<DollarSign className="size-3" /> Est. Utility Billing
+							<div className="rounded-2xl border border-border/60 bg-card/40 p-4 backdrop-blur-sm flex flex-col justify-between">
+								<span className="text-[11px] font-semibold text-emerald-500 flex items-center gap-1.5">
+									<DollarSign className="size-3.5" /> Est. Utility Billing
 								</span>
 								<div className="mt-2 flex items-baseline gap-1">
-									<span className="text-xs font-black text-muted-foreground">₱</span>
-									<span className="text-2xl font-black text-foreground">{readingsSummary.totalEstimatedUtilRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+									<span className="text-xs font-bold text-muted-foreground">₱</span>
+									<span className="text-2xl font-bold font-mono text-foreground">{readingsSummary.totalEstimatedUtilRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
 								</div>
-								<span className="text-[10px] text-muted-foreground mt-2">To be added to rent</span>
+								<span className="text-[10px] text-muted-foreground mt-2">Added to tenant invoices</span>
 							</div>
 						</div>
 
 						{/* Batch Readings Table */}
-						<div className="rounded-2xl neumorphic-panel overflow-hidden border border-border/40">
+						<div className="rounded-2xl border border-border/60 bg-card/30 backdrop-blur-sm overflow-hidden shadow-sm">
 							<div className="overflow-x-auto">
 								<table className="w-full text-left border-collapse">
 									<thead>
-										<tr className="border-b border-border neumorphic-inset bg-muted/20">
-											<th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Unit & Base Rent</th>
-											<th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground text-center">Water Reading (m³)</th>
-											<th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground text-center">Electricity Reading (kWh)</th>
-											<th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground text-center">Estimated Total</th>
-											<th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground text-right">Actions</th>
+										<tr className="border-b border-border/60 bg-muted/30">
+											<th className="px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Unit & Base Rent</th>
+											<th className="px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground text-center">Water Reading (m³)</th>
+											<th className="px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground text-center">Electricity Reading (kWh)</th>
+											<th className="px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground text-center">Estimated Total</th>
+											<th className="px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground text-right">Actions</th>
 										</tr>
 									</thead>
-									<tbody className="divide-y divide-border">
+									<tbody className="divide-y divide-border/40">
 										{filteredDrafts.length === 0 ? (
 											<tr>
 												<td colSpan={5} className="px-6 py-20 text-center">
@@ -900,21 +901,21 @@ export function UtilityBillingDashboard() {
 											return (
 												<tr key={draft.unitId} className="hover:bg-muted/10 transition-colors">
 													{/* Unit Info */}
-													<td className="px-6 py-5">
-														<div className="flex flex-col gap-1">
+													<td className="px-6 py-4">
+														<div className="flex flex-col gap-0.5">
 															<div className="flex items-center gap-2">
-																<span className="text-base font-black text-foreground">{draft.unitName}</span>
+																<span className="text-sm font-bold text-foreground">{draft.unitName}</span>
 																{draft.occupancyStatus === "occupied" ? (
-																	<span className="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
+																	<span className="text-[10px] font-semibold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
 																		Occupied
 																	</span>
 																) : (
-																	<span className="text-[10px] font-bold text-muted-foreground/80 bg-muted/60 px-2 py-0.5 rounded-md border border-border">
+																	<span className="text-[10px] font-semibold text-muted-foreground/80 bg-muted/60 px-2 py-0.5 rounded-md border border-border">
 																		Vacant
 																	</span>
 																)}
 															</div>
-															<span className="text-xs font-medium text-muted-foreground">
+															<span className="text-xs text-muted-foreground">
 																{draft.occupancyStatus === "occupied" && draft.tenantName ? `${draft.tenantName} • ` : ""}
 																Base Rent: ₱{draft.rentAmount.toLocaleString()}
 															</span>
@@ -922,18 +923,18 @@ export function UtilityBillingDashboard() {
 													</td>
 													
 													{/* Water Reading Column */}
-													<td className="px-6 py-5">
+													<td className="px-6 py-4">
 														<div className="flex flex-col items-center gap-1.5">
 															<div className="flex items-center justify-center gap-3">
 																<div className="text-center">
-																	<span className="text-[9px] block text-muted-foreground uppercase font-black">Prev</span>
-																	<span className="font-mono text-xs text-muted-foreground/80 font-bold">{draft.water.previous}</span>
+																	<span className="text-[9px] block text-muted-foreground uppercase font-bold">Prev</span>
+																	<span className="font-mono text-xs text-muted-foreground/80 font-medium">{draft.water.previous}</span>
 																</div>
-																<div className="h-6 w-px bg-border/80" />
+																<div className="h-6 w-px bg-border/60" />
 																<div className="text-center">
-																	<span className="text-[9px] block text-sky-600 uppercase font-black">Curr</span>
+																	<span className="text-[9px] block text-sky-400 uppercase font-bold">Curr</span>
 																	{draft.water.exists ? (
-																		<span className="font-mono text-xs font-black text-sky-600">{draft.water.current}</span>
+																		<span className="font-mono text-xs font-bold text-sky-400">{draft.water.current}</span>
 																	) : (
 																		<input 
 																			type="number" 
@@ -945,13 +946,13 @@ export function UtilityBillingDashboard() {
 																				newDrafts[index] = { ...newDrafts[index], water: { ...draft.water, current: e.target.value } };
 																				setDrafts(newDrafts);
 																			}}
-																			className="w-20 neumorphic-inset rounded-lg px-2 py-1 text-center font-mono text-xs font-bold text-sky-600 outline-none focus:ring-2 focus:ring-sky-500/20"
+																			className="w-20 rounded-lg border border-border/70 bg-background/80 px-2 py-1 text-center font-mono text-xs font-semibold text-sky-400 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 transition-all"
 																		/>
 																	)}
 																</div>
 															</div>
 															{hasWater && waterUsage > 0 && (
-																<span className="text-[10px] font-bold text-sky-600 bg-sky-500/10 px-2 py-0.5 rounded-md">
+																<span className="text-[10px] font-semibold text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-md">
 																	+{waterUsage.toFixed(1)} m³ (₱{waterCost.toFixed(2)})
 																</span>
 															)}
@@ -959,18 +960,18 @@ export function UtilityBillingDashboard() {
 													</td>
 
 													{/* Electricity Reading Column */}
-													<td className="px-6 py-5">
+													<td className="px-6 py-4">
 														<div className="flex flex-col items-center gap-1.5">
 															<div className="flex items-center justify-center gap-3">
 																<div className="text-center">
-																	<span className="text-[9px] block text-muted-foreground uppercase font-black">Prev</span>
-																	<span className="font-mono text-xs text-muted-foreground/80 font-bold">{draft.electricity.previous}</span>
+																	<span className="text-[9px] block text-muted-foreground uppercase font-bold">Prev</span>
+																	<span className="font-mono text-xs text-muted-foreground/80 font-medium">{draft.electricity.previous}</span>
 																</div>
-																<div className="h-6 w-px bg-border/80" />
+																<div className="h-6 w-px bg-border/60" />
 																<div className="text-center">
-																	<span className="text-[9px] block text-amber-600 uppercase font-black">Curr</span>
+																	<span className="text-[9px] block text-amber-400 uppercase font-bold">Curr</span>
 																	{draft.electricity.exists ? (
-																		<span className="font-mono text-xs font-black text-amber-600">{draft.electricity.current}</span>
+																		<span className="font-mono text-xs font-bold text-amber-400">{draft.electricity.current}</span>
 																	) : (
 																		<input 
 																			type="number" 
@@ -982,13 +983,13 @@ export function UtilityBillingDashboard() {
 																				newDrafts[index] = { ...newDrafts[index], electricity: { ...draft.electricity, current: e.target.value } };
 																				setDrafts(newDrafts);
 																			}}
-																			className="w-20 neumorphic-inset rounded-lg px-2 py-1 text-center font-mono text-xs font-bold text-amber-600 outline-none focus:ring-2 focus:ring-amber-500/20"
+																			className="w-20 rounded-lg border border-border/70 bg-background/80 px-2 py-1 text-center font-mono text-xs font-semibold text-amber-400 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 transition-all"
 																		/>
 																	)}
 																</div>
 															</div>
 															{hasElec && elecUsage > 0 && (
-																<span className="text-[10px] font-bold text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded-md">
+																<span className="text-[10px] font-semibold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md">
 																	+{elecUsage.toFixed(1)} kWh (₱{elecCost.toFixed(2)})
 																</span>
 															)}
@@ -996,19 +997,19 @@ export function UtilityBillingDashboard() {
 													</td>
 
 													{/* Total Estimated Calculation */}
-													<td className="px-6 py-5 text-center">
+													<td className="px-6 py-4 text-center">
 														<div className="flex flex-col items-center">
-															<span className="text-sm font-black text-foreground font-mono">
+															<span className="text-sm font-bold text-foreground font-mono">
 																₱{(draft.occupancyStatus === "occupied" ? totalEst : (waterCost + elecCost)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
 															</span>
 															{draft.occupancyStatus === "occupied" ? (
 																(waterCost > 0 || elecCost > 0) && (
-																	<span className="text-[9px] text-muted-foreground font-medium">
+																	<span className="text-[10px] text-muted-foreground font-medium">
 																		Util: +₱{(waterCost + elecCost).toFixed(2)}
 																	</span>
 																)
 															) : (
-																<span className="text-[9px] text-muted-foreground font-medium">
+																<span className="text-[10px] text-muted-foreground font-medium">
 																	Submeter Only (Vacant)
 																</span>
 															)}
@@ -1016,20 +1017,20 @@ export function UtilityBillingDashboard() {
 													</td>
 
 													{/* Row Status & Quick Edit */}
-													<td className="px-6 py-5 text-right">
-														<div className="flex items-center justify-end gap-2.5">
+													<td className="px-6 py-4 text-right">
+														<div className="flex items-center justify-end gap-2">
 															{isComplete ? (
-																<span className="flex items-center gap-1 text-[10px] font-black text-emerald-600 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20" title="Both readings recorded for this cycle">
+																<span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-500 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20" title="Both readings recorded for this cycle">
 																	<Check className="size-3" /> Ready
 																</span>
 															) : (
-																<span className="text-[10px] font-bold text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded-full" title="Pending meter readings">
+																<span className="text-[10px] font-medium text-muted-foreground bg-muted/60 px-2 py-0.5 rounded-full border border-border/50" title="Pending meter readings">
 																	Pending
 																</span>
 															)}
 															<button 
 																onClick={() => setSelectedUnitId(draft.unitId)}
-																className="inline-flex items-center justify-center size-8 rounded-lg border border-border text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
+																className="inline-flex items-center justify-center size-8 rounded-lg border border-border text-muted-foreground transition-all hover:bg-muted hover:text-foreground cursor-pointer"
 																title="Inspect or adjust unit details"
 															>
 																<Edit3 className="size-3.5" />
