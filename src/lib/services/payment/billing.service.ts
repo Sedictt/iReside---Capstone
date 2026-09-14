@@ -82,7 +82,7 @@ export class BillingService {
       // Postgres error on UUID casting or similar; fallback below
     }
 
-    // Fallback: if lease not found by direct ID (or if leaseId was a non-UUID slug, unit ID, or mock ID)
+    // Fallback 1: if lease not found by direct ID (or if leaseId was a non-UUID slug, unit ID, or mock ID)
     if (!lease) {
       const { data: activeLeases, error: activeError } = await this.supabase
         .from("leases")
@@ -91,10 +91,58 @@ export class BillingService {
         .eq("status", "active");
 
       if (!activeError && activeLeases) {
-        lease = activeLeases.find((l) => l.id === payload.leaseId || l.unit_id === payload.leaseId) ?? null;
-        if (!lease && activeLeases.length === 1) {
+        lease = activeLeases.find((l) => l.id === payload.leaseId || l.unit_id === payload.leaseId || (payload.unitId && l.unit_id === payload.unitId)) ?? null;
+        if (!lease && activeLeases.length === 1 && !payload.unitId) {
           lease = activeLeases[0];
         }
+      }
+    }
+
+    // Fallback 2: if unit is vacant (no active lease), look up unit directly and use/create baseline draft lease
+    if (!lease) {
+      const candidateUnitId = payload.unitId || payload.leaseId;
+      try {
+        const { data: unitRecord } = await this.supabase
+          .from("units")
+          .select("id, property_id, rent_amount, properties!inner(id, landlord_id)")
+          .eq("id", candidateUnitId)
+          .eq("properties.landlord_id", landlordId)
+          .maybeSingle();
+
+        if (unitRecord) {
+          const { data: existingUnitLease } = await this.supabase
+            .from("leases")
+            .select("id, unit_id, landlord_id")
+            .eq("unit_id", unitRecord.id)
+            .eq("landlord_id", landlordId)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (existingUnitLease) {
+            lease = existingUnitLease;
+          } else {
+            const { data: newDraftLease } = await this.supabase
+              .from("leases")
+              .insert({
+                landlord_id: landlordId,
+                tenant_id: landlordId,
+                unit_id: unitRecord.id,
+                monthly_rent: unitRecord.rent_amount || 0,
+                status: "draft",
+                start_date: payload.billingPeriodStart || new Date().toISOString().slice(0, 10),
+                end_date: "2099-12-31"
+              })
+              .select("id, unit_id, landlord_id")
+              .single();
+
+            if (newDraftLease) {
+              lease = newDraftLease;
+            }
+          }
+        }
+      } catch {
+        // Fall through
       }
     }
 
