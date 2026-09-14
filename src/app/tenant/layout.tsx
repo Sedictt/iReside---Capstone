@@ -1,9 +1,10 @@
 "use client";
 
+import { Suspense } from "react";
+import { Loader2 } from "lucide-react";
 import { TenantSidebar } from "@/components/tenant/TenantNavbar";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { m as motion, AnimatePresence } from "framer-motion";
 import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "@/components/theme-provider";
 import { NotificationProvider } from "@/context/NotificationContext";
@@ -54,17 +55,15 @@ export default function TenantLayout({
                             )}>
                                 <NotificationBanner />
                             </div>
-                            <AnimatePresence mode="wait">
-                                <motion.div
+                            <Suspense fallback={
+                                <div className="flex h-[60vh] flex-col items-center justify-center space-y-4">
+                                    <Loader2 className="size-8 animate-spin text-primary" />
+                                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Loading...</p>
+                                </div>
+                            }>
+                                <div
                                     key={pathname}
-                                    initial={{ opacity: 0, scale: 0.99, y: 10 }}
-                                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                                    exit={{ opacity: 0, scale: 0.99, y: -10 }}
-                                    transition={{
-                                        duration: 0.5,
-                                        ease: [0.22, 1, 0.36, 1]
-                                    }}
-                                    className="w-full h-full flex-1 flex flex-col"
+                                    className="w-full h-full flex-1 flex flex-col animate-in fade-in-50 duration-200"
                                 >
                                     {useImmersiveLayout ? (
                                         children
@@ -73,8 +72,8 @@ export default function TenantLayout({
                                             {children}
                                         </div>
                                     )}
-                                </motion.div>
-                            </AnimatePresence>
+                                </div>
+                            </Suspense>
                         </main>
                     </div>
                 </ThemeProvider>

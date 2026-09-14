@@ -68,25 +68,21 @@ type TabId = "bill" | "consumption" | "history";
 
 export default function FinanceHubPage() {
     const { push } = useRouter();
-    const [payload, setPayload] = useState<PaymentsPayload | null>(() => {
-        if (typeof window !== "undefined") {
-            const cached = OfflineStorage.get<PaymentsPayload>("tenant_payments_payload");
-            return cached?.data || null;
-        }
-        return null;
-    });
-    const [loading, setLoading] = useState(() => {
-        if (typeof window !== "undefined") {
-            const cached = OfflineStorage.get<PaymentsPayload>("tenant_payments_payload");
-            return !cached?.data;
-        }
-        return true;
-    });
+    const [payload, setPayload] = useState<PaymentsPayload | null>(null);
+    const [loading, setLoading] = useState(true);
     const [creatingAdvance, setCreatingAdvance] = useState(false);
     const [activeTab, setActiveTab] = useState<TabId>("bill");
 
     useEffect(() => {
         let alive = true;
+        
+        // Immediate cache hydration on client mount without SSR mismatch
+        const cached = OfflineStorage.get<PaymentsPayload>("tenant_payments_payload");
+        if (cached?.data && alive) {
+            setPayload(cached.data);
+            setLoading(false);
+        }
+
         const load = async () => {
             try {
                 if (typeof navigator !== "undefined" && navigator.onLine) {
@@ -102,17 +98,21 @@ export default function FinanceHubPage() {
                 }
 
                 // Offline fallback
-                const cached = OfflineStorage.get<PaymentsPayload>("tenant_payments_payload");
-                if (cached?.data && alive) {
-                    setPayload(cached.data);
-                    toast.info("Offline Mode: Loaded billing ledger and invoices from local cache.");
+                if (!cached?.data) {
+                    const fallbackCached = OfflineStorage.get<PaymentsPayload>("tenant_payments_payload");
+                    if (fallbackCached?.data && alive) {
+                        setPayload(fallbackCached.data);
+                        toast.info("Offline Mode: Loaded billing ledger and invoices from local cache.");
+                    }
                 }
             } catch (error) {
                 console.warn("[FinanceHub] Online fetch failed, checking offline cache:", error);
-                const cached = OfflineStorage.get<PaymentsPayload>("tenant_payments_payload");
-                if (cached?.data && alive) {
-                    setPayload(cached.data);
-                    toast.info("Loaded cached billing ledger offline.");
+                if (!cached?.data) {
+                    const fallbackCached = OfflineStorage.get<PaymentsPayload>("tenant_payments_payload");
+                    if (fallbackCached?.data && alive) {
+                        setPayload(fallbackCached.data);
+                        toast.info("Loaded cached billing ledger offline.");
+                    }
                 }
             } finally {
                 if (alive) setLoading(false);

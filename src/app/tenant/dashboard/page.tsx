@@ -322,7 +322,7 @@ export default function TenantDashboard() {
                 id: "overdue-payments",
                 title: `Billing support needed`,
                 description: `You have ${overduePayments.length} overdue bill${overduePayments.length === 1 ? "" : "s"} totaling ₱${formatCurrency(overdueTotal, 2)}.`,
-                href: `/tenant/payments/${overduePayments[0]?.id}/checkout`,
+                href: overduePayments[0]?.id ? `/tenant/payments/${overduePayments[0].id}/checkout` : "/tenant/payments",
                 cta: "Review billing",
                 icon: AlertCircle,
                 iconClass: "text-red-600",
@@ -333,7 +333,7 @@ export default function TenantDashboard() {
                 id: "next-payment",
                 title: "Upcoming payment",
                 description: `${nextPayment.description ?? "Your next payment"} is due ${formatDueDate(nextPayment.dueDate)}.`,
-                href: `/tenant/payments/${nextPayment.id}/checkout`,
+                href: nextPayment?.id ? `/tenant/payments/${nextPayment.id}/checkout` : "/tenant/payments",
                 cta: "View bill",
                 icon: CreditCard,
                 iconClass: "text-emerald-600",
@@ -449,7 +449,7 @@ export default function TenantDashboard() {
                             <div className="flex flex-wrap gap-4 pt-2">
                                 {nextPayment && (
                                     <Link
-                                        href={`/tenant/payments/${nextPayment.id}/checkout`}
+                                        href={nextPayment.id ? `/tenant/payments/${nextPayment.id}/checkout` : "/tenant/payments"}
                                         className="neumorphic-primary px-8 py-4 rounded-2xl font-black text-sm flex items-center gap-2"
                                     >
                                         <CreditCard className="size-4" />
@@ -573,7 +573,7 @@ export default function TenantDashboard() {
                                 </div>
                             </div>
                             <Link
-                                href={`/tenant/payments/${overduePayments[0]?.id}/checkout`}
+                                href={overduePayments[0]?.id ? `/tenant/payments/${overduePayments[0].id}/checkout` : "/tenant/payments"}
                                 className="neumorphic-primary bg-red-500 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
                             >
                                 Pay Now

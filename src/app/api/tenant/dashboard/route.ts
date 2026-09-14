@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/supabase/auth";
 import type { NotificationType, PaymentStatus } from "@/types/database";
 
+export const dynamic = "force-dynamic";
+
 type LeaseSummary = {
     id: string;
     status: string;

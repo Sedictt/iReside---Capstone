@@ -4,17 +4,19 @@ import { getTenantPaymentOverview } from "@/lib/billing/server";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: Request) {
   const authContext = await requireAuthenticatedUser(request);
   if (!("userId" in authContext)) return authContext as Response;
-  const { userId, supabase } = authContext;
+  const { userId } = authContext;
   const adminClient = createServiceRoleSupabaseClient();
 
   try {
     // Parallelize: expireInPersonIntents and getTenantPaymentOverview are independent
     const [_, overview] = await Promise.all([
       expireInPersonIntents(adminClient, userId, { tenantId: userId }),
-      getTenantPaymentOverview(supabase, userId),
+      getTenantPaymentOverview(adminClient, userId),
     ]);
 
         
@@ -24,7 +26,7 @@ export async function GET(request: Request) {
         const upcomingMonths = [];
         
         // Get existing invoices for upcoming months
-        const { data: existingPayments } = await supabase
+        const { data: existingPayments } = await adminClient
             .from("payments")
             .select("id, amount, due_date, billing_cycle, status, metadata")
             .eq("tenant_id", userId)
