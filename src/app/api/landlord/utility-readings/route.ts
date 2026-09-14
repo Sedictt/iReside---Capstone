@@ -4,6 +4,8 @@ import { BILLING_BUCKETS, uploadBillingFile } from "@/lib/billing/storage";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { BillingService } from "@/lib/services/payment";
 
+export const dynamic = "force-dynamic";
+
 const readingSchema = z.object({
   leaseId: z.string().trim().min(1, "Lease or unit identifier is required"),
   unitId: z.string().trim().optional().nullable(),
