@@ -755,6 +755,8 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
       ? "tracking-normal"
       : "tracking-tight";
 
+  const titleCaseClass = titleTransform === "uppercase" ? "uppercase" : "normal-case";
+
   // Dynamic Contrast Colors calculated from user's Card Color Picker
   const cardContrast = getContrastColor(cardColor);
   const cardRgbaBackground = hexToRgba(cardColor, cardOpacity);
@@ -1322,6 +1324,23 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                     </div>
                     {showWifi && <Check className="size-3 stroke-[3]" />}
                   </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowOffice(!showOffice)}
+                    className={cn(
+                      "w-full py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-between border",
+                      showOffice
+                        ? "bg-primary text-white border-primary shadow-xs"
+                        : "neumorphic-inset text-muted-foreground hover:text-foreground border-transparent"
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Phone className="size-3.5" />
+                      <span>Office Details</span>
+                    </div>
+                    {showOffice && <Check className="size-3 stroke-[3]" />}
+                  </button>
                 </div>
               </div>
             )}
@@ -1555,7 +1574,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
               ref={posterRef}
               id="lobby-poster-canvas"
               className={cn(
-                "w-full max-w-[940px] shadow-[0_20px_50px_rgba(0,0,0,0.35)] flex flex-col justify-between border border-zinc-200/90 rounded-2xl transition-all duration-200 relative overflow-hidden bg-white text-zinc-900 select-none print:shadow-none print:border-none print:rounded-none print:p-0 print:w-full print:max-w-none print:h-auto",
+                "w-full max-w-[940px] shadow-[0_20px_50px_rgba(0,0,0,0.35)] flex flex-col justify-between border rounded-2xl transition-all duration-200 relative overflow-hidden select-none print:shadow-none print:border-none print:rounded-none print:p-0 print:w-full print:max-w-none print:h-auto",
                 getPosterBgClass()
               )}
               style={{
@@ -1563,9 +1582,19 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
               }}
             >
               {/* Upper Main Section: 3-Part Layout (Hero + Dual QR + Dark Sidebar) */}
-              <div className="relative z-10 grid grid-cols-12 min-h-[380px] bg-white">
+              <div
+                className={cn(
+                  "relative z-10 grid grid-cols-12 min-h-[380px] transition-colors",
+                  isDarkCanvas ? "bg-transparent text-white" : "bg-transparent text-zinc-950"
+                )}
+              >
                 {/* 1. Left Hero & Branding Column (Col 4) with Custom Photo Support */}
-                <div className="col-span-4 p-5 flex flex-col justify-between border-r border-zinc-200/80 relative overflow-hidden group/hero">
+                <div
+                  className={cn(
+                    "col-span-4 p-5 flex flex-col justify-between border-r relative overflow-hidden group/hero transition-colors",
+                    isDarkCanvas ? "border-white/10" : "border-zinc-200/80"
+                  )}
+                >
                   {/* Custom Hero Panel Background Photo with Subtle Legibility Overlay */}
                   {customBgImage ? (
                     <>
@@ -1577,10 +1606,24 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                           filter: `brightness(${photoBrightness}%) saturate(${photoSaturation}%)`,
                         }}
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-white via-white/85 to-white/70 pointer-events-none" />
+                      <div
+                        className={cn(
+                          "absolute inset-0 pointer-events-none",
+                          isDarkCanvas
+                            ? "bg-gradient-to-t from-[#111115] via-[#111115]/85 to-[#111115]/70"
+                            : "bg-gradient-to-t from-white via-white/85 to-white/70"
+                        )}
+                      />
                     </>
                   ) : (
-                    <div className="absolute inset-0 bg-gradient-to-b from-white via-zinc-50/40 to-purple-50/20 pointer-events-none" />
+                    <div
+                      className={cn(
+                        "absolute inset-0 pointer-events-none",
+                        isDarkCanvas
+                          ? "bg-gradient-to-b from-white/5 via-white/[0.02] to-transparent"
+                          : "bg-gradient-to-b from-white/60 via-zinc-50/30 to-purple-50/10"
+                      )}
+                    />
                   )}
 
                   {/* Hero Panel Quick Change/Upload Photo Controls */}
@@ -1620,7 +1663,10 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                         suppressContentEditableWarning
                         onBlur={(e) => setPropertyName(e.currentTarget.textContent || "")}
                         className={cn(
-                          "text-xs font-black leading-tight block truncate uppercase tracking-wide",
+                          "text-xs font-black leading-tight block truncate",
+                          titleCaseClass,
+                          trackingClass,
+                          isDarkCanvas ? "text-white" : "text-zinc-950",
                           editableClass
                         )}
                       >
@@ -1631,7 +1677,8 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                         suppressContentEditableWarning
                         onBlur={(e) => setAddress(e.currentTarget.textContent || "")}
                         className={cn(
-                          "text-[9px] text-zinc-600 font-medium leading-tight block truncate mt-0.5",
+                          "text-[9px] font-medium leading-tight block truncate mt-0.5",
+                          isDarkCanvas ? "text-zinc-400" : "text-zinc-600",
                           editableClass
                         )}
                       >
@@ -1640,31 +1687,37 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                     </div>
                   </div>
 
-                  {/* Hero Announcement Headline */}
-                  <div className="relative z-10 my-auto py-3">
-                    <h1
-                      contentEditable={isEditingActive}
-                      suppressContentEditableWarning
-                      onBlur={(e) => setBannerHeading(e.currentTarget.textContent || "")}
-                      className={cn(
-                        "text-2xl sm:text-[26px] font-black uppercase tracking-tight text-zinc-950 leading-tight",
-                        editableClass
-                      )}
-                    >
-                      {bannerHeading}
-                    </h1>
-                    <p
-                      contentEditable={isEditingActive}
-                      suppressContentEditableWarning
-                      onBlur={(e) => setTagline(e.currentTarget.textContent || "")}
-                      className={cn(
-                        "text-[10.5px] text-zinc-700 font-medium leading-snug mt-2 block max-w-[220px]",
-                        editableClass
-                      )}
-                    >
-                      {tagline}
-                    </p>
-                  </div>
+                  {/* Hero Announcement Headline (Welcome Notice) */}
+                  {showBanner && (
+                    <div className="relative z-10 my-auto py-3">
+                      <h1
+                        contentEditable={isEditingActive}
+                        suppressContentEditableWarning
+                        onBlur={(e) => setBannerHeading(e.currentTarget.textContent || "")}
+                        className={cn(
+                          "text-2xl sm:text-[26px] font-black leading-tight",
+                          titleCaseClass,
+                          trackingClass,
+                          isDarkCanvas ? "text-white" : "text-zinc-950",
+                          editableClass
+                        )}
+                      >
+                        {bannerHeading}
+                      </h1>
+                      <p
+                        contentEditable={isEditingActive}
+                        suppressContentEditableWarning
+                        onBlur={(e) => setTagline(e.currentTarget.textContent || "")}
+                        className={cn(
+                          "text-[10.5px] font-medium leading-snug mt-2 block max-w-[220px]",
+                          isDarkCanvas ? "text-zinc-300" : "text-zinc-700",
+                          editableClass
+                        )}
+                      >
+                        {tagline}
+                      </p>
+                    </div>
+                  )}
 
                   {/* Minimalist Skyline Vector Silhouette (Shows when no photo) */}
                   {!customBgImage && (
@@ -1686,14 +1739,33 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                 </div>
 
                 {/* 2. Center Dual QR Cards Column with Floating OR Badge (Col 5) - Spacious */}
-                <div className="col-span-5 p-3.5 flex items-center justify-center gap-2.5 relative bg-zinc-50/60 border-r border-zinc-200/80">
+                <div
+                  className={cn(
+                    "col-span-5 p-3.5 flex items-center justify-center gap-2.5 relative border-r transition-colors",
+                    isDarkCanvas ? "bg-black/25 border-white/10" : "bg-zinc-50/40 border-zinc-200/80"
+                  )}
+                >
                   {/* Floating OR Separator Badge */}
-                  <div className="absolute z-20 size-7 rounded-full bg-white border-2 border-zinc-300 shadow-md flex items-center justify-center text-[8.5px] font-black text-zinc-700 uppercase pointer-events-none">
+                  <div
+                    className="absolute z-20 size-7 rounded-full border-2 shadow-md flex items-center justify-center text-[8.5px] font-black uppercase pointer-events-none transition-colors"
+                    style={{
+                      backgroundColor: cardColor,
+                      borderColor: cardContrast.border,
+                      color: cardContrast.text,
+                    }}
+                  >
                     OR
                   </div>
 
-                  {/* Left: Mobile App Card (Purple Theme) */}
-                  <div className="flex-1 h-full bg-[#f8f5ff] border border-purple-200/80 rounded-xl p-3 flex flex-col items-center justify-between text-center shadow-xs">
+                  {/* Left: Mobile App Card */}
+                  <div
+                    className="flex-1 h-full rounded-xl p-3 flex flex-col items-center justify-between text-center shadow-xs border transition-all"
+                    style={{
+                      backgroundColor: cardRgbaBackground,
+                      borderColor: cardContrast.border,
+                      color: cardContrast.text,
+                    }}
+                  >
                     <span
                       className={cn(
                         "px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider text-white shadow-xs",
@@ -1716,7 +1788,9 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                       suppressContentEditableWarning
                       onBlur={(e) => setApkCardTitle(e.currentTarget.textContent || "")}
                       className={cn(
-                        "text-xs font-black uppercase tracking-tight mt-1 leading-tight",
+                        "text-xs font-black tracking-tight mt-1 leading-tight",
+                        titleCaseClass,
+                        trackingClass,
                         editableClass
                       )}
                       style={{ color: brandColor }}
@@ -1725,21 +1799,31 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                     </h3>
 
                     <div className="flex items-center gap-1.5 my-1 text-left w-full px-0.5">
-                      <div className="size-6 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center shrink-0">
+                      <div
+                        className="size-6 rounded-full flex items-center justify-center shrink-0"
+                        style={{
+                          backgroundColor: `${brandColor}20`,
+                          color: brandColor,
+                        }}
+                      >
                         <Smartphone className="size-3.5" />
                       </div>
                       <p
                         contentEditable={isEditingActive}
                         suppressContentEditableWarning
                         onBlur={(e) => setApkCardSubtitle(e.currentTarget.textContent || "")}
-                        className={cn("text-[8px] text-zinc-600 font-medium leading-tight", editableClass)}
+                        className={cn("text-[8px] font-medium leading-tight", editableClass)}
+                        style={{ color: cardContrast.muted }}
                       >
                         {apkCardSubtitle}
                       </p>
                     </div>
 
-                    {/* QR Code Container (Large & 100% Unobstructed) */}
-                    <div className="size-28 sm:size-32 rounded-xl bg-white p-1.5 border border-purple-200 shadow-inner flex items-center justify-center relative group">
+                    {/* QR Code Container (Large & 100% Unobstructed, always white for max scan reliability) */}
+                    <div
+                      className="size-28 sm:size-32 rounded-xl bg-white p-1.5 border shadow-inner flex items-center justify-center relative group"
+                      style={{ borderColor: cardContrast.border }}
+                    >
                       <img
                         src={apkQrUrl}
                         crossOrigin="anonymous"
@@ -1777,8 +1861,15 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                     </div>
                   </div>
 
-                  {/* Right: Web Portal Card (Emerald Theme) */}
-                  <div className="flex-1 h-full bg-[#f0fdf4] border border-emerald-200/80 rounded-xl p-3 flex flex-col items-center justify-between text-center shadow-xs">
+                  {/* Right: Web Portal Card */}
+                  <div
+                    className="flex-1 h-full rounded-xl p-3 flex flex-col items-center justify-between text-center shadow-xs border transition-all"
+                    style={{
+                      backgroundColor: cardRgbaBackground,
+                      borderColor: cardContrast.border,
+                      color: cardContrast.text,
+                    }}
+                  >
                     <span
                       className={cn(
                         "px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider text-white shadow-xs bg-emerald-600",
@@ -1800,7 +1891,10 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                       suppressContentEditableWarning
                       onBlur={(e) => setWebCardTitle(e.currentTarget.textContent || "")}
                       className={cn(
-                        "text-xs font-black text-emerald-900 uppercase tracking-tight mt-1 leading-tight",
+                        "text-xs font-black tracking-tight mt-1 leading-tight",
+                        titleCaseClass,
+                        trackingClass,
+                        cardContrast.isLight ? "text-emerald-900" : "text-emerald-300",
                         editableClass
                       )}
                     >
@@ -1808,21 +1902,25 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                     </h3>
 
                     <div className="flex items-center gap-1.5 my-1 text-left w-full px-0.5">
-                      <div className="size-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                      <div className="size-6 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center shrink-0">
                         <Globe className="size-3.5" />
                       </div>
                       <p
                         contentEditable={isEditingActive}
                         suppressContentEditableWarning
                         onBlur={(e) => setWebCardSubtitle(e.currentTarget.textContent || "")}
-                        className={cn("text-[8px] text-zinc-600 font-medium leading-tight", editableClass)}
+                        className={cn("text-[8px] font-medium leading-tight", editableClass)}
+                        style={{ color: cardContrast.muted }}
                       >
                         {webCardSubtitle}
                       </p>
                     </div>
 
-                    {/* QR Code Container (Large & 100% Unobstructed) */}
-                    <div className="size-28 sm:size-32 rounded-xl bg-white p-1.5 border border-emerald-200 shadow-inner flex items-center justify-center relative group">
+                    {/* QR Code Container (Large & 100% Unobstructed, always white for max scan reliability) */}
+                    <div
+                      className="size-28 sm:size-32 rounded-xl bg-white p-1.5 border shadow-inner flex items-center justify-center relative group"
+                      style={{ borderColor: cardContrast.border }}
+                    >
                       <img
                         src={portalQrUrl}
                         crossOrigin="anonymous"
@@ -1861,73 +1959,81 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
                 {/* 3. Right Dark Utility Sidebar Column (Col 3) */}
                 <div className="col-span-3 bg-[#161d2b] text-white p-3.5 flex flex-col justify-between text-center">
                   {/* Wi-Fi Info */}
-                  <div>
-                    <div className="size-7 rounded-full border border-zinc-600 flex items-center justify-center mx-auto mb-1 text-zinc-300">
-                      <Wifi className="size-3.5 text-zinc-200" />
+                  {showWifi && (
+                    <div>
+                      <div className="size-7 rounded-full border border-zinc-600 flex items-center justify-center mx-auto mb-1 text-zinc-300">
+                        <Wifi className="size-3.5 text-zinc-200" />
+                      </div>
+                      <p
+                        contentEditable={isEditingActive}
+                        suppressContentEditableWarning
+                        onBlur={(e) => setWifiHeader(e.currentTarget.textContent || "")}
+                        className={cn("text-[8px] font-black tracking-wider text-zinc-400", titleCaseClass, trackingClass, editableClass)}
+                      >
+                        {wifiHeader}
+                      </p>
+                      <p
+                        contentEditable={isEditingActive}
+                        suppressContentEditableWarning
+                        onBlur={(e) => setWifiSsid(e.currentTarget.textContent || "")}
+                        className={cn("text-[10.5px] font-bold text-white leading-tight mt-0.5 block truncate", editableClass)}
+                      >
+                        {wifiSsid}
+                      </p>
+                      <p
+                        contentEditable={isEditingActive}
+                        suppressContentEditableWarning
+                        onBlur={(e) => setWifiPassword(e.currentTarget.textContent || "")}
+                        className={cn("text-[8.5px] font-mono text-zinc-400 block truncate", editableClass)}
+                      >
+                        {wifiPassword}
+                      </p>
                     </div>
-                    <p
-                      contentEditable={isEditingActive}
-                      suppressContentEditableWarning
-                      onBlur={(e) => setWifiHeader(e.currentTarget.textContent || "")}
-                      className={cn("text-[8px] font-black uppercase tracking-wider text-zinc-400", editableClass)}
-                    >
-                      {wifiHeader}
-                    </p>
-                    <p
-                      contentEditable={isEditingActive}
-                      suppressContentEditableWarning
-                      onBlur={(e) => setWifiSsid(e.currentTarget.textContent || "")}
-                      className={cn("text-[10.5px] font-bold text-white leading-tight mt-0.5 block truncate", editableClass)}
-                    >
-                      {wifiSsid}
-                    </p>
-                    <p
-                      contentEditable={isEditingActive}
-                      suppressContentEditableWarning
-                      onBlur={(e) => setWifiPassword(e.currentTarget.textContent || "")}
-                      className={cn("text-[8.5px] font-mono text-zinc-400 block truncate", editableClass)}
-                    >
-                      {wifiPassword}
-                    </p>
-                  </div>
+                  )}
 
-                  <div className="w-full h-px bg-zinc-700/60 my-1" />
+                  {showWifi && showOffice && (
+                    <div className="w-full h-px bg-zinc-700/60 my-1" />
+                  )}
 
                   {/* Office Info */}
-                  <div>
-                    <div className="size-7 rounded-full border border-zinc-600 flex items-center justify-center mx-auto mb-1 text-zinc-300">
-                      <Phone className="size-3.5 text-zinc-200" />
+                  {showOffice && (
+                    <div>
+                      <div className="size-7 rounded-full border border-zinc-600 flex items-center justify-center mx-auto mb-1 text-zinc-300">
+                        <Phone className="size-3.5 text-zinc-200" />
+                      </div>
+                      <p
+                        contentEditable={isEditingActive}
+                        suppressContentEditableWarning
+                        onBlur={(e) => setOfficeHeader(e.currentTarget.textContent || "")}
+                        className={cn("text-[8px] font-black tracking-wider text-zinc-400", titleCaseClass, trackingClass, editableClass)}
+                      >
+                        {officeHeader}
+                      </p>
+                      <p
+                        contentEditable={isEditingActive}
+                        suppressContentEditableWarning
+                        onBlur={(e) => setContactPhone(e.currentTarget.textContent || "")}
+                        className={cn("text-[10.5px] font-bold font-mono text-white leading-tight mt-0.5 block truncate", editableClass)}
+                      >
+                        {contactPhone}
+                      </p>
+                      <p
+                        contentEditable={isEditingActive}
+                        suppressContentEditableWarning
+                        onBlur={(e) => setOfficeHours(e.currentTarget.textContent || "")}
+                        className={cn("text-[8px] text-zinc-400 block truncate", editableClass)}
+                      >
+                        {officeHours}
+                      </p>
                     </div>
-                    <p
-                      contentEditable={isEditingActive}
-                      suppressContentEditableWarning
-                      onBlur={(e) => setOfficeHeader(e.currentTarget.textContent || "")}
-                      className={cn("text-[8px] font-black uppercase tracking-wider text-zinc-400", editableClass)}
-                    >
-                      {officeHeader}
-                    </p>
-                    <p
-                      contentEditable={isEditingActive}
-                      suppressContentEditableWarning
-                      onBlur={(e) => setContactPhone(e.currentTarget.textContent || "")}
-                      className={cn("text-[10.5px] font-bold font-mono text-white leading-tight mt-0.5 block truncate", editableClass)}
-                    >
-                      {contactPhone}
-                    </p>
-                    <p
-                      contentEditable={isEditingActive}
-                      suppressContentEditableWarning
-                      onBlur={(e) => setOfficeHours(e.currentTarget.textContent || "")}
-                      className={cn("text-[8px] text-zinc-400 block truncate", editableClass)}
-                    >
-                      {officeHours}
-                    </p>
-                  </div>
+                  )}
 
-                  <div className="w-full h-px bg-zinc-700/60 my-1" />
+                  {(showWifi || showOffice) && (
+                    <div className="w-full h-px bg-zinc-700/60 my-1" />
+                  )}
 
                   {/* Verification Notice Stamp */}
-                  <div className="flex flex-col items-center justify-center gap-0.5">
+                  <div className="flex flex-col items-center justify-center gap-0.5 my-auto">
                     <ShieldCheck className="size-4 text-emerald-400" />
                     <span
                       contentEditable={isEditingActive}
@@ -1942,89 +2048,91 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
               </div>
 
               {/* Bottom Main Step-by-Step Ribbon (Horizontal 1 -> 2 -> 3) */}
-              <div className="relative z-10 bg-[#0c111a] text-white px-5 py-2.5 flex items-center justify-between border-t border-zinc-800">
-                {/* Step 1 */}
-                <div className="flex items-center gap-2">
-                  <div className="size-5 rounded-full bg-white text-zinc-950 flex items-center justify-center text-[10px] font-black shrink-0">
-                    1
+              {showSteps && (
+                <div className="relative z-10 bg-[#0c111a] text-white px-5 py-2.5 flex items-center justify-between border-t border-zinc-800">
+                  {/* Step 1 */}
+                  <div className="flex items-center gap-2">
+                    <div className="size-5 rounded-full bg-white text-zinc-950 flex items-center justify-center text-[10px] font-black shrink-0">
+                      1
+                    </div>
+                    <QrCode className="size-4 text-zinc-300 shrink-0" />
+                    <div className="text-left">
+                      <span
+                        contentEditable={isEditingActive}
+                        suppressContentEditableWarning
+                        onBlur={(e) => setStep1Title(e.currentTarget.textContent || "")}
+                        className={cn("text-[9.5px] font-bold block leading-tight", titleCaseClass, trackingClass, editableClass)}
+                      >
+                        {step1Title}
+                      </span>
+                      <span
+                        contentEditable={isEditingActive}
+                        suppressContentEditableWarning
+                        onBlur={(e) => setStep1Desc(e.currentTarget.textContent || "")}
+                        className={cn("text-[7.5px] text-zinc-400 block leading-tight", editableClass)}
+                      >
+                        {step1Desc}
+                      </span>
+                    </div>
                   </div>
-                  <QrCode className="size-4 text-zinc-300 shrink-0" />
-                  <div className="text-left">
-                    <span
-                      contentEditable={isEditingActive}
-                      suppressContentEditableWarning
-                      onBlur={(e) => setStep1Title(e.currentTarget.textContent || "")}
-                      className={cn("text-[9.5px] font-bold block leading-tight", editableClass)}
-                    >
-                      {step1Title}
-                    </span>
-                    <span
-                      contentEditable={isEditingActive}
-                      suppressContentEditableWarning
-                      onBlur={(e) => setStep1Desc(e.currentTarget.textContent || "")}
-                      className={cn("text-[7.5px] text-zinc-400 block leading-tight", editableClass)}
-                    >
-                      {step1Desc}
-                    </span>
+
+                  <ChevronRight className="size-3.5 text-zinc-600 shrink-0" />
+
+                  {/* Step 2 */}
+                  <div className="flex items-center gap-2">
+                    <div className="size-5 rounded-full bg-white text-zinc-950 flex items-center justify-center text-[10px] font-black shrink-0">
+                      2
+                    </div>
+                    <UserPlus className="size-4 text-zinc-300 shrink-0" />
+                    <div className="text-left">
+                      <span
+                        contentEditable={isEditingActive}
+                        suppressContentEditableWarning
+                        onBlur={(e) => setStep2Title(e.currentTarget.textContent || "")}
+                        className={cn("text-[9.5px] font-bold block leading-tight", titleCaseClass, trackingClass, editableClass)}
+                      >
+                        {step2Title}
+                      </span>
+                      <span
+                        contentEditable={isEditingActive}
+                        suppressContentEditableWarning
+                        onBlur={(e) => setStep2Desc(e.currentTarget.textContent || "")}
+                        className={cn("text-[7.5px] text-zinc-400 block leading-tight", editableClass)}
+                      >
+                        {step2Desc}
+                      </span>
+                    </div>
+                  </div>
+
+                  <ChevronRight className="size-3.5 text-zinc-600 shrink-0" />
+
+                  {/* Step 3 */}
+                  <div className="flex items-center gap-2">
+                    <div className="size-5 rounded-full bg-white text-zinc-950 flex items-center justify-center text-[10px] font-black shrink-0">
+                      3
+                    </div>
+                    <CheckCircle2 className="size-4 text-zinc-300 shrink-0" />
+                    <div className="text-left">
+                      <span
+                        contentEditable={isEditingActive}
+                        suppressContentEditableWarning
+                        onBlur={(e) => setStep3Title(e.currentTarget.textContent || "")}
+                        className={cn("text-[9.5px] font-bold block leading-tight", titleCaseClass, trackingClass, editableClass)}
+                      >
+                        {step3Title}
+                      </span>
+                      <span
+                        contentEditable={isEditingActive}
+                        suppressContentEditableWarning
+                        onBlur={(e) => setStep3Desc(e.currentTarget.textContent || "")}
+                        className={cn("text-[7.5px] text-zinc-400 block leading-tight", editableClass)}
+                      >
+                        {step3Desc}
+                      </span>
+                    </div>
                   </div>
                 </div>
-
-                <ChevronRight className="size-3.5 text-zinc-600 shrink-0" />
-
-                {/* Step 2 */}
-                <div className="flex items-center gap-2">
-                  <div className="size-5 rounded-full bg-white text-zinc-950 flex items-center justify-center text-[10px] font-black shrink-0">
-                    2
-                  </div>
-                  <UserPlus className="size-4 text-zinc-300 shrink-0" />
-                  <div className="text-left">
-                    <span
-                      contentEditable={isEditingActive}
-                      suppressContentEditableWarning
-                      onBlur={(e) => setStep2Title(e.currentTarget.textContent || "")}
-                      className={cn("text-[9.5px] font-bold block leading-tight", editableClass)}
-                    >
-                      {step2Title}
-                    </span>
-                    <span
-                      contentEditable={isEditingActive}
-                      suppressContentEditableWarning
-                      onBlur={(e) => setStep2Desc(e.currentTarget.textContent || "")}
-                      className={cn("text-[7.5px] text-zinc-400 block leading-tight", editableClass)}
-                    >
-                      {step2Desc}
-                    </span>
-                  </div>
-                </div>
-
-                <ChevronRight className="size-3.5 text-zinc-600 shrink-0" />
-
-                {/* Step 3 */}
-                <div className="flex items-center gap-2">
-                  <div className="size-5 rounded-full bg-white text-zinc-950 flex items-center justify-center text-[10px] font-black shrink-0">
-                    3
-                  </div>
-                  <CheckCircle2 className="size-4 text-zinc-300 shrink-0" />
-                  <div className="text-left">
-                    <span
-                      contentEditable={isEditingActive}
-                      suppressContentEditableWarning
-                      onBlur={(e) => setStep3Title(e.currentTarget.textContent || "")}
-                      className={cn("text-[9.5px] font-bold block leading-tight", editableClass)}
-                    >
-                      {step3Title}
-                    </span>
-                    <span
-                      contentEditable={isEditingActive}
-                      suppressContentEditableWarning
-                      onBlur={(e) => setStep3Desc(e.currentTarget.textContent || "")}
-                      className={cn("text-[7.5px] text-zinc-400 block leading-tight", editableClass)}
-                    >
-                      {step3Desc}
-                    </span>
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         </motion.div>
