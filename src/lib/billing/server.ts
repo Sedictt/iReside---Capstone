@@ -26,6 +26,7 @@ import type {
     Unit,
     UtilityConfig,
     UtilityReading,
+    UtilityBillingMode,
 } from "@/types/database";
 
 type AppSupabaseClient = SupabaseClient<Database>;
@@ -859,13 +860,14 @@ export async function generateMonthlyInvoices(
                 configMap.get(`${lease.unit?.property_id}:${lease.unit_id}:${utilityType}`) ??
                 configMap.get(`${lease.unit?.property_id}:property:${utilityType}`);
 
-            if (!config) continue;
-
             const reading = leaseReadings.find((row) => row.utility_type === utilityType);
-            const billedRate = Number(reading?.billed_rate ?? config.rate_per_unit ?? 0);
+            if (!config && !reading) continue;
+
+            const billingMode: UtilityBillingMode = (reading?.billing_mode as UtilityBillingMode) ?? (config?.billing_mode as UtilityBillingMode) ?? "tenant_paid";
+            const billedRate = Number(reading?.billed_rate ?? config?.rate_per_unit ?? 0);
             const usage = Number(reading?.usage ?? 0);
             const charge = Number(reading?.computed_charge ?? computeUtilityCharge({
-                mode: config.billing_mode,
+                mode: billingMode,
                 ratePerUnit: billedRate,
                 usage,
             }));
@@ -877,10 +879,10 @@ export async function generateMonthlyInvoices(
                 category: utilityType,
                 sort_order: utilityType === "water" ? 10 : 20,
                 utility_type: utilityType,
-                billing_mode: config.billing_mode,
+                billing_mode: billingMode,
                 reading_id: reading?.id ?? null,
                 metadata: {
-                    included: config.billing_mode === "included_in_rent",
+                    included: billingMode === "included_in_rent",
                     usage,
                     rate: billedRate,
                 },
@@ -1071,20 +1073,74 @@ export async function recordUtilityReading(
 
     if (configError) throw configError;
 
-    const config =
+    let config =
         (configs ?? []).find((item) => item.unit_id === lease.unit_id) ??
         (configs ?? []).find((item) => item.unit_id === null);
 
     if (!config) {
-        throw new Error("No utility configuration found for this lease.");
+        const { data: newConfig } = await supabase
+            .from("utility_configs")
+            .insert({
+                landlord_id: landlordId,
+                property_id: unit.property_id,
+                unit_id: null,
+                utility_type: payload.utilityType,
+                billing_mode: "tenant_paid",
+                rate_per_unit: 0,
+                unit_label: payload.utilityType === "electricity" ? "kWh" : "m³",
+                is_active: true,
+            })
+            .select()
+            .single();
+
+        if (newConfig) {
+            config = newConfig;
+        }
     }
+
+    const billingMode: UtilityBillingMode = (config?.billing_mode as UtilityBillingMode) ?? "tenant_paid";
+    const billedRate = Number(config?.rate_per_unit ?? 0);
 
     const usage = computeUsage(payload.previousReading, payload.currentReading);
     const computedCharge = computeUtilityCharge({
-        mode: config.billing_mode,
-        ratePerUnit: Number(config.rate_per_unit ?? 0),
+        mode: billingMode,
+        ratePerUnit: billedRate,
         usage,
     });
+
+    const currentTimestamp = new Date().toISOString();
+
+    const { data: existingReading } = await supabase
+        .from("utility_readings")
+        .select("id")
+        .eq("unit_id", lease.unit_id)
+        .eq("utility_type", payload.utilityType)
+        .eq("billing_period_start", payload.billingPeriodStart)
+        .eq("billing_period_end", payload.billingPeriodEnd)
+        .maybeSingle();
+
+    if (existingReading) {
+        const { data: updated, error: updateErr } = await supabase
+            .from("utility_readings")
+            .update({
+                lease_id: payload.leaseId,
+                previous_reading: payload.previousReading,
+                current_reading: payload.currentReading,
+                usage,
+                billed_rate: billedRate,
+                computed_charge: computedCharge,
+                note: payload.note ?? null,
+                proof_image_path: payload.proofImagePath ?? null,
+                proof_image_url: payload.proofImageUrl ?? null,
+                updated_at: currentTimestamp,
+            })
+            .eq("id", existingReading.id)
+            .select("*")
+            .single();
+
+        if (updateErr) throw updateErr;
+        return updated;
+    }
 
     const { data, error } = await supabase
         .from("utility_readings")
@@ -1094,17 +1150,21 @@ export async function recordUtilityReading(
             property_id: unit.property_id,
             unit_id: lease.unit_id,
             utility_type: payload.utilityType,
-            billing_mode: config.billing_mode,
+            billing_mode: billingMode,
             billing_period_start: payload.billingPeriodStart,
             billing_period_end: payload.billingPeriodEnd,
             previous_reading: payload.previousReading,
             current_reading: payload.currentReading,
             usage,
-            billed_rate: Number(config.rate_per_unit ?? 0),
+            billed_rate: billedRate,
             computed_charge: computedCharge,
             note: payload.note ?? null,
             proof_image_path: payload.proofImagePath ?? null,
             proof_image_url: payload.proofImageUrl ?? null,
+            status: "pending",
+            entered_at: currentTimestamp,
+            created_at: currentTimestamp,
+            updated_at: currentTimestamp,
         })
         .select("*")
         .single();
