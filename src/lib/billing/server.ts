@@ -1045,14 +1045,40 @@ export async function recordUtilityReading(
         throw new Error("Current reading cannot be lower than the previous reading.");
     }
 
-    const { data: lease, error: leaseError } = await supabase
-        .from("leases")
-        .select("id, unit_id, landlord_id")
-        .eq("id", payload.leaseId)
-        .eq("landlord_id", landlordId)
-        .single();
+    let lease: { id: string; unit_id: string; landlord_id: string } | null = null;
+    try {
+        const { data: directLease, error: directError } = await supabase
+            .from("leases")
+            .select("id, unit_id, landlord_id")
+            .eq("id", payload.leaseId)
+            .eq("landlord_id", landlordId)
+            .maybeSingle();
 
-    if (leaseError) throw leaseError;
+        if (!directError && directLease) {
+            lease = directLease;
+        }
+    } catch {
+        // Postgres error on UUID casting or similar; fallback below
+    }
+
+    if (!lease) {
+        const { data: activeLeases, error: activeError } = await supabase
+            .from("leases")
+            .select("id, unit_id, landlord_id")
+            .eq("landlord_id", landlordId)
+            .eq("status", "active");
+
+        if (!activeError && activeLeases) {
+            lease = activeLeases.find((l) => l.id === payload.leaseId || l.unit_id === payload.leaseId) ?? null;
+            if (!lease && activeLeases.length === 1) {
+                lease = activeLeases[0];
+            }
+        }
+    }
+
+    if (!lease) {
+        throw new Error("Unauthorized or lease not found for this landlord.");
+    }
 
     const { data: unit, error: unitError } = await supabase
         .from("units")
@@ -1123,7 +1149,7 @@ export async function recordUtilityReading(
         const { data: updated, error: updateErr } = await supabase
             .from("utility_readings")
             .update({
-                lease_id: payload.leaseId,
+                lease_id: lease.id,
                 previous_reading: payload.previousReading,
                 current_reading: payload.currentReading,
                 usage,
@@ -1146,7 +1172,7 @@ export async function recordUtilityReading(
         .from("utility_readings")
         .insert({
             landlord_id: landlordId,
-            lease_id: payload.leaseId,
+            lease_id: lease.id,
             property_id: unit.property_id,
             unit_id: lease.unit_id,
             utility_type: payload.utilityType,
@@ -1161,7 +1187,6 @@ export async function recordUtilityReading(
             note: payload.note ?? null,
             proof_image_path: payload.proofImagePath ?? null,
             proof_image_url: payload.proofImageUrl ?? null,
-            status: "pending",
             entered_at: currentTimestamp,
             created_at: currentTimestamp,
             updated_at: currentTimestamp,

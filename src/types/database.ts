@@ -1377,7 +1377,6 @@ export interface Database {
                     billed_rate: number
                     computed_charge: number
                     entered_at: string
-                    status: string
                     invoice_id: string | null
                     note: string | null
                     proof_image_path: string | null
@@ -1402,7 +1401,6 @@ export interface Database {
                     billed_rate?: number
                     computed_charge?: number
                     entered_at?: string
-                    status?: string
                     invoice_id?: string | null
                     note?: string | null
                     proof_image_path?: string | null
@@ -1427,7 +1425,6 @@ export interface Database {
                     billed_rate?: number
                     computed_charge?: number
                     entered_at?: string
-                    status?: string
                     invoice_id?: string | null
                     note?: string | null
                     proof_image_path?: string | null
