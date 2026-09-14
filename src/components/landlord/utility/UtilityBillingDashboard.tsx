@@ -185,6 +185,13 @@ export function UtilityBillingDashboard() {
 
 					setDrafts(newDrafts);
 					return;
+				} else {
+					console.warn("[UtilityBilling] Live fetch incomplete:", {
+						workspaceOk: workspaceRes.ok,
+						workspaceStatus: workspaceRes.status,
+						readingsOk: readingsRes.ok,
+						readingsStatus: readingsRes.status,
+					});
 				}
 			}
 
@@ -243,16 +250,24 @@ export function UtilityBillingDashboard() {
 				});
 
 				setDrafts(newDrafts);
-				toast.info("Offline Mode: Hydrated utility records and tariffs from local cache.");
+				if (typeof navigator !== "undefined" && !navigator.onLine) {
+					toast.info("Offline Mode: Hydrated utility records and tariffs from local cache.");
+				}
 			} else {
-				toast.error("Failed to load billing information");
+				if (typeof navigator !== "undefined" && !navigator.onLine) {
+					toast.error("Offline: No local utility cache found.");
+				} else {
+					toast.error("Failed to load billing information");
+				}
 			}
 		} catch (err) {
 			console.error(err);
 			const cachedWorkspace = OfflineStorage.get<BillingWorkspace>("utility_workspace");
 			if (cachedWorkspace?.data) {
 				setWorkspace(cachedWorkspace.data);
-				toast.info("Loaded cached utility workspace offline.");
+				if (typeof navigator !== "undefined" && !navigator.onLine) {
+					toast.info("Loaded cached utility workspace offline.");
+				}
 			} else {
 				toast.error("Failed to load billing information");
 			}
